@@ -29,29 +29,15 @@ HTTP/1.1 200 OK
 <%= yield_content :paginated_list_of_associated_packages %>
 ```
 
-This endpoint retrieves the packages that associates with the given app guid.
+Retrieve packages for an app that the user has access to.
 
 #### Query Parameters
 
-<ul class="method-list-group">
-<%= yield_content :guids_query_param, 'package'%>
-
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      states
-
-      <span class="method-list-item-type">optional</span>
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Comma-delimited list of package states to filter by.</p>
-  </li>
-
-<%= yield_content :types_query_param, 'package' %>
-
-<%= yield_content :page_query_param %>
-
-<%= yield_content :per_page_query_param %>
-
-<%= yield_content :order_by_query_param %>
-</ul>
+Name | Type | Description
+---- | ---- | ------------
+**guids** | _list of strings_ | Comma-delimited list of package guids to filter by.
+**states** | _list of strings_ | Comma-delimited list of package states to filter by.
+**types** | _list of strings_ | Comma-delimited list of package types to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.

@@ -24,23 +24,15 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :copy_of_packages, '/v3/packages' %>
 ```
 
 This endpoint copies the bits of a source package to a target package.
 
-#### Query Parameters
+#### Required Query Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      source_package_guid
-
-      <span class="method-list-item-type">required</span>
-    </h4>
-
-    <p class="method-list-item-description">Source of package to copy from</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**source_package_guid** | _uuid_ | Source of package to copy from.

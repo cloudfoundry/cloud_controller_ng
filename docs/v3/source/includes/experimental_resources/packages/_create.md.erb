@@ -38,50 +38,27 @@ Example Response
 
 ```http
 HTTP/1.1 201 Created
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_docker_package %>
 ```
 
-This endpoint creates a new package.
+#### Required Parameters
 
-#### Body Parameters
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Type of the package. Valid values are `bits`, `docker`.
+**app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      relationships[app][data][guid]
+#### Optional Parameters
 
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**data** | _object_ | Data for package type. | `{}`
 
-    <p class="method-list-item-description">Guid of the app to associate the package with.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      type
 
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
+#### Conditionally Required Parameters
 
-    <p class="method-list-item-description">Package type. Possible values are "bits", "docker".</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Data for docker packages. Can be empty for bits packages.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data[image]
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">Location of docker image. Required for docker packages.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**data.image** | _string_ | Required when `type` is `docker`. The registry address of the image.

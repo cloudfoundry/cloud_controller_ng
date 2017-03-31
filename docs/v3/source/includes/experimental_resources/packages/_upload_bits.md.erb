@@ -25,23 +25,15 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_bits_package %>
 ```
 
-This endpoint uploads bits to an existing package of type 'bits'. The bits must be sent as part of a multi-part form
+Upload file for a package of type `bits`. The file must be sent as part of a multi-part form.
 
-#### Form Parameters
+#### Required Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      bits
-
-      <span class="method-list-item-type method-list-item-type-required">required</span>
-    </h4>
-
-    <p class="method-list-item-description">A binary zip file containing the package bits</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**bits** | _form field_ | A binary zip file containing the package bits.

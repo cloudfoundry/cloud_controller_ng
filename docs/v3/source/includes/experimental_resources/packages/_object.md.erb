@@ -1,38 +1,39 @@
-<div class='no-margin'></div>
-
 ### The package object
 
-<ul class="method-list-group">
-<%= yield_content :guid, 'package' %>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      type
-      <span class="method-list-item-type">string</span>
-    </h4>
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Package type. Valid values are `bits`, `docker`.
+**data** | _object_ | Data for package type. Can be empty for bits packages.
+**state** | _string_ | State of the package. Valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `READY`, `FAILED`, `COPYING`, `EXPIRED`.
+**guid** | _uuid_ | Unique identifier for the package.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**links** | [_links object_](#links) | Links to related resources.
 
-    <p class="method-list-item-description">Package type. Possible values are "bits", "docker".</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data
-      <span class="method-list-item-type">object</span>
-    </h4>
+#### Bits package
 
-    <p class="method-list-item-description">Data for docker packages. Can be empty for bits packages.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      state
-      <span class="method-list-item-type">string</span>
-    </h4>
+A bits package is used to upload source code for an app to. The bits package will provide an `upload` link to which a zip file should be uploaded.
 
-    <p class="method-list-item-description">State of the package. Possible states are "PROCESSING_UPLOAD", "READY", "FAILED", "AWAITING_UPLOAD", "COPYING", and "EXPIRED".</p>
-  </li>
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `bits`
+**data** | _object_ | Unused. `{}`
+**state** | _string_ | State of the package. Valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `READY`, `FAILED`, `COPYING`, `EXPIRED`.
+**guid** | _uuid_ | Unique identifier for the package.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**links** | [_links object_](#links) | Links to related resources.
 
-<%= yield_content :created_at %>
+#### Docker package
 
-<%= yield_content :updated_at %>
+A docker package references a docker image from a registry.
 
-<%= yield_content :links %>
-</ul>
-
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `docker`
+**data.image** | _string_ | The registry address of the image.
+**state** | _string_ | State of the package. Valid states are `READY`, `FAILED`, `COPYING`, `EXPIRED`.
+**guid** | _uuid_ | Unique identifier for the package.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**links** | [_links object_](#links) | Links to related resources.
