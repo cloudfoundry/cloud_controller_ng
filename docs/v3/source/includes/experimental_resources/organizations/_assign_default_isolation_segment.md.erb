@@ -30,30 +30,18 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :default_isolation_segment_relationship, '/v3/organizations/:guid/relationships/default_isolation_segment' %>
 ```
 
-This endpoint sets the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
+Set the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
 Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
 
 Apps will not run in the new default isolation segment until they are restarted.
 
-#### Body Parameters
+#### Required Parameters
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data[guid]
-
-      <span class="method-list-item-type"/>
-    </h4>
-
-    <p class="method-list-item-description">
-      Guid of isolation segment to set as default.
-      Setting data to null will remove the default isolation segment.
-    </p>
-  </li>
-</ul>
-
+Name | Type | Description
+---- | ---- | -----------
+**data** | [_to-one relationship_](#to-one-relationships) | Isolation segment relationship. Apps will run in this isolation segment. Set data to `null` to remove the relationship.

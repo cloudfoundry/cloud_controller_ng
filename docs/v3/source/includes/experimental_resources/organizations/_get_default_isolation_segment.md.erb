@@ -24,11 +24,11 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :default_isolation_segment_relationship, '/v3/organizations/:guid/relationships/default_isolation_segment' %>
 ```
 
-This endpoint retrieves the default isolation segment for a given organization.
+Retrieve the default isolation segment for a given organization.
 
 
