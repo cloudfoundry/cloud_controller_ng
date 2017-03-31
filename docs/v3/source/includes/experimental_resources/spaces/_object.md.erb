@@ -1,29 +1,9 @@
-<div class='no-margin'></div>
-
 ### The space object
 
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      guid
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">Unique GUID for the space</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      name
-      <span class="method-list-item-type">string</span>
-    </h4>
-
-    <p class="method-list-item-description">User-facing name of the space.</p>
-  </li>
-
-<%= yield_content :created_at %>
-
-<%= yield_content :updated_at %>
-
-<%= yield_content :links %>
-</ul>
-
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the space.
+**guid** | _uuid_ | Unique identifier for the space.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**links** | [_links object_](#links) | Links to related resources.

@@ -24,26 +24,9 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :space_isolation_segment_relationship, '/v3/spaces' %>
 ```
 
-This endpoint retrieves the isolation segment currently assigned to the space.
-
-#### Body Parameters
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      data[guid]
-
-      <span class="method-list-item-type"/>
-    </h4>
-
-    <p class="method-list-item-description">
-      Guid of the isolation segment to assign to the space.
-      data will be null if there is no isolation segment assigned.
-    </p>
-  </li>
-</ul>
+Retrieve the isolation segment currently assigned to the space.
