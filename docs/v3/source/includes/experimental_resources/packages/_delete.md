@@ -1,14 +1,6 @@
 ### Delete a package
 
 ```
-Definition
-```
-
-```http
-DELETE /v3/packages/:guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -25,3 +17,6 @@ Example Response
 ```http
 HTTP/1.1 204 No Content
 ```
+
+#### Definition
+`DELETE /v3/packages/:guid`

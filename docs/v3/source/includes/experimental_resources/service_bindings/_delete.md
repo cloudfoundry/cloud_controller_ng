@@ -1,14 +1,6 @@
 ### Delete a service binding
 
 ```
-Definition
-```
-
-```http
-DELETE /v3/service_bindings/:guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -25,3 +17,6 @@ Example Response
 ```http
 HTTP/1.1 204 No Content
 ```
+
+#### Definition
+`DELETE /v3/service_bindings/:guid`

@@ -1,14 +1,6 @@
 ### Assign an isolation segment
 
 ```
-Definition
-```
-
-```http
-PATCH /v3/spaces/:guid/relationships/isolation_segment HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -39,7 +31,10 @@ This endpoint assigns an isolation segment to the space.
 The space's parent organization must have already been
 entitled to the isolation_segment.
 
-Apps will not run in the newly assigned isolation segment until they are restarted.
+<aside calss="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
+
+#### Definition
+`PATCH /v3/spaces/:guid/relationships/isolation_segment`
 
 #### Required Parameters
 

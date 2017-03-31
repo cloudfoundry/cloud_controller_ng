@@ -1,14 +1,6 @@
 ### Assign default isolation segment
 
 ```
-Definition
-```
-
-```http
-PATCH /v3/organizations/:guid/relationships/default_isolation_segment HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -38,7 +30,10 @@ Content-Type: application/json
 Set the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
 Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
 
-Apps will not run in the new default isolation segment until they are restarted.
+<aside class="notice">Apps will not run in the new default isolation segment until they are restarted.</aside>
+
+#### Definition
+`PATCH /v3/organizations/:guid/relationships/default_isolation_segment`
 
 #### Required Parameters
 

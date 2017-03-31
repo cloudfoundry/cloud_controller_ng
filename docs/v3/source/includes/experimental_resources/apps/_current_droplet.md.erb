@@ -1,14 +1,6 @@
 ### Set current droplet
 
 ```
-Definition
-```
-
-```http
-PATCH /v3/apps/:guid/relationships/current_droplet HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -32,3 +24,6 @@ Content-Type: application/json
 ```
 
 Set the current droplet for an app. The current droplet is the droplet that the app will use when running.
+
+#### Definition
+`PATCH /v3/apps/:guid/relationships/current_droplet`

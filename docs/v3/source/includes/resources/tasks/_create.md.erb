@@ -1,14 +1,6 @@
 ### Create a task
 
 ```
-Definition
-```
-
-```http
-POST /v3/apps/:guid/tasks HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -30,6 +22,9 @@ Content-Type: application/json
 
 <%= yield_content :single_task %>
 ```
+
+#### Definition
+`POST /v3/apps/:app_guid/tasks`
 
 #### Required Parameters
 

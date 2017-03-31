@@ -1,14 +1,6 @@
 ### Create a droplet
 
 ```
-Definition
-```
-
-```http
-POST /v3/packages/:guid/droplets HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -41,6 +33,9 @@ Content-Type: application/json
 
 <%= yield_content :single_staging_buildpack_droplet %>
 ```
+
+#### Definition
+`POST /v3/packages/:guid/droplets`
 
 #### Optional Parameters
 

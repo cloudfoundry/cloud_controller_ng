@@ -1,14 +1,6 @@
 ### List spaces relationship
 
 ```
-Definition
-```
-
-```http
-GET /v3/isolation_segments/:guid/relationships/spaces HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -30,3 +22,6 @@ Content-Type: application/json
 ```
 
 This endpoint lists the spaces to which the isolation segment is assigned.  For an Admin, this will list all associated spaces in the system.  For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager.  For any other user, this will list only those associated spaces to which the user has access.
+
+#### Definition
+`GET /v3/isolation_segments/:guid/relationships/spaces`

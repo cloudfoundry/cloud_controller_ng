@@ -1,14 +1,6 @@
 ### Update an app
 
 ```
-Definition
-```
-
-```http
-PATCH /v3/apps/:guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -28,7 +20,7 @@ curl "https://api.example.org/v3/apps/[guid]" \
         "buildpacks": ["java_buildpack"],
       }
     }
-  }' 
+  }'
 ```
 
 ```
@@ -41,6 +33,9 @@ Content-Type: application/json
 
 <%= yield_content :app_with_state, 'STARTED' %>
 ```
+
+#### Definition
+`PATCH /v3/apps/:guid`
 
 #### Optional Parameters
 

@@ -1,14 +1,6 @@
 ### Cancel a task
 
 ```
-Definition
-```
-
-```http
-PUT /v3/tasks/:task_guid/cancel HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -36,3 +28,6 @@ Canceled tasks will initially be in state `CANCELING` and will move to state `FA
 Cancel requests are idempotent and will be processed according to the state of the task when the request is executed.
 
 Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
+
+#### Definition
+`PUT /v3/tasks/:task_guid/cancel`

@@ -1,14 +1,6 @@
 ### Get current droplet
 
 ```
-Definition
-```
-
-```http
-GET /v3/apps/:guid/relationships/current_droplet HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -28,3 +20,6 @@ Content-Type: application/json
 
 <%= yield_content :app_current_droplet_relationship %>
 ```
+
+#### Definition
+`GET /v3/apps/:guid/relationships/current_droplet`

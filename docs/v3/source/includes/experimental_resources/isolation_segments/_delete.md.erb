@@ -1,14 +1,6 @@
 ### Delete an isolation segment
 
 ```
-Definition
-```
-
-```http
-DELETE /v3/isolation_segments/:guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -27,3 +19,6 @@ HTTP/1.1 204 No Content
 ```
 
 An isolation segment cannot be deleted if it is still in the allowed list for any organization.  Only Admins can delete isolation segments.
+
+#### Definition
+`DELETE /v3/isolation_segments/:guid`

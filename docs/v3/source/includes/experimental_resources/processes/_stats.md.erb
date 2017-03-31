@@ -1,18 +1,6 @@
 ### Get stats for a process
 
 ```
-Definition
-```
-
-```http
-GET /v3/processes/:guid/stats HTTP/1.1
-```
-
-```http
-GET /v3/apps/:guid/processes/:type/stats HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -32,3 +20,7 @@ Content-Type: application/json
 
 <%= yield_content :list_of_process_stats, '/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82' %>
 ```
+
+#### Definition
+`GET /v3/processes/:guid/stats` <br>
+`GET /v3/apps/:guid/processes/:type/stats`

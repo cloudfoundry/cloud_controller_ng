@@ -1,14 +1,6 @@
 ### List tasks for an app
 
 ```
-Definition
-```
-
-```http
-GET /v3/apps/:guid/tasks HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -31,6 +23,9 @@ Content-Type: application/json
 
 Retrieve tasks for an app the user has access to. The `command` field may be
 excluded in the response based on the user's role.
+
+#### Definition
+`GET /v3/apps/:guid/tasks`
 
 #### Query Parameters
 

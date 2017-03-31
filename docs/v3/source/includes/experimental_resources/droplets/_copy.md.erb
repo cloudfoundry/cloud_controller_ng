@@ -1,14 +1,6 @@
 ### Copy a droplet
 
 ```
-Definition
-```
-
-```http
-POST /v3/droplets/:guid/copy HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -39,6 +31,9 @@ Content-Type: application/json
 
 Copy a droplet to a different app. The copied droplet excludes the
 environment variables listed on the source droplet.
+
+#### Definition
+`POST /v3/droplets/:guid/copy`
 
 #### Query Parameters
 

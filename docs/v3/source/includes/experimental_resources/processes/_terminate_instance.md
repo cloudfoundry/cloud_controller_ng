@@ -1,18 +1,6 @@
 ### Terminate a process instance
 
 ```
-Definition
-```
-
-```http
-DELETE /v3/processes/:guid/instances/:index HTTP/1.1
-```
-
-```http
-DELETE /v3/apps/:guid/processes/:type/instances/:index HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -33,3 +21,7 @@ HTTP/1.1 204 No Content
 Terminate an instance of a specific process. Health management will eventually restart the instance.
 
 This allows a user to stop a single misbehaving instance of a process.
+
+#### Definition
+`DELETE /v3/processes/:guid/instances/:index` <br>
+`DELETE /v3/apps/:guid/processes/:type/instances/:index`

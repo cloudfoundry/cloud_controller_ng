@@ -1,14 +1,6 @@
 ### Update an isolation segment
 
 ```
-Definition
-```
-
-```http
-PATCH /v3/isolation_segments/:guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -31,6 +23,9 @@ Content-Type: application/json
 <%= yield_content :isolation_segment_with_name, 'my_isolation_segment' %>
 ```
 Only Admins can update isolation segments.
+
+#### Definition
+`PATCH /v3/isolation_segments/:guid`
 
 #### Optional Parameters
 

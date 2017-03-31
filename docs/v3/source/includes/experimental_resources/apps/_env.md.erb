@@ -1,14 +1,6 @@
 ### Get environment for an app
 
 ```
-Definition
-```
-
-```http
-GET /v3/apps/:guid/env HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -44,9 +36,9 @@ Content-Type: application/json
           "label": "mysql",
           "tags": ["relational", "sql"],
           "plan": "xlarge",
-          "credentials": { 
+          "credentials": {
             "username": "user",
-            "password": "top-secret" 
+            "password": "top-secret"
            },
           "syslog_drain_url": "https://syslog.example.com/drain",
           "provider": null
@@ -74,3 +66,5 @@ Content-Type: application/json
 Retrieve the environment variables that will be provided to an app at runtime.
 It will include environment variables for Environment Variable Groups and Service Bindings.
 
+#### Definition
+`GET /v3/apps/:guid/env`

@@ -1,18 +1,6 @@
 ### Scale a process
 
 ```
-Definition
-```
-
-```http
-PUT /v3/processes/:guid/scale HTTP/1.1
-```
-
-```http
-PUT /v3/apps/:guid/processes/:type/scale HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -38,6 +26,10 @@ Content-Type: application/json
 
 <%= yield_content :single_process %>
 ```
+
+#### Definition
+`PUT /v3/processes/:guid/scale` <br>
+`PUT /v3/apps/:guid/processes/:type/scale`
 
 #### Optional Parameters
 

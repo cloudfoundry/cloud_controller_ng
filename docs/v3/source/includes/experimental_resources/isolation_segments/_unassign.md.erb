@@ -1,14 +1,6 @@
 ### Revoke entitlement to isolation segment for an organization
 
 ```
-Definition
-```
-
-```http
-DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -27,3 +19,6 @@ HTTP/1.1 204 No Content
 ```
 
 This endpoint revokes the entitlement for the specified organization to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization's default, the entitlement cannot be revoked.
+
+#### Definition
+`DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid`

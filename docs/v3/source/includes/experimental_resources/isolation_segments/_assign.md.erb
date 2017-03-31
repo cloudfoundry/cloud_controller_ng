@@ -1,14 +1,6 @@
 ### Entitle organizations for an isolation segment
 
 ```
-Definition
-```
-
-```http
-POST /v3/isolation_segments/:guid/relationships/organizations HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -37,6 +29,9 @@ Content-Type: application/json
 ```
 This endpoint entitles the specified organizations for the isolation segment.  Only Admins can entitle organizations for isolation segments.
 In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the  default for that organization.
+
+#### Definition
+`POST /v3/isolation_segments/:guid/relationships/organizations`
 
 #### Required Parameters
 

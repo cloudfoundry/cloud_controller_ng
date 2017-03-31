@@ -1,14 +1,6 @@
 ### List organizations relationship
 
 ```
-Definition
-```
-
-```http
-GET /v3/isolation_segments/:guid/relationships/organizations HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -30,3 +22,6 @@ Content-Type: application/json
 ```
 
 This endpoint lists the organizations entitled for the isolation segment.  For an Admin, this will list all entitled organizations in the system.  For any other user, this will list only the entitled organizations to which the user belongs.
+
+#### Definition
+`GET /v3/isolation_segments/:guid/relationships/organizations`

@@ -1,14 +1,6 @@
 ### Delete a droplet
 
 ```
-Definition
-```
-
-```http
-DELETE /v3/droplets/:guid HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -24,3 +16,7 @@ Example Response
 
 ```http
 HTTP/1.1 204 No Content
+```
+
+#### Definition
+`DELETE /v3/droplets/:guid`

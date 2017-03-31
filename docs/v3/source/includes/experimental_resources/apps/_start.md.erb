@@ -1,14 +1,6 @@
 ### Start an app
 
 ```
-Definition
-```
-
-```http
-PUT /v3/apps/:guid/start HTTP/1.1
-```
-
-```
 Example Request
 ```
 
@@ -28,3 +20,6 @@ Content-Type: application/json
 
 <%= yield_content :app_with_state, 'STARTED' %>
 ```
+
+#### Definition
+`PUT /v3/apps/:guid/start`
