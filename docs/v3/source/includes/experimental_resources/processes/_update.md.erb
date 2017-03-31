@@ -26,40 +26,15 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_process %>
 ```
 
-This endpoint updates an existing process.
+#### Optional Parameters
 
-#### Body Parameters
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      command
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The command that will be used to start the process.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      ports
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The ports that will be open to accept traffic in the container running the process. An empty array will bind no ports to the application. <code>web</code> type processes will default to using port 8080 when ports are not provided. All other process types will default to no ports.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      health_check
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The health check to perform on the process. See <%= link_to 'health_check', '#the-health_check-object' %> for more information.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**command** | _string_ | The command is used to start the process.
+**ports** | _array of integers_ | The ports that will be open to accept traffic in the container running the process. An empty array will bind no ports to the application.
+**health_check** | [_health_check object_](#the-health_check-object) | The health check to perform on the process.

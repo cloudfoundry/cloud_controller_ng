@@ -24,7 +24,7 @@ curl "https://api.example.org/v3/processes/[guid]/scale" \
   -d '{
     "instances": 5,
     "memory_in_mb": 256,
-    "disk_in_mb": 1024,
+    "disk_in_mb": 1024
   }'
 ```
 
@@ -34,41 +34,15 @@ Example Response
 
 ```http
 HTTP/1.1 202 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :single_process %>
 ```
 
-This endpoint scales an existing process.
+#### Optional Parameters
 
-#### Body Parameters
-
-<ul class="method-list-group">
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      instances
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The number of instances.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      memory_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The memory in mb allocated per instance.</p>
-  </li>
-  <li class="method-list-item">
-    <h4 class="method-list-item-label">
-      disk_in_mb
-
-      <span class="method-list-item-type">optional</span>
-    </h4>
-
-    <p class="method-list-item-description">The disk in mb allocated per instance.</p>
-  </li>
-</ul>
+Name | Type | Description
+---- | ---- | -----------
+**instances** | _integer_ | The number of instances to run.
+**memory_in_mb** | _integer_ | The memory in mb allocated per instance.
+**disk_in_mb** | _integer_ | The disk in mb allocated per instance.

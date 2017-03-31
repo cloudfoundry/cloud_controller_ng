@@ -24,29 +24,22 @@ Example Response
 
 ```http
 HTTP/1.1 200 OK
-```
-```json
+Content-Type: application/json
+
 <%= yield_content :paginated_list_of_processes, '/v3/processes' %>
 ```
 
-This endpoint retrieves the processes the user has access to.
+Retrieve all processes the user has access to.
 
 #### Query Parameters
 
-<ul class="method-list-group">
-<%= yield_content :app_guids_query_param %>
-
-<%= yield_content :guids_query_param, 'process' %>
-
-<%= yield_content :organization_guids_query_param %>
-
-<%= yield_content :space_guids_query_param %>
-
-<%= yield_content :types_query_param, 'process' %>
-
-<%= yield_content :page_query_param %>
-
-<%= yield_content :per_page_query_param %>
-
-<%= yield_content :order_by_query_param %>
-</ul>
+Name | Type | Description
+---- | ---- | ------------
+**guids** | _list of strings_ | Comma-delimited list of process guids to filter by.
+**types** | _list of strings_ | Comma-delimited list of process types to filter by.
+**app_guids** | _list of strings_ | Comma-delimited list of app guids to filter by.
+**space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
+**organization_guids** | _list of strings_ | Comma-delimited list of organization guids to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.
