@@ -4,7 +4,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **state** | _string_ | State of the droplet. Valid states are `STAGING`, `STAGED`, `COPYING`, `FAILED`, or `EXPIRED`.
 **error** | _string_ | A string describing the last error during the droplet lifecycle.
-**lifecycle** | [_lifecycle object_](##the-lifecycle-object) | An object describing the lifecycle that was configured or discovered from the app.
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was configured or discovered from the app.
 **staging_disk_in_mb** | _integer_ | The disk quota applied during droplet staging.
 **staging_memory_in_mb** | _integer_ | The maximum memory in mb that can be used by a droplet.
 **result** | _object_ | An object describing the result of a droplet that has completed staging (where state is `STAGED`, `FAILED`, or `EXPIRED`). Droplets in incomplete states return null result.

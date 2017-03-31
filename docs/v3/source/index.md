@@ -44,7 +44,6 @@ includes:
   - experimental_resources/apps/list
   - experimental_resources/droplets/header
   - experimental_resources/droplets/object
-  - experimental_resources/droplets/lifecycle_object
   - experimental_resources/droplets/create
   - experimental_resources/droplets/copy
   - experimental_resources/droplets/get

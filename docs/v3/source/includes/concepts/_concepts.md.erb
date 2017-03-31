@@ -299,7 +299,7 @@ Name | Type | Description
 Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
 Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
 
-### The pagination object
+#### The pagination object
 ```
 Example Paginated Response
 ```
@@ -346,3 +346,43 @@ Name | Type | Description
 **last** | [_link object_](#the-link-object) | Link to the last page.
 **next** | [_link object_](#the-link-object) | Link to the next page.
 **previous** | [_link object_](#the-link-object) | Link to the previous page.
+
+## Lifecycles
+
+Lifecycles inform the platform of how to build droplets and run apps. For example the the
+`buildpack` lifecycle will use a droplet and a rootfs to run the app, while a `docker` lifecycle will
+pull a docker image from a registry to run an app.
+
+#### The lifecycle object
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Type of the lifecycle. Valid values are `buildpack`, `docker`.
+**data** | _object_ | Data that is used during staging and running for a lifecycle.
+
+### Buildpack lifecycle
+
+This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
+compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
+will be created and the droplet will be expanded inside that container to be executed.
+
+#### Buildpack lifecycle object
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `buildpack`
+**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack. Supports at most one buildpack.
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs2`
+
+### Docker lifecycle
+
+This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
+metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
+and the docker image is executed inside of it.
+
+#### Docker lifecycle object
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `docker`
+**data** | _object_ | Data is not used by the docker lifecycle. Valid value is `{}`.
