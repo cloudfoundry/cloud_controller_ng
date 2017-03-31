@@ -1,15 +1,14 @@
 module VCAP::CloudController
   class SetDefaultIsolationSegment
-    class InvalidOrg < StandardError; end
-    class InvalidRelationship < StandardError; end
+    class Error < StandardError; end
 
     def set(org, isolation_segment, message)
       iso_seg_guid = message.default_isolation_segment_guid
       if iso_seg_guid
-        invalid_relationship! unless isolation_segment
+        invalid_relationship!(iso_seg_guid) unless isolation_segment
 
         entitled_iso_segs = org.isolation_segment_guids
-        invalid_relationship! unless entitled_iso_segs.include?(iso_seg_guid)
+        invalid_relationship!(iso_seg_guid) unless entitled_iso_segs.include?(iso_seg_guid)
       end
 
       org.db.transaction do
@@ -20,13 +19,13 @@ module VCAP::CloudController
         org.save
       end
     rescue Sequel::ValidationFailed => e
-      raise InvalidOrg.new(e.message)
+      raise Error.new(e.message)
     end
 
     private
 
-    def invalid_relationship!
-      raise InvalidRelationship.new
+    def invalid_relationship!(isolation_segment_guid)
+      raise Error.new "Unable to assign isolation segment with guid '#{isolation_segment_guid}'. Ensure it has been entitled to the organization that this space belongs to."
     end
   end
 end

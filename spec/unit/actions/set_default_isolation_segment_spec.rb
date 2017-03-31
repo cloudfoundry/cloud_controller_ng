@@ -48,7 +48,7 @@ module VCAP::CloudController
         it 'raises an invalid relationship error' do
           expect {
             set_default_isolation_segment.set(org, isolation_segment, message)
-          }.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::InvalidRelationship
+          }.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::Error, /Unable to assign/
         end
       end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
         it 'raises an invalid relationship error' do
           expect {
             set_default_isolation_segment.set(org, isolation_segment, message)
-          }.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::InvalidRelationship
+          }.to raise_error VCAP::CloudController::SetDefaultIsolationSegment::Error, /Unable to assign/
         end
       end
 
@@ -92,7 +92,7 @@ module VCAP::CloudController
         it 'raises an InvalidOrg error' do
           expect {
             set_default_isolation_segment.set(org, isolation_segment, message)
-          }.to raise_error(SetDefaultIsolationSegment::InvalidOrg, 'some message')
+          }.to raise_error(SetDefaultIsolationSegment::Error, 'some message')
         end
       end
     end

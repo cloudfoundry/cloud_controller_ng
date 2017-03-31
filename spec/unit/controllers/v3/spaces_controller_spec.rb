@@ -201,7 +201,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include(
-            "Unable to set #{isolation_segment_model.guid} as the isolation segment. Ensure it has been entitled to the organization that this space belongs to."
+            "Unable to assign isolation segment with guid '#{isolation_segment_model.guid}'. Ensure it has been entitled to the organization that this space belongs to."
           )
         end
       end
@@ -214,7 +214,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           expect(response.status).to eq(422)
           expect(response.body).to include(
-            'Unable to set potato as the isolation segment. Ensure it has been entitled to the organization that this space belongs to.'
+            "Unable to assign isolation segment with guid 'potato'. Ensure it has been entitled to the organization that this space belongs to."
           )
         end
       end

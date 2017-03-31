@@ -298,9 +298,11 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         patch :update_default_isolation_segment, req_body, { guid: org2.guid }
 
         org.reload
+        error_string = "Unable to assign isolation segment with guid '#{isolation_segment.guid}'. Ensure it has been entitled to the organization that this space belongs to."
+
         expect(response.status).to eq(422)
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include("Unable to set #{isolation_segment.guid} as the default isolation segment. Ensure it has been entitled to this organization.")
+        expect(response.body).to include(error_string)
       end
     end
 
@@ -326,14 +328,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         expect(response.status).to eq(422)
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'Unable to set garbage-guid as the default isolation segment. Ensure it has been entitled to this organization.'
+        expect(response.body).to include "Unable to assign isolation segment with guid 'garbage-guid'. Ensure it has been entitled to the organization that this space belongs to."
       end
     end
 
-    context 'when the org is invalid' do
+    context 'when the assignment fails' do
       before do
         allow_any_instance_of(VCAP::CloudController::SetDefaultIsolationSegment).to receive(:set).and_raise(
-          VCAP::CloudController::SetDefaultIsolationSegment::InvalidOrg.new('bad org!'))
+          VCAP::CloudController::SetDefaultIsolationSegment::Error.new('bad thing happened!'))
       end
 
       it 'returns 422' do
@@ -341,7 +343,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
-        expect(response.body).to include('bad org!')
+        expect(response.body).to include('bad thing happened!')
       end
     end
 

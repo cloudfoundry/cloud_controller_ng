@@ -36,10 +36,8 @@ class SpacesV3Controller < ApplicationController
       relationship_name: 'isolation_segment',
       related_resource_name: 'isolation_segments'
     )
-  rescue SpaceUpdateIsolationSegment::InvalidSpace => e
+  rescue SpaceUpdateIsolationSegment::Error => e
     unprocessable!(e.message)
-  rescue SpaceUpdateIsolationSegment::InvalidRelationship
-    unprocessable_iso_seg(message.isolation_segment_guid)
   end
 
   def show_isolation_segment
@@ -74,10 +72,6 @@ class SpacesV3Controller < ApplicationController
 
   def org_not_found!
     resource_not_found!(:org)
-  end
-
-  def unprocessable_iso_seg(iso_seg_guid)
-    unprocessable!("Unable to set #{iso_seg_guid} as the isolation segment. Ensure it has been entitled to the organization that this space belongs to.")
   end
 
   def readable_spaces(message:)

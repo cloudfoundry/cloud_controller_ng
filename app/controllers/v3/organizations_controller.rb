@@ -58,9 +58,7 @@ class OrganizationsV3Controller < ApplicationController
       relationship_name: 'default_isolation_segment',
       related_resource_name: 'isolation_segments'
     )
-  rescue SetDefaultIsolationSegment::InvalidRelationship
-    unprocessable!("Unable to set #{iso_seg_guid} as the default isolation segment. Ensure it has been entitled to this organization.")
-  rescue SetDefaultIsolationSegment::InvalidOrg => e
+  rescue SetDefaultIsolationSegment::Error => e
     unprocessable!(e.message)
   end
 

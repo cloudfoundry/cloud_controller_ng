@@ -65,17 +65,17 @@ module VCAP::CloudController
             allow(space).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))
           end
 
-          it 'raises an invalid space error' do
+          it 'raises an error' do
             expect { space_update.update(space, org, message) }.to raise_error(
-              SpaceUpdateIsolationSegment::InvalidSpace)
+              SpaceUpdateIsolationSegment::Error, /something/)
           end
         end
       end
 
       context 'when the org is NOT entitled to the isolation segment' do
-        it 'raises an invalid relationship error' do
+        it 'raises an error' do
           expect { space_update.update(space, org, message) }.to raise_error(
-            VCAP::CloudController::SpaceUpdateIsolationSegment::InvalidRelationship)
+            VCAP::CloudController::SpaceUpdateIsolationSegment::Error, /Unable to assign/)
         end
       end
 
@@ -84,9 +84,9 @@ module VCAP::CloudController
           SpaceUpdateIsolationSegmentMessage.new({ data: { guid: 'non-existant-guid' } })
         end
 
-        it 'raises an invalid relationship error' do
+        it 'raises an error' do
           expect { space_update.update(space, org, message) }.to raise_error(
-            VCAP::CloudController::SpaceUpdateIsolationSegment::InvalidRelationship)
+            VCAP::CloudController::SpaceUpdateIsolationSegment::Error, /Unable to assign/)
         end
       end
     end
