@@ -11,7 +11,7 @@ module VCAP
           class InvalidDownloadUri < StandardError; end
 
           def initialize(blobstore_url_generator=::CloudController::DependencyLocator.instance.blobstore_url_generator,
-                         droplet_url_generator=DropletUrlGenerator.new)
+                         droplet_url_generator=::CloudController::DependencyLocator.instance.droplet_url_generator)
             @blobstore_url_generator   = blobstore_url_generator
             @buildpack_entry_generator = BuildpackEntryGenerator.new(@blobstore_url_generator)
             @droplet_url_generator = droplet_url_generator
@@ -57,11 +57,12 @@ module VCAP
           end
 
           def desired_app_message(process)
+            checksum_info = droplet_checksum_info(process.current_droplet)
             {
               'start_command' => process.command.nil? ? process.detected_start_command : process.command,
-              'droplet_uri'   => @droplet_url_generator.perma_droplet_download_url(process),
+              'droplet_uri'   => @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
               'droplet_hash'  => process.current_droplet.droplet_hash,
-              'checksum'      => droplet_checksum_info(process.current_droplet),
+              'checksum'      => checksum_info,
             }
           end
 
@@ -78,7 +79,7 @@ module VCAP
           def builder_opts(process)
             checksum_info = droplet_checksum_info(process.current_droplet)
             {
-              droplet_uri:        @droplet_url_generator.perma_droplet_download_url(process),
+              droplet_uri:        @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
               droplet_hash:       process.current_droplet.droplet_hash,
               ports:              Protocol::OpenProcessPorts.new(process).to_a,
               process_guid:       ProcessGuid.from_process(process),

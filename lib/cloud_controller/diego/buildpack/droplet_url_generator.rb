@@ -2,26 +2,41 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       class DropletUrlGenerator
-        def initialize(config=Config.config)
-          @config = config
+        def initialize(internal_service_hostname:, external_port:, tls_port:, mtls:)
+          @internal_service_hostname = internal_service_hostname
+          @external_port             = external_port
+          @tls_port                  = tls_port
+          @mtls                      = mtls
         end
 
-        def perma_droplet_download_url(app)
-          return nil unless app.droplet_hash
+        attr_reader :internal_service_hostname, :external_port, :tls_port, :mtls
 
-          if HashUtils.dig(@config, :diego, :temporary_droplet_download_mtls)
-            URI::HTTPS.build(
-              host: @config[:internal_service_hostname],
-              port: @config[:tls_port],
-              path: "/internal/v4/droplets/#{app.guid}/#{app.droplet_checksum}/download",
-            ).to_s
+        def perma_droplet_download_url(app_guid, droplet_checksum)
+          return nil unless droplet_checksum
+
+          if mtls
+            build_https_url(app_guid, droplet_checksum)
           else
-            URI::HTTP.build(
-              host: @config[:internal_service_hostname],
-              port: @config[:external_port],
-              path: "/internal/v2/droplets/#{app.guid}/#{app.droplet_checksum}/download",
-            ).to_s
+            build_http_url(app_guid, droplet_checksum)
           end
+        end
+
+        private
+
+        def build_https_url(guid, droplet_checksum)
+          URI::HTTPS.build(
+            host: internal_service_hostname,
+            port: tls_port,
+            path: "/internal/v4/droplets/#{guid}/#{droplet_checksum}/download",
+          ).to_s
+        end
+
+        def build_http_url(guid, droplet_checksum)
+          URI::HTTP.build(
+            host: internal_service_hostname,
+            port: external_port,
+            path: "/internal/v2/droplets/#{guid}/#{droplet_checksum}/download",
+          ).to_s
         end
       end
     end

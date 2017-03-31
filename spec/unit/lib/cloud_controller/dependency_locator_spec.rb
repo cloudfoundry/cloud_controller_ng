@@ -7,8 +7,8 @@ RSpec.describe CloudController::DependencyLocator do
   let(:config) { TestConfig.config }
   let(:bits_service_config) do
     {
-      enabled: true,
-      public_endpoint: 'https://bits-service.com',
+      enabled:          true,
+      public_endpoint:  'https://bits-service.com',
       private_endpoint: 'http://bits-service.service.cf.internal'
     }
   end
@@ -25,7 +25,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       {
         droplets: {
-          fog_connection: 'fog_connection',
+          fog_connection:        'fog_connection',
           droplet_directory_key: 'key',
         },
       }
@@ -40,8 +40,8 @@ RSpec.describe CloudController::DependencyLocator do
     context('when bits service is enabled') do
       let(:config) do
         {
-          droplets: {
-            fog_connection: 'fog_connection',
+          droplets:     {
+            fog_connection:        'fog_connection',
             droplet_directory_key: 'key',
           },
           bits_service: bits_service_config
@@ -60,7 +60,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       {
         droplets: {
-          fog_connection: 'fog_connection',
+          fog_connection:        'fog_connection',
           droplet_directory_key: 'key',
         }
       }
@@ -68,9 +68,9 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
-        options: config[:droplets],
+        options:       config[:droplets],
         directory_key: 'key',
-        root_dir: 'buildpack_cache',
+        root_dir:      'buildpack_cache',
         resource_type: :buildpack_cache)
       locator.buildpack_cache_blobstore
     end
@@ -78,8 +78,8 @@ RSpec.describe CloudController::DependencyLocator do
     context('when bits service is enabled') do
       let(:config) do
         {
-          droplets: {
-            fog_connection: 'fog_connection',
+          droplets:     {
+            fog_connection:        'fog_connection',
             droplet_directory_key: 'key',
           },
           bits_service: bits_service_config
@@ -98,7 +98,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       {
         packages: {
-          fog_connection: 'fog_connection',
+          fog_connection:            'fog_connection',
           app_package_directory_key: 'key',
         }
       }
@@ -113,7 +113,7 @@ RSpec.describe CloudController::DependencyLocator do
     context('when bits service is enabled') do
       let(:config) do
         {
-          packages: {
+          packages:     {
             app_package_directory_key: 'key'
           },
           bits_service: bits_service_config
@@ -132,7 +132,7 @@ RSpec.describe CloudController::DependencyLocator do
     let(:config) do
       {
         resource_pool: {
-          fog_connection: 'fog_connection',
+          fog_connection:         'fog_connection',
           resource_directory_key: 'key',
         }
       }
@@ -158,7 +158,7 @@ RSpec.describe CloudController::DependencyLocator do
             password: 'password',
           }
         },
-        diego: {
+        diego:                     {
           temporary_cc_uploader_mtls: true,
         }
       }
@@ -188,6 +188,32 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#droplet_url_generator' do
+    let(:my_config) do
+      {
+        internal_service_hostname: 'internal.service.hostname',
+        external_port:             8282,
+        tls_port:                  8283,
+        diego:                     {
+          temporary_droplet_download_mtls: true,
+        }
+      }
+    end
+
+    before do
+      TestConfig.override(my_config)
+    end
+
+    it 'creates droplet_url_generator with the internal_service_hostname, ports, and diego flag' do
+      expect(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:new).with(
+        internal_service_hostname: 'internal.service.hostname',
+        external_port:             8282,
+        tls_port:                  8283,
+        mtls:                      true)
+      locator.droplet_url_generator
+    end
+  end
+
   describe '#app_event_repository' do
     subject { locator.app_event_repository }
 
@@ -213,8 +239,8 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#object_renderer' do
     it 'returns paginated collection renderer configured via config' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts = { max_inline_relations_depth: 100_002, object_transformer: nil }
+      serializer   = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      opts         = { max_inline_relations_depth: 100_002, object_transformer: nil }
 
       TestConfig.override(renderer: opts)
 
@@ -231,12 +257,12 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#paginated_collection_renderer' do
     it 'returns paginated collection renderer configured via config' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts = {
-        max_results_per_page: 100_000,
-        default_results_per_page: 100_001,
+      serializer   = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      opts         = {
+        max_results_per_page:       100_000,
+        default_results_per_page:   100_001,
         max_inline_relations_depth: 100_002,
-        collection_transformer: nil
+        collection_transformer:     nil
       }
 
       TestConfig.override(renderer: opts)
@@ -254,12 +280,12 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#large_paginated_collection_renderer' do
     it 'returns paginated collection renderer configured via config with a max of 10,000 results per page' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts = {
-        max_results_per_page: 10,
-        default_results_per_page: 100_001,
+      serializer   = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      opts         = {
+        max_results_per_page:       10,
+        default_results_per_page:   100_001,
         max_inline_relations_depth: 100_002,
-        collection_transformer: nil
+        collection_transformer:     nil
       }
 
       TestConfig.override(renderer: opts)
@@ -328,12 +354,12 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#routing_api_client' do
     let(:config) do
       TestConfig.override(routing_api:
-                          {
-        url: 'routing-api-url',
-        routing_client_name: 'routing-client',
-        routing_client_secret: 'routing-secret',
-      }
-                         )
+        {
+          url:                   'routing-api-url',
+          routing_client_name:   'routing-client',
+          routing_client_secret: 'routing-secret',
+        }
+      )
       TestConfig.config
     end
 

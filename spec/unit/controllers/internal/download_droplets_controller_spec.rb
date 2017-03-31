@@ -7,16 +7,16 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection: {
-              provider: 'Local',
+            fog_connection:            {
+              provider:   'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
             app_package_directory_key: 'cc-packages',
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection: {
-              provider: 'Local',
+            fog_connection:        {
+              provider:   'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
           },
@@ -114,6 +114,20 @@ module VCAP::CloudController
           expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
         end
       end
+
+      context 'when mTLS is enabled' do
+        it 'should redirect to the endpoint provided by DropletUrlGenerator' do
+          upload_droplet
+          allow_any_instance_of(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:mtls).and_return(true)
+          allow_any_instance_of(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:perma_droplet_download_url).
+            with(process.guid, process.droplet_checksum).and_return('https://example.com/tls-somewhere-else')
+
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+
+          expect(last_response).to be_redirect
+          expect(last_response.header['Location']).to eq('https://example.com/tls-somewhere-else')
+        end
+      end
     end
 
     describe 'GET /internal/v4/droplets/:guid/:droplet_hash/download' do
@@ -121,16 +135,16 @@ module VCAP::CloudController
       let(:original_staging_config) do
         {
           packages: {
-            fog_connection: {
-              provider: 'Local',
+            fog_connection:            {
+              provider:   'Local',
               local_root: Dir.mktmpdir('packages', workspace)
             },
             app_package_directory_key: 'cc-packages',
           },
           droplets: {
             droplet_directory_key: 'cc-droplets',
-            fog_connection: {
-              provider: 'Local',
+            fog_connection:        {
+              provider:   'Local',
               local_root: Dir.mktmpdir('droplets', workspace)
             }
           },

@@ -37,7 +37,7 @@ module CloudController
     attr_accessor :config
 
     def initialize
-      @config = VCAP::CloudController::Config.config
+      @config       = VCAP::CloudController::Config.config
       @dependencies = {}
     end
 
@@ -113,7 +113,7 @@ module CloudController
       options = @config.fetch(:droplets)
 
       Blobstore::ClientProvider.provide(
-        options: options,
+        options:       options,
         directory_key: options.fetch(:droplet_directory_key),
         resource_type: :droplets
       )
@@ -123,9 +123,9 @@ module CloudController
       options = @config.fetch(:droplets)
 
       Blobstore::ClientProvider.provide(
-        options: options,
+        options:       options,
         directory_key: options.fetch(:droplet_directory_key),
-        root_dir: 'buildpack_cache',
+        root_dir:      'buildpack_cache',
         resource_type: :buildpack_cache
       )
     end
@@ -134,7 +134,7 @@ module CloudController
       options = @config.fetch(:packages)
 
       Blobstore::ClientProvider.provide(
-        options: options,
+        options:       options,
         directory_key: options.fetch(:app_package_directory_key),
         resource_type: :packages
       )
@@ -144,7 +144,7 @@ module CloudController
       options = @config.fetch(:resource_pool)
 
       Blobstore::ClientProvider.provide(
-        options: options,
+        options:       options,
         directory_key: options.fetch(:resource_directory_key)
       )
     end
@@ -153,7 +153,7 @@ module CloudController
       options = @config.fetch(:buildpacks)
 
       Blobstore::ClientProvider.provide(
-        options: options,
+        options:       options,
         directory_key: options.fetch(:buildpack_directory_key, 'cc-buildpacks'),
         resource_type: :buildpacks
       )
@@ -161,12 +161,12 @@ module CloudController
 
     def blobstore_url_generator
       connection_options = {
-        blobstore_host: @config[:internal_service_hostname],
+        blobstore_host:          @config[:internal_service_hostname],
         blobstore_external_port: @config[:external_port],
-        blobstore_tls_port: @config[:tls_port],
-        user: @config[:staging][:auth][:user],
-        password: @config[:staging][:auth][:password],
-        mtls: HashUtils.dig(@config, :diego, :temporary_cc_uploader_mtls)
+        blobstore_tls_port:      @config[:tls_port],
+        user:                    @config[:staging][:auth][:user],
+        password:                @config[:staging][:auth][:password],
+        mtls:                    HashUtils.dig(@config, :diego, :temporary_cc_uploader_mtls)
       }
 
       Blobstore::UrlGenerator.new(
@@ -176,6 +176,14 @@ module CloudController
         buildpack_blobstore,
         droplet_blobstore
       )
+    end
+
+    def droplet_url_generator
+      VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator.new(
+        internal_service_hostname: @config[:internal_service_hostname],
+        external_port:             @config[:external_port],
+        tls_port:                  @config[:tls_port],
+        mtls:                      HashUtils.dig(@config, :diego, :temporary_droplet_download_mtls))
     end
 
     def space_event_repository
@@ -274,7 +282,7 @@ module CloudController
       return nil unless use_bits_service
 
       BitsService::ResourcePool.new(
-        endpoint: bits_service_options[:private_endpoint],
+        endpoint:                   bits_service_options[:private_endpoint],
         request_timeout_in_seconds: @config[:request_timeout_in_seconds]
       )
     end
@@ -354,13 +362,13 @@ module CloudController
     end
 
     def create_object_renderer(opts={})
-      eager_loader = VCAP::CloudController::RestController::SecureEagerLoader.new
-      serializer   = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
+      eager_loader       = VCAP::CloudController::RestController::SecureEagerLoader.new
+      serializer         = VCAP::CloudController::RestController::PreloadedObjectSerializer.new
       object_transformer = opts[:object_transformer]
 
       VCAP::CloudController::RestController::ObjectRenderer.new(eager_loader, serializer, {
         max_inline_relations_depth: @config[:renderer][:max_inline_relations_depth],
-        object_transformer: object_transformer
+        object_transformer:         object_transformer
       })
     end
 
@@ -376,7 +384,7 @@ module CloudController
         max_results_per_page:       max_results_per_page,
         default_results_per_page:   default_results_per_page,
         max_inline_relations_depth: max_inline_relations_depth,
-        collection_transformer: collection_transformer
+        collection_transformer:     collection_transformer
       })
     end
   end
