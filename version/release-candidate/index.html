@@ -197,16 +197,44 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 </tr>
 </thead><tbody>
 <tr>
-<td>SpaceManager</td>
-<td>This role provides Space management access</td>
+<td>Admin</td>
+<td>Allows a user to manage the platform. OAuth token must contain <code class="prettyprint">cloud_controller.admin</code> scope.</td>
 </tr>
 <tr>
-<td>SpaceDeveloper</td>
-<td>This role allows developers to create and manage apps and services in a Space</td>
+<td>Admin Read-Only</td>
+<td>Allows a user to read all resources on the platform. OAuth token must contain <code class="prettyprint">cloud_controller.admin_read_only</code> scope.</td>
 </tr>
 <tr>
-<td>SpaceAuditor</td>
-<td>This role allows read-only access to a Space for auditing purposes</td>
+<td>Global Auditor</td>
+<td>Allows a user to read all resources on the platform, excluding sensitive data such as environment variables and service bindings. OAuth token must contain <code class="prettyprint">cloud_controller.global_auditor</code> scope.</td>
+</tr>
+<tr>
+<td>Org Member</td>
+<td>Allows a user to be assigned other roles within an Organization and its Spaces</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td>Provides Organization management access</td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+<td>Provides read-only access to a Organization for auditing purposes</td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+<td>Allows a user to create and manage billing account and payment information</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td>Allows developers to create and manage apps and services in a Space</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+<td>Provides Space management access</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+<td>Provides read-only access to a Space for auditing purposes</td>
 </tr>
 </tbody></table>
 
@@ -928,6 +956,21 @@ This section is meant to explain how clients can perform complex workflows using
 </tr>
 </tbody></table>
 
+<h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-a-task">Get a task</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -975,6 +1018,36 @@ in the response based on the user&rsquo;s role.</p>
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/tasks/:guid</code></p>
+
+<h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h3 id="cancel-a-task">Cancel a task</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -1028,6 +1101,21 @@ in the response based on the user&rsquo;s role.</p>
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">PUT /v3/tasks/:task_guid/cancel</code></p>
+
+<h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-tasks">List tasks</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -1500,6 +1588,21 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-an-app">Get an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -1571,6 +1674,36 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-environment-for-an-app">Get environment for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -1634,6 +1767,30 @@ It will include environment variables for Environment Variable Groups and Servic
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/env</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+</tbody></table>
 
           <h3 id="update-an-app">Update an app</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -1745,6 +1902,21 @@ It will include environment variables for Environment Variable Groups and Servic
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="set-current-droplet">Set current droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -1781,6 +1953,21 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p><code class="prettyprint">PATCH /v3/apps/:guid/relationships/current_droplet</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-current-droplet">Get current droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -1812,6 +1999,36 @@ It will include environment variables for Environment Variable Groups and Servic
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/relationships/current_droplet</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h3 id="start-an-app">Start an app</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -1884,6 +2101,21 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p><code class="prettyprint">PUT /v3/apps/:guid/start</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="stop-an-app">Stop an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -1955,6 +2187,21 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p><code class="prettyprint">PUT /v3/apps/:guid/stop</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="delete-an-app">Delete an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -1970,6 +2217,21 @@ It will include environment variables for Environment Variable Groups and Servic
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/apps/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-apps">List apps</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -2349,19 +2611,34 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <td><strong>staging_memory_in_mb</strong></td>
 <td><em>integer</em></td>
 <td>Memory limit used to stage package.</td>
-<td></td>
+<td>operator-configured <code class="prettyprint">minimum_staging_memory_mb</code></td>
 </tr>
 <tr>
 <td><strong>staging_disk_in_mb</strong></td>
 <td><em>integer</em></td>
 <td>Disk limit used to stage package.</td>
-<td></td>
+<td>operator-configured <code class="prettyprint">minimum_staging_disk_mb</code></td>
 </tr>
 <tr>
 <td><strong>lifecycle</strong></td>
 <td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
 <td>Lifecycle information for a droplet.</td>
 <td>lifecycle on the app</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -2441,6 +2718,21 @@ environment variables listed on the source droplet.</p>
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
 <td>Source guid of the droplet to be copied.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -2538,6 +2830,36 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/droplets/:guid</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="delete-a-droplet">Delete a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -2553,6 +2875,21 @@ environment variables listed on the source droplet.</p>
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/droplets/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-droplets">List droplets</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -3110,8 +3447,6 @@ environment variables listed on the source droplet.</p>
 
 </span></code></pre>
 
-<p>Only Admins can create isolation segments.</p>
-
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">POST /v3/isolation_segments</code></p>
@@ -3129,6 +3464,18 @@ environment variables listed on the source droplet.</p>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
 <td>Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -3165,6 +3512,36 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="update-an-isolation-segment">Update an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -3196,8 +3573,6 @@ environment variables listed on the source droplet.</p>
 
 </span></code></pre>
 
-<p>Only Admins can update isolation segments.</p>
-
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">PATCH /v3/isolation_segments/:guid</code></p>
@@ -3218,6 +3593,18 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="delete-an-isolation-segment">Delete an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -3230,11 +3617,23 @@ environment variables listed on the source droplet.</p>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
-<p>An isolation segment cannot be deleted if it is still in the allowed list for any organization.  Only Admins can delete isolation segments.</p>
+<p>An isolation segment cannot be deleted if it is entitled to any organization.</p>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/isolation_segments/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-isolation-segments">List isolation segments</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -3426,8 +3825,8 @@ environment variables listed on the source droplet.</p>
 
 </span></code></pre>
 
-<p>This endpoint entitles the specified organizations for the isolation segment.  Only Admins can entitle organizations for isolation segments.
-In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the  default for that organization.</p>
+<p>This endpoint entitles the specified organizations for the isolation segment.
+In the case where the specified isolation segment is the system-wide shared segment, and if an organization is not already entitled for any other isolation segment, then the shared isolation segment automatically gets assigned as the default for that organization.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -3449,6 +3848,18 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="revoke-entitlement-to-isolation-segment-for-an-organization">Revoke entitlement to isolation segment for an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -3461,11 +3872,23 @@ In the case where the specified isolation segment is the system-wide shared segm
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
-<p>This endpoint revokes the entitlement for the specified organization to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization&rsquo;s default, the entitlement cannot be revoked.</p>
+<p>This endpoint revokes the entitlement for the specified organization to the isolation segment. If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization&rsquo;s default, the entitlement cannot be revoked.</p>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-organizations-relationship">List organizations relationship</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -3506,6 +3929,32 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid/relationships/organizations</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+</tr>
+</tbody></table>
+
+<p>Org Member
+Space Developer |
+Space Manager |
+Space Auditor |
+Admin |
+Admin Read-Only |
+Global Auditor |</p>
+
           <h3 id="list-spaces-relationship">List spaces relationship</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -3541,6 +3990,36 @@ In the case where the specified isolation segment is the system-wide shared segm
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid/relationships/spaces</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h2 id="organizations">Organizations</h2>
 
@@ -3780,7 +4259,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 </span></code></pre>
 
-<p>Set the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
+<p>Set the default isolation segment for a given organization.
 Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.</p>
 
 <aside class="notice">Apps will not run in the new default isolation segment until they are restarted.</aside>
@@ -3802,6 +4281,21 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><strong>data</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>Isolation segment relationship. Apps will run in this isolation segment. Set data to <code class="prettyprint">null</code> to remove the relationship.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -3838,6 +4332,45 @@ Only isolation segments that are entitled to the organization are eligible to be
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/organizations/:guid/relationships/default_isolation_segment</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+</tr>
+<tr>
+<td>Org Member</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h2 id="packages">Packages</h2>
 
@@ -4099,6 +4632,21 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-a-package">Get a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4151,6 +4699,36 @@ Only isolation segments that are entitled to the organization are eligible to be
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/packages/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h3 id="stage-a-package">Stage a package</h3>
 
@@ -4228,6 +4806,21 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="download-package-bits">Download package bits</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4252,6 +4845,21 @@ the request in that case. Clients may need to follow the redirect without includ
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/packages/:guid/download</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="copy-a-package">Copy a Package</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -4312,6 +4920,21 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="delete-a-package">Delete a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4327,6 +4950,21 @@ the request in that case. Clients may need to follow the redirect without includ
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/packages/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-packages">List packages</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -4815,6 +5453,36 @@ the request in that case. Clients may need to follow the redirect without includ
 <p><code class="prettyprint">GET /v3/processes/:guid</code> <br>
 <code class="prettyprint">GET /v3/apps/:guid/processes/:type</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-stats-for-a-process">Get stats for a process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4860,6 +5528,36 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <p><code class="prettyprint">GET /v3/processes/:guid/stats</code> <br>
 <code class="prettyprint">GET /v3/apps/:guid/processes/:type/stats</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h3 id="update-a-process">Update a process</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -4940,6 +5638,21 @@ the request in that case. Clients may need to follow the redirect without includ
 <td><strong>health_check</strong></td>
 <td><a href="#the-health_check-object"><em>health_check object</em></a></td>
 <td>The health check to perform on the process.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -5030,6 +5743,21 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="terminate-a-process-instance">Terminate a process instance</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5050,6 +5778,21 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <p><code class="prettyprint">DELETE /v3/processes/:guid/instances/:index</code> <br>
 <code class="prettyprint">DELETE /v3/apps/:guid/processes/:type/instances/:index</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-processes">List processes</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -5491,6 +6234,21 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-a-route-mapping">Get a route mapping</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5530,6 +6288,36 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <p><code class="prettyprint">GET /v3/route_mappings/:guid</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="delete-a-route-mapping">Delete a route mapping</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5545,6 +6333,21 @@ the request in that case. Clients may need to follow the redirect without includ
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/route_mappings/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-route-mappings">List route mappings</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -5922,6 +6725,21 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-a-service-binding">Get a service binding</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5965,6 +6783,36 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <p><code class="prettyprint">GET /v3/service_bindings/:guid</code></p>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="delete-a-service-binding">Delete a service binding</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5980,6 +6828,21 @@ the request in that case. Clients may need to follow the redirect without includ
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">DELETE /v3/service_bindings/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
 
           <h3 id="list-service-bindings">List service bindings</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -6266,8 +7129,7 @@ the request in that case. Clients may need to follow the redirect without includ
 </span></code></pre>
 
 <p>This endpoint assigns an isolation segment to the space.
-The space&rsquo;s parent organization must have already been
-entitled to the isolation_segment.</p>
+The isolatoin segment must be entitled to the space&rsquo;s parent organization.</p>
 
 <aside calss="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
 
@@ -6288,6 +7150,21 @@ entitled to the isolation_segment.</p>
 <td><strong>data</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>Isolation segment relationship. Apps will run in this isolation segment. Set data to <code class="prettyprint">null</code> to remove the relationship.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -6319,11 +7196,39 @@ entitled to the isolation_segment.</p>
 
 </span></code></pre>
 
-<p>Retrieve the isolation segment currently assigned to the space.</p>
-
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/spaces/:guid/relationships/isolation_segment</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
       </div>
       <div class="dark-box">
