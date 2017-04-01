@@ -42,8 +42,8 @@ Content-Type: application/json
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
 **environment_variables** | _object_ | Environment variables to use during staging. Environment variable names may not start with `VCAP_` or `CF_`. `PORT` is not a valid environment variable. | `{}`
-**staging_memory_in_mb** | _integer_ | Memory limit used to stage package. |
-**staging_disk_in_mb** | _integer_ | Disk limit used to stage package. |
+**staging_memory_in_mb** | _integer_ | Memory limit used to stage package. | operator-configured `minimum_staging_memory_mb`
+**staging_disk_in_mb** | _integer_ | Disk limit used to stage package. | operator-configured `minimum_staging_disk_mb`
 **lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Lifecycle information for a droplet. | lifecycle on the app
 
 #### Permitted Roles
