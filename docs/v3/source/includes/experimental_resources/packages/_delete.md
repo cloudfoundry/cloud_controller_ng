@@ -20,3 +20,9 @@ HTTP/1.1 204 No Content
 
 #### Definition
 `DELETE /v3/packages/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

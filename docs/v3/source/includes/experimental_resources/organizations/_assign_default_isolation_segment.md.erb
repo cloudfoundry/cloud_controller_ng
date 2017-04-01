@@ -27,7 +27,7 @@ Content-Type: application/json
 <%= yield_content :default_isolation_segment_relationship, '/v3/organizations/:guid/relationships/default_isolation_segment' %>
 ```
 
-Set the default isolation segment for a given organization.  Only Admins and Org Managers can set the default.
+Set the default isolation segment for a given organization.
 Only isolation segments that are entitled to the organization are eligible to be the default isolation segment.
 
 <aside class="notice">Apps will not run in the new default isolation segment until they are restarted.</aside>
@@ -40,3 +40,9 @@ Only isolation segments that are entitled to the organization are eligible to be
 Name | Type | Description
 ---- | ---- | -----------
 **data** | [_to-one relationship_](#to-one-relationships) | Isolation segment relationship. Apps will run in this isolation segment. Set data to `null` to remove the relationship.
+
+#### Permitted Roles
+ |
+--- | ---
+Org Manager |
+Admin |

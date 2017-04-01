@@ -22,7 +22,6 @@ Content-Type: application/json
 
 <%= yield_content :isolation_segment_with_name, 'my_isolation_segment' %>
 ```
-Only Admins can update isolation segments.
 
 #### Definition
 `PATCH /v3/isolation_segments/:guid`
@@ -32,3 +31,8 @@ Only Admins can update isolation segments.
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |

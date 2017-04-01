@@ -20,3 +20,9 @@ HTTP/1.1 204 No Content
 
 #### Definition
 `DELETE /v3/service_bindings/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

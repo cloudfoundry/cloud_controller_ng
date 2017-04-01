@@ -28,8 +28,7 @@ Content-Type: application/json
 ```
 
 This endpoint assigns an isolation segment to the space.
-The space's parent organization must have already been
-entitled to the isolation_segment.
+The isolatoin segment must be entitled to the space's parent organization.
 
 <aside calss="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
 
@@ -41,3 +40,9 @@ entitled to the isolation_segment.
 Name | Type | Description
 ---- | ---- | -----------
 **data** | [_to-one relationship_](#to-one-relationships) | Isolation segment relationship. Apps will run in this isolation segment. Set data to `null` to remove the relationship.
+
+#### Permitted Roles
+ |
+--- | ---
+Org Manager |
+Admin |

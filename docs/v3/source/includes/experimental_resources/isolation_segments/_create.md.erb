@@ -24,7 +24,6 @@ Content-Type: application/json
 
 <%= yield_content :single_isolation_segment %>
 ```
-Only Admins can create isolation segments.
 
 #### Definition
 `POST /v3/isolation_segments`
@@ -34,3 +33,8 @@ Only Admins can create isolation segments.
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |

@@ -22,10 +22,17 @@ cloud_controller.write | This scope provides write access to resources based on 
 #### Cloud Foundry User Roles
 
 Role | Description
----------- | -------
-SpaceManager | This role provides Space management access
-SpaceDeveloper | This role allows developers to create and manage apps and services in a Space
-SpaceAuditor | This role allows read-only access to a Space for auditing purposes
+---------------------------------------------------- | -------
+Admin               | Allows a user to manage the platform. OAuth token must contain `cloud_controller.admin` scope.
+Admin Read-Only     | Allows a user to read all resources on the platform. OAuth token must contain `cloud_controller.admin_read_only` scope.
+Global Auditor      | Allows a user to read all resources on the platform, excluding sensitive data such as environment variables and service bindings. OAuth token must contain `cloud_controller.global_auditor` scope.
+Org Member          | Allows a user to be assigned other roles within an Organization and its Spaces
+Org Manager         | Provides Organization management access
+Org Auditor         | Provides read-only access to a Organization for auditing purposes
+Org Billing Manager | Allows a user to create and manage billing account and payment information
+Space Developer     | Allows developers to create and manage apps and services in a Space
+Space Manager       | Provides Space management access
+Space Auditor       | Provides read-only access to a Space for auditing purposes
 
 ## Status Codes
 

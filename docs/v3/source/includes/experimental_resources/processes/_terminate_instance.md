@@ -25,3 +25,9 @@ This allows a user to stop a single misbehaving instance of a process.
 #### Definition
 `DELETE /v3/processes/:guid/instances/:index` <br>
 `DELETE /v3/apps/:guid/processes/:type/instances/:index`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |
