@@ -95,13 +95,6 @@ module VCAP::CloudController
         end
       end
 
-      def generate_annotation(config, lifecycle_type, staging_details)
-        {
-          lifecycle:           lifecycle_type,
-          completion_callback: staging_completion_callback(staging_details, config)
-        }.to_json
-      end
-
       def generate_egress_rules(staging_details)
         @egress_rules.staging(app_guid: staging_details.package.app_guid).map do |rule|
           ::Diego::Bbs::Models::SecurityGroupRule.new(
