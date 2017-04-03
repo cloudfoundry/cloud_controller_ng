@@ -15,16 +15,14 @@ module VCAP::CloudController
 
     validates :type, inclusion: { in: %w(bits docker), message: 'must be one of \'bits, docker\'' }
 
+    delegate :app_guid, to: :relationships_message
+
     def self.create_from_http_request(body)
       PackageCreateMessage.new(body.deep_symbolize_keys)
     end
 
     def bits_type?
       type == 'bits'
-    end
-
-    def app_guid
-      HashUtils.dig(relationships, :app, :data, :guid)
     end
 
     def docker_type?
@@ -34,6 +32,12 @@ module VCAP::CloudController
     def docker_data
       OpenStruct.new(data) if docker_type?
     end
+
+    def relationships_message
+      @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
+    end
+
+    private
 
     class Relationships < BaseMessage
       attr_accessor :app
@@ -45,9 +49,11 @@ module VCAP::CloudController
       validates_with NoAdditionalKeysValidator
 
       validates :app, presence: true, allow_nil: false, to_one_relationship_2: true
-    end
 
-    private
+      def app_guid
+        HashUtils.dig(app, :data, :guid)
+      end
+    end
 
     def allowed_keys
       ALLOWED_KEYS

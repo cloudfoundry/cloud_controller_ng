@@ -89,10 +89,10 @@ module VCAP::CloudController::Validators
     def validate(record)
       return if !record.relationships.is_a?(Hash)
 
-      rel = record.class::Relationships.new(record.relationships.symbolize_keys)
+      rel = record.relationships_message
 
       if !rel.valid?
-        record.errors[:relationships].concat rel.errors.full_messages
+        record.errors[:relationships].concat(rel.errors.full_messages)
       end
     end
   end
@@ -104,7 +104,7 @@ module VCAP::CloudController::Validators
       data = record.class::Data.new(record.data.symbolize_keys)
 
       if !data.valid?
-        record.errors[:data].concat data.errors.full_messages
+        record.errors[:data].concat(data.errors.full_messages)
       end
     end
   end

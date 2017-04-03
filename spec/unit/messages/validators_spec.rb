@@ -248,6 +248,10 @@ module VCAP::CloudController::Validators
           [:relationships]
         end
 
+        def relationships_message
+          Relationships.new(relationships.deep_symbolize_keys)
+        end
+
         validates_with RelationshipValidator
 
         class Relationships < VCAP::CloudController::BaseMessage

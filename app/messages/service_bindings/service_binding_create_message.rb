@@ -18,16 +18,14 @@ module VCAP::CloudController
     validates :type, string: true, presence: true
     validates_inclusion_of :type, in: ALLOWED_TYPES, message: 'type must be app'
 
-    def app_guid
-      HashUtils.dig(relationships, :app, :guid)
-    end
-
-    def service_instance_guid
-      HashUtils.dig(relationships, :service_instance, :guid)
-    end
+    delegate :app_guid, :service_instance_guid, to: :relationships_message
 
     def parameters
       HashUtils.dig(data, :parameters)
+    end
+
+    def relationships_message
+      @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
     end
 
     class Relationships < BaseMessage
@@ -36,6 +34,14 @@ module VCAP::CloudController
 
       def allowed_keys
         [:service_instance, :app]
+      end
+
+      def app_guid
+        HashUtils.dig(app, :guid)
+      end
+
+      def service_instance_guid
+        HashUtils.dig(service_instance, :guid)
       end
 
       validates_with NoAdditionalKeysValidator

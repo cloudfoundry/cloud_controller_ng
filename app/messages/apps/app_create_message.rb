@@ -31,9 +31,7 @@ module VCAP::CloudController
       allow_nil: false,
       if: lifecycle_requested?
 
-    def space_guid
-      HashUtils.dig(relationships, :space, :data, :guid)
-    end
+    delegate :space_guid, to: :relationships_message
 
     def lifecycle_type
       HashUtils.dig(lifecycle, :type)
@@ -47,6 +45,10 @@ module VCAP::CloudController
       @buildpack_data ||= BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
     end
 
+    def relationships_message
+      @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
+    end
+
     class Relationships < BaseMessage
       attr_accessor :space
 
@@ -57,6 +59,10 @@ module VCAP::CloudController
       validates_with NoAdditionalKeysValidator
 
       validates :space, presence: true, allow_nil: false, to_one_relationship_2: true
+
+      def space_guid
+        HashUtils.dig(space, :data, :guid)
+      end
     end
 
     private
