@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ProcessUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:command, :health_check, :ports].freeze
+    ALLOWED_KEYS = [:command, :health_check].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -20,10 +20,6 @@ module VCAP::CloudController
       @health_check_requested ||= proc { |a| a.requested?(:health_check) }
     end
 
-    def self.ports_requested?
-      @ports_requested ||= proc { |a| a.requested?(:ports) }
-    end
-
     validates_with NoAdditionalKeysValidator
 
     validates :command,
@@ -39,38 +35,6 @@ module VCAP::CloudController
     allow_nil: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 },
     if: health_check_requested?
-
-    validate :port_validations, if: ports_requested?
-
-    def port_validations
-      unless ports.is_a?(Array)
-        errors.add(:ports, 'must be an array')
-        return
-      end
-
-      if ports.count > 10
-        errors.add(:ports, 'may only contain up to 10 ports')
-      end
-
-      contains_non_integers = false
-      contains_invalid_port = false
-
-      ports.each do |port|
-        unless port.is_a?(Integer)
-          contains_non_integers = true
-          next
-        end
-        contains_invalid_port = true if port < 1024 || port > 65535
-      end
-
-      if contains_non_integers
-        errors.add(:ports, 'must be an array of integers')
-      end
-
-      if contains_invalid_port
-        errors.add(:ports, 'may only contain ports between 1024 and 65535')
-      end
-    end
 
     def health_check_type
       HashUtils.dig(health_check, :type)

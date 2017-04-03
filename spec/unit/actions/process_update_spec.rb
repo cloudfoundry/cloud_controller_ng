@@ -11,7 +11,7 @@ module VCAP::CloudController
         data: { timeout: 20 }
       }
     end
-    let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check, ports: [1234, 5678] }) }
+    let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check }) }
     let!(:process) do
       App.make(
         :process,
@@ -33,7 +33,6 @@ module VCAP::CloudController
         expect(process.command).to eq('new')
         expect(process.health_check_type).to eq('process')
         expect(process.health_check_timeout).to eq(20)
-        expect(process.ports).to match_array([1234, 5678])
       end
 
       context 'when no changes are requested' do
@@ -72,7 +71,6 @@ module VCAP::CloudController
           user_audit_info,
           {
             'command'      => 'new',
-            'ports'        => [1234, 5678],
             'health_check' => {
               type: 'process',
               data: { timeout: 20 }

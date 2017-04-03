@@ -435,7 +435,6 @@ RSpec.describe 'Processes' do
 
       update_request = {
         command:      'new command',
-        ports:        [1234, 5678],
         health_check: {
           type: 'process',
           data: {
@@ -479,7 +478,6 @@ RSpec.describe 'Processes' do
       expect(process.command).to eq('new command')
       expect(process.health_check_type).to eq('process')
       expect(process.health_check_timeout).to eq(20)
-      expect(process.ports).to match_array([1234, 5678])
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
@@ -498,7 +496,6 @@ RSpec.describe 'Processes' do
         'process_type' => 'web',
         'request'      => {
           'command'      => 'PRIVATE DATA HIDDEN',
-          'ports'        => [1234, 5678],
           'health_check' => {
             'type' => 'process',
             'data' => {

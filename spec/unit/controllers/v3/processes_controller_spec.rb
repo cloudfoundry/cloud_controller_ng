@@ -278,15 +278,6 @@ RSpec.describe ProcessesController, type: :controller do
       expect(parsed_body['guid']).to eq(process_type.guid)
     end
 
-    context 'when the provided request to update the port is an empty array' do
-      it 'update the model successfully' do
-        patch :update, { ports: [], health_check: { type: 'process' } }.to_json, { process_guid: process_type.guid, type: :json }
-
-        expect(process_type.reload.ports).to eq([])
-        expect(response.status).to eq(200)
-      end
-    end
-
     context 'when the process does not exist' do
       it 'raises an ApiError with a 404 code' do
         patch :update, req_body.to_json, { process_guid: 'made-up-guid' }

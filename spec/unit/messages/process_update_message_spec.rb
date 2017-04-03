@@ -51,13 +51,13 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when unexpected keys are requested' do
-        let(:params) { { unexpected: 'foo', extra: 'bar' } }
+        let(:params) { { unexpected: 'foo', extra: 'bar', ports: [8181] } }
 
         it 'is not valid' do
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.full_messages[0]).to include("Unknown field(s): 'unexpected', 'extra'")
+          expect(message.errors.full_messages[0]).to include("Unknown field(s): 'unexpected', 'extra', 'ports'")
         end
       end
 
@@ -162,89 +162,6 @@ module VCAP::CloudController
             health_check: {
               type: 'port'
             }
-          }
-        end
-
-        it 'is valid' do
-          message = ProcessUpdateMessage.new(params)
-          expect(message).to be_valid
-        end
-      end
-
-      context 'when ports is not an array' do
-        let(:params) do
-          {
-            ports: 'potato'
-          }
-        end
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('must be an array')
-        end
-      end
-
-      context 'when ports has an array with non-integers' do
-        let(:params) do
-          {
-            ports: ['potato']
-          }
-        end
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('must be an array of integers')
-        end
-      end
-
-      context 'when a port is not in the range 1024-65535' do
-        let(:params) do
-          {
-            ports: [1023]
-          }
-        end
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('may only contain ports between 1024 and 65535')
-        end
-      end
-
-      context 'when there are more than 10 ports' do
-        let(:params) do
-          {
-            ports: (1..11).to_a
-          }
-        end
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('may only contain up to 10 ports')
-        end
-      end
-
-      context 'when ports is nil' do
-        let(:params) do
-          {
-            ports: nil
-          }
-        end
-
-        it 'is not valid' do
-          message = ProcessUpdateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:ports)).to include('must be an array')
-        end
-      end
-
-      context 'when ports is an empty array' do
-        let(:params) do
-          {
-            ports: []
           }
         end
 
