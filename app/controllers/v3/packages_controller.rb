@@ -94,11 +94,11 @@ class PackagesController < ApplicationController
   end
 
   def create
-    if params[:source_guid]
-      create_copy
-    else
-      create_fresh
-    end
+    package = params[:source_guid] ? create_copy : create_fresh
+
+    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
+  rescue PackageCopy::InvalidPackage, PackageCreate::InvalidPackage => e
+    unprocessable!(e.message)
   end
 
   private
@@ -111,15 +111,11 @@ class PackagesController < ApplicationController
     unprocessable_app! unless app && can_read?(app.space.guid, app.organization.guid)
     unauthorized! unless can_write?(app.space.guid)
 
-    package = PackageCreate.create(message: message, user_audit_info: user_audit_info)
-
-    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
-  rescue PackageCreate::InvalidPackage => e
-    unprocessable!(e.message)
+    PackageCreate.create(message: message, user_audit_info: user_audit_info)
   end
 
   def create_copy
-    app_guid = params[:body][:relationships][:app][:data][:guid]
+    app_guid = HashUtils.dig(params, :body, :relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless can_write?(destination_app.space.guid)
@@ -128,15 +124,11 @@ class PackagesController < ApplicationController
     package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
     unauthorized! unless can_write?(source_package.space.guid)
 
-    package = PackageCopy.new.copy(
+    PackageCopy.new.copy(
       destination_app_guid: app_guid,
       source_package:       source_package,
       user_audit_info:      user_audit_info
     )
-
-    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
-  rescue PackageCopy::InvalidPackage => e
-    unprocessable!(e.message)
   end
 
   def package_not_found!
