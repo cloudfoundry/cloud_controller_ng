@@ -37,6 +37,7 @@ includes:
   - experimental_resources/apps/env
   - experimental_resources/apps/update
   - experimental_resources/apps/current_droplet
+  - experimental_resources/apps/get_current_droplet_relationship
   - experimental_resources/apps/get_current_droplet
   - experimental_resources/apps/start
   - experimental_resources/apps/stop

@@ -784,6 +784,53 @@ RSpec.describe 'Apps' do
     end
   end
 
+  describe 'GET /v3/apps/:guid/relationships/current_droplet' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:guid) { droplet_model.guid }
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:droplet_model) do
+      VCAP::CloudController::DropletModel.make(
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                     app_model.guid,
+        package_guid:                 package_model.guid,
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
+        buildpack_receipt_stack_name: 'stack-name',
+        error_description:            'example error',
+        environment_variables:        { 'cloud' => 'foundry' },
+        execution_metadata:           'some-data',
+        droplet_hash:                 'shalalala',
+        sha256_checksum:              'droplet-sha256-checksum',
+        process_types:                { 'web' => 'start-command' },
+        staging_memory_in_mb:         100,
+        staging_disk_in_mb:           200,
+      )
+    end
+    let(:app_guid) { droplet_model.app_guid }
+
+    before do
+      droplet_model.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      app_model.droplet_guid = droplet_model.guid
+      app_model.save
+    end
+
+    it 'gets the current droplet relationship' do
+      get "/v3/apps/#{app_model.guid}/relationships/current_droplet", nil, user_header
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like({
+        'data' => {
+          'guid' => droplet_model.guid
+        },
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet" },
+          'related' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" }
+        }
+      })
+    end
+  end
+
   describe 'GET /v3/apps/:guid/droplets/current' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { droplet_model.guid }

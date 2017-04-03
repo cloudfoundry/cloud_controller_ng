@@ -1,0 +1,43 @@
+### Get current droplet association for an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/relationships/current_droplet" \
+  -X GET \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :app_current_droplet_relationship %>
+```
+
+This endpoint retrieves the current droplet relationship for an app.
+
+#### Definition
+
+`GET /v3/apps/:guid/relationships/current_droplet HTTP/1.1`
+
+#### Body Parameters
+
+<p class='no-body-parameters-outer'>
+  <span class='no-body-parameters-required'>
+    No arguments
+  </span>
+</p>
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

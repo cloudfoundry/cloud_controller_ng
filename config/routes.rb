@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   put '/apps/:guid/stop', to: 'apps_v3#stop'
   get '/apps/:guid/env', to: 'apps_v3#show_environment'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
+  get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
   get '/apps/:guid/droplets/current', to: 'apps_v3#current_droplet'
 
   # processes

@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps/[guid]/relationships/current_droplet" \
+curl "https://api.example.org/v3/apps/[guid]/droplets/current \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -18,7 +18,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :app_current_droplet_relationship %>
+<%= yield_content :single_staging_buildpack_droplet %>
 ```
 
 #### Definition
