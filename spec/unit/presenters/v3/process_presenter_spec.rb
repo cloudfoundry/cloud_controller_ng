@@ -16,7 +16,6 @@ module VCAP::CloudController::Presenters::V3
           metadata:             {},
           health_check_type:    'process',
           health_check_timeout: 51,
-          ports:                [1234, 7896],
           created_at:           Time.at(1)
         )
       }
@@ -42,7 +41,6 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:command]).to eq('rackup')
         expect(result[:health_check][:type]).to eq('process')
         expect(result[:health_check][:data][:timeout]).to eq(51)
-        expect(result[:ports]).to match_array([1234, 7896])
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
         expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
         expect(result[:links]).to eq(links)
@@ -53,18 +51,6 @@ module VCAP::CloudController::Presenters::V3
 
         it 'redacts command' do
           expect(result[:command]).to eq('[PRIVATE DATA HIDDEN]')
-        end
-      end
-
-      context 'when diego thinks that a different port should be used' do
-        let(:open_process_ports) { double(:app_ports, to_a: [5678]) }
-
-        before do
-          allow(VCAP::CloudController::Diego::Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(open_process_ports)
-        end
-
-        it 'uses those ports' do
-          expect(result[:ports]).to match_array([5678])
         end
       end
     end

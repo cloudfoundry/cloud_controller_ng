@@ -282,7 +282,6 @@ RSpec.describe ProcessesController, type: :controller do
       it 'update the model successfully' do
         patch :update, { ports: [], health_check: { type: 'process' } }.to_json, { process_guid: process_type.guid, type: :json }
 
-        expect(parsed_body['ports']).to eq([])
         expect(process_type.reload.ports).to eq([])
         expect(response.status).to eq(200)
       end

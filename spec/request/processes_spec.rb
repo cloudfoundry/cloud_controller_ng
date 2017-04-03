@@ -53,7 +53,6 @@ RSpec.describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'ports'        => [8080],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -77,7 +76,6 @@ RSpec.describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
-            'ports'        => [],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -288,7 +286,6 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -456,7 +453,6 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => [1234, 5678],
         'health_check' => {
           'type' => 'process',
           'data' => {
@@ -541,7 +537,6 @@ RSpec.describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -676,7 +671,6 @@ RSpec.describe 'Processes' do
             'instances'    => 2,
             'memory_in_mb' => 1024,
             'disk_in_mb'   => 1024,
-            'ports'        => [8080],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -700,7 +694,6 @@ RSpec.describe 'Processes' do
             'instances'    => 1,
             'memory_in_mb' => 100,
             'disk_in_mb'   => 200,
-            'ports'        => [],
             'health_check' => {
               'type' => 'port',
               'data' => {
@@ -796,7 +789,6 @@ RSpec.describe 'Processes' do
         'instances'    => 2,
         'memory_in_mb' => 1024,
         'disk_in_mb'   => 1024,
-        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
@@ -956,7 +948,6 @@ RSpec.describe 'Processes' do
         'instances'    => 5,
         'memory_in_mb' => 10,
         'disk_in_mb'   => 20,
-        'ports'        => [8080],
         'health_check' => {
           'type' => 'port',
           'data' => {
