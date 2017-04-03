@@ -108,8 +108,9 @@ class PackagesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
-    unprocessable_app! unless app && can_read?(app.space.guid, app.organization.guid)
-    unauthorized! unless can_write?(app.space.guid)
+    unprocessable_app! unless app &&
+      can_read?(app.space.guid, app.organization.guid) &&
+      can_write?(app.space.guid)
 
     PackageCreate.create(message: message, user_audit_info: user_audit_info)
   end

@@ -634,11 +634,11 @@ RSpec.describe PackagesController, type: :controller do
               disallow_user_write_access(user, space: space)
             end
 
-            it 'returns a 403 NotAuthorized error' do
+            it 'returns a 422 UnprocessableEntity error' do
               post :create, app_guid: app_model.guid, body: req_body
 
-              expect(response.status).to eq 403
-              expect(response.body).to include 'NotAuthorized'
+              expect(response.status).to eq 422
+              expect(response.body).to include 'UnprocessableEntity'
             end
           end
         end
@@ -778,11 +778,11 @@ RSpec.describe PackagesController, type: :controller do
       context 'when the target target_app does not exist' do
         let(:relationship_request_body) { { relationships: { app: { data: { guid: 'bogus' } } } } }
 
-        it 'returns a 404 ResourceNotFound error' do
+        it 'returns a 422 UnprocessableEntity error' do
           post :create, body: relationship_request_body, source_guid: original_package.guid
 
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
         end
       end
 
