@@ -40,19 +40,12 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:name]).to eq(app.name)
         expect(result[:desired_state]).to eq(app.desired_state)
         expect(result[:environment_variables]).to eq(app.environment_variables)
-        expect(result[:total_desired_instances]).to eq(4)
         expect(result[:created_at]).to be_a(Time)
         expect(result[:updated_at]).to be_a(Time)
         expect(result[:links]).to eq(links)
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
         expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo'])
-      end
-
-      context 'if there are no processes' do
-        it 'returns 0' do
-          expect(result[:total_desired_instances]).to eq(0)
-        end
       end
 
       context 'if environment_variables are not present' do

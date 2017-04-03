@@ -46,7 +46,6 @@ RSpec.describe 'Apps' do
           'name'                    => 'my_app',
           'guid'                    => app_guid,
           'desired_state'           => 'STOPPED',
-          'total_desired_instances' => 0,
           'lifecycle'               => {
             'type' => 'buildpack',
             'data' => {
@@ -112,7 +111,6 @@ RSpec.describe 'Apps' do
           'name'                    => 'my_app',
           'guid'                    => created_app.guid,
           'desired_state'           => 'STOPPED',
-          'total_desired_instances' => 0,
           'lifecycle'               => {
             'type' => 'docker',
             'data' => {}
@@ -194,7 +192,6 @@ RSpec.describe 'Apps' do
               'guid'                    => app_model1.guid,
               'name'                    => 'name1',
               'desired_state'           => 'STOPPED',
-              'total_desired_instances' => 0,
               'lifecycle'               => {
                 'type' => 'buildpack',
                 'data' => {
@@ -224,7 +221,6 @@ RSpec.describe 'Apps' do
               'guid'                    => app_model2.guid,
               'name'                    => 'name2',
               'desired_state'           => 'STARTED',
-              'total_desired_instances' => 0,
               'lifecycle'               => {
                 'type' => 'docker',
                 'data' => {}
@@ -405,7 +401,6 @@ RSpec.describe 'Apps' do
           'name'                    => 'my_app',
           'guid'                    => app_model.guid,
           'desired_state'           => 'STARTED',
-          'total_desired_instances' => 3,
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
           'environment_variables'   => { 'unicorn' => 'horn' },
@@ -602,7 +597,6 @@ RSpec.describe 'Apps' do
           'name'                    => 'new-name',
           'guid'                    => app_model.guid,
           'desired_state'           => 'STOPPED',
-          'total_desired_instances' => 0,
           'lifecycle'               => {
             'type' => 'buildpack',
             'data' => {
@@ -674,7 +668,6 @@ RSpec.describe 'Apps' do
         'name'                    => 'app-name',
         'guid'                    => app_model.guid,
         'desired_state'           => 'STARTED',
-        'total_desired_instances' => 0,
         'created_at'              => iso8601,
         'updated_at'              => iso8601,
         'environment_variables'   => {},
@@ -742,7 +735,6 @@ RSpec.describe 'Apps' do
           'name'                    => 'app-name',
           'guid'                    => app_model.guid,
           'desired_state'           => 'STOPPED',
-          'total_desired_instances' => 0,
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
           'environment_variables'   => {},

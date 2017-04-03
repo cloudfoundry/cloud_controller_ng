@@ -9,7 +9,6 @@ module VCAP::CloudController
             guid:                    app.guid,
             name:                    app.name,
             desired_state:           app.desired_state,
-            total_desired_instances: app.processes.map(&:instances).reduce(:+) || 0,
             created_at:              app.created_at,
             updated_at:              app.updated_at,
             lifecycle:               {
