@@ -117,12 +117,14 @@ class PackagesController < ApplicationController
   def create_copy
     app_guid = HashUtils.dig(params, :body, :relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
-    app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless can_write?(destination_app.space.guid)
+    unprocessable_app! unless destination_app &&
+      can_read?(destination_app.space.guid, destination_app.organization.guid) &&
+      can_write?(destination_app.space.guid)
 
     source_package = PackageModel.where(guid: params[:source_guid]).eager(:app, :space, space: :organization).all.first
-    package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
-    unauthorized! unless can_write?(source_package.space.guid)
+    unprocessable_source_package! unless source_package &&
+      can_read?(source_package.space.guid, source_package.space.organization.guid) &&
+      can_write?(source_package.space.guid)
 
     PackageCopy.new.copy(
       destination_app_guid: app_guid,
@@ -146,5 +148,9 @@ class PackagesController < ApplicationController
 
   def unprocessable_app!
     unprocessable!('App is invalid. Ensure it exists and you have access to it.')
+  end
+
+  def unprocessable_source_package!
+    unprocessable!('Source package is invalid. Ensure it exists and you have access to it.')
   end
 end

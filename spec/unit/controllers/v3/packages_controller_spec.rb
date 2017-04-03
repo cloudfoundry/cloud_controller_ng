@@ -716,11 +716,11 @@ RSpec.describe PackagesController, type: :controller do
             disallow_user_read_access(user, space: source_space)
           end
 
-          it 'returns a 404 ResourceNotFound error' do
+          it 'returns a 422 UnprocessableEntity error' do
             post :create, body: relationship_request_body, source_guid: original_package.guid
 
-            expect(response.status).to eq 404
-            expect(response.body).to include 'ResourceNotFound'
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
           end
         end
 
@@ -730,11 +730,11 @@ RSpec.describe PackagesController, type: :controller do
             disallow_user_write_access(user, space: source_space)
           end
 
-          it 'returns a 403 NotAuthorized error' do
+          it 'returns a 422 UnprocessableEntity error' do
             post :create, body: relationship_request_body, source_guid: original_package.guid
 
-            expect(response.status).to eq 403
-            expect(response.body).to include 'NotAuthorized'
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
           end
         end
 
@@ -743,11 +743,11 @@ RSpec.describe PackagesController, type: :controller do
             disallow_user_read_access(user, space: destination_space)
           end
 
-          it 'returns a 404 ResourceNotFound error' do
+          it 'returns a 422 UnprocessableEntity error' do
             post :create, body: relationship_request_body, source_guid: original_package.guid
 
-            expect(response.status).to eq 404
-            expect(response.body).to include 'ResourceNotFound'
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
           end
         end
 
@@ -757,21 +757,21 @@ RSpec.describe PackagesController, type: :controller do
             disallow_user_write_access(user, space: destination_space)
           end
 
-          it 'returns a 403 NotAuthorized error' do
+          it 'returns a 422 UnprocessableEntity error' do
             post :create, body: relationship_request_body, source_guid: original_package.guid
 
-            expect(response.status).to eq 403
-            expect(response.body).to include 'NotAuthorized'
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
           end
         end
       end
 
       context 'when the source package does not exist' do
-        it 'returns a 404 ResourceNotFound error' do
+        it 'returns a 422 UnprocessableEntity error' do
           post :create, body: relationship_request_body, source_guid: 'bogus package guid'
 
-          expect(response.status).to eq 404
-          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
         end
       end
 
