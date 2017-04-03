@@ -298,7 +298,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         patch :update_default_isolation_segment, req_body, { guid: org2.guid }
 
         org.reload
-        error_string = "Unable to assign isolation segment with guid '#{isolation_segment.guid}'. Ensure it has been entitled to the organization that this space belongs to."
+        error_string = "Unable to assign isolation segment with guid '#{isolation_segment.guid}'. Ensure it has been entitled to the organization."
 
         expect(response.status).to eq(422)
         expect(response.body).to include 'UnprocessableEntity'
@@ -328,7 +328,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
         expect(response.status).to eq(422)
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include "Unable to assign isolation segment with guid 'garbage-guid'. Ensure it has been entitled to the organization that this space belongs to."
+        expect(response.body).to include "Unable to assign isolation segment with guid 'garbage-guid'. Ensure it has been entitled to the organization."
       end
     end
 

@@ -25,7 +25,7 @@ module VCAP::CloudController
     private
 
     def invalid_relationship!(isolation_segment_guid)
-      raise Error.new "Unable to assign isolation segment with guid '#{isolation_segment_guid}'. Ensure it has been entitled to the organization that this space belongs to."
+      raise Error.new "Unable to assign isolation segment with guid '#{isolation_segment_guid}'. Ensure it has been entitled to the organization."
     end
   end
 end
