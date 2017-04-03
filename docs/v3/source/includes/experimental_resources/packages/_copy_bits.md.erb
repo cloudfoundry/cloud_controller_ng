@@ -5,9 +5,19 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps/[guid]/packages?source_package_guid=[guid]" \
+curl "https://api.example.org/v3/packages/?source_guid=[guid]" \
   -X POST \
-  -H "Authorization: bearer [token]"
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "relationships": {
+      "app": {
+        "data": {
+          "guid": [destination-app-guid]
+        }
+      }
+    }
+  }'
 ```
 
 ```
@@ -30,7 +40,13 @@ This endpoint copies the bits of a source package to a target package.
 
 Name | Type | Description
 ---- | ---- | -----------
-**source_package_guid** | _uuid_ | Source of package to copy from.
+**source_guid** | _uuid_ | GUID of the source package to copy from.
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**app** | [_to-one relationship_](#to-one-relationships) | A relationship to the destination app.
 
 #### Permitted Roles
  |
