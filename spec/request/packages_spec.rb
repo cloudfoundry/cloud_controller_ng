@@ -83,7 +83,13 @@ RSpec.describe 'Packages' do
 
       it 'copies a package' do
         expect {
-          post "/v3/apps/#{guid}/packages?source_package_guid=#{source_package_guid}", {}, user_header
+          post "/v3/packages?source_guid=#{source_package_guid}",
+            {
+              relationships: {
+                app: { data: { guid: guid } },
+              }
+            },
+            user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -108,7 +114,7 @@ RSpec.describe 'Packages' do
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(expected_response)
 
-        expected_metadata = {
+        expected_event_metadata = {
           package_guid: package.guid,
           request: {
             source_package_guid: source_package_guid
@@ -125,7 +131,7 @@ RSpec.describe 'Packages' do
           actee:             package.app.guid,
           actee_type:        'app',
           actee_name:        package.app.name,
-          metadata:          expected_metadata,
+          metadata:          expected_event_metadata,
           space_guid:        space.guid,
           organization_guid: space.organization.guid
         })

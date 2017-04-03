@@ -94,6 +94,16 @@ class PackagesController < ApplicationController
   end
 
   def create
+    if params[:source_guid]
+      create_copy
+    else
+      create_fresh
+    end
+  end
+
+  private
+
+  def create_fresh
     message = PackageCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -109,16 +119,17 @@ class PackagesController < ApplicationController
   end
 
   def create_copy
-    destination_app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
+    app_guid = params[:body][:relationships][:app][:data][:guid]
+    destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
     app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless can_write?(destination_app.space.guid)
 
-    source_package = PackageModel.where(guid: params[:source_package_guid]).eager(:app, :space, space: :organization).all.first
+    source_package = PackageModel.where(guid: params[:source_guid]).eager(:app, :space, space: :organization).all.first
     package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
     unauthorized! unless can_write?(source_package.space.guid)
 
     package = PackageCopy.new.copy(
-      destination_app_guid: params[:app_guid],
+      destination_app_guid: app_guid,
       source_package:       source_package,
       user_audit_info:      user_audit_info
     )
@@ -127,8 +138,6 @@ class PackagesController < ApplicationController
   rescue PackageCopy::InvalidPackage => e
     unprocessable!(e.message)
   end
-
-  private
 
   def package_not_found!
     resource_not_found!(:package)

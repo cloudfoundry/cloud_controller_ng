@@ -529,7 +529,7 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#create' do
-    describe '#create' do
+    context 'when creating a new package' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:app_guid) { app_model.guid }
       let(:space) { app_model.space }
@@ -669,13 +669,14 @@ RSpec.describe PackagesController, type: :controller do
       end
     end
 
-    describe '#create_copy' do
+    context 'when copying an existing package' do
       let(:source_app_model) { VCAP::CloudController::AppModel.make }
       let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
       let(:target_app_model) { VCAP::CloudController::AppModel.make }
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
       let(:source_space) { source_app_model.space }
       let(:destination_space) { target_app_model.space }
+      let(:relationship_request_body) { { relationships: { app: { data: { guid: target_app_model.guid } } } } }
 
       before do
         allow_user_read_access_for(user, spaces: [source_space, destination_space])
@@ -686,10 +687,10 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 201 and the response' do
         expect(target_app_model.packages.count).to eq(0)
 
-        post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+        post :create, body: relationship_request_body, source_guid: original_package.guid
 
         copied_package = target_app_model.reload.packages.first
-        response_guid  = parsed_body['guid']
+        response_guid = parsed_body['guid']
 
         expect(response.status).to eq 201
         expect(copied_package.type).to eq(original_package.type)
@@ -703,7 +704,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create, body: relationship_request_body, source_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -716,7 +717,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 404 ResourceNotFound error' do
-            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create, body: relationship_request_body, source_guid: original_package.guid
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -730,7 +731,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create, body: relationship_request_body, source_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -743,7 +744,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 404 ResourceNotFound error' do
-            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create, body: relationship_request_body, source_guid: original_package.guid
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -757,7 +758,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+            post :create, body: relationship_request_body, source_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -767,7 +768,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the source package does not exist' do
         it 'returns a 404 ResourceNotFound error' do
-          post :create_copy, app_guid: target_app_model.guid, source_package_guid: 'bogus package guid'
+          post :create, body: relationship_request_body, source_guid: 'bogus package guid'
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -775,8 +776,10 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'when the target target_app does not exist' do
+        let(:relationship_request_body) { { relationships: { app: { data: { guid: 'bogus' } } } } }
+
         it 'returns a 404 ResourceNotFound error' do
-          post :create_copy, app_guid: 'bogus', source_package_guid: original_package.guid
+          post :create, body: relationship_request_body, source_guid: original_package.guid
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -789,7 +792,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns 422' do
-          post :create_copy, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+          post :create, body: relationship_request_body, source_guid: original_package.guid
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
