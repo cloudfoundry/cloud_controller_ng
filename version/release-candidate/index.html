@@ -2618,7 +2618,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
     "lifecycle": {
       "type": "buildpack",
       "data": {
-        "buildpacks": ["http://github.com/myorg/awesome-buildpack"],
+        "buildpacks": ["http://github.example.org/myorg/awesome-buildpack"],
         "stack": "cflinuxfs2"
       }
     }
@@ -4967,9 +4967,19 @@ the request in that case. Clients may need to follow the redirect without includ
           <h3 id="copy-a-package">Copy a Package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/packages?source_package_guid=[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/?source_guid=[guid]"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "relationships": {
+      "app": {
+        "data": {
+          "guid": [destination-app-guid]
+        }
+      }
+    }
+  }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -4982,7 +4992,7 @@ the request in that case. Clients may need to follow the redirect without includ
   </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://awesome-sauce.example.org"</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"READY"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"COPYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:09Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -5017,9 +5027,25 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>source_package_guid</strong></td>
+<td><strong>source_guid</strong></td>
 <td><em>uuid</em></td>
-<td>Source of package to copy from.</td>
+<td>GUID of the source package to copy from.</td>
+</tr>
+</tbody></table>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>app</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the destination app.</td>
 </tr>
 </tbody></table>
 
