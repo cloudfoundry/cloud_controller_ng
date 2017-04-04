@@ -35,8 +35,8 @@ class ApplicationController < ActionController::Base
   before_action :set_locale
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
-  before_action :check_read_permissions!, only: [:index, :show, :show_environment, :stats]
-  before_action :check_write_permissions!, except: [:index, :show, :not_found, :internal_error, :bad_request]
+  before_action :check_read_permissions!, only: [:index, :show, :show_env, :show_environment_variables, :stats]
+  before_action :check_write_permissions!, except: [:index, :show, :not_found, :show_environment_variables, :internal_error, :bad_request]
   before_action :null_coalesce_body
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error

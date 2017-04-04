@@ -28,6 +28,40 @@ module UserHelpers
     set_current_user(user, { global_auditor: true }.merge(opts))
   end
 
+  # rubocop:disable all
+  def set_current_user_as_role(role:, org:, space:, user: nil, scopes: nil)
+    # rubocop:enable all
+    current_user = user || VCAP::CloudController::User.make
+    set_current_user(current_user, scopes: scopes)
+
+    unless role == 'admin' || role == 'admin_read_only'
+      org.add_user(current_user)
+    end
+
+    case role
+    when 'admin'
+      set_current_user_as_admin(user: current_user, scopes: scopes)
+    when 'admin_read_only'
+      set_current_user_as_admin_read_only(user: current_user, scopes: scopes)
+    when 'space_developer'
+      space.add_developer(current_user)
+    when 'space_auditor'
+      space.add_auditor(current_user)
+    when 'space_manager'
+      space.add_manager(current_user)
+    when 'org_user'
+      # no-op
+    when 'org_auditor'
+      org.add_auditor(current_user)
+    when 'org_billing_manager'
+      org.add_billing_manager(current_user)
+    when 'org_manager'
+      org.add_manager(current_user)
+    else
+      fail("Unknown role '#{role}'")
+    end
+  end
+
   def user_token(user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
                                           skey: TestConfig.config[:uaa][:symmetric_secret],

@@ -14,8 +14,7 @@ module VCAP::CloudController
       app.db.transaction do
         app.lock!
 
-        app.name                  = message.name if message.requested?(:name)
-        app.environment_variables = message.environment_variables if message.requested?(:environment_variables)
+        app.name = message.name if message.requested?(:name)
 
         app.save
 

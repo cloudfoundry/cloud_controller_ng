@@ -449,24 +449,6 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
-
-      context 'when the user attempts to set a reserved environment variable' do
-        let(:req_body) do
-          {
-            environment_variables: {
-              VCAP_GOOFY_GOOF: 'you done goofed!'
-            }
-          }
-        end
-
-        it 'returns the correct error' do
-          put :update, guid: app_model.guid, body: req_body
-
-          expect(response.status).to eq 422
-          expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'environment_variables cannot start with VCAP_'
-        end
-      end
     end
 
     context 'lifecycle data' do
@@ -1081,7 +1063,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
-  describe '#show_environment' do
+  describe '#show_env' do
     let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -1096,7 +1078,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     it 'returns 200 and the environment variables' do
       allow(controller).to receive(:can_see_secrets?).and_return(true)
-      get :show_environment, guid: app_model.guid
+      get :show_env, guid: app_model.guid
 
       expect(response.status).to eq 200
       expect(parsed_body['environment_variables']).to eq(app_model.environment_variables)
@@ -1109,7 +1091,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns a 403' do
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -1122,7 +1104,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound error' do
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -1135,7 +1117,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'succeeds' do
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
           expect(response.status).to eq(200)
         end
       end
@@ -1146,7 +1128,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'raises ApiError NotAuthorized' do
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -1160,7 +1142,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'raises 403 for non-admins' do
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
@@ -1169,14 +1151,14 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         it 'succeeds for admins' do
           set_current_user_as_admin(user: user)
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq(200)
         end
 
         it 'succeeds for admins_read_only' do
           set_current_user_as_admin_read_only(user: user)
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq(200)
         end
@@ -1187,7 +1169,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'raises ApiError NotAuthorized as opposed to FeatureDisabled' do
-            get :show_environment, guid: app_model.guid
+            get :show_env, guid: app_model.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -1203,7 +1185,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         it 'raises 403 for all users' do
           set_current_user_as_admin(user: user)
-          get :show_environment, guid: app_model.guid
+          get :show_env, guid: app_model.guid
 
           expect(response.status).to eq(403)
           expect(response.body).to include('Feature Disabled: env_var_visibility')
@@ -1213,10 +1195,235 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the app does not exist' do
       it 'raises an ApiError with a 404 code' do
-        get :show_environment, guid: 'beep-boop'
+        get :show_env, guid: 'beep-boop'
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+  end
+
+  describe '#show_environment_variables' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+
+    let(:expected_success_response) do
+      {
+        'meep' => 'moop',
+        'beep' => 'boop',
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+        }
+      }
+    end
+
+    before do
+      set_current_user(user, scopes: ['cloud_controller.read'])
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'space_developer' => 200,
+        'org_manager' => 403,
+        'org_user' => 404,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_auditor' => 404,
+        'org_billing_manager' => 404,
+        'admin' => 200,
+        'admin_read_only' => 200
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user, scopes: ['cloud_controller.read'])
+
+            get :show_environment_variables, guid: app_model.guid
+
+            expect(response.status).to eq expected_return_value
+            if expected_return_value == 200
+              expect(parsed_body).to eq(expected_success_response)
+            end
+          end
+        end
+      end
+
+      context 'when the space_developer_env_var_visibility feature flag is disabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+        end
+
+        role_to_expected_http_response.merge({ 'space_developer' => 403 }).each do |role, expected_return_value|
+          context "as an #{role}" do
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+              get :show_environment_variables, guid: app_model.guid
+
+              expect(response.status).to eq expected_return_value
+              if role == 'space_developer'
+                expect(response.body).to include('FeatureDisabled')
+                expect(response.body).to include('space_developer_env_var_visibility')
+              end
+            end
+          end
+        end
+      end
+
+      context 'when the env_var_visibility feature flag is disabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
+        end
+
+        it 'raises 403 for all users' do
+          set_current_user_as_admin(user: user)
+          get :show_environment_variables, guid: app_model.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('Feature Disabled: env_var_visibility')
+        end
+      end
+    end
+
+    context 'when the user does not have read scope' do
+      let(:user) { VCAP::CloudController::User.make }
+
+      before do
+        org.add_user(user)
+        space.add_developer(user)
+        set_current_user(user, scopes: [])
+      end
+
+      it 'returns a 403' do
+        get :show_environment_variables, guid: app_model.guid
+
+        expect(response.status).to eq 403
+      end
+    end
+
+    context 'when the app does not exist' do
+      it 'raises an ApiError with a 404 code' do
+        get :show_environment_variables, guid: 'beep-boop'
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when the app does not have environment variables' do
+      let(:app_model) { VCAP::CloudController::AppModel.make }
+
+      it 'returns 200 and the set of links' do
+        set_current_user_as_admin(user: user)
+        get :show_environment_variables, guid: app_model.guid
+
+        expect(response.status).to eq(200)
+        expect(parsed_body).to eq({
+          'links' => expected_success_response['links'],
+        })
+      end
+    end
+  end
+
+  describe '#update_environment_variables' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { override: 'value-to-override', preserve: 'value-to-keep' }) }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+
+    let(:expected_success_response) do
+      {
+        'override' => 'new-value',
+        'preserve' => 'value-to-keep',
+        'new-key' => 'another-new-value',
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+        }
+      }
+    end
+
+    let(:request_body) do
+      {
+        'override' => 'new-value',
+        'new-key' => 'another-new-value',
+      }
+    end
+
+    before do
+      set_current_user(user)
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'space_developer' => 200,
+        'org_manager' => 403,
+        'org_user' => 404,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_auditor' => 404,
+        'org_billing_manager' => 404,
+        'admin' => 200,
+        'admin_read_only' => 403
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            patch :update_environment_variables, guid: app_model.guid, body: request_body
+
+            expect(response.status).to eq(expected_return_value), response.body
+            if expected_return_value == 200
+              expect(parsed_body).to eq(expected_success_response)
+
+              app_model.reload
+              expect(app_model.environment_variables).to eq({
+                'override' => 'new-value',
+                'preserve' => 'value-to-keep',
+                'new-key' => 'another-new-value',
+              })
+            end
+          end
+        end
+      end
+    end
+
+    context 'when the given app does not exist' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      it 'returns a validation error' do
+        patch :update_environment_variables, guid: 'fake-guid', body: request_body
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when given an invalid request' do
+      let(:request_body) do
+        {
+          'PORT' => 8080,
+        }
+      end
+
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      it 'returns a validation error' do
+        patch :update_environment_variables, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'PORT'
       end
     end
   end

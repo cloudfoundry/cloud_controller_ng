@@ -13,9 +13,6 @@ module VCAP::CloudController
               'buildpacks' => ['some-buildpack'],
               'stack' => 'some-stack'
             }
-          },
-          'environment_variables' => {
-            'ENVVAR' => 'env-val'
           }
         }
       }
@@ -27,7 +24,6 @@ module VCAP::CloudController
         expect(message.name).to eq('some-name')
         expect(message.lifecycle[:data][:buildpacks].first).to eq('some-buildpack')
         expect(message.lifecycle[:data][:stack]).to eq('some-stack')
-        expect(message.environment_variables).to eq({ ENVVAR: 'env-val' })
       end
 
       it 'converts requested keys to symbols' do
@@ -35,7 +31,6 @@ module VCAP::CloudController
 
         expect(message.requested?(:name)).to be_truthy
         expect(message.requested?(:lifecycle)).to be_truthy
-        expect(message.requested?(:environment_variables)).to be_truthy
       end
     end
 
@@ -59,17 +54,6 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors_on(:name)).to include('must be a string')
-        end
-      end
-
-      context 'when environment_variables is not a hash' do
-        let(:params) { { environment_variables: 'potato' } }
-
-        it 'is not valid' do
-          message = AppUpdateMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors_on(:environment_variables)[0]).to include('must be a hash')
         end
       end
 

@@ -10,10 +10,14 @@ Rails.application.routes.draw do
   delete '/apps/:guid', to: 'apps_v3#destroy'
   put '/apps/:guid/start', to: 'apps_v3#start'
   put '/apps/:guid/stop', to: 'apps_v3#stop'
-  get '/apps/:guid/env', to: 'apps_v3#show_environment'
+  get '/apps/:guid/env', to: 'apps_v3#show_env'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
   get '/apps/:guid/droplets/current', to: 'apps_v3#current_droplet'
+
+  # environment variables
+  get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'
+  patch '/apps/:guid/environment_variables', to: 'apps_v3#update_environment_variables'
 
   # processes
   get '/processes', to: 'processes#index'

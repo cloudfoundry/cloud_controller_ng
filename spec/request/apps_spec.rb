@@ -55,12 +55,12 @@ RSpec.describe 'Apps' do
           },
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
-          'environment_variables'   => { 'open' => 'source' },
           'links'                   => {
             'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/packages" },
-            'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
             'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
@@ -117,12 +117,12 @@ RSpec.describe 'Apps' do
           },
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
-          'environment_variables'   => { 'open' => 'source' },
           'links'                   => {
             'self'           => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/packages" },
-            'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
             'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
@@ -201,14 +201,12 @@ RSpec.describe 'Apps' do
               },
               'created_at'              => iso8601,
               'updated_at'              => iso8601,
-              'environment_variables'   => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
-              },
               'links' => {
                 'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
                 'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
                 'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
-                'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
+                'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
                 'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
                 'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
                 'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
@@ -227,14 +225,12 @@ RSpec.describe 'Apps' do
               },
               'created_at'              => iso8601,
               'updated_at'              => iso8601,
-              'environment_variables'   => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
-              },
               'links' => {
                 'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
                 'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
                 'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
-                'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/environment_variables" },
+                'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
                 'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
                 'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
                 'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
@@ -403,7 +399,6 @@ RSpec.describe 'Apps' do
           'desired_state'           => 'STARTED',
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
-          'environment_variables'   => { 'unicorn' => 'horn' },
           'lifecycle'               => {
             'type' => 'buildpack',
             'data' => {
@@ -415,7 +410,8 @@ RSpec.describe 'Apps' do
             'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-            'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
             'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
@@ -425,27 +421,6 @@ RSpec.describe 'Apps' do
           }
         }
       )
-    end
-
-    describe 'redacting' do
-      it 'redacts fields for auditors' do
-        app_model = VCAP::CloudController::AppModel.make(
-          :buildpack,
-          name:                  'my_app',
-          space:                 space,
-          environment_variables: { 'unicorn' => 'horn' },
-        )
-
-        auditor = VCAP::CloudController::User.make
-        space.organization.add_user(auditor)
-        space.add_auditor(auditor)
-
-        get "/v3/apps/#{app_model.guid}", nil, headers_for(auditor)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['environment_variables']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-      end
     end
   end
 
@@ -576,7 +551,6 @@ RSpec.describe 'Apps' do
 
       update_request = {
         name:                  'new-name',
-        environment_variables: { 'NEWENV' => 'VARIABLE' },
         lifecycle:             {
           type: 'buildpack',
           data: {
@@ -606,12 +580,12 @@ RSpec.describe 'Apps' do
           },
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
-          'environment_variables'   => { 'NEWENV' => 'VARIABLE' },
           'links'                   => {
             'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-            'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
             'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
@@ -636,7 +610,7 @@ RSpec.describe 'Apps' do
         organization_guid: space.organization.guid
       })
 
-      metadata_request = { 'name' => 'new-name', 'environment_variables' => 'PRIVATE DATA HIDDEN',
+      metadata_request = { 'name' => 'new-name',
                            'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpacks' => ['http://gitwheel.org/my-app'], 'stack' => stack.name } } }
       expect(event.metadata['request']).to eq(metadata_request)
     end
@@ -670,7 +644,6 @@ RSpec.describe 'Apps' do
         'desired_state'           => 'STARTED',
         'created_at'              => iso8601,
         'updated_at'              => iso8601,
-        'environment_variables'   => {},
         'lifecycle'               => {
           'type' => 'buildpack',
           'data' => {
@@ -682,7 +655,8 @@ RSpec.describe 'Apps' do
           'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
           'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-          'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
           'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
           'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
@@ -737,7 +711,6 @@ RSpec.describe 'Apps' do
           'desired_state'           => 'STOPPED',
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
-          'environment_variables'   => {},
           'lifecycle'               => {
             'type' => 'buildpack',
             'data' => {
@@ -749,7 +722,8 @@ RSpec.describe 'Apps' do
             'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
             'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-            'space'          => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
             'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
@@ -1081,6 +1055,61 @@ RSpec.describe 'Apps' do
         organization_guid: space.organization.guid
       })
       expect(delete_event.metadata).to eq({ 'process_guid' => process_to_delete.guid, 'process_type' => 'bob' })
+    end
+  end
+
+  describe 'PATCH /v3/apps/:guid/environment_variables' do
+    it 'patches the environment variables for the app' do
+      app_model = VCAP::CloudController::AppModel.make(
+        name: 'name1',
+        space: space,
+        desired_state: 'STOPPED',
+        environment_variables: {
+          override: 'original',
+          preserve: 'keep'
+        }
+      )
+
+      update_request = {
+        override: 'new-value',
+        new_key:  'brand-new-value'
+      }
+
+      patch "/v3/apps/#{app_model.guid}/environment_variables", update_request, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'override' => 'new-value',
+          'new_key'  => 'brand-new-value',
+          'preserve' => 'keep',
+          'links'    => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          }
+        }
+      )
+    end
+  end
+
+  describe 'GET /v3/apps/:guid/environment_variables' do
+    it 'gets the environment variables for the app' do
+      app_model = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { meep: 'moop' })
+
+      get "/v3/apps/#{app_model.guid}/environment_variables", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'meep'  => 'moop',
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          }
+        }
+      )
     end
   end
 end

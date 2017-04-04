@@ -2,6 +2,7 @@ require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/app_create'
 require 'actions/app_update'
+require 'actions/app_patch_environment_variables'
 require 'actions/app_delete'
 require 'actions/app_start'
 require 'actions/app_stop'
@@ -9,8 +10,10 @@ require 'actions/set_current_droplet'
 require 'messages/apps/apps_list_message'
 require 'messages/apps/app_update_message'
 require 'messages/apps/app_create_message'
+require 'messages/apps/app_update_environment_variables_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
+require 'presenters/v3/app_environment_variables_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/app_droplet_relationship_presenter'
 require 'fetchers/app_list_fetcher'
@@ -124,7 +127,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
-  def show_environment
+  def show_env
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
     FeatureFlag.raise_unless_enabled!(:env_var_visibility)
@@ -135,6 +138,33 @@ class AppsV3Controller < ApplicationController
     FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
     render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app)
+  end
+
+  def show_environment_variables
+    FeatureFlag.raise_unless_enabled!(:env_var_visibility)
+
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_see_secrets?(space)
+
+    FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
+
+    render status: :ok, json: Presenters::V3::AppEnvironmentVariablesPresenter.new(app)
+  end
+
+  def update_environment_variables
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
+
+    message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    app = AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message)
+
+    render status: :ok, json: Presenters::V3::AppEnvironmentVariablesPresenter.new(app)
   end
 
   def assign_current_droplet
