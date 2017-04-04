@@ -34,8 +34,10 @@ includes:
   - experimental_resources/apps/object
   - experimental_resources/apps/create
   - experimental_resources/apps/get
-  - experimental_resources/apps/env
   - experimental_resources/apps/update
+  - experimental_resources/apps/env
+  - experimental_resources/apps/environment_variables
+  - experimental_resources/apps/update_environment_variables
   - experimental_resources/apps/current_droplet
   - experimental_resources/apps/get_current_droplet_relationship
   - experimental_resources/apps/get_current_droplet

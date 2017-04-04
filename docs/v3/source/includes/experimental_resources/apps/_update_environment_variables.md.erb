@@ -1,0 +1,52 @@
+### Update environment variables for an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/environment_variables" \
+  -X PATCH \
+  -H "Authorization: bearer [token]"
+  -d '{
+     "DEBUG": "false"
+   }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "RAILS_ENV": "production",
+  "DEBUG": "false",
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/apps/[guid]/environment_variables"
+    },
+    "app": {
+      "href": "https://api.example.org/v3/apps/[guid]"
+    },
+  }
+}
+```
+
+Update the environment variables associated with the given app.
+The variables given in the request will be merged with the existing app environment variables.
+Any requested variables with a value of `null` will be removed from the app.
+Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+
+<aside class="notice">The updated environment variables will not take effect until the app is restarted.</aside>
+
+#### Definition
+`PATCH /v3/apps/:guid/environment_variables`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

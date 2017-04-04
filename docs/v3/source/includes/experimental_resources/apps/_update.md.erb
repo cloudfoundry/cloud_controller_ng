@@ -11,9 +11,6 @@ curl "https://api.example.org/v3/apps/[guid]" \
   -H "Content-type: application/json" \
   -d '{
     "name": "my_app",
-    "environment_variables": {
-      "HTTP_PROXY": "http://proxy.example.org"
-    },
     "lifecycle": {
       "type": "buildpack",
       "data": {
@@ -42,7 +39,6 @@ Content-Type: application/json
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the app.
-**environment_variables** | _object_ | Environment variables to be used for the app when running.
 **lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Lifecycle to be used when updating the app. Note: `data` is a required field in lifecycle if lifecycle is updated.
 
 #### Permitted Roles

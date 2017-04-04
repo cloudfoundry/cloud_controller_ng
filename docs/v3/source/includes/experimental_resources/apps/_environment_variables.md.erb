@@ -1,0 +1,45 @@
+### Get environment variables for an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/environment_variables" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "RAILS_ENV": "production",
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/apps/[guid]/environment_variables"
+    },
+    "app": {
+      "href": "https://api.example.org/v3/apps/[guid]"
+    },
+  }
+}
+```
+
+Retrieve the environment variables that are associated with the given app.
+For the entire list of environment variables that will be available to the app at runtime, see the [env endpoint](#get-environment-for-an-app).
+
+#### Definition
+`GET /v3/apps/:guid/environment_variables`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |
+Admin Read-Only |
