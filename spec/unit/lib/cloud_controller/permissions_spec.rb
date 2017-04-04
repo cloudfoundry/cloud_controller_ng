@@ -190,10 +190,10 @@ module VCAP::CloudController
           expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
         end
 
-        it 'returns true for space manager' do
+        it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
+          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for space auditor' do
@@ -202,9 +202,9 @@ module VCAP::CloudController
           expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
         end
 
-        it 'returns true for org manager' do
+        it 'returns false for org manager' do
           org.add_manager(user)
-          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
+          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
         end
       end
     end

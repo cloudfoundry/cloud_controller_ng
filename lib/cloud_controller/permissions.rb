@@ -14,9 +14,7 @@ class VCAP::CloudController::Permissions
   ].freeze
 
   ROLES_FOR_SECRETS ||= [
-    VCAP::CloudController::Membership::SPACE_DEVELOPER,
-    VCAP::CloudController::Membership::SPACE_MANAGER,
-    VCAP::CloudController::Membership::ORG_MANAGER
+    VCAP::CloudController::Membership::SPACE_DEVELOPER
   ].freeze
 
   ROLES_FOR_WRITING ||= [
