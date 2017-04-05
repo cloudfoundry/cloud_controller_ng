@@ -26,18 +26,15 @@ This endpoint retrieves the current droplet relationship for an app.
 
 #### Definition
 
-`GET /v3/apps/:guid/relationships/current_droplet HTTP/1.1`
-
-#### Body Parameters
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
+`GET /v3/apps/:guid/relationships/current_droplet`
 
 #### Permitted Roles
  |
 --- | ---
 Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
 Admin |
+Admin Read-Only |
+Global Auditor |
