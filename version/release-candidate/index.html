@@ -1425,11 +1425,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Current desired state of the app. Valid values are <code class="prettyprint">STOPPED</code> or <code class="prettyprint">STARTED</code>.</td>
 </tr>
 <tr>
-<td><strong>total_desired_instances</strong></td>
-<td><em>integer</em></td>
-<td>Number of desired instances of the application.</td>
-</tr>
-<tr>
 <td><strong>environment_variables</strong></td>
 <td><em>object</em></td>
 <td>Provides the list of custom environment variables available to the application.</td>
@@ -1488,7 +1483,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STOPPED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -1619,7 +1613,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STOPPED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -1821,7 +1814,6 @@ It will include environment variables for Environment Variable Groups and Servic
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STARTED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T11:32:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2001,15 +1993,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/apps/:guid/relationships/current_droplet HTTP/1.1</code></p>
-
-<h4 id="body-parameters">Body Parameters</h4>
-
-<p class='no-body-parameters-outer'>
-  <span class='no-body-parameters-required'>
-    No arguments
-  </span>
-</p>
+<p><code class="prettyprint">GET /v3/apps/:guid/relationships/current_droplet</code></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
@@ -2022,7 +2006,22 @@ It will include environment variables for Environment Variable Groups and Servic
 <td>Space Developer</td>
 </tr>
 <tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
 <td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -2149,7 +2148,6 @@ It will include environment variables for Environment Variable Groups and Servic
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STARTED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T11:32:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2235,7 +2233,6 @@ It will include environment variables for Environment Variable Groups and Servic
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STOPPED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T11:32:30Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2368,7 +2365,6 @@ It will include environment variables for Environment Variable Groups and Servic
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STARTED"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T11:32:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2420,7 +2416,6 @@ It will include environment variables for Environment Variable Groups and Servic
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"02b4ec9b-94c7-4468-9c23-4e906191a0f8"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app2"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STOPPED"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"total_desired_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1970-01-01T00:00:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4967,7 +4962,7 @@ the request in that case. Clients may need to follow the redirect without includ
           <h3 id="copy-a-package">Copy a Package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/?source_guid=[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages?source_guid=[guid]"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
@@ -4975,7 +4970,7 @@ the request in that case. Clients may need to follow the redirect without includ
     "relationships": {
       "app": {
         "data": {
-          "guid": [destination-app-guid]
+          "guid": "[destination-app-guid]"
         }
       }
     }
@@ -5015,7 +5010,7 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">POST /v3/apps/:guid/packages</code></p>
+<p><code class="prettyprint">POST /v3/packages?source_guid=:guid</code></p>
 
 <h4 id="required-query-parameters">Required Query Parameters</h4>
 
