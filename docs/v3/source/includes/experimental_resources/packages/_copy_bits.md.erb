@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/packages/?source_guid=[guid]" \
+curl "https://api.example.org/v3/packages?source_guid=[guid]" \
   -X POST \
   -H "Authorization: bearer [token]" \
   -H "Content-Type: application/json" \
@@ -13,7 +13,7 @@ curl "https://api.example.org/v3/packages/?source_guid=[guid]" \
     "relationships": {
       "app": {
         "data": {
-          "guid": [destination-app-guid]
+          "guid": "[destination-app-guid]"
         }
       }
     }
@@ -34,7 +34,7 @@ Content-Type: application/json
 This endpoint copies the bits of a source package to a target package.
 
 #### Definition
-`POST /v3/apps/:guid/packages`
+`POST /v3/packages?source_guid=:guid`
 
 #### Required Query Parameters
 
