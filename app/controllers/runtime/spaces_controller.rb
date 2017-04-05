@@ -4,7 +4,8 @@ require 'fetchers/space_user_roles_fetcher'
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
-      [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client, :services_event_repository, :user_event_repository]
+      [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client,
+       :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository]
     end
 
     define_attributes do
@@ -48,6 +49,8 @@ module VCAP::CloudController
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
       @uaa_client = dependencies.fetch(:uaa_client)
       @services_event_repository = dependencies.fetch(:services_event_repository)
+      @app_event_repository = dependencies.fetch(:app_event_repository)
+      @route_event_repository = dependencies.fetch(:route_event_repository)
     end
 
     get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
@@ -238,6 +241,25 @@ module VCAP::CloudController
 
         [HTTP::NO_CONTENT, nil]
       end
+    end
+
+    delete '/v2/spaces/:guid/unmapped_routes', :delete_unmapped_routes
+    def delete_unmapped_routes(guid)
+      space = find_guid_and_validate_access(:read, guid)
+
+      route_delete_action = RouteDelete.new(
+        app_event_repository: @app_event_repository,
+        route_event_repository: @route_event_repository,
+        user_audit_info: UserAuditInfo.from_context(SecurityContext))
+
+      space.db.transaction do
+        space.routes.
+          select { |route| route.apps.empty? && !route.service_instance.present? }.
+          each { |route| validate_access(:delete, route) }.
+          each { |route| route_delete_action.delete_sync(route: route, recursive: false) }
+      end
+
+      [HTTP::NO_CONTENT, nil]
     end
 
     delete '/v2/spaces/:guid/isolation_segment', :delete_isolation_segment

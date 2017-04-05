@@ -1697,6 +1697,92 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
+      let(:user) { set_current_user(User.make) }
+      let(:organization) { Organization.make }
+      let(:space) { Space.make(organization: organization) }
+      let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+
+      describe 'permissions' do
+        {
+          'space_developer' => 204,
+          'org_manager' => 403,
+          'org_user' => 403,
+          'space_manager' => 403,
+          'space_auditor' => 403,
+          'org_auditor' => 403,
+          'org_billing_manager' => 403,
+          'admin' => 204,
+          'admin_read_only' => 403,
+        }.each do |role, expected_return_value|
+          context "as an #{role}" do
+            before do
+              set_current_user_as_role(
+                role: role,
+                org: organization,
+                space: space,
+                user: user,
+                scopes: %w(cloud_controller.read cloud_controller.write)
+              )
+            end
+
+            it "returns #{expected_return_value}" do
+              unmapped_route = Route.make(space: space)
+
+              delete "/v2/spaces/#{space.guid}/unmapped_routes"
+              expect(last_response.status).to eq(expected_return_value), "Expected #{expected_return_value}, got: #{last_response.status} with body: #{last_response.body}"
+
+              if last_response.status == 204
+                expect(unmapped_route.exists?).to eq(false), "Expected route '#{unmapped_route.guid}' to not exist"
+                expect(last_response.body).to be_empty
+              end
+            end
+          end
+        end
+      end
+
+      context 'with sufficient permissions' do
+        before do
+          set_current_user_as_role(
+            role: 'space_developer',
+            org: organization,
+            space: space,
+            user: user,
+            scopes: %w(cloud_controller.read cloud_controller.write)
+          )
+        end
+
+        context 'when a route is mapped to an app' do
+          it 'does not delete it' do
+            mapped_route = Route.make(space: space)
+            RouteMappingModel.make(app: process.app, route: mapped_route, app_port: 9090)
+
+            delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
+
+            expect(last_response.status).to eq(204), "Expected 204, got: #{last_response.status} with body: #{last_response.body}"
+            expect(mapped_route.exists?).to eq(true), "Expected route '#{mapped_route.guid}' to exist"
+
+            expect(last_response.body).to be_empty
+          end
+        end
+
+        context 'when the route has a service instance' do
+          it 'does not delete it' do
+            service_instance = ManagedServiceInstance.make(:routing, space: space)
+            mapped_route = VCAP::CloudController::Route.make(space: space)
+            RouteBinding.make(route: mapped_route, service_instance: service_instance)
+
+            delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
+
+            expect(last_response.status).to eq(204), "Expected 204, got: #{last_response.status} with body: #{last_response.body}"
+            expect(mapped_route.exists?).to eq(true), "Expected route '#{mapped_route.guid}' to exist"
+
+            expect(last_response.body).to be_empty
+          end
+        end
+      end
+    end
+
     describe 'security groups' do
       let(:user) { User.make }
       let(:org) { Organization.make(user_guids: [user.guid]) }
