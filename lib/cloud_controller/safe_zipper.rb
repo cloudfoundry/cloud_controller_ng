@@ -70,12 +70,12 @@ class SafeZipper
   end
 
   def size
-    @size ||= zip_info.split("\n").last.match(/^\s*(\d+)/)[1].to_i
+    @size ||= zip_info.split("\n").last.match(/\A\s*(\d+)/)[1].to_i
   end
 
   def any_outside_relative_paths?
     zip_info.split("\n")[3..-3].map do |info|
-      info.match(/^\s*\d+\s+[\d-]+\s+[\d:]+\s+(.*)$/)[1]
+      info.match(/\A\s*\d+\s+[\d-]+\s+[\d:]+\s+(.*)\z/)[1]
     end.any? do |path|
       !VCAP::CloudController::FilePathChecker.safe_path? path, @zip_destination
     end

@@ -143,11 +143,11 @@ module VCAP::CloudController::RestController
     end
 
     def v2_api?
-      env['PATH_INFO'] =~ /^#{V2_ROUTE_PREFIX}/
+      env['PATH_INFO'] =~ /\A#{V2_ROUTE_PREFIX}/
     end
 
     def unversioned_api?
-      !(env['PATH_INFO'] =~ %r{^/v\d})
+      !(env['PATH_INFO'] =~ %r{\A/v\d})
     end
 
     def recursive_delete?

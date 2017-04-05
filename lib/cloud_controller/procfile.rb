@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     def self.process(procfile)
       processes = procfile.gsub("\r\n", "\n").split("\n").each_with_object({}) do |line, hash|
-        matches = line.match(/^(?<type>[A-Za-z0-9_-]+):\s*(?<command>.+)$/)
+        matches = line.match(/\A(?<type>[A-Za-z0-9_-]+):\s*(?<command>.+)\z/)
         hash[matches[:type].to_sym] = matches[:command] if matches
       end
 

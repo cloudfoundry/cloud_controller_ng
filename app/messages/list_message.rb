@@ -22,7 +22,7 @@ module VCAP::CloudController
       def validate(record)
         order_by = record.pagination_params[:order_by]
         columns_allowed = record.valid_order_by_values.join('|')
-        matcher = /^(\+|\-)?(#{columns_allowed})$/
+        matcher = /\A(\+|\-)?(#{columns_allowed})\z/
         record.errors.add(:order_by, "can only be 'created_at' or 'updated_at'") unless order_by =~ matcher
       end
     end

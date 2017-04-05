@@ -5,7 +5,9 @@ module CloudFoundry
 
       def initialize(app, allowed_cors_domains=[])
         @app                  = app
-        @allowed_cors_domains = allowed_cors_domains.map { |d| /^#{Regexp.quote(d).gsub('\*', '.*?')}$/ }
+        @allowed_cors_domains = allowed_cors_domains.map do |d|
+          /\A#{Regexp.quote(d).gsub('\*', '.*?')}\z/
+        end
       end
 
       def call(env)

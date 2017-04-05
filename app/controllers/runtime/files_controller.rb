@@ -40,15 +40,11 @@ module VCAP::CloudController
     end
 
     def get_file_uri_for_search_param(app, path, search_param)
-      # Do we really want/need to be accepting a + here?  It is pretty
-      # harmless, but it is weird.  Getting rid of it would require checking
-      # with the VMC and STS teams to make sure no one expects to be able to
-      # send a +.
-      match = search_param.match(/^[+]?([0-9]+)$/)
+      match = search_param.match(/\A[+]?([0-9]+)\z/)
       if match
         instance = match.captures[0].to_i
         Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-      elsif search_param =~ /^[0-9a-zA-z]+$/
+      elsif search_param =~ /\A[0-9a-zA-z]+\z/
         Dea::Client.get_file_uri_by_instance_guid(app, path, search_param)
       else
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
