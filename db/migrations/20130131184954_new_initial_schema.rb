@@ -28,6 +28,7 @@ Sequel.migration do
   change do
     if Sequel::Model.db.database_type == :mssql
       run 'ALTER DATABASE CURRENT COLLATE SQL_Latin1_General_CP1_CS_AS;'
+      run 'ALTER DATABASE CURRENT SET READ_COMMITTED_SNAPSHOT ON;'
     end
 
     # rather than creating different tables for each type of events, we're
