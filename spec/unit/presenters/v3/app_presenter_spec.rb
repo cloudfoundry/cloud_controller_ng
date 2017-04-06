@@ -39,7 +39,7 @@ module VCAP::CloudController::Presenters::V3
 
         expect(result[:guid]).to eq(app.guid)
         expect(result[:name]).to eq(app.name)
-        expect(result[:desired_state]).to eq(app.desired_state)
+        expect(result[:state]).to eq(app.desired_state)
         expect(result[:environment_variables]).to be_nil
         expect(result[:created_at]).to be_a(Time)
         expect(result[:updated_at]).to be_a(Time)

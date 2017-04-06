@@ -854,7 +854,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq 200
       expect(response_body['guid']).to eq(app_model.guid)
-      expect(response_body['desired_state']).to eq('STARTED')
+      expect(response_body['state']).to eq('STARTED')
     end
 
     context 'permissions' do
@@ -994,7 +994,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq 200
       expect(response_body['guid']).to eq(app_model.guid)
-      expect(response_body['desired_state']).to eq('STOPPED')
+      expect(response_body['state']).to eq('STOPPED')
     end
 
     context 'permissions' do

@@ -45,8 +45,8 @@ RSpec.describe 'Apps' do
         {
           'name'                    => 'my_app',
           'guid'                    => app_guid,
-          'desired_state'           => 'STOPPED',
-          'lifecycle'               => {
+          'state' => 'STOPPED',
+          'lifecycle' => {
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => [buildpack.name],
@@ -110,8 +110,8 @@ RSpec.describe 'Apps' do
         expected_response = {
           'name'                    => 'my_app',
           'guid'                    => created_app.guid,
-          'desired_state'           => 'STOPPED',
-          'lifecycle'               => {
+          'state' => 'STOPPED',
+          'lifecycle' => {
             'type' => 'docker',
             'data' => {}
           },
@@ -191,8 +191,8 @@ RSpec.describe 'Apps' do
             {
               'guid'                    => app_model1.guid,
               'name'                    => 'name1',
-              'desired_state'           => 'STOPPED',
-              'lifecycle'               => {
+              'state' => 'STOPPED',
+              'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['bp-name'],
@@ -218,8 +218,8 @@ RSpec.describe 'Apps' do
             {
               'guid'                    => app_model2.guid,
               'name'                    => 'name2',
-              'desired_state'           => 'STARTED',
-              'lifecycle'               => {
+              'state' => 'STARTED',
+              'lifecycle' => {
                 'type' => 'docker',
                 'data' => {}
               },
@@ -396,7 +396,7 @@ RSpec.describe 'Apps' do
         {
           'name'                    => 'my_app',
           'guid'                    => app_model.guid,
-          'desired_state'           => 'STARTED',
+          'state' => 'STARTED',
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
           'lifecycle'               => {
@@ -570,8 +570,8 @@ RSpec.describe 'Apps' do
         {
           'name'                    => 'new-name',
           'guid'                    => app_model.guid,
-          'desired_state'           => 'STOPPED',
-          'lifecycle'               => {
+          'state' => 'STOPPED',
+          'lifecycle' => {
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://gitwheel.org/my-app'],
@@ -641,7 +641,7 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like({
         'name'                    => 'app-name',
         'guid'                    => app_model.guid,
-        'desired_state'           => 'STARTED',
+        'state' => 'STARTED',
         'created_at'              => iso8601,
         'updated_at'              => iso8601,
         'lifecycle'               => {
@@ -708,7 +708,7 @@ RSpec.describe 'Apps' do
         {
           'name'                    => 'app-name',
           'guid'                    => app_model.guid,
-          'desired_state'           => 'STOPPED',
+          'state' => 'STOPPED',
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
           'lifecycle'               => {
