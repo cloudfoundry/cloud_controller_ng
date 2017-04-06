@@ -21,6 +21,45 @@ module VCAP::CloudController
       allow(route_event_repository).to receive(:record_route_delete_request)
     end
 
+    describe 'atomic_delete' do
+      it 'deletes the route' do
+        route_delete_action.atomic_delete(route: route)
+
+        expect(route.exists?).to eq(false)
+      end
+
+      it 'creates a route delete audit event' do
+        route_delete_action.atomic_delete(route: route)
+
+        expect(route_event_repository).to have_received(:record_route_delete_request).with(route, user_audit_info, false)
+      end
+
+      context 'when there are route mappings' do
+        it 'does not deletes the mappings or route' do
+          route_mapping = RouteMappingModel.make(route: route)
+          route_mapping_2 = RouteMappingModel.make(route: route)
+
+          route_delete_action.atomic_delete(route: route)
+
+          expect(route.exists?).to eq(true)
+          expect(route_mapping.exists?).to eq(true)
+          expect(route_mapping_2.exists?).to eq(true)
+        end
+      end
+
+      context 'when there is a service binding' do
+        let(:route_binding) { RouteBinding.make }
+        let(:route) { route_binding.route }
+
+        it 'does not delete the route' do
+          route_delete_action.atomic_delete(route: route)
+
+          expect(route.exists?).to eq(true)
+          expect(route_binding.exists?).to eq(true)
+        end
+      end
+    end
+
     describe 'delete_sync' do
       it 'deletes the route' do
         route_delete_action.delete_sync(route: route, recursive: recursive)

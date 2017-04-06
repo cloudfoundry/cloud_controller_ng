@@ -256,7 +256,7 @@ module VCAP::CloudController
         space.routes.
           select { |route| route.apps.empty? && !route.service_instance.present? }.
           each { |route| validate_access(:delete, route) }.
-          each { |route| route_delete_action.delete_sync(route: route, recursive: false) }
+          each { |route| route_delete_action.atomic_delete(route: route) }
       end
 
       [HTTP::NO_CONTENT, nil]

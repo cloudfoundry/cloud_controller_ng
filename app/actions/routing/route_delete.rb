@@ -18,6 +18,16 @@ module VCAP::CloudController
       Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
     end
 
+    def atomic_delete(route:)
+      delete_count = Route.where(guid: route.guid).
+                     exclude(guid: RouteMappingModel.where(route_guid: route.guid).select(:route_guid)).
+                     exclude(id: RouteBinding.where(route_id: route.id).select(:route_id)).
+                     delete
+      if delete_count > 0
+        route_event_repository.record_route_delete_request(route, user_audit_info, false)
+      end
+    end
+
     private
 
     def do_delete(recursive, route)
