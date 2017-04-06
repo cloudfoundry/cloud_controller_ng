@@ -27,6 +27,8 @@ Sequel.migration do
 
   change do
     if Sequel::Model.db.database_type == :mssql
+      # TODO: these commands seem to fail if there are any other open connections to the DB
+      # Should we force close all other active connections?
       run 'ALTER DATABASE CURRENT COLLATE SQL_Latin1_General_CP1_CS_AS;'
       run 'ALTER DATABASE CURRENT SET READ_COMMITTED_SNAPSHOT ON;'
     end

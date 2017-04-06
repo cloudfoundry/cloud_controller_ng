@@ -42,6 +42,7 @@ module VCAP::CloudController
 
       if opts[:azure]
         connection_options[:azure] = opts[:azure]
+        connection_options[:timeout] = 30
       end
 
       db = Sequel.connect(opts[:database], connection_options)
