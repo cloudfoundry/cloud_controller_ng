@@ -10,54 +10,40 @@ class BuildsController < ApplicationController
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
     unprocessable_package! unless package
-    package_not_found! unless can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_write?(package.space.guid)
+    package_not_accessible! unless can_read?(package.space.guid, package.space.organization.guid)
     staging_in_progress! if package.app.staging_in_progress?
+
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
+    unauthorized! unless can_write?(package.space.guid)
 
     lifecycle = LifecycleProvider.provide(package, message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, message: message, user_audit_info: user_audit_info)
-
-    droplet = DropletCreate.new.create_and_stage(
+    build = BuildCreate.new.create_and_stage(
       package: package,
       lifecycle: lifecycle,
       message: message,
-      user_audit_info: user_audit_info
-    )
-
-    build.update(droplet: droplet)
+      user_audit_info: user_audit_info)
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
-  rescue DropletCreate::InvalidPackage => e
+  rescue BuildCreate::InvalidPackage => e
     invalid_request!(e.message)
-  rescue DropletCreate::SpaceQuotaExceeded => e
+  rescue BuildCreate::SpaceQuotaExceeded => e
     unprocessable!("space's memory limit exceeded: #{e.message}")
-  rescue DropletCreate::OrgQuotaExceeded => e
+  rescue BuildCreate::OrgQuotaExceeded => e
     unprocessable!("organization's memory limit exceeded: #{e.message}")
-  rescue DropletCreate::DiskLimitExceeded
+  rescue BuildCreate::DiskLimitExceeded
     unprocessable!('disk limit exceeded')
-  end
-
-  def show
-    # TODO: could we optimize this call with .eager?
-    build = BuildModel.where(guid: params[:guid]).first
-    build_not_found! unless build
-
-    space = build.package.app.space
-    build_not_found! unless can_read?(space.guid, space.organization.guid)
-    render status: :ok, json: Presenters::V3::BuildPresenter.new(build, show_secrets: can_see_secrets?(space))
   end
 
   private
 
-  def package_not_found!
-    resource_not_found!(:package)
-  end
-
   def build_not_found!
     resource_not_found!(:build)
+  end
+
+  def package_not_accessible!
+    resource_not_found!(:package)
   end
 
   def unprocessable_package!

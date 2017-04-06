@@ -4,7 +4,11 @@ require 'messages/builds/build_create_message'
 module VCAP::CloudController
   RSpec.describe BuildCreateMessage do
     describe '.create_from_http_request' do
-      let(:body) { { 'package' => { 'guid' => 'package-guid' } } }
+      let(:body) do
+        {
+          'package' => { 'guid' => 'package-guid' },
+        }
+      end
 
       it 'returns the correct BuildCreateMessage' do
         message = BuildCreateMessage.create_from_http_request(body)

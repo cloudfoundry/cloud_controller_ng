@@ -9,8 +9,7 @@ module VCAP::CloudController
     one_to_one :droplet,
       class: 'VCAP::CloudController::DropletModel',
       key: :build_guid,
-      primary_key: :guid,
-      without_guid_generation: true
+      primary_key: :guid
     many_to_one :package,
       class: 'VCAP::CloudController::PackageModel',
       key: :package_guid,

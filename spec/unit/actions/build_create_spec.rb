@@ -1,19 +1,27 @@
 require 'spec_helper'
 require 'actions/build_create'
+require 'messages/droplets/droplet_create_message'
+require 'isolation_segment_assign'
+require 'isolation_segment_unassign'
 
 module VCAP::CloudController
   RSpec.describe BuildCreate do
-    subject(:action) { BuildCreate.new }
+    subject(:action) do
+      described_class.new
+    end
 
     let(:user) { User.make }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
 
+    let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
+    let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+
     let(:space) { Space.make }
     let(:org) { space.organization }
     let(:app) { AppModel.make(space: space) }
-    let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
-    let(:staging_message) { BuildCreateMessage.new(request) }
-    let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
+
+    let(:staging_message) { BuildCreateMessage.create_from_http_request(request) }
+
     let(:request) do
       {
         package: {
@@ -23,12 +31,14 @@ module VCAP::CloudController
           type: 'buildpack',
           data: lifecycle_data
         },
-      }
+      }.deep_stringify_keys
     end
+    let(:buildpack_git_url) { 'http://example.com/repo.git' }
+    let(:stack) { Stack.default }
     let(:lifecycle_data) do
       {
-        stack: Stack.default.name,
-        buildpacks: ['http://example.com/repo.git']
+        stack: stack.name,
+        buildpacks: [buildpack_git_url]
       }
     end
 
@@ -42,35 +52,44 @@ module VCAP::CloudController
     end
 
     describe '#create_and_stage' do
-      # it 'creates an audit event' do
-      #   expect(Repositories::DropletEventRepository).to receive(:record_create_by_staging).with(
-      #     instance_of(BuildModel),
-      #     user_audit_info,
-      #     staging_message.audit_hash,
-      #     app.name,
-      #     space.guid,
-      #     org.guid
-      #   )
-      #
-      #   action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
-      # end
+      it 'creates an audit event' do
+        expect(Repositories::DropletEventRepository).to receive(:record_create_by_staging).with(
+          instance_of(DropletModel),
+          user_audit_info,
+          staging_message.audit_hash,
+          app.name,
+          space.guid,
+          org.guid
+        )
 
-      it 'creates a build' do
-        build = nil
-        expect {
-          build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
-        }.to change { BuildModel.count }.by(1)
+        action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+      end
 
-        expect(build.state).to eq(BuildModel::STAGING_STATE)
-        expect(build.package_guid).to eq(package.guid)
+      context 'creating a build and dependent droplet' do
+        it 'creates a build' do
+          build = nil
+
+          expect {
+            build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+          }.to change { [DropletModel.count, BuildModel.count] }.by([1, 1])
+
+          expect(build.state).to eq(BuildModel::STAGING_STATE)
+          expect(build.package_guid).to eq(package.guid)
+          droplet = build.droplet
+          expect(droplet.state).to eq(DropletModel::STAGING_STATE)
+          expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
+          expect(droplet.package_guid).to eq(package.guid)
+          expect(droplet.app_guid).to eq(app.guid)
+          expect(droplet.lifecycle_data).to_not be_nil
+        end
       end
 
       describe 'creating a stage request' do
         it 'initiates a staging request' do
           build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
           expect(stager).to have_received(:stage) do |staging_details|
-            expect(staging_details.staging_guid).to eq(build.guid)
             expect(staging_details.package).to eq(package)
+            expect(staging_details.staging_guid).to eq(build.droplet.guid)
             expect(staging_details.lifecycle).to eq(lifecycle)
             expect(staging_details.isolation_segment).to be_nil
           end
@@ -168,6 +187,21 @@ module VCAP::CloudController
       end
 
       context 'when staging is unsuccessful' do
+        context 'when the package is not ready' do
+          let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
+          it 'raises an InvalidPackage exception' do
+            expect {
+              action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+            }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
+          end
+        end
+      end
+    end
+
+    describe '#create_and_stage_without_event' do
+      it 'does not create an audit event' do
+        expect(Repositories::DropletEventRepository).not_to receive(:record_create_by_staging)
+        action.create_and_stage_without_event(package: package, lifecycle: lifecycle, message: staging_message)
       end
     end
   end
