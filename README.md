@@ -49,7 +49,7 @@ See [Diego Design Notes](https://github.com/cloudfoundry/diego-design-notes) for
 
 Please read the [contributors' guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md)
 
-### Testing
+### Unit Tests
 **TLDR:** Always run `bundle exec rake` before committing
 
 To maintain a consistent and effective approach to testing, please refer to [the spec README](spec/README.md) and
@@ -82,19 +82,48 @@ You will also need a database called:
 
     `cc_test_integration_cc`
 
-### Running tests on a single file
+#### Running tests on a single file
 
 The development team typically will run the specs to a single file as (e.g.)
 
     bundle exec rspec spec/controllers/runtime/users_controller_spec.rb
 
-### Running all the tests
+#### Running all the unit tests
 
     bundle exec rake spec
 
-### Running static analysis
+#### Running static analysis
 
     bundle exec rubocop
+
+### CF Acceptance Tests (CATs)
+
+To ensure our changes to the Cloud Controller correctly integrate with the rest of the Cloud Foundry components like Diego,
+we run the [CF Acceptance Tests (CATs)](https://github.com/cloudfoundry/cf-acceptance-tests) against a running CF deployment.
+This test suite uses the CF CLI to ensure end-user actions like `cf push` function end-to-end.
+
+For more substantial code changes and PRs, please deploy your changes and ensure that at least the core CATs suite passes.
+Follow the instructions [here](https://github.com/cloudfoundry/cf-acceptance-tests#test-setup) for setting up the CATs suite.
+The following will run the core test suites against a local bosh-lite:
+
+```bash
+cd ~/go/src/github.com/cloudfoundry/cf-acceptance-tests
+cat > integration_config.json <<EOF
+{
+  "api": "api.bosh-lite.com",
+  "apps_domain": "bosh-lite.com",
+  "admin_user": "admin",
+  "admin_password": "admin",
+  "skip_ssl_validation": true
+}
+EOF
+export CONFIG=$PWD/integration_config.json
+./bin/test -nodes=3
+```
+
+If your change touches a more specialized part of the code such as Isolation Segments or Tasks,
+please opt into the corresponding test suites.
+The full list of optional test suites can be found [here](https://github.com/cloudfoundry/cf-acceptance-tests#test-configuration).
 
 ## Logs
 
