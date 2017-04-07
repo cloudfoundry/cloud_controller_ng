@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class EventsController < RestController::ModelController
     query_parameters :timestamp, :type, :actee, :space_guid, :organization_guid
+    sortable_parameters :timestamp, :id
 
     def initialize(*args)
       super

@@ -10,6 +10,10 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:organization_guid) }
     end
 
+    it 'can order by name and id when listing' do
+      expect(described_class.sortable_parameters).to match_array([:timestamp, :id])
+    end
+
     describe 'GET /v2/events' do
       before do
         @user_a = User.make
