@@ -1425,11 +1425,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Current desired state of the app. Valid values are <code class="prettyprint">STOPPED</code> or <code class="prettyprint">STARTED</code>.</td>
 </tr>
 <tr>
-<td><strong>environment_variables</strong></td>
-<td><em>object</em></td>
-<td>Provides the list of custom environment variables available to the application.</td>
-</tr>
-<tr>
 <td><strong>lifecycle</strong></td>
 <td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
 <td>Provides the lifecycle object for the application.</td>
@@ -1492,9 +1487,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"HTTP_PROXY"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://proxy.example.org"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
@@ -1510,6 +1502,9 @@ information for your packages, droplets, processes, tasks, and more.</p>
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
@@ -1622,9 +1617,6 @@ information for your packages, droplets, processes, tasks, and more.</p>
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"HTTP_PROXY"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://proxy.example.org"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
@@ -1640,6 +1632,9 @@ information for your packages, droplets, processes, tasks, and more.</p>
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
@@ -1694,6 +1689,122 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 <tr>
 <td>Global Auditor</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-an-app">Update an app</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "my_app",
+    "lifecycle": {
+      "type": "buildpack",
+      "data": {
+        "buildpacks": ["java_buildpack"],
+      }
+    }
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STARTED"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T11:32:30Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"java_buildpack"</span><span class="p">],</span><span class="w">
+      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"processes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"route_mappings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"droplets"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"tasks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/apps/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the app.</td>
+</tr>
+<tr>
+<td><strong>lifecycle</strong></td>
+<td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
+<td>Lifecycle to be used when updating the app. Note: <code class="prettyprint">data</code> is a required field in lifecycle if lifecycle is updated.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -1772,10 +1883,54 @@ It will include environment variables for Environment Variable Groups and Servic
 <td>Space Developer</td>
 </tr>
 <tr>
-<td>Space Manager</td>
+<td>Admin</td>
 </tr>
 <tr>
-<td>Org Manager</td>
+<td>Admin Read-Only</td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-environment-variables-for-an-app">Get environment variables for an app</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"RAILS_ENV"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+  </span><span class="err">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Retrieve the environment variables that are associated with the given app.
+For the entire list of environment variables that will be available to the app at runtime, see the <a href="#get-environment-for-an-app">env endpoint</a>.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/apps/:guid/environment_variables</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
 </tr>
 <tr>
 <td>Admin</td>
@@ -1785,25 +1940,15 @@ It will include environment variables for Environment Variable Groups and Servic
 </tr>
 </tbody></table>
 
-          <h3 id="update-an-app">Update an app</h3>
+          <h3 id="update-environment-variables-for-an-app">Update environment variables for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
   -d <span class="s1">'{
-    "name": "my_app",
-    "environment_variables": {
-      "HTTP_PROXY": "http://proxy.example.org"
-    },
-    "lifecycle": {
-      "type": "buildpack",
-      "data": {
-        "buildpacks": ["java_buildpack"],
-      }
-    }
-  }'</span>
+     "DEBUG": "false"
+   }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -1811,88 +1956,29 @@ It will include environment variables for Environment Variable Groups and Servic
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
 <span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"desired_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STARTED"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:30Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T11:32:30Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"java_buildpack"</span><span class="p">],</span><span class="w">
-      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"HTTP_PROXY"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://proxy.example.org"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"RAILS_ENV"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"DEBUG"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]"</span><span class="w">
     </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"processes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/processes"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"route_mappings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/route_mappings"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"droplets"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"tasks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
+  </span><span class="err">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
-
 </span></code></pre>
+
+<p>Update the environment variables associated with the given app.
+The variables given in the request will be merged with the existing app environment variables.
+Any requested variables with a value of <code class="prettyprint">null</code> will be removed from the app.
+Environment variable names may not start with VCAP_. PORT is not a valid environment variable.</p>
+
+<aside class="notice">The updated environment variables will not take effect until the app is restarted.</aside>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/apps/:guid</code></p>
-
-<h4 id="optional-parameters">Optional Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>name</strong></td>
-<td><em>string</em></td>
-<td>Name of the app.</td>
-</tr>
-<tr>
-<td><strong>environment_variables</strong></td>
-<td><em>object</em></td>
-<td>Environment variables to be used for the app when running.</td>
-</tr>
-<tr>
-<td><strong>lifecycle</strong></td>
-<td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
-<td>Lifecycle to be used when updating the app. Note: <code class="prettyprint">data</code> is a required field in lifecycle if lifecycle is updated.</td>
-</tr>
-</tbody></table>
+<p><code class="prettyprint">PATCH /v3/apps/:guid/environment_variables</code></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
@@ -2157,9 +2243,6 @@ It will include environment variables for Environment Variable Groups and Servic
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"HTTP_PROXY"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://proxy.example.org"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
@@ -2175,6 +2258,9 @@ It will include environment variables for Environment Variable Groups and Servic
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
@@ -2242,9 +2328,6 @@ It will include environment variables for Environment Variable Groups and Servic
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"HTTP_PROXY"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://proxy.example.org"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
@@ -2260,6 +2343,9 @@ It will include environment variables for Environment Variable Groups and Servic
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
@@ -2374,9 +2460,6 @@ It will include environment variables for Environment Variable Groups and Servic
           </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
@@ -2392,6 +2475,9 @@ It will include environment variables for Environment Variable Groups and Servic
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/packages"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/environment_variables"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/droplets/current"</span><span class="w">
@@ -2425,9 +2511,6 @@ It will include environment variables for Environment Variable Groups and Servic
           </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8"</span><span class="w">
@@ -2443,6 +2526,9 @@ It will include environment variables for Environment Variable Groups and Servic
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"packages"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/packages"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/environment_variables"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/droplets/current"</span><span class="w">
