@@ -123,7 +123,6 @@ RSpec.describe 'Builds' do
       droplet.buildpack_lifecycle_data.update(buildpack: 'http://github.com/myorg/awesome-buildpack', stack: 'cflinuxfs2')
     end
     it 'shows the build' do
-      skip
       get "v3/builds/#{build.guid}", nil, json_headers(developer_headers)
 
       parsed_response = MultiJson.load(last_response.body)

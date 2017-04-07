@@ -446,68 +446,82 @@ RSpec.describe BuildsController, type: :controller do
 
   describe '#show' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:organization) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: organization) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:build) { VCAP::CloudController::BuildModel.make(package: package) }
-    let!(:droplet) { VCAP::CloudController::DropletModel.make(
-      state: VCAP::CloudController::DropletModel::STAGED_STATE,
-      package_guid: package.guid,
-      build: build,
-    )
-    }
-
-    before do
-      allow_user_read_access_for(user, spaces: [space])
-      allow_user_secret_access(user, space: space)
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package_guid: package.guid,
+        build: build,
+      )
     end
 
-    it 'returns a 200 OK and the build' do
-      pending
-      get :show, guid: build.guid
+    context 'with sufficient permissions' do
+      before do
+        allow_user_read_access_for(user, spaces: [space])
+        allow_user_secret_access(user, space: space)
+      end
 
-      expect(response.status).to eq(200)
-      expect(parsed_body['guid']).to eq(build.guid)
-    end
+      it 'returns a 200 OK and the build' do
+        get :show, guid: build.guid
 
-    context 'when the build does not exist' do
-      it 'returns a 404 Not Found' do
-        pending
-        get :show, guid: 'shablam!'
+        expect(response.status).to eq(200)
+        expect(parsed_body['guid']).to eq(build.guid)
+      end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+      context 'when the build does not exist' do
+        it 'returns a 404 Not Found' do
+          get :show, guid: 'shablam!'
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
     end
 
     context 'permissions' do
+      {
+        'space_developer' => 200,
+        'org_manager' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'admin' => 200,
+        'admin_read_only' => 200,
+        'org_billing_manager' => 404,
+        'org_auditor' => 404,
+        'org_user' => 404,
+      }.each do |role, expected_return_value|
+        context "as an #{role}" do
+          before do
+            set_current_user_as_role(
+              role: role,
+              org: organization,
+              space: space,
+              user: user,
+              scopes: %w(cloud_controller.read)
+            )
+          end
+
+          it "returns #{expected_return_value}" do
+            get :show, guid: build.guid
+            expect(response.status).to eq(expected_return_value), "Expected #{expected_return_value}, got: #{response.status} with body: #{response.body}"
+          end
+        end
+      end
+
       context 'when the user does not have the read scope' do
         before do
           set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
-          pending
           get :show, guid: build.guid
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
-        end
-      end
-
-      context 'when the user can not read from the space' do
-        let(:org) { space.organization }
-
-        before do
-          disallow_user_read_access(user, space: space)
-        end
-
-        it 'returns a 404 not found' do
-          pending
-          get :show, guid: build.guid
-
-          expect(response.status).to eq(404)
-          expect(response.body).to include('ResourceNotFound')
         end
       end
     end

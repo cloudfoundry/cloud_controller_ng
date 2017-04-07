@@ -36,6 +36,14 @@ class BuildsController < ApplicationController
     unprocessable!('disk limit exceeded')
   end
 
+  def show
+    build = BuildModel.find(guid: params[:guid])
+
+    build_not_found! unless build && can_read?(build.package.space.guid, build.package.space.organization.guid)
+
+    render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
+  end
+
   private
 
   def build_not_found!

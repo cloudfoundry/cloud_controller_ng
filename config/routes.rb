@@ -43,6 +43,7 @@ Rails.application.routes.draw do
 
   # builds
   post '/builds', to: 'builds#create'
+  get '/builds/:guid', to: 'builds#show'
 
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'
