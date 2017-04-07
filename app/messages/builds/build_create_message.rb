@@ -49,6 +49,18 @@ module VCAP::CloudController
       HashUtils.dig(lifecycle, :type)
     end
 
+    def staging_memory_in_mb
+      nil
+    end
+
+    def staging_disk_in_mb
+      nil
+    end
+
+    def environment_variables
+      nil
+    end
+
     private
 
     def allowed_keys

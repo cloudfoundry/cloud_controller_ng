@@ -7,8 +7,16 @@ require 'isolation_segment_unassign'
 module VCAP::CloudController
   RSpec.describe BuildCreate do
     subject(:action) do
-      described_class.new
+      described_class.new(
+        memory_limit_calculator: memory_limit_calculator,
+        disk_limit_calculator:   disk_limit_calculator,
+        environment_presenter:   environment_builder
+      )
     end
+
+    let(:memory_limit_calculator) { double(:memory_limit_calculator) }
+    let(:disk_limit_calculator) { double(:disk_limit_calculator) }
+    let(:environment_builder) { double(:environment_builder) }
 
     let(:user) { User.make }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
@@ -44,11 +52,20 @@ module VCAP::CloudController
 
     let(:stagers) { instance_double(Stagers) }
     let(:stager) { instance_double(Diego::Stager) }
+    let(:calculated_mem_limit) { 32 }
+    let(:calculated_staging_disk_in_mb) { 64 }
+
+    let(:staging_memory_in_mb) { nil }
+    let(:staging_disk_in_mb) { nil }
+    let(:environment_variables) { 'random string' }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
       allow(stagers).to receive(:stager_for_app).and_return(stager)
       allow(stager).to receive(:stage)
+      allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_return(calculated_mem_limit)
+      allow(disk_limit_calculator).to receive(:get_limit).with(staging_disk_in_mb).and_return(calculated_staging_disk_in_mb)
+      allow(environment_builder).to receive(:build).and_return(environment_variables)
     end
 
     describe '#create_and_stage' do
@@ -90,6 +107,9 @@ module VCAP::CloudController
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.package).to eq(package)
             expect(staging_details.staging_guid).to eq(build.droplet.guid)
+            expect(staging_details.staging_memory_in_mb).to eq(calculated_mem_limit)
+            expect(staging_details.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
+            expect(staging_details.environment_variables).to eq(environment_variables)
             expect(staging_details.lifecycle).to eq(lifecycle)
             expect(staging_details.isolation_segment).to be_nil
           end

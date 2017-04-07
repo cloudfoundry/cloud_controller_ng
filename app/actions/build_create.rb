@@ -91,24 +91,17 @@ module VCAP::CloudController
 
     def get_staging_details(package, lifecycle)
       space = package.space
-      # Just enough to set defaults for the three old droplet parameters.
-      # Pull in rest from DropletCreate#get_staging_details when we merge them in
       app = package.app
       org = space.organization
 
-      # staging_message is lifecycle.staging_message
-      staging_memory_in_mb_tmp = nil # Should be staging_message.staging_memory_in_mb
-      staging_disk_in_mb_tmp = nil # Should be staging_message.taging_disk_in_mb
-      environment_variables_tmp = nil # staging_message.environment_variables
-
-      memory_limit = get_memory_limit(staging_memory_in_mb_tmp, space, org)
-      disk_limit = get_disk_limit(staging_disk_in_mb_tmp)
+      memory_limit = get_memory_limit(lifecycle.staging_message.staging_memory_in_mb, space, org)
+      disk_limit = get_disk_limit(lifecycle.staging_message.staging_disk_in_mb)
       environment_variables = @environment_builder.build(app,
         space,
         lifecycle,
         memory_limit,
         disk_limit,
-        environment_variables_tmp)
+        lifecycle.staging_message.environment_variables)
 
       staging_details = Diego::StagingDetails.new
       staging_details.package = package
