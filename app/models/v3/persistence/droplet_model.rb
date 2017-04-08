@@ -26,7 +26,7 @@ module VCAP::CloudController
       key:         :droplet_guid,
       primary_key: :guid
 
-    add_association_dependencies buildpack_lifecycle_data: :delete
+    add_association_dependencies buildpack_lifecycle_data: :destroy
 
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
