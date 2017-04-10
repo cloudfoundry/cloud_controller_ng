@@ -20,6 +20,7 @@ templates:
   mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt
   mutual_tls.crt.erb: config/certs/mutual_tls.crt
   mutual_tls.key.erb: config/certs/mutual_tls.key
+  uaa_ca.crt.erb: config/certs/uaa_ca.crt
 
 packages:
   - capi_utils
@@ -405,6 +406,8 @@ properties:
   cc.uaa.internal_url:
     description: "The internal url used by UAA"
     default: "uaa.service.cf.internal"
+  uaa.ca_cert:
+    description: "The certificate authority being used by UAA"
   login.protocol:
     description: "http or https"
     default: "https"
@@ -541,6 +544,12 @@ properties:
   uaa.clients.cc-service-dashboards.scope:
     description: "Used to grant scope for SSO clients for service brokers"
     default: "openid,cloud_controller_service_permissions.read"
+  uaa.clients.cc_routing.secret:
+    description: "Used for fetching routing information from the Routing API"
+
+  routing_api.enabled:
+    description: "Whether to expose the routing_endpoint listed at /v2/info. Enable this after deploying the Routing API"
+    default: false
 
   cc.install_buildpacks:
     description: "Set of buildpacks to install during deploy"
