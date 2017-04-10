@@ -24,8 +24,8 @@ module VCAP::CloudController
 
           expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:package]).to eq(package)
-            expect(parameter_hash[:message].staging_memory_in_mb).to eq(765)
-            expect(parameter_hash[:message].staging_disk_in_mb).to eq(1234)
+            expect(parameter_hash[:message].staging_memory_in_mb).to eq(nil)
+            expect(parameter_hash[:message].staging_disk_in_mb).to eq(nil)
           end
         end
 

@@ -109,7 +109,7 @@ RSpec.describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error_description:                'example-error',
-        state:                            VCAP::CloudController::DropletModel::STAGING_STATE
+        state:                            VCAP::CloudController::DropletModel::FAILED_STATE
       )
     end
     let!(:droplet2) do
@@ -185,7 +185,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::FAILED_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -196,7 +196,13 @@ RSpec.describe 'Droplets' do
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 235,
-            'result'                => nil,
+            'result'                => {
+              'checksum'               => { 'type' => 'sha1', 'value' => nil },
+              'buildpacks'             => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+              'stack'                  => 'stack-1',
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+            },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
@@ -234,7 +240,7 @@ RSpec.describe 'Droplets' do
         expect(last_response.status).to eq(200)
         expect(parsed_response['pagination']).to be_a_response_like(
           {
-            'total_results' => 2,
+            'total_results' => 3,
             'total_pages'   => 1,
             'first'         => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
             'last'          => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
@@ -243,7 +249,8 @@ RSpec.describe 'Droplets' do
           })
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
-        expect(returned_guids).to match_array([droplet2.guid, droplet3.guid])
+        expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
+        expect(returned_guids).not_to include(droplet4.guid)
       end
 
       it 'filters by app_guids' do
@@ -359,7 +366,7 @@ RSpec.describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error_description:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::STAGING_STATE,
+        state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
     let!(:droplet2) do
@@ -454,7 +461,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::FAILED_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -465,7 +472,13 @@ RSpec.describe 'Droplets' do
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 235,
-            'result'                => nil,
+            'result'                => {
+              'checksum'               => { 'type' => 'sha1', 'value' => nil },
+              'buildpacks'             => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+              'stack'                  => 'stack-1',
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+            },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,
@@ -502,7 +515,7 @@ RSpec.describe 'Droplets' do
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
         error_description:                            'example-error',
-        state:                            VCAP::CloudController::DropletModel::STAGING_STATE,
+        state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
 
@@ -598,7 +611,7 @@ RSpec.describe 'Droplets' do
           },
           {
             'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGING_STATE,
+            'state'                 => VCAP::CloudController::DropletModel::FAILED_STATE,
             'error'                 => 'example-error',
             'lifecycle'             => {
               'type' => 'buildpack',
@@ -609,7 +622,13 @@ RSpec.describe 'Droplets' do
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 235,
-            'result'                => nil,
+            'result'                => {
+              'checksum'               => { 'type' => 'sha1', 'value' => nil },
+              'buildpacks'             => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+              'stack'                  => 'stack-1',
+              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+            },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
             'updated_at'            => iso8601,

@@ -53,7 +53,7 @@ module VCAP::CloudController
                   join_table(:inner, AppModel.table_name, { guid: "#{DropletModel.table_name}__app_guid".to_sym, space_guid: scoped_space_guids }, { table_alias: :apps_spaces })
       end
 
-      dataset
+      dataset.exclude(state: DropletModel::STAGING_STATE)
     end
 
     def scoped_space_guids(permitted_space_guids: @space_guids, filtered_space_guids: @message.space_guids)

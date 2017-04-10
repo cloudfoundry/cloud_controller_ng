@@ -279,9 +279,10 @@ RSpec.describe DropletsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app) { VCAP::CloudController::AppModel.make }
     let!(:space) { app.space }
-    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
-    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
+    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let!(:staging_droplet) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGING_STATE) }
+    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -297,6 +298,7 @@ RSpec.describe DropletsController, type: :controller do
 
       response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([user_droplet_1, user_droplet_2].map(&:guid))
+      expect(response_guids).not_to include(staging_droplet.guid)
     end
 
     it 'returns pagination links for /v3/droplets' do
@@ -322,8 +324,8 @@ RSpec.describe DropletsController, type: :controller do
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
         app       = VCAP::CloudController::AppModel.make(space: space)
-        droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid)
-        droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid)
+        droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         VCAP::CloudController::DropletModel.make
 
         get :index, app_guid: app.guid
@@ -364,7 +366,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'accessed as a package subresource' do
       let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app.guid) }
-      let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid) }
+      let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       it 'returns droplets for the package' do
         get :index, package_guid: package.guid
