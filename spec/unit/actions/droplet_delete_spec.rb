@@ -11,7 +11,7 @@ module VCAP::CloudController
     subject(:droplet_delete) { DropletDelete.new(user_audit_info, stagers) }
 
     describe '#delete' do
-      let!(:droplet) { DropletModel.make(:staged) }
+      let!(:droplet) { DropletModel.make }
 
       it 'deletes the droplet record' do
         expect {

@@ -279,10 +279,10 @@ RSpec.describe DropletsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app) { VCAP::CloudController::AppModel.make }
     let!(:space) { app.space }
-    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
-    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
+    let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
     let!(:staging_droplet) { VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGING_STATE) }
-    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let!(:admin_droplet) { VCAP::CloudController::DropletModel.make }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

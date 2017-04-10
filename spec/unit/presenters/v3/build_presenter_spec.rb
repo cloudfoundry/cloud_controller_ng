@@ -9,6 +9,7 @@ module VCAP::CloudController::Presenters::V3
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         :buildpack,
+        state: VCAP::CloudController::DropletModel::STAGING_STATE,
         package_guid: package.guid,
         app: app,
         build: build

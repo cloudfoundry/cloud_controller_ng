@@ -44,14 +44,14 @@ module VCAP::CloudController
     context 'with droplets' do
       before do
         t        = Time.now
-        @current = DropletModel.make(:staged,
+        @current = DropletModel.make(
           app_guid:     app.guid,
           created_at:   t
         )
         app.update(droplet: @current)
 
         10.times do |i|
-          DropletModel.make(:staged,
+          DropletModel.make(
             app_guid:     app.guid,
             created_at:   t + i,
           )
@@ -99,7 +99,7 @@ module VCAP::CloudController
           app_guid:     app.guid,
           created_at:   t
         )
-        @current = DropletModel.make(:staged,
+        @current = DropletModel.make(
           app_guid:     app.guid,
           package_guid: @current_package.guid
         )

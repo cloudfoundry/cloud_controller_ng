@@ -48,7 +48,7 @@ module VCAP::CloudController
 
       it 'changes the droplet state to STAGED' do
         droplet_model.mark_as_staged
-        expect(droplet_model.state).to be DropletModel::STAGED_STATE
+        expect(droplet_model.state).to eq(DropletModel::STAGED_STATE)
       end
     end
 

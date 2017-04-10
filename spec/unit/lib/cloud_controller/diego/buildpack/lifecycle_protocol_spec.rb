@@ -24,7 +24,7 @@ module VCAP
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
-            let(:droplet) { DropletModel.make(:staged, package_guid: package.guid, app_guid: app.guid) }
+            let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
             let(:process) { App.make(app: app) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
@@ -129,7 +129,7 @@ module VCAP
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) do
-              DropletModel.make(:staged,
+              DropletModel.make(
                 package_guid:    package.guid,
                 app_guid:        app.guid,
                 droplet_hash:    'droplet-sha1-checksum',
@@ -268,9 +268,7 @@ module VCAP
           describe '#desired_lrp_builder' do
             let(:config) { {} }
             let(:app) { AppModel.make(droplet: droplet) }
-            let(:droplet) do
-              DropletModel.make(state: DropletModel::STAGED_STATE)
-            end
+            let(:droplet) { DropletModel.make }
             let(:process) do
               ProcessModel.make(
                 app:      app,
@@ -286,8 +284,8 @@ module VCAP
                 droplet_uri:        'www.droplet.com',
                 droplet_hash:       droplet.droplet_hash,
                 process_guid:       ProcessGuid.from_process(process),
-                checksum_algorithm: 'sha1',
-                checksum_value:     droplet.droplet_hash,
+                checksum_algorithm: 'sha256',
+                checksum_value:     droplet.sha256_checksum,
                 start_command:      'go go go',
               }
             end

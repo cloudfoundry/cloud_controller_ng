@@ -12,7 +12,7 @@ module VCAP
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(:docker, app: app) }
-            let(:droplet) { DropletModel.make(:staged, package: package, app: app) }
+            let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:process) { App.make(app: app) }
 
             before do

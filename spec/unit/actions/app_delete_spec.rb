@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated droplets' do
-          droplet = DropletModel.make(:staged, app: app)
+          droplet = DropletModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)

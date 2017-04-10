@@ -14,19 +14,19 @@ RSpec.describe 'Droplets' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
       VCAP::CloudController::DropletModel.make(
-        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid:                    app_model.guid,
-        package_guid:                package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                     app_model.guid,
+        package_guid:                 package_model.guid,
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error_description:                       'example error',
-        environment_variables:       { 'cloud' => 'foundry' },
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-checksum-sha256',
-        process_types: { 'web' => 'start-command' },
-        staging_memory_in_mb: 100,
-        staging_disk_in_mb: 200,
+        error_description:            'example error',
+        environment_variables:        { 'cloud' => 'foundry' },
+        execution_metadata:           'some-data',
+        droplet_hash:                 'shalalala',
+        sha256_checksum:              'droplet-checksum-sha256',
+        process_types:                { 'web' => 'start-command' },
+        staging_memory_in_mb:         100,
+        staging_disk_in_mb:           200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -49,17 +49,17 @@ RSpec.describe 'Droplets' do
           'type' => 'buildpack',
           'data' => {
             'buildpacks' => ['http://buildpack.git.url.com'],
-            'stack' => 'stack-name'
+            'stack'      => 'stack-name'
           }
         },
         'staging_memory_in_mb'  => 100,
         'staging_disk_in_mb'    => 200,
         'result'                => {
-          'checksum'               => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-          'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-          'stack'                  => 'stack-name',
-          'execution_metadata'     => 'some-data',
-          'process_types'          => { 'web' => 'start-command' }
+          'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+          'stack'              => 'stack-name',
+          'execution_metadata' => 'some-data',
+          'process_types'      => { 'web' => 'start-command' }
         },
         'environment_variables' => { 'cloud' => 'foundry' },
         'created_at'            => iso8601,
@@ -103,6 +103,8 @@ RSpec.describe 'Droplets' do
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
+        droplet_hash:                     nil,
+        sha256_checksum:                  nil,
         buildpack_receipt_buildpack:      buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
         buildpack_receipt_stack_name:     'stack-1',
@@ -118,7 +120,7 @@ RSpec.describe 'Droplets' do
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
-        sha256_checksum: 'droplet-checksum-sha256',
+        sha256_checksum:              'droplet-checksum-sha256',
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -126,7 +128,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error_description:                        'example-error'
+        error_description:            'example-error'
       )
     end
 
@@ -161,17 +163,17 @@ RSpec.describe 'Droplets' do
               'type' => 'buildpack',
               'data' => {
                 'buildpacks' => ['http://buildpack.git.url.com'],
-                'stack' => 'stack-2'
+                'stack'      => 'stack-2'
               }
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 456,
             'result'                => {
-              'checksum'               => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-              'stack'                  => 'stack-2',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+              'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+              'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+              'stack'              => 'stack-2',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -191,17 +193,17 @@ RSpec.describe 'Droplets' do
               'type' => 'buildpack',
               'data' => {
                 'buildpacks' => [buildpack.name],
-                'stack' => 'stack-1'
+                'stack'      => 'stack-1'
               }
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 235,
             'result'                => {
-              'checksum'               => { 'type' => 'sha1', 'value' => nil },
-              'buildpacks'             => [{ 'name' => buildpack.name, 'detect_output' => nil }],
-              'stack'                  => 'stack-1',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+              'checksum'           => { 'type' => 'sha1', 'value' => nil },
+              'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+              'stack'              => 'stack-1',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -360,12 +362,14 @@ RSpec.describe 'Droplets' do
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
+        droplet_hash:                     nil,
+        sha256_checksum:                  nil,
         buildpack_receipt_buildpack:      buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error_description:                            'example-error',
+        error_description:                'example-error',
         state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
@@ -375,7 +379,7 @@ RSpec.describe 'Droplets' do
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
-        sha256_checksum: 'droplet-checksum-sha256',
+        sha256_checksum:              'droplet-checksum-sha256',
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -383,7 +387,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error_description:                        'example-error'
+        error_description:            'example-error'
       )
     end
 
@@ -437,17 +441,17 @@ RSpec.describe 'Droplets' do
               'type' => 'buildpack',
               'data' => {
                 'buildpacks' => ['http://buildpack.git.url.com'],
-                'stack' => 'stack-2'
+                'stack'      => 'stack-2'
               }
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 456,
             'result'                => {
-              'checksum'               => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-              'stack'                  => 'stack-2',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+              'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+              'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+              'stack'              => 'stack-2',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -467,17 +471,17 @@ RSpec.describe 'Droplets' do
               'type' => 'buildpack',
               'data' => {
                 'buildpacks' => [buildpack.name],
-                'stack' => 'stack-1'
+                'stack'      => 'stack-1'
               }
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 235,
             'result'                => {
-              'checksum'               => { 'type' => 'sha1', 'value' => nil },
-              'buildpacks'             => [{ 'name' => buildpack.name, 'detect_output' => nil }],
-              'stack'                  => 'stack-1',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+              'checksum'           => { 'type' => 'sha1', 'value' => nil },
+              'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+              'stack'              => 'stack-1',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -509,12 +513,14 @@ RSpec.describe 'Droplets' do
         app_guid:                         app_model.guid,
         created_at:                       Time.at(1),
         package_guid:                     package_model.guid,
+        droplet_hash:                     nil,
+        sha256_checksum:                  nil,
         buildpack_receipt_buildpack:      buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
         buildpack_receipt_stack_name:     'stack-1',
         environment_variables:            { 'yuu' => 'huuu' },
         staging_disk_in_mb:               235,
-        error_description:                            'example-error',
+        error_description:                'example-error',
         state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
@@ -525,7 +531,7 @@ RSpec.describe 'Droplets' do
         created_at:                   Time.at(2),
         package_guid:                 package_model.guid,
         droplet_hash:                 'my-hash',
-        sha256_checksum: 'droplet-checksum-sha256',
+        sha256_checksum:              'droplet-checksum-sha256',
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-2',
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -533,7 +539,7 @@ RSpec.describe 'Droplets' do
         staging_memory_in_mb:         123,
         staging_disk_in_mb:           456,
         execution_metadata:           'black-box-secrets',
-        error_description:                        'example-error'
+        error_description:            'example-error'
       )
     end
 
@@ -587,17 +593,17 @@ RSpec.describe 'Droplets' do
               'type' => 'buildpack',
               'data' => {
                 'buildpacks' => ['http://buildpack.git.url.com'],
-                'stack' => 'stack-2'
+                'stack'      => 'stack-2'
               }
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 456,
             'result'                => {
-              'checksum'               => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpacks'             => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-              'stack'                  => 'stack-2',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+              'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+              'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+              'stack'              => 'stack-2',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -617,17 +623,17 @@ RSpec.describe 'Droplets' do
               'type' => 'buildpack',
               'data' => {
                 'buildpacks' => [buildpack.name],
-                'stack' => 'stack-1'
+                'stack'      => 'stack-1'
               }
             },
             'staging_memory_in_mb'  => 123,
             'staging_disk_in_mb'    => 235,
             'result'                => {
-              'checksum'               => { 'type' => 'sha1', 'value' => nil },
-              'buildpacks'             => [{ 'name' => buildpack.name, 'detect_output' => nil }],
-              'stack'                  => 'stack-1',
-              'execution_metadata'     => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'          => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
+              'checksum'           => { 'type' => 'sha1', 'value' => nil },
+              'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+              'stack'              => 'stack-1',
+              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
             },
             'environment_variables' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at'            => iso8601,
@@ -650,23 +656,24 @@ RSpec.describe 'Droplets' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
-        state:                       VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid:                    app_model.guid,
-        package_guid:                package_model.guid,
-        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                     app_model.guid,
+        package_guid:                 package_model.guid,
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
-        error_description:                       nil,
-        environment_variables:       { 'cloud' => 'foundry' },
-        execution_metadata: 'some-data',
-        droplet_hash: 'shalalala',
-        sha256_checksum: 'droplet-checksum-sha256',
-        process_types: { 'web' => 'start-command' },
-        staging_memory_in_mb: 100,
-        staging_disk_in_mb: 200,
+        error_description:            nil,
+        environment_variables:        { 'cloud' => 'foundry' },
+        execution_metadata:           'some-data',
+        droplet_hash:                 'shalalala',
+        sha256_checksum:              'droplet-checksum-sha256',
+        process_types:                { 'web' => 'start-command' },
+        staging_memory_in_mb:         100,
+        staging_disk_in_mb:           200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
-    let(:copy_request_json) do {
+    let(:copy_request_json) do
+      {
         relationships: {
           app: { data: { guid: new_app.guid } }
         }
@@ -680,7 +687,7 @@ RSpec.describe 'Droplets' do
       post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, json_headers(developer_headers)
 
       parsed_response = MultiJson.load(last_response.body)
-      copied_droplet = VCAP::CloudController::DropletModel.last
+      copied_droplet  = VCAP::CloudController::DropletModel.last
 
       expect(last_response.status).to eq(201), "Expected 201, got status: #{last_response.status} with body: #{parsed_response}"
       expect(parsed_response).to be_a_response_like({
@@ -691,7 +698,7 @@ RSpec.describe 'Droplets' do
           'type' => 'buildpack',
           'data' => {
             'buildpacks' => ['http://buildpack.git.url.com'],
-            'stack' => 'stack-name'
+            'stack'      => 'stack-name'
           }
         },
         'staging_memory_in_mb'  => 100,
