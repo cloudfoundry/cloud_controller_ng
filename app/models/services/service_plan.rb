@@ -77,7 +77,7 @@ module VCAP::CloudController
     def self.plan_ids_for_visible_service_instances(user)
       plan_ids = []
       user.spaces.each do |space|
-        space.service_instances.each do |service_instance|
+        space.service_instances.select(&:managed_instance?).each do |service_instance|
           plan_ids << service_instance.service_plan.id
         end
       end

@@ -186,6 +186,7 @@ module VCAP::CloudController
         let!(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
         let!(:service_instance2) { ManagedServiceInstance.make(service_plan: non_public_plan, space: space) }
         let!(:service_instance3) { ManagedServiceInstance.make(service_plan: inactive_plan, space: space) }
+        let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
         let!(:other_service_instance) { ManagedServiceInstance.make(service_plan: other_plan, space: other_space) }
 
         before do
