@@ -28,11 +28,10 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      buildpack = find_guid_and_validate_access(:delete, guid)
-      response = do_delete(buildpack)
+      find_guid_and_validate_access(:delete, guid)
 
-      BuildpackBitsDelete.delete_when_safe(buildpack.key, @config[:staging][:timeout_in_seconds])
-      response
+      job = Jobs::Runtime::BuildpackDelete.new(guid: guid, timeout: @config[:staging][:timeout_in_seconds])
+      enqueue_deletion_job(job)
     end
 
     def self.not_found_exception_name(_model_class)

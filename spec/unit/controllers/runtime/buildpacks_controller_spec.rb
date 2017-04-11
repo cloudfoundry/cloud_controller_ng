@@ -79,9 +79,6 @@ module VCAP::CloudController
         VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', key: 'xyz', position: 1 })
       end
 
-      before { Delayed::Worker.delay_jobs = false }
-      after { Delayed::Worker.delay_jobs = true }
-
       it 'returns NOT AUTHORIZED (403) for non admins' do
         set_current_user(user)
 
@@ -89,27 +86,46 @@ module VCAP::CloudController
         expect(last_response.status).to eq(403)
       end
 
-      context 'create a default buildpack' do
-        it 'destroys the buildpack key in the blobstore' do
-          buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-          buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']), buildpack1.key)
+      context 'with sufficient permissions' do
+        context 'with async false' do
+          before do
+            buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
+            buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']), buildpack1.key)
+          end
 
-          expect { delete "/v2/buildpacks/#{buildpack1.guid}" }.to change {
-            buildpack_blobstore.exists?(buildpack1.key)
-          }.from(true).to(false)
+          it 'destroys the buildpack entry and enqueues a job to delete the object from the blobstore' do
+            expect(Delayed::Job.first).to be_nil
+            delete "/v2/buildpacks/#{buildpack1.guid}"
 
-          expect(last_response.status).to eq(204)
+            expect(last_response.status).to eq(204)
+            expect(Buildpack.find(name: buildpack1.name)).to be_nil
 
-          expect(Buildpack.find(name: buildpack1.name)).to be_nil
+            blobstore_delete_job = Delayed::Job.first
+            expect(blobstore_delete_job).not_to be_nil
+            expect(blobstore_delete_job.payload_object).to be_an_instance_of Jobs::Runtime::BlobstoreDelete
+          end
+
+          it 'does not fail if no buildpack bits were ever uploaded' do
+            buildpack1.update_from_hash(key: nil)
+            expect(buildpack1.key).to be_nil
+
+            delete "/v2/buildpacks/#{buildpack1.guid}"
+            expect(last_response.status).to eql(204)
+            expect(Buildpack.find(name: buildpack1.name)).to be_nil
+          end
         end
 
-        it 'does not fail if no buildpack bits were ever uploaded' do
-          buildpack1.update_from_hash(key: nil)
-          expect(buildpack1.key).to be_nil
+        context 'with async true' do
+          it 'queues the buildpack deletion as a job' do
+            expect(Delayed::Job.first).to be_nil
+            delete "/v2/buildpacks/#{buildpack1.guid}?async=true"
 
-          delete "/v2/buildpacks/#{buildpack1.guid}"
-          expect(last_response.status).to eql(204)
-          expect(Buildpack.find(name: buildpack1.name)).to be_nil
+            expect(last_response.status).to eq(202), "Expected 202, got #{last_response.status}, body: #{last_response.body}"
+
+            buildpack_delete_job = Delayed::Job.first
+            expect(buildpack_delete_job).not_to be_nil
+            expect(buildpack_delete_job).to be_a_fully_wrapped_job_of Jobs::Runtime::BuildpackDelete
+          end
         end
       end
     end
