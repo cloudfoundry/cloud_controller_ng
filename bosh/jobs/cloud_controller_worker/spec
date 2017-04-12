@@ -35,6 +35,9 @@ consumes:
 - name: nats
   type: nats
   optional: true
+- name: database
+  type: database
+  optional: true
 
 properties:
   ssl.skip_cert_verify:
