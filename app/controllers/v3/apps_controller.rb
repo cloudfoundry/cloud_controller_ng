@@ -168,8 +168,8 @@ class AppsV3Controller < ApplicationController
   end
 
   def assign_current_droplet
-    app_guid                 = params[:guid]
-    droplet_guid             = HashUtils.dig(params[:body], 'data', 'guid')
+    app_guid     = params[:guid]
+    droplet_guid = HashUtils.dig(params[:body], 'data', 'guid')
     cannot_remove_droplet! if params[:body].key?('data') && droplet_guid.nil?
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
@@ -179,11 +179,11 @@ class AppsV3Controller < ApplicationController
     SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
 
     render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
-      resource_path: "apps/#{app_guid}",
-      related_instance: droplet,
-      relationship_name: 'current_droplet',
+      resource_path:         "apps/#{app_guid}",
+      related_instance:      droplet,
+      relationship_name:     'current_droplet',
       related_resource_name: 'droplets',
-      app_model: app
+      app_model:             app
     )
   rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::Error => e
     unprocessable!(e.message)
@@ -196,12 +196,12 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
-      resource_path: "apps/#{app.guid}",
-      related_instance: droplet,
-      relationship_name: 'current_droplet',
+      resource_path:         "apps/#{app.guid}",
+      related_instance:      droplet,
+      relationship_name:     'current_droplet',
       related_resource_name: 'droplets',
-      app_model: app
-            )
+      app_model:             app
+    )
   end
 
   def current_droplet
