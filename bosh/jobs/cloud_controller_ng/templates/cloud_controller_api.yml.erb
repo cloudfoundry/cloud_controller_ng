@@ -437,13 +437,32 @@ rate_limiter:
   unauthenticated_limit: <%= p("cc.rate_limiter.unauthenticated_limit") %>
   reset_interval_in_minutes: <%= p("cc.rate_limiter.reset_interval_in_minutes") %>
 
+<%
+use_mtls = p("cc.diego.temporary_cc_uploader_mtls")
+
+cc_uploader_url = nil
+if_link("cc_uploader") do |cc_uploader|
+  if use_mtls
+    cc_uploader_url = "https://#{cc_uploader.p("internal_hostname")}:#{cc_uploader.p("https_port")}"
+  else
+    cc_uploader_url = "http://#{cc_uploader.p("internal_hostname")}:#{cc_uploader.p("http_port")}"
+  end
+end.else do
+  if use_mtls
+    cc_uploader_url = p("cc.diego.cc_uploader_https_url")
+  else
+    cc_uploader_url = p("cc.diego.cc_uploader_url")
+  end
+end
+%>
+
 diego:
   bbs:
     url: <%= p("cc.diego.bbs.url") %>
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls_ca.crt
-  cc_uploader_url: <%= p("cc.diego.cc_uploader_url") %>
+  cc_uploader_url: <%= cc_uploader_url %>
   docker_staging_stack: <%= p("cc.diego.docker_staging_stack") %>
   file_server_url: <%= p("cc.diego.file_server_url") %>
   insecure_docker_registry_list: <%= p("cc.diego.insecure_docker_registry_list") %>
