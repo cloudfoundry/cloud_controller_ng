@@ -22,8 +22,7 @@ class BuildsController < ApplicationController
     build = BuildCreate.new.create_and_stage(
       package: package,
       lifecycle: lifecycle,
-      message: message,
-      user_audit_info: user_audit_info)
+      message: message)
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e

@@ -128,7 +128,7 @@ module VCAP::CloudController
             expect(result.legacy_download_user).to eq('vcap')
 
             expect(result.completion_callback_url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
-                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
+                                   "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
 
             timeout_action = result.action.timeout_action
             expect(timeout_action).not_to be_nil
@@ -249,7 +249,7 @@ module VCAP::CloudController
           it 'sets the completion callback' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.completion_callback_url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
-                                   "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}")
+                                   "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
           end
 
           it 'sets the trusted cert path' do

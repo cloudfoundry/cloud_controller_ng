@@ -5,32 +5,18 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe BuildPresenter do
     let(:app) { VCAP::CloudController::AppModel.make }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app) }
-    let(:build) { VCAP::CloudController::BuildModel.make(state: VCAP::CloudController::BuildModel::STAGING_STATE) }
-    let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        :buildpack,
-        state: VCAP::CloudController::DropletModel::STAGING_STATE,
-        package_guid: package.guid,
-        app: app,
-        build: build
-      )
-    end
+    let(:buildpack) { 'the-happiest-buildpack' }
+    let(:stack) { 'the-happiest-stack' }
+    let(:build) { VCAP::CloudController::BuildModel.make(state: VCAP::CloudController::BuildModel::STAGING_STATE, package: package) }
+    let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpack: [buildpack], stack: stack, build: build) }
 
     describe '#to_hash' do
       let(:result) { BuildPresenter.new(build).to_hash }
-      let(:buildpack) { 'the-happiest-buildpack' }
       context 'buildpack lifecycle' do
-        before do
-          build.droplet = droplet
-          droplet.lifecycle_data.buildpack = buildpack
-          droplet.lifecycle_data.stack = 'the-happiest-stack'
-          droplet.save
-        end
-
         it 'presents the build as a hash' do
           links = {
             self: { href: "#{link_prefix}/v3/builds/#{build.guid}" },
-            app: { href: "#{link_prefix}/v3/apps/#{app.guid}" },
+            app:  { href: "#{link_prefix}/v3/apps/#{app.guid}" },
           }
 
           expect(result[:guid]).to eq(build.guid)
@@ -60,11 +46,6 @@ module VCAP::CloudController::Presenters::V3
         context 'when there is no buildpack' do
           let(:buildpack) { nil }
 
-          before do
-            droplet.lifecycle_data.buildpack = buildpack
-            droplet.save
-          end
-
           it 'has an empty array of buildpacks' do
             expect(result[:lifecycle][:data][:buildpacks]).to eq([])
           end
@@ -72,19 +53,14 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'docker lifecycle' do
-        let!(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :docker,
-            package: package,
-            app: app,
-            build: build,
-          )
+        before do
+          build.buildpack_lifecycle_data = nil
         end
 
         it 'presents the build as a hash' do
           links = {
             self: { href: "#{link_prefix}/v3/builds/#{build.guid}" },
-            app: { href: "#{link_prefix}/v3/apps/#{app.guid}" },
+            app:  { href: "#{link_prefix}/v3/apps/#{app.guid}" },
           }
 
           expect(result[:guid]).to eq(build.guid)
@@ -104,9 +80,20 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the droplet has finished staging' do
+        let(:droplet) do
+          VCAP::CloudController::DropletModel.make(
+            :buildpack,
+            state:        VCAP::CloudController::DropletModel::STAGED_STATE,
+            package_guid: package.guid,
+            app:          app,
+            build:        build
+          )
+        end
+
         before do
-          droplet.state = VCAP::CloudController::DropletModel::STAGED_STATE
-          droplet.save
+          build.droplet = droplet
+          build.state = droplet.state
+          build.save
         end
 
         it 'shows the droplet guid and state as STAGED' do
@@ -117,10 +104,20 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the droplet stages with an error' do
+        let(:droplet) do
+          VCAP::CloudController::DropletModel.make(
+            :buildpack,
+            state:             VCAP::CloudController::DropletModel::FAILED_STATE,
+            package_guid:      package.guid,
+            app:               app,
+            build:             build,
+            error_description: 'something bad'
+          )
+        end
+
         before do
-          droplet.state = VCAP::CloudController::DropletModel::FAILED_STATE
-          droplet.error_description = 'something bad'
-          droplet.save
+          build.state = droplet.state
+          build.error_description = droplet.error_description
         end
 
         it 'populates the error field and state as FAILED' do

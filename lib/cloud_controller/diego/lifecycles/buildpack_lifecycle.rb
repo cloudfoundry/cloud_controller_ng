@@ -29,6 +29,14 @@ module VCAP::CloudController
       )
     end
 
+    def create_lifecycle_data_model_for_build(build)
+      VCAP::CloudController::BuildpackLifecycleDataModel.create(
+        buildpack: buildpack_to_use,
+        stack:     requested_stack,
+        build:     build
+      )
+    end
+
     def staging_environment_variables
       {
         'CF_STACK' => staging_stack

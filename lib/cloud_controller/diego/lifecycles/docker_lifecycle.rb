@@ -14,6 +14,9 @@ module VCAP::CloudController
     def create_lifecycle_data_model(_)
     end
 
+    def create_lifecycle_data_model_for_build(_)
+    end
+
     def staging_environment_variables
       {}
     end

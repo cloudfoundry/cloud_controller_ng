@@ -93,19 +93,6 @@ RSpec.describe 'Builds' do
 
       expect(last_response.status).to eq(201), last_response.body
       expect(parsed_response).to be_a_response_like(expected_response)
-
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include(
-        type:              'audit.app.droplet.create',
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        'my-app',
-        actor:             developer.guid,
-        actor_type:        'user',
-        actor_username:    user_name,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid,
-      )
     end
   end
 
@@ -118,9 +105,15 @@ RSpec.describe 'Builds' do
       build: build,
     )
     }
+    let(:body) do
+      { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
+                                                stack: 'cflinuxfs2' } } }
+    end
+    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.create_from_http_request(body) }
 
     before do
-      droplet.buildpack_lifecycle_data.update(buildpack: 'http://github.com/myorg/awesome-buildpack', stack: 'cflinuxfs2')
+      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model_for_build(build)
+      build.update(state: droplet.state, error_description: droplet.error_description)
     end
     it 'shows the build' do
       get "v3/builds/#{build.guid}", nil, json_headers(developer_headers)

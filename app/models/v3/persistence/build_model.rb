@@ -15,5 +15,21 @@ module VCAP::CloudController
       key: :package_guid,
       primary_key: :guid,
       without_guid_generation: true
+    one_to_one :buildpack_lifecycle_data,
+      class:       'VCAP::CloudController::BuildpackLifecycleDataModel',
+      key:         :build_guid,
+      primary_key: :guid
+
+    add_association_dependencies buildpack_lifecycle_data: :delete
+
+    def lifecycle_type
+      return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
+      DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def lifecycle_data
+      return buildpack_lifecycle_data if buildpack_lifecycle_data
+      DockerLifecycleDataModel.new
+    end
   end
 end

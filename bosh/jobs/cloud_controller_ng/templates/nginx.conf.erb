@@ -82,7 +82,7 @@ http {
       proxy_pass http://cloud_controller;
     }
 
-    location ~ /internal/v3/staging/.*/droplet_completed {
+    location ~ /internal/v3/staging/.*/(droplet_completed|build_completed) {
       proxy_pass http://cloud_controller;
     }
 

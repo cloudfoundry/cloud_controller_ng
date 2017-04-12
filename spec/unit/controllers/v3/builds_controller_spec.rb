@@ -33,12 +33,11 @@ RSpec.describe BuildsController, type: :controller do
       expect(response.status).to eq 201
     end
 
-    it 'creates a new droplet for the package and associates the droplet with a new build' do
+    it 'creates a new build for the package' do
       expect { post :create, body: req_body }.
-        to change { [VCAP::CloudController::DropletModel.count, VCAP::CloudController::BuildModel.count] }.from([0, 0]).to([1, 1])
-      droplet = VCAP::CloudController::DropletModel.last
-      expect(droplet.package.guid).to eq(package.guid)
-      expect(VCAP::CloudController::BuildModel.last.droplet).to eq(droplet)
+        to change { VCAP::CloudController::BuildModel.count }.from(0).to(1)
+      build = VCAP::CloudController::BuildModel.last
+      expect(build.package.guid).to eq(package.guid)
     end
 
     context 'if staging is in progress on any package on the app' do
@@ -108,7 +107,7 @@ RSpec.describe BuildsController, type: :controller do
             post :create, body: req_body
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
+            expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
           end
 
           context 'when the url is invalid' do
@@ -130,7 +129,7 @@ RSpec.describe BuildsController, type: :controller do
             post :create, body: req_body
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
+            expect(VCAP::CloudController::BuildModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
           end
 
           context 'when the buildpack does not exist' do
@@ -160,7 +159,7 @@ RSpec.describe BuildsController, type: :controller do
             post :create, body: req_body
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to be_nil
+            expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpack).to be_nil
           end
         end
 
@@ -179,7 +178,7 @@ RSpec.describe BuildsController, type: :controller do
             post :create, body: req_body
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to be_nil
+            expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpack).to be_nil
           end
         end
       end
@@ -201,7 +200,7 @@ RSpec.describe BuildsController, type: :controller do
             post :create, body: req_body_without_lifecycle
 
             expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
+            expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
           end
         end
       end
@@ -237,12 +236,11 @@ RSpec.describe BuildsController, type: :controller do
           VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
         end
 
-        it 'returns a 201 Created response and creates a build model with an associated droplet' do
+        it 'returns a 201 Created response and creates a build model with an associated package' do
           expect { post :create, body: req_body }.
             to change { VCAP::CloudController::BuildModel.count }.from(0).to(1)
-          droplet = VCAP::CloudController::DropletModel.last
-          expect(droplet.package.guid).to eq(package.guid)
-          expect(VCAP::CloudController::BuildModel.last.droplet).to eq(droplet)
+          build = VCAP::CloudController::BuildModel.last
+          expect(build.package.guid).to eq(package.guid)
 
           expect(response.status).to eq 201
         end

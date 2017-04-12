@@ -18,9 +18,6 @@ module VCAP::CloudController
     let(:disk_limit_calculator) { double(:disk_limit_calculator) }
     let(:environment_builder) { double(:environment_builder) }
 
-    let(:user) { User.make }
-    let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
-
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
@@ -69,44 +66,26 @@ module VCAP::CloudController
     end
 
     describe '#create_and_stage' do
-      it 'creates an audit event' do
-        expect(Repositories::DropletEventRepository).to receive(:record_create_by_staging).with(
-          instance_of(DropletModel),
-          user_audit_info,
-          staging_message.audit_hash,
-          app.name,
-          space.guid,
-          org.guid
-        )
-
-        action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
-      end
-
       context 'creating a build and dependent droplet' do
         it 'creates a build' do
           build = nil
 
           expect {
-            build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
-          }.to change { [DropletModel.count, BuildModel.count] }.by([1, 1])
+            build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+          }.to change { BuildModel.count }.by(1)
 
           expect(build.state).to eq(BuildModel::STAGING_STATE)
           expect(build.package_guid).to eq(package.guid)
-          droplet = build.droplet
-          expect(droplet.state).to eq(DropletModel::STAGING_STATE)
-          expect(droplet.lifecycle_data.to_hash).to eq(lifecycle_data)
-          expect(droplet.package_guid).to eq(package.guid)
-          expect(droplet.app_guid).to eq(app.guid)
-          expect(droplet.lifecycle_data).to_not be_nil
+          expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
         end
       end
 
       describe 'creating a stage request' do
         it 'initiates a staging request' do
-          build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+          build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.package).to eq(package)
-            expect(staging_details.staging_guid).to eq(build.droplet.guid)
+            expect(staging_details.staging_guid).to eq(build.guid)
             expect(staging_details.staging_memory_in_mb).to eq(calculated_mem_limit)
             expect(staging_details.staging_disk_in_mb).to eq(calculated_staging_disk_in_mb)
             expect(staging_details.environment_variables).to eq(environment_variables)
@@ -130,7 +109,7 @@ module VCAP::CloudController
               end
 
               it 'does not set an isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to be_nil
                 end
@@ -144,7 +123,7 @@ module VCAP::CloudController
               end
 
               it 'sets the isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                 end
@@ -160,7 +139,7 @@ module VCAP::CloudController
                   end
 
                   it 'does not set the isolation segment' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to be_nil
                     end
@@ -175,7 +154,7 @@ module VCAP::CloudController
                   end
 
                   it 'sets the IS from the space' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to eq(isolation_segment_model_2.name)
                     end
@@ -195,7 +174,7 @@ module VCAP::CloudController
                 end
 
                 it 'sets the isolation segment' do
-                  action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+                  action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
                   expect(stager).to have_received(:stage) do |staging_details|
                     expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                   end
@@ -211,17 +190,10 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
           it 'raises an InvalidPackage exception' do
             expect {
-              action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message, user_audit_info: user_audit_info)
+              action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
             }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
           end
         end
-      end
-    end
-
-    describe '#create_and_stage_without_event' do
-      it 'does not create an audit event' do
-        expect(Repositories::DropletEventRepository).not_to receive(:record_create_by_staging)
-        action.create_and_stage_without_event(package: package, lifecycle: lifecycle, message: staging_message)
       end
     end
   end

@@ -9,13 +9,13 @@ module VCAP::CloudController
             guid: build.guid,
             created_at: build.created_at,
             updated_at: build.updated_at,
-            state: droplet.state,
-            error: droplet.error_description,
+            state: build.state,
+            error: build.error_description,
             lifecycle: {
-              type: droplet.lifecycle_type,
-              data: droplet.lifecycle_data.to_hash
+              type: build.lifecycle_type,
+              data: build.lifecycle_data.to_hash
             },
-            package: { guid: package.guid },
+            package: { guid: build.package_guid },
             droplet: droplet_guid,
             links: build_links,
           }
@@ -32,21 +32,17 @@ module VCAP::CloudController
         end
 
         def droplet_guid
-          if VCAP::CloudController::DropletModel::FINAL_STATES.include?(droplet.state)
+          if build.droplet && VCAP::CloudController::DropletModel::FINAL_STATES.include?(build.droplet.state)
             return { guid: droplet.guid }
           end
           nil
-        end
-
-        def package
-          droplet.package
         end
 
         def build_links
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
             self: { href: url_builder.build_url(path: "/v3/builds/#{build.guid}") },
-            app: { href: url_builder.build_url(path: "/v3/apps/#{package.app.guid}") },
+            app: { href: url_builder.build_url(path: "/v3/apps/#{build.package.app.guid}") },
           }
         end
       end

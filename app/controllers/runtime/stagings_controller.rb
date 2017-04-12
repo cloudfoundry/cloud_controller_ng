@@ -120,15 +120,44 @@ module VCAP::CloudController
     def upload_droplet(guid)
       droplet = DropletModel.find(guid: guid)
 
-      raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
-      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{guid}") unless upload_path
+      if droplet.nil?
+        build = BuildModel.find(guid: guid)
+        raise ApiError.new_from_details('NotFound', guid) if build.nil?
+        droplet = create_droplet_from_build(build, build.package)
+      end
+
+      raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{droplet.guid}") unless upload_path
       check_file_md5
 
-      logger.info 'v3-droplet.begin-upload', droplet_guid: guid
+      logger.info 'v3-droplet.begin-upload', droplet_guid: droplet.guid
 
-      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, guid)
+      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, droplet.guid)
 
       Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+    end
+
+    def create_droplet_from_build(build, package)
+      droplet = DropletModel.new(
+        app_guid:                         package.app.guid,
+        package_guid:                     package.guid,
+        state:                            DropletModel::STAGING_STATE, # ##needed for app_usage_events
+        staging_memory_in_mb:             1024, # ###this is weird. needed for app_usage_events
+        buildpack_receipt_buildpack_guid: build.buildpack_receipt_buildpack_guid, # needed?
+        buildpack_receipt_stack_name:     build.buildpack_receipt_stack_name, # needed?
+        build:                            build,
+      )
+
+      buildpack_lifecycle_data = build.buildpack_lifecycle_data
+
+      DropletModel.db.transaction do
+        droplet.save
+        droplet.buildpack_lifecycle_data = buildpack_lifecycle_data
+
+        # record_audit_event(droplet, message, package, user_audit_info)
+      end
+      droplet.reload
+      Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
+      droplet
     end
 
     def upload_path
