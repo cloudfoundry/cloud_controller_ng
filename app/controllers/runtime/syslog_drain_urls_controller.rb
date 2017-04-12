@@ -10,20 +10,30 @@ module VCAP::CloudController
 
     get '/v2/syslog_drain_urls', :list
     def list
-      guid_to_drain_maps = AppModel.
-                           join(ServiceBinding, app_guid: :guid).
-                           where('syslog_drain_url IS NOT NULL').
-                           where("syslog_drain_url != ''").
-                           group("#{AppModel.table_name}__guid".to_sym).
-                           select(
-                             "#{AppModel.table_name}__guid".to_sym,
-          aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls)
-        ).
-                           order(:guid).
-                           limit(batch_size).
-                           offset(last_id).
-                           all
-
+      # TODO: SET ANSI_NULLS, QUOTED_IDENTIFIER, CONCAT_NULL_YIELDS_NULL, ANSI_WARNINGS, ANSI_PADDING ON to the table when it is created?
+      guid_to_drain_maps = if Sequel::Model.db.database_type == :mssql
+                             Sequel::Model.db.fetch("SET ANSI_NULLS, QUOTED_IDENTIFIER, CONCAT_NULL_YIELDS_NULL, ANSI_WARNINGS, ANSI_PADDING ON; SELECT [APPS].[GUID], STUFF((
+                                SELECT ',' + sb.SYSLOG_DRAIN_URL
+                                FROM [SERVICE_BINDINGS] sb
+                                WHERE [APPS].[GUID] = sb.[APP_GUID]
+                                FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') AS [SYSLOG_DRAIN_URLS]
+                                FROM [APPS] INNER JOIN (SELECT * FROM [SERVICE_BINDINGS]) AS [T1] ON ([T1].[APP_GUID] = [APPS].[GUID])
+                                WHERE ((SYSLOG_DRAIN_URL IS NOT NULL) AND (SYSLOG_DRAIN_URL != ''))
+                                GROUP BY [APPS].[GUID] ORDER BY [GUID] OFFSET #{last_id} ROWS FETCH NEXT #{batch_size} ROWS ONLY")
+                           else
+                             AppModel.join(ServiceBinding, app_guid: :guid).
+                               where { Sequel[:syslog_drain_url] !~ nil }.
+                               where { Sequel[:syslog_drain_url] !~ '' }.
+                               group("#{AppModel.table_name}__guid".to_sym).
+                               select(
+                                 "#{AppModel.table_name}__guid".to_sym,
+                                  aggregate_function("#{ServiceBinding.table_name}__syslog_drain_url".to_sym).as(:syslog_drain_urls)
+                                ).
+                               order(:guid).
+                               limit(batch_size).
+                               offset(last_id).
+                               all
+                           end
       next_page_token = nil
       drain_urls = {}
 

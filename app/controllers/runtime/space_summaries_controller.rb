@@ -43,7 +43,7 @@ module VCAP::CloudController
           urls:              process.routes.map(&:uri),
           routes:            process.routes.map(&:as_summary_json),
           service_count:     process.service_bindings_dataset.count,
-          service_names:     process.service_bindings_dataset.map(&:service_instance).map(&:name),
+          service_names:     process.service_bindings_dataset.all.map(&:service_instance).map(&:name),
           running_instances: instances[process.guid],
         }.merge(process.to_hash)
       end

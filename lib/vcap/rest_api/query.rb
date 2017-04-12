@@ -65,7 +65,6 @@ module VCAP::RestAPI
 
     def filter_args_from_query
       return {} unless query
-
       parse.collect do |key, comparison, val|
         query_filter(key, comparison, val)
       end
@@ -109,8 +108,12 @@ module VCAP::RestAPI
 
       if values.empty?
         { key => nil }
+      elsif comparison.include?('IN') || comparison == '='
+        # IN, :
+        { key.to_sym => values }
       else
-        ["#{key} #{comparison} ?", values]
+        # > < >= <=
+        Sequel[@model.table_name][key.to_sym].send(comparison.to_sym, values)
       end
     end
 

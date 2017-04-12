@@ -19,11 +19,10 @@ before_install:
   - wget https://github.com/nats-io/gnatsd/releases/download/v0.9.4/gnatsd-v0.9.4-linux-amd64.zip -O /tmp/gnatsd.zip
   - unzip /tmp/gnatsd.zip
   - export PATH=$PATH:$PWD/gnatsd-v0.9.4-linux-amd64
+  - "if [ \"$DB\" = \"mssql\" ]; then npm install -g sql-cli && ./scripts/run-ms-sql-background.sh; fi"
 
 before_script:
-  - bundle exec rake db:create
-  - DB=mysql bundle exec rake parallel:create
-  - DB=postgres bundle exec rake parallel:create
+  - "if [ -n \"$DB\" ]; then bundle exec rake parallel:create ; fi"
 
 script:
   - bundle exec rake $TASKS
@@ -34,6 +33,7 @@ after_script:
 services:
   - mysql
   - postgresql
+  - docker
 
 addons:
   code_climate:
@@ -46,4 +46,5 @@ env:
   matrix:
     - COVERAGE=true DB=postgres TASKS=spec:all
     - DB=mysql TASKS=spec:all
+    - DB=mssql TASKS=spec:all
     - TASKS=rubocop

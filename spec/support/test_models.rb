@@ -94,7 +94,9 @@ module VCAP::CloudController
 
   class TestModelRedactController < RestController::ModelController
     define_attributes do
-      attribute :redacted, Hash, redact_in: [:create, :update]
+      # TODO: see comment in model_controller_spec around MSSQL and hashes
+      # attribute :redacted, Hash, redact_in: [:create, :update]
+      attribute :redacted, String, redact_in: [:create, :update]
     end
 
     define_messages

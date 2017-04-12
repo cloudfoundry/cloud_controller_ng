@@ -135,7 +135,12 @@ module Sequel::Plugins::VcapSerialization
         elsif hash.key?(attr.to_s)
           key = attr.to_s
         end
-        results[attr] = hash[key] unless key.nil?
+        unless key.nil?
+          # TODO: do we need this hash handling logic?
+          # value = hash[key].class == Hash ? hash[key].to_json : hash[key]
+          # results[attr] = value
+          results[attr] = hash[key]
+        end
       end
       results
     end

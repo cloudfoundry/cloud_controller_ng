@@ -22,7 +22,17 @@
 # http://code.google.com/p/ruby-sequel/issues/detail?id=284
 
 Sequel.migration do
+  # TODO: move ALTER DB into own migration or figure out how to run the rest in a transaction
+  no_transaction
+
   change do
+    if Sequel::Model.db.database_type == :mssql
+      # TODO: these commands seem to fail if there are any other open connections to the DB
+      # Should we force close all other active connections?
+      run 'ALTER DATABASE CURRENT COLLATE SQL_Latin1_General_CP1_CS_AS;'
+      run 'ALTER DATABASE CURRENT SET READ_COMMITTED_SNAPSHOT ON;'
+    end
+
     # rather than creating different tables for each type of events, we're
     # going to denormalize them into one table.
     #
@@ -58,7 +68,7 @@ Sequel.migration do
       VCAP::Migration.common(self, :qd)
 
       String :name, null: false, unique: true, case_insensitive: true
-      Boolean :non_basic_services_allowed, null: false
+      TrueClass :non_basic_services_allowed, null: false
       Integer :total_services, null: false
       Integer :memory_limit, null: false
 
@@ -87,7 +97,7 @@ Sequel.migration do
       String :info_url
       String :acls
       Integer :timeout
-      Boolean :active, default: false
+      TrueClass :active, default: false
 
       index :label
       index [:label, :provider], unique: true
@@ -163,7 +173,7 @@ Sequel.migration do
 
       # Do the bare miminum for now.  We'll migrate this to something
       # fancier later if we need it.
-      Boolean :production, default: false
+      TrueClass :production, default: false
 
       # environment provided by the developer.
       # does not include environment from service
@@ -266,8 +276,8 @@ Sequel.migration do
       Integer :default_space_id
       foreign_key [:default_space_id], :spaces, name: :fk_users_default_space_id
 
-      Boolean :admin,  default: false
-      Boolean :active, default: false
+      TrueClass :admin,  default: false
+      TrueClass :active, default: false
     end
 
     create_table :apps_routes do

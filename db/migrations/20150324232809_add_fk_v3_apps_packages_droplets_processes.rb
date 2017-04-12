@@ -8,7 +8,11 @@ Sequel.migration do
       self[:apps_v3].truncate
       self[:v3_droplets].truncate
       self[:packages].truncate
-      run 'UPDATE apps SET app_guid = NULL;'
+      if Sequel::Model.db.database_type == :mssql
+        run 'UPDATE APPS SET APP_GUID = NULL;'
+      else
+        run 'UPDATE apps SET app_guid = NULL;'
+      end
 
       alter_table(:apps_v3_routes) do
         add_foreign_key :app_v3_id, :apps_v3

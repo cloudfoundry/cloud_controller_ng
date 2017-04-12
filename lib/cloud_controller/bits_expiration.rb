@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       droplets_to_expire = filter_non_expirable(expirable_candidates, droplets_storage_count)
 
-      droplets_to_expire.each do |droplet|
+      droplets_to_expire.all.each do |droplet|
         droplet.update(state: DropletModel::EXPIRED_STATE)
         enqueue_droplet_delete_job(droplet.guid)
       end
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
       packages_to_expire = filter_non_expirable(expirable_candidates, packages_storage_count)
 
-      packages_to_expire.each do |package|
+      packages_to_expire.all.each do |package|
         package.update(state: PackageModel::EXPIRED_STATE)
         enqueue_package_delete_job(package.guid)
       end

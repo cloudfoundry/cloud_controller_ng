@@ -81,7 +81,7 @@ module VCAP::CloudController::Metrics
     end
 
     def update_failed_job_count
-      jobs_by_queue_with_count = Delayed::Job.where('failed_at IS NOT NULL').group_and_count(:queue)
+      jobs_by_queue_with_count = Delayed::Job.where { failed_at !~ nil }.group_and_count(:queue)
 
       total                = 0
       failed_jobs_by_queue = jobs_by_queue_with_count.each_with_object({}) do |row, hash|

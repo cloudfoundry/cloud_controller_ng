@@ -7,11 +7,11 @@ module VCAP::RestAPI
             org_filter(filter, cond)
           elsif cond.key?(:stack)
             stack_filter(filter, cond)
+          elsif cond.key?(:name)
+            name_filter(filter, cond)
           else
             filter.filter(cond)
           end
-        elsif cond[0].starts_with?('name')
-          name_filter(filter, cond)
         else
           filter.filter(cond)
         end

@@ -85,8 +85,9 @@ module VCAP::CloudController
 
     private
 
+    # TODO: Is there a difference between `join(App,...)` (fails on mssql) and `join(App.table_name,...)` (works)?
     def filter_dataset(dataset)
-      dataset.select_all(ServiceBinding.table_name).join(App, app_guid: :app_guid, type: 'web')
+      dataset.select_all(ServiceBinding.table_name).join(App.table_name, app_guid: :app_guid, type: 'web')
     end
 
     def volume_services_enabled?

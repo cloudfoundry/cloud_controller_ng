@@ -20,6 +20,11 @@ class TableTruncator
         tables.each do |table|
           db.run("TRUNCATE TABLE #{table};")
         end
+      when :mssql
+        tables.each do |table|
+          # TODO: could this be changed to TRUNCATE TABLE?
+          db.run("DELETE #{table.upcase};")
+        end
       end
     end
   end

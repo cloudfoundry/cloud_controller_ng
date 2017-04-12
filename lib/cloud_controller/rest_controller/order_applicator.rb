@@ -9,9 +9,24 @@ module VCAP::CloudController::RestController
       validate!
 
       if descending?
-        @order_by.inject(dataset) { |ds, col| ds.order_more(Sequel.desc(col)) }
+        @order_by.inject(dataset) { |ds, col|
+          sql = ds.sql.downcase
+          # if the dataset is already ordered by a `col`, you should not order it by that `col` again.
+          if sql =~ /order by .*#{col.downcase}.* asc$/ || sql =~ /order by .*#{col.downcase}.* desc$/
+            ds.order_by(Sequel.desc(col))
+          else
+            ds.order_more(Sequel.desc(col))
+          end
+        }
       else
-        @order_by.inject(dataset) { |ds, col| ds.order_more(Sequel.asc(col)) }
+        @order_by.inject(dataset) { |ds, col|
+          sql = ds.sql.downcase
+          if sql =~ /order by .*#{col.downcase}.* asc$/ || sql =~ /order by .*#{col.downcase}.* desc$/
+            ds.order_by(Sequel.asc(col))
+          else
+            ds.order_more(Sequel.asc(col))
+          end
+        }
       end
     end
 

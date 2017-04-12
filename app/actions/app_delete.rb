@@ -19,7 +19,7 @@ module VCAP::CloudController
       apps = Array(apps)
 
       apps.each do |app|
-        app.db.transaction do
+        app.db.transaction(retry_on: [Sequel::SerializationFailure]) do
           app.lock!
 
           delete_subresources(app)

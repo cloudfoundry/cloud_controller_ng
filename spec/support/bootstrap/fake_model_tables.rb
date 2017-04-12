@@ -152,7 +152,9 @@ class FakeModelTables
     db.alter_table :unique_str_altered do
       set_column_type :altered_to_default, String
       set_column_type :altered_to_case_sensitive, String, case_insensitive: false
+      drop_index :altered_to_case_insensitive, name: :uniq_str_altered_3
       set_column_type :altered_to_case_insensitive, String, case_insensitive: true
+      add_index [:altered_to_case_insensitive], unique: true, name: 'uniq_str_altered_3'
     end
   end
 
@@ -163,7 +165,7 @@ class FakeModelTables
       Integer :num_val
       String :str_val
       Integer :protected
-      Boolean :published
+      TrueClass :published
       DateTime :published_at
     end
 

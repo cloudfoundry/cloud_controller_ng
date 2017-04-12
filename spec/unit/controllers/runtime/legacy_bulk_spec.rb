@@ -36,11 +36,11 @@ module VCAP::CloudController
 
       it 'requires authentication' do
         get '/bulk/apps'
-        expect(last_response.status).to eq(401)
+        expect(last_response.status).to eq(401), "Response Body: #{last_response.body}"
 
         authorize 'bar', 'foo'
         get '/bulk/apps'
-        expect(last_response.status).to eq(401)
+        expect(last_response.status).to eq(401), "Response Body: #{last_response.body}"
       end
 
       describe 'with authentication' do
@@ -54,7 +54,7 @@ module VCAP::CloudController
             'bulk_token' => '{}',
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
           expect(decoded_response['results']).not_to be_nil
         end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
             'bulk_token' => '{}'
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
           expect(decoded_response['results']).not_to be_nil
         end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
             'bulk_token' => '{}'
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
           decoded_response['results'].each { |key, value|
             expect(value).to be_kind_of Hash
             expect(value['id']).not_to be_nil
@@ -85,7 +85,7 @@ module VCAP::CloudController
             'bulk_token' => '{"id":1}'
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
           expect(decoded_response['results']).to be_empty
         end
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
             'bulk_token' => '{}'
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
           expect(decoded_response['results']).to_not include(app.guid)
           expect(decoded_response['results'].size).to eq(5)
         end
@@ -106,7 +106,7 @@ module VCAP::CloudController
     describe 'GET', '/bulk/counts' do
       it 'requires authentication' do
         get '/bulk/counts', { 'model' => 'user' }
-        expect(last_response.status).to eq(401)
+        expect(last_response.status).to eq(401), "Response Body: #{last_response.body}"
       end
 
       it 'returns the number of users' do

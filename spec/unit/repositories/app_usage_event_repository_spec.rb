@@ -37,7 +37,8 @@ module VCAP::CloudController
         it 'will create an event with default previous attributes' do
           event = repository.create_from_app(app)
 
-          default_instances = App.db_schema[:instances][:default].to_i
+          # MS SQL returns default as ((1))
+          default_instances = App.db_schema[:instances][:default].tr('()', '').to_i
           default_memory    = VCAP::CloudController::Config.config[:default_app_memory]
 
           expect(event.previous_state).to eq('STOPPED')

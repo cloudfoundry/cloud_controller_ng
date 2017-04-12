@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class DatabaseUriGenerator
-    VALID_DB_TYPES = %w(mysql mysql2 postgres postgresql).freeze
+    VALID_DB_TYPES = %w(mysql mysql2 postgres postgresql tinytds).freeze
     RAILS_STYLE_DATABASE_TO_ADAPTER_MAPPING = {
       'mysql' => 'mysql2',
       'postgresql' => 'postgres'

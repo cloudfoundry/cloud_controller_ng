@@ -1,6 +1,7 @@
 Sequel.migration do
   up do
     alter_table :packages do
+      drop_index :space_guid
       drop_column :space_guid
     end
   end

@@ -67,7 +67,6 @@ module VCAP::CloudController
 
     def update(guid)
       @request_attrs = decode_update_request_attrs
-
       censored_attrs = censor(@request_attrs)
       logger.debug 'cc.update', guid: guid, attributes: censored_attrs
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless request_attrs

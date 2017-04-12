@@ -1,4 +1,11 @@
 GIT
+  remote: git://github.com/jeremyevans/sequel.git
+  revision: ee83441c8fdb2c704ec07fdfbcb8ae95b613fa1e
+  ref: ee83441
+  specs:
+    sequel (4.44.0)
+
+GIT
   remote: https://github.com/cloudfoundry/delayed_job_sequel.git
   revision: 908f3883e136bdf53d3b7caac1b88710ef1c7742
   specs:
@@ -348,7 +355,6 @@ GEM
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
     safe_yaml (1.0.4)
-    sequel (4.41.0)
     sexp_processor (4.7.0)
     signet (0.7.3)
       addressable (~> 2.3)
@@ -385,6 +391,8 @@ GEM
     tilt (2.0.2)
     timecop (0.8.1)
     timeliness (0.3.8)
+    tiny_tds (1.0.5)
+      mini_portile2 (~> 2.0)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     unf (0.1.4)
@@ -473,13 +481,14 @@ DEPENDENCIES
   rspec_api_documentation!
   rubocop
   ruby-debug-ide
-  sequel
+  sequel!
   sinatra (~> 1.4)
   sinatra-contrib
   statsd-ruby
   steno
   thin
   timecop
+  tiny_tds (~> 1.0.5)
   unf
   vcap-concurrency!
   vcap_common (~> 4.0.4)

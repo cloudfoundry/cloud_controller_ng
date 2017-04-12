@@ -8,7 +8,7 @@ module VCAP::CloudController
     end
 
     def delete(dataset)
-      dataset.inject([]) do |errors, space_model|
+      dataset.all.inject([]) do |errors, space_model|
         instance_delete_errors = delete_service_instances(space_model)
         unless instance_delete_errors.empty?
           error_message = instance_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")

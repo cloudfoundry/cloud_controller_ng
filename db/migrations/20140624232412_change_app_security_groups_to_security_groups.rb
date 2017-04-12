@@ -28,7 +28,11 @@ Sequel.migration do
       drop_foreign_key [:app_security_group_id], name: :fk_app_security_group_id
       drop_index [:app_security_group_id, :space_id], name: 'asgs_spaces_ids'
 
-      rename_column(:app_security_group_id, :security_group_id)
+      if Sequel::Model.db.database_type == :mssql
+        rename_column(:app_security_group_id, 'SECURITY_GROUP_ID')
+      else
+        rename_column(:app_security_group_id, :security_group_id)
+      end
 
       add_foreign_key [:security_group_id], :security_groups, name: :fk_security_group_id
       add_index [:security_group_id, :space_id], name: 'sgs_spaces_ids'

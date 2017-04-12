@@ -72,13 +72,14 @@ module VCAP::CloudController
     end
 
     def run!
+      setup_cloud_controller_precursors
+
       create_pidfile
 
       EM.run do
         begin
           message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
-
-          start_cloud_controller(message_bus)
+          setup_message_bus_dependencies(message_bus)
 
           Dea::SubSystem.setup!(message_bus)
 
@@ -134,13 +135,16 @@ module VCAP::CloudController
 
     private
 
-    def start_cloud_controller(message_bus)
+    def setup_cloud_controller_precursors
       setup_logging
       setup_db
       Config.configure_components(@config)
       setup_loggregator_emitter
 
       @config[:external_host] = VCAP.local_ip(@config[:local_route])
+    end
+
+    def setup_message_bus_dependencies(message_bus)
       Config.configure_components_depending_on_message_bus(message_bus)
     end
 

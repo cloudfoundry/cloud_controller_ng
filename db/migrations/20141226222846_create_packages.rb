@@ -8,7 +8,11 @@ Sequel.migration do
       index :type
       String :package_hash
       String :state, null: false
-      String :error, text: true
+      if Sequel::Model.db.database_type == :mssql
+        String :error, size: :max
+      else
+        String :error, text: true
+      end
       String :url
     end
   end

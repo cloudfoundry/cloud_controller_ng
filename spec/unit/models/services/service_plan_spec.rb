@@ -132,18 +132,27 @@ module VCAP::CloudController
       end
 
       it 'cannot be destroyed if associated service_instances exist' do
+        conn = DbConfig.new.connection
+        type = conn.database_type
+
         service_plan = ServicePlan.make
         ManagedServiceInstance.make(service_plan: service_plan)
-        expect {
-          service_plan.destroy
-        }.to raise_error Sequel::DatabaseError, /foreign key/
+        if type == :mssql
+          expect {
+            service_plan.destroy
+          }.to raise_error Sequel::ForeignKeyConstraintViolation
+        else
+          expect {
+            service_plan.destroy
+          }.to raise_error Sequel::DatabaseError, /foreign key/
+        end
       end
     end
 
     describe '.plan_ids_from_private_brokers' do
       let(:organization) { Organization.make }
-      let(:space_1) { Space.make(organization: organization, id: Space.count + 9998) }
-      let(:space_2) { Space.make(organization: organization, id: Space.count + 9999) }
+      let(:space_1) { Space.make(organization: organization) }
+      let(:space_2) { Space.make(organization: organization) }
       let(:user) { User.make }
       let(:broker_1) { ServiceBroker.make(space: space_1) }
       let(:broker_2) { ServiceBroker.make(space: space_2) }

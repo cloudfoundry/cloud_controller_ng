@@ -1,6 +1,10 @@
 Sequel.migration do
   up do
     alter_table(:env_groups) do
+      if Sequel::Model.db.database_type == :mssql
+        drop_constraint(Sequel::Model.db.default_constraint_name('ENV_GROUPS', 'ENVIRONMENT_JSON'))
+      end
+
       add_column :salt, String
       set_column_allow_null(:environment_json)
       set_column_default(:environment_json, nil)
@@ -21,6 +25,9 @@ Sequel.migration do
     end
 
     alter_table(:env_groups) do
+      if Sequel::Model.db.database_type == :mssql
+        drop_constraint(Sequel::Model.db.default_constraint_name('ENV_GROUPS', 'ENVIRONMENT_JSON'))
+      end
       set_column_allow_null(:environment_json, false)
       set_column_default(:environment_json, '{}')
       drop_column :salt
