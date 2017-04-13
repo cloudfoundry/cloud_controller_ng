@@ -122,7 +122,7 @@ module VCAP::CloudController::Diego
       end
 
       context 'when the app does not have a database_uri' do
-        let(:app_env_vars) { {'DATABASE_URL' => 'cool-db'} }
+        let(:app_env_vars) { { 'DATABASE_URL' => 'cool-db' } }
         before do
           allow(app).to receive(:database_uri).and_return(nil)
         end

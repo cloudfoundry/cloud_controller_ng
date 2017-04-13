@@ -669,6 +669,15 @@ module VCAP::CloudController
               )
             end
           end
+
+          context 'when the same builder is used twice' do
+            it 'should build the same app lrp' do
+              lrp = builder.build_app_lrp
+              expect(lrp.action).to eq(expected_action)
+              lrp2 = builder.build_app_lrp
+              expect(lrp2.action).to eq(expected_action)
+            end
+          end
         end
 
         context 'when the lifecycle_type is "docker"' do

@@ -178,7 +178,7 @@ module VCAP::CloudController
       end
 
       def generate_environment_variables(lrp_builder)
-        environment_variables = lrp_builder.port_environment_variables
+        environment_variables = lrp_builder.port_environment_variables.clone
 
         env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
         env.each do |i|

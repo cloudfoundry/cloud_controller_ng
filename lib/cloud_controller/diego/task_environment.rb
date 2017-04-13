@@ -13,16 +13,16 @@ module VCAP::CloudController
 
         task_env =
           initial_envs.
-            merge(app_env).
-            merge(VCAP_APPLICATION: vcap_application, MEMORY_LIMIT: "#{task.memory_in_mb}m").
-            merge(SystemEnvPresenter.new(app.service_bindings).system_env)
+          merge(app_env).
+          merge('VCAP_APPLICATION' => vcap_application, 'MEMORY_LIMIT' => "#{task.memory_in_mb}m").
+          merge(SystemEnvPresenter.new(app.service_bindings).system_env.stringify_keys)
 
-        task_env = task_env.merge(DATABASE_URL: app.database_uri) if app.database_uri
+        task_env = task_env.merge('DATABASE_URL' => app.database_uri) if app.database_uri
 
         task_env
       end
 
-      attr_accessor :app, :task, :space, :initial_envs
+      attr_reader :app, :task, :space, :initial_envs
 
       private
 
