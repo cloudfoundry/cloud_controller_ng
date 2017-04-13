@@ -22,6 +22,17 @@ includes:
   - concepts/concepts
   - workflows/workflows
   - resources/header
+  - resources/isolation_segments/header
+  - resources/isolation_segments/object
+  - resources/isolation_segments/create
+  - resources/isolation_segments/get
+  - resources/isolation_segments/update
+  - resources/isolation_segments/delete
+  - resources/isolation_segments/list
+  - resources/isolation_segments/assign
+  - resources/isolation_segments/unassign
+  - resources/isolation_segments/list_organizations
+  - resources/isolation_segments/list_spaces
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
@@ -54,17 +65,6 @@ includes:
   - experimental_resources/droplets/list
   - experimental_resources/droplets/app/list
   - experimental_resources/droplets/package/list
-  - experimental_resources/isolation_segments/header
-  - experimental_resources/isolation_segments/object
-  - experimental_resources/isolation_segments/create
-  - experimental_resources/isolation_segments/get
-  - experimental_resources/isolation_segments/update
-  - experimental_resources/isolation_segments/delete
-  - experimental_resources/isolation_segments/list
-  - experimental_resources/isolation_segments/assign
-  - experimental_resources/isolation_segments/unassign
-  - experimental_resources/isolation_segments/list_organizations
-  - experimental_resources/isolation_segments/list_spaces
   - experimental_resources/organizations/header
   - experimental_resources/organizations/object
   - experimental_resources/organizations/list
