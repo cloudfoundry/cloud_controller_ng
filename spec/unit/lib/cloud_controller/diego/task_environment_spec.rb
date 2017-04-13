@@ -114,9 +114,22 @@ module VCAP::CloudController::Diego
         before do
           allow(app).to receive(:database_uri).and_return('fake-database-uri')
         end
+
         it 'includes DATABASE_URL' do
           constructed_envs = TaskEnvironment.new(app, task, space).build
           expect(constructed_envs).to include({ 'DATABASE_URL' => 'fake-database-uri' })
+        end
+      end
+
+      context 'when the app does not have a database_uri' do
+        let(:app_env_vars) { {'DATABASE_URL' => 'cool-db'} }
+        before do
+          allow(app).to receive(:database_uri).and_return(nil)
+        end
+
+        it 'uses the DATABASE_URL from the apps environment variable' do
+          constructed_envs = TaskEnvironment.new(app, task, space).build
+          expect(constructed_envs).to include({ 'DATABASE_URL' => 'cool-db' })
         end
       end
     end
