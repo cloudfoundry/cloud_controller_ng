@@ -3,6 +3,7 @@ require 'fetchers/v2/app_query'
 require 'actions/v2/app_stage'
 require 'actions/v2/app_create'
 require 'actions/v2/app_update'
+require 'actions/v2/route_mapping_create'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -286,14 +287,14 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
 
       begin
-        RouteMappingCreate.new(user_audit_info, route, app).add(request_attrs)
-      rescue RouteMappingCreate::DuplicateRouteMapping
+        V2::RouteMappingCreate.new(user_audit_info, route, app).add(request_attrs)
+      rescue V2::RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
-      rescue RouteMappingCreate::RoutingApiDisabledError
+      rescue V2::RouteMappingCreate::RoutingApiDisabledError
         raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
-      rescue RouteMappingCreate::RouteServiceNotSupportedError
+      rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
         raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
-      rescue RouteMappingCreate::SpaceMismatch
+      rescue V2::RouteMappingCreate::SpaceMismatch
         raise CloudController::Errors::InvalidRelation.new(
           'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space.')
       end
