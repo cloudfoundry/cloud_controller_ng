@@ -79,7 +79,7 @@ module VCAP::CloudController
       def staging_completion_callback(staging_details, config)
         auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
         host_port = "#{config[:internal_service_hostname]}:#{config[:external_port]}"
-        path      = "/internal/v3/staging/#{staging_details.staging_guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+        path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
         "http://#{auth}@#{host_port}#{path}"
       end
 

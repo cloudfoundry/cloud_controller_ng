@@ -232,6 +232,20 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
           expect(last_response.body).to match /JobTimeout/
+          build.reload
+          expect(build.state).to eq(BuildModel::FAILED_STATE)
+          expect(build.error_description).to eq('droplet failed to stage')
+        end
+
+        it 'propagates other errors from staging_response' do
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(StandardError)
+
+          post url, MultiJson.dump(staging_response)
+          expect(last_response.status).to eq(500)
+          expect(last_response.body).to match /ServerError/
+          build.reload
+          expect(build.state).to eq(BuildModel::FAILED_STATE)
+          expect(build.error_description).to eq('droplet failed to stage')
         end
 
         context 'when staging failed' do
@@ -301,6 +315,64 @@ module VCAP::CloudController
           end
         end
       end
+    end
+
+    context 'staging fails, calls back to /build_completed' do
+      let(:url) { "/internal/v3/staging/#{staging_guid}/build_completed" }
+      let(:staged_app) { AppModel.make }
+      let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
+      let(:build) { BuildModel.make(package_guid: package.guid) }
+      # let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpack: buildpack, stack: 'cflinuxfs2', build: build) }
+      let(:staging_guid) { build.guid }
+      let(:staging_result) { nil }
+      let(:staging_result_json) {  MultiJson.dump(staging_result)  }
+      let(:staging_response) do
+        {
+          failed: failure_reason.present?,
+          failure_reason: failure_reason,
+          result: staging_result_json,
+        }
+      end
+
+      before do
+        @internal_user = 'internal_user'
+        @internal_password = 'internal_password'
+        authorize @internal_user, @internal_password
+      end
+
+      context 'no droplet was uploaded' do
+        let!(:droplet) { nil }
+        let(:failure_reason) { 'bad buildpack"' }
+        let(:staging_error) do { error: "bad buildpack"} end
+
+        it 'sets the build to the failed state' do
+          post url, MultiJson.dump(staging_response)
+          expect(last_response.status).to eq(200), last_response.body
+          build.reload
+          expect(build.state).to eq(BuildModel::FAILED_STATE)
+          expect(build.error_description).to eq('staging failed')
+        end
+
+      end
+
+      context 'have droplet but staging failed' do
+        let!(:droplet) { DropletModel.make }
+        let(:failure_reason) { 'something went wrong' }
+
+        before do
+          build.droplet = droplet
+        end
+
+        it 'sets the build to the failed state' do
+          post url, MultiJson.dump(staging_response)
+          expect(last_response.status).to eq(200)
+          build.reload
+          expect(build.state).to eq(BuildModel::FAILED_STATE)
+          expect(build.error_description).to eq('Staging error: staging failed')
+        end
+
+      end
+
     end
   end
 end

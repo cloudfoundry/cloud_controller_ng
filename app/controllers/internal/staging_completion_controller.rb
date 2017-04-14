@@ -55,25 +55,33 @@ module VCAP::CloudController
       build            = BuildModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Build not found') if build.nil?
 
-      droplet = build.droplet #### droplet is created in stagings_controller (which seems to be called before this.
-      # but does it get called in a failed droplet??? brings up the question whether we would even have a droplet at this point during a failure)
-      # droplet = create_droplet_from_build(build, package)
-
       if staging_response.key? :failed
         staging_response = parse_bbs_task_callback(staging_response)
       end
 
+      droplet = build.droplet
       begin
-        stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
-        build.update(state: droplet.state, error_description: droplet.error_description)
+        if droplet.nil?
+          final_state = BuildModel::FAILED_STATE
+          final_error_description = staging_response.dig(:error, :message) || 'no droplet'
+        else
+          stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
+          final_state = droplet.state
+          final_error_description = droplet.error_description
+        end
 
       rescue CloudController::Errors::ApiError => api_err
         logger.error('diego.staging.completion-controller-api_err-error', error: api_err)
+        final_state = BuildModel::FAILED_STATE
+        final_error_description = 'droplet failed to stage'
         raise api_err
       rescue => e
-        puts e
         logger.error('diego.staging.completion-controller-error', error: e)
+        final_state = BuildModel::FAILED_STATE
+        final_error_description = 'droplet failed to stage'
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
+      ensure
+        build.update(state: final_state, error_description: final_error_description)
       end
 
       [200, '{}']

@@ -102,7 +102,7 @@ module VCAP::CloudController
             lifecycle:           lifecycle_type,
             lifecycle_data:      { 'some' => 'data' },
             completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
-            "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
+            "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}"
           })
         end
       end
