@@ -1752,17 +1752,32 @@ module VCAP::CloudController
           )
         end
 
+        context 'when a route is neither mapped to a route nor bound to a service instance' do
+          it 'deletes the route' do
+            mapped_route = Route.make(space: space)
+
+            delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
+
+            expect(last_response.status).to eq(204)
+            expect(mapped_route.exists?).to eq(false)
+
+            expect(last_response.body).to be_empty
+            expect(Event.find(type: 'audit.route.delete-request')).not_to be_nil
+          end
+        end
+
         context 'when a route is mapped to an app' do
-          it 'does not delete it' do
+          it 'does not delete it and does not send any event to ...' do
             mapped_route = Route.make(space: space)
             RouteMappingModel.make(app: process.app, route: mapped_route, app_port: 9090)
 
             delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
-            expect(last_response.status).to eq(204), "Expected 204, got: #{last_response.status} with body: #{last_response.body}"
-            expect(mapped_route.exists?).to eq(true), "Expected route '#{mapped_route.guid}' to exist"
+            expect(last_response.status).to eq(204)
+            expect(mapped_route.exists?).to eq(true)
 
             expect(last_response.body).to be_empty
+            expect(Event.all).to be_empty
           end
         end
 
@@ -1774,10 +1789,11 @@ module VCAP::CloudController
 
             delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
-            expect(last_response.status).to eq(204), "Expected 204, got: #{last_response.status} with body: #{last_response.body}"
-            expect(mapped_route.exists?).to eq(true), "Expected route '#{mapped_route.guid}' to exist"
+            expect(last_response.status).to eq(204)
+            expect(mapped_route.exists?).to eq(true)
 
             expect(last_response.body).to be_empty
+            expect(Event.all).to be_empty
           end
         end
       end

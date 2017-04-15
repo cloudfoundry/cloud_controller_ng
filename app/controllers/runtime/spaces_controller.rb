@@ -252,11 +252,9 @@ module VCAP::CloudController
         route_event_repository: @route_event_repository,
         user_audit_info: UserAuditInfo.from_context(SecurityContext))
 
-      space.db.transaction do
-        space.routes.
-          select { |route| route.apps.empty? && !route.service_instance.present? }.
-          each { |route| validate_access(:delete, route) }.
-          each { |route| route_delete_action.atomic_delete(route: route) }
+      space.routes.each do |route|
+        validate_access(:delete, route)
+        route_delete_action.delete_unmapped_route(route: route)
       end
 
       [HTTP::NO_CONTENT, nil]
