@@ -3,6 +3,7 @@ require 'securerandom'
 
 RSpec.describe 'Staging an app', type: :integration do
   before do
+    Fog.unmock!
     start_nats(debug: false)
     start_cc(debug: false, config: 'spec/fixtures/config/port_8181_config.yml')
     @tmpdir = Dir.mktmpdir
@@ -89,6 +90,8 @@ RSpec.describe 'Staging an app', type: :integration do
         '{}',
         authed_headers
       )
+
+      @locator = CloudController::DependencyLocator.send(:new, VCAP::CloudController::Config.from_file("spec/fixtures/config/port_8181_config.yml"));      
     end
 
     context 'and the admin has not uploaded yet the buildpacks' do
@@ -221,6 +224,48 @@ RSpec.describe 'Staging an app', type: :integration do
             end
           end
         end
+      end
+    end
+
+    def delete_app guid
+      @app_delete_response = make_delete_request(
+        "/v2/apps/"+guid,
+        authed_headers
+      )
+    end
+  
+    def check_app guid
+      @app_check_response = make_get_request(
+        "/v2/apps/"+guid,
+        authed_headers
+      )
+    end
+  
+    def stop_app guid
+      @app_stop_response = make_put_request(
+        "/v2/apps/#{@app_response.json_body["metadata"]["guid"]}",
+        { state: "STOPPED" }.to_json,
+        authed_headers
+      )
+    end
+    
+    context "on app deletion " do
+      it "should delete package blobstore" do
+        metadata = JSON.parse(@app_response.body)
+        guid = "#{metadata["metadata"]["guid"]}"
+  
+        packageFileCount = @locator.package_blobstore.files.length
+  
+        expect((check_app guid).code).to eq("200")
+        expect((delete_app guid).code).to eq("204")
+  
+        ENV["CLOUD_CONTROLLER_NG_CONFIG"] = "spec/fixtures/config/port_8181_config.yml"
+        run_cmd("bundle exec rake jobs:generic ", {wait: false})
+        sleep 10 #since there is no good way to wait for the job
+     
+        expect(JSON.parse((check_app guid).body)["code"]).should eq(100004)
+        expect("CF-AppNotFound").to include(JSON.parse((check_app guid).body)["error_code"])
+        expect(@locator.package_blobstore.files.length).to eq(packageFileCount - 1)
       end
     end
   end
