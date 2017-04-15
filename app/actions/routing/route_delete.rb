@@ -6,6 +6,7 @@ module VCAP::CloudController
       @app_event_repository   = app_event_repository
       @route_event_repository = route_event_repository
       @user_audit_info        = user_audit_info
+      @logger = Steno.logger('cc.action.route_delete')
     end
 
     def delete_sync(route:, recursive:)
@@ -27,6 +28,8 @@ module VCAP::CloudController
       if delete_count > 0
         route_event_repository.record_route_delete_request(route, user_audit_info, false)
       end
+    rescue Sequel::ForeignKeyConstraintViolation => e
+      @logger.info("Tried to delete route '#{route.guid}', got error: #{e}")
     end
 
     private

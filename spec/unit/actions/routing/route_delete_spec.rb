@@ -58,6 +58,17 @@ module VCAP::CloudController
           expect(route_binding.exists?).to eq(true)
         end
       end
+
+      context 'when a foreign key violation occurs' do
+        before do
+          allow(Route).to receive(:where).and_raise(Sequel::ForeignKeyConstraintViolation)
+        end
+
+        it 'does not delete the route' do
+          route_delete_action.delete_unmapped_route(route: route)
+          expect(route.exists?).to eq(true)
+        end
+      end
     end
 
     describe 'delete_sync' do

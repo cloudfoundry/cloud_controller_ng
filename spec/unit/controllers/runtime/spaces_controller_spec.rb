@@ -1754,12 +1754,12 @@ module VCAP::CloudController
 
         context 'when a route is neither mapped to a route nor bound to a service instance' do
           it 'deletes the route' do
-            mapped_route = Route.make(space: space)
+            unmapped_route = Route.make(space: space)
 
             delete "/v2/spaces/#{space.guid}/unmapped_routes", {}, headers_for(user)
 
             expect(last_response.status).to eq(204)
-            expect(mapped_route.exists?).to eq(false)
+            expect(unmapped_route.exists?).to eq(false)
 
             expect(last_response.body).to be_empty
             expect(Event.find(type: 'audit.route.delete-request')).not_to be_nil
