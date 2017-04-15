@@ -1730,7 +1730,7 @@ module VCAP::CloudController
               unmapped_route = Route.make(space: space)
 
               delete "/v2/spaces/#{space.guid}/unmapped_routes"
-              expect(last_response.status).to eq(expected_return_value), "Expected #{expected_return_value}, got: #{last_response.status} with body: #{last_response.body}"
+              expect(last_response.status).to eq(expected_return_value), "Expected #{expected_return_value}, got: #{last_response.status} body: #{last_response.body} role: #{role}"
 
               if last_response.status == 204
                 expect(unmapped_route.exists?).to eq(false), "Expected route '#{unmapped_route.guid}' to not exist"
