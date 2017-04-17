@@ -324,6 +324,14 @@ module VCAP::CloudController
         expect(Encryptor.db_encryption_key).to eq('123-456')
       end
 
+      it 'sets up encryption' do
+        Config.configure_components(@test_config.merge(encryption: { fips_mode: true, fips_algorithm: 'BOGUS-ALGO', fips_iterations: 30000, fips_iv_length: 32 }))
+        expect(Encryptor.encryption[:fips_mode]).to be_truthy
+        expect(Encryptor.encryption[:fips_algorithm]).to eq('BOGUS-ALGO')
+        expect(Encryptor.encryption[:fips_iterations]).to eq(30000)
+        expect(Encryptor.encryption[:fips_iv_length]).to eq(32)
+      end
+
       it 'sets up the account capacity' do
         Config.configure_components(@test_config.merge(admin_account_capacity: { memory: 64 * 1024 }))
         expect(AccountCapacity.admin[:memory]).to eq(64 * 1024)

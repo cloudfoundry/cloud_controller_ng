@@ -6,6 +6,31 @@ module VCAP::CloudController::Encryptor
   class << self
     ALGORITHM = 'AES-128-CBC'.freeze
 
+    FIPS_MODE = false
+    FIPS_ALGORITHM = 'AES-128-CBC'
+    FIPS_IV_LENGTH = 16
+    FIPS_ITERATIONS = 20000
+
+    attr_accessor :db_encryption_key
+
+    def encryption
+      @encryption ||= {
+        fips_mode: FIPS_MODE,
+        fips_algorithm: FIPS_ALGORITHM,
+        fips_iv_length: FIPS_IV_LENGTH,
+        fips_iterations: FIPS_ITERATIONS
+      }
+    end
+
+    def configure(config)
+      key = 'encryption'.to_sym
+      return unless config.key?(key)
+      options = send(key)
+      config[key].each do |param, value|
+        options[param.to_sym] = value
+      end
+    end
+
     def generate_salt
       SecureRandom.hex(4).to_s
     end
@@ -19,8 +44,6 @@ module VCAP::CloudController::Encryptor
       return nil unless encrypted_input
       run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt)
     end
-
-    attr_accessor :db_encryption_key
 
     private
 
