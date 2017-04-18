@@ -23,7 +23,6 @@ module VCAP::CloudController
         build_creator.create_and_stage_without_event(
           package:             app.latest_package,
           lifecycle:           lifecycle,
-          message:             message,
           start_after_staging: true
         )
 

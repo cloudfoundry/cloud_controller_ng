@@ -18,6 +18,15 @@ module VCAP::CloudController
     let(:disk_limit_calculator) { double(:disk_limit_calculator) }
     let(:environment_builder) { double(:environment_builder) }
 
+    let(:staging_message) { BuildCreateMessage.create_from_http_request(request) }
+    let(:request) do
+      {
+        lifecycle: {
+          type: 'buildpack',
+          data: lifecycle_data
+        },
+      }.deep_stringify_keys
+    end
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
@@ -25,19 +34,6 @@ module VCAP::CloudController
     let(:org) { space.organization }
     let(:app) { AppModel.make(space: space) }
 
-    let(:staging_message) { BuildCreateMessage.create_from_http_request(request) }
-
-    let(:request) do
-      {
-        package: {
-          guid: package.guid,
-        },
-        lifecycle: {
-          type: 'buildpack',
-          data: lifecycle_data
-        },
-      }.deep_stringify_keys
-    end
     let(:buildpack_git_url) { 'http://example.com/repo.git' }
     let(:stack) { Stack.default }
     let(:lifecycle_data) do
@@ -71,7 +67,7 @@ module VCAP::CloudController
           build = nil
 
           expect {
-            build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+            build = action.create_and_stage(package: package, lifecycle: lifecycle)
           }.to change { BuildModel.count }.by(1)
 
           expect(build.state).to eq(BuildModel::STAGING_STATE)
@@ -82,7 +78,7 @@ module VCAP::CloudController
 
       describe 'creating a stage request' do
         it 'initiates a staging request' do
-          build = action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+          build = action.create_and_stage(package: package, lifecycle: lifecycle)
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.package).to eq(package)
             expect(staging_details.staging_guid).to eq(build.guid)
@@ -109,7 +105,7 @@ module VCAP::CloudController
               end
 
               it 'does not set an isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+                action.create_and_stage(package: package, lifecycle: lifecycle)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to be_nil
                 end
@@ -123,7 +119,7 @@ module VCAP::CloudController
               end
 
               it 'sets the isolation segment' do
-                action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+                action.create_and_stage(package: package, lifecycle: lifecycle)
                 expect(stager).to have_received(:stage) do |staging_details|
                   expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                 end
@@ -139,7 +135,7 @@ module VCAP::CloudController
                   end
 
                   it 'does not set the isolation segment' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+                    action.create_and_stage(package: package, lifecycle: lifecycle)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to be_nil
                     end
@@ -154,7 +150,7 @@ module VCAP::CloudController
                   end
 
                   it 'sets the IS from the space' do
-                    action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+                    action.create_and_stage(package: package, lifecycle: lifecycle)
                     expect(stager).to have_received(:stage) do |staging_details|
                       expect(staging_details.isolation_segment).to eq(isolation_segment_model_2.name)
                     end
@@ -174,7 +170,7 @@ module VCAP::CloudController
                 end
 
                 it 'sets the isolation segment' do
-                  action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+                  action.create_and_stage(package: package, lifecycle: lifecycle)
                   expect(stager).to have_received(:stage) do |staging_details|
                     expect(staging_details.isolation_segment).to eq(isolation_segment_model.name)
                   end
@@ -190,7 +186,7 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
           it 'raises an InvalidPackage exception' do
             expect {
-              action.create_and_stage(package: package, lifecycle: lifecycle, message: staging_message)
+              action.create_and_stage(package: package, lifecycle: lifecycle)
             }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
           end
         end

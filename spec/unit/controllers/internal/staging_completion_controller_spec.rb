@@ -325,7 +325,7 @@ module VCAP::CloudController
       # let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpack: buildpack, stack: 'cflinuxfs2', build: build) }
       let(:staging_guid) { build.guid }
       let(:staging_result) { nil }
-      let(:staging_result_json) {  MultiJson.dump(staging_result)  }
+      let(:staging_result_json) { MultiJson.dump(staging_result) }
       let(:staging_response) do
         {
           failed: failure_reason.present?,
@@ -343,7 +343,7 @@ module VCAP::CloudController
       context 'no droplet was uploaded' do
         let!(:droplet) { nil }
         let(:failure_reason) { 'bad buildpack"' }
-        let(:staging_error) do { error: "bad buildpack"} end
+        let(:staging_error) do { error: 'bad buildpack' } end
 
         it 'sets the build to the failed state' do
           post url, MultiJson.dump(staging_response)
@@ -352,7 +352,6 @@ module VCAP::CloudController
           expect(build.state).to eq(BuildModel::FAILED_STATE)
           expect(build.error_description).to eq('staging failed')
         end
-
       end
 
       context 'have droplet but staging failed' do
@@ -370,9 +369,7 @@ module VCAP::CloudController
           expect(build.state).to eq(BuildModel::FAILED_STATE)
           expect(build.error_description).to eq('Staging error: staging failed')
         end
-
       end
-
     end
   end
 end

@@ -29,8 +29,8 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def create_and_stage(package:, lifecycle:, message:, start_after_staging: false)
-      logger.info("creating build for package #{message.package_guid}")
+    def create_and_stage(package:, lifecycle:, start_after_staging: false)
+      logger.info("creating build for package #{package.guid}")
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details                     = get_staging_details(package, lifecycle)
@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       build = BuildModel.new({
         state:        BuildModel::STAGING_STATE,
-        package_guid: message.package_guid,
+        package_guid: package.guid,
       }.merge(lifecycle.pre_known_receipt_information))
 
       BuildModel.db.transaction do
