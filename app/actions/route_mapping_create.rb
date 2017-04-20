@@ -11,24 +11,24 @@ module VCAP::CloudController
     class RouteServiceNotSupportedError < InvalidRouteMapping
     end
 
-    DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
+    DUPLICATE_MESSAGE     = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
 
     def initialize(user_audit_info, route, process)
       @user_audit_info = user_audit_info
-      @app = process.app
-      @route = route
-      @process = process
+      @app             = process.app
+      @route           = route
+      @process         = process
     end
 
     def add(message)
       validate!
 
       route_mapping = RouteMappingModel.new(
-        app: @app,
-        route: @route,
+        app:          app,
+        route:        route,
         process_type: message.process_type,
-        app_port: VCAP::CloudController::App::DEFAULT_HTTP_PORT
+        app_port:     VCAP::CloudController::App::DEFAULT_HTTP_PORT
       )
 
       route_handler = ProcessRouteHandler.new(process)
@@ -74,11 +74,11 @@ module VCAP::CloudController
     end
 
     def validate_route_services!
-      raise RouteServiceNotSupportedError.new if !@route.route_service_url.nil? && !process.diego?
+      raise RouteServiceNotSupportedError.new if !route.route_service_url.nil? && !process.diego?
     end
 
     def validate_routing_api_enabled!
-      if Config.config[:routing_api].nil? && @route.domain.shared? && @route.domain.router_group_guid
+      if Config.config[:routing_api].nil? && route.domain.shared? && route.domain.router_group_guid
         raise RoutingApiDisabledError.new('Routing API is disabled')
       end
     end

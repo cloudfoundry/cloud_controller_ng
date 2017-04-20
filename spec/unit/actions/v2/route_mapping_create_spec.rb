@@ -131,35 +131,33 @@ module VCAP::CloudController
           end
 
           context 'diego' do
-            context 'buildpack' do
-              let(:process) { App.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
+            let(:process) { App.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
-              context 'requesting available port' do
-                let(:requested_port) { 5678 }
-                it 'succeeds' do
-                  mapping = route_mapping_create.add
-                  expect(app.reload.routes).to eq([route])
-                  expect(mapping.app_port).to eq(5678)
-                end
+            context 'requesting available port' do
+              let(:requested_port) { 5678 }
+              it 'succeeds' do
+                mapping = route_mapping_create.add
+                expect(app.reload.routes).to eq([route])
+                expect(mapping.app_port).to eq(5678)
               end
+            end
 
-              context 'requesting unavailable' do
-                let(:requested_port) { 8888 }
-                it 'raises' do
-                  expect {
-                    route_mapping_create.add
-                  }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
-                end
+            context 'requesting unavailable' do
+              let(:requested_port) { 8888 }
+              it 'raises' do
+                expect {
+                  route_mapping_create.add
+                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
               end
+            end
 
-              context 'not requesting a port' do
-                let(:request_attrs) { {} }
+            context 'not requesting a port' do
+              let(:request_attrs) { {} }
 
-                it 'succeeds using the first available port from the process' do
-                  mapping = route_mapping_create.add
-                  expect(app.reload.routes).to eq([route])
-                  expect(mapping.app_port).to eq(1234)
-                end
+              it 'succeeds using the first available port from the process' do
+                mapping = route_mapping_create.add
+                expect(app.reload.routes).to eq([route])
+                expect(mapping.app_port).to eq(1234)
               end
             end
           end

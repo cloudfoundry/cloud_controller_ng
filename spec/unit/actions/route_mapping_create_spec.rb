@@ -23,9 +23,12 @@ module VCAP::CloudController
     describe '#add' do
       let(:route) { Route.make(space: space) }
 
-      it 'associates the app to the route' do
-        route_mapping_create.add(message)
-        expect(app.reload.routes).to eq([route])
+      it 'maps the route' do
+        expect {
+          route_mapping = route_mapping_create.add(message)
+          expect(route_mapping.route.guid).to eq(route.guid)
+          expect(route_mapping.process.guid).to eq(process.guid)
+        }.to change { RouteMappingModel.count }.by(1)
       end
 
       it 'delegates to the route handler to update route information' do
@@ -66,25 +69,23 @@ module VCAP::CloudController
         end
 
         context 'diego' do
-          context 'buildpack' do
-            let(:process) { App.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
+          let(:process) { App.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
-            it 'succeeds using the first available port from the process' do
-              route_mapping_create.add(message)
-              expect(app.reload.routes).to eq([route])
-            end
+          it 'succeeds with the default port' do
+            mapping = route_mapping_create.add(message)
+            expect(app.reload.routes).to eq([route])
+            expect(mapping.app_port).to eq(App::DEFAULT_HTTP_PORT)
           end
         end
 
         context 'docker' do
           let(:process) { AppFactory.make(app: app, diego: true, type: process_type, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
-          let(:requested_port) { 8888 }
 
           before do
             allow_any_instance_of(AppModel).to receive(:lifecycle_type).and_return(DockerLifecycleDataModel::LIFECYCLE_TYPE)
           end
 
-          it 'does not validate' do
+          it 'succeeds' do
             route_mapping_create.add(message)
             expect(app.reload.routes).to eq([route])
           end
