@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Route Mappings' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
-  let(:process) { VCAP::CloudController::App.make(:process, app: app_model, type: 'worker', ports: [8888]) }
+  let(:process) { VCAP::CloudController::App.make(:process, app: app_model, type: 'worker', ports: [8080]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:developer) { make_developer_for_space(space) }
   let(:user_name) { 'roto' }
@@ -32,7 +32,7 @@ RSpec.describe 'Route Mappings' do
 
       expected_response = {
         'guid'       => route_mapping.guid,
-        'app_port'   => 8888,
+        'app_port'   => 8080,
         'created_at' => iso8601,
         'updated_at' => iso8601,
 
@@ -56,7 +56,7 @@ RSpec.describe 'Route Mappings' do
       expect(route_mapping.app_guid).to eq(app_model.guid)
       expect(route_mapping.route_guid).to eq(route.guid)
       expect(route_mapping.process_type).to eq('worker')
-      expect(route_mapping.app_port).to eq(8888)
+      expect(route_mapping.app_port).to eq(8080)
 
       # verify audit event
       event = VCAP::CloudController::Event.last
@@ -71,7 +71,7 @@ RSpec.describe 'Route Mappings' do
         space_guid:        space.guid,
         metadata:          {
                              route_guid:         route.guid,
-                             app_port:           8888,
+                             app_port:           8080,
                              route_mapping_guid: route_mapping.guid,
                              process_type:       'worker'
                            }.to_json,
@@ -191,14 +191,14 @@ RSpec.describe 'Route Mappings' do
   end
 
   describe 'GET /v3/route_mappings/:route_mapping_guid' do
-    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker', app_port: 8888) }
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker', app_port: 8080) }
 
     it 'retrieves the requests route mapping' do
       get "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
 
       expected_response = {
         'guid'       => route_mapping.guid,
-        'app_port'   => 8888,
+        'app_port'   => 8080,
         'created_at' => iso8601,
         'updated_at' => iso8601,
 
