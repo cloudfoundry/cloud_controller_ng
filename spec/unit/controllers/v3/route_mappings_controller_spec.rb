@@ -11,7 +11,6 @@ RSpec.describe RouteMappingsController, type: :controller do
   describe '#create' do
     let(:req_body) do
       {
-        app_port: 8888,
         relationships: {
           app:     { guid: app.guid },
           route:   { guid: route.guid },

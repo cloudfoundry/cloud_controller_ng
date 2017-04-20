@@ -5,10 +5,9 @@ module VCAP::CloudController
   RSpec.describe RouteMappingsCreateMessage do
     let(:body) do
       {
-        'app_port' => 1234,
         'relationships' => {
-          'route'    => { 'guid' => 'some-route-guid' },
-          'process'  => { 'type' => 'web' }
+          'route'   => { 'guid' => 'some-route-guid' },
+          'process' => { 'type' => 'web' }
         }
       }
     end
@@ -18,7 +17,6 @@ module VCAP::CloudController
 
       expect(message).to be_a(RouteMappingsCreateMessage)
       expect(message.route_guid).to eq('some-route-guid')
-      expect(message.app_port).to eq(1234)
       expect(message.process_type).to eq('web')
     end
 
@@ -31,9 +29,10 @@ module VCAP::CloudController
       context 'when unexpected keys are requested' do
         let(:body) do
           {
-            unexpected: 'woah',
+            unexpected:    'woah',
+            app_port:      '1234',
             relationships: {
-              route: { guid: 'some-route-guid' },
+              route:   { guid: 'some-route-guid' },
               process: { type: 'web' }
             }
           }
@@ -43,56 +42,7 @@ module VCAP::CloudController
           message = RouteMappingsCreateMessage.new(body)
 
           expect(message).not_to be_valid
-          expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
-        end
-      end
-
-      describe 'app_port' do
-        let(:body) do
-          {
-          relationships: {
-              route: { guid: 'some-route-guid' },
-              process: { type: 'web' },
-              app: { guid: '123' }
-            }
-          }
-        end
-
-        context 'when app_port is present' do
-          it 'is valid' do
-            body[:app_port] = 8888
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).to be_valid
-          end
-
-          it 'is not valid when app_port is a string' do
-            body[:app_port] = 'trout'
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-            expect(message.errors_on(:app_port)).to include('is not a number')
-          end
-
-          it 'is not valid when app_port is a fraction' do
-            body[:app_port] = 7.8
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-            expect(message.errors_on(:app_port)).to include('must be an integer')
-          end
-
-          it 'is not valid when app_port is less than 0' do
-            body[:app_port] = -1
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).not_to be_valid
-            expect(message.errors_on(:app_port)).to include('must be greater than 0')
-          end
-        end
-
-        context 'when app_port is not present' do
-          it 'is valid' do
-            body.delete(:app_port)
-            message = RouteMappingsCreateMessage.new(body)
-            expect(message).to be_valid
-          end
+          expect(message.errors[:base]).to include("Unknown field(s): 'unexpected', 'app_port'")
         end
       end
 

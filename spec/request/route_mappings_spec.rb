@@ -18,7 +18,6 @@ RSpec.describe 'Route Mappings' do
   describe 'POST /v3/route_mappings' do
     it 'creates a route mapping for a specific process on an app on a specific port' do
       body = {
-        app_port:      8888,
         relationships: {
           app:     { guid: app_model.guid },
           route:   { guid: route.guid },
