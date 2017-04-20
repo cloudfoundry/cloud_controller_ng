@@ -1823,5 +1823,30 @@ module VCAP::CloudController
         expect(app.name).to eq('parent-app-name')
       end
     end
+
+    describe 'staging failures' do
+      let(:parent_app) { AppModel.make(name: 'parent-app-name') }
+      let(:app) { App.make(app: parent_app) }
+      let(:error_id) { 'StagingFailed' }
+      let(:error_description) { 'stating failed' }
+
+      describe 'when there is a build but no droplet' do
+        let!(:build) { BuildModel.make app: parent_app, error_id: error_id, error_description: error_description }
+
+        it 'returns the error_id and error_description from the build' do
+          expect(app.staging_failed_reason).to eq(error_id)
+          expect(app.staging_failed_description).to eq(error_description)
+        end
+      end
+
+      describe 'when there is a droplet but no build (legacy case for supporting rolling deploy)' do
+        let!(:droplet) { DropletModel.make app: parent_app, error_id: error_id, error_description: error_description }
+
+        it 'returns the error_id and error_description from the build' do
+          expect(app.staging_failed_reason).to eq(error_id)
+          expect(app.staging_failed_description).to eq(error_description)
+        end
+      end
+    end
   end
 end

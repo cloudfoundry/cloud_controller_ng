@@ -64,10 +64,12 @@ module VCAP::CloudController
         if droplet.nil?
           final_state = BuildModel::FAILED_STATE
           final_error_description = staging_response.dig(:error, :message) || 'no droplet'
+          final_error_id = staging_response.dig(:error, :id)
         else
           stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
           final_state = droplet.state
           final_error_description = droplet.error_description
+          final_error_id = droplet.error_id
         end
 
       rescue CloudController::Errors::ApiError => api_err
@@ -81,7 +83,7 @@ module VCAP::CloudController
         final_error_description = 'droplet failed to stage'
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
       ensure
-        build.update(state: final_state, error_description: final_error_description)
+        build.update(state: final_state, error_description: final_error_description, error_id: final_error_id)
       end
 
       [200, '{}']

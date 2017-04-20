@@ -322,7 +322,6 @@ module VCAP::CloudController
       let(:staged_app) { AppModel.make }
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let(:build) { BuildModel.make(package_guid: package.guid) }
-      # let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpack: buildpack, stack: 'cflinuxfs2', build: build) }
       let(:staging_guid) { build.guid }
       let(:staging_result) { nil }
       let(:staging_result_json) { MultiJson.dump(staging_result) }
@@ -350,6 +349,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
           build.reload
           expect(build.state).to eq(BuildModel::FAILED_STATE)
+          expect(build.error_id).to eq(Diego::CCMessages::STAGING_ERROR)
           expect(build.error_description).to eq('staging failed')
         end
       end
@@ -368,6 +368,7 @@ module VCAP::CloudController
           build.reload
           expect(build.state).to eq(BuildModel::FAILED_STATE)
           expect(build.error_description).to eq('Staging error: staging failed')
+          expect(build.error_id).to eq(Diego::CCMessages::STAGING_ERROR)
         end
       end
     end

@@ -390,11 +390,11 @@ module VCAP::CloudController
     end
 
     def staging_failed_reason
-      latest_droplet.try(:error_id)
+      latest_build.try(:error_id) || latest_droplet.try(:error_id)
     end
 
     def staging_failed_description
-      latest_droplet.try(:error_description)
+      latest_build.try(:error_description) || latest_droplet.try(:error_description)
     end
 
     def console=(c)
