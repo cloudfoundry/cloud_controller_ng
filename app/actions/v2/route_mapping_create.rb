@@ -21,41 +21,34 @@ module VCAP::CloudController
       UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
       NO_PORT_REQUESTED                   = 'Port must be specified when mapping to a non-web process'.freeze
 
-      def initialize(user_audit_info, route, process, message=nil)
+      def initialize(user_audit_info, route, process, request_attrs)
         @user_audit_info = user_audit_info
         @app             = process.app
         @route           = route
         @process         = process
-        @message         = message
+        @request_attrs   = request_attrs
       end
 
-      def add(request_attrs=nil)
-        if !request_attrs.nil?
-          validate_routing_api_enabled!
-          validate_route_services!
-          validate_port!(request_attrs)
-          @message = create_message(request_attrs)
-        end
-
+      def add
         validate!
 
         route_mapping = RouteMappingModel.new(
-          app:          @app,
-          route:        @route,
-          process_type: @message.process_type,
+          app:          app,
+          route:        route,
+          process_type: process.type,
           app_port:     port_with_defaults
         )
 
-        route_handler = ProcessRouteHandler.new(@process)
+        route_handler = ProcessRouteHandler.new(process)
 
         RouteMappingModel.db.transaction do
           route_mapping.save
           route_handler.update_route_information
 
           app_event_repository.record_map_route(
-            @app,
-            @route,
-            @user_audit_info,
+            app,
+            route,
+            user_audit_info,
             route_mapping: route_mapping
           )
         end
@@ -72,43 +65,52 @@ module VCAP::CloudController
 
       private
 
+      attr_reader :request_attrs, :user_audit_info, :app, :route, :process
+
+      def requested_port
+        @requested_port ||= request_attrs.key?('app_port') ? request_attrs['app_port'] : process.ports.try(:first)
+      end
+
       def port_with_defaults
-        port = @message.app_port
-        port ||= App::DEFAULT_HTTP_PORT if !@app.docker?
+        port = requested_port
+        port ||= App::DEFAULT_HTTP_PORT if !app.docker?
         port
       end
 
       def validate!
+        validate_routing_api_enabled!
+        validate_route_services!
+        validate_port!
         validate_space!
         validate_available_port!
       end
 
       def validate_available_port!
-        return if @process.blank?
+        return if process.blank?
         validate_web_port!
         validate_non_web_port!
       end
 
       def validate_non_web_port!
-        return if @process.type == 'web'
-        raise InvalidRouteMapping.new(NO_PORT_REQUESTED) if @message.app_port.nil?
-        raise_unavailable_port! unless available_ports.present? && available_ports.include?(@message.app_port.to_i)
+        return if process.type == 'web'
+        raise InvalidRouteMapping.new(NO_PORT_REQUESTED) if requested_port.nil?
+        raise_unavailable_port! unless available_ports.present? && available_ports.include?(requested_port.to_i)
       end
 
       def validate_web_port!
-        return unless @process.type == 'web'
-        return if @message.app_port.nil?
-        return if @process.docker?
+        return unless process.type == 'web'
+        return if requested_port.nil?
+        return if process.docker?
 
-        if @process.dea?
+        if process.dea?
           raise_unavailable_port!
         else
-          raise_unavailable_port! unless available_ports.include?(@message.app_port.to_i)
+          raise_unavailable_port! unless available_ports.include?(requested_port.to_i)
         end
       end
 
       def validate_space!
-        raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless @app.space.guid == @route.space.guid
+        raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless app.space.guid == route.space.guid
       end
 
       def app_event_repository
@@ -116,40 +118,25 @@ module VCAP::CloudController
       end
 
       def raise_unavailable_port!
-        raise UnavailableAppPort.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % @message.app_port)
+        raise UnavailableAppPort.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % requested_port)
       end
 
       def available_ports
-        @available_ports ||= Diego::Protocol::OpenProcessPorts.new(@process).to_a
-      end
-
-      def create_message(request_attrs)
-        RouteMappingsCreateMessage.new({
-          relationships: {
-            app:     { guid: @process.app.guid },
-            route:   { guid: @route.guid },
-            process: { type: @process.type }
-          },
-          app_port:      get_port(request_attrs)
-        })
-      end
-
-      def get_port(request_attrs)
-        request_attrs.key?('app_port') ? request_attrs['app_port'] : @process.ports.try(:first)
+        @available_ports ||= Diego::Protocol::OpenProcessPorts.new(process).to_a
       end
 
       def validate_route_services!
-        raise RouteServiceNotSupportedError.new if !@route.route_service_url.nil? && !@process.diego?
+        raise RouteServiceNotSupportedError.new if !route.route_service_url.nil? && !process.diego?
       end
 
       def validate_routing_api_enabled!
-        if Config.config[:routing_api].nil? && @route.domain.shared? && @route.domain.router_group_guid
+        if Config.config[:routing_api].nil? && route.domain.shared? && route.domain.router_group_guid
           raise RoutingApiDisabledError.new('Routing API is disabled')
         end
       end
 
-      def validate_port!(request_attrs)
-        raise AppPortNotSupportedError.new if request_attrs.key?('app_port') && @process.dea?
+      def validate_port!
+        raise AppPortNotSupportedError.new if request_attrs.key?('app_port') && process.dea?
       end
     end
   end
