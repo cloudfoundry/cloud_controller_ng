@@ -71,6 +71,7 @@ module VCAP::CloudController
           }.to change { BuildModel.count }.by(1)
 
           expect(build.state).to eq(BuildModel::STAGING_STATE)
+          expect(build.app_guid).to eq(app.guid)
           expect(build.package_guid).to eq(package.guid)
           expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
         end

@@ -6,6 +6,11 @@ module VCAP::CloudController
       FAILED_STATE = 'FAILED'.freeze,
     ].freeze
 
+    many_to_one :app,
+      class: 'VCAP::CloudController::AppModel',
+      key: :app_guid,
+      primary_key: :guid,
+      without_guid_generation: true
     one_to_one :droplet,
       class: 'VCAP::CloudController::DropletModel',
       key: :build_guid,
@@ -30,6 +35,18 @@ module VCAP::CloudController
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
       DockerLifecycleDataModel.new
+    end
+
+    def staged?
+      self.state == STAGED_STATE
+    end
+
+    def failed?
+      self.state == FAILED_STATE
+    end
+
+    def staging?
+      self.state == STAGING_STATE
     end
   end
 end

@@ -51,7 +51,7 @@ module VCAP::CloudController
 
   BuildModel.blueprint do
     guid     { Sham.guid }
-    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    state    { VCAP::CloudController::BuildModel::STAGED_STATE }
   end
 
   PackageModel.blueprint do

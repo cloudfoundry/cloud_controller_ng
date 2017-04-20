@@ -39,6 +39,7 @@ module VCAP::CloudController
       build = BuildModel.new({
         state:        BuildModel::STAGING_STATE,
         package_guid: package.guid,
+        app:          package.app
       }.merge(lifecycle.pre_known_receipt_information))
 
       BuildModel.db.transaction do

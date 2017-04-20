@@ -41,5 +41,41 @@ module VCAP::CloudController
         expect(build_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
       end
     end
+
+    describe '#staged?' do
+      it 'returns true when state is STAGED' do
+        build_model.state = BuildModel::STAGED_STATE
+        expect(build_model.staged?).to eq(true)
+      end
+
+      it 'returns false otherwise' do
+        build_model.state = BuildModel::FAILED_STATE
+        expect(build_model.staged?).to eq(false)
+      end
+    end
+
+    describe '#failed?' do
+      it 'returns true when state is FAILED' do
+        build_model.state = BuildModel::FAILED_STATE
+        expect(build_model.failed?).to eq(true)
+      end
+
+      it 'returns false otherwise' do
+        build_model.state = BuildModel::STAGING_STATE
+        expect(build_model.failed?).to eq(false)
+      end
+    end
+
+    describe '#staging?' do
+      it 'returns true when state is STAGING' do
+        build_model.state = BuildModel::STAGING_STATE
+        expect(build_model.staging?).to eq(true)
+      end
+
+      it 'returns false otherwise' do
+        build_model.state = BuildModel::FAILED_STATE
+        expect(build_model.staging?).to eq(false)
+      end
+    end
   end
 end
