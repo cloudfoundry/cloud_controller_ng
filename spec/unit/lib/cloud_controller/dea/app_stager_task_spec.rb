@@ -192,14 +192,6 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the droplet somehow has not been uploaded (defensive)' do
-            it 'does not change the start command' do
-              expect { staging_task.handle_http_response(response) }.not_to change {
-                app.detected_start_command
-              }.from('')
-            end
-          end
-
           context 'when detected_start_command is not returned' do
             let(:response) do
               {
@@ -695,14 +687,6 @@ module VCAP::CloudController
                   app.refresh.current_droplet
                   app.detected_start_command
                 }.from('').to('wait_for_godot')
-              end
-            end
-
-            context 'when the droplet somehow has not been uploaded (defensive)' do
-              it 'does not change the start command' do
-                expect { stage }.not_to change {
-                  app.detected_start_command
-                }.from('')
               end
             end
 
