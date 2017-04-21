@@ -25,7 +25,6 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:guid]).to eq(route_mapping.guid)
         expect(result[:created_at]).to eq(route_mapping.created_at)
         expect(result[:updated_at]).to eq(route_mapping.updated_at)
-        expect(result[:app_port]).to eq(route_mapping.app_port)
         expect(result[:links]).to include(:self)
         expect(result[:links]).to include(:app)
         expect(result[:links]).to include(:route)

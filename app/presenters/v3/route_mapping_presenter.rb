@@ -7,7 +7,6 @@ module VCAP::CloudController
         def to_hash
           {
             guid: route_mapping.guid,
-            app_port: route_mapping.app_port,
             created_at: route_mapping.created_at,
             updated_at: route_mapping.updated_at,
             links: build_links
