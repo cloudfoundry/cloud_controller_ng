@@ -165,7 +165,7 @@ module VCAP::CloudController
     end
 
     def staging_task_id
-      latest_droplet.try(:guid)
+      latest_build.try(:guid) || latest_droplet.try(:guid)
     end
 
     def droplet_hash
