@@ -77,5 +77,61 @@ module VCAP::CloudController
         expect(build_model.staging?).to eq(false)
       end
     end
+
+    describe '#fail_to_stage!' do
+      before { build_model.update(state: BuildModel::STAGING_STATE) }
+
+      it 'sets the state to FAILED' do
+        expect { build_model.fail_to_stage! }.to change { build_model.state }.to(BuildModel::FAILED_STATE)
+      end
+
+      context 'when a valid reason is specified' do
+        BuildModel::STAGING_FAILED_REASONS.each do |reason|
+          it 'sets the requested staging failed reason' do
+            expect {
+              build_model.fail_to_stage!(reason)
+            }.to change { build_model.error_id }.to(reason)
+          end
+        end
+      end
+
+      context 'when an unexpected reason is specifed' do
+        it 'should use the default, generic reason' do
+          expect {
+            build_model.fail_to_stage!('bogus')
+          }.to change { build_model.error_id }.to('StagingError')
+        end
+      end
+
+      context 'when a reason is not specified' do
+        it 'should use the default, generic reason' do
+          expect {
+            build_model.fail_to_stage!
+          }.to change { build_model.error_id }.to('StagingError')
+        end
+      end
+
+      describe 'setting staging_failed_description' do
+        it 'sets the staging_failed_description to the v2.yml description of the error type' do
+          expect {
+            build_model.fail_to_stage!('NoAppDetectedError')
+          }.to change { build_model.error_description }.to('An app was not successfully detected by any available buildpack')
+        end
+
+        it 'provides a string for interpolation on errors that require it' do
+          expect {
+            build_model.fail_to_stage!('StagingError')
+          }.to change { build_model.error_description }.to('Staging error: staging failed')
+        end
+
+        BuildModel::STAGING_FAILED_REASONS.each do |reason|
+          it "successfully sets staging_failed_description for reason: #{reason}" do
+            expect {
+              build_model.fail_to_stage!(reason)
+            }.to_not raise_error
+          end
+        end
+      end
+    end
   end
 end

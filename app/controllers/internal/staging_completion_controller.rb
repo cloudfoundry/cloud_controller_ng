@@ -62,28 +62,26 @@ module VCAP::CloudController
       droplet = build.droplet
       begin
         if droplet.nil?
-          final_state = BuildModel::FAILED_STATE
-          final_error_description = staging_response.dig(:error, :message) || 'no droplet'
-          final_error_id = staging_response.dig(:error, :id)
+          error_description = staging_response.dig(:error, :message) || 'no droplet'
+          error_id = staging_response.dig(:error, :id)
+          build.fail_to_stage!(error_id, error_description)
         else
           stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
-          final_state = droplet.state
-          final_error_description = droplet.error_description
-          final_error_id = droplet.error_id
+          build.update(
+            state: droplet.state,
+            error_description: droplet.error_description,
+            error_id: droplet.error_id
+          )
         end
 
       rescue CloudController::Errors::ApiError => api_err
         logger.error('diego.staging.completion-controller-api_err-error', error: api_err)
-        final_state = BuildModel::FAILED_STATE
-        final_error_description = 'droplet failed to stage'
+        build.fail_to_stage!(nil, 'droplet failed to stage')
         raise api_err
       rescue => e
         logger.error('diego.staging.completion-controller-error', error: e)
-        final_state = BuildModel::FAILED_STATE
-        final_error_description = 'droplet failed to stage'
+        build.fail_to_stage!(nil, 'droplet failed to stage')
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
-      ensure
-        build.update(state: final_state, error_description: final_error_description, error_id: final_error_id)
       end
 
       [200, '{}']

@@ -5,6 +5,8 @@ module VCAP::CloudController
       STAGED_STATE = 'STAGED'.freeze,
       FAILED_STATE = 'FAILED'.freeze,
     ].freeze
+    STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
+                                BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
 
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
@@ -47,6 +49,15 @@ module VCAP::CloudController
 
     def staging?
       self.state == STAGING_STATE
+    end
+
+    def fail_to_stage!(reason='StagingError', details='staging failed')
+      reason = 'StagingError' unless STAGING_FAILED_REASONS.include?(reason)
+
+      self.state             = FAILED_STATE
+      self.error_id          = reason
+      self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
+      save_changes(raise_on_save_failure: true)
     end
   end
 end
