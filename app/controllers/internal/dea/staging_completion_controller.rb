@@ -31,11 +31,11 @@ module VCAP::CloudController
         process = App.find(guid: process_guid)
         raise CloudController::Errors::ApiError.new_from_details('ProcessNotFound', process_guid) unless process
 
-        droplet = process.latest_droplet
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless droplet.try(:guid) == staging_response['task_id']
+        build = process.latest_build
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless build.try(:guid) == staging_response['task_id']
 
         begin
-          stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response)
+          stagers.stager_for_app(build.app).staging_complete(build, staging_response)
         rescue CloudController::Errors::ApiError => api_err
           logger.error('dea.staging.completion-controller-error', error: api_err)
           raise CloudController::Errors::ApiError.new_from_details('ServerError', name: api_err.name, message: api_err.message) if api_err.name.eql? 'StagingError'

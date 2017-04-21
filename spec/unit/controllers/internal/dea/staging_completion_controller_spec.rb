@@ -27,11 +27,10 @@ module VCAP::CloudController
       end
 
       let(:v2_app) { AppFactory.make(state: 'STOPPED') }
-      let(:droplet) { DropletModel.make(app: v2_app.app, package: v2_app.latest_package, state: DropletModel::STAGING_STATE) }
+      let!(:build) { BuildModel.make(app: v2_app, package: v2_app.latest_package, state: BuildModel::STAGING_STATE) }
 
-      let(:staging_guid) { v2_app.guid }
-      let(:task_id) { droplet.guid }
-      let(:url) { "/internal/dea/staging/#{staging_guid}/completed" }
+      let(:task_id) { build.guid }
+      let(:url) { "/internal/dea/staging/#{v2_app.guid}/completed" }
 
       before do
         @internal_user = 'internal_user'
@@ -80,8 +79,8 @@ module VCAP::CloudController
       end
 
       context 'with a valid app' do
-        it 'calls the stager with the droplet and response' do
-          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).with(droplet, staging_response)
+        it 'calls the stager with the build and response' do
+          expect_any_instance_of(Dea::Stager).to receive(:staging_complete).with(build, staging_response)
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
@@ -124,8 +123,8 @@ module VCAP::CloudController
           expect(last_response.body).to match /InvalidRequest/
         end
 
-        context 'because the droplet no longer exists' do
-          before { DropletModel.dataset.destroy }
+        context 'because the build no longer exists' do
+          before { BuildModel.dataset.destroy }
 
           it 'discards the response and fails with a 400' do
             expect_any_instance_of(Dea::Stager).to_not receive(:staging_complete)

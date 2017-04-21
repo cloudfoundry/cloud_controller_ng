@@ -68,13 +68,15 @@ module VCAP::CloudController
       end
 
       describe '#staging_complete' do
+        let(:build) { BuildModel.make(app: app) }
+
         before do
           allow(AppStagerTask).to receive(:new).and_return(stager_task)
         end
 
         it 'invokes AppStagerTask#handle_http_response for response handling' do
           expect(stager_task).to receive(:handle_http_response).with(response)
-          stager.staging_complete(nil, response)
+          stager.staging_complete(build, response)
         end
 
         context 'when the callback is invoked' do
@@ -86,7 +88,7 @@ module VCAP::CloudController
 
           it 'starts the app with the returned staging result' do
             expect(runner).to receive(:start).with('fake-staging-result')
-            stager.staging_complete(nil, response)
+            stager.staging_complete(build, response)
           end
         end
       end
