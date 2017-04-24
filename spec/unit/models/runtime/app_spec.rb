@@ -1861,7 +1861,7 @@ module VCAP::CloudController
       end
 
       context 'when there is no build' do
-        let!(:droplet) { DropletModel.make(app: parent_app)}
+        let!(:droplet) { DropletModel.make(app: parent_app) }
 
         it 'is the droplet guid if there is no build' do
           expect(app.staging_task_id).to eq(droplet.guid)

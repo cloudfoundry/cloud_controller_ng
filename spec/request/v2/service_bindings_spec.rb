@@ -145,7 +145,7 @@ RSpec.describe 'ServiceBindings' do
                       'command'                    => nil,
                       'console'                    => false,
                       'debug'                      => nil,
-                      'staging_task_id'            => process1.latest_droplet.guid,
+                      'staging_task_id'            => process1.latest_build.guid,
                       'package_state'              => 'STAGED',
                       'health_check_type'          => 'port',
                       'health_check_timeout'       => nil,

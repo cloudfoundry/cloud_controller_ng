@@ -160,7 +160,7 @@ module VCAP::CloudController
     end
 
     def package_state
-      calculator = PackageStateCalculator.new self
+      calculator = PackageStateCalculator.new(self)
       calculator.calculate
     end
 

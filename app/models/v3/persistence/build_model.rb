@@ -1,5 +1,6 @@
 module VCAP::CloudController
   class BuildModel < Sequel::Model(:builds)
+    STAGING_MEMORY = 1024 # This is weird, needed for app_usage_events. Resolved in later story (#141455831)
     BUILD_STATES = [
       STAGING_STATE = 'STAGING'.freeze,
       STAGED_STATE = 'STAGED'.freeze,

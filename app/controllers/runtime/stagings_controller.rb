@@ -141,7 +141,7 @@ module VCAP::CloudController
         app_guid:                         package.app.guid,
         package_guid:                     package.guid,
         state:                            DropletModel::STAGING_STATE, # ##needed for app_usage_events
-        staging_memory_in_mb:             1024, # ###this is weird. needed for app_usage_events
+        staging_memory_in_mb:             BuildModel::STAGING_MEMORY,
         buildpack_receipt_buildpack_guid: build.buildpack_receipt_buildpack_guid, # needed?
         buildpack_receipt_stack_name:     build.buildpack_receipt_stack_name, # needed?
         build:                            build,
