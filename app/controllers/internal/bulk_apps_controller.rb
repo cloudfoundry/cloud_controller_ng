@@ -17,6 +17,7 @@ module VCAP::CloudController
       end
     end
 
+    get '/internal/bulk/apps', :bulk_apps
     def bulk_apps
       batch_size = Integer(params.fetch('batch_size'))
       bulk_token = MultiJson.load(params.fetch('token'))
@@ -31,8 +32,7 @@ module VCAP::CloudController
       raise ApiError.new_from_details('BadQueryParameter', e.message)
     end
 
-    get '/internal/bulk/apps', :bulk_apps
-
+    post '/internal/bulk/apps', :filtered_bulk_apps
     def filtered_bulk_apps
       raise ApiError.new_from_details('MessageParseError', 'Missing request body') if body.length == 0
       payload = MultiJson.load(body)
@@ -44,8 +44,6 @@ module VCAP::CloudController
     rescue MultiJson::ParseError => e
       raise ApiError.new_from_details('MessageParseError', e.message)
     end
-
-    post '/internal/bulk/apps', :filtered_bulk_apps
 
     private
 
