@@ -211,29 +211,29 @@ module VCAP::CloudController
         build = BuildModel.find(guid: @staging_guid)
         build.update(state: BuildModel::STAGED_STATE)
 
-        droplet = DropletModel.new(
-          build: build,
-          app_guid: build.app.guid,
-          package_guid: build.package.guid,
-          process_types: { web: stager_response.detected_start_command },
-          execution_metadata: stager_response.execution_metadata,
-          staging_memory_in_mb: BuildModel::STAGING_MEMORY,
-        )
-        droplet.mark_as_staged
-        droplet.app.processes.each do |p|
-          p.lock!
-          Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
-        end
-        droplet.set_buildpack_receipt(
-          detect_output: stager_response.detected_buildpack,
-          buildpack_key: stager_response.buildpack_key,
-          requested_buildpack: build.lifecycle_data.buildpack,
-        )
-        droplet.save_changes(raise_on_save_failure: true)
+        droplet = build.droplet
 
         droplet.db.transaction do
-          droplet.app.lock!
+          droplet.lock!
 
+          droplet.update(
+            process_types: { web: stager_response.detected_start_command },
+            execution_metadata: stager_response.execution_metadata,
+          )
+
+          droplet.mark_as_staged
+          droplet.app.processes.each do |p|
+            p.lock!
+            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
+          end
+          droplet.set_buildpack_receipt(
+            detect_output: stager_response.detected_buildpack,
+            buildpack_key: stager_response.buildpack_key,
+            requested_buildpack: build.lifecycle_data.buildpack,
+          )
+          droplet.save_changes(raise_on_save_failure: true)
+
+          droplet.app.lock!
           droplet.app.droplet = droplet
           droplet.app.save
         end

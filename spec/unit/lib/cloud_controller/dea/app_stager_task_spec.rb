@@ -16,9 +16,9 @@ module VCAP::CloudController
         disk_quota: 1024
       )
     end
-    let(:package) { PackageModel.make(app: app.app, package_hash: 'some-hash', state: PackageModel::READY_STATE) }
-    let(:build) { BuildModel.make(app: app.app, package: package) }
+    let(:build) { BuildModel.make(app: app.app, package: app.latest_package, state: BuildModel::STAGING_STATE) }
     let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(build: build) }
+    let!(:droplet) { DropletModel.make(app: app.app, build: build, package: app.latest_package, state: DropletModel::STAGING_STATE) }
 
     let(:dea_advertisement) { Dea::NatsMessages::DeaAdvertisement.new({ 'id' => 'my_stager' }, nil) }
     let(:stager_id) { dea_advertisement.dea_id }
@@ -249,7 +249,7 @@ module VCAP::CloudController
         end
 
         context 'when staging was already marked as failed' do
-          let(:build) { BuildModel.make(app: app.app, package: package, state: BuildModel::FAILED_STATE) }
+          let(:build) { BuildModel.make(app: app.app, package: app.latest_package, state: BuildModel::FAILED_STATE) }
 
           it 'does not mark the app as staged' do
             expect {
@@ -413,10 +413,10 @@ module VCAP::CloudController
       context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
         let(:app) do
           AppFactory.make(
-            type:       'web',
-            state:      'STARTED',
-            instances:  1,
-            memory: 1025
+            type:      'web',
+            state:     'STARTED',
+            instances: 1,
+            memory:    1025
           )
         end
 
