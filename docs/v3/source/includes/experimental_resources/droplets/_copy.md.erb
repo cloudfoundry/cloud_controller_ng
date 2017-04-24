@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/droplets/[guid]/copy" \
+curl "https://api.example.org/v3/droplets?source_guid=[guid]" \
   -X POST \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
@@ -33,13 +33,20 @@ Copy a droplet to a different app. The copied droplet excludes the
 environment variables listed on the source droplet.
 
 #### Definition
-`POST /v3/droplets/:guid/copy`
+`POST /v3/droplets?source_guid=:guid`
 
-#### Query Parameters
+#### Required Query Parameters
 
 Name | Type | Description
 ---- | ---- | ------------
-**guid** | _uuid_ | Source guid of the droplet to be copied.
+**source_guid** | _uuid_ | Source guid of the droplet to be copied.
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**app** | [_to-one relationship_](#to-one-relationships) | A relationship to the destination app.
+
 
 #### Permitted Roles
  |

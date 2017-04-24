@@ -57,7 +57,7 @@ class DropletsController < ApplicationController
     message = DropletCopyMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    source_droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
+    source_droplet = DropletModel.where(guid: params[:source_guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless source_droplet && can_read?(source_droplet.space.guid, source_droplet.space.organization.guid)
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first

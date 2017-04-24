@@ -439,7 +439,7 @@ RSpec.describe DropletsController, type: :controller do
 
     it 'returns a 201 OK response with the new droplet' do
       expect {
-        post :copy, guid: source_droplet_guid, body: req_body
+        post :copy, source_guid: source_droplet_guid, body: req_body
       }.to change { target_app.reload.droplets.count }.from(0).to(1)
 
       expect(response.status).to eq(201)
@@ -448,7 +448,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'when the request is invalid' do
       it 'returns a 422' do
-        post :copy, guid: source_droplet_guid, body: { 'super_duper': 'bad_request' }
+        post :copy, source_guid: source_droplet_guid, body: { 'super_duper': 'bad_request' }
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -462,7 +462,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a not found error' do
-          post :copy, guid: source_droplet_guid, body: req_body
+          post :copy, source_guid: source_droplet_guid, body: req_body
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -480,7 +480,7 @@ RSpec.describe DropletsController, type: :controller do
           end
 
           it 'returns a 404 ResourceNotFound error' do
-            post :copy, guid: source_droplet_guid, body: req_body
+            post :copy, source_guid: source_droplet_guid, body: req_body
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -494,7 +494,7 @@ RSpec.describe DropletsController, type: :controller do
           end
 
           it 'returns a forbidden error' do
-            post :copy, guid: source_droplet_guid, body: req_body
+            post :copy, source_guid: source_droplet_guid, body: req_body
 
             expect(response.status).to eq(403)
             expect(response.body).to include('NotAuthorized')
@@ -509,7 +509,7 @@ RSpec.describe DropletsController, type: :controller do
       end
 
       it 'returns an error ' do
-        post :copy, guid: source_droplet_guid, body: req_body
+        post :copy, source_guid: source_droplet_guid, body: req_body
 
         expect(response.status).to eq(422)
         expect(response.body).to include('boom')
@@ -519,7 +519,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'when the source droplet does not exist' do
       let(:source_droplet_guid) { 'no-source-droplet-here' }
       it 'returns a not found error' do
-        post :copy, guid: 'no droplet here', body: req_body
+        post :copy, source_guid: 'no droplet here', body: req_body
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
@@ -529,7 +529,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'when the target application does not exist' do
       let(:target_app_guid) { 'not a real app guid' }
       it 'returns a not found error' do
-        post :copy, guid: 'no droplet here', body: req_body
+        post :copy, source_guid: 'no droplet here', body: req_body
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'

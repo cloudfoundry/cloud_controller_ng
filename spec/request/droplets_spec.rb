@@ -768,12 +768,12 @@ RSpec.describe 'Droplets' do
     end
 
     it 'copies a droplet' do
-      post "/v3/droplets/#{og_droplet.guid}/copy", copy_request_json, json_headers(developer_headers)
+      post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, json_headers(developer_headers)
 
       parsed_response = MultiJson.load(last_response.body)
       copied_droplet = VCAP::CloudController::DropletModel.last
 
-      expect(last_response.status).to eq(201)
+      expect(last_response.status).to eq(201), "Expected 201, got status: #{last_response.status} with body: #{parsed_response}"
       expect(parsed_response).to be_a_response_like({
         'guid'                  => copied_droplet.guid,
         'state'                 => VCAP::CloudController::DropletModel::COPYING_STATE,
