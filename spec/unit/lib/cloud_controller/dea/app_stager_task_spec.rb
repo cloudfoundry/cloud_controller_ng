@@ -17,7 +17,7 @@ module VCAP::CloudController
       )
     end
     let(:build) { BuildModel.make(app: app.app, package: app.latest_package, state: BuildModel::STAGING_STATE) }
-    let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(build: build) }
+    let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(build: build, buildpack: 'yoloswag') }
     let!(:droplet) { DropletModel.make(app: app.app, build: build, package: app.latest_package, state: DropletModel::STAGING_STATE) }
 
     let(:dea_advertisement) { Dea::NatsMessages::DeaAdvertisement.new({ 'id' => 'my_stager' }, nil) }
@@ -748,10 +748,12 @@ module VCAP::CloudController
             end
 
             it 'records a buildpack set event for each process' do
-              App.make(app: app.app, type: 'asdf')
+              ProcessModel.make(app: app.app, type: 'asdf')
               expect {
                 stage
               }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
+              usage_event = AppUsageEvent.where(state: 'BUILDPACK_SET').last
+              expect(usage_event.buildpack_name).to eq(build.lifecycle_data.buildpack)
             end
           end
 

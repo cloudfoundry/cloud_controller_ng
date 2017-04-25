@@ -222,20 +222,22 @@ module VCAP::CloudController
           )
 
           droplet.mark_as_staged
-          droplet.app.processes.each do |p|
-            p.lock!
-            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
-          end
           droplet.set_buildpack_receipt(
             detect_output: stager_response.detected_buildpack,
             buildpack_key: stager_response.buildpack_key,
             requested_buildpack: build.lifecycle_data.buildpack,
           )
+
           droplet.save_changes(raise_on_save_failure: true)
 
           droplet.app.lock!
           droplet.app.droplet = droplet
           droplet.app.save
+
+          droplet.app.processes.each do |p|
+            p.lock!
+            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
+          end
         end
         BitsExpiration.new.expire_droplets!(droplet.app)
       end
