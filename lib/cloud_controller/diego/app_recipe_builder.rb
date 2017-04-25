@@ -11,6 +11,8 @@ module VCAP::CloudController
     class AppRecipeBuilder
       include ::Diego::ActionBuilder
 
+      MONITORED_HEALTH_CHECK_TYPES = ['port', 'http', ''].map(&:freeze).freeze
+
       def initialize(config:, process:, ssh_key: SSHKey.new)
         @config      = config
         @process     = process
@@ -197,7 +199,7 @@ module VCAP::CloudController
       end
 
       def generate_monitor_action(lrp_builder)
-        return if process.health_check_type == 'none'
+        return unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
 
         desired_ports = lrp_builder.ports
         actions       = []

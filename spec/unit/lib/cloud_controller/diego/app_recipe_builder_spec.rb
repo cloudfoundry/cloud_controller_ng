@@ -436,6 +436,18 @@ module VCAP::CloudController
                 expect(lrp.monitor).to eq(expected_monitor_action)
               end
             end
+
+            context 'when the health check type is not recognized' do
+              before do
+                process.health_check_type = 'foobar'
+              end
+
+              it 'adds a port healthcheck action for backwards compatibility' do
+                lrp = builder.build_app_lrp
+
+                expect(lrp.monitor).to eq(nil)
+              end
+            end
           end
 
           describe 'routes' do
