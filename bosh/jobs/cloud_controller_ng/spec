@@ -361,7 +361,7 @@ properties:
     description: "The ca cert to use when communicating with webdav"
     default: ""
   cc.packages.app_package_directory_key:
-    description: "Directory (bucket) used store app packages.  It does not have be pre-created."
+    description: "Directory (bucket) used store app packages.  It does not have be pre-created.  Should contain only alphanumeric characters, '-', '_', and '.'"
     default: "cc-packages"
   cc.packages.max_package_size:
     description: "Maximum size of application package"
@@ -406,7 +406,7 @@ properties:
     description: "The ca cert to use when communicating with webdav"
     default: ""
   cc.droplets.droplet_directory_key:
-    description: "Directory (bucket) used store droplets.  It does not have be pre-created."
+    description: "Directory (bucket) used store droplets.  It does not have be pre-created.  Should contain only alphanumeric characters, '-', '_', and '.'"
     default: "cc-droplets"
   cc.droplets.max_staged_droplets_stored:
     description: "Number of recent, staged droplets stored per app (not including current droplet)"
@@ -448,7 +448,7 @@ properties:
     description: "The ca cert to use when communicating with webdav"
     default: ""
   cc.buildpacks.buildpack_directory_key:
-    description: "Directory (bucket) used store buildpacks.  It does not have be pre-created."
+    description: "Directory (bucket) used store buildpacks.  It does not have be pre-created.  Should contain only alphanumeric characters, '-', '_', and '.'"
     default: "cc-buildpacks"
   cc.buildpacks.fog_connection:
     description: "Fog connection hash"

@@ -1,5 +1,6 @@
 <%
   require 'cgi'
+  require 'uri'
 
   def discover_external_ip
     networks = spec.networks.marshal_dump
@@ -37,11 +38,11 @@ development_mode: <%= p("cc.development_mode") %>
 message_bus_servers:
 <% if_p("nats.machines") do %>
   <% p("nats.machines").each do |address| %>
-    - nats://<%= p("nats.user") %>:<%= p("nats.password") %>@<%= address %>:<%= p("nats.port") %>
+    - nats://<%= p("nats.user") %>:<%= URI.escape(p("nats.password")) %>@<%= address %>:<%= p("nats.port") %>
   <% end %>
 <% end.else do %>
   <% link("nats").instances.each do |instance| %>
-    - nats://<%= link("nats").p("nats.user") %>:<%= link("nats").p("nats.password") %>@<%= instance.address %>:<%= link("nats").p("nats.port") %>
+    - nats://<%= link("nats").p("nats.user") %>:<%= URI.escape(link("nats").p("nats.password")) %>@<%= instance.address %>:<%= link("nats").p("nats.port") %>
   <% end %>
 <% end %>
 
@@ -205,7 +206,7 @@ doppler:
   end
 %>
 db: &db
-  database: <%= p("ccdb.db_scheme") == "mysql" ? "mysql2" : p("ccdb.db_scheme") %>://<%= db_role["name"] %>:<%= CGI.escape(db_role["password"]) %>@<%= database_address %>:<%= p("ccdb.port") %>/<%= db["name"] %>
+  database: "<%= p("ccdb.db_scheme") == "mysql" ? "mysql2" : p("ccdb.db_scheme") %>://<%= db_role["name"] %>:<%= URI.escape(db_role["password"]) %>@<%= database_address %>:<%= p("ccdb.port") %>/<%= db["name"] %>"
   max_connections: <%= p("ccdb.max_connections") %>
   pool_timeout: <%= p("ccdb.pool_timeout") %>
   log_level: <%= p("cc.db_logging_level") %>
@@ -217,7 +218,7 @@ db: &db
 login:
   url: <%= p("login.url", "#{scheme}://login.#{system_domain}") %>
 <% end %>
-uaa :
+uaa:
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
   internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
   resource_id: <%= p("cc.uaa_resource_id") %>

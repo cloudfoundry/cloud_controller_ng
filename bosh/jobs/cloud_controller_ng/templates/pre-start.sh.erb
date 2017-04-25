@@ -66,7 +66,8 @@ function setup_api_directories {
 
   # Configure the core file location
   <% if p("cc.core_file_pattern") %>
-  echo <%= p("cc.core_file_pattern") %> > /proc/sys/kernel/core_pattern
+    <% require 'shellwords' %>
+    echo <%= Shellwords.shellescape(p("cc.core_file_pattern")) %> > /proc/sys/kernel/core_pattern
   <% end %>
 }
 
