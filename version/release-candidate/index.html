@@ -3476,7 +3476,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
           <h3 id="copy-a-droplet">Copy a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]/copy"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets?source_guid=[guid]"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
@@ -3534,9 +3534,9 @@ environment variables listed on the source droplet.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">POST /v3/droplets/:guid/copy</code></p>
+<p><code class="prettyprint">POST /v3/droplets?source_guid=:guid</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="required-query-parameters">Required Query Parameters</h4>
 
 <table><thead>
 <tr>
@@ -3546,9 +3546,25 @@ environment variables listed on the source droplet.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>guid</strong></td>
+<td><strong>source_guid</strong></td>
 <td><em>uuid</em></td>
 <td>Source guid of the droplet to be copied.</td>
+</tr>
+</tbody></table>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>app</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the destination app.</td>
 </tr>
 </tbody></table>
 
