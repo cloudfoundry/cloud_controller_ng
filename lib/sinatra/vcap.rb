@@ -102,7 +102,6 @@ module Sinatra
 
       after do
         headers['Content-Type'] = 'application/json;charset=utf-8'
-        headers[::VCAP::Request::HEADER_NAME] = @request_guid
         ::VCAP::CloudController::Diagnostics.new.request_complete
         nil
       end

@@ -173,10 +173,6 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
       MultiJson.load(last_response.body)
     end
 
-    it 'populates the correct request id' do
-      expect(request_info['request_id']).to eq(last_response.headers['X-VCAP-Request-ID'])
-    end
-
     it 'populates the request uri and method' do
       expect(request_info['request_method']).to eq('GET')
       expect(request_info['request_uri']).to eq('/current_request')
