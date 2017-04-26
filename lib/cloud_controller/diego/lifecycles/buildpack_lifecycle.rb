@@ -21,15 +21,7 @@ module VCAP::CloudController
       Lifecycles::BUILDPACK
     end
 
-    def create_lifecycle_data_model(droplet)
-      VCAP::CloudController::BuildpackLifecycleDataModel.create(
-        buildpack: buildpack_to_use,
-        stack:     requested_stack,
-        droplet:   droplet
-      )
-    end
-
-    def create_lifecycle_data_model_for_build(build)
+    def create_lifecycle_data_model(build)
       VCAP::CloudController::BuildpackLifecycleDataModel.create(
         buildpack: buildpack_to_use,
         stack:     requested_stack,

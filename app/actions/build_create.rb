@@ -45,7 +45,7 @@ module VCAP::CloudController
       BuildModel.db.transaction do
         build.save
         staging_details.staging_guid = build.guid
-        lifecycle.create_lifecycle_data_model_for_build(build)
+        lifecycle.create_lifecycle_data_model(build)
       end
 
       logger.info("build created: #{build.guid}")

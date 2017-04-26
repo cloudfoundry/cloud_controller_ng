@@ -112,7 +112,7 @@ RSpec.describe 'Builds' do
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.create_from_http_request(body) }
 
     before do
-      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model_for_build(build)
+      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
       build.update(state: droplet.state, error_description: droplet.error_description)
     end
     it 'shows the build' do

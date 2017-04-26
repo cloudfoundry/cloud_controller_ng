@@ -21,33 +21,10 @@ module VCAP::CloudController
       end
 
       it 'can create a BuildpackLifecycleDataModel' do
-        droplet = DropletModel.make
-
-        expect {
-          buildpack_lifecycle.create_lifecycle_data_model(droplet)
-        }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
-
-        data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
-
-        expect(data_model.buildpack).to eq('cool-buildpack')
-        expect(data_model.stack).to eq('cool-stack')
-        expect(data_model.droplet).to eq(droplet)
-      end
-    end
-
-    describe '#create_lifecycle_data_model_for_build' do
-      let(:request_data) do
-        {
-          buildpacks: ['cool-buildpack'],
-          stack:     'cool-stack'
-        }
-      end
-
-      it 'can create a BuildpackLifecycleDataModel' do
         build = BuildModel.make
 
         expect {
-          buildpack_lifecycle.create_lifecycle_data_model_for_build(build)
+          buildpack_lifecycle.create_lifecycle_data_model(build)
         }.to change(VCAP::CloudController::BuildpackLifecycleDataModel, :count).by(1)
 
         data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
