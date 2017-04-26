@@ -12,7 +12,13 @@ module VCAP::CloudController
         package.app_guid     = message.app_guid
         package.type         = message.type
         package.state        = get_package_state(message)
-        package.docker_image = message.docker_data.image if message.docker_type?
+
+        if message.docker_type?
+          docker_data = message.docker_data
+          package.docker_image = docker_data.image
+          package.docker_username = docker_data.username
+          package.docker_password = docker_data.password
+        end
 
         package.db.transaction do
           package.save

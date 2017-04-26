@@ -645,12 +645,17 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'docker' do
+        let(:image) { 'registry/image:latest' }
+        let(:docker_username) { 'naruto' }
+        let(:docker_password) { 'oturan' }
         let(:req_body) do
           {
             relationships: { app: { data: { guid: app_model.guid } } },
             type: 'docker',
             data: {
-              image: 'registry/image:latest'
+              image: image,
+              username: docker_username,
+              password: docker_password
             }
           }
         end
@@ -665,6 +670,8 @@ RSpec.describe PackagesController, type: :controller do
           package = app_model.packages.first
           expect(package.type).to eq('docker')
           expect(package.image).to eq('registry/image:latest')
+          expect(package.docker_username).to eq(docker_username)
+          expect(package.docker_password).to eq(docker_password)
         end
       end
     end

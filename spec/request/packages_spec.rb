@@ -18,7 +18,8 @@ RSpec.describe 'Packages' do
     end
 
     let(:type) { 'docker' }
-    let(:data) { { image: 'registry/image:latest' } }
+    let(:data) { { image: 'registry/image:latest', username: 'my-docker-username', password: 'my-password' } }
+    let(:expected_data) { { image: 'registry/image:latest', username: 'my-docker-username', password: '***' } }
     let(:relationships) { { app: { data: { guid: app_model.guid } } } }
 
     describe 'creation' do
@@ -34,6 +35,8 @@ RSpec.describe 'Packages' do
           'type'       => type,
           'data'       => {
             'image'    => 'registry/image:latest',
+            'username' => 'my-docker-username',
+            'password' => '***'
           },
           'state'      => 'READY',
           'created_at' => iso8601,
@@ -49,7 +52,7 @@ RSpec.describe 'Packages' do
           package_guid: package.guid,
           request: {
             type: type,
-            data: data,
+            data: expected_data,
             relationships: relationships
           }
         }.to_json
@@ -98,7 +101,9 @@ RSpec.describe 'Packages' do
           'guid'       => package.guid,
           'type'       => 'docker',
           'data'       => {
-            'image'    => 'http://awesome-sauce.com'
+            'image'    => 'http://awesome-sauce.com',
+            'username' => nil,
+            'password' => nil,
           },
           'state'      => 'READY',
           'created_at' => iso8601,
@@ -343,7 +348,9 @@ RSpec.describe 'Packages' do
             'guid'       => docker_package.guid,
             'type'       => 'docker',
             'data'       => {
-              'image'    => 'http://location-of-image.com'
+              'image'    => 'http://location-of-image.com',
+              'username' => nil,
+              'password' => nil,
             },
             'state'      => VCAP::CloudController::PackageModel::READY_STATE,
             'created_at' => iso8601,

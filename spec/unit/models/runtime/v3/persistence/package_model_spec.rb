@@ -36,5 +36,14 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'docker credentials' do
+      it_behaves_like 'a model with an encrypted attribute' do
+        let(:value_to_encrypt) { 'password' }
+        let(:encrypted_attr) { :docker_password }
+        let(:storage_column) { :encrypted_docker_password }
+        let(:attr_salt) { :docker_password_salt }
+      end
+    end
   end
 end

@@ -4,6 +4,12 @@ module VCAP::CloudController
   module Presenters
     module V3
       class PackagePresenter < BasePresenter
+        REDACTED_MESSAGE = '***'.freeze
+
+        def initialize(resource, show_secrets: false, censored_message: REDACTED_MESSAGE)
+          super
+        end
+
         def to_hash
           {
             guid:       package.guid,
@@ -29,6 +35,8 @@ module VCAP::CloudController
         def docker_data
           {
             image: package.image,
+            username: package.docker_username,
+            password: package.docker_password && redact(package.docker_password),
           }
         end
 

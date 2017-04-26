@@ -2,7 +2,7 @@ require 'messages/nested_message_validator'
 
 module VCAP::CloudController
   class DockerDataValidator < NestedMessageValidator
-    ALLOWED_KEYS = [:image].freeze
+    ALLOWED_KEYS = [:image, :username, :password].freeze
 
     validates :image, string: true, presence: { message: 'required' }
 

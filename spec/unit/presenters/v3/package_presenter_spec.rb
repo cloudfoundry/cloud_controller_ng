@@ -40,12 +40,19 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the package type is docker' do
         let(:package) do
-          VCAP::CloudController::PackageModel.make(type: 'docker', docker_image: 'registry/image:latest')
+          VCAP::CloudController::PackageModel.make(
+            type: 'docker',
+            docker_image: 'registry/image:latest',
+            docker_username: 'jarjarbinks',
+            docker_password: 'meesaPassword'
+          )
         end
 
         it 'presents the docker information in the data section' do
           data = result[:data]
           expect(data[:image]).to eq('registry/image:latest')
+          expect(data[:username]).to eq('jarjarbinks')
+          expect(data[:password]).to eq('***')
         end
 
         it 'includes links to stage' do
