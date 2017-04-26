@@ -395,7 +395,7 @@ uaa :
   ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/uaa_ca.crt
 
 routing_api:
-  url: <%= "http://api.#{system_domain}/routing" %>
+  url: <%= "https://api.#{system_domain}/routing" %>
   routing_client_name: "cc_routing"
   routing_client_secret: <%= p("uaa.clients.cc_routing.secret") %>
 <% end %>
