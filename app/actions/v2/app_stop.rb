@@ -10,11 +10,11 @@ module VCAP::CloudController
         private
 
         def abort_staging!(stagers, app)
-          stager           = stagers.stager_for_app(app)
-          droplets_to_stop = app.droplets_dataset.exclude(state: DropletModel::FINAL_STATES).all
+          stager = stagers.stager_for_app(app)
+          builds_to_stop = app.builds_dataset.exclude(state: BuildModel::FINAL_STATES).all
 
-          droplets_to_stop.each do |droplet|
-            stager.stop_stage(droplet.guid)
+          builds_to_stop.each do |build|
+            stager.stop_stage(build.guid)
           end
         end
       end

@@ -6,6 +6,10 @@ module VCAP::CloudController
       STAGED_STATE = 'STAGED'.freeze,
       FAILED_STATE = 'FAILED'.freeze,
     ].freeze
+    FINAL_STATES = [
+      FAILED_STATE,
+      STAGED_STATE
+    ].freeze
     STAGING_FAILED_REASONS = %w(StagerError StagingError StagingTimeExpired NoAppDetectedError BuildpackCompileFailed
                                 BuildpackReleaseFailed InsufficientResources NoCompatibleCell).map(&:freeze).freeze
 
