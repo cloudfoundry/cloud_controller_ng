@@ -60,22 +60,6 @@ module VCAP::CloudController
           }
         end
       end
-
-      context 'when the droplet is staging' do
-        let(:stager) { instance_double(Diego::Stager) }
-        let!(:droplet) { DropletModel.make(state: DropletModel::STAGING_STATE) }
-
-        before do
-          allow(stagers).to receive(:stager_for_app).and_return(stager)
-          allow(stager).to receive(:stop_stage)
-        end
-
-        it 'sends a stop staging request' do
-          droplet_delete.delete([droplet])
-          expect(stagers).to have_received(:stager_for_app).with(droplet.app)
-          expect(stager).to have_received(:stop_stage).with(droplet.guid)
-        end
-      end
     end
   end
 end

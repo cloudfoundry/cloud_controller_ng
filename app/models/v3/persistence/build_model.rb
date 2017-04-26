@@ -56,6 +56,10 @@ module VCAP::CloudController
       self.state == STAGING_STATE
     end
 
+    def in_final_state?
+      FINAL_STATES.include?(self.state)
+    end
+
     def fail_to_stage!(reason='StagingError', details='staging failed')
       reason = 'StagingError' unless STAGING_FAILED_REASONS.include?(reason)
 

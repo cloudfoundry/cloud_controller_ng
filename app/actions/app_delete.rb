@@ -2,6 +2,7 @@ require 'jobs/runtime/blobstore_delete.rb'
 require 'jobs/v3/buildpack_cache_delete'
 require 'actions/package_delete'
 require 'actions/task_delete'
+require 'actions/build_delete'
 require 'actions/droplet_delete'
 require 'actions/process_delete'
 require 'actions/route_mapping_delete'
@@ -48,6 +49,7 @@ module VCAP::CloudController
     def delete_subresources(app)
       PackageDelete.new(@user_audit_info).delete(app.packages)
       TaskDelete.new(@user_audit_info).delete(app.tasks)
+      BuildDelete.new(@user_audit_info).delete(app.builds)
       DropletDelete.new(@user_audit_info, stagers).delete(app.droplets)
       ProcessDelete.new(@user_audit_info).delete(app.processes)
       RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete(app))
