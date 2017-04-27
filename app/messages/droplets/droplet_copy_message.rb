@@ -20,7 +20,7 @@ module VCAP::CloudController
     end
 
     def app_guid
-      HashUtils.dig(app, :guid)
+      HashUtils.dig(app, :data, :guid)
     end
 
     private

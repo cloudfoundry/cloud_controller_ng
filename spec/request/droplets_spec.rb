@@ -759,7 +759,7 @@ RSpec.describe 'Droplets' do
     let(:app_guid) { droplet_model.app_guid }
     let(:copy_request_json) do {
         relationships: {
-          app: { guid: new_app.guid }
+          app: { data: { guid: new_app.guid } }
         }
       }.to_json
     end
