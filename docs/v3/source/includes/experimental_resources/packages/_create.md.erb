@@ -19,7 +19,9 @@ curl "https://api.example.org/v3/packages" \
       }
     },
     "data": {
-      "image": "registry/image:latest"
+      "image": "registry/image:latest",
+      "username": "username",
+      "password": "password"
     }
   }'
 ```
@@ -52,11 +54,13 @@ Name | Type | Description | Default
 **data** | _object_ | Data for package type. | `{}`
 
 
-#### Conditionally Required Parameters
+#### Conditional Parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **data.image** | _string_ | Required when `type` is `docker`. The registry address of the image.
+**data.username** | _string_ | Optional when `type` is `docker` and accessing a secured registry.
+**data.password** | _string_ | Optional when `type` is `docker` and accessing a secured registry.
 
 #### Permitted Roles
  |

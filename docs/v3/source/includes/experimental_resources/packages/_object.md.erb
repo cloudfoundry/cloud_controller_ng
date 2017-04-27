@@ -32,6 +32,8 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `docker`
 **data.image** | _string_ | The registry address of the image.
+**data.username** | _string_ | The username for the image's registry.
+**data.password** | _string_ | The password for the image's registry.
 **state** | _string_ | State of the package. Valid states are `READY`, `FAILED`, `COPYING`, `EXPIRED`.
 **guid** | _uuid_ | Unique identifier for the package.
 **created_at** | _datetime_ | The time with zone when the object was created.
