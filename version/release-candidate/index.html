@@ -4694,6 +4694,16 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>The registry address of the image.</td>
 </tr>
 <tr>
+<td><strong>data.username</strong></td>
+<td><em>string</em></td>
+<td>The username for the image&rsquo;s registry.</td>
+</tr>
+<tr>
+<td><strong>data.password</strong></td>
+<td><em>string</em></td>
+<td>The password for the image&rsquo;s registry.</td>
+</tr>
+<tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
 <td>State of the package. Valid states are <code class="prettyprint">READY</code>, <code class="prettyprint">FAILED</code>, <code class="prettyprint">COPYING</code>, <code class="prettyprint">EXPIRED</code>.</td>
@@ -4737,7 +4747,9 @@ Only isolation segments that are entitled to the organization are eligible to be
       }
     },
     "data": {
-      "image": "registry/image:latest"
+      "image": "registry/image:latest",
+      "username": "username",
+      "password": "password"
     }
   }'</span>
 </code></pre>
@@ -4750,12 +4762,9 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4cb65058-f04f-458f-aca1-5f4e43de6407"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"registry/image:latest"</span><span class="w">
+    </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"registry/image:latest"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"username"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"password"</span><span class="p">:</span><span class="w"> </span><span class="s2">"***"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"READY"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-03T00:53:54Z"</span><span class="p">,</span><span class="w">
@@ -4816,7 +4825,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="conditionally-required-parameters">Conditionally Required Parameters</h4>
+<h4 id="conditional-parameters">Conditional Parameters</h4>
 
 <table><thead>
 <tr>
@@ -4829,6 +4838,16 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><strong>data.image</strong></td>
 <td><em>string</em></td>
 <td>Required when <code class="prettyprint">type</code> is <code class="prettyprint">docker</code>. The registry address of the image.</td>
+</tr>
+<tr>
+<td><strong>data.username</strong></td>
+<td><em>string</em></td>
+<td>Optional when <code class="prettyprint">type</code> is <code class="prettyprint">docker</code> and accessing a secured registry.</td>
+</tr>
+<tr>
+<td><strong>data.password</strong></td>
+<td><em>string</em></td>
+<td>Optional when <code class="prettyprint">type</code> is <code class="prettyprint">docker</code> and accessing a secured registry.</td>
 </tr>
 </tbody></table>
 
@@ -5258,12 +5277,9 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"repository/docker-image:latest"</span><span class="w">
+        </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"registry/image:latest"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"username"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"password"</span><span class="p">:</span><span class="w"> </span><span class="s2">"***"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"READY"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-03T00:53:54Z"</span><span class="p">,</span><span class="w">
