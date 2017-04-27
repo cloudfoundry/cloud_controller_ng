@@ -59,6 +59,7 @@ http {
     ssl_certificate_key    /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls.key;
     ssl_client_certificate /var/vcap/jobs/cloud_controller_ng/config/certs/mutual_tls_ca.crt;
     ssl_verify_client      on;
+    ssl_verify_depth       2;
     ssl_protocols          TLSv1.2;
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
