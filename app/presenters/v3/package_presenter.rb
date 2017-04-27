@@ -36,7 +36,7 @@ module VCAP::CloudController
           {
             image: package.image,
             username: package.docker_username,
-            password: package.docker_password && redact(package.docker_password),
+            password: package.docker_password && REDACTED_MESSAGE,
           }
         end
 
