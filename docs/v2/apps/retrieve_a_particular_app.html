@@ -423,8 +423,8 @@ Cookie: </pre>
                 </td>
               </tr>
               <tr class="">
-                <td class="experimental">
-                    <span class="name">docker_credentials_json</span>
+                <td>
+                    <span class="name">docker_credentials</span>
                 </td>
                 <td>
                   <span class="description">Docker credentials for pulling docker image.</span>
@@ -435,7 +435,7 @@ Cookie: </pre>
                 </td>
                 <td>
                   <ul class="example_values">
-                        <li>200</li>
+                        <li>{"username": "user", "password": "***"}</li>
                   </ul>
                 </td>
               </tr>
@@ -598,12 +598,13 @@ Cookie: </pre>
     "staging_failed_description": null,
     "diego": false,
     "docker_image": null,
+    "docker_credentials": {
+      "username": null,
+      "password": null
+    },
     "package_updated_at": "2016-06-08T16:41:45Z",
     "detected_start_command": "",
     "enable_ssh": true,
-    "docker_credentials_json": {
-      "redacted_message": "[PRIVATE DATA HIDDEN]"
-    },
     "ports": null,
     "space_url": "/v2/spaces/7846301e-c84c-4ba9-9c6a-2dfdae948d52",
     "stack_url": "/v2/stacks/7e03186d-a438-4285-b3b7-c426532e1df2",

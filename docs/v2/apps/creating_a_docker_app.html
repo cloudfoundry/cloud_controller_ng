@@ -396,8 +396,8 @@
               </td>
             </tr>
             <tr class=" ">
-              <td class=" experimental">
-                <span class="name">docker_credentials_json</span>
+              <td>
+                <span class="name">docker_credentials</span>
               </td>
               <td>
                 <span class="description">Docker credentials for pulling docker image.</span>
@@ -411,7 +411,7 @@
               </td>
               <td>
                 <ul class="example_values">
-                      <li>#&lt;RspecApiDocumentation::Views::HtmlExample:0x007fcb736b6138&gt;</li>
+                      <li>{"username": "user", "password": "password"}</li>
                 </ul>
               </td>
             </tr>
@@ -566,6 +566,10 @@
   "name": "docker_app",
   "space_guid": "20820ec2-12dc-4690-ac1f-d17eb5357959",
   "docker_image": "cloudfoundry/diego-docker-app",
+  "docker_credentials": {
+    "username": "user",
+    "password": "password"
+  },
   "diego": true
 }</pre>
 
@@ -580,6 +584,10 @@ Cookie: </pre>
   &quot;name&quot;: &quot;docker_app&quot;,
   &quot;space_guid&quot;: &quot;20820ec2-12dc-4690-ac1f-d17eb5357959&quot;,
   &quot;docker_image&quot;: &quot;cloudfoundry/diego-docker-app&quot;,
+  "docker_credentials": {
+    "username": "user",
+    "password": "password"
+  },
   &quot;diego&quot;: true
 }&#39; -X POST \
 	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzOSIsImVtYWlsIjoiZW1haWwtMzAxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDR9.z0fBFq-vMeKTNiBlKtRCZ49OV-V_lTQYYdBvRw_eR1c&quot; \
@@ -629,15 +637,14 @@ Cookie: </pre>
     "staging_failed_description": null,
     "diego": true,
     "docker_image": "cloudfoundry/diego-docker-app:latest",
+    "docker_credentials": {
+      "username": "user",
+      "password": "***"
+    },
     "package_updated_at": "2016-06-08T16:41:44Z",
     "detected_start_command": "",
     "enable_ssh": true,
-    "docker_credentials_json": {
-      "redacted_message": "[PRIVATE DATA HIDDEN]"
-    },
-    "ports": [
-
-    ],
+    "ports": null,
     "space_url": "/v2/spaces/20820ec2-12dc-4690-ac1f-d17eb5357959",
     "stack_url": "/v2/stacks/5603073e-38d3-4309-8bd1-460efa4a8c15",
     "routes_url": "/v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc/routes",
@@ -756,7 +763,6 @@ X-Content-Type-Options: nosniff</pre>
     &quot;docker_image&quot;: &quot;cloudfoundry/diego-docker-app&quot;,
     &quot;diego&quot;: true,
     &quot;console&quot;: false,
-    &quot;docker_credentials_json&quot;: &quot;PRIVATE DATA HIDDEN&quot;,
     &quot;environment_json&quot;: &quot;PRIVATE DATA HIDDEN&quot;,
     &quot;health_check_type&quot;: &quot;port&quot;,
     &quot;instances&quot;: 1,
