@@ -46,14 +46,14 @@ module VCAP::CloudController
           stack = Stack.make(name: 'stacks-on-stacks')
 
           request_attrs = {
-            'name'              => 'maria',
-            'space_guid'        => space.guid,
-            'environment_json'  => { 'KEY' => 'val' },
-            'buildpack'         => 'http://example.com/buildpack',
-            'state'             => 'STOPPED',
-            'health_check_type' => 'http',
+            'name'                       => 'maria',
+            'space_guid'                 => space.guid,
+            'environment_json'           => { 'KEY' => 'val' },
+            'buildpack'                  => 'http://example.com/buildpack',
+            'state'                      => 'STOPPED',
+            'health_check_type'          => 'http',
             'health_check_http_endpoint' => '/healthz',
-            'stack_guid'        => stack.guid
+            'stack_guid'                 => stack.guid
           }
 
           v2_app = app_create.create(request_attrs)
@@ -88,7 +88,7 @@ module VCAP::CloudController
         end
 
         it 'does allow a buildpack name' do
-          admin_buildpack = Buildpack.make
+          admin_buildpack            = Buildpack.make
           request_attrs['buildpack'] = admin_buildpack.name
           expect { app_create.create(request_attrs) }.not_to raise_error
         end
@@ -123,30 +123,42 @@ module VCAP::CloudController
       end
 
       context 'when docker credentials are specified' do
-        it 'creates the app with docker credentials' do
-          request_attrs = {
+        let(:request_attrs) do
+          {
             'name'               => 'maria',
             'space_guid'         => space.guid,
             'state'              => 'STOPPED',
             'health_check_type'  => 'port',
-            'docker_image'       => 'some-image:latest',
             'docker_credentials' => {
               'username' => 'username',
               'password' => 'password'
-            },
+            }
           }
+        end
 
-          v2_app = app_create.create(request_attrs)
+        context 'when a docker image is specified' do
+          it 'creates the app with docker credentials' do
+            request_attrs['docker_image'] = 'some-image:latest'
 
-          expect(v2_app.docker_image).to eq('some-image:latest')
-          expect(v2_app.docker_username).to eq('username')
-          expect(v2_app.docker_password).to eq('password')
-          expect(v2_app.package_hash).to eq('some-image:latest')
+            v2_app = app_create.create(request_attrs)
 
-          package = v2_app.latest_package
-          expect(package.image).to eq('some-image:latest')
-          expect(package.docker_username).to eq('username')
-          expect(package.docker_password).to eq('password')
+            expect(v2_app.docker_image).to eq('some-image:latest')
+            expect(v2_app.docker_username).to eq('username')
+            expect(v2_app.docker_password).to eq('password')
+            expect(v2_app.package_hash).to eq('some-image:latest')
+
+            package = v2_app.latest_package
+            expect(package.image).to eq('some-image:latest')
+            expect(package.docker_username).to eq('username')
+            expect(package.docker_password).to eq('password')
+          end
+        end
+
+        context 'when no docker image is specified' do
+          it 'returns an error' do
+            expect { app_create.create(request_attrs) }.to raise_error(CloudController::Errors::ApiError,
+              /Docker credentials can only be supplied for apps with a 'docker_image'/)
+          end
         end
       end
 

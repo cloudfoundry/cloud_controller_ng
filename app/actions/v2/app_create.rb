@@ -15,6 +15,7 @@ module VCAP::CloudController
             environment_variables: request_attrs['environment_json'],
           )
 
+          validate_lifecycle!(request_attrs)
           create_lifecycle(app, request_attrs)
 
           process = App.new(
@@ -84,6 +85,12 @@ module VCAP::CloudController
         stack      = Stack.find(guid: stack_guid)
         stack_name = stack.present? ? stack.name : Stack.default.name
         stack_name
+      end
+
+      def validate_lifecycle!(request_attrs)
+        if request_attrs['docker_credentials'].present? && !request_attrs.key?('docker_image')
+          raise CloudController::Errors::ApiError.new_from_details('DockerImageMissing')
+        end
       end
 
       def validate_custom_buildpack!(process)

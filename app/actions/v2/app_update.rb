@@ -16,6 +16,7 @@ module VCAP::CloudController
           @access_validator.validate_access(:read_for_update, process, request_attrs)
 
           validate_not_changing_lifecycle_type!(process, request_attrs)
+          validate_lifecycle!(process, request_attrs)
 
           update_app(app, request_attrs)
           update_lifecycle(app, process, request_attrs)
@@ -55,7 +56,7 @@ module VCAP::CloudController
 
       def update_lifecycle(app, process, request_attrs)
         buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        docker_type_requested    = request_attrs.key?('docker_image')
+        docker_type_requested    = request_attrs.key?('docker_image') || request_attrs.key?('docker_credentials')
 
         if buildpack_type_requested
           app.lifecycle_data.buildpack = request_attrs['buildpack'] if request_attrs.key?('buildpack')
@@ -70,7 +71,7 @@ module VCAP::CloudController
 
         elsif docker_type_requested && docker_data_changed(process, request_attrs)
           relationships = { app: { data: { guid: app.guid } } }
-          docker_data   = { image: request_attrs['docker_image'] }
+          docker_data   = { image: request_attrs['docker_image'] || process.docker_image }
           if request_attrs['docker_credentials']
             docker_data[:username] = request_attrs['docker_credentials']['username']
             docker_data[:password] = request_attrs['docker_credentials']['password']
@@ -86,9 +87,13 @@ module VCAP::CloudController
       end
 
       def docker_data_changed(process, request_attrs)
-        !case_insensitive_equals(process.docker_image, request_attrs['docker_image']) ||
-          process.docker_username != request_attrs.dig('docker_credentials', 'username') ||
-          process.docker_password != request_attrs.dig('docker_credentials', 'password')
+        requested_docker_image = request_attrs.dig('docker_image') || ''
+        requested_docker_username = request_attrs.dig('docker_credentials', 'username')
+        requested_docker_password = request_attrs.dig('docker_credentials', 'password')
+
+        !case_insensitive_equals(process.docker_image, requested_docker_image) ||
+          process.docker_username != requested_docker_username ||
+          process.docker_password != requested_docker_password
       end
 
       def prepare_to_stage(app)
@@ -112,6 +117,12 @@ module VCAP::CloudController
 
       def case_insensitive_equals(str1, str2)
         str1.casecmp(str2) == 0
+      end
+
+      def validate_lifecycle!(process, request_attrs)
+        if request_attrs['docker_credentials'].present? && !request_attrs.key('docker_image') && process.docker_image.nil?
+          raise CloudController::Errors::ApiError.new_from_details('DockerImageMissing')
+        end
       end
 
       def validate_not_changing_lifecycle_type!(process, request_attrs)

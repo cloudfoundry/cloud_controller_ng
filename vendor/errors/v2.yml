@@ -533,6 +533,11 @@
   http_code: 500
   message: "Failed to perform blobstore operation after three retries."
 
+150008:
+  name: DockerImageMissing
+  http_code: 400
+  message: "Docker credentials can only be supplied for apps with a 'docker_image'"
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400
