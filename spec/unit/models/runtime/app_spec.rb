@@ -1705,6 +1705,29 @@ module VCAP::CloudController
           app.save
         }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
       end
+
+      it 'retrieves the docker image from the package' do
+        PackageModel.make(:docker, app: app.app, docker_image: 'someimage')
+        expect(app.reload.docker_image).to eq('someimage')
+      end
+    end
+
+    describe 'docker_username' do
+      subject(:app) { AppFactory.make(app: parent_app) }
+
+      it 'retrieves the docker registry username from the package' do
+        PackageModel.make(:docker, app: app.app, docker_image: 'someimage', docker_username: 'user')
+        expect(app.reload.docker_username).to eq('user')
+      end
+    end
+
+    describe 'docker_password' do
+      subject(:app) { AppFactory.make(app: parent_app) }
+
+      it 'retrieves the docker registry password from the package' do
+        PackageModel.make(:docker, app: app.app, docker_image: 'someimage', docker_password: 'pass')
+        expect(app.reload.docker_password).to eq('pass')
+      end
     end
 
     describe 'diego' do

@@ -18,24 +18,24 @@ module VCAP::CloudController
           create_lifecycle(app, request_attrs)
 
           process = App.new(
-            guid:                    app.guid,
-            production:              request_attrs['production'],
-            memory:                  request_attrs['memory'],
-            instances:               request_attrs['instances'],
-            disk_quota:              request_attrs['disk_quota'],
-            state:                   request_attrs['state'],
-            command:                 request_attrs['command'],
-            console:                 request_attrs['console'],
-            debug:                   request_attrs['debug'],
-            health_check_http_endpoint:       request_attrs['health_check_http_endpoint'],
-            health_check_type:       request_attrs['health_check_type'],
-            health_check_timeout:    request_attrs['health_check_timeout'],
-            diego:                   request_attrs['diego'],
-            enable_ssh:              request_attrs['enable_ssh'],
-            docker_credentials_json: request_attrs['docker_credentials_json'],
-            ports:                   request_attrs['ports'],
-            route_guids:             request_attrs['route_guids'],
-            app:                     app
+            guid:                       app.guid,
+            production:                 request_attrs['production'],
+            memory:                     request_attrs['memory'],
+            instances:                  request_attrs['instances'],
+            disk_quota:                 request_attrs['disk_quota'],
+            state:                      request_attrs['state'],
+            command:                    request_attrs['command'],
+            console:                    request_attrs['console'],
+            debug:                      request_attrs['debug'],
+            health_check_http_endpoint: request_attrs['health_check_http_endpoint'],
+            health_check_type:          request_attrs['health_check_type'],
+            health_check_timeout:       request_attrs['health_check_timeout'],
+            diego:                      request_attrs['diego'],
+            enable_ssh:                 request_attrs['enable_ssh'],
+            docker_credentials_json:    request_attrs['docker_credentials_json'],
+            ports:                      request_attrs['ports'],
+            route_guids:                request_attrs['route_guids'],
+            app:                        app
           )
 
           validate_custom_buildpack!(process)
@@ -57,9 +57,17 @@ module VCAP::CloudController
 
         if docker_type_requested
           relationships = { app: { data: { guid: app.guid } } }
-          create_message = PackageCreateMessage.new({ type: 'docker',
-                                                      relationships: relationships,
-                                                      data: { image: request_attrs['docker_image'] } })
+          docker_data   = { image: request_attrs['docker_image'] }
+          if request_attrs['docker_credentials']
+            docker_data[:username] = request_attrs['docker_credentials']['username']
+            docker_data[:password] = request_attrs['docker_credentials']['password']
+          end
+
+          create_message = PackageCreateMessage.new({
+            type:          'docker',
+            relationships: relationships,
+            data:          docker_data
+          })
           PackageCreate.create_without_event(create_message)
         elsif buildpack_type_requested || !docker_type_requested
           # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x

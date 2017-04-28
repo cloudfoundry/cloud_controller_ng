@@ -20,16 +20,16 @@ module CloudController::Presenters::V2
       let(:stack) { VCAP::CloudController::Stack.make }
       let(:app) do
         VCAP::CloudController::AppFactory.make(
-          name: 'utako',
-          space: space,
-          stack: stack,
+          name:             'utako',
+          space:            space,
+          stack:            stack,
           environment_json: { 'UNICORNS': 'RAINBOWS' },
-          memory: 1024,
-          disk_quota: 1024,
-          state: 'STOPPED',
-          command: 'start',
-          enable_ssh: true,
-          diego: diego,
+          memory:           1024,
+          disk_quota:       1024,
+          state:            'STOPPED',
+          command:          'start',
+          enable_ssh:       true,
+          diego:            diego,
         )
       end
       let(:diego) { true }
@@ -40,7 +40,7 @@ module CloudController::Presenters::V2
           buildpack: buildpack
         )
         app.current_droplet.update(
-          buildpack_receipt_detect_output: 'detected buildpack',
+          buildpack_receipt_detect_output:  'detected buildpack',
           buildpack_receipt_buildpack_guid: 'i am a buildpack guid',
         )
         VCAP::CloudController::DropletModel.make(app: app.app, package: app.latest_package, error_description: 'because')
@@ -48,37 +48,41 @@ module CloudController::Presenters::V2
 
       it 'returns the app entity and associated urls' do
         expected_entity_hash = {
-          'name' => 'utako',
-          'production' => anything,
-          'space_guid' => space.guid,
-          'stack_guid' => stack.guid,
-          'buildpack' => 'https://github.com/custombuildpack',
-          'detected_buildpack' => 'detected buildpack',
-          'detected_buildpack_guid' => 'i am a buildpack guid',
-          'environment_json' => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
-          'memory' => 1024,
-          'instances' => 1,
-          'disk_quota' => 1024,
-          'state' => 'STOPPED',
-          'version' => app.version,
-          'command' => 'start',
-          'console' => anything,
-          'debug' => anything,
-          'staging_task_id' => app.latest_droplet.guid,
-          'package_state' => 'PENDING',
-          'health_check_type' => 'port',
-          'health_check_timeout' => nil,
+          'name'                       => 'utako',
+          'production'                 => anything,
+          'space_guid'                 => space.guid,
+          'stack_guid'                 => stack.guid,
+          'buildpack'                  => 'https://github.com/custombuildpack',
+          'detected_buildpack'         => 'detected buildpack',
+          'detected_buildpack_guid'    => 'i am a buildpack guid',
+          'environment_json'           => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
+          'memory'                     => 1024,
+          'instances'                  => 1,
+          'disk_quota'                 => 1024,
+          'state'                      => 'STOPPED',
+          'version'                    => app.version,
+          'command'                    => 'start',
+          'console'                    => anything,
+          'debug'                      => anything,
+          'staging_task_id'            => app.latest_droplet.guid,
+          'package_state'              => 'PENDING',
+          'health_check_type'          => 'port',
+          'health_check_timeout'       => nil,
           'health_check_http_endpoint' => nil,
-          'staging_failed_reason' => anything,
+          'staging_failed_reason'      => anything,
           'staging_failed_description' => 'because',
-          'diego' => true,
-          'docker_image' => anything,
-          'package_updated_at' => anything,
-          'detected_start_command' => anything,
-          'enable_ssh' => true,
-          'docker_credentials_json' => anything,
-          'ports' => [8080],
-          'relationship_key' => 'relationship_value'
+          'diego'                      => true,
+          'docker_image'               => anything,
+          'docker_credentials'         => {
+            'username' => anything,
+            'password' => anything,
+          },
+          'package_updated_at'         => anything,
+          'detected_start_command'     => anything,
+          'enable_ssh'                 => true,
+          'docker_credentials_json'    => anything,
+          'ports'                      => [8080],
+          'relationship_key'           => 'relationship_value'
         }
 
         actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
@@ -136,6 +140,40 @@ module CloudController::Presenters::V2
         end
       end
 
+      describe 'docker' do
+        context 'with no credentials' do
+          before do
+            VCAP::CloudController::PackageModel.make(:docker, app: app.app, docker_image: 'someimage')
+            app.reload
+          end
+
+          it 'displays the docker_image' do
+            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+
+            expect(actual_entity_hash['docker_image']).to eq('someimage')
+            expect(actual_entity_hash['docker_credentials']['username']).to eq(nil)
+            expect(actual_entity_hash['docker_credentials']['password']).to eq(nil)
+            expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+          end
+        end
+
+        context 'with credentials' do
+          before do
+            VCAP::CloudController::PackageModel.make(:docker, app: app.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
+            app.reload
+          end
+
+          it 'displays the docker image and username and redacts the password' do
+            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+
+            expect(actual_entity_hash['docker_image']).to eq('someimage')
+            expect(actual_entity_hash['docker_credentials']['username']).to eq('user')
+            expect(actual_entity_hash['docker_credentials']['password']).to eq('***')
+            expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+          end
+        end
+      end
+
       describe 'ports' do
         before do
           allow_any_instance_of(VCAP::CloudController::Diego::Protocol::OpenProcessPorts).to receive(:to_a).and_return('expected-ports')
@@ -152,10 +190,9 @@ module CloudController::Presenters::V2
         context 'when the user is an admin' do
           before { set_current_user_as_admin }
 
-          it 'only redacts the docker credentials' do
+          it 'displays environment_json' do
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
-            expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
@@ -163,10 +200,9 @@ module CloudController::Presenters::V2
         context 'when the user is an admin-read-only' do
           before { set_current_user_as_admin_read_only }
 
-          it 'only redacts the docker credentials' do
+          it 'displays environment_json' do
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
-            expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
@@ -174,10 +210,9 @@ module CloudController::Presenters::V2
         context 'when the user is a space developer' do
           before { allow(app.space).to receive(:has_developer?).and_return(true) }
 
-          it 'only redacts the docker credentials' do
+          it 'displays the environment json' do
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
-            expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
@@ -185,10 +220,9 @@ module CloudController::Presenters::V2
         context 'when the user is any other role' do
           before { allow(app.space).to receive(:has_developer?).and_return(false) }
 
-          it 'redacts the docker credentials and the environment json' do
+          it 'redacts the environment json' do
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
-            expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(actual_entity_hash['environment_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
           end
         end

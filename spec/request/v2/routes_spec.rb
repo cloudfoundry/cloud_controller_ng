@@ -159,6 +159,10 @@ RSpec.describe 'Routes' do
                       'staging_failed_description' => nil,
                       'diego'                      => false,
                       'docker_image'               => nil,
+                      'docker_credentials'         => {
+                        'username' => nil,
+                        'password' => nil
+                      },
                       'package_updated_at'         => iso8601,
                       'detected_start_command'     => '',
                       'enable_ssh'                 => true,

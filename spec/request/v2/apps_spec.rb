@@ -68,6 +68,10 @@ RSpec.describe 'Apps' do
               'staging_failed_description' => nil,
               'diego'                      => false,
               'docker_image'               => nil,
+              'docker_credentials'         => {
+                'username' => nil,
+                'password' => nil
+              },
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
@@ -146,6 +150,10 @@ RSpec.describe 'Apps' do
                 'staging_failed_description' => nil,
                 'diego'                      => false,
                 'docker_image'               => nil,
+                'docker_credentials'         => {
+                  'username' => nil,
+                  'password' => nil
+                },
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
@@ -357,6 +365,10 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => false,
             'docker_image'               => nil,
+            'docker_credentials'         => {
+              'username' => nil,
+              'password' => nil
+            },
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
@@ -432,6 +444,10 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => false,
             'docker_image'               => nil,
+            'docker_credentials'         => {
+              'username' => nil,
+              'password' => nil
+            },
             'package_updated_at'         => nil,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
@@ -454,6 +470,7 @@ RSpec.describe 'Apps' do
           name:                    'maria',
           space_guid:              space.guid,
           docker_image:            'cloudfoundry/diego-docker-app:latest',
+          docker_credentials:      { 'username' => 'bob', 'password' => 'password' },
           docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
           environment_json:        { 'KEY' => 'val' },
         })
@@ -496,6 +513,10 @@ RSpec.describe 'Apps' do
               'staging_failed_description' => nil,
               'diego'                      => false,
               'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
+              'docker_credentials'         => {
+                'username' => 'bob',
+                'password' => '***'
+              },
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
@@ -573,6 +594,10 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => false,
             'docker_image'               => nil,
+            'docker_credentials'         => {
+              'username' => nil,
+              'password' => nil
+            },
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
@@ -652,6 +677,10 @@ RSpec.describe 'Apps' do
               'staging_failed_description' => nil,
               'diego'                      => false,
               'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
+              'docker_credentials'         => {
+                'username' => nil,
+                'password' => nil
+              },
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
@@ -1002,6 +1031,10 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => true,
             'docker_image'               => nil,
+            'docker_credentials'         => {
+              'username' => nil,
+              'password' => nil
+            },
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
@@ -1266,6 +1299,10 @@ RSpec.describe 'Apps' do
             'staging_failed_description' => nil,
             'diego'                      => false,
             'docker_image'               => nil,
+            'docker_credentials'         => {
+              'username' => nil,
+              'password' => nil
+            },
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,

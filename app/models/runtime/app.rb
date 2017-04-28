@@ -156,7 +156,7 @@ module VCAP::CloudController
     end
 
     def package_state
-      cached_latest_droplet = latest_droplet
+      cached_latest_droplet  = latest_droplet
       cached_current_droplet = current_droplet
       return 'FAILED' if cached_latest_droplet.try(:failed?)
       return 'PENDING' if cached_current_droplet != cached_latest_droplet
@@ -195,6 +195,14 @@ module VCAP::CloudController
 
     def docker_image
       latest_package.try(:image)
+    end
+
+    def docker_username
+      latest_package.try(:docker_username)
+    end
+
+    def docker_password
+      latest_package.try(:docker_password)
     end
 
     def copy_buildpack_errors

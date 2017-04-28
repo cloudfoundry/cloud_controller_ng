@@ -64,6 +64,22 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links]).not_to include(:upload)
           expect(result[:links]).not_to include(:download)
         end
+
+        context 'when no docker credentials are present' do
+          let(:package) do
+            VCAP::CloudController::PackageModel.make(
+              type: 'docker',
+              docker_image: 'registry/image:latest',
+            )
+          end
+
+          it 'displays null for username and password' do
+            data = result[:data]
+            expect(data[:image]).to eq('registry/image:latest')
+            expect(data[:username]).to be_nil
+            expect(data[:password]).to be_nil
+          end
+        end
       end
 
       context 'when the package type is not bits' do

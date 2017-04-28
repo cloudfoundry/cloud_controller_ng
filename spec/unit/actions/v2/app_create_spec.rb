@@ -121,6 +121,34 @@ module VCAP::CloudController
         expect(package.image).to eq('some-image:latest')
       end
 
+      context 'when docker credentials are specified' do
+        it 'creates the app with docker credentials' do
+          request_attrs = {
+            'name'               => 'maria',
+            'space_guid'         => space.guid,
+            'state'              => 'STOPPED',
+            'health_check_type'  => 'port',
+            'docker_image'       => 'some-image:latest',
+            'docker_credentials' => {
+              'username' => 'username',
+              'password' => 'password'
+            },
+          }
+
+          v2_app = app_create.create(request_attrs)
+
+          expect(v2_app.docker_image).to eq('some-image:latest')
+          expect(v2_app.docker_username).to eq('username')
+          expect(v2_app.docker_password).to eq('password')
+          expect(v2_app.package_hash).to eq('some-image:latest')
+
+          package = v2_app.latest_package
+          expect(package.image).to eq('some-image:latest')
+          expect(package.docker_username).to eq('username')
+          expect(package.docker_password).to eq('password')
+        end
+      end
+
       context 'when starting an app without a package' do
         it 'raises an error' do
           request_attrs = {
