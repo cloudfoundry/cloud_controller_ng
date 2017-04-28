@@ -72,15 +72,14 @@ module CloudController::Presenters::V2
           'staging_failed_reason'      => anything,
           'staging_failed_description' => 'because',
           'diego'                      => true,
-          'docker_image'               => anything,
+          'docker_image'               => nil,
           'docker_credentials'         => {
-            'username' => anything,
-            'password' => anything,
+            'username' => nil,
+            'password' => nil,
           },
           'package_updated_at'         => anything,
           'detected_start_command'     => anything,
           'enable_ssh'                 => true,
-          'docker_credentials_json'    => anything,
           'ports'                      => [8080],
           'relationship_key'           => 'relationship_value'
         }

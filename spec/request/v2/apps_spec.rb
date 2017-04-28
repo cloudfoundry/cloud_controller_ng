@@ -75,9 +75,6 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'docker_credentials_json'    => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN]'
-              },
               'ports'                      => nil,
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -157,9 +154,6 @@ RSpec.describe 'Apps' do
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
-                'docker_credentials_json'    => {
-                  'redacted_message' => '[PRIVATE DATA HIDDEN]'
-                },
                 'ports'                      => nil,
                 'space_url'                  => "/v2/spaces/#{space.guid}",
                 'space'                      => {
@@ -372,9 +366,6 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{process.space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -451,7 +442,6 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => nil,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -520,7 +510,6 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
               'ports'                      => nil,
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -601,9 +590,6 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -621,7 +607,6 @@ RSpec.describe 'Apps' do
       let!(:process) {
         VCAP::CloudController::AppFactory.make(
           app:                     app_model,
-          docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
           docker_image:            'cloudfoundry/diego-docker-app:latest'
         )
       }
@@ -629,6 +614,7 @@ RSpec.describe 'Apps' do
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true)
         allow_any_instance_of(VCAP::CloudController::V2::AppStage).to receive(:stage).and_return(nil)
+        process.latest_package.update(docker_username: 'bob', docker_password: 'password')
       end
 
       it 'updates an app' do
@@ -679,15 +665,12 @@ RSpec.describe 'Apps' do
               'diego'                      => false,
               'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
               'docker_credentials'         => {
-                'username' => nil,
-                'password' => nil
+                'username' => 'bob',
+                'password' => '***'
               },
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'docker_credentials_json'    => {
-                'redacted_message' => '[PRIVATE DATA HIDDEN]'
-              },
               'ports'                      => nil,
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -765,9 +748,6 @@ RSpec.describe 'Apps' do
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
-                'docker_credentials_json'    => {
-                  'redacted_message' => '[PRIVATE DATA HIDDEN]'
-                },
                 'ports'                      => nil,
                 'space_url'                  => "/v2/spaces/#{space.guid}",
                 'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
@@ -866,7 +846,6 @@ RSpec.describe 'Apps' do
           'package_updated_at'         => iso8601,
           'detected_start_command'     => '',
           'enable_ssh'                 => true,
-          'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
           'ports'                      => nil
         })
     end
@@ -1120,9 +1099,6 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => {
-              'redacted_message' => '[PRIVATE DATA HIDDEN]'
-            },
             'ports' => [8080]
           }
         }
@@ -1388,7 +1364,6 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'docker_credentials_json'    => { 'redacted_message' => '[PRIVATE DATA HIDDEN]' },
             'ports'                      => nil,
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",

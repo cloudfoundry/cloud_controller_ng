@@ -42,7 +42,6 @@ module CloudController
             'package_updated_at'         => app.package_updated_at,
             'detected_start_command'     => app.detected_start_command,
             'enable_ssh'                 => app.enable_ssh,
-            'docker_credentials_json'    => redact(app.docker_credentials_json),
             'ports'                      => VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(app).to_a,
           }
 

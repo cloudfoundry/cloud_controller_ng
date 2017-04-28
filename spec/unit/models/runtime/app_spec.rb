@@ -575,7 +575,6 @@ module VCAP::CloudController
           :diego,
           :disk_quota,
           :docker_image,
-          :docker_credentials_json,
           :environment_json,
           :health_check_http_endpoint,
           :health_check_timeout,

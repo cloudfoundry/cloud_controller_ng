@@ -327,12 +327,12 @@ module VCAP::CloudController
 
       it 'creates the app' do
         request = {
-          name:             'maria',
-          space_guid:       space.guid,
-          environment_json: { 'KEY' => 'val' },
-          buildpack:        'http://example.com/buildpack',
+          name:                       'maria',
+          space_guid:                 space.guid,
+          environment_json:           { 'KEY' => 'val' },
+          buildpack:                  'http://example.com/buildpack',
           health_check_http_endpoint: '/healthz',
-          health_check_type: 'http',
+          health_check_type:          'http',
         }
 
         set_current_user(admin_user, admin: true)
@@ -503,25 +503,18 @@ module VCAP::CloudController
       end
       let(:decoded_response) { MultiJson.load(last_response.body) }
 
-      let(:login_server) { 'https://index.docker.io/v1' }
       let(:user) { 'user' }
       let(:password) { 'password' }
-      let(:email) { 'email@example.com' }
       let(:docker_credentials) do
         {
-          docker_login_server: login_server,
-          docker_user:         user,
-          docker_password:     password,
-          docker_email:        email
+          username: user,
+          password: password,
         }
       end
       let(:body) do
-        MultiJson.dump(initial_hash.merge(docker_credentials_json: docker_credentials))
+        MultiJson.dump(initial_hash.merge(docker_image: 'someimage', docker_credentials: docker_credentials))
       end
-
-      let(:space_developer) { make_developer_for_space(space) }
-
-      let(:redacted_message) { { 'redacted_message' => '[PRIVATE DATA HIDDEN]' } }
+      let(:redacted_message) { '***' }
 
       def create_app
         post '/v2/apps', body
@@ -541,57 +534,28 @@ module VCAP::CloudController
         expect(last_response).to have_status_code(201)
       end
 
-      context 'create app' do
-        context 'by admin' do
-          it 'redacts the credentials' do
-            set_current_user_as_admin
-            create_app
-            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
-          end
-        end
+      before do
+        set_current_user_as_admin
+      end
 
-        context 'by developer' do
-          it 'redacts the credentials' do
-            set_current_user(space_developer)
-            create_app
-            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
-          end
+      context 'create app' do
+        it 'redacts the credentials' do
+          create_app
+          expect(decoded_response['entity']['docker_credentials']['password']).to eq redacted_message
         end
       end
 
       context 'read app' do
-        context 'by admin' do
-          it 'redacts the credentials' do
-            set_current_user_as_admin
-            read_app
-            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
-          end
-        end
-
-        context 'by developer' do
-          it 'redacts the credentials' do
-            set_current_user(space_developer)
-            read_app
-            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
-          end
+        it 'redacts the credentials' do
+          read_app
+          expect(decoded_response['entity']['docker_credentials']['password']).to eq redacted_message
         end
       end
 
       context 'update app' do
-        context 'by admin' do
-          it 'redacts the credentials' do
-            set_current_user_as_admin
-            update_app
-            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
-          end
-        end
-
-        context 'by developer' do
-          it 'redacts the credentials' do
-            set_current_user(space_developer)
-            update_app
-            expect(decoded_response['entity']['docker_credentials_json']).to eq redacted_message
-          end
+        it 'redacts the credentials' do
+          update_app
+          expect(decoded_response['entity']['docker_credentials']['password']).to eq redacted_message
         end
       end
     end
@@ -2397,7 +2361,7 @@ module VCAP::CloudController
     describe 'GET /v2/apps/:guid/permissions' do
       let(:app_obj) { AppFactory.make(space: space) }
       let(:space) { Space.make }
-      let(:user)  { User.make }
+      let(:user) { User.make }
 
       before do
         space.organization.add_user(user)
