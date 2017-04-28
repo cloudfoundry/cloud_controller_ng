@@ -32,7 +32,6 @@ module VCAP::CloudController
             health_check_timeout:       request_attrs['health_check_timeout'],
             diego:                      request_attrs['diego'],
             enable_ssh:                 request_attrs['enable_ssh'],
-            docker_credentials_json:    request_attrs['docker_credentials_json'],
             ports:                      request_attrs['ports'],
             route_guids:                request_attrs['route_guids'],
             app:                        app

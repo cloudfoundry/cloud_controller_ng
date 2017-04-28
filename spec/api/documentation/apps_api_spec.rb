@@ -69,13 +69,12 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       },
 
       {
-        name: :docker_credentials_json,
+        name: :docker_credentials,
         description: 'Docker credentials for pulling docker image.',
         custom_params: {
           default: {},
-          experimental: true,
           example_values: [
-            { 'docker_user' => 'user name', 'docker_password' => 's3cr3t', 'docker_email' => 'email@example.com', 'docker_login_server' => 'https://index.docker.io/v1/' }
+            { 'username' => 'user name', 'password' => 'secret' }
           ]
         }
       },

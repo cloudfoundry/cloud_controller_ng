@@ -17,12 +17,5 @@ class DockerPolicy
         @errors.add(:docker, :docker_disabled) if @app.being_started?
       end
     end
-
-    docker_credentials = @app.docker_credentials_json
-    if docker_credentials.present?
-      unless docker_credentials['docker_user'].present? && docker_credentials['docker_password'].present? && docker_credentials['docker_email'].present?
-        @errors.add(:docker_credentials, DOCKER_CREDENTIALS_ERROR_MSG)
-      end
-    end
   end
 end

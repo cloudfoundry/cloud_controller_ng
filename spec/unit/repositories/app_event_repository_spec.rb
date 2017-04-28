@@ -17,12 +17,6 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => { 'foo' => 1 },
-            'docker_credentials_json' => {
-            'docker_login_server' => 'server',
-            'docker_user' => 'user',
-            'docker_password' => 'password',
-            'docker_email' => 'email'
-          },
           }
         end
 
@@ -36,7 +30,6 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => 'PRIVATE DATA HIDDEN',
-            'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
           }
 
           expect(Loggregator).to receive(:emit).with(app.guid, "Updated app with guid #{app.guid} (#{expected_request_field})")
@@ -66,12 +59,6 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => { 'super' => 'secret ' },
-            'docker_credentials_json' => {
-            'docker_login_server' => 'server',
-            'docker_user' => 'user',
-            'docker_password' => 'password',
-            'docker_email' => 'email'
-          },
           }
         end
 
@@ -95,7 +82,6 @@ module VCAP::CloudController
             'memory' => 84,
             'state' => 'STOPPED',
             'environment_json' => 'PRIVATE DATA HIDDEN',
-            'docker_credentials_json' => 'PRIVATE DATA HIDDEN',
           )
         end
 

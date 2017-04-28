@@ -43,45 +43,6 @@ module VCAP
               message = lifecycle_protocol.lifecycle_data(staging_details)
               expect(message[:docker_image]).to eq('registry/image-name:latest')
             end
-
-            describe 'experimental v2 app docker credential support' do
-              it 'does not set docker credentials if there is no web process' do
-                message = lifecycle_protocol.lifecycle_data(staging_details)
-                expect(message[:docker_login_server]).to be_nil
-                expect(message[:docker_user]).to be_nil
-                expect(message[:docker_password]).to be_nil
-                expect(message[:docker_email]).to be_nil
-              end
-
-              it 'does not set docker credentials if the web process has no docker credentials' do
-                App.make(app: droplet.app, type: 'web', docker_credentials_json: nil)
-
-                message = lifecycle_protocol.lifecycle_data(staging_details)
-                expect(message[:docker_login_server]).to be_nil
-                expect(message[:docker_user]).to be_nil
-                expect(message[:docker_password]).to be_nil
-                expect(message[:docker_email]).to be_nil
-              end
-
-              it 'sets docker credentials if the web process has docker credentials' do
-                App.make(
-                  app: droplet.app,
-                  type: 'web',
-                  docker_credentials_json: {
-                    docker_login_server: 'login-server',
-                    docker_user: 'user',
-                    docker_password: 'password',
-                    docker_email: 'email',
-                  }
-                )
-
-                message = lifecycle_protocol.lifecycle_data(staging_details)
-                expect(message[:docker_login_server]).to eq('login-server')
-                expect(message[:docker_user]).to eq('user')
-                expect(message[:docker_password]).to eq('password')
-                expect(message[:docker_email]).to eq('email')
-              end
-            end
           end
 
           describe '#desired_app_message' do

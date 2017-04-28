@@ -17,7 +17,6 @@ RSpec.describe 'Apps' do
           environment_variables: { 'RAILS_ENV' => 'staging' }
         ),
         command:                    'hello_world',
-        docker_credentials_json:    { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
         health_check_type:          'http',
         health_check_http_endpoint: '/health'
       )
@@ -315,7 +314,6 @@ RSpec.describe 'Apps' do
       VCAP::CloudController::AppFactory.make(
         space:                   space,
         name:                    'app-name',
-        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
         command:                 'app-command'
       )
     end
@@ -393,7 +391,6 @@ RSpec.describe 'Apps' do
         name:                    'maria',
         space_guid:              space.guid,
         stack_guid:              stack.guid,
-        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
         environment_json:        { 'KEY' => 'val' },
       })
 
@@ -461,7 +458,6 @@ RSpec.describe 'Apps' do
           space_guid:              space.guid,
           docker_image:            'cloudfoundry/diego-docker-app:latest',
           docker_credentials:      { 'username' => 'bob', 'password' => 'password' },
-          docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' },
           environment_json:        { 'KEY' => 'val' },
         })
 
@@ -531,7 +527,6 @@ RSpec.describe 'Apps' do
         name:                    'mario',
         environment_json:        { 'RAILS_ENV' => 'staging' },
         command:                 'hello_world',
-        docker_credentials_json: { 'docker_user' => 'bob', 'docker_password' => 'password', 'docker_email' => 'blah@blah.com' }
       )
     }
 

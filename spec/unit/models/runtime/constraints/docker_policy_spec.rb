@@ -50,24 +50,4 @@ RSpec.describe DockerPolicy do
       expect(validator).to validate_without_error(app)
     end
   end
-
-  context 'when complete set of Docker credentials is supplied' do
-    before do
-      allow(app).to receive(:docker_credentials_json).and_return({ 'docker_user' => 'user', 'docker_password' => 'pass', 'docker_email' => 'someone@somewhere.com' })
-    end
-
-    it 'does not register an error' do
-      expect(validator).to validate_without_error(app)
-    end
-  end
-
-  context 'when an incomplete set of Docker credentials is supplied' do
-    before do
-      allow(app).to receive(:docker_credentials_json).and_return({ 'docker_email' => 'someone@somewhere.com' })
-    end
-
-    it 'does not register an error' do
-      expect(validator).to validate_with_error(app, :docker_credentials, DockerPolicy::DOCKER_CREDENTIALS_ERROR_MSG)
-    end
-  end
 end

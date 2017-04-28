@@ -11,13 +11,6 @@ module VCAP
             lifecycle_data              = Diego::Docker::LifecycleData.new
             lifecycle_data.docker_image = staging_details.package.image
 
-            if (process = staging_details.droplet.app.web_process) && process.docker_credentials_json.present?
-              lifecycle_data.docker_login_server = process.docker_credentials_json['docker_login_server']
-              lifecycle_data.docker_user         = process.docker_credentials_json['docker_user']
-              lifecycle_data.docker_password     = process.docker_credentials_json['docker_password']
-              lifecycle_data.docker_email        = process.docker_credentials_json['docker_email']
-            end
-
             lifecycle_data.message
           end
 

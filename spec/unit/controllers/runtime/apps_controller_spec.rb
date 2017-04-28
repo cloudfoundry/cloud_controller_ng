@@ -72,7 +72,6 @@ module VCAP::CloudController
             diego:                      { type: 'bool' },
             docker_image:               { type: 'string', required: false },
             docker_credentials:         { type: 'hash', default: {} },
-            docker_credentials_json:    { type: 'hash', default: {} },
             ports:                      { type: '[integer]', default: nil }
           })
       end
@@ -100,7 +99,6 @@ module VCAP::CloudController
             diego:                      { type: 'bool' },
             docker_image:               { type: 'string' },
             docker_credentials:         { type: 'hash' },
-            docker_credentials_json:    { type: 'hash' },
             ports:                      { type: '[integer]' }
 
           })

@@ -118,14 +118,10 @@ module VCAP::CloudController
       :detected_buildpack, :environment_json, :memory, :instances, :disk_quota,
       :state, :command, :console, :debug, :staging_task_id,
       :service_binding_guids, :route_guids, :health_check_type, :health_check_http_endpoint,
-      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh,
-      :docker_credentials_json, :ports
+      :health_check_timeout, :diego, :docker_image, :app_guid, :enable_ssh, :ports
 
     serialize_attributes :json, :metadata
     serialize_attributes :integer_array, :ports
-
-    encrypt :docker_credentials_json, salt: :docker_salt, column: :encrypted_docker_credentials_json
-    serializes_via_json :docker_credentials_json
 
     STARTED            = 'STARTED'.freeze
     STOPPED            = 'STOPPED'.freeze
@@ -549,10 +545,8 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      opts[:redact] = if VCAP::CloudController::Security::AccessContext.new.can?(:read_env, self)
-                        %w(docker_credentials_json)
-                      else
-                        %w(environment_json system_env_json docker_credentials_json)
+      opts[:redact] = if !VCAP::CloudController::Security::AccessContext.new.can?(:read_env, self)
+                        %w(environment_json system_env_json)
                       end
       super(opts)
     end

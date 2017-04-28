@@ -225,6 +225,12 @@ module VCAP::CloudController
       describe 'updating docker_image' do
         let(:process) { AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
+        let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
+
+        before do
+          FeatureFlag.create(name: 'diego_docker', enabled: true)
+          allow(V2::AppStage).to receive(:new).and_return(app_stage)
+        end
 
         it 'creates a new docker package' do
           request_attrs = { 'docker_image' => 'repo/new-image' }
@@ -239,7 +245,7 @@ module VCAP::CloudController
         context 'when docker credentials are requested' do
           it 'creates a new docker package with those credentials' do
             request_attrs = {
-              'docker_image' => 'repo/new-image',
+              'docker_image'       => 'repo/new-image',
               'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' }
             }
 
@@ -257,21 +263,23 @@ module VCAP::CloudController
 
         context 'when the same docker image is requested' do
           context 'but there are no changes' do
-            it 'does not create a new package' do
-              request_attrs = { 'docker_image' => 'REPO/ORIGINAL-IMAGE' }
+            it 'does not create a new package and does not trigger staging' do
+              request_attrs = { 'docker_image' => 'REPO/ORIGINAL-IMAGE', 'state' => 'STARTED' }
 
               app_update.update(process.app, process, request_attrs)
 
               expect(process.reload.docker_image).to eq('repo/original-image')
               expect(process.latest_package).to eq(original_package)
+              expect(process.needs_staging?).to be_falsey
             end
           end
 
           context 'but it changes credentials' do
-            it 'creates a new docker package' do
+            it 'creates a new docker package and triggers staging' do
               request_attrs = {
-                'docker_image' => 'repo/original-image',
-                'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' }
+                'docker_image'       => 'repo/original-image',
+                'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' },
+                'state'              => 'STARTED',
               }
 
               expect(process.reload.docker_image).to eq('repo/original-image')
@@ -283,6 +291,7 @@ module VCAP::CloudController
               expect(process.docker_username).to eq('bob')
               expect(process.docker_password).to eq('secret')
               expect(process.latest_package).not_to eq(original_package)
+              expect(process.needs_staging?).to be_truthy
             end
           end
         end

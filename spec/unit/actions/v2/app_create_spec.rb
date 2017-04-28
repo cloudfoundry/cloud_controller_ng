@@ -40,6 +40,7 @@ module VCAP::CloudController
 
         expect(v3_app.guid).to eq(v2_app.guid)
       end
+
       context 'when the health_check_type is http' do
         it 'creates the app' do
           stack = Stack.make(name: 'stacks-on-stacks')

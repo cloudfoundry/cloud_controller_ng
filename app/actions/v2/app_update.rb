@@ -41,7 +41,7 @@ module VCAP::CloudController
       def assign_process_values(process, request_attrs)
         mass_assign = request_attrs.slice('production', 'memory', 'instances', 'disk_quota', 'state',
           'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
-          'diego', 'enable_ssh', 'docker_credentials_json', 'ports', 'route_guids')
+          'diego', 'enable_ssh', 'ports', 'route_guids')
 
         process.set_all(mass_assign)
       end
