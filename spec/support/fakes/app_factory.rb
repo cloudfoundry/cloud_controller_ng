@@ -5,7 +5,7 @@ module VCAP
         parent_app_attributes = args.extract_options!.symbolize_keys
         attributes            = parent_app_attributes.slice!(:name, :space, :environment_json, :stack)
         package_attributes    = attributes
-        attributes            = package_attributes.slice!(:docker_image)
+        attributes            = package_attributes.slice!(:docker_image, :docker_credentials)
 
         defaults   = { metadata: {} }
         attributes = defaults.merge(attributes)
@@ -44,7 +44,11 @@ module VCAP
         package = if package_attributes.empty?
                     VCAP::CloudController::PackageModel.make(app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
                   else
-                    VCAP::CloudController::PackageModel.make(:docker, app: parent_app, docker_image: package_attributes[:docker_image])
+                    docker_credentials = package_attributes[:docker_credentials].nil? ? {} : package_attributes[:docker_credentials]
+                    VCAP::CloudController::PackageModel.make(:docker, app: parent_app,
+                                                                      docker_image: package_attributes[:docker_image],
+                                                                      docker_username: docker_credentials['username'],
+                                                                      docker_password: docker_credentials['password'])
                   end
 
         droplet = DropletModel.make(:staged, app: parent_app, package: package)
