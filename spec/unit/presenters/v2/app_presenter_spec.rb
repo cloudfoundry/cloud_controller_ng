@@ -156,7 +156,7 @@ module CloudController::Presenters::V2
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-            expect(actual_entity_hash['environment_json']).not_to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
 
@@ -167,18 +167,29 @@ module CloudController::Presenters::V2
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-            expect(actual_entity_hash['environment_json']).not_to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
 
         context 'when the user is a space developer' do
           before { allow(app.space).to receive(:has_developer?).and_return(true) }
 
-          it 'redacts the docker credentials and the environment json' do
+          it 'only redacts the docker credentials' do
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
+          end
+        end
+
+        context 'when the user is any other role' do
+          before { allow(app.space).to receive(:has_developer?).and_return(false) }
+
+          it 'redacts the docker credentials and the environment json' do
+            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+
+            expect(actual_entity_hash['docker_credentials_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+            expect(actual_entity_hash['environment_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
           end
         end
       end
