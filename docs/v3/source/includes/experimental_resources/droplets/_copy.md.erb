@@ -12,7 +12,9 @@ curl "https://api.example.org/v3/droplets?source_guid=[guid]" \
   -d '{
     "relationships": {
       "app": {
-        "guid": "[app-guid]"
+        "data": {
+          "guid": "[app-guid]"
+        }
       }
     }
   }'
