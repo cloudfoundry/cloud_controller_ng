@@ -628,6 +628,7 @@ RSpec.describe 'Apps' do
 
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true)
+        allow_any_instance_of(VCAP::CloudController::V2::AppStage).to receive(:stage).and_return(nil)
       end
 
       it 'updates an app' do
@@ -697,6 +698,87 @@ RSpec.describe 'Apps' do
             }
           }
         )
+      end
+
+      context 'when updating docker data' do
+        let(:update_params) do
+          MultiJson.dump({
+            name:             'maria',
+            environment_json: { 'RAILS_ENV' => 'production' },
+            state:            'STARTED',
+            docker_image:       'cloudfoundry/diego-docker-app:even-more-latest',
+            docker_credentials: {
+              'username' => 'somedude',
+              'password' => 'secretfromdude',
+            },
+          })
+        end
+
+        it 'updates the app with docker data' do
+          # updating docker data will create a new package, which triggers staging. Therefore, package_state will
+          # become PENDING
+
+          put "/v2/apps/#{process.guid}", update_params, headers_for(user)
+
+          process.reload
+          expect(last_response.status).to eq(201)
+          expect(MultiJson.load(last_response.body)).to be_a_response_like(
+            {
+              'metadata' => {
+                'guid'       => process.guid,
+                'url'        => "/v2/apps/#{process.guid}",
+                'created_at' => iso8601,
+                'updated_at' => iso8601
+              },
+              'entity' => {
+                'name'                       => 'maria',
+                'production'                 => false,
+                'space_guid'                 => space.guid,
+                'stack_guid'                 => process.stack.guid,
+                'buildpack'                  => nil,
+                'detected_buildpack'         => nil,
+                'detected_buildpack_guid'    => nil,
+                'environment_json'           => {
+                  'RAILS_ENV' => 'production'
+                },
+                'memory'                     => 1024,
+                'instances'                  => 1,
+                'disk_quota'                 => 1024,
+                'state'                      => 'STARTED',
+                'version'                    => process.version,
+                'command'                    => nil,
+                'console'                    => false,
+                'debug'                      => nil,
+                'staging_task_id'            => process.latest_droplet.guid,
+                'package_state'              => 'PENDING',
+                'health_check_type'          => 'port',
+                'health_check_timeout'       => nil,
+                'health_check_http_endpoint' => nil,
+                'staging_failed_reason'      => nil,
+                'staging_failed_description' => nil,
+                'diego'                      => false,
+                'docker_image'               => 'cloudfoundry/diego-docker-app:even-more-latest',
+                'docker_credentials'         => {
+                  'username' => 'somedude',
+                  'password' => '***'
+                },
+                'package_updated_at'         => iso8601,
+                'detected_start_command'     => '',
+                'enable_ssh'                 => true,
+                'docker_credentials_json'    => {
+                  'redacted_message' => '[PRIVATE DATA HIDDEN]'
+                },
+                'ports'                      => nil,
+                'space_url'                  => "/v2/spaces/#{space.guid}",
+                'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
+                'routes_url'                 => "/v2/apps/#{process.guid}/routes",
+                'events_url'                 => "/v2/apps/#{process.guid}/events",
+                'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
+                'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+              }
+            }
+          )
+        end
       end
     end
   end

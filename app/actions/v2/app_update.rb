@@ -68,13 +68,27 @@ module VCAP::CloudController
           app.lifecycle_data.save
           validate_custom_buildpack!(process.reload)
 
-        elsif docker_type_requested && !case_insensitive_equals(process.docker_image, request_attrs['docker_image'])
+        elsif docker_type_requested && docker_data_changed(process, request_attrs)
           relationships = { app: { data: { guid: app.guid } } }
-          create_message = PackageCreateMessage.new({ type: 'docker',
-                                                      relationships: relationships,
-                                                      data: { image: request_attrs['docker_image'] } })
+          docker_data   = { image: request_attrs['docker_image'] }
+          if request_attrs['docker_credentials']
+            docker_data[:username] = request_attrs['docker_credentials']['username']
+            docker_data[:password] = request_attrs['docker_credentials']['password']
+          end
+
+          create_message = PackageCreateMessage.new({
+            type:          'docker',
+            relationships: relationships,
+            data:          docker_data,
+          })
           PackageCreate.create_without_event(create_message)
         end
+      end
+
+      def docker_data_changed(process, request_attrs)
+        !case_insensitive_equals(process.docker_image, request_attrs['docker_image']) ||
+          process.docker_username != request_attrs.dig('docker_credentials', 'username') ||
+          process.docker_password != request_attrs.dig('docker_credentials', 'password')
       end
 
       def prepare_to_stage(app)

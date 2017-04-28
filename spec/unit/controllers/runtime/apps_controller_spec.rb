@@ -994,33 +994,51 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_image' do
+        before do
+          set_current_user(admin_user, admin: true)
+        end
+
         it 'creates a new docker package' do
           app              = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
           original_package = app.latest_package
 
           expect(app.docker_image).not_to eq('repo/new-image')
 
-          set_current_user(admin_user, admin: true)
-
           put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'repo/new-image' })
+          expect(last_response.status).to eq(201)
 
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['entity']['docker_image']).to eq('repo/new-image')
+          expect(parsed_response['entity']['docker_credentials']).to eq({
+            'username' => nil,
+            'password' => nil
+          })
           expect(app.reload.docker_image).to eq('repo/new-image')
           expect(app.latest_package).not_to eq(original_package)
         end
 
-        context 'when the docker image is requested but is not a change' do
-          it 'does not create a new package' do
+        context 'when credentials are requested' do
+          let(:docker_credentials) do
+            { 'username' => 'fred', 'password' => 'derf' }
+          end
+
+          it 'creates a new docker package with those credentials' do
             app              = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
             original_package = app.latest_package
 
             expect(app.docker_image).not_to eq('repo/new-image')
 
-            set_current_user(admin_user, admin: true)
+            put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'repo/new-image', docker_credentials: docker_credentials })
+            expect(last_response.status).to eq(201)
 
-            put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'REPO/ORIGINAL-IMAGE' })
-
-            expect(app.reload.docker_image).to eq('repo/original-image')
-            expect(app.latest_package).to eq(original_package)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['entity']['docker_image']).to eq('repo/new-image')
+            expect(parsed_response['entity']['docker_credentials']).to eq({
+              'username' => 'fred',
+              'password' => '***'
+            })
+            expect(app.reload.docker_image).to eq('repo/new-image')
+            expect(app.latest_package).not_to eq(original_package)
           end
         end
       end

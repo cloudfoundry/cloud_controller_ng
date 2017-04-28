@@ -6,6 +6,8 @@ module CloudController
 
         present_for_class 'VCAP::CloudController::App'
 
+        REDACTED_MESSAGE = '***'.freeze
+
         def entity_hash(controller, app, opts, depth, parents, orphans=nil)
           entity = {
             'name'                       => app.name,
@@ -35,7 +37,7 @@ module CloudController
             'docker_image'               => app.docker_image,
             'docker_credentials'         => {
               'username' => app.docker_username,
-              'password' => app.docker_username && redact_password,
+              'password' => app.docker_username && REDACTED_MESSAGE,
             },
             'package_updated_at'         => app.package_updated_at,
             'detected_start_command'     => app.detected_start_command,
@@ -74,10 +76,6 @@ module CloudController
           else
             { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
           end
-        end
-
-        def redact_password
-          '***'
         end
       end
     end

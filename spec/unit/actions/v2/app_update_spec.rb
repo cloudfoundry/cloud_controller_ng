@@ -236,14 +236,54 @@ module VCAP::CloudController
           expect(process.latest_package).not_to eq(original_package)
         end
 
-        context 'when the docker image is requested but is not a change' do
-          it 'does not create a new package' do
-            request_attrs = { 'docker_image' => 'REPO/ORIGINAL-IMAGE' }
+        context 'when docker credentials are requested' do
+          it 'creates a new docker package with those credentials' do
+            request_attrs = {
+              'docker_image' => 'repo/new-image',
+              'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' }
+            }
 
+            expect(process.docker_image).not_to eq('repo/new-image')
+            expect(process.docker_username).to be_nil
+            expect(process.docker_password).to be_nil
             app_update.update(process.app, process, request_attrs)
 
-            expect(process.reload.docker_image).to eq('repo/original-image')
-            expect(process.latest_package).to eq(original_package)
+            expect(process.reload.docker_image).to eq('repo/new-image')
+            expect(process.docker_username).to eq('bob')
+            expect(process.docker_password).to eq('secret')
+            expect(process.latest_package).not_to eq(original_package)
+          end
+        end
+
+        context 'when the same docker image is requested' do
+          context 'but there are no changes' do
+            it 'does not create a new package' do
+              request_attrs = { 'docker_image' => 'REPO/ORIGINAL-IMAGE' }
+
+              app_update.update(process.app, process, request_attrs)
+
+              expect(process.reload.docker_image).to eq('repo/original-image')
+              expect(process.latest_package).to eq(original_package)
+            end
+          end
+
+          context 'but it changes credentials' do
+            it 'creates a new docker package' do
+              request_attrs = {
+                'docker_image' => 'repo/original-image',
+                'docker_credentials' => { 'username' => 'bob', 'password' => 'secret' }
+              }
+
+              expect(process.reload.docker_image).to eq('repo/original-image')
+              expect(process.docker_username).to be_nil
+              expect(process.docker_password).to be_nil
+              app_update.update(process.app, process, request_attrs)
+
+              expect(process.reload.docker_image).to eq('repo/original-image')
+              expect(process.docker_username).to eq('bob')
+              expect(process.docker_password).to eq('secret')
+              expect(process.latest_package).not_to eq(original_package)
+            end
           end
         end
       end
