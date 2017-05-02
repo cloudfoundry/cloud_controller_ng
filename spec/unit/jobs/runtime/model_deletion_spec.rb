@@ -6,25 +6,20 @@ require 'models/runtime/space'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe ModelDeletion do
-      let(:space) { Space.make }
+      let!(:space) { Space.make }
       subject(:job) { ModelDeletion.new(Space, space.guid) }
 
       it { is_expected.to be_a_valid_job }
 
       describe '#perform' do
-        let!(:app) { AppFactory.make(space: space) }
-
         context 'deleting a space' do
           it 'can delete the space' do
             expect { job.perform }.to change { Space.count }.by(-1)
           end
-
-          it "can delete the space's associated app" do
-            expect { job.perform }.to change { App.count }.by(-1)
-          end
         end
 
         context 'deleting an app' do
+          let!(:app) { AppFactory.make(space: space) }
           subject(:job) { ModelDeletion.new(App, app.guid) }
 
           it 'can delete an app' do

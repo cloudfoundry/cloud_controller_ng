@@ -306,27 +306,6 @@ module VCAP::CloudController
 
             expect(space.isolation_segment_model).to be_nil
           end
-
-          context 'and the space has an app' do
-            before do
-              AppModel.make(space: space)
-            end
-
-            it 'removes the isolation segment but does not affect the running apps' do
-              expect {
-                space.update(isolation_segment_model: nil)
-              }.to_not raise_error
-              space.reload
-
-              expect(space.isolation_segment_model).to eq(nil)
-            end
-
-            it 'can delete the space' do
-              expect {
-                space.destroy
-              }.to_not raise_error
-            end
-          end
         end
       end
 
@@ -480,20 +459,6 @@ module VCAP::CloudController
 
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
-      it 'creates an AppUsageEvent for each app in the STARTED state' do
-        app = AppFactory.make(space: space)
-        app.update(state: 'STARTED')
-        expect {
-          subject.destroy
-        }.to change {
-          AppUsageEvent.count
-        }.by(1)
-        event = AppUsageEvent.last
-        expect(event.app_guid).to eql(app.guid)
-        expect(event.state).to eql('STOPPED')
-        expect(event.space_name).to eql(space.name)
-      end
-
       context 'when there are service instances' do
         before do
           ManagedServiceInstance.make(space: space)
@@ -541,18 +506,6 @@ module VCAP::CloudController
         event = Event.find(id: event.id)
         expect(event).to be
         expect(event.space).to be_nil
-      end
-
-      it 'destroys all processes' do
-        app1 = AppFactory.make(space: space)
-        app2 = AppFactory.make(space: space)
-        app3 = AppFactory.make(space: space, type: 'potato')
-
-        expect {
-          subject.destroy
-        }.to change {
-          App.where(id: [app1.id, app2.id, app3.id]).count
-        }.by(-3)
       end
     end
 
