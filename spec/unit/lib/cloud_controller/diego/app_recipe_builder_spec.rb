@@ -457,12 +457,10 @@ module VCAP::CloudController
                   {
                     'hostname' => 'potato.example.com',
                     'port'     => 8080,
-                    'router_group_guid' => 'potato-guid'
                   },
                   {
                     'hostname'          => 'tomato.example.com',
                     'port'              => 8080,
-                    'router_group_guid' => 'tomato-guid',
                     'route_service_url' => 'https://potatosarebetter.example.com'
                   }
                 ],
@@ -492,15 +490,13 @@ module VCAP::CloudController
                     key:   'cf-router',
                     value: [
                       {
-                               'hostnames'         => ['potato.example.com'],
-                               'port'              => 8080,
-                               'router_group_guid' => 'potato-guid',
-                               'route_service_url' => nil
-                             },
+                        'hostnames'         => ['potato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => nil
+                      },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
-                        'router_group_guid' => 'tomato-guid',
                         'route_service_url' => 'https://potatosarebetter.example.com'
                       }
                     ].to_json
@@ -609,15 +605,13 @@ module VCAP::CloudController
                       key:   'cf-router',
                       value: [
                         {
-                                 'hostnames'         => ['potato.example.com'],
-                                 'port'              => 8080,
-                                 'router_group_guid' => nil,
-                                 'route_service_url' => nil
-                               },
+                          'hostnames'         => ['potato.example.com'],
+                          'port'              => 8080,
+                          'route_service_url' => nil
+                        },
                         {
                           'hostnames'         => ['tomato.example.com'],
                           'port'              => 8080,
-                          'router_group_guid' => nil,
                           'route_service_url' => 'https://potatosarebetter.example.com'
                         }
                       ].to_json
@@ -974,15 +968,13 @@ module VCAP::CloudController
                   key:   'cf-router',
                   value: [
                     {
-                             'hostnames'         => ['potato.example.com'],
-                             'port'              => 8080,
-                             'router_group_guid' => 'potato-guid',
-                             'route_service_url' => nil
-                           },
+                      'hostnames'         => ['potato.example.com'],
+                      'port'              => 8080,
+                      'route_service_url' => nil
+                    },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
-                      'router_group_guid' => 'tomato-guid',
                       'route_service_url' => 'https://potatosarebetter.example.com'
                     }
                   ].to_json
@@ -1091,15 +1083,13 @@ module VCAP::CloudController
                     key:   'cf-router',
                     value: [
                       {
-                               'hostnames'         => ['potato.example.com'],
-                               'port'              => 8080,
-                               'router_group_guid' => nil,
-                               'route_service_url' => nil
-                             },
+                        'hostnames'         => ['potato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => nil
+                      },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
-                        'router_group_guid' => nil,
                         'route_service_url' => 'https://potatosarebetter.example.com'
                       }
                     ].to_json
