@@ -492,12 +492,14 @@ module VCAP::CloudController
                       {
                         'hostnames'         => ['potato.example.com'],
                         'port'              => 8080,
-                        'route_service_url' => nil
+                        'route_service_url' => nil,
+                        'isolation_segment' => 'placement-tag',
                       },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
-                        'route_service_url' => 'https://potatosarebetter.example.com'
+                        'route_service_url' => 'https://potatosarebetter.example.com',
+                        'isolation_segment' => 'placement-tag',
                       }
                     ].to_json
                   ),
@@ -607,12 +609,14 @@ module VCAP::CloudController
                         {
                           'hostnames'         => ['potato.example.com'],
                           'port'              => 8080,
-                          'route_service_url' => nil
+                          'route_service_url' => nil,
+                          'isolation_segment' => 'placement-tag',
                         },
                         {
                           'hostnames'         => ['tomato.example.com'],
                           'port'              => 8080,
-                          'route_service_url' => 'https://potatosarebetter.example.com'
+                          'route_service_url' => 'https://potatosarebetter.example.com',
+                          'isolation_segment' => 'placement-tag',
                         }
                       ].to_json
                     ),
@@ -920,6 +924,10 @@ module VCAP::CloudController
         end
         let(:existing_ssh_route) { nil }
 
+        before do
+          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
+        end
+
         it 'returns a DesiredLRPUpdate' do
           result = builder.build_app_lrp_update(existing_lrp)
           expect(result.instances).to eq(7)
@@ -970,12 +978,14 @@ module VCAP::CloudController
                     {
                       'hostnames'         => ['potato.example.com'],
                       'port'              => 8080,
-                      'route_service_url' => nil
+                      'route_service_url' => nil,
+                      'isolation_segment' => 'placement-tag',
                     },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
-                      'route_service_url' => 'https://potatosarebetter.example.com'
+                      'route_service_url' => 'https://potatosarebetter.example.com',
+                      'isolation_segment' => 'placement-tag',
                     }
                   ].to_json
                 ),
@@ -1085,12 +1095,14 @@ module VCAP::CloudController
                       {
                         'hostnames'         => ['potato.example.com'],
                         'port'              => 8080,
-                        'route_service_url' => nil
+                        'route_service_url' => nil,
+                        'isolation_segment' => 'placement-tag',
                       },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
-                        'route_service_url' => 'https://potatosarebetter.example.com'
+                        'route_service_url' => 'https://potatosarebetter.example.com',
+                        'isolation_segment' => 'placement-tag',
                       }
                     ].to_json
                   ),

@@ -105,7 +105,8 @@ module VCAP::CloudController
           {
             hostnames:         [i['hostname']],
             port:              i['port'],
-            route_service_url: i['route_service_url']
+            route_service_url: i['route_service_url'],
+            isolation_segment: IsolationSegmentSelector.for_space(process.space),
           }
         end
 
