@@ -97,7 +97,7 @@ module VCAP::CloudController
         let(:expected_monitor_action) do
           ::Diego::Bbs::Models::Action.new(
             timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
-              timeout_ms: 30000,
+              timeout_ms: 600000,
               action:     ::Diego::Bbs::Models::Action.new(
                 parallel_action: ::Diego::Bbs::Models::ParallelAction.new(
                   actions: [
@@ -399,7 +399,7 @@ module VCAP::CloudController
               let(:expected_monitor_action) do
                 ::Diego::Bbs::Models::Action.new(
                   timeout_action: ::Diego::Bbs::Models::TimeoutAction.new(
-                    timeout_ms: 30000,
+                    timeout_ms: 600000,
                     action:     ::Diego::Bbs::Models::Action.new(
                       parallel_action: ::Diego::Bbs::Models::ParallelAction.new(
                         actions: [

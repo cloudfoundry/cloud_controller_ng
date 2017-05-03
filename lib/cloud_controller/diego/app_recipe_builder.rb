@@ -207,7 +207,7 @@ module VCAP::CloudController
           actions << build_action(lrp_builder, port, index)
         end
 
-        action(timeout(parallel(actions), timeout_ms: 1000 * 30.seconds))
+        action(timeout(parallel(actions), timeout_ms: 1000 * 10.minutes))
       end
 
       def build_action(lrp_builder, port, index)
