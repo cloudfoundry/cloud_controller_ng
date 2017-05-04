@@ -35,15 +35,17 @@ module VCAP::CloudController
         end
         let(:runners) { instance_double(Runners) }
 
-        subject { StagingCompletionHandler.new(droplet, runners) }
+        subject { StagingCompletionHandler.new(build, runners) }
 
         describe '#staging_complete' do
           let(:app) { AppModel.make }
           let(:package) { PackageModel.make(app: app) }
-          let!(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
-          let(:staging_guid) { droplet.guid }
+          let!(:build) { BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE) }
+          let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+          let(:staging_guid) { build.guid }
 
           before do
+            build.update(droplet: droplet)
             allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
             allow(Loggregator).to receive(:emit_error)
           end
@@ -53,6 +55,24 @@ module VCAP::CloudController
               expect {
                 subject.staging_complete(success_response)
               }.to change { droplet.reload.staged? }.to(true)
+            end
+
+            it 'marks the build as staged' do
+              expect {
+                subject.staging_complete(success_response)
+              }.to change { build.reload.staged? }.to(true)
+            end
+
+            context 'when the build does not have a droplet' do
+              let(:droplet) { nil }
+
+              it 'marks the build as failed' do
+                subject.staging_complete(success_response)
+                build.reload
+                expect(build.state).to eq(BuildModel::FAILED_STATE)
+                expect(build.error_id).to eq('StagingError')
+                expect(build.error_description).to eq('Staging error: no droplet')
+              end
             end
 
             context 'when staging result is returned' do
@@ -257,6 +277,15 @@ module VCAP::CloudController
                 expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
               end
 
+              it 'should mark the build as failed' do
+                subject.staging_complete(fail_response)
+                build.reload
+
+                expect(build.state).to eq(BuildModel::FAILED_STATE)
+                expect(build.error_id).to eq('NoCompatibleCell')
+                expect(build.error_description).to eq('Found no compatible cell')
+              end
+
               it 'records the error' do
                 subject.staging_complete(fail_response)
                 expect(droplet.reload.error).to eq('NoCompatibleCell - Found no compatible cell')
@@ -265,6 +294,18 @@ module VCAP::CloudController
               it 'should emit a loggregator error' do
                 expect(Loggregator).to receive(:emit_error).with(droplet.guid, /Found no compatible cell/)
                 subject.staging_complete(fail_response)
+              end
+            end
+
+            context 'when the build does not have a droplet' do
+              let(:droplet) { nil }
+
+              it 'marks the build as failed' do
+                subject.staging_complete(fail_response)
+                build.reload
+                expect(build.state).to eq(BuildModel::FAILED_STATE)
+                expect(build.error_id).to eq('NoCompatibleCell')
+                expect(build.error_description).to eq('Found no compatible cell')
               end
             end
 
@@ -345,7 +386,7 @@ module VCAP::CloudController
             end
 
             context 'when a start is requested' do
-              let!(:web_process) { App.make(app: app, type: 'web', state: 'STARTED') }
+              let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
                 expect {

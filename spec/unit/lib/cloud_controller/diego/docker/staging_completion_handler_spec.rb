@@ -8,12 +8,14 @@ module VCAP::CloudController
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
         let(:app) { AppModel.make }
         let(:package) { PackageModel.make(app: app) }
-        let!(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+        let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+        let!(:build) { BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE) }
         let(:runners) { instance_double(Runners) }
 
-        subject(:handler) { StagingCompletionHandler.new(droplet, runners) }
+        subject(:handler) { StagingCompletionHandler.new(build, runners) }
 
         before do
+          build.update(droplet: droplet)
           allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
           allow(Loggregator).to receive(:emit_error)
         end

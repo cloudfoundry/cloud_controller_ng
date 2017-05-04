@@ -59,21 +59,8 @@ module VCAP::CloudController
         staging_response = parse_bbs_task_callback(staging_response)
       end
 
-      droplet = build.droplet
       begin
-        if droplet.nil?
-          error_description = staging_response.dig(:error, :message) || 'no droplet'
-          error_id = staging_response.dig(:error, :id)
-          build.fail_to_stage!(error_id, error_description)
-        else
-          stagers.stager_for_app(droplet.app).staging_complete(droplet, staging_response, params['start'] == 'true')
-          build.update(
-            state: droplet.state,
-            error_description: droplet.error_description,
-            error_id: droplet.error_id
-          )
-        end
-
+        stagers.stager_for_app(build.app).staging_complete(build, staging_response, params['start'] == 'true')
       rescue CloudController::Errors::ApiError => api_err
         logger.error('diego.staging.completion-controller-api_err-error', error: api_err)
         build.fail_to_stage!(nil, 'droplet failed to stage')

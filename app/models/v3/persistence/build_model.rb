@@ -68,5 +68,9 @@ module VCAP::CloudController
       self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
       save_changes(raise_on_save_failure: true)
     end
+
+    def mark_as_staged
+      self.state = STAGED_STATE
+    end
   end
 end

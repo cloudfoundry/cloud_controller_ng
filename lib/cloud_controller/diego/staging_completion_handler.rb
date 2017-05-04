@@ -3,11 +3,12 @@ module VCAP::CloudController
     class StagingCompletionHandler
       DEFAULT_STAGING_ERROR = 'StagingError'.freeze
 
-      attr_reader :droplet
+      attr_reader :droplet, :build
 
-      def initialize(droplet, runners=CloudController::DependencyLocator.instance.runners)
-        @droplet       = droplet
-        @runners       = runners
+      def initialize(build, runners=CloudController::DependencyLocator.instance.runners)
+        @build   = build
+        @droplet = build.droplet
+        @runners = runners
       end
 
       def logger_prefix
@@ -20,6 +21,8 @@ module VCAP::CloudController
 
       def staging_complete(payload, with_start=false)
         logger.info(logger_prefix + 'finished', response: payload)
+
+        return handle_missing_droplet!(payload) if droplet.nil?
 
         if payload[:error]
           handle_failure(payload, with_start)
@@ -49,6 +52,8 @@ module VCAP::CloudController
         begin
           droplet.class.db.transaction do
             droplet.lock!
+            build.lock!
+            build.fail_to_stage!(payload[:error][:id], payload[:error][:message])
             droplet.fail_to_stage!(payload[:error][:id], payload[:error][:message])
 
             if with_start
@@ -96,6 +101,12 @@ module VCAP::CloudController
 
           BitsExpiration.new.expire_droplets!(app)
         end
+      end
+
+      def handle_missing_droplet!(payload)
+        error_description = payload.dig(:error, :message) || 'no droplet'
+        error_id          = payload.dig(:error, :id)
+        build.fail_to_stage!(error_id, error_description)
       end
 
       def start_process
