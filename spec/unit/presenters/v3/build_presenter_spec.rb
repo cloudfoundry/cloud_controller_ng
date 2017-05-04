@@ -104,26 +104,17 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the droplet stages with an error' do
-        let(:droplet) do
-          VCAP::CloudController::DropletModel.make(
-            :buildpack,
-            state:             VCAP::CloudController::DropletModel::FAILED_STATE,
-            package_guid:      package.guid,
-            app:               app,
-            build:             build,
-            error_description: 'something bad'
-          )
-        end
-
         before do
-          build.state = droplet.state
-          build.error_description = droplet.error_description
+          build.update(
+            state:             VCAP::CloudController::BuildModel::FAILED_STATE,
+            error_description: 'something bad',
+            error_id:          'SomeError',
+          )
         end
 
         it 'populates the error field and state as FAILED' do
           expect(result[:state]).to eq('FAILED')
-          expect(result[:error]).to eq('something bad')
-          expect(result[:droplet][:guid]).to eq(droplet.guid)
+          expect(result[:error]).to eq('SomeError - something bad')
         end
       end
     end

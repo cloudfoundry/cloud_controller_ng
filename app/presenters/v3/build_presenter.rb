@@ -10,7 +10,7 @@ module VCAP::CloudController
             created_at: build.created_at,
             updated_at: build.updated_at,
             state: build.state,
-            error: build.error_description,
+            error: error,
             lifecycle: {
               type: build.lifecycle_type,
               data: build.lifecycle_data.to_hash
@@ -27,15 +27,16 @@ module VCAP::CloudController
           @resource
         end
 
-        def droplet
-          @droplet ||= build.droplet
-        end
-
         def droplet_guid
           if build.droplet && VCAP::CloudController::DropletModel::FINAL_STATES.include?(build.droplet.state)
-            return { guid: droplet.guid }
+            return { guid: build.droplet.guid }
           end
           nil
+        end
+
+        def error
+          e = [build.error_id, build.error_description].compact.join(' - ')
+          e.blank? ? nil : e
         end
 
         def build_links
