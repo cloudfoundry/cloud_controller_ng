@@ -27,6 +27,12 @@ module VCAP::CloudController
 
         private
 
+        def handle_missing_droplet!(payload)
+          error_description = payload.dig(:error, :message) || 'no droplet'
+          error_id          = payload.dig(:error, :id)
+          build.fail_to_stage!(error_id, error_description)
+        end
+
         def save_staging_result(payload)
           lifecycle_data = payload[:result][:lifecycle_metadata]
           buildpack_key  = nil

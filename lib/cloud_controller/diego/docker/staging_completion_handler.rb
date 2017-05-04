@@ -26,15 +26,22 @@ module VCAP::CloudController
 
         private
 
+        def handle_missing_droplet!(payload)
+          @droplet = create_droplet_from_build(build, build.package)
+        end
+
         def save_staging_result(payload)
           docker_image = payload.dig(:result, :lifecycle_metadata, :docker_image)
 
           droplet.class.db.transaction do
             droplet.lock!
+            build.lock!
             droplet.process_types        = payload[:result][:process_types]
             droplet.execution_metadata   = payload[:result][:execution_metadata]
             droplet.docker_receipt_image = docker_image unless docker_image.blank?
             droplet.mark_as_staged
+            build.mark_as_staged
+            build.save_changes(raise_on_save_failure: true)
             droplet.save_changes(raise_on_save_failure: true)
           end
         end

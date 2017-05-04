@@ -22,12 +22,14 @@ module VCAP::CloudController
       def staging_complete(payload, with_start=false)
         logger.info(logger_prefix + 'finished', response: payload)
 
-        return handle_missing_droplet!(payload) if droplet.nil?
+        handle_missing_droplet!(payload) if droplet.nil?
 
-        if payload[:error]
-          handle_failure(payload, with_start)
-        else
-          handle_success(payload, with_start)
+        if droplet.present?
+          if payload[:error]
+            handle_failure(payload, with_start)
+          else
+            handle_success(payload, with_start)
+          end
         end
       end
 
@@ -41,7 +43,7 @@ module VCAP::CloudController
         begin
           error_parser.validate(payload)
         rescue Membrane::SchemaValidationError => e
-          logger.error(logger_prefix + 'failure.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
+          logger.error(logger_prefix + 'failure.invalid-message', staging_guid: build.guid, payload: payload, error: e.to_s)
 
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
@@ -61,10 +63,10 @@ module VCAP::CloudController
             end
           end
         rescue => e
-          logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
+          logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: build.guid, response: payload, error: e.message)
         end
 
-        Loggregator.emit_error(droplet.guid, "Failed to stage droplet: #{payload[:error][:message]}")
+        Loggregator.emit_error(build.guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
       def handle_success(payload, with_start)
@@ -72,7 +74,7 @@ module VCAP::CloudController
           payload[:result][:process_types] ||= {} if payload[:result]
           self.class.success_parser.validate(payload)
         rescue Membrane::SchemaValidationError => e
-          logger.error(logger_prefix + 'success.invalid-message', staging_guid: droplet.guid, payload: payload, error: e.to_s)
+          logger.error(logger_prefix + 'success.invalid-message', staging_guid: build.guid, payload: payload, error: e.to_s)
 
           payload[:error] = { message: 'Malformed message from Diego stager', id: DEFAULT_STAGING_ERROR }
           handle_failure(payload, with_start)
@@ -80,7 +82,7 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('InvalidRequest')
         end
 
-        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if droplet.in_final_state?
+        raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if build.in_final_state?
 
         app = droplet.app
         requires_start_command = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
@@ -96,7 +98,7 @@ module VCAP::CloudController
             save_staging_result(payload)
             start_process if with_start
           rescue => e
-            logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: droplet.guid, response: payload, error: e.message)
+            logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: build.guid, response: payload, error: e.message)
           end
 
           BitsExpiration.new.expire_droplets!(app)
@@ -104,9 +106,28 @@ module VCAP::CloudController
       end
 
       def handle_missing_droplet!(payload)
-        error_description = payload.dig(:error, :message) || 'no droplet'
-        error_id          = payload.dig(:error, :id)
-        build.fail_to_stage!(error_id, error_description)
+        raise NotImplementedError
+      end
+
+      def create_droplet_from_build(build, package)
+        droplet = DropletModel.new(
+          app_guid:                         package.app.guid,
+          package_guid:                     package.guid,
+          state:                            DropletModel::STAGING_STATE, # ##needed for app_usage_events
+          staging_memory_in_mb:             BuildModel::STAGING_MEMORY,
+          build:                            build,
+        )
+
+        buildpack_lifecycle_data = build.buildpack_lifecycle_data
+
+        DropletModel.db.transaction do
+          droplet.save
+          droplet.buildpack_lifecycle_data = buildpack_lifecycle_data
+
+          # record_audit_event(droplet, message, package, user_audit_info)
+        end
+        droplet.reload
+        droplet
       end
 
       def start_process

@@ -116,6 +116,7 @@ module VCAP::CloudController
                   subject.staging_complete(success_response)
                   expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
                   expect(droplet.error).to match(/StagingError/)
+                  expect(build.error_id).to match(/StagingError/)
                 end
 
                 context 'when a start is requested' do
@@ -200,7 +201,7 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.saving-staging-result-failed',
-                  staging_guid: droplet.guid,
+                  staging_guid: build.guid,
                   response:     success_response,
                   error:        'save-error',
                 )
@@ -255,17 +256,17 @@ module VCAP::CloudController
               end
             end
 
-            context 'when the droplet is already in a completed state' do
+            context 'when the build is already in a completed state' do
               before do
-                droplet.update(state: DropletModel::FAILED_STATE)
+                build.update(state: BuildModel::FAILED_STATE)
               end
 
-              it 'does not update the droplet' do
+              it 'does not update the build' do
                 expect {
                   subject.staging_complete(success_response)
                 }.to raise_error(CloudController::Errors::ApiError)
 
-                expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
             end
           end
@@ -292,7 +293,7 @@ module VCAP::CloudController
               end
 
               it 'should emit a loggregator error' do
-                expect(Loggregator).to receive(:emit_error).with(droplet.guid, /Found no compatible cell/)
+                expect(Loggregator).to receive(:emit_error).with(build.guid, /Found no compatible cell/)
                 subject.staging_complete(fail_response)
               end
             end
@@ -319,14 +320,14 @@ module VCAP::CloudController
               it 'logs an error for the CF operator' do
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.success.invalid-message',
-                  staging_guid: droplet.guid,
+                  staging_guid: build.guid,
                   payload:      malformed_success_response,
                   error:        '{ result => Missing key }'
                 )
               end
 
               it 'logs an error for the CF user' do
-                expect(Loggregator).to have_received(:emit_error).with(droplet.guid, /Malformed message from Diego stager/)
+                expect(Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
               end
 
               it 'should mark the droplet as failed' do
@@ -349,7 +350,7 @@ module VCAP::CloudController
                   subject.staging_complete(malformed_fail_response)
                 }.to raise_error(CloudController::Errors::ApiError)
 
-                expect(Loggregator).to have_received(:emit_error).with(droplet.guid, /Malformed message from Diego stager/)
+                expect(Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
               end
 
               it 'logs an error for the CF operator' do
@@ -359,7 +360,7 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.failure.invalid-message',
-                  staging_guid: droplet.guid,
+                  staging_guid: build.guid,
                   payload:      malformed_fail_response,
                   error:        '{ error => { message => Missing key } }'
                 )
@@ -378,7 +379,7 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.saving-staging-result-failed',
-                  staging_guid: droplet.guid,
+                  staging_guid: build.guid,
                   response:     fail_response,
                   error:        'save-error',
                 )
