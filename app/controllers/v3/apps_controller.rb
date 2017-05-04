@@ -48,8 +48,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
-    unprocessable_space! unless space && can_read?(space.guid, space.organization_guid)
-    unauthorized! unless can_write?(message.space_guid)
+    unprocessable_space! unless space && can_read?(space.guid, space.organization_guid) && can_write?(space.guid)
 
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -220,7 +219,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def unprocessable_space!
-    unprocessable!('Space is invalid. Ensure it exists and you have access to it.')
+    unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
   end
 
   def app_not_found!

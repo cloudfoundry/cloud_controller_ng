@@ -330,7 +330,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response).to have_status_code(422)
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include('Space is invalid. Ensure it exists and you have access to it.')
+        expect(response.body).to include('Invalid space. Ensure that the space exists and you have access to it.')
       end
     end
 
@@ -382,7 +382,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response).to have_status_code(422)
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include('Space is invalid. Ensure it exists and you have access to it.')
+          expect(response.body).to include('Invalid space. Ensure that the space exists and you have access to it.')
         end
       end
 
@@ -408,8 +408,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'returns an Unauthorized error' do
           post :create, body: req_body
 
-          expect(response.status).to eq(403)
-          expect(response.body).to include 'NotAuthorized'
+          expect(response.status).to eq(422)
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include('Invalid space. Ensure that the space exists and you have access to it.')
         end
       end
     end
