@@ -16,6 +16,7 @@ rvm:
   - 2.3.1
 
 before_install:
+  - gem update --system
   - wget https://github.com/nats-io/gnatsd/releases/download/v0.9.4/gnatsd-v0.9.4-linux-amd64.zip -O /tmp/gnatsd.zip
   - unzip /tmp/gnatsd.zip
   - export PATH=$PATH:$PWD/gnatsd-v0.9.4-linux-amd64
