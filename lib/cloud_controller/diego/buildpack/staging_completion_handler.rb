@@ -28,9 +28,7 @@ module VCAP::CloudController
         private
 
         def handle_missing_droplet!(payload)
-          error_description = payload.dig(:error, :message) || 'no droplet'
-          error_id          = payload.dig(:error, :id)
-          build.fail_to_stage!(error_id, error_description)
+          build.fail_to_stage!(nil, 'no droplet')
         end
 
         def save_staging_result(payload)

@@ -22,14 +22,11 @@ module VCAP::CloudController
       def staging_complete(payload, with_start=false)
         logger.info(logger_prefix + 'finished', response: payload)
 
-        handle_missing_droplet!(payload) if droplet.nil?
-
-        if droplet.present?
-          if payload[:error]
-            handle_failure(payload, with_start)
-          else
-            handle_success(payload, with_start)
-          end
+        if payload[:error]
+          handle_failure(payload, with_start)
+        else
+          handle_missing_droplet!(payload) if droplet.nil?
+          handle_success(payload, with_start) if droplet.present?
         end
       end
 
@@ -52,14 +49,12 @@ module VCAP::CloudController
         end
 
         begin
-          droplet.class.db.transaction do
-            droplet.lock!
+          build.class.db.transaction do
             build.lock!
             build.fail_to_stage!(payload[:error][:id], payload[:error][:message])
-            droplet.fail_to_stage!(payload[:error][:id], payload[:error][:message])
 
             if with_start
-              V2::AppStop.stop(droplet.app, stagers)
+              V2::AppStop.stop(build.app, stagers)
             end
           end
         rescue => e

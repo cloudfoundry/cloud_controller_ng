@@ -41,16 +41,20 @@ module VCAP::CloudController
           let(:app) { AppModel.make }
           let(:package) { PackageModel.make(app: app) }
           let!(:build) { BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE) }
-          let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
           let(:staging_guid) { build.guid }
 
           before do
-            build.update(droplet: droplet)
             allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
             allow(Loggregator).to receive(:emit_error)
           end
 
           describe 'success case' do
+            let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+
+            before do
+              build.update(droplet: droplet)
+            end
+
             it 'marks the droplet as staged' do
               expect {
                 subject.staging_complete(success_response)
@@ -112,10 +116,10 @@ module VCAP::CloudController
                   success_response[:result][:process_types] = nil
                 end
 
-                it 'gracefully sets process_types to an empty hash, but mark the droplet as failed' do
+                it 'gracefully sets process_types to an empty hash, but mark the build as failed' do
                   subject.staging_complete(success_response)
-                  expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
-                  expect(droplet.error).to match(/StagingError/)
+                  build.reload
+                  expect(build.state).to eq(BuildModel::FAILED_STATE)
                   expect(build.error_id).to match(/StagingError/)
                 end
 
@@ -151,8 +155,9 @@ module VCAP::CloudController
 
                     it 'gracefully sets process_types to an empty hash, and marks the droplet as failed' do
                       subject.staging_complete(success_response, true)
-                      expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
-                      expect(droplet.error).to match(/StagingError/)
+                      build.reload
+                      expect(build.state).to eq(BuildModel::FAILED_STATE)
+                      expect(build.error_id).to eq('StagingError')
                     end
                   end
                 end
@@ -273,11 +278,6 @@ module VCAP::CloudController
 
           describe 'failure case' do
             context 'when the staging fails' do
-              it 'should mark the droplet as failed' do
-                subject.staging_complete(fail_response)
-                expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
-              end
-
               it 'should mark the build as failed' do
                 subject.staging_complete(fail_response)
                 build.reload
@@ -287,9 +287,17 @@ module VCAP::CloudController
                 expect(build.error_description).to eq('Found no compatible cell')
               end
 
+              it 'should not create a droplet' do
+                subject.staging_complete(fail_response)
+                expect(build.reload.droplet).to be_nil
+              end
+
               it 'records the error' do
                 subject.staging_complete(fail_response)
-                expect(droplet.reload.error).to eq('NoCompatibleCell - Found no compatible cell')
+
+                build.reload
+                expect(build.error_id).to eq('NoCompatibleCell')
+                expect(build.error_description).to eq('Found no compatible cell')
               end
 
               it 'should emit a loggregator error' do
@@ -311,7 +319,10 @@ module VCAP::CloudController
             end
 
             context 'with a malformed success message' do
+              let(:droplet) { DropletModel.make(app: app, package: package, state: DropletModel::STAGING_STATE) }
+
               before do
+                build.update(droplet: droplet)
                 expect {
                   subject.staging_complete(malformed_success_response)
                 }.to raise_error(CloudController::Errors::ApiError)
@@ -330,19 +341,20 @@ module VCAP::CloudController
                 expect(Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
               end
 
-              it 'should mark the droplet as failed' do
-                expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+              it 'should mark the build as failed' do
+                expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
             end
 
             context 'with a malformed error message' do
-              it 'should mark the droplet as failed' do
+              it 'should mark the build as failed' do
                 expect {
                   subject.staging_complete(malformed_fail_response)
                 }.to raise_error(CloudController::Errors::ApiError)
 
-                expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
-                expect(droplet.error).to match(/StagingError/)
+                build.reload
+                expect(build.state).to eq(BuildModel::FAILED_STATE)
+                expect(build.error_id).to eq('StagingError')
               end
 
               it 'logs an error for the CF user' do
@@ -367,11 +379,11 @@ module VCAP::CloudController
               end
             end
 
-            context 'when updating the droplet record with data from staging fails' do
+            context 'when updating the build record with data from staging fails' do
               let(:save_error) { StandardError.new('save-error') }
 
               before do
-                allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
+                allow_any_instance_of(BuildModel).to receive(:save_changes).and_raise(save_error)
               end
 
               it 'logs an error for the CF operator' do
@@ -398,9 +410,9 @@ module VCAP::CloudController
               context 'when there is no web process for the app' do
                 let(:web_process) { nil }
 
-                it 'still marks the droplet as failed' do
+                it 'still marks the build as failed' do
                   subject.staging_complete(fail_response, true)
-                  expect(droplet.reload.state).to eq(DropletModel::FAILED_STATE)
+                  expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
                 end
               end
             end

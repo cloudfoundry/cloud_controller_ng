@@ -194,6 +194,11 @@ module VCAP::CloudController
                 expect(build.reload.state).to eq(BuildModel::FAILED_STATE)
               end
 
+              it 'should not create a droplet' do
+                handler.staging_complete(payload)
+                expect(build.reload.droplet).to be_nil
+              end
+
               it 'records the error' do
                 handler.staging_complete(payload)
                 expect(build.reload.error_id).to eq('InsufficientResources')
@@ -281,7 +286,7 @@ module VCAP::CloudController
               end
             end
 
-            context 'when updating the droplet record with data from staging fails' do
+            context 'when updating the build record with data from staging fails' do
               let(:payload) do
                 {
                   error: { id: 'InsufficientResources', message: 'some message' }
@@ -290,7 +295,7 @@ module VCAP::CloudController
               let(:save_error) { StandardError.new('save-error') }
 
               before do
-                allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
+                allow_any_instance_of(BuildModel).to receive(:save_changes).and_raise(save_error)
               end
 
               it 'logs an error for the CF operator' do
