@@ -184,45 +184,64 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     let(:unassigner) { VCAP::CloudController::IsolationSegmentUnassign.new }
 
     before do
-      set_current_user(user, { admin: true })
-      allow_user_read_access_for(user, orgs: [org])
       assigner.assign(isolation_segment, [org])
       org.update(default_isolation_segment_guid: isolation_segment.guid)
     end
 
-    it 'presents the default isolation segment' do
-      get :show_default_isolation_segment, guid: org.guid
-
-      expect(response.status).to eq(200)
-      expect(parsed_body['data']['guid']).to eq(isolation_segment.guid)
-    end
-
-    context 'when the organization does not exist' do
-      it 'throws ResourceNotFound error' do
-        get :show_default_isolation_segment, guid: 'cest-ne-pas-un-org'
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'Organization not found'
-      end
-    end
-
-    context 'when there is no default isolation segment' do
+    context 'with sufficient permissions' do
       before do
-        org.update(default_isolation_segment_guid: nil)
+        set_current_user(user, { admin: true })
+        allow_user_read_access_for(user, orgs: [org])
       end
 
-      it 'presents a null guid' do
+      it 'presents the default isolation segment' do
         get :show_default_isolation_segment, guid: org.guid
 
         expect(response.status).to eq(200)
-        expect(parsed_body['data']).to eq(nil)
+        expect(parsed_body['data']['guid']).to eq(isolation_segment.guid)
+      end
+
+      context 'when the organization does not exist' do
+        it 'throws ResourceNotFound error' do
+          get :show_default_isolation_segment, guid: 'cest-ne-pas-un-org'
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Organization not found'
+        end
+      end
+
+      context 'when there is no default isolation segment' do
+        before do
+          org.update(default_isolation_segment_guid: nil)
+        end
+
+        it 'presents a null guid' do
+          get :show_default_isolation_segment, guid: org.guid
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['data']).to eq(nil)
+        end
       end
     end
 
     context 'permissions' do
+      context 'when the user does not have cloud_controller.read' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.write'])
+        end
+
+        it 'throws a NotAuthorized error' do
+          get :show_default_isolation_segment, guid: org.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
       context 'when the user does not have permissions to read from organization' do
         before do
+          set_current_user(user)
           allow_user_read_access_for(user)
         end
 

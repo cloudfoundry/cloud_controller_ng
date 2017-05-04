@@ -9,6 +9,9 @@ require 'controllers/v3/mixins/sub_resource'
 class OrganizationsV3Controller < ApplicationController
   include SubResource
 
+  before_action :check_read_permissions!, only: [:index, :show_default_isolation_segment, :update_default_isolation_segment]
+  before_action :check_write_permissions!, except: [:index, :show_default_isolation_segment]
+
   def index
     message = OrgsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
