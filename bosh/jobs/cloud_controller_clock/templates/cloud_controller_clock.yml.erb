@@ -166,7 +166,6 @@ logging:
 <% if_p("metron_endpoint.host", "metron_endpoint.port") do |host, port| %>
 loggregator:
   router: <%= host %>:<%= port %>
-  url: ws<%= "s" if p("logger_endpoint.use_ssl") %>://loggregator.<%= p("system_domain") %>:<%= p("logger_endpoint.port") %>
 <% end %>
 
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>

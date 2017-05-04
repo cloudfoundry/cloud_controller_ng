@@ -66,13 +66,6 @@ module VCAP::CloudController
         expect(hash['authorization_endpoint']).to eq('login_url')
       end
 
-      it 'includes the logging endpoint when configured' do
-        TestConfig.override(loggregator: { url: 'loggregator_url' })
-        get '/v2/info'
-        hash = MultiJson.load(last_response.body)
-        expect(hash['logging_endpoint']).to eq('loggregator_url')
-      end
-
       it 'includes the routing api endpoint when configured' do
         TestConfig.override(routing_api: { url: 'some_routing_api' })
         get '/v2/info'
