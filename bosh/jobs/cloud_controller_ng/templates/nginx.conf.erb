@@ -24,7 +24,7 @@ http {
   tcp_nopush           on;
   tcp_nodelay          on;  #disable nagel's algorithm
 
-  keepalive_timeout  75 20; #inherited from router
+  keepalive_timeout    <%= p("cc.server_keepalive_timeout") %> 20;
 
   <% if_p("cc.nginx_rate_limit_general") do %>
   limit_req_zone $http_authorization zone=all:10m rate=<%=p("cc.nginx_rate_limit_general")['limit'] %>;

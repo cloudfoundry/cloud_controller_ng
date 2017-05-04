@@ -646,6 +646,10 @@ properties:
         limit: 10r/s
         burst: 100
 
+  cc.server_keepalive_timeout:
+    description: "Configure keep alive timeout for connections to cloud controller. This is a temporary field used for testing."
+    default: 75
+
   cc.jobs.local.number_of_workers:
     default: 2
     description: "Number of local cloud_controller_worker workers"
