@@ -3,6 +3,7 @@ require 'jobs/services/service_instance_state_fetch'
 module VCAP::Services::ServiceBrokers::V2
   class Client
     CATALOG_PATH = '/v2/catalog'.freeze
+    PLATFORM = 'cloudfoundry'.freeze
 
     attr_reader :orphan_mitigator, :attrs
 
@@ -27,6 +28,11 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id: instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
         space_guid: instance.space.guid,
+        context: {
+          platform: PLATFORM,
+          organization_guid: instance.organization.guid,
+          space_guid: instance.space.guid
+        }
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -186,7 +192,12 @@ module VCAP::Services::ServiceBrokers::V2
       body = {
         service_id: instance.service.broker_provided_id,
         plan_id: plan.broker_provided_id,
-        previous_values: previous_values
+        previous_values: previous_values,
+        context: {
+          platform: PLATFORM,
+          organization_guid: instance.organization.guid,
+          space_guid: instance.space.guid
+        }
       }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters
       response = @http_client.patch(path, body)

@@ -136,7 +136,12 @@ module VCAP::Services::ServiceBrokers::V2
           service_id:        instance.service.broker_provided_id,
           plan_id:           instance.service_plan.broker_provided_id,
           organization_guid: instance.organization.guid,
-          space_guid:        instance.space.guid
+          space_guid:        instance.space.guid,
+          context: {
+            platform: 'cloudfoundry',
+            organization_guid: instance.organization.guid,
+            space_guid: instance.space_guid
+          }
         )
       end
 
@@ -501,6 +506,20 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(anything,
           hash_including({
             service_id: instance.service.broker_provided_id,
+          })
+        )
+      end
+
+      it 'makes a patch request with the correct context in the body' do
+        client.update(instance, new_plan, previous_values: { plan_id: '1234' })
+
+        expect(http_client).to have_received(:patch).with(anything,
+          hash_including({
+            context: {
+              platform: 'cloudfoundry',
+              organization_guid: instance.organization.guid,
+              space_guid: instance.space_guid
+            }
           })
         )
       end
