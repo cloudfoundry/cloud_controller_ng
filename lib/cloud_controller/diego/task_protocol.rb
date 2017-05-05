@@ -44,6 +44,13 @@ module VCAP::CloudController
           result = result.merge(
             'docker_path' => droplet.docker_receipt_image,
           )
+
+          if droplet.docker_receipt_username.present?
+            result = result.merge(
+              'docker_user' => droplet.docker_receipt_username,
+              'docker_password' => droplet.docker_receipt_password,
+            )
+          end
         end
 
         if task.space.isolation_segment_model

@@ -509,7 +509,13 @@ module VCAP::CloudController
 
         context 'with a docker backend' do
           let(:package) { PackageModel.make(:docker, app: app) }
-          let(:droplet) { DropletModel.make(:docker, app: app) }
+          let(:droplet) do
+            DropletModel.make(:docker,
+                              app: app,
+                              docker_receipt_username: 'dockerusername',
+                              docker_receipt_password: 'dockerpassword',
+                             )
+          end
 
           let(:task_action_builder) do
             instance_double(
@@ -561,6 +567,9 @@ module VCAP::CloudController
             expect(result.PlacementTags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
+
+            expect(result.image_username).to eq('dockerusername')
+            expect(result.image_password).to eq('dockerpassword')
           end
 
           context 'when a volume mount is provided' do
