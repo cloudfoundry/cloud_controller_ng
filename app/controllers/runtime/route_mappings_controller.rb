@@ -44,17 +44,17 @@ module VCAP::CloudController
         object_renderer.render_json(self.class, route_mapping, @opts)
       ]
 
-    rescue V2::RouteMappingCreate::DuplicateRouteMapping
+    rescue ::VCAP::CloudController::V2::RouteMappingCreate::DuplicateRouteMapping
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(request_attrs))
-    rescue V2::RouteMappingCreate::UnavailableAppPort
+    rescue ::VCAP::CloudController::V2::RouteMappingCreate::UnavailableAppPort
       raise CloudController::Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
-    rescue V2::RouteMappingCreate::RoutingApiDisabledError
+    rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError
       raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
-    rescue V2::RouteMappingCreate::RouteServiceNotSupportedError
+    rescue ::VCAP::CloudController::V2::RouteMappingCreate::RouteServiceNotSupportedError
       raise CloudController::Errors::InvalidRelation.new('Route services are only supported for apps on Diego')
-    rescue V2::RouteMappingCreate::AppPortNotSupportedError
+    rescue ::VCAP::CloudController::V2::RouteMappingCreate::AppPortNotSupportedError
       raise CloudController::Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
-    rescue V2::RouteMappingCreate::SpaceMismatch => e
+    rescue ::VCAP::CloudController::V2::RouteMappingCreate::SpaceMismatch => e
       raise CloudController::Errors::InvalidRelation.new(e.message)
     end
 
