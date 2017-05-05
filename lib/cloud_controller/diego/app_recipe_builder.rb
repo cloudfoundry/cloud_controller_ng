@@ -71,6 +71,8 @@ module VCAP::CloudController
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["app:#{process.app.guid}"]
           ),
+          image_username:                   process.current_droplet.docker_receipt_username,
+          image_password:                   process.current_droplet.docker_receipt_password,
         )
       end
 

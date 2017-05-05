@@ -74,6 +74,8 @@ module Diego
         optional ::Diego::Bbs::Models::Network, :network, 18
         optional :int64, :start_timeout_ms, 19
         optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 20
+        optional :string, :image_username, 21
+        optional :string, :image_password, 22
       end
 
       class ProtoRoutes
@@ -135,6 +137,8 @@ module Diego
         repeated :string, :PlacementTags, 28
         optional :int32, :max_pids, 29
         optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 30
+        optional :string, :image_username, 31
+        optional :string, :image_password, 32
       end
 
     end

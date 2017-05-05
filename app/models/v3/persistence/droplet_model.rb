@@ -29,6 +29,7 @@ module VCAP::CloudController
     add_association_dependencies buildpack_lifecycle_data: :delete
 
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
+    encrypt :docker_receipt_password, salt: :docker_receipt_password_salt, column: :encrypted_docker_receipt_password
     serializes_via_json :environment_variables
     serializes_via_json :process_types
 

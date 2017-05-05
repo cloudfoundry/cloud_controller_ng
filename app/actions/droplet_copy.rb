@@ -11,7 +11,9 @@ module VCAP::CloudController
       :execution_metadata,
       :staging_memory_in_mb,
       :staging_disk_in_mb,
-      :docker_receipt_image
+      :docker_receipt_image,
+      :docker_receipt_username,
+      :docker_receipt_password,
     ].freeze
 
     def initialize(source_droplet)

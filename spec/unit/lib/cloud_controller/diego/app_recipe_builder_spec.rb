@@ -699,12 +699,15 @@ module VCAP::CloudController
             }
           end
           let(:lifecycle_type) { :docker }
+          let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
           let(:droplet) do
             DropletModel.make(:docker,
               package:              package,
               state:                DropletModel::STAGED_STATE,
               execution_metadata:   execution_metadata,
               docker_receipt_image: 'docker-receipt-image',
+              docker_receipt_username: 'dockeruser',
+              docker_receipt_password: 'dockerpass',
             )
           end
           let(:old_expected_cached_dependencies) do
@@ -765,6 +768,8 @@ module VCAP::CloudController
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
             expect(lrp.certificate_properties).to eq(expected_certificate_properties)
+            expect(lrp.image_username).to eq('dockeruser')
+            expect(lrp.image_password).to eq('dockerpass')
           end
 
           context 'cpu weight' do

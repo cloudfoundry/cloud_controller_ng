@@ -65,6 +65,8 @@ module Diego
         repeated :string, :PlacementTags, 20
         optional :int32, :max_pids, 21
         optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 22
+        optional :string, :image_username, 23
+        optional :string, :image_password, 24
       end
 
       class Task

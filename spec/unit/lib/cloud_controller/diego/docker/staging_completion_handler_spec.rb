@@ -27,12 +27,16 @@ module VCAP::CloudController
                   process_types:      { web: 'start' },
                   lifecycle_type:     'docker',
                   lifecycle_metadata: {
-                    docker_image: docker_image_name
+                    docker_image: docker_image_name,
+                    docker_user: docker_username,
+                    docker_password: docker_password
                   }
                 }
               }
             end
             let(:docker_image_name) { '' }
+            let(:docker_username) { '' }
+            let(:docker_password) { '' }
 
             it 'marks the droplet as staged' do
               expect {
@@ -174,11 +178,22 @@ module VCAP::CloudController
               let(:docker_image_name) { 'cached-docker-image' }
 
               it 'records it on the droplet' do
-                expect {
+                handler.staging_complete(payload)
+                droplet.reload
+                expect(droplet.docker_receipt_image).to eq('cached-docker-image')
+              end
+
+              context 'when docker credentials are present' do
+                let(:docker_username) { 'dockerusername' }
+                let(:docker_password) { 'dockerpassword' }
+
+                it 'records them on the droplet' do
                   handler.staging_complete(payload)
-                }.to change {
-                  droplet.reload.docker_receipt_image
-                }.to('cached-docker-image')
+                  droplet.reload
+                  expect(droplet.docker_receipt_image).to eq('cached-docker-image')
+                  expect(droplet.docker_receipt_username).to eq('dockerusername')
+                  expect(droplet.docker_receipt_password).to eq('dockerpassword')
+                end
               end
             end
           end

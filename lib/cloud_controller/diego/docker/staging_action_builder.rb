@@ -22,6 +22,11 @@ module VCAP::CloudController
             run_args << insecure_registries
           end
 
+          if staging_details.package.docker_username.present?
+            run_args << "-dockerUser=#{staging_details.package.docker_username}"
+            run_args << "-dockerPassword=#{staging_details.package.docker_password}"
+          end
+
           stage_action = ::Diego::Bbs::Models::RunAction.new(
             path:            '/tmp/docker_app_lifecycle/builder',
             user:            'vcap',

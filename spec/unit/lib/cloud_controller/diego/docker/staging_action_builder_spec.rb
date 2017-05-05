@@ -63,6 +63,27 @@ module VCAP::CloudController
               expect(run_action.args).to include('-insecureDockerRegistries=registry-1,registry-2')
             end
           end
+
+          context 'where there are docker credentials' do
+            let(:staging_details) do
+              StagingDetails.new.tap do |details|
+                details.package = PackageModel.new(
+                  docker_image: 'the-docker-image',
+                  docker_username: 'dockerusername',
+                  docker_password: 'dockerpassword',
+                )
+                details.environment_variables = env
+              end
+            end
+
+            it 'includes them in the run action args' do
+              result = builder.action
+
+              run_action = result.emit_progress_action.action.run_action
+              expect(run_action.args).to include('-dockerUser=dockerusername')
+              expect(run_action.args).to include('-dockerPassword=dockerpassword')
+            end
+          end
         end
 
         describe '#cached_dependencies' do

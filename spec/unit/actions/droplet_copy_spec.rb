@@ -23,6 +23,8 @@ module VCAP::CloudController
         staging_memory_in_mb: 128,
         staging_disk_in_mb: 256,
         docker_receipt_image: 'docker/image',
+        docker_receipt_username: 'dockerusername',
+        docker_receipt_password: 'dockerpassword',
        )
     end
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user-email', user_guid: 'user_guid') }
@@ -47,6 +49,8 @@ module VCAP::CloudController
         expect(copied_droplet.staging_memory_in_mb).to eq 128
         expect(copied_droplet.staging_disk_in_mb).to eq 256
         expect(copied_droplet.docker_receipt_image).to eq 'docker/image'
+        expect(copied_droplet.docker_receipt_username).to eq 'dockerusername'
+        expect(copied_droplet.docker_receipt_password).to eq 'dockerpassword'
 
         expect(target_app.droplets).to include(copied_droplet)
       end

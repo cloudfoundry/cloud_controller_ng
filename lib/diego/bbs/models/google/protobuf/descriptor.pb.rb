@@ -83,7 +83,15 @@ module Google
     class EnumOptions < ::Protobuf::Message; end
     class EnumValueOptions < ::Protobuf::Message; end
     class ServiceOptions < ::Protobuf::Message; end
-    class MethodOptions < ::Protobuf::Message; end
+    class MethodOptions < ::Protobuf::Message
+      class IdempotencyLevel < ::Protobuf::Enum
+        define :IDEMPOTENCY_UNKNOWN, 0
+        define :NO_SIDE_EFFECTS, 1
+        define :IDEMPOTENT, 2
+      end
+
+    end
+
     class UninterpretedOption < ::Protobuf::Message
       class NamePart < ::Protobuf::Message; end
 
@@ -195,7 +203,7 @@ module Google
       optional :string, :java_package, 1
       optional :string, :java_outer_classname, 8
       optional :bool, :java_multiple_files, 10, :default => false
-      optional :bool, :java_generate_equals_and_hash, 20, :default => false
+      optional :bool, :java_generate_equals_and_hash, 20, :deprecated => true
       optional :bool, :java_string_check_utf8, 27, :default => false
       optional ::Google::Protobuf::FileOptions::OptimizeMode, :optimize_for, 9, :default => ::Google::Protobuf::FileOptions::OptimizeMode::SPEED
       optional :string, :go_package, 11
@@ -206,6 +214,8 @@ module Google
       optional :bool, :cc_enable_arenas, 31, :default => false
       optional :string, :objc_class_prefix, 36
       optional :string, :csharp_namespace, 37
+      optional :string, :swift_prefix, 39
+      optional :string, :php_class_prefix, 40
       repeated ::Google::Protobuf::UninterpretedOption, :uninterpreted_option, 999
       # Extension Fields
       extensions 1000...536870912
@@ -263,6 +273,7 @@ module Google
 
     class MethodOptions
       optional :bool, :deprecated, 33, :default => false
+      optional ::Google::Protobuf::MethodOptions::IdempotencyLevel, :idempotency_level, 34, :default => ::Google::Protobuf::MethodOptions::IdempotencyLevel::IDEMPOTENCY_UNKNOWN
       repeated ::Google::Protobuf::UninterpretedOption, :uninterpreted_option, 999
       # Extension Fields
       extensions 1000...536870912

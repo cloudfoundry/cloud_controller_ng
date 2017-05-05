@@ -164,7 +164,13 @@ module VCAP::CloudController
 
         context 'with a docker backend' do
           let(:droplet) { DropletModel.make(:docker, package: package, app: app) }
-          let(:package) { PackageModel.make(:docker, app: app) }
+          let(:package) do
+            PackageModel.make(:docker,
+                              app: app,
+                              docker_username: 'dockeruser',
+                              docker_password: 'dockerpass',
+                             )
+          end
 
           let(:docker_staging_action) { ::Diego::Bbs::Models::RunAction.new }
           let(:lifecycle_type) { 'docker' }
@@ -275,6 +281,12 @@ module VCAP::CloudController
           it 'sets the certificate_properties' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.certificate_properties).to eq(certificate_properties)
+          end
+
+          it 'sets the docker credentials' do
+            result = task_recipe_builder.build_staging_task(config, staging_details)
+            expect(result.image_username).to eq('dockeruser')
+            expect(result.image_password).to eq('dockerpass')
           end
         end
       end

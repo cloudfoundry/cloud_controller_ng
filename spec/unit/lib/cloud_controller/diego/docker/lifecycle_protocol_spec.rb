@@ -29,7 +29,13 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:package) { PackageModel.make(:docker, docker_image: 'registry/image-name:latest') }
+            let(:package) do
+              PackageModel.make(:docker,
+                                docker_image: 'registry/image-name:latest',
+                                docker_username: 'dockerusername',
+                                docker_password: 'dockerpassword',
+                               )
+            end
             let(:droplet) { DropletModel.make(package_guid: package.guid) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
@@ -42,12 +48,22 @@ module VCAP
             it 'sets the docker image' do
               message = lifecycle_protocol.lifecycle_data(staging_details)
               expect(message[:docker_image]).to eq('registry/image-name:latest')
+              expect(message[:docker_user]).to eq('dockerusername')
+              expect(message[:docker_password]).to eq('dockerpassword')
             end
           end
 
           describe '#desired_app_message' do
             let(:app) { AppModel.make }
-            let(:droplet) { DropletModel.make(:docker, state: DropletModel::STAGED_STATE, app: app, docker_receipt_image: 'the-image') }
+            let(:droplet) do
+              DropletModel.make(:docker,
+                                state: DropletModel::STAGED_STATE,
+                                app: app,
+                                docker_receipt_image: 'the-image',
+                                docker_receipt_username: 'dockerusername',
+                                docker_receipt_password: 'dockerpassword',
+                               )
+            end
             let(:process) { App.make(app: app, diego: true, command: 'go go go', metadata: {}) }
 
             before do
@@ -59,9 +75,11 @@ module VCAP
               expect(message['start_command']).to eq('go go go')
             end
 
-            it 'uses the droplet receipt image' do
+            it 'uses the droplet receipt image and docker credentials' do
               message = lifecycle_protocol.desired_app_message(process)
               expect(message['docker_image']).to eq('the-image')
+              expect(message['docker_user']).to eq('dockerusername')
+              expect(message['docker_password']).to eq('dockerpassword')
             end
           end
 
