@@ -15,6 +15,7 @@ module VCAP::CloudController
 
         before do
           allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
+          allow(Steno).to receive(:logger).with('build_completed').and_return(logger)
           allow(Loggregator).to receive(:emit_error)
         end
 

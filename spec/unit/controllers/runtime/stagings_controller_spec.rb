@@ -640,7 +640,7 @@ module VCAP::CloudController
     context 'has builds, creates droplets when uploading droplet' do
       let(:file_content) { 'droplet content' }
       let(:package) { PackageModel.make(app: app_obj) }
-      let(:build) { BuildModel.make(package: package) }
+      let(:build) { BuildModel.make(package: package, app: app_obj) }
       let(:droplet) { nil }
       let(:upload_req) do
         { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }

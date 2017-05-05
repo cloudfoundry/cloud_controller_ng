@@ -1,5 +1,6 @@
 require 'securerandom'
 require 'cloud_controller/diego/staging_completion_handler'
+require 'actions/droplet_create'
 
 module VCAP::CloudController
   module Diego
@@ -27,7 +28,11 @@ module VCAP::CloudController
         private
 
         def handle_missing_droplet!(payload)
-          @droplet = create_droplet_from_build(build, build.package)
+          @droplet = create_droplet_from_build(build)
+        end
+
+        def create_droplet_from_build(build)
+          VCAP::CloudController::DropletCreate.new.create_docker_droplet(build)
         end
 
         def save_staging_result(payload)

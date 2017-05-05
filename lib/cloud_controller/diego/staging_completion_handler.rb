@@ -104,27 +104,6 @@ module VCAP::CloudController
         raise NotImplementedError
       end
 
-      def create_droplet_from_build(build, package)
-        droplet = DropletModel.new(
-          app_guid:                         package.app.guid,
-          package_guid:                     package.guid,
-          state:                            DropletModel::STAGING_STATE, # ##needed for app_usage_events
-          staging_memory_in_mb:             BuildModel::STAGING_MEMORY,
-          build:                            build,
-        )
-
-        buildpack_lifecycle_data = build.buildpack_lifecycle_data
-
-        DropletModel.db.transaction do
-          droplet.save
-          droplet.buildpack_lifecycle_data = buildpack_lifecycle_data
-
-          # record_audit_event(droplet, message, package, user_audit_info)
-        end
-        droplet.reload
-        droplet
-      end
-
       def start_process
         app         = droplet.app
         web_process = app.web_process
