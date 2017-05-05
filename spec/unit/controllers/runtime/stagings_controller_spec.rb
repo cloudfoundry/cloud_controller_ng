@@ -666,8 +666,6 @@ module VCAP::CloudController
           expect(droplet.app_guid).to eq(app_obj.guid)
           expect(droplet.package_guid).to eq(package.guid)
           expect(droplet.state).to eq(DropletModel::STAGING_STATE)
-          expect(droplet.buildpack_receipt_buildpack_guid).to eq(build.buildpack_receipt_buildpack_guid)
-          expect(droplet.buildpack_receipt_stack_name).to eq(build.buildpack_receipt_stack_name)
           expect(droplet.build).to eq(build)
 
           # XXX: Probably no need to test jobs, as above code does that.
@@ -757,8 +755,6 @@ module VCAP::CloudController
           expect(droplet.app_guid).to eq(app_obj.guid)
           expect(droplet.package_guid).to eq(package.guid)
           expect(droplet.state).to eq(DropletModel::STAGING_STATE)
-          expect(droplet.buildpack_receipt_buildpack_guid).to eq(build.buildpack_receipt_buildpack_guid)
-          expect(droplet.buildpack_receipt_stack_name).to eq(build.buildpack_receipt_stack_name)
           expect(droplet.build).to eq(build)
 
           job = Delayed::Job.last
