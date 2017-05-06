@@ -11,6 +11,16 @@ module VCAP::CloudController
       build_model.save
     end
 
+    describe 'associations' do
+      it 'has a foreign key to app' do
+        app = AppModel.make
+        BuildModel.make(app: app)
+        expect {
+          app.delete
+        }.to raise_error Sequel::ForeignKeyConstraintViolation, /"apps" violates foreign key constraint/
+      end
+    end
+
     describe '#lifecycle_type' do
       it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
         expect(build_model.lifecycle_type).to eq('buildpack')

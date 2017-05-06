@@ -95,6 +95,7 @@ module CloudController::Presenters::V2
           before do
             parent_app = app.app
             app.destroy
+            parent_app.builds.map(&:destroy)
             parent_app.packages.map(&:destroy)
             parent_app.droplets.map(&:destroy)
             parent_app.destroy
