@@ -17,7 +17,7 @@ module VCAP::CloudController
         BuildModel.make(app: app)
         expect {
           app.delete
-        }.to raise_error Sequel::ForeignKeyConstraintViolation, /"apps" violates foreign key constraint/
+        }.to raise_error Sequel::ForeignKeyConstraintViolation
       end
     end
 
