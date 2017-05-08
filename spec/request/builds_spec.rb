@@ -97,7 +97,7 @@ RSpec.describe 'Builds' do
   end
 
   describe 'GET /v3/builds' do
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package) }
+    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,

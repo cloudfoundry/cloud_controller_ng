@@ -51,6 +51,7 @@ module VCAP::CloudController
 
   BuildModel.blueprint do
     guid     { Sham.guid }
+    app      { AppModel.make }
     state    { VCAP::CloudController::BuildModel::STAGED_STATE }
   end
 

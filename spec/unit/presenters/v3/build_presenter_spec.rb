@@ -7,7 +7,13 @@ module VCAP::CloudController::Presenters::V3
     let(:package) { VCAP::CloudController::PackageModel.make(app: app) }
     let(:buildpack) { 'the-happiest-buildpack' }
     let(:stack) { 'the-happiest-stack' }
-    let(:build) { VCAP::CloudController::BuildModel.make(state: VCAP::CloudController::BuildModel::STAGING_STATE, package: package) }
+    let(:build) do
+      VCAP::CloudController::BuildModel.make(
+        state:   VCAP::CloudController::BuildModel::STAGING_STATE,
+        package: package,
+        app:     app
+      )
+    end
     let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpack: [buildpack], stack: stack, build: build) }
 
     describe '#to_hash' do
@@ -115,6 +121,18 @@ module VCAP::CloudController::Presenters::V3
         it 'populates the error field and state as FAILED' do
           expect(result[:state]).to eq('FAILED')
           expect(result[:error]).to eq('SomeError - something bad')
+        end
+      end
+
+      context 'when the package is deleted' do
+        before do
+          @package_guid = package.guid
+          package.destroy
+          build.reload
+        end
+
+        it 'still shows the package guid' do
+          expect(result[:package][:guid]).to eq(@package_guid)
         end
       end
     end

@@ -16,7 +16,7 @@ module VCAP::CloudController
               data: build.lifecycle_data.to_hash
             },
             package: { guid: build.package_guid },
-            droplet: droplet_guid,
+            droplet: droplet,
             links: build_links,
           }
         end
@@ -27,7 +27,7 @@ module VCAP::CloudController
           @resource
         end
 
-        def droplet_guid
+        def droplet
           if build.droplet && VCAP::CloudController::DropletModel::FINAL_STATES.include?(build.droplet.state)
             return { guid: build.droplet.guid }
           end
@@ -43,7 +43,7 @@ module VCAP::CloudController
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
             self: { href: url_builder.build_url(path: "/v3/builds/#{build.guid}") },
-            app: { href: url_builder.build_url(path: "/v3/apps/#{build.package.app.guid}") },
+            app: { href: url_builder.build_url(path: "/v3/apps/#{build.app.guid}") },
           }
         end
       end
