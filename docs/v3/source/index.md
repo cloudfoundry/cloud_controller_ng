@@ -9,6 +9,7 @@ includes:
   - snippets/query_params
   - snippets/object_attributes
   - api_resources/apps
+  - api_resources/builds
   - api_resources/droplets
   - api_resources/isolation_segments
   - api_resources/organizations
@@ -56,9 +57,12 @@ includes:
   - experimental_resources/apps/stop
   - experimental_resources/apps/delete
   - experimental_resources/apps/list
+  - experimental_resources/builds/header
+  - experimental_resources/builds/object
+  - experimental_resources/builds/create
+  - experimental_resources/builds/get
   - experimental_resources/droplets/header
   - experimental_resources/droplets/object
-  - experimental_resources/droplets/create
   - experimental_resources/droplets/copy
   - experimental_resources/droplets/get
   - experimental_resources/droplets/delete

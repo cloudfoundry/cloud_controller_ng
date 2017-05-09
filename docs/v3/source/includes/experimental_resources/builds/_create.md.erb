@@ -1,0 +1,51 @@
+### Create a build
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/builds" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "lifecycle": {
+      "type": "buildpack",
+      "data": {
+        "buildpacks": ["http://github.example.org/myorg/awesome-buildpack"],
+        "stack": "cflinuxfs2"
+      }
+    },
+    "package": {
+       "guid": "[package-guid]"
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_staging_build %>
+```
+
+#### Definition
+`POST /v3/builds`
+
+#### Optional Parameters
+
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Lifecycle information for a build. | lifecycle on the app
+**package** | object | App package to stage. |
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |
