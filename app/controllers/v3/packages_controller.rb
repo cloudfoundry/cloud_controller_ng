@@ -13,8 +13,6 @@ require 'controllers/v3/mixins/sub_resource'
 class PackagesController < ApplicationController
   include SubResource
 
-  before_action :check_read_permissions!, only: [:index, :show, :download]
-
   def index
     message = PackagesListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?

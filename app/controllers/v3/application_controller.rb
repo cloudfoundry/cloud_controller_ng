@@ -30,13 +30,16 @@ class ApplicationController < ActionController::Base
   include VCAP::CloudController
   include V3ErrorsHelper
 
+  UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
+  READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
+
   wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 
   before_action :set_locale
   before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
-  before_action :check_read_permissions!, only: [:index, :show, :show_env, :show_environment_variables, :stats]
-  before_action :check_write_permissions!, except: [:index, :show, :not_found, :show_environment_variables, :internal_error, :bad_request]
+  before_action :check_read_permissions!, if: :enforce_read_scope?
+  before_action :check_write_permissions!, if: :enforce_write_scope?
   before_action :null_coalesce_body
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
@@ -122,6 +125,18 @@ class ApplicationController < ActionController::Base
   ###
   ### FILTERS
   ###
+
+  def enforce_read_scope?
+    return false if UNSCOPED_PAGES.include?(action_name)
+
+    READ_SCOPE_HTTP_METHODS.include?(request.method)
+  end
+
+  def enforce_write_scope?
+    return false if UNSCOPED_PAGES.include?(action_name)
+
+    !READ_SCOPE_HTTP_METHODS.include?(request.method)
+  end
 
   def check_read_permissions!
     read_scope = SecurityContext.scopes.include?('cloud_controller.read')

@@ -682,7 +682,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     it 'returns the stats for all instances for the process' do
-      put :stats, { process_guid: process_type.guid }
+      get :stats, { process_guid: process_type.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body['resources'][0]['type']).to eq('potato')
@@ -690,7 +690,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'accessed as app subresource' do
       it 'returns the stats for all instances of specified type for all processes of an app' do
-        put :stats, { app_guid: app.guid, type: process_type.type }
+        get :stats, { app_guid: app.guid, type: process_type.type }
 
         expect(response.status).to eq(200)
         expect(parsed_body['resources'][0]['type']).to eq('potato')
@@ -702,7 +702,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404 error' do
-          put :stats, { app_guid: app.guid, type: process_type.type }
+          get :stats, { app_guid: app.guid, type: process_type.type }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -712,7 +712,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the app does not exist' do
         it 'raises a 404 error' do
-          put :stats, { app_guid: 'bogus-guid', type: process_type.type }
+          get :stats, { app_guid: 'bogus-guid', type: process_type.type }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -722,7 +722,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when process does not exist' do
         it 'raises a 404 error' do
-          put :stats, { app_guid: app.guid, type: 1234 }
+          get :stats, { app_guid: app.guid, type: 1234 }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -745,7 +745,7 @@ RSpec.describe ProcessesController, type: :controller do
         before { set_current_user(user, scopes: ['cloud_controller.write']) }
 
         it 'raises an ApiError with a 403 code' do
-          put :stats, { process_guid: process_type.guid }
+          get :stats, { process_guid: process_type.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -758,7 +758,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          put :stats, { process_guid: process_type.guid }
+          get :stats, { process_guid: process_type.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
