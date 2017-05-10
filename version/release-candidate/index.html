@@ -90,6 +90,8 @@
 
           
 
+          
+
 
 
           
@@ -3253,15 +3255,254 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 </tbody></table>
 
+          <h2 id="builds">Builds</h2>
+
+<p>Builds represent the process of staging an application package. There are two types
+(<a href="#lifecycles">lifecycles</a>) of builds: buildpack and docker.</p>
+
+<p>After an <a href="#apps">application</a> is created and <a href="#packages">packages</a> are uploaded, a build
+resource can be created to initiate the staging process. A successful build results in a 
+<a href="#droplets">droplet</a>.</p>
+
+          <h3 id="the-build-object">The build object</h3>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>state</strong></td>
+<td><em>string</em></td>
+<td>State of the build. Valid states are <code class="prettyprint">STAGING</code>, <code class="prettyprint">STAGED</code>, <code class="prettyprint">COPYING</code>, <code class="prettyprint">FAILED</code>, or <code class="prettyprint">EXPIRED</code>.</td>
+</tr>
+<tr>
+<td><strong>error</strong></td>
+<td><em>string</em></td>
+<td>A string describing errors during the build process.</td>
+</tr>
+<tr>
+<td><strong>lifecycle</strong></td>
+<td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
+<td>An object describing the lifecycle that was configured or discovered from the app.</td>
+</tr>
+<tr>
+<td><strong>package</strong></td>
+<td><em>object</em></td>
+<td>The package that is the input to the staging process.</td>
+</tr>
+<tr>
+<td><strong>droplet</strong></td>
+<td><em>object</em></td>
+<td>A resulting droplet from the staging process.</td>
+</tr>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the build.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the build was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the build was last updated.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="create-a-build">Create a build</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/builds"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "lifecycle": {
+      "type": "buildpack",
+      "data": {
+        "buildpacks": ["http://github.example.org/myorg/awesome-buildpack"],
+        "stack": "cflinuxfs2"
+      }
+    },
+    "package": {
+       "guid": "[package-guid]"
+    }
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
+      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8e4da443-f255-499c-8b47-b3729b5b7432"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/builds/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/builds</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>lifecycle</strong></td>
+<td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
+<td>Lifecycle information for a build.</td>
+<td>lifecycle on the app</td>
+</tr>
+<tr>
+<td><strong>package</strong></td>
+<td>object</td>
+<td>App package to stage.</td>
+<td></td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-a-build">Get a build</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/builds/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
+      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8e4da443-f255-499c-8b47-b3729b5b7432"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1e1186e7-d803-4c46-b9d6-5c81e50fe55a"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/builds/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/builds/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h2 id="droplets">Droplets</h2>
 
-<p>Droplets are created by staging an application package. There are two types
+<p>Droplets are the result of staging an application package. There are two types
 (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
 the droplet contains the bits produced by the buildpack, typically application
 code and dependencies.</p>
 
 <p>After an application is created and packages are uploaded, a droplet must be
-created in order for an application to be deployed or tasks to be run. 
+created via a <a href="#builds">build</a> in order for an application to be deployed or tasks to be run. 
 The current droplet <a href="#set-current-droplet-for-an-app">must be assigned</a> to an 
 application before it may be started. When <a href="#create-a-task">tasks are created</a>, 
 they either use a specific droplet guid, or use the current droplet assigned to an application.</p>
@@ -3329,147 +3570,6 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="create-a-droplet">Create a droplet</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "environment_variables": {
-      "CUSTOM_ENV_VAR": "hello"
-    },
-    "lifecycle": {
-      "type": "buildpack",
-      "data": {
-        "buildpacks": ["http://github.example.org/myorg/awesome-buildpack"],
-        "stack": "cflinuxfs2"
-      }
-    }
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"CF_STACK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_APPLICATION"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"fds"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"application_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.org"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_space"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.org"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"users"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"MEMORY_LIMIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1024m"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_SERVICES"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/8222f76a-9e09-4360-b3aa-1ed329945e92"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"assign_current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PATCH"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">POST /v3/packages/:guid/droplets</code></p>
-
-<h4 id="optional-parameters">Optional Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>environment_variables</strong></td>
-<td><em>object</em></td>
-<td>Environment variables to use during staging. Environment variable names may not start with <code class="prettyprint">VCAP_</code> or <code class="prettyprint">CF_</code>. <code class="prettyprint">PORT</code> is not a valid environment variable.</td>
-<td><code class="prettyprint">{}</code></td>
-</tr>
-<tr>
-<td><strong>staging_memory_in_mb</strong></td>
-<td><em>integer</em></td>
-<td>Memory limit used to stage package.</td>
-<td>operator-configured <code class="prettyprint">minimum_staging_memory_mb</code></td>
-</tr>
-<tr>
-<td><strong>staging_disk_in_mb</strong></td>
-<td><em>integer</em></td>
-<td>Disk limit used to stage package.</td>
-<td>operator-configured <code class="prettyprint">minimum_staging_disk_mb</code></td>
-</tr>
-<tr>
-<td><strong>lifecycle</strong></td>
-<td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
-<td>Lifecycle information for a droplet.</td>
-<td>lifecycle on the app</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Admin</td>
 </tr>
 </tbody></table>
 
