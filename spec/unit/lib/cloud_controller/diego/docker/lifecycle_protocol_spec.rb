@@ -12,7 +12,7 @@ module VCAP
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(:docker, app: app) }
-            let(:droplet) { DropletModel.make(:staged, package: package, app: app) }
+            let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:process) { App.make(app: app) }
 
             before do
@@ -21,7 +21,7 @@ module VCAP
 
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet = droplet
+                details.staging_guid = droplet.guid
                 details.package = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end
@@ -29,17 +29,18 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
+            let(:app) { AppModel.make }
             let(:package) do
               PackageModel.make(:docker,
-                                docker_image: 'registry/image-name:latest',
-                                docker_username: 'dockerusername',
-                                docker_password: 'dockerpassword',
-                               )
+                app:             app,
+                docker_image:    'registry/image-name:latest',
+                docker_username: 'dockerusername',
+                docker_password: 'dockerpassword',)
             end
             let(:droplet) { DropletModel.make(package_guid: package.guid) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet = droplet
+                details.staging_guid = droplet.guid
                 details.package = package
                 details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
               end

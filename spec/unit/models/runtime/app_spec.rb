@@ -942,10 +942,9 @@ module VCAP::CloudController
     describe 'staging?' do
       let(:app) { AppFactory.make }
 
-      it 'should return true if the latest_droplet is STAGING' do
-        DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::STAGING_STATE)
-        app.reload
-        expect(app.staging?).to be true
+      it 'should return true if the latest_build is STAGING' do
+        BuildModel.make(app: app.app, package: app.latest_package, state: BuildModel::STAGING_STATE)
+        expect(app.reload.staging?).to be true
       end
 
       it 'should return false if a new package has been uploaded but a droplet has not been created for it' do
@@ -964,16 +963,16 @@ module VCAP::CloudController
     describe 'failed?' do
       let(:app) { AppFactory.make }
 
-      it 'should return true if the latest_droplet is FAILED' do
-        app.latest_droplet.update(state: DropletModel::FAILED_STATE)
+      it 'should return true if the latest_build is FAILED' do
+        app.latest_build.update(state: BuildModel::FAILED_STATE)
         app.reload
 
         expect(app.package_state).to eq('FAILED')
         expect(app.staging_failed?).to be true
       end
 
-      it 'should return false if latest_droplet is not FAILED' do
-        app.latest_droplet.update(state: DropletModel::STAGED_STATE)
+      it 'should return false if latest_build is not FAILED' do
+        app.latest_build.update(state: BuildModel::STAGED_STATE)
         app.reload
 
         expect(app.package_state).to eq('STAGED')
@@ -981,115 +980,23 @@ module VCAP::CloudController
       end
     end
 
+    describe '#latest_build' do
+      let!(:process) { App.make app: parent_app }
+      let!(:build1) { BuildModel.make(app: parent_app, state: BuildModel::STAGED_STATE) }
+      let!(:build2) { BuildModel.make(app: parent_app, state: BuildModel::STAGED_STATE) }
+
+      it 'should return the most recently created build' do
+        expect(process.latest_build).to eq build2
+      end
+    end
+
     describe '#package_state' do
       let(:parent_app) { AppModel.make }
       subject(:app) { App.make(app: parent_app) }
 
-      context 'when no package exists' do
-        it 'is PENDING' do
-          expect(app.latest_package).to be_nil
-          expect(app.reload.package_state).to eq('PENDING')
-        end
-      end
-
-      context 'when the package has no hash' do
-        before do
-          PackageModel.make(app: parent_app, package_hash: nil)
-        end
-
-        it 'is PENDING' do
-          expect(app.reload.package_state).to eq('PENDING')
-        end
-      end
-
-      context 'when the package failed to upload' do
-        before do
-          PackageModel.make(app: parent_app, state: PackageModel::FAILED_STATE)
-        end
-
-        it 'is FAILED' do
-          expect(app.reload.package_state).to eq('FAILED')
-        end
-      end
-
-      context 'when the package is available and there is no droplet' do
-        before do
-          PackageModel.make(app: parent_app, package_hash: 'hash')
-        end
-
-        it 'is PENDING' do
-          expect(app.reload.package_state).to eq('PENDING')
-        end
-      end
-
-      context 'when the current droplet is the latest droplet' do
-        before do
-          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
-          droplet = DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
-          parent_app.update(droplet: droplet)
-        end
-
-        it 'is STAGED' do
-          expect(app.reload.package_state).to eq('STAGED')
-        end
-      end
-
-      context 'when the current droplet is not the latest droplet' do
-        before do
-          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
-          DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
-        end
-
-        it 'is PENDING' do
-          expect(app.reload.package_state).to eq('PENDING')
-        end
-      end
-
-      context 'when the latest droplet failed to stage' do
-        before do
-          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
-          DropletModel.make(app: parent_app, package: package, state: DropletModel::FAILED_STATE)
-        end
-
-        it 'is FAILED' do
-          expect(app.reload.package_state).to eq('FAILED')
-        end
-      end
-
-      context 'when there is a newer package than current droplet' do
-        before do
-          package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
-          droplet = DropletModel.make(app: parent_app, package: package, state: DropletModel::STAGED_STATE)
-          parent_app.update(droplet: droplet)
-          PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE, created_at: droplet.created_at + 10.seconds)
-        end
-
-        it 'is PENDING' do
-          expect(app.reload.package_state).to eq('PENDING')
-        end
-      end
-
-      context 'when the latest droplet is the current droplet but it does not have a package' do
-        before do
-          droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
-          parent_app.update(droplet: droplet)
-        end
-
-        it 'is STAGED' do
-          expect(app.reload.package_state).to eq('STAGED')
-        end
-      end
-
-      context 'when the latest droplet has no package but there is a previous package' do
-        before do
-          previous_package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::FAILED_STATE)
-          droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE, created_at: previous_package.created_at + 10.seconds)
-          parent_app.update(droplet: droplet)
-        end
-
-        it 'is STAGED' do
-          expect(app.reload.package_state).to eq('STAGED')
-        end
+      it 'calculates the package state' do
+        expect(app.latest_package).to be_nil
+        expect(app.reload.package_state).to eq('PENDING')
       end
     end
 
@@ -1914,6 +1821,51 @@ module VCAP::CloudController
 
       it 'returns the parent app name' do
         expect(app.name).to eq('parent-app-name')
+      end
+    end
+
+    describe 'staging failures' do
+      let(:parent_app) { AppModel.make(name: 'parent-app-name') }
+      let(:app) { App.make(app: parent_app) }
+      let(:error_id) { 'StagingFailed' }
+      let(:error_description) { 'stating failed' }
+
+      describe 'when there is a build but no droplet' do
+        let!(:build) { BuildModel.make app: parent_app, error_id: error_id, error_description: error_description }
+
+        it 'returns the error_id and error_description from the build' do
+          expect(app.staging_failed_reason).to eq(error_id)
+          expect(app.staging_failed_description).to eq(error_description)
+        end
+      end
+
+      describe 'when there is a droplet but no build (legacy case for supporting rolling deploy)' do
+        let!(:droplet) { DropletModel.make app: parent_app, error_id: error_id, error_description: error_description }
+
+        it 'returns the error_id and error_description from the build' do
+          expect(app.staging_failed_reason).to eq(error_id)
+          expect(app.staging_failed_description).to eq(error_description)
+        end
+      end
+    end
+
+    describe 'staging task id' do
+      let(:app) { App.make(app: parent_app) }
+
+      context 'when there is a build but no droplet' do
+        let!(:build) { BuildModel.make(app: parent_app) }
+
+        it 'is the build guid' do
+          expect(app.staging_task_id).to eq(build.guid)
+        end
+      end
+
+      context 'when there is no build' do
+        let!(:droplet) { DropletModel.make(app: parent_app) }
+
+        it 'is the droplet guid if there is no build' do
+          expect(app.staging_task_id).to eq(droplet.guid)
+        end
       end
     end
   end

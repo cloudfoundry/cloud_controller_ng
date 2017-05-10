@@ -13,6 +13,12 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
+    many_to_one :build,
+      class: '::VCAP::CloudController::BuildModel',
+      key: :build_guid,
+      primary_key: :guid,
+      without_guid_generation: true
+
     many_to_one :app,
       class: '::VCAP::CloudController::AppModel',
       key: :app_guid,

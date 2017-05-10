@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Dea::AppStagerTask do
-    subject!(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, droplet, dea_pool, blobstore_url_generator) }
+    subject!(:staging_task) { Dea::AppStagerTask.new(config_hash, message_bus, build.guid, dea_pool, blobstore_url_generator, app) }
 
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_pool) { instance_double(Dea::Pool, reserve_app_memory: nil) }
@@ -16,8 +16,9 @@ module VCAP::CloudController
         disk_quota: 1024
       )
     end
-    let(:package) { PackageModel.make(app: app.app, package_hash: 'some-hash', state: PackageModel::READY_STATE) }
-    let(:droplet) { DropletModel.make(app: app.app, package: package) }
+    let(:build) { BuildModel.make(app: app.app, package: app.latest_package, state: BuildModel::STAGING_STATE) }
+    let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(build: build, buildpack: 'yoloswag') }
+    let!(:droplet) { DropletModel.make(app: app.app, build: build, package: app.latest_package, state: DropletModel::STAGING_STATE) }
 
     let(:dea_advertisement) { Dea::NatsMessages::DeaAdvertisement.new({ 'id' => 'my_stager' }, nil) }
     let(:stager_id) { dea_advertisement.dea_id }
@@ -179,25 +180,11 @@ module VCAP::CloudController
             expect { staging_task.handle_http_response(response) }.to change { app.refresh.detected_buildpack }.from(nil)
           end
 
-          context 'and the droplet has been uploaded' do
-            before do
-              droplet.update(state: DropletModel::STAGED_STATE, droplet_hash: 'abc')
-            end
-
-            it 'saves the detected start command' do
-              expect { staging_task.handle_http_response(response) }.to change {
-                app.refresh.current_droplet
-                app.detected_start_command
-              }.from('').to('wait_for_godot')
-            end
-          end
-
-          context 'when the droplet somehow has not been uploaded (defensive)' do
-            it 'does not change the start command' do
-              expect { staging_task.handle_http_response(response) }.not_to change {
-                app.detected_start_command
-              }.from('')
-            end
+          it 'saves the detected start command' do
+            expect { staging_task.handle_http_response(response) }.to change {
+              app.refresh.current_droplet
+              app.detected_start_command
+            }.from('').to('wait_for_godot')
           end
 
           context 'when detected_start_command is not returned' do
@@ -262,7 +249,7 @@ module VCAP::CloudController
         end
 
         context 'when staging was already marked as failed' do
-          let(:droplet) { DropletModel.make(app: app.app, package: package, state: DropletModel::FAILED_STATE) }
+          let(:build) { BuildModel.make(app: app.app, package: app.latest_package, state: BuildModel::FAILED_STATE) }
 
           it 'does not mark the app as staged' do
             expect {
@@ -426,10 +413,10 @@ module VCAP::CloudController
       context 'when the app memory requirement exceeds the staging memory requirement (1024)' do
         let(:app) do
           AppFactory.make(
-            type:       'web',
-            state:      'STARTED',
-            instances:  1,
-            memory: 1025
+            type:      'web',
+            state:     'STARTED',
+            instances: 1,
+            memory:    1025
           )
         end
 
@@ -517,9 +504,9 @@ module VCAP::CloudController
               stage
             end
 
-            it 'saves staging task id as the droplet guid' do
+            it 'saves staging task id as the build guid' do
               stage
-              expect(app.reload.staging_task_id).to eq(droplet.guid)
+              expect(app.reload.staging_task_id).to eq(build.guid)
             end
           end
           it 'keeps the app as not staged' do
@@ -685,25 +672,11 @@ module VCAP::CloudController
               expect { stage }.to change { app.refresh.execution_metadata }.from('')
             end
 
-            context 'and the droplet has been uploaded' do
-              before do
-                droplet.update(state: DropletModel::STAGED_STATE, droplet_hash: 'abc')
-              end
-
-              it 'saves the detected start command' do
-                expect { stage }.to change {
-                  app.refresh.current_droplet
-                  app.detected_start_command
-                }.from('').to('wait_for_godot')
-              end
-            end
-
-            context 'when the droplet somehow has not been uploaded (defensive)' do
-              it 'does not change the start command' do
-                expect { stage }.not_to change {
-                  app.detected_start_command
-                }.from('')
-              end
+            it 'saves the detected start command' do
+              expect { stage }.to change {
+                app.refresh.current_droplet
+                app.detected_start_command
+              }.from('').to('wait_for_godot')
             end
 
             context 'when detected_start_command is not returned' do
@@ -775,17 +748,19 @@ module VCAP::CloudController
             end
 
             it 'records a buildpack set event for each process' do
-              App.make(app: app.app, type: 'asdf')
+              ProcessModel.make(app: app.app, type: 'asdf')
               expect {
                 stage
               }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
+              usage_event = AppUsageEvent.where(state: 'BUILDPACK_SET').last
+              expect(usage_event.buildpack_name).to eq(build.lifecycle_data.buildpack)
             end
           end
 
           context 'when other staging has happened' do
             before do
               @before_staging_completion = -> {
-                DropletModel.make(app: app.app, package: app.latest_package)
+                BuildModel.make(app: app.app, package: app.latest_package)
               }
             end
 
@@ -835,7 +810,7 @@ module VCAP::CloudController
           context 'when staging was already marked as failed' do
             before do
               @before_staging_completion = -> {
-                droplet.update(state: DropletModel::FAILED_STATE)
+                build.update(state: BuildModel::FAILED_STATE)
               }
             end
 

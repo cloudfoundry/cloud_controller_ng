@@ -9,23 +9,21 @@ module VCAP::CloudController
       subject(:action) { described_class.new(stagers: stagers) }
 
       describe '#stage' do
-        let(:droplet_create) { instance_double(DropletCreate, create_and_stage_without_event: nil, staging_response: 'staging-response') }
+        let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: nil, staging_response: 'staging-response') }
 
         before do
-          allow(DropletCreate).to receive(:new).with(memory_limit_calculator: an_instance_of(NonQuotaValidatingStagingMemoryCalculator)).and_return(droplet_create)
+          allow(BuildCreate).to receive(:new).with(memory_limit_calculator: an_instance_of(NonQuotaValidatingStagingMemoryCalculator)).and_return(build_create)
         end
 
-        it 'delegates to DropletCreate with a DropletCreateMessage based on the process' do
+        it 'delegates to BuildCreate with a BuildCreateMessage based on the process' do
           process = App.make(memory: 765, disk_quota: 1234)
           package = PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
           process.reload
 
           action.stage(process)
 
-          expect(droplet_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
+          expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:package]).to eq(package)
-            expect(parameter_hash[:message].staging_memory_in_mb).to eq(765)
-            expect(parameter_hash[:message].staging_disk_in_mb).to eq(1234)
           end
         end
 
@@ -34,7 +32,7 @@ module VCAP::CloudController
 
           action.stage(process)
 
-          expect(droplet_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
+          expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:start_after_staging]).to be_truthy
           end
         end
@@ -44,7 +42,7 @@ module VCAP::CloudController
 
           action.stage(process)
 
-          expect(droplet_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
+          expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:lifecycle].type).to equal(Lifecycles::DOCKER)
           end
         end
@@ -54,7 +52,7 @@ module VCAP::CloudController
 
           action.stage(process)
 
-          expect(droplet_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
+          expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:lifecycle].type).to equal(Lifecycles::BUILDPACK)
           end
         end
@@ -73,15 +71,15 @@ module VCAP::CloudController
             action.stage(process)
           }.to raise_error(StandardError)
 
-          expect(droplet_create).not_to have_received(:create_and_stage_without_event)
+          expect(build_create).not_to have_received(:create_and_stage_without_event)
         end
 
-        describe 'handling DropletCreate errors' do
+        describe 'handling BuildCreate errors' do
           let(:process) { AppFactory.make }
 
-          context 'when DropletError error is raised' do
+          context 'when BuildError error is raised' do
             before do
-              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::DropletError.new('some error'))
+              allow(build_create).to receive(:create_and_stage_without_event).and_raise(BuildCreate::BuildError.new('some error'))
             end
 
             it 'translates it to an ApiError' do
@@ -93,8 +91,8 @@ module VCAP::CloudController
 
           context 'when SpaceQuotaExceeded error is raised' do
             before do
-              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(
-                DropletCreate::SpaceQuotaExceeded.new('helpful message')
+              allow(build_create).to receive(:create_and_stage_without_event).and_raise(
+                BuildCreate::SpaceQuotaExceeded.new('helpful message')
               )
             end
 
@@ -108,8 +106,8 @@ module VCAP::CloudController
 
           context 'when OrgQuotaExceeded error is raised' do
             before do
-              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(
-                DropletCreate::OrgQuotaExceeded.new('helpful message')
+              allow(build_create).to receive(:create_and_stage_without_event).and_raise(
+                BuildCreate::OrgQuotaExceeded.new('helpful message')
               )
             end
 
@@ -123,7 +121,7 @@ module VCAP::CloudController
 
           context 'when DiskLimitExceeded error is raised' do
             before do
-              allow(droplet_create).to receive(:create_and_stage_without_event).and_raise(DropletCreate::DiskLimitExceeded.new)
+              allow(build_create).to receive(:create_and_stage_without_event).and_raise(BuildCreate::DiskLimitExceeded.new)
             end
 
             it 'translates it to an ApiError' do

@@ -150,7 +150,7 @@ RSpec.describe 'Routes' do
                       'command'                    => nil,
                       'console'                    => false,
                       'debug'                      => nil,
-                      'staging_task_id'            => process.latest_droplet.guid,
+                      'staging_task_id'            => process.latest_build.guid,
                       'package_state'              => 'STAGED',
                       'health_check_type'          => 'port',
                       'health_check_timeout'       => nil,

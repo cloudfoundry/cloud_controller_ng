@@ -35,7 +35,7 @@ module VCAP::CloudController
           end
 
           it 'does NOT delete droplets that are NOT expired' do
-            droplet = DropletModel.make(:staged)
+            droplet = DropletModel.make
 
             job.perform
             expect(droplet).to exist
@@ -63,7 +63,7 @@ module VCAP::CloudController
         end
 
         it 'does NOT delete packages that are NOT expired' do
-          package = PackageModel.make(:staged)
+          package = PackageModel.make
           job.perform
           expect(package).to exist
         end

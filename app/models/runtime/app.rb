@@ -5,6 +5,7 @@ require 'cloud_controller/errors/application_missing'
 require 'repositories/app_usage_event_repository'
 require 'presenters/v3/cache_key_presenter'
 require 'utils/uri_utils'
+require 'models/runtime/helpers/package_state_calculator.rb'
 
 require_relative 'buildpack'
 
@@ -56,6 +57,13 @@ module VCAP::CloudController
 
     one_through_one :latest_droplet,
       class:             'VCAP::CloudController::DropletModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :app_guid, right_key: :guid,
+      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+
+    one_through_one :latest_build,
+      class:             'VCAP::CloudController::BuildModel',
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :app_guid, right_key: :guid,
@@ -152,29 +160,12 @@ module VCAP::CloudController
     end
 
     def package_state
-      cached_latest_droplet  = latest_droplet
-      cached_current_droplet = current_droplet
-      return 'FAILED' if cached_latest_droplet.try(:failed?)
-      return 'PENDING' if cached_current_droplet != cached_latest_droplet
-
-      cached_latest_package = latest_package
-      if cached_current_droplet
-        if cached_latest_package
-          return 'STAGED' if cached_current_droplet.package == cached_latest_package || cached_current_droplet.created_at > cached_latest_package.created_at
-          return 'FAILED' if cached_latest_package.failed?
-          return 'PENDING'
-        end
-
-        return 'STAGED'
-      end
-
-      return 'FAILED' if cached_latest_package.try(:failed?)
-
-      'PENDING'
+      calculator = PackageStateCalculator.new(self)
+      calculator.calculate
     end
 
     def staging_task_id
-      latest_droplet.try(:guid)
+      latest_build.try(:guid) || latest_droplet.try(:guid)
     end
 
     def droplet_hash
@@ -399,11 +390,11 @@ module VCAP::CloudController
     end
 
     def staging_failed_reason
-      latest_droplet.try(:error_id)
+      latest_build.try(:error_id) || latest_droplet.try(:error_id)
     end
 
     def staging_failed_description
-      latest_droplet.try(:error_description)
+      latest_build.try(:error_description) || latest_droplet.try(:error_description)
     end
 
     def console=(c)
@@ -482,7 +473,7 @@ module VCAP::CloudController
     end
 
     def staging?
-      pending? && !latest_droplet.nil? && latest_droplet.staging?
+      pending? && latest_build.present? && latest_build.staging?
     end
 
     def started?

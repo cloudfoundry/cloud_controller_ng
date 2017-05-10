@@ -47,7 +47,7 @@ module VCAP::CloudController
             desired_state:         'STOPPED',
             environment_variables: environment_variables)
         end
-        let!(:droplet) { DropletModel.make(:staged, app: app) }
+        let!(:droplet) { DropletModel.make(app: app) }
         let!(:process1) { App.make(:process, state: 'STOPPED', app: app) }
         let!(:process2) { App.make(:process, state: 'STOPPED', app: app) }
 

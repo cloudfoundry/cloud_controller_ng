@@ -24,13 +24,13 @@ module VCAP
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
-            let(:droplet) { DropletModel.make(:staged, package_guid: package.guid, app_guid: app.guid) }
+            let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
             let(:process) { App.make(app: app) }
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet   = droplet
-                details.package   = package
-                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
+                details.staging_guid = droplet.guid
+                details.package      = package
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
               end
             end
             let(:buildpack_info) { BuildpackInfo.new('http://some-buildpack.url', nil) }
@@ -54,7 +54,7 @@ module VCAP
 
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
-                details.droplet               = droplet
+                details.staging_guid          = droplet.guid
                 details.package               = package
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
@@ -129,7 +129,7 @@ module VCAP
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) do
-              DropletModel.make(:staged,
+              DropletModel.make(
                 package_guid:    package.guid,
                 app_guid:        app.guid,
                 droplet_hash:    'droplet-sha1-checksum',
@@ -203,9 +203,9 @@ module VCAP
             let(:droplet) { DropletModel.make }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
-                details.package   = package
-                details.droplet   = droplet
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
+                details.package      = package
+                details.staging_guid = droplet.guid
               end
             end
 
@@ -268,9 +268,7 @@ module VCAP
           describe '#desired_lrp_builder' do
             let(:config) { {} }
             let(:app) { AppModel.make(droplet: droplet) }
-            let(:droplet) do
-              DropletModel.make(state: DropletModel::STAGED_STATE)
-            end
+            let(:droplet) { DropletModel.make }
             let(:process) do
               ProcessModel.make(
                 app:      app,
@@ -286,8 +284,8 @@ module VCAP
                 droplet_uri:        'www.droplet.com',
                 droplet_hash:       droplet.droplet_hash,
                 process_guid:       ProcessGuid.from_process(process),
-                checksum_algorithm: 'sha1',
-                checksum_value:     droplet.droplet_hash,
+                checksum_algorithm: 'sha256',
+                checksum_value:     droplet.sha256_checksum,
                 start_command:      'go go go',
               }
             end

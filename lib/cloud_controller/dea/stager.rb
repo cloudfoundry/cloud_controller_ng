@@ -10,17 +10,14 @@ module VCAP::CloudController
       end
 
       def stage(staging_details)
-        @droplet = staging_details.droplet
-
-        stager_task.stage do |staging_result|
+        stager_task(staging_details.staging_guid).stage do |staging_result|
+          @process.reload
           @runners.runner_for_app(@process).start(staging_result)
         end
       end
 
-      def staging_complete(droplet, response)
-        @droplet = droplet
-
-        stager_task.handle_http_response(response) do |staging_result|
+      def staging_complete(build, response)
+        stager_task(build.guid).handle_http_response(response) do |staging_result|
           @process.reload
           @runners.runner_for_app(@process).start(staging_result)
         end
@@ -32,8 +29,8 @@ module VCAP::CloudController
 
       private
 
-      def stager_task
-        @task ||= AppStagerTask.new(@config, @message_bus, @droplet, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator)
+      def stager_task(staging_guid)
+        @task ||= AppStagerTask.new(@config, @message_bus, staging_guid, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator, @process)
       end
     end
   end

@@ -41,6 +41,10 @@ Rails.application.routes.draw do
   delete '/packages/:guid', to: 'packages#destroy'
   get '/apps/:app_guid/packages', to: 'packages#index'
 
+  # builds
+  post '/builds', to: 'builds#create'
+  get '/builds/:guid', to: 'builds#show'
+
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'
   post '/droplets', to: 'droplets#copy'

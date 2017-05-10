@@ -29,7 +29,7 @@ module VCAP::CloudController
         let(:staging_details) do
           VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|
             sd.package = package
-            sd.droplet = droplet
+            sd.staging_guid = staging_guid
           end
         end
 

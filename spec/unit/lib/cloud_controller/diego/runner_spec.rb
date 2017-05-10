@@ -95,7 +95,7 @@ module VCAP::CloudController
           let(:process) { AppFactory.make(state: 'STARTED') }
 
           before do
-            DropletModel.make(app: process.app, package: process.latest_package, state: DropletModel::STAGING_STATE)
+            BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
             process.reload
           end
 

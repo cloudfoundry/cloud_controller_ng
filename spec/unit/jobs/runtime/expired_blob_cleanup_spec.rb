@@ -14,7 +14,7 @@ module VCAP::CloudController
       describe 'droplets' do
         context 'expired' do
           let!(:expired_droplet) { DropletModel.make(state: DropletModel::EXPIRED_STATE) }
-          let!(:non_expired_droplet) { DropletModel.make(:staged) }
+          let!(:non_expired_droplet) { DropletModel.make }
 
           it 'enqueues a deletion job when droplet_hash is not nil' do
             expired_droplet.update(droplet_hash: 'not-nil')
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
         context 'failed' do
           let!(:expired_droplet) { DropletModel.make(state: DropletModel::FAILED_STATE) }
-          let!(:non_expired_droplet) { DropletModel.make(:staged) }
+          let!(:non_expired_droplet) { DropletModel.make }
 
           it 'enqueues a deletion job when droplet_hash is not nil' do
             expired_droplet.update(droplet_hash: 'not-nil')

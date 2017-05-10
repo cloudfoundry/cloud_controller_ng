@@ -4,7 +4,6 @@ require 'fetchers/droplet_delete_fetcher'
 require 'fetchers/droplet_list_fetcher'
 require 'actions/droplet_delete'
 require 'actions/droplet_copy'
-require 'actions/droplet_create'
 require 'messages/droplets/droplet_create_message'
 require 'messages/droplets/droplets_list_message'
 require 'messages/droplets/droplet_copy_message'
@@ -71,41 +70,6 @@ class DropletsController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def create
-    staging_message = DropletCreateMessage.create_from_http_request(params[:body])
-    unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
-
-    package = PackageModel.where(guid: params[:package_guid]).eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
-    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
-    staging_in_progress! if package.app.staging_in_progress?
-
-    if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE
-      FeatureFlag.raise_unless_enabled!(:diego_docker)
-    end
-
-    unauthorized! unless can_write?(package.space.guid)
-
-    lifecycle = LifecycleProvider.provide(package, staging_message)
-    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
-
-    droplet = DropletCreate.new.create_and_stage(
-      package:         package,
-      lifecycle:       lifecycle,
-      message:         staging_message,
-      user_audit_info: user_audit_info
-    )
-
-    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
-  rescue DropletCreate::InvalidPackage => e
-    invalid_request!(e.message)
-  rescue DropletCreate::SpaceQuotaExceeded => e
-    unprocessable!("space's memory limit exceeded: #{e.message}")
-  rescue DropletCreate::OrgQuotaExceeded => e
-    unprocessable!("organization's memory limit exceeded: #{e.message}")
-  rescue DropletCreate::DiskLimitExceeded
-    unprocessable!('disk limit exceeded')
-  end
-
   private
 
   def stagers
@@ -118,9 +82,5 @@ class DropletsController < ApplicationController
 
   def package_not_found!
     resource_not_found!(:package)
-  end
-
-  def staging_in_progress!
-    raise CloudController::Errors::ApiError.new_from_details('StagingInProgress')
   end
 end

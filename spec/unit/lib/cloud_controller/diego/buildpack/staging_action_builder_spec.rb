@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
         let(:staging_details) do
           StagingDetails.new.tap do |details|
-            details.droplet               = droplet
+            details.staging_guid          = droplet.guid
             details.environment_variables = env
           end
         end

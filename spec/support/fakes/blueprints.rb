@@ -49,6 +49,19 @@ module VCAP::CloudController
   AppModel.blueprint(:buildpack) do
   end
 
+  BuildModel.blueprint do
+    guid     { Sham.guid }
+    app      { AppModel.make }
+    state    { VCAP::CloudController::BuildModel::STAGED_STATE }
+  end
+
+  BuildModel.blueprint(:docker) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app { AppModel.make(droplet_guid: guid) }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
   PackageModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
@@ -65,14 +78,6 @@ module VCAP::CloudController
   end
 
   DropletModel.blueprint do
-    guid     { Sham.guid }
-    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app { AppModel.make }
-    staging_memory_in_mb { 123 }
-    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
-  end
-
-  DropletModel.blueprint(:staged) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGED_STATE }
     app { AppModel.make }
@@ -94,7 +99,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(:staged, app: app) }
+    droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
@@ -105,7 +110,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(:staged, app: app) }
+    droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::RUNNING_STATE }
     memory_in_mb { 256 }
@@ -116,7 +121,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(:staged, app: app) }
+    droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::CANCELING_STATE }
     memory_in_mb { 256 }
@@ -127,7 +132,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(:staged, app: app) }
+    droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::SUCCEEDED_STATE }
     memory_in_mb { 256 }
@@ -138,7 +143,7 @@ module VCAP::CloudController
     guid { Sham.guid }
     app { AppModel.make }
     name { Sham.name }
-    droplet { DropletModel.make(:staged, app: app) }
+    droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
     state { VCAP::CloudController::TaskModel::PENDING_STATE }
     memory_in_mb { 256 }
@@ -271,7 +276,7 @@ module VCAP::CloudController
   end
 
   App.blueprint(:diego_runnable) do
-    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    app { AppModel.make(droplet: DropletModel.make) }
     diego { true }
     instances { 1 }
     type { Sham.name }
@@ -280,7 +285,7 @@ module VCAP::CloudController
   end
 
   App.blueprint(:dea_runnable) do
-    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    app { AppModel.make(droplet: DropletModel.make) }
     diego { false }
     instances { 1 }
     type { Sham.name }

@@ -27,6 +27,10 @@ module VCAP::CloudController
 
         private
 
+        def handle_missing_droplet!(payload)
+          build.fail_to_stage!(nil, 'no droplet')
+        end
+
         def save_staging_result(payload)
           lifecycle_data = payload[:result][:lifecycle_metadata]
           buildpack_key  = nil
@@ -40,6 +44,7 @@ module VCAP::CloudController
 
           droplet.class.db.transaction do
             droplet.lock!
+            build.lock!
             droplet.set_buildpack_receipt(
               buildpack_key:       buildpack_key,
               buildpack_url:       buildpack_url,
@@ -47,8 +52,10 @@ module VCAP::CloudController
               requested_buildpack: droplet.buildpack_lifecycle_data.buildpack
             )
             droplet.mark_as_staged
+            build.mark_as_staged
             droplet.process_types      = payload[:result][:process_types]
             droplet.execution_metadata = payload[:result][:execution_metadata]
+            build.save_changes(raise_on_save_failure: true)
             droplet.save_changes(raise_on_save_failure: true)
           end
         end

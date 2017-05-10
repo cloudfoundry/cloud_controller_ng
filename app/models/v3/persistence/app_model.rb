@@ -15,6 +15,7 @@ module VCAP::CloudController
     one_to_many :processes, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid
     one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
+    one_to_many :builds, class: 'VCAP::CloudController::BuildModel', key: :app_guid, primary_key: :guid
 
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
     one_to_one :web_process, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid, conditions: { type: 'web' }

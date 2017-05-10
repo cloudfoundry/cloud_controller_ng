@@ -1,6 +1,7 @@
 require 'models/runtime/space'
 
 require 'models/v3/persistence/app_model'
+require 'models/v3/persistence/build_model'
 require 'models/v3/persistence/route_mapping_model'
 require 'models/v3/persistence/package_model'
 require 'models/v3/persistence/droplet_model'

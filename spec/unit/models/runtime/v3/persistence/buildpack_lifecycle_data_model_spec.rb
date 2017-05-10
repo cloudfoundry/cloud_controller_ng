@@ -101,6 +101,13 @@ module VCAP::CloudController
         expect(buildpack_lifecycle_data_model.reload.app).to eq(app)
       end
 
+      it 'can be associated with a build' do
+        build = BuildModel.make
+        buildpack_lifecycle_data_model.build = build
+        buildpack_lifecycle_data_model.save
+        expect(buildpack_lifecycle_data_model.reload.build).to eq(build)
+      end
+
       it 'cannot be associated with both apps and droplets' do
         droplet = DropletModel.make
         app = AppModel.make

@@ -12,8 +12,18 @@ module VCAP::CloudController
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:package) { PackageModel.make }
       let(:config) { TestConfig.config }
+      let(:build) { BuildModel.make(package_guid: package.guid) }
+      let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
+      let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
+
+      let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
+      let(:docker_completion_handler) { instance_double(Diego::Docker::StagingCompletionHandler) }
 
       before do
+        allow(Diego::Buildpack::StagingCompletionHandler).to receive(:new).with(build).and_return(buildpack_completion_handler)
+        allow(Diego::Docker::StagingCompletionHandler).to receive(:new).with(build).and_return(docker_completion_handler)
+        allow(buildpack_completion_handler).to receive(:staging_complete)
+        allow(docker_completion_handler).to receive(:staging_complete)
         allow(Diego::Messenger).to receive(:new).and_return(messenger)
       end
 
@@ -22,17 +32,24 @@ module VCAP::CloudController
       describe '#stage' do
         let(:staging_memory_in_mb) { 1024 }
         let(:staging_disk_in_mb) { 1024 }
-        let(:droplet) { DropletModel.make(environment_variables: environment_variables, package_guid: package.guid) }
-        let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
         let(:staging_details) do
           details                       = VCAP::CloudController::Diego::StagingDetails.new
-          details.droplet               = droplet
           details.package               = package
           details.environment_variables = environment_variables
           details.staging_memory_in_mb  = staging_memory_in_mb
           details.staging_disk_in_mb    = staging_disk_in_mb
+          details.staging_guid          = build.guid
+          details.lifecycle             = lifecycle
           details
         end
+        let(:lifecycle) do
+          LifecycleProvider.provide(package, staging_message)
+        end
+        let(:request_data) do
+          {}
+        end
+        let(:lifecycle_type) { 'buildpack' }
+        let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: lifecycle_type }) }
 
         before do
           allow(messenger).to receive(:send_stage_request)
@@ -50,7 +67,6 @@ module VCAP::CloudController
 
           before do
             allow(messenger).to receive(:send_stage_request).and_raise(CloudController::Errors::ApiError.new_from_details('StagerError', 'staging failed'))
-            allow(stager).to receive(:staging_complete)
           end
 
           it 'calls the completion handler with the error' do
@@ -58,39 +74,31 @@ module VCAP::CloudController
               stager.stage(staging_details)
             }.to raise_error(CloudController::Errors::ApiError)
             package.reload
-            expect(stager).to have_received(:staging_complete).with(droplet, error)
+            expect(buildpack_completion_handler).to have_received(:staging_complete).with(error, false)
           end
         end
       end
 
       describe '#staging_complete' do
-        let(:droplet) { instance_double(DropletModel) }
         let(:staging_response) { {} }
-        let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
-        let(:docker_completion_handler) { instance_double(Diego::Docker::StagingCompletionHandler) }
-
-        before do
-          allow(Diego::Buildpack::StagingCompletionHandler).to receive(:new).with(droplet).and_return(buildpack_completion_handler)
-          allow(Diego::Docker::StagingCompletionHandler).to receive(:new).with(droplet).and_return(docker_completion_handler)
-          allow(buildpack_completion_handler).to receive(:staging_complete)
-          allow(docker_completion_handler).to receive(:staging_complete)
-        end
 
         context 'buildpack' do
-          let(:droplet) { DropletModel.make }
+          let(:build) { BuildModel.make }
+          let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
 
           it 'delegates to a buildpack staging completion handler' do
-            stager.staging_complete(droplet, staging_response)
+            stager.staging_complete(build, staging_response)
             expect(buildpack_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
             expect(docker_completion_handler).not_to have_received(:staging_complete)
           end
         end
 
         context 'docker' do
-          let(:droplet) { DropletModel.make(:docker) }
+          let(:build) { BuildModel.make(:docker) }
+          let!(:lifecycle_data_model) { nil }
 
           it 'delegates to a docker staging completion handler' do
-            stager.staging_complete(droplet, staging_response)
+            stager.staging_complete(build, staging_response)
             expect(buildpack_completion_handler).not_to have_received(:staging_complete)
             expect(docker_completion_handler).to have_received(:staging_complete).with(staging_response, boolean)
           end

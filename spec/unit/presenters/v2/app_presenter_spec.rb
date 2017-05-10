@@ -64,7 +64,7 @@ module CloudController::Presenters::V2
           'command'                    => 'start',
           'console'                    => anything,
           'debug'                      => anything,
-          'staging_task_id'            => app.latest_droplet.guid,
+          'staging_task_id'            => app.latest_build.guid,
           'package_state'              => 'PENDING',
           'health_check_type'          => 'port',
           'health_check_timeout'       => nil,
@@ -95,6 +95,7 @@ module CloudController::Presenters::V2
           before do
             parent_app = app.app
             app.destroy
+            parent_app.builds.map(&:destroy)
             parent_app.packages.map(&:destroy)
             parent_app.droplets.map(&:destroy)
             parent_app.destroy

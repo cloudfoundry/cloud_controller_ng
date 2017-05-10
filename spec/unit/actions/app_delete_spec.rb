@@ -40,8 +40,18 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        it 'deletes associated builds' do
+          build = BuildModel.make(app: app)
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { BuildModel.count }.by(-1)
+          expect(build.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+
         it 'deletes associated droplets' do
-          droplet = DropletModel.make(:staged, app: app)
+          droplet = DropletModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
