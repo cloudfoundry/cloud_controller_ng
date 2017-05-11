@@ -131,21 +131,22 @@ RSpec.describe 'Builds' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs2'
+              'stack' => 'cflinuxfs2',
             },
           },
           'package' => {
-            'guid' => package.guid
+            'guid' => package.guid,
           },
           'droplet' => {
-            'guid' => droplet.guid
+            'guid' => droplet.guid,
+            'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
           },
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/builds/#{build.guid}"
+              'href' => "#{link_prefix}/v3/builds/#{build.guid}",
             },
             'app' => {
-              'href' => "#{link_prefix}/v3/apps/#{package.app.guid}"
+              'href' => "#{link_prefix}/v3/apps/#{package.app.guid}",
             }
           }
         }

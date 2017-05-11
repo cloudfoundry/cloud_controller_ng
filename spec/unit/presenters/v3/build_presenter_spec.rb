@@ -106,6 +106,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:state]).to eq('STAGED')
           expect(result[:error]).to eq(nil)
           expect(result[:droplet][:guid]).to eq(droplet.guid)
+          expect(result[:droplet][:href]).to eq("#{link_prefix}/v3/droplets/#{droplet.guid}")
         end
       end
 

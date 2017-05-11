@@ -29,7 +29,7 @@ module VCAP::CloudController
 
         def droplet
           if build.droplet && VCAP::CloudController::DropletModel::FINAL_STATES.include?(build.droplet.state)
-            return { guid: build.droplet.guid }
+            return { guid: build.droplet.guid, href: url_builder.build_url(path: "/v3/droplets/#{build.droplet.guid}") }
           end
           nil
         end
@@ -40,11 +40,14 @@ module VCAP::CloudController
         end
 
         def build_links
-          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
             self: { href: url_builder.build_url(path: "/v3/builds/#{build.guid}") },
             app: { href: url_builder.build_url(path: "/v3/apps/#{build.app.guid}") },
           }
+        end
+
+        def url_builder
+          @url_builder ||= VCAP::CloudController::Presenters::ApiUrlBuilder.new
         end
       end
     end
