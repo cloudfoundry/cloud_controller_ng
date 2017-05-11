@@ -93,7 +93,6 @@
           
 
 
-
           
 
 
@@ -2774,7 +2773,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
@@ -2785,7 +2784,24 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
   </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"rake"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rake"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"web"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup config.ru -p $PORT"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"detect_output"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby 1.6.14"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"CF_STACK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"VCAP_APPLICATION"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2813,7 +2829,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
     </span><span class="nt">"VCAP_SERVICES"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
@@ -3276,7 +3292,7 @@ resource can be created to initiate the staging process. A successful build resu
 <tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
-<td>State of the build. Valid states are <code class="prettyprint">STAGING</code>, <code class="prettyprint">STAGED</code>, <code class="prettyprint">COPYING</code>, <code class="prettyprint">FAILED</code>, or <code class="prettyprint">EXPIRED</code>.</td>
+<td>State of the build. Valid states are <code class="prettyprint">STAGING</code>, <code class="prettyprint">STAGED</code>, or <code class="prettyprint">FAILED</code>.</td>
 </tr>
 <tr>
 <td><strong>error</strong></td>
@@ -3378,6 +3394,22 @@ resource can be created to initiate the staging process. A successful build resu
 
 <p><code class="prettyprint">POST /v3/builds</code></p>
 
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>package</strong></td>
+<td>object</td>
+<td>App package to stage.</td>
+</tr>
+</tbody></table>
+
 <h4 id="optional-parameters">Optional Parameters</h4>
 
 <table><thead>
@@ -3393,12 +3425,6 @@ resource can be created to initiate the staging process. A successful build resu
 <td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
 <td>Lifecycle information for a build.</td>
 <td>lifecycle on the app</td>
-</tr>
-<tr>
-<td><strong>package</strong></td>
-<td>object</td>
-<td>App package to stage.</td>
-<td></td>
 </tr>
 </tbody></table>
 
@@ -3519,7 +3545,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
-<td>State of the droplet. Valid states are <code class="prettyprint">STAGING</code>, <code class="prettyprint">STAGED</code>, <code class="prettyprint">COPYING</code>, <code class="prettyprint">FAILED</code>, or <code class="prettyprint">EXPIRED</code>.</td>
+<td>State of the droplet. Valid states are <code class="prettyprint">STAGED</code>, <code class="prettyprint">COPYING</code>, <code class="prettyprint">FAILED</code>, or <code class="prettyprint">EXPIRED</code>.</td>
 </tr>
 <tr>
 <td><strong>error</strong></td>
@@ -3919,7 +3945,7 @@ environment variables listed on the source droplet.</p>
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fdf3851c-def8-4de1-87f1-6d4543189e22"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
@@ -4090,7 +4116,7 @@ environment variables listed on the source droplet.</p>
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fdf3851c-def8-4de1-87f1-6d4543189e22"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
@@ -4246,7 +4272,7 @@ environment variables listed on the source droplet.</p>
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fdf3851c-def8-4de1-87f1-6d4543189e22"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGED"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
@@ -5053,7 +5079,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
           <h3 id="stage-a-package">Stage a package</h3>
 
-<p>Staging a package is accomplished by creating a droplet. See <a href=#create-a-droplet>Create a droplet</a>.</p>
+<p>Staging a package is accomplished by creating a build. See <a href=#create-a-build>Create a build</a>.</p>
 
           <h3 id="upload-package-bits">Upload package bits</h3>
 <pre class="highlight plaintext"><code>Example Request
