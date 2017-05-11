@@ -16,8 +16,8 @@ module VCAP::CloudController
     ].freeze
 
     FREQUENTS = [
-      { name: 'pending_droplets', class: Jobs::Runtime::PendingDropletCleanup},
-      { name: 'pending_builds', class: Jobs::Runtime::PendingBuildCleanup},
+      { name: 'pending_droplets', class: Jobs::Runtime::PendingDropletCleanup },
+      { name: 'pending_builds', class: Jobs::Runtime::PendingBuildCleanup },
     ].freeze
 
     def initialize(config)
@@ -48,8 +48,6 @@ module VCAP::CloudController
         Jobs::Diego::Sync.new
       end
     end
-
-
 
     def start_frequent_jobs
       FREQUENTS.each do |job_config|
