@@ -19,6 +19,7 @@ module VCAP::CloudController
           service_usage_events: { cutoff_age_in_days: 5, },
           completed_tasks: { cutoff_age_in_days: 6, },
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
+          pending_builds: { frequency_in_seconds: 400, expiration_in_seconds: 700 },
           diego_sync: { frequency_in_seconds: 30 },
         }
       end
@@ -113,6 +114,12 @@ module VCAP::CloudController
           expect(args).to eql(name: 'pending_droplets', interval: 300)
           expect(Jobs::Runtime::PendingDropletCleanup).to receive(:new).with(600).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::PendingDropletCleanup)
+        end
+
+        expect(clock).to receive(:schedule_frequent_worker_job) do |args, &block|
+          expect(args).to eql(name: 'pending_builds', interval: 400)
+          expect(Jobs::Runtime::PendingBuildCleanup).to receive(:new).with(700).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::PendingBuildCleanup)
         end
 
         schedule.start

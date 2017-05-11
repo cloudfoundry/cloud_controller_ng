@@ -131,7 +131,11 @@ properties:
     default: 31
 
   cc.pending_droplets.frequency_in_seconds:
-    description: "How often the droplet pending cleanup job runs"
+    description: "How often the pending droplets cleanup job runs"
+    default: 300
+
+  cc.pending_builds.frequency_in_seconds:
+    description: "How often the pending builds cleanup job runs"
     default: 300
 
   cc.diego_sync.frequency_in_seconds:

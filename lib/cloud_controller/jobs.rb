@@ -1,5 +1,6 @@
 require 'jobs/cc_job'
 require 'jobs/runtime/pending_droplet_cleanup'
+require 'jobs/runtime/pending_build_cleanup'
 require 'jobs/runtime/app_events_cleanup'
 require 'jobs/runtime/app_usage_events_cleanup'
 require 'jobs/runtime/blobstore_delete'

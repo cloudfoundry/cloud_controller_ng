@@ -15,6 +15,11 @@ module VCAP::CloudController
       { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },
     ].freeze
 
+    FREQUENTS = [
+      { name: 'pending_droplets', class: Jobs::Runtime::PendingDropletCleanup},
+      { name: 'pending_builds', class: Jobs::Runtime::PendingBuildCleanup},
+    ].freeze
+
     def initialize(config)
       @clock  = Clock.new
       @config = config
@@ -44,13 +49,18 @@ module VCAP::CloudController
       end
     end
 
+
+
     def start_frequent_jobs
-      clock_opts = {
-        name:     'pending_droplets',
-        interval: @config.dig(:pending_droplets, :frequency_in_seconds),
-      }
-      @clock.schedule_frequent_worker_job(clock_opts) do
-        Jobs::Runtime::PendingDropletCleanup.new(@config.dig(:pending_droplets, :expiration_in_seconds))
+      FREQUENTS.each do |job_config|
+        clock_opts = {
+          name:     job_config[:name],
+          interval: @config.dig(job_config[:name].to_sym, :frequency_in_seconds),
+        }
+        @clock.schedule_frequent_worker_job(clock_opts) do
+          klass = job_config[:class]
+          klass.new(@config.dig(job_config[:name].to_sym, :expiration_in_seconds))
+        end
       end
     end
 
