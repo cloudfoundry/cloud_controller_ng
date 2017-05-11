@@ -37,12 +37,17 @@ Content-Type: application/json
 #### Definition
 `POST /v3/builds`
 
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**package** | object | App package to stage. |
+
 #### Optional Parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
 **lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Lifecycle information for a build. | lifecycle on the app
-**package** | object | App package to stage. |
 
 #### Permitted Roles
  |
