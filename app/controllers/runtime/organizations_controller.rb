@@ -157,7 +157,7 @@ module VCAP::CloudController
     get '/v2/organizations/:guid/memory_usage', :get_memory_usage
     def get_memory_usage(guid)
       org = find_guid_and_validate_access(:read, guid)
-      [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: OrganizationMemoryCalculator.get_memory_usage(org) })]
+      [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: org.memory_used })]
     end
 
     [:user, :manager, :billing_manager, :auditor].each do |role|

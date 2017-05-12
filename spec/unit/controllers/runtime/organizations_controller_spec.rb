@@ -821,6 +821,11 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/memory_usage' do
+      before do
+        space = Space.make(organization: org)
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
+      end
+
       context 'for an organization that does not exist' do
         it 'returns a 404' do
           set_current_user_as_admin
@@ -841,13 +846,11 @@ module VCAP::CloudController
 
       it 'calls the organization memory usage calculator' do
         set_current_user_as_admin
-        allow(OrganizationMemoryCalculator).to receive(:get_memory_usage).and_return(2)
 
         get "/v2/organizations/#{org.guid}/memory_usage"
 
         expect(last_response.status).to eq(200)
-        expect(OrganizationMemoryCalculator).to have_received(:get_memory_usage).with(org)
-        expect(MultiJson.load(last_response.body)).to eq({ 'memory_usage_in_mb' => 2 })
+        expect(MultiJson.load(last_response.body)).to eq({ 'memory_usage_in_mb' => 400 })
       end
     end
 

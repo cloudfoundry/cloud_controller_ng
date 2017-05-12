@@ -189,6 +189,10 @@ module VCAP::CloudController
       end
     end
 
+    def memory_used
+      started_app_memory + running_task_memory
+    end
+
     def has_remaining_memory(mem)
       memory_remaining >= mem
     end
@@ -259,7 +263,6 @@ module VCAP::CloudController
     end
 
     def memory_remaining
-      memory_used = started_app_memory + running_task_memory
       quota_definition.memory_limit - memory_used
     end
 
