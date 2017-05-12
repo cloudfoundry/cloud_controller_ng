@@ -59,7 +59,7 @@ module VCAP::CloudController
     end
 
     def staging_in_progress?
-      droplets.any?(&:staging?)
+      builds.any?(&:staging?)
     end
 
     def docker?
