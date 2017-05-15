@@ -190,6 +190,15 @@ module VCAP::CloudController
             }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
           end
         end
+
+        context 'when there is already a staging in progress for the app' do
+          it 'raises a StagingInProgress exception' do
+            BuildModel.make(state: BuildModel::STAGING_STATE, app: app)
+            expect {
+              action.create_and_stage(package: package, lifecycle: lifecycle)
+            }.to raise_error(BuildCreate::StagingInProgress)
+          end
+        end
       end
     end
   end

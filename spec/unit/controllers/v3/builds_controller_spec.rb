@@ -48,7 +48,7 @@ RSpec.describe BuildsController, type: :controller do
       it 'returns a 422 Unprocessable Entity and an informative error message' do
         post :create, body: req_body
         expect(response.status).to eq 422
-        expect(response.body).to include 'Only one package can be staged at a time per application.'
+        expect(response.body).to include 'Only one build can be STAGING at a time per application.'
       end
     end
 

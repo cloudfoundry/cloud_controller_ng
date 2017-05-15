@@ -7,16 +7,12 @@ require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   class BuildCreate
-    class BuildError < StandardError
-    end
-    class InvalidPackage < BuildError
-    end
-    class SpaceQuotaExceeded < BuildError
-    end
-    class OrgQuotaExceeded < BuildError
-    end
-    class DiskLimitExceeded < BuildError
-    end
+    class BuildError < StandardError; end
+    class InvalidPackage < BuildError; end
+    class SpaceQuotaExceeded < BuildError; end
+    class OrgQuotaExceeded < BuildError; end
+    class DiskLimitExceeded < BuildError; end
+    class StagingInProgress < BuildError; end
 
     attr_reader :staging_response
 
@@ -31,6 +27,7 @@ module VCAP::CloudController
 
     def create_and_stage(package:, lifecycle:, start_after_staging: false)
       logger.info("creating build for package #{package.guid}")
+      staging_in_progress! if package.app.staging_in_progress?
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
       staging_details                     = get_staging_details(package, lifecycle)
@@ -105,6 +102,10 @@ module VCAP::CloudController
 
     def stagers
       CloudController::DependencyLocator.instance.stagers
+    end
+
+    def staging_in_progress!
+      raise StagingInProgress
     end
   end
 end

@@ -626,7 +626,7 @@
 170017:
   name: StagingInProgress
   http_code: 422
-  message: "Only one package can be staged at a time per application."
+  message: "Only one build can be STAGING at a time per application."
 
 170018:
   name: InvalidTaskAddress
