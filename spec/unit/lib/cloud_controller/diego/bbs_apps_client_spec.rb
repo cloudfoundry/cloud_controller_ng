@@ -38,6 +38,18 @@ module VCAP::CloudController::Diego
         end
       end
 
+      context 'when the bbs response contains an invalid request error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::InvalidRequest, message: 'bad request') }
+
+        it 'raises an RunnerInvalidRequest api error' do
+          expect {
+            client.desire_app(lurp)
+          }.to raise_error(CloudController::Errors::ApiError, /bad request/) do |e|
+            expect(e.name).to eq('RunnerInvalidRequest')
+          end
+        end
+      end
+
       context 'when bbs returns a response with any other error' do
         let(:error) { ::Diego::Bbs::Models::Error.new(message: 'error message') }
 
@@ -226,6 +238,18 @@ module VCAP::CloudController::Diego
 
         it 'returns false' do
           expect { client.update_app(process_guid, lrp_update) }.not_to raise_error
+        end
+      end
+
+      context 'when the bbs response contains an invalid request error' do
+        let(:error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::InvalidRequest, message: 'bad request') }
+
+        it 'raises an RunnerInvalidRequest api error' do
+          expect {
+            client.update_app(process_guid, lrp_update)
+          }.to raise_error(CloudController::Errors::ApiError, /bad request/) do |e|
+            expect(e.name).to eq('RunnerInvalidRequest')
+          end
         end
       end
 

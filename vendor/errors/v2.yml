@@ -613,6 +613,11 @@
   http_code: 500
   message: "Stager error: %s"
 
+170014:
+  name: RunnerInvalidRequest
+  http_code: 500
+  message: "Runner invalid request: %s"
+
 170015:
   name: RunnerUnavailable
   http_code: 503

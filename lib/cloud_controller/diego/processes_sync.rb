@@ -17,7 +17,9 @@ module VCAP::CloudController
 
       def sync
         logger.info('run-process-sync')
-        diego_lrps = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
+        bump_freshness = true
+        diego_lrps     = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
+        logger.info('fetched-scheduling-infos')
 
         for_processes do |processes|
           processes.each do |process|
@@ -49,11 +51,19 @@ module VCAP::CloudController
 
         @workpool.drain
 
-        bbs_apps_client.bump_freshness
-        logger.info('finished-process-sync')
       rescue CloudController::Errors::ApiError => e
-        logger.info('sync-failed', error: e.message)
-        raise BBSFetchError.new(e.message)
+        if e.name == 'RunnerInvalidRequest'
+          logger.info('synced-invalid-desired-lrps', error: e.name, error_message: e.message)
+        else
+          logger.info('sync-failed', error: e.name, error_message: e.message)
+          bump_freshness = false
+          raise BBSFetchError.new(e.message)
+        end
+      ensure
+        if bump_freshness
+          bbs_apps_client.bump_freshness
+          logger.info('finished-process-sync')
+        end
       end
 
       private

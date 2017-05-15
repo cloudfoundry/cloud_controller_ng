@@ -12,6 +12,7 @@ module VCAP::CloudController
           response = @client.desire_lrp(lrp)
           logger.info('desire.app.response', process_guid: lrp.process_guid, error: response.error)
 
+          runner_invalid_request!(response.error.message) if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::InvalidRequest
           return response if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::ResourceConflict
 
           response
@@ -25,6 +26,7 @@ module VCAP::CloudController
           response = @client.update_desired_lrp(process_guid, lrp_update)
           logger.info('update.app.response', process_guid: process_guid, error: response.error)
 
+          runner_invalid_request!(response.error.message) if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::InvalidRequest
           return response if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::ResourceConflict
 
           response
@@ -111,6 +113,10 @@ module VCAP::CloudController
         end
 
         response
+      end
+
+      def runner_invalid_request!(message)
+        raise CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', message)
       end
 
       def logger

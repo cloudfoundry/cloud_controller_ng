@@ -49,6 +49,7 @@ module VCAP::CloudController
             expect(bbs_apps_client).not_to have_received(:desire_app)
             expect(bbs_apps_client).not_to have_received(:update_app)
             expect(bbs_apps_client).not_to have_received(:stop_app)
+            expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
         end
 
@@ -82,20 +83,32 @@ module VCAP::CloudController
             allow(bbs_apps_client).to receive(:update_app)
             subject.sync
             expect(bbs_apps_client).to have_received(:update_app).with(ProcessGuid.from_process(stale_process), stale_lrp_update)
+            expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
 
           context 'when updating app fails' do
             # bbs_apps_client will raise ApiErrors as of right now, we should think about factoring that out so that
             # the background job doesn't have to deal with API concerns
-            let(:error) { CloudController::Errors::ApiError.new }
-
             before do
               allow(bbs_apps_client).to receive(:update_app).and_raise(error)
             end
 
-            it 'does not bump freshness' do
-              expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
-              expect(bbs_apps_client).not_to receive(:bump_freshness)
+            context 'when RunnerInvalidRequest is returned' do
+              let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'bad request') }
+
+              it 'bumps freshness' do
+                expect { subject.sync }.not_to raise_error
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+
+            context 'any other error' do
+              let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
+
+              it 'does not bump freshness' do
+                expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
+                expect(bbs_apps_client).not_to receive(:bump_freshness)
+              end
             end
           end
         end
@@ -114,20 +127,33 @@ module VCAP::CloudController
             allow(bbs_apps_client).to receive(:desire_app).with(missing_lrp)
             subject.sync
             expect(bbs_apps_client).to have_received(:desire_app).with(missing_lrp)
+            expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
 
           context 'when desiring app fails' do
             # bbs_apps_client will raise ApiErrors as of right now, we should think about factoring that out so that
             # the background job doesn't have to deal with API concerns
-            let(:error) { CloudController::Errors::ApiError.new }
 
             before do
               allow(bbs_apps_client).to receive(:desire_app).and_raise(error)
             end
 
-            it 'does not bump freshness' do
-              expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
-              expect(bbs_apps_client).not_to receive(:bump_freshness)
+            context 'when RunnerInvalidRequest is returned' do
+              let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
+
+              it 'bumps freshness' do
+                expect { subject.sync }.not_to raise_error
+                expect(bbs_apps_client).to have_received(:bump_freshness).once
+              end
+            end
+
+            context 'when any other error is returned' do
+              let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
+
+              it 'does not bump freshness' do
+                expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
+                expect(bbs_apps_client).not_to receive(:bump_freshness)
+              end
             end
           end
         end
@@ -141,6 +167,7 @@ module VCAP::CloudController
               }),
             )
           end
+
           it 'deletes deleted lrps' do
             allow(bbs_apps_client).to receive(:stop_app)
             subject.sync
@@ -150,7 +177,7 @@ module VCAP::CloudController
           context 'when stopping app fails' do
             # bbs_apps_client will raise ApiErrors as of right now, we should think about factoring that out so that
             # the background job doesn't have to deal with API concerns
-            let(:error) { CloudController::Errors::ApiError.new }
+            let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
 
             before do
               allow(bbs_apps_client).to receive(:stop_app).and_raise(error)
@@ -166,7 +193,7 @@ module VCAP::CloudController
         context 'when fetching from diego fails' do
           # bbs_apps_client will raise ApiErrors as of right now, we should think about factoring that out so that
           # the background job doesn't have to deal with API concerns
-          let(:error) { CloudController::Errors::ApiError.new }
+          let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
 
           before do
             allow(bbs_apps_client).to receive(:fetch_scheduling_infos).and_raise(error)
