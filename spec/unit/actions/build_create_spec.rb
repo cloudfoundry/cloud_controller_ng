@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'actions/build_create'
-require 'messages/droplets/droplet_create_message'
 require 'isolation_segment_assign'
 require 'isolation_segment_unassign'
 

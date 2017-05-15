@@ -59,7 +59,7 @@ module VCAP::CloudController
           end
         end
         let(:lifecycle_type) { 'buildpack' }
-        let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: {}, type: lifecycle_type }) }
+        let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: {}, type: lifecycle_type }) }
         let(:lifecycle) do
           LifecycleProvider.provide(package, staging_message)
         end

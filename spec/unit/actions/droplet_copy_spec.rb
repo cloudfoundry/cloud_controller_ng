@@ -17,11 +17,8 @@ module VCAP::CloudController
         buildpack_receipt_buildpack_guid: 'buildpack-guid',
         buildpack_receipt_buildpack: 'buildpack',
         buildpack_receipt_stack_name: 'stack',
-        environment_variables: { 'THING' => 'STUFF' },
         state:                 VCAP::CloudController::DropletModel::STAGED_STATE,
         execution_metadata: 'execution_metadata',
-        staging_memory_in_mb: 128,
-        staging_disk_in_mb: 256,
         docker_receipt_image: 'docker/image',
         docker_receipt_username: 'dockerusername',
         docker_receipt_password: 'dockerpassword',
@@ -40,14 +37,11 @@ module VCAP::CloudController
         expect(copied_droplet.state).to eq DropletModel::COPYING_STATE
         expect(copied_droplet.droplet_hash).to be nil
         expect(copied_droplet.sha256_checksum).to be nil
-        expect(copied_droplet.environment_variables).to eq(nil)
         expect(copied_droplet.process_types).to eq({ 'web' => 'bundle exec rails s' })
         expect(copied_droplet.buildpack_receipt_buildpack_guid).to eq 'buildpack-guid'
         expect(copied_droplet.buildpack_receipt_buildpack).to eq 'buildpack'
         expect(copied_droplet.buildpack_receipt_stack_name).to eq 'stack'
         expect(copied_droplet.execution_metadata).to eq 'execution_metadata'
-        expect(copied_droplet.staging_memory_in_mb).to eq 128
-        expect(copied_droplet.staging_disk_in_mb).to eq 256
         expect(copied_droplet.docker_receipt_image).to eq 'docker/image'
         expect(copied_droplet.docker_receipt_username).to eq 'dockerusername'
         expect(copied_droplet.docker_receipt_password).to eq 'dockerpassword'

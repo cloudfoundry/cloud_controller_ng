@@ -762,13 +762,10 @@ RSpec.describe 'Apps' do
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
         error_description:            'example error',
-        environment_variables:        { 'cloud' => 'foundry' },
         execution_metadata:           'some-data',
         droplet_hash:                 'shalalala',
         sha256_checksum:              'droplet-sha256-checksum',
         process_types:                { 'web' => 'start-command' },
-        staging_memory_in_mb:         100,
-        staging_disk_in_mb:           200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -809,13 +806,10 @@ RSpec.describe 'Apps' do
         buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
         buildpack_receipt_stack_name: 'stack-name',
         error_description:            'example error',
-        environment_variables:        { 'cloud' => 'foundry' },
         execution_metadata:           'some-data',
         droplet_hash:                 'shalalala',
         sha256_checksum:              'droplet-sha256-checksum',
         process_types:                { 'web' => 'start-command' },
-        staging_memory_in_mb:         100,
-        staging_disk_in_mb:           200,
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -843,16 +837,13 @@ RSpec.describe 'Apps' do
             'stack'      => 'stack-name'
           }
         },
-        'staging_memory_in_mb'  => 100,
-        'staging_disk_in_mb'    => 200,
-        'result'                => {
+        'result' => {
           'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
           'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
           'stack'              => 'stack-name',
           'execution_metadata' => 'some-data',
           'process_types'      => { 'web' => 'start-command' }
         },
-        'environment_variables' => { 'cloud' => 'foundry' },
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {

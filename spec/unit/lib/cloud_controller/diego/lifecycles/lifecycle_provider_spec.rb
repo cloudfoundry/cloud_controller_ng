@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe LifecycleProvider do
     let(:package) { PackageModel.make }
-    let(:message) { DropletCreateMessage.new(request) }
+    let(:message) { BuildCreateMessage.new(request) }
 
     context 'when lifecycle type is requested on the message' do
       let(:request) { { lifecycle: { type: type, data: {} } } }

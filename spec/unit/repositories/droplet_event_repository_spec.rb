@@ -15,9 +15,6 @@ module VCAP::CloudController
       describe '#record_create_by_staging' do
         let(:request_attrs) do
           {
-            'environment_variables' => {
-              'foo' => 'bar'
-            },
             'app_guid' => 'app-guid',
             'type'     => 'docker',
             'url'      => 'dockerurl.example.com'
@@ -46,7 +43,6 @@ module VCAP::CloudController
           expect(request['app_guid']).to eq('app-guid')
           expect(request['type']).to eq('docker')
           expect(request['url']).to eq('dockerurl.example.com')
-          expect(request['environment_variables']).to eq('PRIVATE DATA HIDDEN')
         end
       end
 

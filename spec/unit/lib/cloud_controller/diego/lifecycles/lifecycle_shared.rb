@@ -16,7 +16,7 @@ RSpec.shared_examples_for 'a lifecycle' do
   end
 
   it 'provides a staging message' do
-    expect(subject.staging_message).to be_a(VCAP::CloudController::DropletCreateMessage)
+    expect(subject.staging_message).to be_a(VCAP::CloudController::BuildCreateMessage)
   end
 
   it 'provides validations' do

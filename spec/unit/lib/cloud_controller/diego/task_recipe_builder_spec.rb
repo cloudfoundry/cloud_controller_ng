@@ -22,7 +22,7 @@ module VCAP::CloudController
         let(:lifecycle) do
           LifecycleProvider.provide(package, staging_message)
         end
-        let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: request_data, type: lifecycle_type }) }
+        let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: lifecycle_type }) }
         let(:request_data) do
           {
             stack:     'cool-stack'

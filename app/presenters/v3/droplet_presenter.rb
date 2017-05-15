@@ -13,10 +13,7 @@ module VCAP::CloudController
               type: droplet.lifecycle_type,
               data: droplet.lifecycle_data.to_hash
             },
-            staging_memory_in_mb:  droplet.staging_memory_in_mb,
-            staging_disk_in_mb:    droplet.staging_disk_in_mb,
             result:                result_for_lifecycle,
-            environment_variables: redact_hash(droplet.environment_variables || {}),
             created_at:            droplet.created_at,
             updated_at:            droplet.updated_at,
             links:                 build_links,

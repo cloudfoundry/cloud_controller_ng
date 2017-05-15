@@ -9,8 +9,6 @@ module VCAP::CloudController
       :buildpack_receipt_buildpack,
       :buildpack_receipt_stack_name,
       :execution_metadata,
-      :staging_memory_in_mb,
-      :staging_disk_in_mb,
       :docker_receipt_image,
       :docker_receipt_username,
       :docker_receipt_password,

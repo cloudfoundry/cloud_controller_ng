@@ -165,7 +165,6 @@ module VCAP::CloudController
           let(:droplet) do
             DropletModel.make(:docker,
                               app: app,
-                              environment_variables: { 'foo' => 'bar' },
                               docker_receipt_image: 'cloudfoundry/capi-docker',
                              )
           end
@@ -197,7 +196,6 @@ module VCAP::CloudController
             let(:droplet) do
               DropletModel.make(:docker,
                                 app: app,
-                                environment_variables: { 'foo' => 'bar' },
                                 docker_receipt_image: 'cloudfoundry/capi-docker',
                                 docker_receipt_username: 'dockerusername',
                                 docker_receipt_password: 'dockerpassword',

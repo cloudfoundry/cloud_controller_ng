@@ -19,7 +19,6 @@ module VCAP::CloudController
         expect(droplet.state).to eq(DropletModel::STAGING_STATE)
         expect(droplet.app).to eq(app)
         expect(droplet.package).to eq(package)
-        expect(droplet.staging_memory_in_mb).to eq(1024)
         expect(droplet.build).to eq(build)
 
         expect(droplet.buildpack_lifecycle_data).to be_nil
@@ -39,7 +38,6 @@ module VCAP::CloudController
         expect(droplet.state).to eq(DropletModel::STAGING_STATE)
         expect(droplet.app).to eq(app)
         expect(droplet.package).to eq(package)
-        expect(droplet.staging_memory_in_mb).to eq(1024)
         expect(droplet.build).to eq(build)
 
         buildpack_lifecycle_data.reload

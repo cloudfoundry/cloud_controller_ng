@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe BuildpackLifecycle do
     let(:app) { AppModel.create(name: 'some-app', space: Space.make) }
     let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE, app: app) }
-    let(:staging_message) { DropletCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
+    let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }
 
     subject(:buildpack_lifecycle) { BuildpackLifecycle.new(package, staging_message) }
@@ -86,7 +86,7 @@ module VCAP::CloudController
       describe 'buildpack_receipt_buildpack_guid' do
         context 'when the buildpack is in the system' do
           context 'and specified by the app' do
-            let(:staging_message) { DropletCreateMessage.new }
+            let(:staging_message) { BuildCreateMessage.new }
 
             before do
               app.lifecycle_data.update(buildpack: app_buildpack.name)
@@ -100,7 +100,7 @@ module VCAP::CloudController
 
           context 'and specified by the staging message even if specified by the app' do
             let(:staging_message) do
-              DropletCreateMessage.new(lifecycle: { data: { buildpacks: [staging_buildpack.name] }, type: 'buildpack' })
+              BuildCreateMessage.new(lifecycle: { data: { buildpacks: [staging_buildpack.name] }, type: 'buildpack' })
             end
 
             before do
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
         context 'when the buildpack is not in the system' do
           let(:staging_message) do
-            DropletCreateMessage.new(lifecycle: { data: { buildpacks: ['git://cool-buildpack'] }, type: 'buildpack' })
+            BuildCreateMessage.new(lifecycle: { data: { buildpacks: ['git://cool-buildpack'] }, type: 'buildpack' })
           end
 
           it 'is nil' do
@@ -128,7 +128,7 @@ module VCAP::CloudController
 
       describe 'buildpack_receipt_stack_name' do
         let(:staging_message) do
-          DropletCreateMessage.new(lifecycle: { data: { stack: 'pancake' }, type: 'buildpack' })
+          BuildCreateMessage.new(lifecycle: { data: { stack: 'pancake' }, type: 'buildpack' })
         end
 
         it 'is the requested stack' do

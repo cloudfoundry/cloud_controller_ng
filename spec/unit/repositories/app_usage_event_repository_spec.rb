@@ -312,7 +312,7 @@ module VCAP::CloudController
         let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
         let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
-        let!(:droplet) { DropletModel.make(guid: 'droplet-1', staging_memory_in_mb: 222, package: package, app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
+        let!(:droplet) { DropletModel.make(guid: 'droplet-1', package: package, app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
 
         let(:state) { 'TEST_STATE' }
 
@@ -340,8 +340,8 @@ module VCAP::CloudController
             expect(event.previous_state).to eq('STAGING')
             expect(event.instance_count).to eq(1)
             expect(event.previous_instance_count).to eq(1)
-            expect(event.memory_in_mb_per_instance).to eq(222)
-            expect(event.previous_memory_in_mb_per_instance).to eq(222)
+            expect(event.memory_in_mb_per_instance).to eq(1024)
+            expect(event.previous_memory_in_mb_per_instance).to eq(1024)
             expect(event.org_guid).to eq('org-1')
             expect(event.space_guid).to eq('space-1')
             expect(event.space_name).to eq('space-name')
@@ -365,7 +365,6 @@ module VCAP::CloudController
             DropletModel.make(
               :buildpack,
               guid:                             'droplet-1',
-              staging_memory_in_mb:             222,
               package_guid:                     package.guid,
               app_guid:                         app_model.guid,
               buildpack_receipt_buildpack:      'a-buildpack',
@@ -386,7 +385,6 @@ module VCAP::CloudController
             DropletModel.make(
               :buildpack,
               guid:                 'droplet-1',
-              staging_memory_in_mb: 222,
               package_guid:         package.guid,
               app_guid:             app_model.guid,
             )
@@ -424,7 +422,6 @@ module VCAP::CloudController
             DropletModel.make(
               :buildpack,
               guid:                             'droplet-1',
-              staging_memory_in_mb:             222,
               package_guid:                     package.guid,
               app_guid:                         app_model.guid,
               buildpack_receipt_buildpack:      'a-buildpack',
@@ -446,19 +443,17 @@ module VCAP::CloudController
         end
 
         context 'when the droplet exists' do
-          let(:old_memory) { 265 }
           let(:old_droplet_state) { DropletModel::STAGED_STATE }
           let(:existing_droplet) { DropletModel.make(
             guid:                 'existing-droplet',
             state:                old_droplet_state,
-            staging_memory_in_mb: old_memory,
             package:              package,
             app_guid:             app_model.guid)
           }
 
           context 'when the same attribute values are set' do
             before do
-              existing_droplet.staging_memory_in_mb = old_memory
+              existing_droplet.state = old_droplet_state
             end
 
             it 'creates event with previous attributes' do
@@ -467,7 +462,6 @@ module VCAP::CloudController
               expect(event.previous_state).to eq(old_droplet_state)
               expect(event.previous_package_state).to eq(package_state)
               expect(event.previous_instance_count).to eq(1)
-              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
             end
           end
 
@@ -477,8 +471,7 @@ module VCAP::CloudController
             let(:new_memory) { 1024 }
 
             before do
-              existing_droplet.package.state        = new_package_state
-              existing_droplet.staging_memory_in_mb = new_memory
+              existing_droplet.package.state = new_package_state
             end
 
             it 'stores new values' do
@@ -487,7 +480,6 @@ module VCAP::CloudController
               expect(event.state).to eq(new_state)
               expect(event.package_state).to eq(new_package_state)
               expect(event.instance_count).to eq(1)
-              expect(event.memory_in_mb_per_instance).to eq(new_memory)
             end
 
             it 'stores previous values' do
@@ -496,16 +488,15 @@ module VCAP::CloudController
               expect(event.previous_state).to eq(old_droplet_state)
               expect(event.previous_package_state).to eq(package_state)
               expect(event.previous_instance_count).to eq(1)
-              expect(event.previous_memory_in_mb_per_instance).to eq(old_memory)
             end
           end
 
           context 'when the droplet has no package' do
-            let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, staging_memory_in_mb: old_memory, app_guid: app_model.guid) }
+            let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, app_guid: app_model.guid) }
 
             context 'when app attributes change' do
               before do
-                existing_droplet.staging_memory_in_mb = 1024
+                existing_droplet.state = DropletModel::STAGED_STATE
               end
 
               it 'returns no previous package state' do

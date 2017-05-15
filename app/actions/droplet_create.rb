@@ -28,7 +28,6 @@ module VCAP::CloudController
         app_guid:             build.app.guid,
         package_guid:         build.package.guid,
         state:                DropletModel::STAGING_STATE,
-        staging_memory_in_mb: BuildModel::STAGING_MEMORY,
         build:                build,
       )
     end
