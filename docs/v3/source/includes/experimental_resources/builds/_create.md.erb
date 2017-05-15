@@ -10,13 +10,6 @@ curl "https://api.example.org/v3/builds" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
-    "lifecycle": {
-      "type": "buildpack",
-      "data": {
-        "buildpacks": ["http://github.example.org/myorg/awesome-buildpack"],
-        "stack": "cflinuxfs2"
-      }
-    },
     "package": {
        "guid": "[package-guid]"
     }
