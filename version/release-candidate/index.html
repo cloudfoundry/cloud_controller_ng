@@ -2782,8 +2782,6 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
   </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
     </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -2801,32 +2799,6 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"CF_STACK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_APPLICATION"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"fds"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"application_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.org"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_space"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.org"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"users"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"MEMORY_LIMIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1024m"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_SERVICES"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
@@ -3344,13 +3316,6 @@ resource can be created to initiate the staging process. A successful build resu
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
-    "lifecycle": {
-      "type": "buildpack",
-      "data": {
-        "buildpacks": ["http://github.example.org/myorg/awesome-buildpack"],
-        "stack": "cflinuxfs2"
-      }
-    },
     "package": {
        "guid": "[package-guid]"
     }
@@ -3558,24 +3523,9 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <td>An object describing the lifecycle that was configured or discovered from the app.</td>
 </tr>
 <tr>
-<td><strong>staging_disk_in_mb</strong></td>
-<td><em>integer</em></td>
-<td>The disk quota applied during droplet staging.</td>
-</tr>
-<tr>
-<td><strong>staging_memory_in_mb</strong></td>
-<td><em>integer</em></td>
-<td>The maximum memory in mb that can be used by a droplet.</td>
-</tr>
-<tr>
 <td><strong>result</strong></td>
 <td><em>object</em></td>
 <td>An object describing the result of a droplet that has completed staging (where state is <code class="prettyprint">STAGED</code>, <code class="prettyprint">FAILED</code>, or <code class="prettyprint">EXPIRED</code>). Droplets in incomplete states return null result.</td>
-</tr>
-<tr>
-<td><strong>environment_variables</strong></td>
-<td><em>object</em></td>
-<td>Environment variables to be used when staging the droplet. Variables in the <code class="prettyprint">CF_</code> and <code class="prettyprint">VCAP_</code> scopes will be populated by the system.</td>
 </tr>
 <tr>
 <td><strong>guid</strong></td>
@@ -3632,10 +3582,7 @@ they either use a specific droplet guid, or use the current droplet assigned to 
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
   </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -3734,8 +3681,6 @@ environment variables listed on the source droplet.</p>
       </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
   </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
     </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -3753,32 +3698,6 @@ environment variables listed on the source droplet.</p>
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"CF_STACK"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_APPLICATION"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"mem"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"disk"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"fds"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"application_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"application_uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.org"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5985d64-c455-44d0-99a5-285b6521f84c"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_app"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_space"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"space_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"uris"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"my_app.example.org"</span><span class="w">
-      </span><span class="p">],</span><span class="w">
-      </span><span class="nt">"users"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"MEMORY_LIMIT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1024m"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"VCAP_SERVICES"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
@@ -3903,8 +3822,6 @@ environment variables listed on the source droplet.</p>
           </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
       </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -3921,9 +3838,6 @@ environment variables listed on the source droplet.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">],</span><span class="w">
         </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
@@ -3951,12 +3865,7 @@ environment variables listed on the source droplet.</p>
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
       </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T00:00:01Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:32Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4074,8 +3983,6 @@ environment variables listed on the source droplet.</p>
           </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
       </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4092,9 +3999,6 @@ environment variables listed on the source droplet.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">],</span><span class="w">
         </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
@@ -4122,12 +4026,7 @@ environment variables listed on the source droplet.</p>
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
       </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T00:00:01Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:32Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4230,8 +4129,6 @@ environment variables listed on the source droplet.</p>
           </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
       </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4248,9 +4145,6 @@ environment variables listed on the source droplet.</p>
           </span><span class="p">}</span><span class="w">
         </span><span class="p">],</span><span class="w">
         </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
@@ -4278,12 +4172,7 @@ environment variables listed on the source droplet.</p>
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"staging_memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"staging_disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w">
       </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"environment_variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"redacted_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[PRIVATE DATA HIDDEN IN LISTS]"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T00:00:01Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-17T21:41:32Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
