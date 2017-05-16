@@ -12,73 +12,119 @@ RSpec.describe 'Droplets' do
   describe 'GET /v3/droplets/:guid' do
     let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let!(:droplet_model) do
-      VCAP::CloudController::DropletModel.make(
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid:                     app_model.guid,
-        package_guid:                 package_model.guid,
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        buildpack_receipt_stack_name: 'stack-name',
-        error_description:            'example error',
-        execution_metadata:           'some-data',
-        droplet_hash:                 'shalalala',
-        sha256_checksum:              'droplet-checksum-sha256',
-        process_types:                { 'web' => 'start-command' },
-      )
-    end
+
     let(:app_guid) { droplet_model.app_guid }
 
-    before do
-      droplet_model.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
-    end
+    context 'when the droplet has a buildpack lifecycle' do
+      let!(:droplet_model) do
+        VCAP::CloudController::DropletModel.make(
+          state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+          app_guid:                     app_model.guid,
+          package_guid:                 package_model.guid,
+          buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
+          buildpack_receipt_stack_name: 'stack-name',
+          error_description:            'example error',
+          execution_metadata:           'some-data',
+          droplet_hash:                 'shalalala',
+          sha256_checksum:              'droplet-checksum-sha256',
+          process_types:                { 'web' => 'start-command' },
+        )
+      end
 
-    it 'gets a droplet' do
-      get "/v3/droplets/#{droplet_model.guid}", nil, developer_headers
+      before do
+        droplet_model.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      end
 
-      parsed_response = MultiJson.load(last_response.body)
+      it 'gets a droplet' do
+        get "/v3/droplets/#{droplet_model.guid}", nil, developer_headers
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like({
-        'guid'                  => droplet_model.guid,
-        'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
-        'error'                 => 'example error',
-        'lifecycle'             => {
-          'type' => 'buildpack',
-          'data' => {
-            'buildpacks' => ['http://buildpack.git.url.com'],
-            'stack'      => 'stack-name'
-          }
-        },
-        'result' => {
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like({
+          'guid'               => droplet_model.guid,
+          'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
+          'error'              => 'example error',
+          'lifecycle'          => {
+            'type' => 'buildpack',
+            'data' => {}
+          },
           'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
           'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
           'stack'              => 'stack-name',
           'execution_metadata' => 'some-data',
-          'process_types'      => { 'web' => 'start-command' }
-        },
-        'created_at'            => iso8601,
-        'updated_at'            => iso8601,
-        'links'                 => {
-          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-          'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-          'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
-        }
-      })
+          'process_types'      => { 'web' => 'start-command' },
+          'image'              => nil,
+          'created_at'         => iso8601,
+          'updated_at'         => iso8601,
+          'links'              => {
+            'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+            'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+            'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
+          }
+        })
+      end
+
+      it 'redacts information for auditors' do
+        auditor = VCAP::CloudController::User.make
+        space.organization.add_user(auditor)
+        space.add_auditor(auditor)
+
+        get "/v3/droplets/#{droplet_model.guid}", nil, headers_for(auditor)
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['process_types']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
+        expect(parsed_response['execution_metadata']).to eq('[PRIVATE DATA HIDDEN]')
+      end
     end
 
-    it 'redacts information for auditors' do
-      auditor = VCAP::CloudController::User.make
-      space.organization.add_user(auditor)
-      space.add_auditor(auditor)
+    context 'when the droplet has a docker lifecycle' do
+      let!(:droplet_model) do
+        VCAP::CloudController::DropletModel.make(
+          :docker,
+          state:                VCAP::CloudController::DropletModel::STAGED_STATE,
+          app_guid:             app_model.guid,
+          package_guid:         package_model.guid,
+          error_description:    'example error',
+          execution_metadata:   'some-data',
+          process_types:        { 'web' => 'start-command' },
+          docker_receipt_image: 'docker/foobar:baz'
+        )
+      end
 
-      get "/v3/droplets/#{droplet_model.guid}", nil, headers_for(auditor)
+      it 'gets a droplet' do
+        get "/v3/droplets/#{droplet_model.guid}", nil, developer_headers
 
-      parsed_response = MultiJson.load(last_response.body)
+        parsed_response = MultiJson.load(last_response.body)
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['result']['process_types']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
-      expect(parsed_response['result']['execution_metadata']).to eq('[PRIVATE DATA HIDDEN]')
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like({
+          'guid'               => droplet_model.guid,
+          'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
+          'error'              => 'example error',
+          'lifecycle'          => {
+            'type' => 'docker',
+            'data' => {}
+          },
+          'checksum'           => nil,
+          'buildpacks'         => nil,
+          'stack'              => nil,
+          'execution_metadata' => 'some-data',
+          'process_types'      => { 'web' => 'start-command' },
+          'image'              => 'docker/foobar:baz',
+          'created_at'         => iso8601,
+          'updated_at'         => iso8601,
+          'links'              => {
+            'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+            'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+            'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
+          }
+        })
+      end
     end
   end
 
@@ -146,26 +192,22 @@ RSpec.describe 'Droplets' do
         },
         'resources' => [
           {
-            'guid'                  => droplet2.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error'                 => 'example-error',
-            'lifecycle'             => {
+            'guid'               => droplet2.guid,
+            'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error'              => 'example-error',
+            'lifecycle'          => {
               'type' => 'buildpack',
-              'data' => {
-                'buildpacks' => ['http://buildpack.git.url.com'],
-                'stack'      => 'stack-2'
-              }
+              'data' => {}
             },
-            'result' => {
-              'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-              'stack'              => 'stack-2',
-              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
-            },
-            'created_at'            => iso8601,
-            'updated_at'            => iso8601,
-            'links'                 => {
+            'image' => nil,
+            'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+            'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+            'stack'              => 'stack-2',
+            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at'         => iso8601,
+            'updated_at'         => iso8601,
+            'links'              => {
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -173,26 +215,22 @@ RSpec.describe 'Droplets' do
             }
           },
           {
-            'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error'                 => 'example-error',
-            'lifecycle'             => {
+            'guid'               => droplet1.guid,
+            'state'              => VCAP::CloudController::DropletModel::FAILED_STATE,
+            'error'              => 'example-error',
+            'lifecycle'          => {
               'type' => 'buildpack',
-              'data' => {
-                'buildpacks' => [buildpack.name],
-                'stack'      => 'stack-1'
-              }
+              'data' => {}
             },
-            'result' => {
-              'checksum'           => { 'type' => 'sha1', 'value' => nil },
-              'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
-              'stack'              => 'stack-1',
-              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
-            },
-            'created_at'            => iso8601,
-            'updated_at'            => iso8601,
-            'links'                 => {
+            'image' => nil,
+            'checksum'           => nil,
+            'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+            'stack'              => 'stack-1',
+            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at'         => iso8601,
+            'updated_at'         => iso8601,
+            'links'              => {
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -415,26 +453,22 @@ RSpec.describe 'Droplets' do
         },
         'resources' => [
           {
-            'guid'                  => droplet2.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error'                 => 'example-error',
-            'lifecycle'             => {
+            'guid'               => droplet2.guid,
+            'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error'              => 'example-error',
+            'lifecycle'          => {
               'type' => 'buildpack',
-              'data' => {
-                'buildpacks' => ['http://buildpack.git.url.com'],
-                'stack'      => 'stack-2'
-              }
+              'data' => {}
             },
-            'result' => {
-              'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-              'stack'              => 'stack-2',
-              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
-            },
-            'created_at'            => iso8601,
-            'updated_at'            => iso8601,
-            'links'                 => {
+            'image' => nil,
+            'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+            'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+            'stack'              => 'stack-2',
+            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at'         => iso8601,
+            'updated_at'         => iso8601,
+            'links'              => {
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -442,26 +476,22 @@ RSpec.describe 'Droplets' do
             }
           },
           {
-            'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error'                 => 'example-error',
-            'lifecycle'             => {
+            'guid'               => droplet1.guid,
+            'state'              => VCAP::CloudController::DropletModel::FAILED_STATE,
+            'error'              => 'example-error',
+            'lifecycle'          => {
               'type' => 'buildpack',
-              'data' => {
-                'buildpacks' => [buildpack.name],
-                'stack'      => 'stack-1'
-              }
+              'data' => {}
             },
-            'result' => {
-              'checksum'           => { 'type' => 'sha1', 'value' => nil },
-              'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
-              'stack'              => 'stack-1',
-              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
-            },
-            'created_at'            => iso8601,
-            'updated_at'            => iso8601,
-            'links'                 => {
+            'image' => nil,
+            'checksum'           => nil,
+            'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+            'stack'              => 'stack-1',
+            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at'         => iso8601,
+            'updated_at'         => iso8601,
+            'links'              => {
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -557,26 +587,22 @@ RSpec.describe 'Droplets' do
         },
         'resources' => [
           {
-            'guid'                  => droplet2.guid,
-            'state'                 => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error'                 => 'example-error',
-            'lifecycle'             => {
+            'guid'               => droplet2.guid,
+            'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error'              => 'example-error',
+            'lifecycle'          => {
               'type' => 'buildpack',
-              'data' => {
-                'buildpacks' => ['http://buildpack.git.url.com'],
-                'stack'      => 'stack-2'
-              }
+              'data' => {}
             },
-            'result' => {
-              'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-              'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-              'stack'              => 'stack-2',
-              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
-            },
-            'created_at'            => iso8601,
-            'updated_at'            => iso8601,
-            'links'                 => {
+            'image' => nil,
+            'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+            'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+            'stack'              => 'stack-2',
+            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at'         => iso8601,
+            'updated_at'         => iso8601,
+            'links'              => {
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -584,26 +610,22 @@ RSpec.describe 'Droplets' do
             }
           },
           {
-            'guid'                  => droplet1.guid,
-            'state'                 => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error'                 => 'example-error',
-            'lifecycle'             => {
+            'guid'               => droplet1.guid,
+            'state'              => VCAP::CloudController::DropletModel::FAILED_STATE,
+            'error'              => 'example-error',
+            'lifecycle'          => {
               'type' => 'buildpack',
-              'data' => {
-                'buildpacks' => [buildpack.name],
-                'stack'      => 'stack-1'
-              }
+              'data' => {}
             },
-            'result' => {
-              'checksum'           => { 'type' => 'sha1', 'value' => nil },
-              'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
-              'stack'              => 'stack-1',
-              'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-              'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' }
-            },
-            'created_at'            => iso8601,
-            'updated_at'            => iso8601,
-            'links'                 => {
+            'image' => nil,
+            'checksum'           => nil,
+            'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil }],
+            'stack'              => 'stack-1',
+            'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
+            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at'         => iso8601,
+            'updated_at'         => iso8601,
+            'links'              => {
               'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -653,20 +675,22 @@ RSpec.describe 'Droplets' do
 
       expect(last_response.status).to eq(201), "Expected 201, got status: #{last_response.status} with body: #{parsed_response}"
       expect(parsed_response).to be_a_response_like({
-        'guid'                  => copied_droplet.guid,
-        'state'                 => VCAP::CloudController::DropletModel::COPYING_STATE,
-        'error'                 => nil,
-        'lifecycle'             => {
+        'guid'               => copied_droplet.guid,
+        'state'              => VCAP::CloudController::DropletModel::COPYING_STATE,
+        'error'              => nil,
+        'lifecycle'          => {
           'type' => 'buildpack',
-          'data' => {
-            'buildpacks' => ['http://buildpack.git.url.com'],
-            'stack'      => 'stack-name'
-          }
+          'data' => {}
         },
-        'result'                => nil,
-        'created_at'            => iso8601,
-        'updated_at'            => iso8601,
-        'links'                 => {
+        'checksum'           => nil,
+        'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+        'stack'              => 'stack-name',
+        'execution_metadata' => 'some-data',
+        'image'              => nil,
+        'process_types'      => { 'web' => 'start-command' },
+        'created_at'         => iso8601,
+        'updated_at'         => iso8601,
+        'links'              => {
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
           'package'                => nil,
           'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },

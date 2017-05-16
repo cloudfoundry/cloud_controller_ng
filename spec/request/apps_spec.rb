@@ -832,18 +832,14 @@ RSpec.describe 'Apps' do
         'error'                 => 'example error',
         'lifecycle'             => {
           'type' => 'buildpack',
-          'data' => {
-            'buildpacks' => ['http://buildpack.git.url.com'],
-            'stack'      => 'stack-name'
-          }
+          'data' => {}
         },
-        'result' => {
-          'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
-          'stack'              => 'stack-name',
-          'execution_metadata' => 'some-data',
-          'process_types'      => { 'web' => 'start-command' }
-        },
+        'checksum'              => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
+        'buildpacks'            => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+        'stack'                 => 'stack-name',
+        'execution_metadata'    => 'some-data',
+        'process_types'         => { 'web' => 'start-command' },
+        'image'                 => nil,
         'created_at'            => iso8601,
         'updated_at'            => iso8601,
         'links'                 => {
