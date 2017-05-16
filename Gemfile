@@ -15,7 +15,7 @@ gem 'fog-google'
 gem 'google-api-client', '~> 0.8.6' # required for fog-google
 
 gem 'i18n'
-gem 'nokogiri', '~> 1.7.1'
+gem 'nokogiri', '~> 1.7.2'
 gem 'unf'
 gem 'netaddr'
 gem 'rfc822'

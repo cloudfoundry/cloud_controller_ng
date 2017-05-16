@@ -255,7 +255,7 @@ GEM
     netaddr (1.5.1)
     netrc (0.11.0)
     newrelic_rpm (3.17.1.326)
-    nokogiri (1.7.1)
+    nokogiri (1.7.2)
       mini_portile2 (~> 2.1.0)
     os (0.9.6)
     parallel (1.10.0)
@@ -453,7 +453,7 @@ DEPENDENCIES
   net-ssh
   netaddr
   newrelic_rpm (>= 3.12)
-  nokogiri (~> 1.7.1)
+  nokogiri (~> 1.7.2)
   parallel_tests
   pg (= 0.19.0)
   protobuf
