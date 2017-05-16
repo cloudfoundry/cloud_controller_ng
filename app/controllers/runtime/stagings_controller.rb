@@ -119,13 +119,9 @@ module VCAP::CloudController
     end
 
     def upload_droplet(guid)
-      droplet = DropletModel.find(guid: guid)
+      build = BuildModel.find(guid: guid)
 
-      if droplet.nil?
-        build = BuildModel.find(guid: guid)
-        raise ApiError.new_from_details('NotFound', guid) if build.nil?
-        droplet = create_droplet_from_build(build)
-      end
+      droplet = droplet_from_build(build, guid)
 
       raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{droplet.guid}") unless upload_path
       check_file_md5
@@ -135,6 +131,16 @@ module VCAP::CloudController
       droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, droplet.guid)
 
       Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+    end
+
+    def droplet_from_build(build, guid)
+      if build.nil?
+        droplet = DropletModel.find(guid: guid)
+        raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
+        droplet
+      else
+        create_droplet_from_build(build)
+      end
     end
 
     def create_droplet_from_build(build)
