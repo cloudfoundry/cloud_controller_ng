@@ -207,14 +207,12 @@ module VCAP::CloudController
           }.to change {
             Delayed::Job.count
           }.by(1)
+          expect(last_response.status).to eq 200
 
           job = Delayed::Job.last
-          expect(job.handler).to include('VCAP::CloudController::Jobs::V3::DropletUpload')
-          expect(job.handler).to include("droplet_guid: #{droplet.guid}")
-          expect(job.handler).to include('ngx.uploads')
-          expect(job.queue).to eq('cc-api_z1-99')
-          expect(job.guid).not_to be_nil
-          expect(last_response.status).to eq 200
+          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
+          inner_job = job.payload_object.handler.job.job
+          expect(inner_job.droplet_guid).to eq(droplet.guid)
         end
 
         it "returns a JSON body with full url and basic auth to query for job's status" do
@@ -304,13 +302,12 @@ module VCAP::CloudController
           expect(droplet.state).to eq(DropletModel::STAGING_STATE)
           expect(droplet.build).to eq(build)
 
-          job = Delayed::Job.last
-          expect(job.handler).to include('VCAP::CloudController::Jobs::V3::DropletUpload')
-          expect(job.handler).to include("droplet_guid: #{droplet.guid}")
-          expect(job.handler).to include('ngx.uploads')
-          expect(job.queue).to eq('cc-api_z1-99')
-          expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
+
+          job = Delayed::Job.last
+          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
+          inner_job = job.payload_object.handler.job.job
+          expect(inner_job.droplet_guid).to eq(droplet.guid)
         end
 
         it "returns a JSON body with full url and basic auth to query for job's status" do
@@ -398,13 +395,12 @@ module VCAP::CloudController
             Delayed::Job.count
           }.by(1)
 
-          job = Delayed::Job.last
-          expect(job.handler).to include('VCAP::CloudController::Jobs::V3::DropletUpload')
-          expect(job.handler).to include("droplet_guid: #{droplet.guid}")
-          expect(job.handler).to include('ngx.uploads')
-          expect(job.queue).to eq('cc-api_z1-99')
-          expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
+
+          job = Delayed::Job.last
+          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
+          inner_job = job.payload_object.handler.job.job
+          expect(inner_job.droplet_guid).to eq(droplet.guid)
         end
 
         it "returns a JSON body with full url and basic auth to query for job's status" do
@@ -496,13 +492,12 @@ module VCAP::CloudController
           expect(droplet.state).to eq(DropletModel::STAGING_STATE)
           expect(droplet.build).to eq(build)
 
-          job = Delayed::Job.last
-          expect(job.handler).to include('VCAP::CloudController::Jobs::V3::DropletUpload')
-          expect(job.handler).to include("droplet_guid: #{droplet.guid}")
-          expect(job.handler).to include('ngx.uploads')
-          expect(job.queue).to eq('cc-api_z1-99')
-          expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 200
+
+          job = Delayed::Job.last
+          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
+          inner_job = job.payload_object.handler.job.job
+          expect(inner_job.droplet_guid).to eq(droplet.guid)
         end
 
         it "returns a JSON body with full url and basic auth to query for job's status" do

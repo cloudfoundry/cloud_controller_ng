@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Jobs
     module V3
       class DropletUpload
-        attr_reader :max_attempts
+        attr_reader :max_attempts, :droplet_guid
 
         def initialize(local_path, droplet_guid)
           @local_path   = local_path
