@@ -35,11 +35,34 @@ module VCAP::CloudController
         authorize @internal_user, @internal_password
       end
 
-      it 'calls the stager with the droplet and response' do
-        expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
+      context 'when it is a docker app' do
+        let(:droplet) { DropletModel.make(:docker, package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
 
-        post url, MultiJson.dump(staging_response)
-        expect(last_response.status).to eq(200)
+        it 'calls the stager with a build created from the droplet and the response' do
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
+
+          post url, MultiJson.dump(staging_response)
+
+          build = BuildModel.last
+          expect(build).to_not be_nil
+          expect(build.lifecycle_type).to eq('docker')
+
+          expect(last_response.status).to eq(200)
+        end
+      end
+
+      context 'when it is a buildpack app' do
+        it 'calls the stager with a build created from the droplet and the response' do
+          expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), staging_response, false)
+
+          post url, MultiJson.dump(staging_response)
+
+          build = BuildModel.last
+          expect(build).to_not be_nil
+          expect(build.lifecycle_type).to eq('buildpack')
+
+          expect(last_response.status).to eq(200)
+        end
       end
 
       it 'propagates api errors from staging_response' do

@@ -33,7 +33,14 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found') if droplet.nil?
 
       build = BuildModel.create(package: droplet.package, app: droplet.app, state: DropletModel::STAGING_STATE)
-      build.update(droplet: droplet)
+
+      BuildModel.db.transaction do
+        build.lock!
+        build.update(
+          droplet: droplet,
+          buildpack_lifecycle_data: droplet.buildpack_lifecycle_data
+        )
+      end
 
       if staging_response.key? :failed
         staging_response = parse_bbs_task_callback(staging_response)
