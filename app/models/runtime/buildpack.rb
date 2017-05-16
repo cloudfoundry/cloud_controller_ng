@@ -1,8 +1,7 @@
-require 'cloud_controller/buildpack_positioner'
-require 'cloud_controller/buildpack_shifter'
-
 module VCAP::CloudController
   class Buildpack < Sequel::Model
+    plugin :list
+
     export_attributes :name, :position, :enabled, :locked, :filename
     import_attributes :name, :position, :enabled, :locked, :filename, :key
 
@@ -14,35 +13,8 @@ module VCAP::CloudController
       where(position: max(:position)).first
     end
 
-    def before_save
-      if new? || column_changed?(:position)
-        Locking[name: 'buildpacks'].lock!
-        positioner = BuildpackPositioner.new
-        self.position = if new?
-                          if Buildpack.at_last_position.nil?
-                            1
-                          else
-                            positioner.position_for_create(position)
-                          end
-                        else
-                          positioner.position_for_update(initial_value(:position), position)
-                        end
-      end
-      super
-    end
-
     def self.user_visibility_filter(user)
       full_dataset_filter
-    end
-
-    def before_destroy
-      Locking[name: 'buildpacks'].lock!
-    end
-
-    def after_destroy
-      super
-      shifter = BuildpackShifter.new
-      shifter.shift_positions_down(self)
     end
 
     def validate
