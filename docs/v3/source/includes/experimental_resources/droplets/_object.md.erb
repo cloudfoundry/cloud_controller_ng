@@ -4,9 +4,35 @@ Name | Type | Description
 ---- | ---- | -----------
 **state** | _string_ | State of the droplet. Valid states are `STAGED`, `COPYING`, `FAILED`, or `EXPIRED`.
 **error** | _string_ | A string describing the last error during the droplet lifecycle.
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was configured or discovered from the app.
-**result** | _object_ | An object describing the result of a droplet that has completed staging (where state is `STAGED`, `FAILED`, or `EXPIRED`). Droplets in incomplete states return null result.
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was configured or discovered from the app. **lifecycle.data** will always be an empty hash for a droplet object.
 **guid** | _uuid_ | Unique identifier for the droplet.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **links** | [_links object_](#links) | Links to related resources.
+**execution_metadata** | _string_ | Serialized JSON data resulting from staging for use when executing a droplet.
+**process_types** | _object_ | The process types (keys) and associated start commands (values) that will be created when the droplet is executed.
+
+In addition to these fields, a droplet object will contain the following fields from both lifecycles.
+Their values will be `null` by default and will contain values when the droplet is of a specific **lifecycle.type**.
+
+#### Buildpack droplet
+
+Name | Type | Description
+---- | ---- | -----------
+**checksum.type** | _string_ | Hashing algorithm for checksum. Supported algorithms are `sha256` and `sha1`.
+**checksum.value** | _string_ | Checksum of droplet.
+**buildpacks** | _array of [detected buildpack objects](#detected-buildpack-object)_ | Detected buildpacks from the staging process.
+**stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs2`
+
+##### Detected buildpack object
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Buildpack name
+**detect_output** | _string_ | Output during buildpack detect process
+
+#### Docker droplet
+
+Name | Type | Description
+---- | ---- | -----------
+**image** | _string_ | Docker image name.
