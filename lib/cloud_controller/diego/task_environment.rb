@@ -17,6 +17,7 @@ module VCAP::CloudController
           merge('VCAP_APPLICATION' => vcap_application, 'MEMORY_LIMIT' => "#{task.memory_in_mb}m").
           merge(SystemEnvPresenter.new(app.service_bindings).system_env.stringify_keys)
 
+        task_env = task_env.merge('LANG' => DEFAULT_LANG) if app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
         task_env = task_env.merge('DATABASE_URL' => app.database_uri) if app.database_uri
 
         task_env

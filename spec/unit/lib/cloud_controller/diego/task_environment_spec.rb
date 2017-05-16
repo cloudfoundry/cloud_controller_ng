@@ -76,6 +76,24 @@ module VCAP::CloudController::Diego
         expect(constructed_envs).to include({ 'PUPPIES' => 'frolicking' })
       end
 
+      context 'when the task is for a buildpack app' do
+        let(:app) { VCAP::CloudController::AppModel.make(:buildpack) }
+
+        it 'sets the LANG environment variable' do
+          constructed_envs = TaskEnvironment.new(app, task, space).build
+          expect(constructed_envs).to include('LANG' => 'en_US.UTF-8')
+        end
+      end
+
+      context 'when the task is for a docker app' do
+        let(:app) { VCAP::CloudController::AppModel.make(:docker) }
+
+        it 'does not set the LANG environment variable' do
+          constructed_envs = TaskEnvironment.new(app, task, space).build
+          expect(constructed_envs).not_to have_key('LANG')
+        end
+      end
+
       context 'when the app has a route associated with it' do
         let(:expected_vcap_application) do
           {
