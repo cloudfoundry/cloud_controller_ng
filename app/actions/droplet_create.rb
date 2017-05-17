@@ -2,6 +2,10 @@ module VCAP::CloudController
   class DropletCreate
     def create_docker_droplet(build)
       droplet = droplet_from_build(build)
+      droplet.update(
+        docker_receipt_username: build.package.docker_username,
+        docker_receipt_password: build.package.docker_password,
+      )
       droplet.save
 
       Steno.logger('build_completed').info("droplet created: #{droplet.guid}")

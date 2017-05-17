@@ -2,13 +2,17 @@ require 'spec_helper'
 require 'actions/droplet_create'
 
 module VCAP::CloudController
-  RSpec.describe DropletCopy do
-    let(:droplet_create) { DropletCreate.new }
+  RSpec.describe DropletCreate do
+    subject(:droplet_create) { DropletCreate.new }
     let(:app) { AppModel.make }
     let(:package) { PackageModel.make app: app }
     let(:build) { BuildModel.make app: app, package: package }
 
     describe '#create_docker_droplet' do
+      before do
+        package.update(docker_username: 'docker-username', docker_password: 'example-docker-password')
+      end
+
       it 'creates a droplet for build' do
         expect {
           droplet_create.create_docker_droplet(build)
@@ -18,8 +22,11 @@ module VCAP::CloudController
 
         expect(droplet.state).to eq(DropletModel::STAGING_STATE)
         expect(droplet.app).to eq(app)
-        expect(droplet.package).to eq(package)
+        expect(droplet.package_guid).to eq(package.guid)
         expect(droplet.build).to eq(build)
+
+        expect(droplet.docker_receipt_username).to eq('docker-username')
+        expect(droplet.docker_receipt_password).to eq('example-docker-password')
 
         expect(droplet.buildpack_lifecycle_data).to be_nil
       end

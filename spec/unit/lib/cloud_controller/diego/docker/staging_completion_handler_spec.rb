@@ -29,15 +29,11 @@ module VCAP::CloudController
                   lifecycle_type:     'docker',
                   lifecycle_metadata: {
                     docker_image: docker_image_name,
-                    docker_user: docker_username,
-                    docker_password: docker_password
                   }
                 }
               }
             end
             let(:docker_image_name) { '' }
-            let(:docker_username) { '' }
-            let(:docker_password) { '' }
 
             it 'marks the build as staged' do
               expect {
@@ -112,6 +108,7 @@ module VCAP::CloudController
 
             context 'when updating the droplet table fails' do
               let(:save_error) { StandardError.new('save-error') }
+              let!(:droplet) { DropletModel.make(app: app, package: package, build: build) }
 
               before do
                 allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
@@ -182,20 +179,6 @@ module VCAP::CloudController
                 build.reload
                 expect(build.droplet).to_not be_nil
                 expect(build.droplet.docker_receipt_image).to eq('cached-docker-image')
-              end
-
-              context 'when docker credentials are present' do
-                let(:docker_username) { 'dockerusername' }
-                let(:docker_password) { 'dockerpassword' }
-
-                it 'records them on the droplet' do
-                  handler.staging_complete(payload)
-                  build.reload
-                  expect(build.droplet).to_not be_nil
-                  expect(build.droplet.docker_receipt_image).to eq('cached-docker-image')
-                  expect(build.droplet.docker_receipt_username).to eq('dockerusername')
-                  expect(build.droplet.docker_receipt_password).to eq('dockerpassword')
-                end
               end
             end
           end
