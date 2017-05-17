@@ -180,4 +180,22 @@ end
       VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config)
     end
   end
+
+  desc "Ensure migrations in DB match local migration files"
+  task :ensure_migrations_are_current do
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    db_logger = Steno.logger("cc.db.migrations")
+    VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config[:db_encryption_key]
+    db = VCAP::CloudController::DB.connect(RakeConfig.config[:db], db_logger)
+
+    latest_migration_in_db = db[:schema_migrations].order(Sequel.desc(:filename)).first[:filename]
+    latest_migration_in_dir = File.basename(Dir["db/migrations/*"].sort.last)
+
+    unless latest_migration_in_db == latest_migration_in_dir
+      puts "Expected latest migration #{latest_migration_in_db} to equal #{latest_migration_in_dir}"
+      exit 1
+    end
+
+    puts "Successfully applied latest migrations to CF deployment"
+  end
 end
