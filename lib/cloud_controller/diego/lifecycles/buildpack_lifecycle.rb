@@ -35,13 +35,6 @@ module VCAP::CloudController
       }
     end
 
-    def pre_known_receipt_information
-      {
-        buildpack_receipt_buildpack_guid: buildpack_info.buildpack_record.try(:guid),
-        buildpack_receipt_stack_name:     staging_stack
-      }
-    end
-
     def staging_stack
       requested_stack || app_stack || VCAP::CloudController::Stack.default.name
     end

@@ -14,13 +14,5 @@ module VCAP::CloudController
     let(:staging_message) { BuildCreateMessage.new }
 
     it_behaves_like 'a lifecycle'
-
-    describe '#pre_known_receipt_information' do
-      it 'includes the requested image' do
-        expect(lifecycle.pre_known_receipt_information[:docker_receipt_image]).to eq('test-image')
-        expect(lifecycle.pre_known_receipt_information[:docker_receipt_username]).to eq('dockerusername')
-        expect(lifecycle.pre_known_receipt_information[:docker_receipt_password]).to eq('dockerpassword')
-      end
-    end
   end
 end

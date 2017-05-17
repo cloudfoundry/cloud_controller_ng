@@ -77,67 +77,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'pre-known receipt information' do
-      let(:app_buildpack) { Buildpack.make }
-      let(:staging_buildpack) { Buildpack.make }
-      let(:app) { AppModel.make }
-      let(:package) { PackageModel.make(app: app) }
-
-      describe 'buildpack_receipt_buildpack_guid' do
-        context 'when the buildpack is in the system' do
-          context 'and specified by the app' do
-            let(:staging_message) { BuildCreateMessage.new }
-
-            before do
-              app.lifecycle_data.update(buildpack: app_buildpack.name)
-            end
-
-            it 'is the guid of the app buildpack' do
-              receipt = buildpack_lifecycle.pre_known_receipt_information
-              expect(receipt[:buildpack_receipt_buildpack_guid]).to eq(app_buildpack.guid)
-            end
-          end
-
-          context 'and specified by the staging message even if specified by the app' do
-            let(:staging_message) do
-              BuildCreateMessage.new(lifecycle: { data: { buildpacks: [staging_buildpack.name] }, type: 'buildpack' })
-            end
-
-            before do
-              app.lifecycle_data.update(buildpack: app_buildpack.name)
-            end
-
-            it 'is the guid of the staging message buildpack' do
-              receipt = buildpack_lifecycle.pre_known_receipt_information
-              expect(receipt[:buildpack_receipt_buildpack_guid]).to eq(staging_buildpack.guid)
-            end
-          end
-        end
-
-        context 'when the buildpack is not in the system' do
-          let(:staging_message) do
-            BuildCreateMessage.new(lifecycle: { data: { buildpacks: ['git://cool-buildpack'] }, type: 'buildpack' })
-          end
-
-          it 'is nil' do
-            receipt = buildpack_lifecycle.pre_known_receipt_information
-            expect(receipt[:buildpack_receipt_buildpack_guid]).to be_nil
-          end
-        end
-      end
-
-      describe 'buildpack_receipt_stack_name' do
-        let(:staging_message) do
-          BuildCreateMessage.new(lifecycle: { data: { stack: 'pancake' }, type: 'buildpack' })
-        end
-
-        it 'is the requested stack' do
-          receipt = buildpack_lifecycle.pre_known_receipt_information
-          expect(receipt[:buildpack_receipt_stack_name]).to eq('pancake')
-        end
-      end
-    end
-
     describe 'buildpack info' do
       it 'is provided' do
         expect(buildpack_lifecycle.buildpack_info).to be_a(BuildpackInfo)

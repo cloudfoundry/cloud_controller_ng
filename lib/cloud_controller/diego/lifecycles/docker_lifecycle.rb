@@ -18,14 +18,6 @@ module VCAP::CloudController
       {}
     end
 
-    def pre_known_receipt_information
-      {
-        docker_receipt_image: @package.image,
-        docker_receipt_username: @package.docker_username,
-        docker_receipt_password: @package.docker_password,
-      }
-    end
-
     def valid?
       true
     end
