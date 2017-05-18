@@ -109,7 +109,8 @@ properties:
   cc.jobs.droplet_upload.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
   cc.jobs.diego_sync.timeout_in_seconds:
-    description: "The longest this job can take before it is cancelled"
+    description: "The longest the diego sync job can take before another is enqueued"
+    default: 600
 
   cc.app_events.cutoff_age_in_days:
     description: "How old an app event should stay in cloud controller database before being cleaned up"

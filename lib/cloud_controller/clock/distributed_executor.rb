@@ -51,11 +51,9 @@ module VCAP::CloudController
 
     def need_to_run_job?(job, interval, timeout, fudge=0)
       last_started_at = job.last_started_at
-      last_completed_at = job.last_completed_at
+      return true if last_started_at.nil?
 
-      if last_started_at.nil?
-        return true
-      end
+      last_completed_at = job.last_completed_at
       interval_has_elapsed = now >= (last_started_at + interval - fudge)
       last_run_completed = last_completed_at && (last_completed_at >= last_started_at)
       timeout_elapsed = timeout && (now >= (last_started_at + timeout))
