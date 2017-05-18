@@ -61,6 +61,13 @@ module VCAP::CloudController
 
       require 'delayed_job_sequel'
     end
+
+    def self.load_models_without_migrations_check(db_config, logger)
+      db = connect(db_config, logger)
+
+      require 'models'
+      require 'delayed_job_sequel'
+    end
   end
 end
 

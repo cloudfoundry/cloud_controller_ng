@@ -25,7 +25,7 @@ logger = Logger.new(STDOUT)
 db_config = @config.fetch(:db).merge(log_level: :debug)
 db_config[:database] ||= DbConfig.new.connection_string
 
-VCAP::CloudController::DB.load_models(db_config, logger)
+VCAP::CloudController::DB.load_models_without_migrations_check(db_config, logger)
 VCAP::CloudController::Config.configure_components(@config)
 
 if ENV['NEW_RELIC_ENV'] == 'development'
