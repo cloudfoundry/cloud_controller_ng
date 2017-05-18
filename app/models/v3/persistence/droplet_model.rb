@@ -46,27 +46,6 @@ module VCAP::CloudController
       validates_includes DROPLET_STATES, :state, allow_missing: true
     end
 
-    def after_create
-      super
-      unless copying? || processing_upload?
-        app_usage_event_repository.create_from_droplet(self, 'STAGING_STARTED')
-      end
-    end
-
-    def after_update
-      super
-      if !exiting_processing_upload? && (entering_staged? || entering_failed?)
-        app_usage_event_repository.create_from_droplet(self, 'STAGING_STOPPED')
-      end
-    end
-
-    def after_destroy
-      super
-      unless in_final_state? || copying? || processing_upload?
-        app_usage_event_repository.create_from_droplet(self, 'STAGING_STOPPED')
-      end
-    end
-
     def set_buildpack_receipt(buildpack_key:, detect_output:, requested_buildpack:, buildpack_url: nil)
       self.buildpack_receipt_detect_output = detect_output
 

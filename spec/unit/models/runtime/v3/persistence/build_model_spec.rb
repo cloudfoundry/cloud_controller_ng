@@ -3,7 +3,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe BuildModel do
-    let(:build_model) { BuildModel.make }
+    let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
+    let(:build_model) { BuildModel.make(package: package) }
     let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(build: build_model) }
 
     before do
@@ -18,6 +19,15 @@ module VCAP::CloudController
         expect {
           app.delete
         }.to raise_error Sequel::ForeignKeyConstraintViolation
+      end
+
+      describe 'space' do
+        it 'gets its space from the containing app' do
+          space = Space.make
+          app = AppModel.make(space: space)
+          build = BuildModel.make(app: app)
+          expect(build.space).to eq(space)
+        end
       end
     end
 
@@ -95,6 +105,36 @@ module VCAP::CloudController
         expect { build_model.fail_to_stage! }.to change { build_model.state }.to(BuildModel::FAILED_STATE)
       end
 
+      it 'creates an app usage event for STAGING_STOPPED' do
+        expect {
+          build_model.fail_to_stage!
+        }.to change {
+          AppUsageEvent.count
+        }.by(1)
+
+        event = AppUsageEvent.last
+        expect(event).to_not be_nil
+        expect(event.state).to eq('STAGING_STOPPED')
+        expect(event.previous_state).to eq('STAGING')
+        expect(event.instance_count).to eq(1)
+        expect(event.previous_instance_count).to eq(1)
+        expect(event.memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+        expect(event.previous_memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+
+        expect(event.org_guid).to eq(build_model.app.space.organization.guid)
+        expect(event.space_guid).to eq(build_model.app.space.guid)
+        expect(event.parent_app_guid).to eq(build_model.app.guid)
+        expect(event.parent_app_name).to eq(build_model.app.name)
+        expect(event.package_guid).to eq(build_model.package_guid)
+        expect(event.app_name).to eq('')
+        expect(event.app_guid).to eq('')
+        expect(event.package_state).to eq(PackageModel::READY_STATE)
+        expect(event.previous_package_state).to eq(PackageModel::READY_STATE)
+
+        expect(event.buildpack_guid).to eq(nil)
+        expect(event.buildpack_name).to eq(nil)
+      end
+
       context 'when a valid reason is specified' do
         BuildModel::STAGING_FAILED_REASONS.each do |reason|
           it 'sets the requested staging failed reason' do
@@ -141,6 +181,44 @@ module VCAP::CloudController
             }.to_not raise_error
           end
         end
+      end
+    end
+
+    describe '#mark_as_staged' do
+      before { build_model.update(state: BuildModel::STAGING_STATE) }
+
+      it 'sets the sate to STAGED' do
+        expect { build_model.mark_as_staged }.to change { build_model.state }.to(BuildModel::STAGED_STATE)
+      end
+
+      it 'creates an app usage event for STAGING_STOPPED' do
+        expect {
+          build_model.mark_as_staged
+        }.to change {
+          AppUsageEvent.count
+        }.by(1)
+
+        event = AppUsageEvent.last
+        expect(event).to_not be_nil
+        expect(event.state).to eq('STAGING_STOPPED')
+        expect(event.previous_state).to eq('STAGING')
+        expect(event.instance_count).to eq(1)
+        expect(event.previous_instance_count).to eq(1)
+        expect(event.memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+        expect(event.previous_memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+
+        expect(event.org_guid).to eq(build_model.app.space.organization.guid)
+        expect(event.space_guid).to eq(build_model.app.space.guid)
+        expect(event.parent_app_guid).to eq(build_model.app.guid)
+        expect(event.parent_app_name).to eq(build_model.app.name)
+        expect(event.package_guid).to eq(build_model.package_guid)
+        expect(event.app_name).to eq('')
+        expect(event.app_guid).to eq('')
+        expect(event.package_state).to eq(PackageModel::READY_STATE)
+        expect(event.previous_package_state).to eq(PackageModel::READY_STATE)
+
+        expect(event.buildpack_guid).to eq(nil)
+        expect(event.buildpack_name).to eq(nil)
       end
     end
   end

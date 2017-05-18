@@ -61,7 +61,7 @@ module VCAP::CloudController
     end
 
     describe '#create_and_stage' do
-      context 'creating a build and dependent droplet' do
+      context 'creating a build' do
         it 'creates a build' do
           build = nil
 
@@ -73,6 +73,37 @@ module VCAP::CloudController
           expect(build.app_guid).to eq(app.guid)
           expect(build.package_guid).to eq(package.guid)
           expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
+        end
+
+        it 'creates an app usage event for STAGING_STARTED' do
+          build = nil
+          expect {
+            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+          }.to change {
+            AppUsageEvent.count
+          }.by(1)
+
+          event = AppUsageEvent.last
+          expect(event).to_not be_nil
+          expect(event.state).to eq('STAGING_STARTED')
+          expect(event.previous_state).to eq('STAGING')
+          expect(event.instance_count).to eq(1)
+          expect(event.previous_instance_count).to eq(1)
+          expect(event.memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+          expect(event.previous_memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
+
+          expect(event.org_guid).to eq(build.app.space.organization.guid)
+          expect(event.space_guid).to eq(build.app.space.guid)
+          expect(event.parent_app_guid).to eq(build.app.guid)
+          expect(event.parent_app_name).to eq(build.app.name)
+          expect(event.package_guid).to eq(build.package_guid)
+          expect(event.app_name).to eq('')
+          expect(event.app_guid).to eq('')
+          expect(event.package_state).to eq('READY')
+          expect(event.previous_package_state).to eq('READY')
+
+          expect(event.buildpack_guid).to eq(nil)
+          expect(event.buildpack_name).to eq(buildpack_git_url)
         end
       end
 

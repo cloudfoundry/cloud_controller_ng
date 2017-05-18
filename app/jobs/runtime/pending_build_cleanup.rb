@@ -14,11 +14,8 @@ module VCAP::CloudController
           BuildModel.
             where(state: BuildModel::STAGING_STATE).
             where(updated_at_past_threshold).
-            update(
-              state:      BuildModel::FAILED_STATE,
-              error_id:   'StagingTimeExpired',
-              updated_at: Sequel::CURRENT_TIMESTAMP
-            )
+            all.
+            map { |build| build.fail_to_stage!('StagingTimeExpired') }
         end
 
         def job_name_in_configuration

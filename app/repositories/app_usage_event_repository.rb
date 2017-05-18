@@ -57,29 +57,29 @@ module VCAP::CloudController
         )
       end
 
-      def create_from_droplet(droplet, state)
+      def create_from_build(build, state)
         opts = {
           state:                              state,
-          previous_state:                     droplet.initial_value(:state),
+          previous_state:                     build.initial_value(:state),
           instance_count:                     1,
           previous_instance_count:            1,
           memory_in_mb_per_instance:          BuildModel::STAGING_MEMORY,
           previous_memory_in_mb_per_instance: BuildModel::STAGING_MEMORY,
-          org_guid:                           droplet.space.organization.guid,
-          space_guid:                         droplet.space.guid,
-          space_name:                         droplet.space.name,
-          parent_app_guid:                    droplet.app.guid,
-          parent_app_name:                    droplet.app.name,
-          package_guid:                       droplet.package_guid,
+          org_guid:                           build.space.organization.guid,
+          space_guid:                         build.space.guid,
+          space_name:                         build.space.name,
+          parent_app_guid:                    build.app.guid,
+          parent_app_name:                    build.app.name,
+          package_guid:                       build.package_guid,
           app_guid:                           '',
           app_name:                           '',
-          package_state:                      droplet.try(:package).try(:state),
-          previous_package_state:             droplet.package ? droplet.package.initial_value(:state) : nil
+          package_state:                      build.try(:package).try(:state),
+          previous_package_state:             build.package ? build.package.initial_value(:state) : nil
         }
 
-        if droplet.lifecycle_type == Lifecycles::BUILDPACK
-          opts[:buildpack_guid] = droplet.buildpack_receipt_buildpack_guid
-          opts[:buildpack_name] = CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack || droplet.lifecycle_data.buildpack)
+        if build.lifecycle_type == Lifecycles::BUILDPACK
+          opts[:buildpack_guid] = build.droplet&.buildpack_receipt_buildpack_guid
+          opts[:buildpack_name] = CloudController::UrlSecretObfuscator.obfuscate(build.droplet&.buildpack_receipt_buildpack || build.lifecycle_data.buildpack)
         end
         AppUsageEvent.create(opts)
       end

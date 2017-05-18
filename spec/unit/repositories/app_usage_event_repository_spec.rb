@@ -306,35 +306,34 @@ module VCAP::CloudController
         end
       end
 
-      describe '#create_from_droplet' do
+      describe '#create_from_build' do
         let(:org) { Organization.make(guid: 'org-1') }
         let(:space) { Space.make(guid: 'space-1', name: 'space-name', organization: org) }
         let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
         let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
-        let!(:droplet) { DropletModel.make(guid: 'droplet-1', package: package, app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
+        let!(:build) { BuildModel.make(guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         let(:state) { 'TEST_STATE' }
 
-        before do
-          droplet.lifecycle_data.buildpack = 'le-buildpack'
-          droplet.lifecycle_data.save
-        end
-
         it 'creates an AppUsageEvent' do
           expect {
-            repository.create_from_droplet(droplet, state)
+            repository.create_from_build(build, state)
           }.to change { AppUsageEvent.count }.by(1)
         end
 
         describe 'the created event' do
           it 'sets the state to what is passed in' do
-            event = repository.create_from_droplet(droplet, state)
+            event = repository.create_from_build(build, state)
             expect(event.state).to eq('TEST_STATE')
           end
 
-          it 'sets the attributes based on the droplet' do
-            event = repository.create_from_droplet(droplet, state)
+          it 'sets the attributes based on the build' do
+            build.update(
+              droplet: DropletModel.make(buildpack_receipt_buildpack: 'le-buildpack'),
+              buildpack_lifecycle_data: BuildpackLifecycleDataModel.make
+            )
+            event = repository.create_from_build(build, state)
 
             expect(event.state).to eq('TEST_STATE')
             expect(event.previous_state).to eq('STAGING')
@@ -360,122 +359,122 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the droplet has buildpack receipt information' do
-          let!(:droplet) do
-            DropletModel.make(
-              :buildpack,
-              guid:                             'droplet-1',
-              package_guid:                     package.guid,
-              app_guid:                         app_model.guid,
-              buildpack_receipt_buildpack:      'a-buildpack',
-              buildpack_receipt_buildpack_guid: 'a-buildpack-guid'
-            )
-          end
-
-          it 'sets the event info to the buildpack receipt info' do
-            event = repository.create_from_droplet(droplet, state)
-
-            expect(event.buildpack_name).to eq('a-buildpack')
-            expect(event.buildpack_guid).to eq('a-buildpack-guid')
-          end
-        end
-
-        context 'when the droplet has buildpack lifecycle information' do
-          let!(:droplet) do
-            DropletModel.make(
-              :buildpack,
-              guid:                 'droplet-1',
-              package_guid:         package.guid,
-              app_guid:             app_model.guid,
-            )
-          end
-
-          before do
-            lifecycle_data           = droplet.lifecycle_data
-            lifecycle_data.buildpack = 'http://git.url.example.com'
-          end
-
-          it 'sets the event info to the buildpack lifecycle info' do
-            event = repository.create_from_droplet(droplet, state)
-
-            expect(event.buildpack_name).to eq('http://git.url.example.com')
-            expect(event.buildpack_guid).to be_nil
-          end
-
-          context 'when buildpack lifecycle info contains credentials in buildpack url' do
+        context 'buildpack builds' do
+          context 'when the build does NOT have an associated droplet but does have lifecycle data' do
             before do
-              lifecycle_data           = droplet.lifecycle_data
-              lifecycle_data.buildpack = 'http://ping:pong@example.com'
+              build.update(
+                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpack: 'http://git.url.example.com')
+              )
             end
 
-            it 'redacts credentials from the url' do
-              event = repository.create_from_droplet(droplet, state)
+            it 'sets the event buildpack_name to the lifecycle data buildpack' do
+              event = repository.create_from_build(build, state)
 
-              expect(event.buildpack_name).to eq('http://***:***@example.com')
+              expect(event.buildpack_name).to eq('http://git.url.example.com')
               expect(event.buildpack_guid).to be_nil
             end
+
+            context 'when buildpack lifecycle info contains credentials in buildpack url' do
+              before do
+                build.update(
+                  buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpack: 'http://ping:pong@example.com')
+                )
+              end
+
+              it 'redacts credentials from the url' do
+                event = repository.create_from_build(build, state)
+
+                expect(event.buildpack_name).to eq('http://***:***@example.com')
+                expect(event.buildpack_guid).to be_nil
+              end
+            end
+          end
+
+          context 'when the build has BOTH an associated droplet and lifecycle data' do
+            let!(:build) do
+              BuildModel.make(
+                :buildpack,
+                guid:         'build-1',
+                package_guid: package.guid,
+                app_guid:     app_model.guid,
+              )
+            end
+            let!(:droplet) do
+              DropletModel.make(
+                :buildpack,
+                buildpack_receipt_buildpack:      'a-buildpack',
+                buildpack_receipt_buildpack_guid: 'a-buildpack-guid',
+                build:                            build
+              )
+            end
+
+            before do
+              build.update(
+                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpack: 'ruby_buildpack')
+              )
+            end
+
+            it 'prefers the buildpack receipt info' do
+              event = repository.create_from_build(build, state)
+
+              expect(event.buildpack_name).to eq('a-buildpack')
+              expect(event.buildpack_guid).to eq('a-buildpack-guid')
+            end
           end
         end
 
-        context 'when the droplet has both buildpack receipt and lifecycle information' do
-          let!(:droplet) do
-            DropletModel.make(
-              :buildpack,
-              guid:                             'droplet-1',
-              package_guid:                     package.guid,
-              app_guid:                         app_model.guid,
-              buildpack_receipt_buildpack:      'a-buildpack',
-              buildpack_receipt_buildpack_guid: 'a-buildpack-guid'
+        context 'docker builds' do
+          let!(:build) do
+            BuildModel.make(
+              :docker,
+              guid:         'build-1',
+              package_guid: package.guid,
+              app_guid:     app_model.guid,
             )
           end
 
-          before do
-            lifecycle_data           = droplet.lifecycle_data
-            lifecycle_data.buildpack = 'ruby_buildpack'
-          end
+          it 'does not include buildpack_guid or buildpack_name' do
+            event = repository.create_from_build(build, state)
 
-          it 'prefers the buildpack receipt info' do
-            event = repository.create_from_droplet(droplet, state)
-
-            expect(event.buildpack_name).to eq('a-buildpack')
-            expect(event.buildpack_guid).to eq('a-buildpack-guid')
+            expect(event.buildpack_name).to be_nil
+            expect(event.buildpack_guid).to be_nil
           end
         end
 
-        context 'when the droplet exists' do
-          let(:old_droplet_state) { DropletModel::STAGED_STATE }
-          let(:existing_droplet) { DropletModel.make(
-            guid:                 'existing-droplet',
-            state:                old_droplet_state,
-            package:              package,
-            app_guid:             app_model.guid)
+        context 'when the build is updating its state' do
+          let(:old_build_state) { BuildModel::STAGED_STATE }
+          let(:existing_build) { BuildModel.make(
+            guid:     'existing-build',
+            state:    old_build_state,
+            package:  package,
+            app_guid: app_model.guid)
           }
 
           context 'when the same attribute values are set' do
             before do
-              existing_droplet.state = old_droplet_state
+              existing_build.state = old_build_state
             end
 
             it 'creates event with previous attributes' do
-              event = repository.create_from_droplet(existing_droplet, state)
+              event = repository.create_from_build(existing_build, state)
 
-              expect(event.previous_state).to eq(old_droplet_state)
+              expect(event.previous_state).to eq(old_build_state)
               expect(event.previous_package_state).to eq(package_state)
               expect(event.previous_instance_count).to eq(1)
             end
           end
 
-          context 'when app attributes change' do
-            let(:new_state) { DropletModel::STAGED_STATE }
+          context 'when package attributes change' do
+            let(:new_state) { BuildModel::STAGED_STATE }
             let(:new_package_state) { PackageModel::FAILED_STATE }
             let(:new_memory) { 1024 }
 
             before do
-              existing_droplet.package.state = new_package_state
+              existing_build.package.state = new_package_state
             end
 
             it 'stores new values' do
-              event = repository.create_from_droplet(existing_droplet, new_state)
+              event = repository.create_from_build(existing_build, new_state)
 
               expect(event.state).to eq(new_state)
               expect(event.package_state).to eq(new_package_state)
@@ -483,24 +482,24 @@ module VCAP::CloudController
             end
 
             it 'stores previous values' do
-              event = repository.create_from_droplet(existing_droplet, new_state)
+              event = repository.create_from_build(existing_build, new_state)
 
-              expect(event.previous_state).to eq(old_droplet_state)
+              expect(event.previous_state).to eq(old_build_state)
               expect(event.previous_package_state).to eq(package_state)
               expect(event.previous_instance_count).to eq(1)
             end
           end
 
-          context 'when the droplet has no package' do
-            let(:existing_droplet) { DropletModel.make(guid: 'existing-droplet', state: old_droplet_state, app_guid: app_model.guid) }
+          context 'when the build has no package' do
+            let(:existing_build) { BuildModel.make(guid: 'existing-build', state: old_build_state, app_guid: app_model.guid) }
 
-            context 'when app attributes change' do
+            context 'when an attribute changes' do
               before do
-                existing_droplet.state = DropletModel::STAGED_STATE
+                existing_build.state = BuildModel::STAGED_STATE
               end
 
               it 'returns no previous package state' do
-                event = repository.create_from_droplet(existing_droplet, state)
+                event = repository.create_from_build(existing_build, state)
                 expect(event.previous_package_state).to be_nil
               end
             end
@@ -554,7 +553,7 @@ module VCAP::CloudController
           context 'with associated buildpack information' do
             before do
               app.current_droplet.update(
-                buildpack_receipt_buildpack:  'detected-name',
+                buildpack_receipt_buildpack:      'detected-name',
                 buildpack_receipt_buildpack_guid: 'detected-guid',
               )
               app.reload

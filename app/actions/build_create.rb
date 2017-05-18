@@ -3,7 +3,7 @@ require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
 require 'cloud_controller/diego/staging_details'
 require 'cloud_controller/diego/lifecycles/lifecycle_provider'
-require 'repositories/droplet_event_repository'
+require 'repositories/app_usage_event_repository'
 
 module VCAP::CloudController
   class BuildCreate
@@ -43,6 +43,7 @@ module VCAP::CloudController
         build.save
         staging_details.staging_guid = build.guid
         lifecycle.create_lifecycle_data_model(build)
+        Repositories::AppUsageEventRepository.new.create_from_build(build, 'STAGING_STARTED')
       end
 
       logger.info("build created: #{build.guid}")

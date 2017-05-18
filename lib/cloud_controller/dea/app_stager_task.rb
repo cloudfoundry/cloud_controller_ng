@@ -209,12 +209,12 @@ module VCAP::CloudController
 
       def staging_completion(stager_response)
         build = BuildModel.find(guid: @staging_guid)
-        build.update(state: BuildModel::STAGED_STATE)
 
         droplet = build.droplet
 
         droplet.db.transaction do
           droplet.lock!
+          build.lock!
 
           droplet.update(
             process_types: { web: stager_response.detected_start_command },
@@ -222,12 +222,14 @@ module VCAP::CloudController
           )
 
           droplet.mark_as_staged
+          build.mark_as_staged
           droplet.set_buildpack_receipt(
             detect_output: stager_response.detected_buildpack,
             buildpack_key: stager_response.buildpack_key,
             requested_buildpack: build.lifecycle_data.buildpack,
           )
 
+          build.save_changes(raise_on_save_failure: true)
           droplet.save_changes(raise_on_save_failure: true)
 
           droplet.app.lock!

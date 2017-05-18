@@ -1,3 +1,5 @@
+require 'repositories/app_usage_event_repository'
+
 module VCAP::CloudController
   class BuildModel < Sequel::Model(:builds)
     STAGING_MEMORY = 1024
@@ -31,6 +33,8 @@ module VCAP::CloudController
       class:       'VCAP::CloudController::BuildpackLifecycleDataModel',
       key:         :build_guid,
       primary_key: :guid
+
+    one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
     add_association_dependencies buildpack_lifecycle_data: :delete
 
@@ -66,11 +70,24 @@ module VCAP::CloudController
       self.state             = FAILED_STATE
       self.error_id          = reason
       self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
-      save_changes(raise_on_save_failure: true)
+
+      self.db.transaction do
+        app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
+        save_changes(raise_on_save_failure: true)
+      end
     end
 
     def mark_as_staged
-      self.state = STAGED_STATE
+      self.db.transaction do
+        app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
+        self.state = STAGED_STATE
+      end
+    end
+
+    private
+
+    def app_usage_event_repository
+      Repositories::AppUsageEventRepository.new
     end
   end
 end
