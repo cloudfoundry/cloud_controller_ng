@@ -31,10 +31,10 @@ module VCAP::CloudController
     define_routes
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors = e.errors.on([:space_id, :name]).to_a
-      quota_errors = e.errors.on(:quota).to_a
-      service_plan_errors = e.errors.on(:service_plan).to_a
-      service_instance_errors = e.errors.on(:service_instance).to_a
+      space_and_name_errors        = e.errors.on([:space_id, :name]).to_a
+      quota_errors                 = e.errors.on(:quota).to_a
+      service_plan_errors          = e.errors.on(:service_plan).to_a
+      service_instance_errors      = e.errors.on(:service_instance).to_a
       service_instance_name_errors = e.errors.on(:name).to_a
       service_instance_tags_errors = e.errors.on(:tags).to_a
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
     end
 
     def create
-      @request_attrs = validate_create_request
+      @request_attrs     = validate_create_request
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       service_plan = ServicePlan.first(guid: request_attrs['service_plan_guid'])
@@ -108,7 +108,7 @@ module VCAP::CloudController
     end
 
     def update(guid)
-      @request_attrs = validate_update_request(guid)
+      @request_attrs     = validate_update_request(guid)
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       service_instance, related_objects = ServiceInstanceFetcher.new.fetch(guid)
@@ -142,8 +142,8 @@ module VCAP::CloudController
 
     def delete(guid)
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
-      async = convert_flag_to_bool(params['async'])
-      purge = convert_flag_to_bool(params['purge'])
+      async              = convert_flag_to_bool(params['async'])
+      purge              = convert_flag_to_bool(params['purge'])
 
       service_instance = find_guid(guid, ServiceInstance)
 
@@ -155,13 +155,13 @@ module VCAP::CloudController
 
       validate_access(:delete, service_instance)
       has_assocations = has_routes?(service_instance) ||
-                        has_bindings?(service_instance) ||
-                        has_keys?(service_instance)
+        has_bindings?(service_instance) ||
+        has_keys?(service_instance)
 
       association_not_empty! if has_assocations && !recursive_delete?
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
-      delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+      delete_job    = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
 
       if delete_job
         [
@@ -182,11 +182,21 @@ module VCAP::CloudController
 
     get '/v2/service_instances/:guid/permissions', :permissions
     def permissions(guid)
-      find_guid_and_validate_access(:read_permissions, guid, ServiceInstance)
-      [HTTP::OK, {}, JSON.generate({ manage: true })]
+      service_instance = find_guid_and_validate_access(:read_permissions, guid, ServiceInstance)
+
+      manage_permissions = @access_context.can?(:manage_permissions, service_instance)
+      read_permissions   = @access_context.can?(:read_permissions, service_instance)
+
+      [HTTP::OK, {}, JSON.generate({
+        manage: manage_permissions,
+        read:   read_permissions
+      })]
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        [HTTP::OK, {}, JSON.generate({ manage: false })]
+        [HTTP::OK, {}, JSON.generate({
+          manage: false,
+          read:   false,
+        })]
       else
         raise e
       end
@@ -234,7 +244,7 @@ module VCAP::CloudController
 
       req_body = body.string.blank? ? '{}' : body
 
-      json_msg = VCAP::CloudController::RouteBindingMessage.decode(req_body)
+      json_msg       = VCAP::CloudController::RouteBindingMessage.decode(req_body)
       @request_attrs = json_msg.extract(stringify_keys: true)
 
       bind_route(other_guid, guid)
@@ -246,7 +256,7 @@ module VCAP::CloudController
       arbitrary_parameters = @request_attrs['parameters']
 
       binding_manager = ServiceInstanceBindingManager.new(self, logger)
-      route_binding = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, arbitrary_parameters, route_services_enabled?)
+      route_binding   = binding_manager.create_route_service_instance_binding(route_guid, instance_guid, arbitrary_parameters, route_services_enabled?)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, route_binding.service_instance, @opts)]
     rescue ServiceInstanceBindingManager::ServiceInstanceNotBindable

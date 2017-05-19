@@ -43,6 +43,8 @@ module UserHelpers
       set_current_user_as_admin(user: current_user, scopes: scopes)
     when 'admin_read_only'
       set_current_user_as_admin_read_only(user: current_user, scopes: scopes)
+    when 'global_auditor'
+      set_current_user_as_global_auditor(user: current_user, scopes: scopes)
     when 'space_developer'
       space.add_developer(current_user)
     when 'space_auditor'

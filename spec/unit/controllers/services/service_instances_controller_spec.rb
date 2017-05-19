@@ -3278,66 +3278,110 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/permissions' do
-      let(:space)     { Space.make }
-      let(:developer) { make_developer_for_space(space) }
-
-      before { set_current_user(developer) }
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
+      let(:instance) { ManagedServiceInstance.make(space: space) }
+      let(:user) { User.make }
 
       context 'when the user is a member of the space this instance exists in' do
-        let(:instance)  { ManagedServiceInstance.make(space: space) }
+        describe 'permissions' do
+          {
+            'space_auditor'       => { manage: false, read: true },
+            'space_developer'     => { manage: true, read: true },
+            'space_manager'       => { manage: false, read: true },
+            'org_auditor'         => { manage: false, read: false },
+            'org_billing_manager' => { manage: false, read: false },
+            'org_manager'         => { manage: false, read: true },
+            'admin'               => { manage: true, read: true },
+            'admin_read_only'     => { manage: false, read: true },
+            'global_auditor'      => { manage: false, read: false },
+          }.each do |role, expected_return_values|
+            context "as an #{role}" do
+              before do
+                set_current_user_as_role(
+                  role:   role,
+                  org:    org,
+                  space:  space,
+                  user:   user,
+                  scopes: ['cloud_controller.read']
+                )
+              end
 
-        context 'when the user has only the cloud_controller.read scope' do
-          it 'returns a JSON payload indicating they have permission to manage this instance' do
-            set_current_user(developer, { scopes: ['cloud_controller.read'] })
-            get "/v2/service_instances/#{instance.guid}/permissions"
-            expect(last_response.status).to eql(200)
-            expect(JSON.parse(last_response.body)['manage']).to be true
+              it "returns #{expected_return_values}" do
+                get "/v2/service_instances/#{instance.guid}/permissions"
+                expect(last_response.status).to eq(200), "Expected 200, got: #{last_response.status}, role: #{role}"
+                manage_response = JSON.parse(last_response.body)['manage']
+                read_response   = JSON.parse(last_response.body)['read']
+                expect(manage_response).to eq(expected_return_values[:manage]), "Expected #{expected_return_values[:manage]}, got: #{read_response}, role: #{role}"
+                expect(read_response).to eq(expected_return_values[:read]), "Expected #{expected_return_values[:read]}, got: #{read_response}, role: #{role}"
+              end
+            end
           end
         end
 
-        context 'when the user has only the cloud_controller_service_permissions.read scope' do
-          it 'returns a JSON payload indicating they have permission to manage this instance' do
-            set_current_user(developer, { scopes: ['cloud_controller_service_permissions.read'] })
-            get "/v2/service_instances/#{instance.guid}/permissions"
-            expect(last_response.status).to eql(200)
-            expect(JSON.parse(last_response.body)['manage']).to be true
-          end
-        end
+        describe 'scopes' do
+          let(:developer) { make_developer_for_space(space) }
 
-        context 'when the user does not have either necessary scope' do
-          it 'returns InsufficientScope' do
-            set_current_user(developer, { scopes: ['cloud_controller.write'] })
-            get "/v2/service_instances/#{instance.guid}/permissions"
-            expect(last_response.status).to eql(403)
-            expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
+          context 'when the user has only the cloud_controller.read scope' do
+            it 'returns a JSON payload indicating they have permission to manage this instance' do
+              set_current_user(developer, { scopes: ['cloud_controller.read'] })
+              get "/v2/service_instances/#{instance.guid}/permissions"
+              expect(last_response.status).to eql(200)
+              expect(JSON.parse(last_response.body)['manage']).to be true
+              expect(JSON.parse(last_response.body)['read']).to be true
+            end
+          end
+
+          context 'when the user has only the cloud_controller_service_permissions.read scope' do
+            it 'returns a JSON payload indicating they have permission to manage this instance' do
+              set_current_user(developer, { scopes: ['cloud_controller_service_permissions.read'] })
+              get "/v2/service_instances/#{instance.guid}/permissions"
+              expect(last_response.status).to eql(200)
+              expect(JSON.parse(last_response.body)['manage']).to be true
+              expect(JSON.parse(last_response.body)['read']).to be true
+            end
+          end
+
+          context 'when the user does not have either necessary scope' do
+            it 'returns InsufficientScope' do
+              set_current_user(developer, { scopes: ['cloud_controller.write'] })
+              get "/v2/service_instances/#{instance.guid}/permissions"
+              expect(last_response.status).to eql(403)
+              expect(JSON.parse(last_response.body)['description']).to eql('Your token lacks the necessary scopes to access this resource.')
+            end
           end
         end
       end
 
       context 'when the user is NOT a member of the space this instance exists in' do
-        let(:instance)  { ManagedServiceInstance.make }
+        let(:instance) { ManagedServiceInstance.make }
 
         it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
+          set_current_user(user)
           get "/v2/service_instances/#{instance.guid}/permissions"
           expect(last_response.status).to eql(200)
           expect(JSON.parse(last_response.body)['manage']).to be false
+          expect(JSON.parse(last_response.body)['read']).to be false
         end
       end
 
       context 'when the user has not authenticated with Cloud Controller' do
-        let(:instance)  { ManagedServiceInstance.make }
         let(:developer) { nil }
 
         it 'returns an error saying that the user is not authenticated' do
-          get "/v2/service_instances/#{instance.guid}/permissions"
+          set_current_user(developer)
+          get '/v2/service_instances/any-guid/permissions'
           expect(last_response.status).to eq(401)
+          expect(last_response.body).to include('NotAuthenticated')
         end
       end
 
       context 'when the service instance does not exist' do
         it 'returns an error saying the instance was not found' do
+          set_current_user(user)
           get '/v2/service_instances/nonexistent_instance/permissions'
           expect(last_response.status).to eql 404
+          expect(last_response.body).to include('ServiceInstanceNotFound')
         end
       end
     end
