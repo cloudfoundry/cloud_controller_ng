@@ -56,6 +56,11 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links]).to eq(links)
         end
 
+        it 'does not redacts the process_types and execution_metadata by default' do
+          expect(result[:process_types]).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
+          expect(result[:execution_metadata]).to eq('black-box-string')
+        end
+
         context 'when buildpack contains username and password' do
           let(:buildpack) { 'https://amelia:meow@neopets.com' }
           let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
@@ -63,11 +68,6 @@ module VCAP::CloudController::Presenters::V3
           it 'obfuscates the username and password' do
             expect(result[:buildpacks]).to eq([{ name: 'https://***:***@neopets.com', detect_output: 'the-happiest-buildpack-detect-output' }])
           end
-        end
-
-        it 'does not redacts the process_types and execution_metadata by default' do
-          expect(result[:process_types]).to eq({ 'web' => 'npm start', 'worker' => 'start worker' })
-          expect(result[:execution_metadata]).to eq('black-box-string')
         end
 
         context 'when show_secrets is false' do
