@@ -52,13 +52,6 @@ module VCAP::CloudController
       DBMigrator.new(db).check_migrations!
 
       require 'models'
-
-      # We need the Locking model to have a separate DB connection so its transactions don't get in the way of
-      # transactions made while holding a lock. This is to work around the fact that Sequel doesn't let us manage the
-      # transactions ourselves with a non-block syntax
-      lock_db = connect(db_config, logger)
-      Locking.db = lock_db
-
       require 'delayed_job_sequel'
     end
 

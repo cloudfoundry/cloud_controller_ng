@@ -8,8 +8,12 @@ module VCAP::CloudController
         end
 
         def perform
-          buildpack = Jobs::Runtime::ModelDeletion.new(Buildpack, @guid).perform
-
+          buildpack = nil
+          buildpacks_lock = Locking[name: 'buildpacks']
+          buildpacks_lock.db.transaction do
+            buildpacks_lock.lock!
+            buildpack = Jobs::Runtime::ModelDeletion.new(Buildpack, @guid).perform
+          end
           BuildpackBitsDelete.delete_when_safe(buildpack.key, @timeout) if buildpack
         end
       end
