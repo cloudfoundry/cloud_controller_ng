@@ -15,7 +15,7 @@ module VCAP::CloudController
             },
             checksum:           droplet_checksum_info,
             buildpacks:         droplet_buildpack_info,
-            stack:              droplet.buildpack_receipt_stack_name,
+            stack:              droplet.lifecycle_data.try(:stack),
             image:              droplet.docker_receipt_image,
             execution_metadata: redact(droplet.execution_metadata),
             process_types:      redact_hash(droplet.process_types),

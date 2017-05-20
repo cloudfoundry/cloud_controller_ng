@@ -28,7 +28,6 @@ module VCAP::CloudController::Presenters::V3
           droplet.lifecycle_data.stack            = 'the-happiest-stack'
           droplet.buildpack_receipt_buildpack     = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = 'the-happiest-buildpack-detect-output'
-          droplet.buildpack_receipt_stack_name    = 'the-happiest-stack'
           droplet.save
         end
 

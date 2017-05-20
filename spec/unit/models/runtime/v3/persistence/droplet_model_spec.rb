@@ -227,5 +227,13 @@ module VCAP::CloudController
         expect(droplet_model_with_only_sha1.checksum).to eq('baz')
       end
     end
+
+    describe '#buildpack_receipt_stack_name' do
+      it 'is deprecated and should be removed at some point' do
+        if Date.today >= Date.parse('2017/11/20')
+          fail "It's been six months since we stopped using #buildpack_receipt_stack_name... drop the column"
+        end
+      end
+    end
   end
 end

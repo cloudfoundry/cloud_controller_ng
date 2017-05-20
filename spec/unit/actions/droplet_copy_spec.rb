@@ -16,7 +16,6 @@ module VCAP::CloudController
         process_types:         { web: 'bundle exec rails s' },
         buildpack_receipt_buildpack_guid: 'buildpack-guid',
         buildpack_receipt_buildpack: 'buildpack',
-        buildpack_receipt_stack_name: 'stack',
         state:                 VCAP::CloudController::DropletModel::STAGED_STATE,
         execution_metadata: 'execution_metadata',
         docker_receipt_image: 'docker/image',
@@ -40,7 +39,6 @@ module VCAP::CloudController
         expect(copied_droplet.process_types).to eq({ 'web' => 'bundle exec rails s' })
         expect(copied_droplet.buildpack_receipt_buildpack_guid).to eq 'buildpack-guid'
         expect(copied_droplet.buildpack_receipt_buildpack).to eq 'buildpack'
-        expect(copied_droplet.buildpack_receipt_stack_name).to eq 'stack'
         expect(copied_droplet.execution_metadata).to eq 'execution_metadata'
         expect(copied_droplet.docker_receipt_image).to eq 'docker/image'
         expect(copied_droplet.docker_receipt_username).to eq 'dockerusername'

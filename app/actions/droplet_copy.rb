@@ -7,7 +7,6 @@ module VCAP::CloudController
       :salt,
       :process_types,
       :buildpack_receipt_buildpack,
-      :buildpack_receipt_stack_name,
       :execution_metadata,
       :docker_receipt_image,
       :docker_receipt_username,

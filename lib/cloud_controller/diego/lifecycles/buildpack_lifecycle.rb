@@ -24,7 +24,7 @@ module VCAP::CloudController
     def create_lifecycle_data_model(build)
       VCAP::CloudController::BuildpackLifecycleDataModel.create(
         buildpack: buildpack_to_use,
-        stack:     requested_stack,
+        stack:     staging_stack,
         build:     build
       )
     end

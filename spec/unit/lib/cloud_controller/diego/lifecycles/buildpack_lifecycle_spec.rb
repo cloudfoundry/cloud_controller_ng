@@ -16,7 +16,6 @@ module VCAP::CloudController
       let(:request_data) do
         {
           buildpacks: ['cool-buildpack'],
-          stack:     'cool-stack'
         }
       end
 
@@ -30,8 +29,40 @@ module VCAP::CloudController
         data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
 
         expect(data_model.buildpack).to eq('cool-buildpack')
-        expect(data_model.stack).to eq('cool-stack')
         expect(data_model.build).to eq(build)
+      end
+
+      context 'when the user specifies a stack' do
+        let(:request_data) do
+          { stack: 'cool-stack' }
+        end
+
+        it 'uses that stack' do
+          data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
+          expect(data_model.stack).to eq('cool-stack')
+        end
+      end
+
+      context 'when the user does not specify a stack' do
+        let(:request_data) { {} }
+
+        context 'when the app has a stack' do
+          before do
+            BuildpackLifecycleDataModel.make(app: app, stack: 'best-stack')
+          end
+
+          it 'uses the stack from the app' do
+            data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
+            expect(data_model.stack).to eq('best-stack')
+          end
+        end
+
+        context 'when the app does not have a stack' do
+          it 'uses the default stack' do
+            data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
+            expect(data_model.stack).to eq(Stack.default.name)
+          end
+        end
       end
     end
 
@@ -39,8 +70,8 @@ module VCAP::CloudController
       staging_message.buildpack_data.stack = 'cool-stack'
 
       expect(buildpack_lifecycle.staging_environment_variables).to eq({
-            'CF_STACK' => 'cool-stack'
-          })
+        'CF_STACK' => 'cool-stack'
+      })
     end
 
     describe 'the staging stack' do
@@ -57,19 +88,15 @@ module VCAP::CloudController
       context 'when the user does not specify a stack' do
         context 'and the app has a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: app)
+            BuildpackLifecycleDataModel.make(app: app, stack: 'cooler-stack')
           end
 
           it 'uses the value set on the app' do
-            expect(buildpack_lifecycle.staging_stack).to eq(package.app.buildpack_lifecycle_data.stack)
+            expect(buildpack_lifecycle.staging_stack).to eq('cooler-stack')
           end
         end
 
         context 'and the app does not have a stack' do
-          before do
-            BuildpackLifecycleDataModel.make(app: app, stack: nil)
-          end
-
           it 'uses the default value for stack' do
             expect(buildpack_lifecycle.staging_stack).to eq(Stack.default.name)
           end
