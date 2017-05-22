@@ -42,21 +42,20 @@
     "type": "buildpack",
     "data": {}
   },
-
   "execution_metadata": "",
   "process_types": {
-  "rake": "bundle exec rake",
-  "web": "bundle exec rackup config.ru -p $PORT"
+    "rake": "bundle exec rake",
+    "web": "bundle exec rackup config.ru -p $PORT"
   },
   "checksum": {
-  "type": "sha256",
-  "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "type": "sha256",
+    "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "buildpacks": [
-  {
-  "name": "ruby_buildpack",
-  "detect_output": "ruby 1.6.14"
-  }
+    {
+      "name": "ruby_buildpack",
+      "detect_output": "ruby 1.6.14"
+    }
   ],
   "stack": "cflinuxfs2",
   "image": null,
