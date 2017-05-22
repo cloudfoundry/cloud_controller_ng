@@ -40,7 +40,11 @@ module VCAP::CloudController
         describe '#staging_complete' do
           let(:app) { AppModel.make }
           let(:package) { PackageModel.make(app: app) }
-          let!(:build) { BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE) }
+          let!(:build) do
+            BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
+              BuildpackLifecycleDataModel.make(build: build)
+            end
+          end
           let(:staging_guid) { build.guid }
 
           before do
@@ -126,7 +130,7 @@ module VCAP::CloudController
                 context 'when a start is requested' do
                   context 'and the app has a start command' do
                     let(:runner) { instance_double(Diego::Runner, start: nil) }
-                    let!(:web_process) { App.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
+                    let!(:web_process) { ProcessModel.make(app: app, type: 'web', command: 'start me', state: 'STARTED', metadata: {}) }
 
                     before do
                       success_response[:result][:execution_metadata] = 'black-box-string'
@@ -147,7 +151,7 @@ module VCAP::CloudController
 
                   context 'when the app does not have a start command' do
                     let(:runner) { instance_double(Diego::Runner, start: nil) }
-                    let!(:web_process) { App.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
+                    let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
 
                     before do
                       allow(runners).to receive(:runner_for_app).and_return(runner)
@@ -215,7 +219,7 @@ module VCAP::CloudController
 
             context 'when a start is requested' do
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { App.make(app: app, type: 'web') }
+              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_app).and_return(runner)
@@ -237,10 +241,19 @@ module VCAP::CloudController
               end
 
               it 'records a buildpack set event for all processes' do
-                App.make(app: app, type: 'other')
+                ProcessModel.make(app: app, type: 'other')
                 expect {
                   subject.staging_complete(success_response, true)
-                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
+                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(2)
+              end
+
+              it 'records a staging complete event for the build' do
+                expect {
+                  subject.staging_complete(success_response, true)
+                }.to change { AppUsageEvent.where(state: 'STAGING_STOPPED').count }.from(0).to(1)
+                event = AppUsageEvent.where(state: 'STAGING_STOPPED').last
+                expect(event.buildpack_guid).to eq(buildpack.guid)
+                expect(event.buildpack_name).to eq(buildpack.name)
               end
 
               context 'when this is not the most recent staging result' do

@@ -51,6 +51,8 @@ module VCAP::CloudController
               detect_output:       lifecycle_data[:detected_buildpack],
               requested_buildpack: droplet.buildpack_lifecycle_data.buildpack
             )
+            droplet.save_changes(raise_on_save_failure: true)
+            build.droplet.reload
             droplet.mark_as_staged
             build.mark_as_staged
             droplet.process_types      = payload[:result][:process_types]
