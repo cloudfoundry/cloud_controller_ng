@@ -108,13 +108,22 @@ module VCAP::CloudController
         expect(buildpack_lifecycle_data_model.reload.build).to eq(build)
       end
 
-      it 'cannot be associated with both apps and droplets' do
+      it 'cannot be associated with both an app and a build' do
+        build = BuildModel.make
+        app = AppModel.make
+        buildpack_lifecycle_data_model.build = build
+        buildpack_lifecycle_data_model.app = app
+        expect(buildpack_lifecycle_data_model.valid?).to be(false)
+        expect(buildpack_lifecycle_data_model.errors.full_messages.first).to include('Must be associated with an app OR a build+droplet, but not both')
+      end
+
+      it 'cannot be associated with both an app and a droplet' do
         droplet = DropletModel.make
         app = AppModel.make
         buildpack_lifecycle_data_model.droplet = droplet
         buildpack_lifecycle_data_model.app = app
         expect(buildpack_lifecycle_data_model.valid?).to be(false)
-        expect(buildpack_lifecycle_data_model.errors.full_messages.first).to include('Cannot be associated with both a droplet and an app')
+        expect(buildpack_lifecycle_data_model.errors.full_messages.first).to include('Must be associated with an app OR a build+droplet, but not both')
       end
     end
   end

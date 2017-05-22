@@ -8,25 +8,25 @@ module VCAP::CloudController
     encrypt :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
 
     many_to_one :droplet,
-      class: '::VCAP::CloudController::DropletModel',
-      key: :droplet_guid,
-      primary_key: :guid,
+      class:                   '::VCAP::CloudController::DropletModel',
+      key:                     :droplet_guid,
+      primary_key:             :guid,
       without_guid_generation: true
 
     many_to_one :build,
-      class: '::VCAP::CloudController::BuildModel',
-      key: :build_guid,
-      primary_key: :guid,
+      class:                   '::VCAP::CloudController::BuildModel',
+      key:                     :build_guid,
+      primary_key:             :guid,
       without_guid_generation: true
 
     many_to_one :app,
-      class: '::VCAP::CloudController::AppModel',
-      key: :app_guid,
-      primary_key: :guid,
+      class:                   '::VCAP::CloudController::AppModel',
+      key:                     :app_guid,
+      primary_key:             :guid,
       without_guid_generation: true
 
     def buildpack=(buildpack)
-      self.buildpack_url = nil
+      self.buildpack_url        = nil
       self.admin_buildpack_name = nil
 
       if UriUtils.is_uri?(buildpack)
@@ -46,8 +46,9 @@ module VCAP::CloudController
     end
 
     def validate
-      return unless app_guid && droplet_guid
-      errors.add(:lifecycle_data, 'Cannot be associated with both a droplet and an app')
+      if app && (build || droplet)
+        errors.add(:lifecycle_data, 'Must be associated with an app OR a build+droplet, but not both')
+      end
     end
   end
 end
