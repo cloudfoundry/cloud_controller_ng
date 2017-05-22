@@ -68,5 +68,19 @@ RSpec.describe 'max memory policies' do
         expect(validator).to validate_without_error(task)
       end
     end
+
+    context 'when the task is SUCCEEDED' do
+      it 'does not register error' do
+        task.state = VCAP::CloudController::TaskModel::SUCCEEDED_STATE
+        expect(validator).to validate_without_error(task)
+      end
+    end
+
+    context 'when the task is FAILED' do
+      it 'does not register error' do
+        task.state = VCAP::CloudController::TaskModel::FAILED_STATE
+        expect(validator).to validate_without_error(task)
+      end
+    end
   end
 end
