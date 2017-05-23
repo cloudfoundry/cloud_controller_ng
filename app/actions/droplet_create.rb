@@ -9,6 +9,7 @@ module VCAP::CloudController
       droplet.save
 
       Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
+      record_audit_event(droplet, build.package, user_audit_info_from_build(build))
       droplet
     end
 
@@ -22,6 +23,7 @@ module VCAP::CloudController
 
       droplet.reload
       Steno.logger('build_completed').info("droplet created: #{droplet.guid}")
+      record_audit_event(droplet, build.package, user_audit_info_from_build(build))
       droplet
     end
 
@@ -33,6 +35,25 @@ module VCAP::CloudController
         package_guid:         build.package.guid,
         state:                DropletModel::STAGING_STATE,
         build:                build,
+      )
+    end
+
+    def record_audit_event(droplet, package, user_audit_info)
+      app = package.app
+      Repositories::DropletEventRepository.record_create_by_staging(
+        droplet,
+        user_audit_info,
+        app.name,
+        app.space_guid,
+        app.space.organization_guid
+      )
+    end
+
+    def user_audit_info_from_build(build)
+      UserAuditInfo.new(
+        user_guid: build.created_by_user_guid || UserAuditInfo::DATA_UNAVAILABLE,
+        user_name: build.created_by_user_name,
+        user_email: build.created_by_user_email,
       )
     end
   end

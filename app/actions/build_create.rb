@@ -49,6 +49,12 @@ module VCAP::CloudController
         staging_details.staging_guid = build.guid
         lifecycle.create_lifecycle_data_model(build)
         Repositories::AppUsageEventRepository.new.create_from_build(build, 'STAGING_STARTED')
+        app = package.app
+        Repositories::BuildEventRepository.record_build_create(build,
+                                                               @user_audit_info,
+                                                               app.name,
+                                                               app.space_guid,
+                                                               app.organization_guid)
       end
 
       logger.info("build created: #{build.guid}")

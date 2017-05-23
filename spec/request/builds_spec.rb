@@ -98,6 +98,14 @@ RSpec.describe 'Builds' do
 
       expect(last_response.status).to eq(201), last_response.body
       expect(parsed_response).to be_a_response_like(expected_response)
+
+      event = VCAP::CloudController::Event.last
+      expect(event).not_to be_nil
+      expect(event.type).to eq('audit.app.build.create')
+      expect(event.metadata).to eq({
+        'build_guid' => created_build.guid,
+        'package_guid' => package.guid,
+      })
     end
   end
 

@@ -7,19 +7,17 @@ module VCAP::CloudController
   RSpec.describe BuildCreate do
     subject(:action) do
       described_class.new(
+        user_audit_info: user_audit_info,
         memory_limit_calculator: memory_limit_calculator,
         disk_limit_calculator:   disk_limit_calculator,
-        environment_presenter:   environment_builder,
-        user_audit_info:         user_audit_info,
-      )
+        environment_presenter:   environment_builder
+                          )
     end
 
     let(:memory_limit_calculator) { double(:memory_limit_calculator) }
     let(:disk_limit_calculator) { double(:disk_limit_calculator) }
     let(:environment_builder) { double(:environment_builder) }
-    let(:user_audit_info) { instance_double(UserAuditInfo, user_guid: 'user.guid',
-                                                           user_name: 'user.name', user_email: 'user.email')
-    }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'charles@las.gym', user_guid: '1234', user_name: 'charles') }
 
     let(:staging_message) { BuildCreateMessage.create_from_http_request(request) }
     let(:request) do
@@ -77,9 +75,9 @@ module VCAP::CloudController
           expect(build.app_guid).to eq(app.guid)
           expect(build.package_guid).to eq(package.guid)
           expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
-          expect(build.created_by_user_guid).to eq('user.guid')
-          expect(build.created_by_user_name).to eq('user.name')
-          expect(build.created_by_user_email).to eq('user.email')
+          expect(build.created_by_user_guid).to eq('1234')
+          expect(build.created_by_user_name).to eq('charles')
+          expect(build.created_by_user_email).to eq('charles@las.gym')
         end
 
         it 'creates an app usage event for STAGING_STARTED' do
@@ -111,6 +109,34 @@ module VCAP::CloudController
 
           expect(event.buildpack_guid).to eq(nil)
           expect(event.buildpack_name).to eq(buildpack_git_url)
+        end
+
+        it 'creates a build audit event' do
+          build = action.create_and_stage(package: package, lifecycle: lifecycle)
+          event = Event.last
+          expect(event.type).to eq('audit.app.build.create')
+          expect(event.actor).to eq('1234')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq('charles@las.gym')
+          expect(event.actor_username).to eq('charles')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.timestamp).to be
+          expect(event.space_guid).to eq(app.space_guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+          expect(event.metadata).to eq({
+                                         'build_guid' => build.guid,
+                                         'package_guid' => package.guid,
+                                         })
+        end
+
+        it 'does not create a droplet audit event' do
+          expect {
+            action.create_and_stage(package: package, lifecycle: lifecycle)
+          }.to_not change {
+            Event.where(type: 'audit.app.droplet.create').count
+          }
         end
       end
 

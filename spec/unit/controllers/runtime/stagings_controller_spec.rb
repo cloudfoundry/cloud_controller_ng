@@ -1,6 +1,116 @@
 require 'spec_helper'
 
 module VCAP::CloudController
+  RSpec.shared_examples 'droplet staging error handling' do
+    context 'when a content-md5 is specified' do
+      it 'returns a 400 if the value does not match the md5 of the body' do
+        post url, upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'succeeds if the value matches the md5 of the body' do
+        content_md5 = digester.digest(file_content)
+        post url, upload_req, 'HTTP_CONTENT_MD5' => content_md5
+        expect(last_response.status).to eq(200)
+      end
+    end
+
+    context 'with an invalid app' do
+      it 'returns 404' do
+        post bad_droplet_url, upload_req
+        expect(last_response.status).to eq(404)
+      end
+
+      it 'does not add a job' do
+        expect {
+          post bad_droplet_url, upload_req
+        }.not_to change {
+          Delayed::Job.count
+        }
+      end
+
+      context 'when the upload path is nil' do
+        let(:upload_req) do
+          { upload: { droplet: nil } }
+        end
+
+        it 'does not add a job' do
+          expect {
+            post url, upload_req
+          }.not_to change {
+            Delayed::Job.count
+          }
+        end
+      end
+    end
+  end
+
+  RSpec.shared_examples 'a Build to Droplet stager' do
+    it 'schedules a job to upload the droplet to the blobstore' do
+      expect {
+        post url, upload_req
+      }.to change {
+        [Delayed::Job.count, DropletModel.count]
+      }.by([1, 1])
+
+      droplet = DropletModel.last
+      expect(droplet.app_guid).to eq(app_obj.guid)
+      expect(droplet.package_guid).to eq(package.guid)
+      expect(droplet.state).to eq(DropletModel::STAGING_STATE)
+      expect(droplet.build).to eq(build)
+
+      expect(last_response.status).to eq 200
+
+      job = Delayed::Job.last
+      expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
+      inner_job = job.payload_object.handler.job.job
+      expect(inner_job.droplet_guid).to eq(droplet.guid)
+    end
+
+    it 'creates an audit.app.droplet.create event' do
+      expect {
+        post url, upload_req
+      }.to change {
+        Event.count
+      }.by(1)
+
+      event = Event.last
+      droplet = DropletModel.last
+      expect(event.type).to eq('audit.app.droplet.create')
+      expect(event.actor).to eq('1234')
+      expect(event.actor_type).to eq('user')
+      expect(event.actor_name).to eq('joe@joe.com')
+      expect(event.actor_username).to eq('briggs')
+      expect(event.actee).to eq(app_obj.guid)
+      expect(event.actee_type).to eq('app')
+      expect(event.actee_name).to eq(app_obj.name)
+      expect(event.timestamp).to be
+      expect(event.space_guid).to eq(app_obj.space_guid)
+      expect(event.organization_guid).to eq(app_obj.space.organization.guid)
+      expect(event.metadata).to eq({
+        'droplet_guid' => droplet.guid,
+        'package_guid' => package.guid,
+      })
+    end
+  end
+
+  RSpec.shared_examples 'a legacy Droplet stager to support rolling deploys' do
+    it 'schedules a job to upload the existing droplet to the blobstore' do
+      expect {
+        post url, upload_req
+      }.to change {
+        Delayed::Job.count
+      }.by(1)
+
+      expect(last_response.status).to eq 200
+
+      job = Delayed::Job.last
+      expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
+      inner_job = job.payload_object.handler.job.job
+      expect(inner_job.droplet_guid).to eq(droplet.guid)
+    end
+  end
+
   RSpec.describe StagingsController do
     let(:timeout_in_seconds) { 120 }
     let(:cc_addr) { '1.2.3.4' }
@@ -69,6 +179,7 @@ module VCAP::CloudController
     before do
       Fog.unmock!
       TestConfig.override(staging_config)
+      set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
     end
 
     after { FileUtils.rm_rf(workspace) }
@@ -186,37 +297,34 @@ module VCAP::CloudController
     end
 
     describe 'POST /staging/v3/droplets/:guid/upload' do
-      context 'when the staging guid is a droplet guid (legacy for rolling deploy)' do
-        include TempFileCreator
+      include TempFileCreator
 
-        let(:droplet) { DropletModel.make }
+      before do
+        TestConfig.override(staging_config)
+        authorize staging_user, staging_password
+      end
+
+      it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
-
+        let(:package) { PackageModel.make(app: app_obj) }
+        let(:build) { BuildModel.make(
+          package:               package,
+          app:                   app_obj,
+          created_by_user_guid:  '1234',
+          created_by_user_email: 'joe@joe.com',
+          created_by_user_name:  'briggs',
+        )
+        }
+        let(:droplet) { nil }
         let(:upload_req) do
           { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
         end
 
-        before do
-          TestConfig.override(staging_config)
-          authorize staging_user, staging_password
-        end
-
-        it 'schedules a job to upload the droplet to the blobstore' do
-          expect {
-            post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
-          expect(last_response.status).to eq 200
-
-          job = Delayed::Job.last
-          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
-          inner_job = job.payload_object.handler.job.job
-          expect(inner_job.droplet_guid).to eq(droplet.guid)
-        end
+        let(:url) { "/staging/v3/droplets/#{build.guid}/upload" }
 
         it "returns a JSON body with full url and basic auth to query for job's status" do
-          post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req
+          post url, upload_req
+          expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
 
           job         = Delayed::Job.last
           config      = VCAP::CloudController::Config.config
@@ -226,53 +334,19 @@ module VCAP::CloudController
 
           expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
         end
-
-        context 'when a content-md5 is specified' do
-          it 'returns a 400 if the value does not match the md5 of the body' do
-            post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
-            expect(last_response.status).to eq(400)
-          end
-
-          it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = digester.digest(file_content)
-            post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
-            expect(last_response.status).to eq(200)
-          end
-        end
-
-        context 'with an invalid app' do
-          it 'returns 404' do
-            post '/staging/v3/droplets/bad-droplet/upload', upload_req
-            expect(last_response.status).to eq(404)
-          end
-
-          it 'does not add a job' do
-            expect {
-              post '/staging/v3/droplets/bad-droplet/upload', upload_req
-            }.not_to change {
-              Delayed::Job.count
-            }
-          end
-
-          context 'when the upload path is nil' do
-            let(:upload_req) do
-              { upload: { droplet: nil } }
-            end
-
-            it 'does not add a job' do
-              expect {
-                post "/staging/v3/droplets/#{droplet.guid}/upload", upload_req
-              }.not_to change {
-                Delayed::Job.count
-              }
-            end
-          end
-        end
-
-        include_examples 'staging bad auth', :post, 'droplets'
       end
 
-      context 'when the staging guid is a build guid' do
+      it_behaves_like 'a legacy Droplet stager to support rolling deploys' do
+        let(:droplet) { DropletModel.make }
+        let(:file_content) { 'droplet content' }
+        let(:url) { "/staging/v3/droplets/#{droplet.guid}/upload" }
+
+        let(:upload_req) do
+          { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
+        end
+      end
+
+      it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
         let(:package) { PackageModel.make(app: app_obj) }
         let(:build) { BuildModel.make(package: package, app: app_obj) }
@@ -282,129 +356,46 @@ module VCAP::CloudController
         end
 
         let(:url) { "/staging/v3/droplets/#{build.guid}/upload" }
-        include TempFileCreator
-
-        before do
-          TestConfig.override(staging_config)
-          authorize staging_user, staging_password
-        end
-
-        it 'schedules a job to upload the droplet to the blobstore' do
-          expect {
-            post url, upload_req
-          }.to change {
-            [Delayed::Job.count, DropletModel.count]
-          }.by([1, 1])
-
-          droplet = DropletModel.last
-          expect(droplet.app_guid).to eq(app_obj.guid)
-          expect(droplet.package_guid).to eq(package.guid)
-          expect(droplet.state).to eq(DropletModel::STAGING_STATE)
-          expect(droplet.build).to eq(build)
-
-          expect(last_response.status).to eq 200
-
-          job = Delayed::Job.last
-          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
-          inner_job = job.payload_object.handler.job.job
-          expect(inner_job.droplet_guid).to eq(droplet.guid)
-        end
-
-        it "returns a JSON body with full url and basic auth to query for job's status" do
-          post url, upload_req
-
-          job         = Delayed::Job.last
-          config      = VCAP::CloudController::Config.config
-          user        = config[:staging][:auth][:user]
-          password    = config[:staging][:auth][:password]
-          polling_url = "http://#{user}:#{password}@#{config[:internal_service_hostname]}:#{config[:external_port]}/staging/jobs/#{job.guid}"
-
-          expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
-        end
-
-        context 'when a content-md5 is specified' do
-          it 'returns a 400 if the value does not match the md5 of the body' do
-            post url, upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
-            expect(last_response.status).to eq(400)
-          end
-
-          it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = digester.digest(file_content)
-            post url, upload_req, 'HTTP_CONTENT_MD5' => content_md5
-            expect(last_response.status).to eq(200)
-          end
-        end
-
-        context 'with an invalid app' do
-          it 'returns 404' do
-            post '/staging/v3/droplets/bad-droplet/upload', upload_req
-            expect(last_response.status).to eq(404)
-          end
-
-          it 'does not add a job' do
-            expect {
-              post '/staging/v3/droplets/bad-droplet/upload', upload_req
-            }.not_to change {
-              Delayed::Job.count
-            }
-          end
-
-          context 'when the upload path is nil' do
-            let(:upload_req) do
-              { upload: { droplet: nil } }
-            end
-
-            it 'does not add a job' do
-              expect {
-                post url, upload_req
-              }.not_to change {
-                Delayed::Job.count
-              }
-            end
-          end
-        end
-
-        include_examples 'staging bad auth', :post, 'droplets'
+        let(:bad_droplet_url) { '/staging/v3/droplets/bad-build/upload' }
       end
+
+      include_examples 'staging bad auth', :post, 'droplets'
     end
 
     describe 'POST /internal/v4/droplets/:guid/upload' do
-      context 'when the staging guid is a droplet guid (legacy for rolling deploy)' do
-        include TempFileCreator
+      include TempFileCreator
 
-        let(:droplet) { DropletModel.make }
+      before do
+        c = staging_config.merge({
+          diego: {
+            temporary_cc_uploader_mtls: true,
+          }
+        })
+        TestConfig.override(c)
+      end
+
+      it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
+        let(:package) { PackageModel.make(app: app_obj) }
+        let(:build) { BuildModel.make(
+          package:               package,
+          app:                   app_obj,
+          created_by_user_guid:  '1234',
+          created_by_user_email: 'joe@joe.com',
+          created_by_user_name:  'briggs',
+        )
+        }
+        let(:droplet) { nil }
 
         let(:upload_req) do
           { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
         end
 
-        before do
-          c = staging_config.merge({
-            diego: {
-              temporary_cc_uploader_mtls: true,
-            }
-          })
-          TestConfig.override(c)
-        end
-
-        it 'schedules a job to upload the droplet to the blobstore' do
-          expect {
-            post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req
-          }.to change {
-            Delayed::Job.count
-          }.by(1)
-
-          expect(last_response.status).to eq 200
-
-          job = Delayed::Job.last
-          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
-          inner_job = job.payload_object.handler.job.job
-          expect(inner_job.droplet_guid).to eq(droplet.guid)
-        end
+        let(:url) { "/internal/v4/droplets/#{build.guid}/upload" }
+        let(:bad_droplet_url) { '/internal/v4/droplets/bad-build/upload' }
 
         it "returns a JSON body with full url and basic auth to query for job's status" do
-          post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req
+          post url, upload_req
 
           job         = Delayed::Job.last
           config      = VCAP::CloudController::Config.config
@@ -412,57 +403,21 @@ module VCAP::CloudController
 
           expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
         end
-
-        it 'returns a JSON body with full url containing the correct external_protocol' do
-          TestConfig.config[:external_protocol] = 'https'
-          post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req
-          expect(decoded_response.fetch('metadata').fetch('url')).to start_with('https://')
-        end
-
-        context 'when a content-md5 is specified' do
-          it 'returns a 400 if the value does not match the md5 of the body' do
-            post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
-            expect(last_response.status).to eq(400)
-          end
-
-          it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = digester.digest(file_content)
-            post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req, 'HTTP_CONTENT_MD5' => content_md5
-            expect(last_response.status).to eq(200)
-          end
-        end
-
-        context 'with an invalid app' do
-          it 'returns 404' do
-            post '/internal/v4/droplets/bad-droplet/upload', upload_req
-            expect(last_response.status).to eq(404)
-          end
-
-          it 'does not add a job' do
-            expect {
-              post '/internal/v4/droplets/bad-droplet/upload', upload_req
-            }.not_to change {
-              Delayed::Job.count
-            }
-          end
-
-          context 'when the upload path is nil' do
-            let(:upload_req) do
-              { upload: { droplet: nil } }
-            end
-
-            it 'does not add a job' do
-              expect {
-                post "/internal/v4/droplets/#{droplet.guid}/upload", upload_req
-              }.not_to change {
-                Delayed::Job.count
-              }
-            end
-          end
-        end
       end
 
-      context 'when the staging guid is a build guid' do
+      it_behaves_like 'a legacy Droplet stager to support rolling deploys' do
+        let(:droplet) { DropletModel.make }
+        let(:file_content) { 'droplet content' }
+
+        let(:upload_req) do
+          { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
+        end
+
+        let(:url) { "/internal/v4/droplets/#{droplet.guid}/upload" }
+        let(:bad_droplet_url) { '/internal/v4/droplets/bad-droplet/upload' }
+      end
+
+      it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
         let(:package) { PackageModel.make(app: app_obj) }
         let(:build) { BuildModel.make(package: package, app: app_obj) }
@@ -472,87 +427,7 @@ module VCAP::CloudController
         end
 
         let(:url) { "/internal/v4/droplets/#{build.guid}/upload" }
-        include TempFileCreator
-
-        before do
-          TestConfig.override(staging_config)
-          authorize staging_user, staging_password
-        end
-
-        it 'schedules a job to upload the droplet to the blobstore' do
-          expect {
-            post url, upload_req
-          }.to change {
-            [Delayed::Job.count, DropletModel.count]
-          }.by([1, 1])
-
-          droplet = DropletModel.last
-          expect(droplet.app_guid).to eq(app_obj.guid)
-          expect(droplet.package_guid).to eq(package.guid)
-          expect(droplet.state).to eq(DropletModel::STAGING_STATE)
-          expect(droplet.build).to eq(build)
-
-          expect(last_response.status).to eq 200
-
-          job = Delayed::Job.last
-          expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
-          inner_job = job.payload_object.handler.job.job
-          expect(inner_job.droplet_guid).to eq(droplet.guid)
-        end
-
-        it "returns a JSON body with full url and basic auth to query for job's status" do
-          post url, upload_req
-
-          job         = Delayed::Job.last
-          config      = VCAP::CloudController::Config.config
-          polling_url = "https://#{config[:internal_service_hostname]}:#{config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
-
-          expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
-        end
-
-        context 'when a content-md5 is specified' do
-          it 'returns a 400 if the value does not match the md5 of the body' do
-            post url, upload_req, 'HTTP_CONTENT_MD5' => 'the-wrong-md5'
-            expect(last_response.status).to eq(400)
-          end
-
-          it 'succeeds if the value matches the md5 of the body' do
-            content_md5 = digester.digest(file_content)
-            post url, upload_req, 'HTTP_CONTENT_MD5' => content_md5
-            expect(last_response.status).to eq(200)
-          end
-        end
-
-        context 'with an invalid app' do
-          it 'returns 404' do
-            post '/staging/v3/droplets/bad-droplet/upload', upload_req
-            expect(last_response.status).to eq(404)
-          end
-
-          it 'does not add a job' do
-            expect {
-              post '/staging/v3/droplets/bad-droplet/upload', upload_req
-            }.not_to change {
-              Delayed::Job.count
-            }
-          end
-
-          context 'when the upload path is nil' do
-            let(:upload_req) do
-              { upload: { droplet: nil } }
-            end
-
-            it 'does not add a job' do
-              expect {
-                post url, upload_req
-              }.not_to change {
-                Delayed::Job.count
-              }
-            end
-          end
-        end
-
-        include_examples 'staging bad auth', :post, 'droplets'
+        let(:bad_droplet_url) { '/internal/v4/droplets/bad-build/upload' }
       end
     end
 

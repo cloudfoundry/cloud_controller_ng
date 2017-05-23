@@ -13,16 +13,8 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user.guid) }
 
       describe '#record_create_by_staging' do
-        let(:request_attrs) do
-          {
-            'app_guid' => 'app-guid',
-            'type'     => 'docker',
-            'url'      => 'dockerurl.example.com'
-          }
-        end
-
         it 'creates a new audit.app.droplet.create event' do
-          event = DropletEventRepository.record_create_by_staging(droplet, user_audit_info, request_attrs, app.name, package.space.guid, package.space.organization.guid)
+          event = DropletEventRepository.record_create_by_staging(droplet, user_audit_info, app.name, package.space.guid, package.space.organization.guid)
           event.reload
 
           expect(event.type).to eq('audit.app.droplet.create')
@@ -38,11 +30,6 @@ module VCAP::CloudController
           metadata = event.metadata
           expect(metadata['droplet_guid']).to eq(droplet.guid)
           expect(metadata['package_guid']).to eq(package.guid)
-
-          request = event.metadata['request']
-          expect(request['app_guid']).to eq('app-guid')
-          expect(request['type']).to eq('docker')
-          expect(request['url']).to eq('dockerurl.example.com')
         end
       end
 

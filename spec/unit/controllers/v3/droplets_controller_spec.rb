@@ -6,10 +6,10 @@ RSpec.describe DropletsController, type: :controller do
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
     let(:package) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-                                               type:                                            VCAP::CloudController::PackageModel::BITS_TYPE,
-                                               state:                                           VCAP::CloudController::PackageModel::READY_STATE)
+                                               type:  VCAP::CloudController::PackageModel::BITS_TYPE,
+                                               state: VCAP::CloudController::PackageModel::READY_STATE)
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(user: VCAP::CloudController::User.make(guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
 
     before do

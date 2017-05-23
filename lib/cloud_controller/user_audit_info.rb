@@ -1,5 +1,7 @@
 module VCAP::CloudController
   class UserAuditInfo
+    DATA_UNAVAILABLE = 'UNKNOWN'.freeze
+
     attr_reader :user_email, :user_name, :user_guid
 
     def initialize(user_email:, user_name: nil, user_guid:)

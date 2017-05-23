@@ -1,13 +1,12 @@
 module VCAP::CloudController
   module Repositories
     class DropletEventRepository
-      def self.record_create_by_staging(droplet, user_audit_info, request_attrs, v3_app_name, space_guid, org_guid)
+      def self.record_create_by_staging(droplet, user_audit_info, v3_app_name, space_guid, org_guid)
         Loggregator.emit(droplet.app_guid, "Creating droplet for app with guid #{droplet.app_guid}")
 
         metadata = {
           droplet_guid: droplet.guid,
-          package_guid: droplet.package.guid,
-          request:      request_attrs
+          package_guid: droplet.package.guid
         }
 
         Event.create(

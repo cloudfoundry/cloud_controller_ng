@@ -14,9 +14,9 @@ module VCAP::CloudController
         subject(:handler) { StagingCompletionHandler.new(build, runners) }
 
         before do
-          allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
-          allow(Steno).to receive(:logger).with('build_completed').and_return(logger)
+          allow(Steno).to receive(:logger).and_return(logger)
           allow(Loggregator).to receive(:emit_error)
+          set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
         end
 
         describe '#staging_complete' do

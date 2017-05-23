@@ -1,4 +1,5 @@
 require 'repositories/app_event_repository'
+require 'repositories/build_event_repository'
 require 'repositories/space_event_repository'
 require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
