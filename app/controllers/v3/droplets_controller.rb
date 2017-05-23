@@ -45,7 +45,7 @@ class DropletsController < ApplicationController
 
     unauthorized! unless can_write?(space.guid)
 
-    droplet_deletor = DropletDelete.new(user_audit_info, stagers)
+    droplet_deletor = DropletDelete.new(user_audit_info)
     droplet_deletor.delete(droplet)
 
     head :no_content

@@ -2,9 +2,8 @@ require 'repositories/droplet_event_repository'
 
 module VCAP::CloudController
   class DropletDelete
-    def initialize(user_audit_info, stagers)
+    def initialize(user_audit_info)
       @user_audit_info = user_audit_info
-      @stagers = stagers
     end
 
     def delete(droplets)
