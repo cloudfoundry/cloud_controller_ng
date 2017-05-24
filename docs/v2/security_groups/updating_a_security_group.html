@@ -158,26 +158,34 @@ log (enables logging for the egress rule), description (optional description of 
                 <ul class="example_values">
                       <li><pre>[
   {
-    &quot;protocol&quot;: &quot;icmp&quot;,
-    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
-    &quot;type&quot;: 0,
-    &quot;code&quot;: 1
+    "protocol": "tcp",
+    "destination": "10.10.10.0/24",
+    "ports": "443,80,8080"
   },
   {
-    &quot;protocol&quot;: &quot;tcp&quot;,
-    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
-    &quot;ports&quot;: &quot;2048-3000&quot;,
-    &quot;log&quot;: true
+    "protocol": "icmp",
+    "destination": "10.10.10.0/24",
+    "type": 8,
+    "code": 0,
+    "description": "Allow ping requests to private services"
   },
   {
-    &quot;protocol&quot;: &quot;udp&quot;,
-    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
-    &quot;ports&quot;: &quot;53, 5353&quot;
+    "protocol": "udp",
+    "destination": "10.68.192.11-10.68.192.12",
+    "ports": "123",
+    "description": "Allow syncing with time server"
   },
   {
-    &quot;protocol&quot;: &quot;all&quot;,
-    &quot;destination&quot;: &quot;0.0.0.0/0&quot;,
-    &quot;description&quot;: &quot;This rule allows access to all ips and protocols&quot;
+    "protocol": "tcp",
+    "destination": "10.68.192.13",
+    "ports": "4000-5000",
+    "description": "Allow tcp requests using our custom protocol",
+    "log": true
+  },
+  {
+    "protocol": "all",
+    "destination": "192.168.10.2-192.168.10.5",
+    "log": true
   }
 ]</pre></li>
                 </ul>
