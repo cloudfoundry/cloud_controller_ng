@@ -115,24 +115,6 @@ module VCAP::CloudController
         event = AppUsageEvent.last
         expect(event).to_not be_nil
         expect(event.state).to eq('STAGING_STOPPED')
-        expect(event.previous_state).to eq('STAGING')
-        expect(event.instance_count).to eq(1)
-        expect(event.previous_instance_count).to eq(1)
-        expect(event.memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
-        expect(event.previous_memory_in_mb_per_instance).to eq(BuildModel::STAGING_MEMORY)
-
-        expect(event.org_guid).to eq(build_model.app.space.organization.guid)
-        expect(event.space_guid).to eq(build_model.app.space.guid)
-        expect(event.parent_app_guid).to eq(build_model.app.guid)
-        expect(event.parent_app_name).to eq(build_model.app.name)
-        expect(event.package_guid).to eq(build_model.package_guid)
-        expect(event.app_name).to eq('')
-        expect(event.app_guid).to eq('')
-        expect(event.package_state).to eq(PackageModel::READY_STATE)
-        expect(event.previous_package_state).to eq(PackageModel::READY_STATE)
-
-        expect(event.buildpack_guid).to eq(nil)
-        expect(event.buildpack_name).to eq(nil)
       end
 
       context 'when a valid reason is specified' do
@@ -194,6 +176,22 @@ module VCAP::CloudController
       it 'creates an app usage event for STAGING_STOPPED' do
         expect {
           build_model.mark_as_staged
+        }.to change {
+          AppUsageEvent.count
+        }.by(1)
+
+        event = AppUsageEvent.last
+        expect(event).to_not be_nil
+        expect(event.state).to eq('STAGING_STOPPED')
+      end
+    end
+
+    describe '#record_staging_stopped' do
+      before { build_model.update(state: BuildModel::STAGING_STATE) }
+
+      it 'creates an app usage event for STAGING_STOPPED' do
+        expect {
+          build_model.record_staging_stopped
         }.to change {
           AppUsageEvent.count
         }.by(1)

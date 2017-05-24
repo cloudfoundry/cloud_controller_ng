@@ -11,6 +11,8 @@ module VCAP::CloudController
         begin
           next if build.in_final_state?
           @stagers.stager_for_app(build.app).stop_stage(build.guid)
+
+          build.record_staging_stopped
         rescue => e
           logger.error("failed to request staging cancellation for build: #{build.guid}, error: #{e.message}")
         end
@@ -21,10 +23,6 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.build_delete')
-    end
-
-    def app_usage_event_repository
-      Repositories::AppUsageEventRepository.new
     end
   end
 end

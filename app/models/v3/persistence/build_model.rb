@@ -72,16 +72,20 @@ module VCAP::CloudController
       self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
 
       self.db.transaction do
-        app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
+        record_staging_stopped
         save_changes(raise_on_save_failure: true)
       end
     end
 
     def mark_as_staged
       self.db.transaction do
-        app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
+        record_staging_stopped
         self.state = STAGED_STATE
       end
+    end
+
+    def record_staging_stopped
+      app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
     end
 
     private
