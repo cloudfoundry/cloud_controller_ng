@@ -472,6 +472,7 @@ module VCAP::CloudController
     app { AppModel.make }
     route { Route.make(space: app.space) }
     process_type { 'web' }
+    app_port { -1 }
   end
 
   TestModel.blueprint do

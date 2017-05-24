@@ -8,6 +8,7 @@ module VCAP::CloudController
     many_to_one :process, class: 'VCAP::CloudController::App', key: [:app_guid, :process_type], primary_key: [:app_guid, :type]
 
     def validate
+      validates_presence [:app_port]
       validates_unique [:app_guid, :route_guid, :process_type, :app_port]
     end
 

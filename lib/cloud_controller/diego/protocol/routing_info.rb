@@ -53,7 +53,7 @@ module VCAP::CloudController
         def route_id_app_ports_map
           process.route_mappings(true).each_with_object({}) do |route_map, route_app_port_map|
             route_app_port_map[route_map.route_guid] = [] if route_app_port_map[route_map.route_guid].nil?
-            if route_map.app_port.present?
+            if route_map.app_port.present? && route_map.app_port != VCAP::CloudController::App::NO_APP_PORT_SPECIFIED
               route_app_port_map[route_map.route_guid].push(route_map.app_port)
             elsif process.docker? && process.docker_ports.present?
               route_app_port_map[route_map.route_guid].push(process.docker_ports.first)

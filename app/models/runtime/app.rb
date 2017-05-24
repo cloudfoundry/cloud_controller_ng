@@ -26,8 +26,9 @@ module VCAP::CloudController
       self.file_descriptors ||= Config.config[:instance_file_descriptor_limit] if Config.config[:instance_file_descriptor_limit]
     end
 
-    DEFAULT_HTTP_PORT = 8080
-    DEFAULT_PORTS     = [DEFAULT_HTTP_PORT].freeze
+    NO_APP_PORT_SPECIFIED = -1
+    DEFAULT_HTTP_PORT     = 8080
+    DEFAULT_PORTS         = [DEFAULT_HTTP_PORT].freeze
 
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     one_to_many :service_bindings, key: :app_guid, primary_key: :app_guid, without_guid_generation: true

@@ -72,13 +72,6 @@ module VCAP::CloudController
           context 'docker' do
             let(:process) { AppFactory.make(diego: true, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
             let(:app) { process.app }
-            let(:requested_port) { nil }
-
-            it 'allows null when app_port is not requested' do
-              mapping = route_mapping_create.add
-              expect(app.reload.routes).to eq([route])
-              expect(mapping.app_port).to be_nil
-            end
 
             context 'when app_port is requested' do
               let(:requested_port) { 8888 }
@@ -91,6 +84,16 @@ module VCAP::CloudController
                 mapping = route_mapping_create.add
                 expect(app.reload.routes).to eq([route])
                 expect(mapping.app_port).to eq(8888)
+              end
+            end
+
+            context 'when app_port is not specified' do
+              let(:requested_port) { nil }
+
+              it 'defaults to "App::NO_APP_PORT_SPECIFIED"' do
+                mapping = route_mapping_create.add
+                expect(app.reload.routes).to eq([route])
+                expect(mapping.app_port).to eq(App::NO_APP_PORT_SPECIFIED)
               end
             end
           end
