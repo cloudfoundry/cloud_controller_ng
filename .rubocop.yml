@@ -137,6 +137,9 @@ Style/NumericLiteralPrefix:
 Style/NumericLiterals:
   Enabled: false
 
+Style/NumericPredicate:
+  Enabled: false
+
 Style/PredicateName:
   Enabled: false
 
@@ -159,6 +162,9 @@ Style/SpaceAroundEqualsInParameterDefault:
   EnforcedStyle: no_space
 
 Style/StructInheritance:
+  Enabled: false
+
+Style/TernaryParentheses:
   Enabled: false
 
 Style/TrailingCommaInArguments:
