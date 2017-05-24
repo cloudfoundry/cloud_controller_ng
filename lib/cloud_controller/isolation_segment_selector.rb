@@ -4,7 +4,7 @@ module VCAP::CloudController
       def for_space(space)
         if space.isolation_segment_model
           if !space.isolation_segment_model.is_shared_segment?
-            return space.isolation_segment_model.name
+            space.isolation_segment_model.name
           end
         else
           for_org(space.organization)
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       def for_org(org)
         if org.default_isolation_segment_model && !org.default_isolation_segment_model.is_shared_segment?
-          return org.default_isolation_segment_model.name
+          org.default_isolation_segment_model.name
         end
       end
     end

@@ -30,6 +30,14 @@ Lint/UnusedMethodArgument:
 Metrics/AbcSize:
   Enabled: false
 
+Metrics/BlockLength:
+  Exclude:
+    - db/migrations/**/*
+    - spec/**/*
+    - lib/cloud_controller/config.rb
+    - config/routes.rb
+  Max: 50
+
 Metrics/ClassLength:
   Enabled: false
 

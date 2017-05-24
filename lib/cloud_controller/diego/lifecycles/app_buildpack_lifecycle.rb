@@ -46,8 +46,6 @@ module VCAP::CloudController
     def buildpack
       if message.buildpack_data.requested?(:buildpacks)
         message.buildpack_data.buildpacks.try(:first)
-      else
-        return nil
       end
     end
 

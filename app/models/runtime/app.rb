@@ -507,7 +507,7 @@ module VCAP::CloudController
         known_buildpack = Buildpack.find(name: app.lifecycle_data.buildpack)
         return known_buildpack if known_buildpack
 
-        return CustomBuildpack.new(app.lifecycle_data.buildpack)
+        CustomBuildpack.new(app.lifecycle_data.buildpack)
       else
         AutoDetectionBuildpack.new
       end
