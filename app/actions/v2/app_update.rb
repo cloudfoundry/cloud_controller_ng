@@ -1,4 +1,5 @@
 require 'actions/v2/app_stop'
+require 'actions/staging_cancel'
 
 module VCAP::CloudController
   module V2
@@ -110,7 +111,7 @@ module VCAP::CloudController
           when App::STARTED
             AppStart.start_without_event(app)
           when App::STOPPED
-            V2::AppStop.stop(app, @stagers)
+            V2::AppStop.stop(app, StagingCancel.new(@stagers))
           end
         end
       end

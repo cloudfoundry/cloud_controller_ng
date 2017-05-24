@@ -1,4 +1,5 @@
 require 'actions/v2/app_stage'
+require 'actions/staging_cancel'
 
 module VCAP::CloudController
   class RestagesController < RestController::ModelController
@@ -32,7 +33,7 @@ module VCAP::CloudController
           raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
         end
 
-        V2::AppStop.stop(process.app, @stagers)
+        V2::AppStop.stop(process.app, StagingCancel.new(@stagers))
         process.app.update(droplet_guid: nil)
         AppStart.start_without_event(process.app)
       end

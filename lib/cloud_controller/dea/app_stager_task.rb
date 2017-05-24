@@ -1,5 +1,6 @@
 require 'cloud_controller/multi_response_message_bus_request'
 require 'presenters/message_bus/service_binding_presenter'
+require 'actions/staging_cancel'
 
 module VCAP::CloudController
   module Dea
@@ -250,7 +251,7 @@ module VCAP::CloudController
           build.lock!
           build.fail_to_stage!(error)
 
-          V2::AppStop.stop(build.app, stagers)
+          V2::AppStop.stop(build.app, StagingCancel.new(stagers))
         end
       end
 

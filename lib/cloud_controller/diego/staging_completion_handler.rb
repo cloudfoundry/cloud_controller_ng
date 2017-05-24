@@ -1,3 +1,5 @@
+require 'actions/staging_cancel'
+
 module VCAP::CloudController
   module Diego
     class StagingCompletionHandler
@@ -54,7 +56,7 @@ module VCAP::CloudController
             build.fail_to_stage!(payload[:error][:id], payload[:error][:message])
 
             if with_start
-              V2::AppStop.stop(build.app, stagers)
+              V2::AppStop.stop(build.app, StagingCancel.new(stagers))
             end
           end
         rescue => e
