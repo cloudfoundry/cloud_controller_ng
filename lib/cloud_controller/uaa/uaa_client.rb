@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     def token_info
       token_issuer.client_credentials_grant
-    rescue CF::UAA::NotFound => e
+    rescue CF::UAA::NotFound, CF::UAA::BadTarget, CF::UAA::BadResponse => e
       logger.error("UAA request for token failed: #{e.inspect}")
       raise UaaUnavailable.new
     end
@@ -39,7 +39,8 @@ module VCAP::CloudController
         results_hash[resource['id']] = resource['username']
         results_hash
       end
-    rescue UaaUnavailable, CF::UAA::TargetError
+    rescue UaaUnavailable, CF::UAA::UAAError => e
+      logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
       {}
     end
 

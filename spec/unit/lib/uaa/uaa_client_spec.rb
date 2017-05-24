@@ -29,6 +29,44 @@ module VCAP::CloudController
       end
     end
 
+    describe '#token_info' do
+      context 'when token information can be retrieved successfully' do
+        it 'returns token_info from the token_issuer' do
+          expect(uaa_client.token_info).to eq(token_info)
+        end
+      end
+
+      context 'when a CF::UAA::NotFound error occurs' do
+        before do
+          allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::NotFound)
+        end
+
+        it 'raises a UaaUnavailable error' do
+          expect { uaa_client.token_info }.to raise_error(UaaUnavailable)
+        end
+      end
+
+      context 'when a CF::UAA::BadTarget error occurs' do
+        before do
+          allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::BadTarget)
+        end
+
+        it 'raises a UaaUnavailable error' do
+          expect { uaa_client.token_info }.to raise_error(UaaUnavailable)
+        end
+      end
+
+      context 'when a CF::UAA::BadResponse error occurs' do
+        before do
+          allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::BadResponse)
+        end
+
+        it 'raises a UaaUnavailable error' do
+          expect { uaa_client.token_info }.to raise_error(UaaUnavailable)
+        end
+      end
+    end
+
     describe '#get_clients' do
       let(:scim) { double('scim') }
 
@@ -99,14 +137,23 @@ module VCAP::CloudController
       end
 
       context 'when the endpoint returns an error' do
+        let(:uaa_error) { CF::UAA::UAAError.new('some error') }
+        let(:mock_logger) { double(:steno_logger, error: nil) }
+
         before do
-          scim = double('scim')
-          allow(scim).to receive(:query).and_raise(CF::UAA::TargetError)
+          scim = instance_double(CF::UAA::Scim)
+          allow(scim).to receive(:query).and_raise(uaa_error)
           allow(uaa_client).to receive(:scim).and_return(scim)
+          allow(uaa_client).to receive(:logger).and_return(mock_logger)
         end
 
         it 'returns an empty hash' do
           expect(uaa_client.usernames_for_ids([userid_1])).to eq({})
+        end
+
+        it 'logs the error' do
+          uaa_client.usernames_for_ids([userid_1])
+          expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.inspect}")
         end
       end
     end
