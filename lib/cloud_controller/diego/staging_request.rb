@@ -30,14 +30,14 @@ module VCAP::CloudController
         @schema ||= Membrane::SchemaParser.parse do
           {
             app_id:                   String,
-            file_descriptors:         Fixnum,
-            memory_mb:                Fixnum,
-            disk_mb:                  Fixnum,
+            file_descriptors:         Integer,
+            memory_mb:                Integer,
+            disk_mb:                  Integer,
             environment:              [
               { 'name' => String, 'value' => String },
             ],
             optional(:egress_rules) => Array,
-            timeout:                  Fixnum,
+            timeout:                  Integer,
             log_guid:                 String,
             lifecycle:                String,
             optional(:lifecycle_data) => Hash,

@@ -17,6 +17,10 @@ Lint/AmbiguousRegexpLiteral:
 Lint/HandleExceptions:
   Enabled: false
 
+Lint/UnifiedInteger:
+  Exclude:
+    - db/migrations/**/*
+
 Lint/UnusedBlockArgument:
   Enabled: false
 
@@ -152,6 +156,9 @@ Style/RedundantSelf:
 Style/RescueModifier:
   Enabled: false
 
+Style/SafeNavigation:
+  Enabled: false
+
 Style/SignalException:
   Enabled: false
 
@@ -177,6 +184,9 @@ Style/TrailingUnderscoreVariable:
   Enabled: false
 
 Style/TrivialAccessors:
+  Enabled: false
+
+Style/VariableNumber:
   Enabled: false
 
 Style/WordArray:

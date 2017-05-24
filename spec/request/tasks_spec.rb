@@ -247,7 +247,7 @@ RSpec.describe 'Tasks' do
       put "/v3/tasks/#{task.guid}/cancel", nil, developer_headers
 
       expect(last_response.status).to eq(202)
-      parsed_body = JSON.load(last_response.body)
+      parsed_body = JSON.parse(last_response.body)
       expect(parsed_body['guid']).to eq(task.guid)
       expect(parsed_body['name']).to eq('task')
       expect(parsed_body['command']).to eq('echo task')

@@ -258,7 +258,7 @@ module VCAP::CloudController
           post '/v2/service_brokers', body
 
           expect(last_response).to have_status_code(201)
-          parsed_body = JSON.load(last_response.body)
+          parsed_body = JSON.parse(last_response.body)
           expect(parsed_body['entity']).to include({ 'space_guid' => space.guid })
           expect(a_request(:get, broker_catalog_url)).to have_been_made
 
@@ -314,7 +314,7 @@ module VCAP::CloudController
           post '/v2/service_brokers', body
 
           expect(last_response).to have_status_code(404)
-          parsed_body = JSON.load(last_response.body)
+          parsed_body = JSON.parse(last_response.body)
           expect(parsed_body['description']).to include('Space not found')
         end
       end

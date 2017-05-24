@@ -19,7 +19,7 @@ module VCAP::CloudController
         :info => {
           name: String,
           build: String,
-          version: Fixnum,
+          version: Integer,
           support_address: String,
           description: String,
           optional(:app_ssh_endpoint) => String,
@@ -31,27 +31,27 @@ module VCAP::CloudController
         :system_domain_organization => enum(String, NilClass),
         :app_domains => Array,
         :app_events => {
-          cutoff_age_in_days: Fixnum
+          cutoff_age_in_days: Integer
         },
         :app_usage_events => {
-          cutoff_age_in_days: Fixnum
+          cutoff_age_in_days: Integer
         },
         :audit_events => {
-          cutoff_age_in_days: Fixnum
+          cutoff_age_in_days: Integer
         },
         :failed_jobs => {
-          cutoff_age_in_days: Fixnum
+          cutoff_age_in_days: Integer
         },
         :completed_tasks => {
-          cutoff_age_in_days: Fixnum
+          cutoff_age_in_days: Integer
         },
-        :default_app_memory => Fixnum,
-        :default_app_disk_in_mb => Fixnum,
-        optional(:maximum_app_disk_in_mb) => Fixnum,
-        :default_health_check_timeout => Fixnum,
-        :maximum_health_check_timeout => Fixnum,
+        :default_app_memory => Integer,
+        :default_app_disk_in_mb => Integer,
+        optional(:maximum_app_disk_in_mb) => Integer,
+        :default_health_check_timeout => Integer,
+        :maximum_health_check_timeout => Integer,
 
-        optional(:instance_file_descriptor_limit) => Fixnum,
+        optional(:instance_file_descriptor_limit) => Integer,
 
         optional(:bits_service) => {
           enabled: bool,
@@ -116,10 +116,10 @@ module VCAP::CloudController
         },
 
         :staging => {
-          :timeout_in_seconds => Fixnum,
-          optional(:minimum_staging_memory_mb) => Fixnum,
-          optional(:minimum_staging_disk_mb) => Fixnum,
-          optional(:minimum_staging_file_descriptor_limit) => Fixnum,
+          :timeout_in_seconds => Integer,
+          optional(:minimum_staging_memory_mb) => Integer,
+          optional(:minimum_staging_disk_mb) => Integer,
+          optional(:minimum_staging_file_descriptor_limit) => Integer,
           :auth => {
             user: String,
             password: String,
@@ -129,17 +129,17 @@ module VCAP::CloudController
         :cc_partition => String,
 
         optional(:default_account_capacity) => {
-          memory: Fixnum,   #:default => 2048,
-          app_uris: Fixnum, #:default => 4,
-          services: Fixnum, #:default => 16,
-          apps: Fixnum, #:default => 20
+          memory: Integer,   #:default => 2048,
+          app_uris: Integer, #:default => 4,
+          services: Integer, #:default => 16,
+          apps: Integer, #:default => 20
         },
 
         optional(:admin_account_capacity) => {
-          memory: Fixnum,   #:default => 2048,
-          app_uris: Fixnum, #:default => 4,
-          services: Fixnum, #:default => 16,
-          apps: Fixnum, #:default => 20
+          memory: Integer,   #:default => 2048,
+          app_uris: Integer, #:default => 4,
+          services: Integer, #:default => 16,
+          apps: Integer, #:default => 20
         },
 
         optional(:index)       => Integer,    # Component index (cc-0, cc-1, etc)
