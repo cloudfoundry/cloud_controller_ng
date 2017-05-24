@@ -8,11 +8,11 @@ module VCAP::CloudController
       builds = Array(builds)
 
       builds.each do |build|
-        begin
-          next if build.in_final_state?
-          @stagers.stager_for_app(build.app).stop_stage(build.guid)
+        next if build.in_final_state?
+        build.record_staging_stopped
 
-          build.record_staging_stopped
+        begin
+          @stagers.stager_for_app(build.app).stop_stage(build.guid)
         rescue => e
           logger.error("failed to request staging cancellation for build: #{build.guid}, error: #{e.message}")
         end
