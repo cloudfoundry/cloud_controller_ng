@@ -158,5 +158,58 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#staging_memory_in_mb' do
+      subject(:build_create_message) { BuildCreateMessage.new(params) }
+      let(:params) { { staging_memory_in_mb: 765 } }
+
+      it 'returns the staging_memory_in_mb' do
+        expect(build_create_message.staging_memory_in_mb).to eq(765)
+      end
+
+      context 'when not provided' do
+        let(:params) { nil }
+
+        it 'returns nil' do
+          expect(build_create_message.staging_memory_in_mb).to eq(nil)
+        end
+      end
+    end
+
+    describe '#staging_disk_in_mb' do
+      subject(:build_create_message) { BuildCreateMessage.new(params) }
+      let(:params) { { staging_disk_in_mb: 765 } }
+
+      it 'returns the staging_disk_in_mb' do
+        expect(build_create_message.staging_disk_in_mb).to eq(765)
+      end
+
+      context 'when not provided' do
+        let(:params) { nil }
+
+        it 'returns nil' do
+          expect(build_create_message.staging_disk_in_mb).to eq(nil)
+        end
+      end
+    end
+
+    describe '#environment variables' do
+      subject(:build_create_message) { BuildCreateMessage.new(params) }
+
+      let(:env_vars) { { name: 'value' } }
+      let(:params) { { environment_variables: env_vars } }
+
+      it 'returns the staging_disk_in_mb' do
+        expect(build_create_message.environment_variables).to eq(env_vars)
+      end
+
+      context 'when not provided' do
+        let(:params) { nil }
+
+        it 'returns nil' do
+          expect(build_create_message.environment_variables).to eq(nil)
+        end
+      end
+    end
   end
 end
