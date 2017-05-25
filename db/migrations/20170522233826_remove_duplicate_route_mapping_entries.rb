@@ -9,5 +9,7 @@ Sequel.migration do
     self[:route_mappings].exclude(id: route_mappings_ids_to_keep).where(app_port: nil).each do |row|
       self[:route_mappings].where(id: row[:id]).delete
     end
+
+    self[:route_mappings].where(app_port: nil).update(app_port: -1)
   end
 end
