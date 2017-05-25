@@ -25,6 +25,10 @@ module CloudController
         error_handling { wrapped_client.blob(*args) }
       end
 
+      def files
+        error_handling { wrapped_client.files }
+      end
+
       def delete_blob(*args)
         error_handling { wrapped_client.delete_blob(*args) }
       end

@@ -119,6 +119,12 @@ module CloudController
         end
       end
 
+      def files
+        with_retries(__method__.to_s, {}) do
+          @wrapped_client.files
+        end
+      end
+
       private
 
       def with_retries(log_prefix, log_data)

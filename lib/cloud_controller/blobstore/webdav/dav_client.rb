@@ -164,6 +164,9 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
+      def files
+      end
+
       private
 
       def url(key)

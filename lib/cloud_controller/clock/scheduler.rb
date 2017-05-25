@@ -13,6 +13,7 @@ module VCAP::CloudController
       { name: 'completed_tasks', class: Jobs::Runtime::PruneCompletedTasks, time: '23:00' },
       { name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00' },
       { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },
+      # { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:00' },
     ].freeze
 
     FREQUENTS = [

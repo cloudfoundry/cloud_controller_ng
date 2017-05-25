@@ -39,6 +39,9 @@ module CloudController
       def blob(key)
         Blob.new
       end
+
+      def files
+      end
     end
   end
 end
