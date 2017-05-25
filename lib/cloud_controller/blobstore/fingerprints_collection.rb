@@ -38,8 +38,10 @@ module CloudController
 
       def parse_mode(raw_mode)
         mode = raw_mode ? raw_mode.to_i(8) : DEFAULT_FILE_MODE
-        raise CloudController::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid',
-          "File mode '#{raw_mode}' is invalid. Minimum file mode is '0600'") unless (mode & 0600) == 0600
+        unless (mode & 0600) == 0600
+          raise CloudController::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid',
+            "File mode '#{raw_mode}' is invalid. Minimum file mode is '0600'")
+        end
         mode
       end
 

@@ -17,6 +17,9 @@ Lint/AmbiguousRegexpLiteral:
 Lint/HandleExceptions:
   Enabled: false
 
+Lint/ShadowedException:
+  Enabled: false
+
 Lint/UnifiedInteger:
   Exclude:
     - db/migrations/**/*

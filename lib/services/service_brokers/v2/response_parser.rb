@@ -480,6 +480,7 @@ module VCAP::Services
             when 408
               raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, response)
             when 409, 410, 422
+              nil
             when 400..499
               raise Errors::ServiceBrokerRequestRejected.new(uri.to_s, method, response)
             when 500..599

@@ -111,7 +111,7 @@ module VCAP::CloudController
 
         case response.code
         when '202', '404'
-          # success
+          nil # success
         else
           raise CloudController::Errors::ApiError.new_from_details('RunnerError', "stop app failed: #{response.code}")
         end
@@ -140,7 +140,7 @@ module VCAP::CloudController
 
         case response.code
         when '202', '404'
-          # success
+          nil # success
         else
           raise CloudController::Errors::ApiError.new_from_details('RunnerError', "stop index failed: #{response.code}")
         end

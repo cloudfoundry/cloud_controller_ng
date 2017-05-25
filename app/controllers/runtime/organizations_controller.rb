@@ -61,9 +61,11 @@ module VCAP::CloudController
 
     def before_update(org)
       if request_attrs['default_isolation_segment_guid']
-        raise CloudController::Errors::ApiError.new_from_details(
-          'ResourceNotFound',
-          'Could not find Isolation Segment to set as the default.') unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
+        unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
+          raise CloudController::Errors::ApiError.new_from_details(
+            'ResourceNotFound',
+            'Could not find Isolation Segment to set as the default.')
+        end
       end
 
       super(org)

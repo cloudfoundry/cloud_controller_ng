@@ -52,7 +52,7 @@ module UserHelpers
     when 'space_manager'
       space.add_manager(current_user)
     when 'org_user'
-      # no-op
+      nil
     when 'org_auditor'
       org.add_auditor(current_user)
     when 'org_billing_manager'
