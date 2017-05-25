@@ -58,8 +58,7 @@ module VCAP::CloudController::RestController
 
     # Override this to set dependencies
     #
-    def inject_dependencies(dependencies={})
-    end
+    def inject_dependencies(dependencies={}); end
 
     # Main entry point for the rest routes.  Acts as the final location
     # for catching any unhandled sequel and db exceptions.  By calling
@@ -159,20 +158,16 @@ module VCAP::CloudController::RestController
     end
 
     # hook called before +create+
-    def before_create
-    end
+    def before_create; end
 
     # hook called after +create+
-    def after_create(obj)
-    end
+    def after_create(obj); end
 
     # hook called before +update+, +add_related+ or +remove_related+
-    def before_update(obj)
-    end
+    def before_update(obj); end
 
     # hook called after +update+, +add_related+ or +remove_related+
-    def after_update(obj)
-    end
+    def after_update(obj); end
 
     def check_write_permissions!
       admin       = SecurityContext.roles.admin?

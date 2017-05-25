@@ -36,8 +36,7 @@ module VCAP::CloudController
       end
     end
 
-    def trial_db_allowed=(_)
-    end
+    def trial_db_allowed=(_); end
 
     def trial_db_allowed
       false

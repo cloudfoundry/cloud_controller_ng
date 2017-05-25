@@ -57,8 +57,7 @@ module VCAP::CloudController
           config[:diego][:docker_staging_stack]
         end
 
-        def task_environment_variables
-        end
+        def task_environment_variables; end
       end
     end
   end

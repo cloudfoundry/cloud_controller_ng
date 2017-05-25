@@ -141,8 +141,7 @@ module VCAP::CloudController
             [:allowed]
           end
 
-          def allowed=(_)
-          end
+          def allowed=(_); end
         end
       end
 
@@ -169,8 +168,7 @@ module VCAP::CloudController
             [:allowed]
           end
 
-          def allowed=(_)
-          end
+          def allowed=(_); end
         end
       end
 

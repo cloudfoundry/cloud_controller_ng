@@ -1,60 +1,55 @@
 source 'https://rubygems.org'
 
+gem 'actionpack'
+gem 'actionview'
+gem 'activemodel'
 gem 'addressable'
+gem 'allowy'
+gem 'clockwork', require: false
+gem 'cloudfront-signer'
+gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
+gem 'eventmachine', '~> 1.0.9'
+gem 'google-api-client', '~> 0.8.6' # required for fog-google
+gem 'httpclient'
+gem 'i18n'
+gem 'loggregator_emitter', '~> 5.0'
+gem 'membrane', '~> 1.0'
+gem 'mime-types', '~> 2.6.2'
+gem 'multi_json'
+gem 'net-ssh'
+gem 'netaddr'
+gem 'newrelic_rpm', '>= 3.12'
+gem 'nokogiri', '~> 1.7.2'
+gem 'protobuf'
+gem 'public_suffix', '~> 1.0'
 gem 'railties'
 gem 'rake'
-
-# nats wants to lock us to an older version. we already use eventmachine 1.0.9, so do not want a downgrade.
-gem 'eventmachine', '~> 1.0.9'
-
-gem 'fog-azure-rm'
-gem 'fog-aws'
-gem 'fog-local'
-gem 'fog-openstack'
-gem 'fog-google'
-gem 'google-api-client', '~> 0.8.6' # required for fog-google
-
-gem 'i18n'
-gem 'nokogiri', '~> 1.7.2'
-gem 'unf'
-gem 'netaddr'
 gem 'rfc822'
 gem 'sequel'
 gem 'sinatra', '~> 1.4'
 gem 'sinatra-contrib'
-gem 'multi_json'
-gem 'yajl-ruby'
-gem 'mime-types', '~> 2.6.2'
-gem 'membrane', '~> 1.0'
-gem 'httpclient'
-gem 'steno'
-gem 'cloudfront-signer'
-gem 'vcap_common', '~> 4.0.4'
-gem 'allowy'
-gem 'loggregator_emitter', '~> 5.0'
-gem 'delayed_job_sequel', git: 'https://github.com/cloudfoundry/delayed_job_sequel.git'
-gem 'thin'
-gem 'newrelic_rpm', '>= 3.12'
-gem 'clockwork', require: false
 gem 'statsd-ruby'
-gem 'activemodel'
-gem 'actionpack'
-gem 'actionview'
-gem 'public_suffix', '~> 1.0'
-gem 'protobuf'
-gem 'net-ssh'
+gem 'steno'
+gem 'thin'
+gem 'unf'
+gem 'vcap_common', '~> 4.0.4'
+gem 'yajl-ruby'
+
+gem 'fog-aws'
+gem 'fog-azure-rm'
+gem 'fog-google'
+gem 'fog-local'
+gem 'fog-openstack'
 
 # Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
 # (see https://github.com/nats-io/ruby-nats/commit/3f3efc6bc41cc483f2d90cb9d401ba4aa3e727d3)
 # If a release newer than 0.5.1 is made that includes this commit, we may wish to switch to that.
 gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b6063002486614b66a28bad254a64'
 
-# We need to use https for git urls as the git protocol is blocked by various
-# firewalls
-gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
-gem 'cf-uaa-lib', '~> 3.7.0'
-gem 'cf-message-bus', '~> 0.3.0'
 gem 'bits_service_client'
+gem 'cf-message-bus', '~> 0.3.0'
+gem 'cf-uaa-lib', '~> 3.7.0'
+gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 group :db do
   gem 'mysql2', '0.4.5'
@@ -62,8 +57,8 @@ group :db do
 end
 
 group :operations do
-  gem 'pry-byebug'
   gem 'awesome_print'
+  gem 'pry-byebug'
 end
 
 group :test do
@@ -73,18 +68,18 @@ group :test do
   gem 'parallel_tests'
   gem 'rack-test'
   gem 'rspec', '~> 3.0'
-  gem 'rspec-instafail'
-  gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
   gem 'rspec-collection_matchers'
+  gem 'rspec-instafail'
   gem 'rspec-its'
   gem 'rspec-rails'
+  gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
   gem 'rubocop'
   gem 'timecop'
   gem 'webmock'
 end
 
 group :development do
+  gem 'byebug'
   gem 'roodi'
   gem 'ruby-debug-ide'
-  gem 'byebug'
 end

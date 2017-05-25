@@ -63,8 +63,7 @@ module VCAP::CloudController
       false
     end
 
-    def addable_to_organization!(organization)
-    end
+    def addable_to_organization!(organization); end
 
     def transient_attrs
       router_group_type.blank? ? [] : [:router_group_type]

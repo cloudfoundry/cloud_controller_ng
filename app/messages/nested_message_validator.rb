@@ -12,8 +12,7 @@ module VCAP::CloudController
 
     attr_reader :record
 
-    def initialize(*_)
-    end
+    def initialize(*_); end
 
     def validate(record)
       @record = record

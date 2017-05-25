@@ -1,7 +1,6 @@
 module VCAP::Services
   class ServiceBrokers::UserProvided::Client
-    def provision(_)
-    end
+    def provision(_); end
 
     def bind(binding, _arbitrary_parameters)
       if binding.class.name.demodulize == 'RouteBinding'
@@ -16,8 +15,7 @@ module VCAP::Services
       end
     end
 
-    def unbind(_)
-    end
+    def unbind(_); end
 
     def deprovision(_, _={})
       {

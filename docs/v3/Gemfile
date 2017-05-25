@@ -1,10 +1,10 @@
 source 'http://rubygems.org'
 
 gem 'middleman'
+gem 'middleman-autoprefixer'
 gem 'middleman-gh-pages'
 gem 'middleman-syntax'
-gem 'middleman-autoprefixer'
-gem 'rouge'
 gem 'rake'
 gem 'redcarpet'
+gem 'rouge'
 gem 'therubyracer'
