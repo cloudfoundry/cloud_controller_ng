@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Builds' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:developer) { make_developer_for_space(space) }
-  let(:developer_headers) { headers_for(developer, user_name: user_name) }
+  let(:developer_headers) { headers_for(developer, user_name: user_name, email: 'bob@loblaw.com') }
   let(:user_name) { 'bob the builder' }
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
@@ -88,6 +88,11 @@ RSpec.describe 'Builds' do
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{package.app.guid}"
             }
+          },
+          'created_by' => {
+            'guid' => developer.guid,
+            'name' => 'bob the builder',
+            'email' => 'bob@loblaw.com',
           }
         }
 
@@ -97,7 +102,15 @@ RSpec.describe 'Builds' do
   end
 
   describe 'GET /v3/builds' do
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:build) do
+      VCAP::CloudController::BuildModel.make(
+        package: package,
+        app: app_model,
+        created_by_user_name: 'bob the builder',
+        created_by_user_guid: developer.guid,
+        created_by_user_email: 'bob@loblaw.com'
+      )
+    end
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -115,6 +128,7 @@ RSpec.describe 'Builds' do
       VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
       build.update(state: droplet.state, error_description: droplet.error_description)
     end
+
     it 'shows the build' do
       get "v3/builds/#{build.guid}", nil, json_headers(developer_headers)
 
@@ -148,6 +162,11 @@ RSpec.describe 'Builds' do
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{package.app.guid}",
             }
+          },
+          'created_by' => {
+            'guid' => developer.guid,
+            'name' => 'bob the builder',
+            'email' => 'bob@loblaw.com',
           }
         }
 

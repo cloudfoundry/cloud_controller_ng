@@ -16,10 +16,12 @@ module VCAP::CloudController
 
     attr_reader :staging_response
 
-    def initialize(memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
+    def initialize(user_audit_info: UserAuditInfo.from_context(SecurityContext),
+      memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
       disk_limit_calculator: StagingDiskCalculator.new,
       environment_presenter: StagingEnvironmentBuilder.new)
 
+      @user_audit_info = user_audit_info
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
       @environment_builder     = environment_presenter
@@ -36,7 +38,10 @@ module VCAP::CloudController
       build = BuildModel.new(
         state:        BuildModel::STAGING_STATE,
         package_guid: package.guid,
-        app:          package.app
+        app:          package.app,
+        created_by_user_guid: @user_audit_info.user_guid,
+        created_by_user_name: @user_audit_info.user_name,
+        created_by_user_email: @user_audit_info.user_email
       )
 
       BuildModel.db.transaction do

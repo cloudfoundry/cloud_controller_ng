@@ -9,13 +9,17 @@ module VCAP::CloudController
       described_class.new(
         memory_limit_calculator: memory_limit_calculator,
         disk_limit_calculator:   disk_limit_calculator,
-        environment_presenter:   environment_builder
+        environment_presenter:   environment_builder,
+        user_audit_info:         user_audit_info,
       )
     end
 
     let(:memory_limit_calculator) { double(:memory_limit_calculator) }
     let(:disk_limit_calculator) { double(:disk_limit_calculator) }
     let(:environment_builder) { double(:environment_builder) }
+    let(:user_audit_info) { instance_double(UserAuditInfo, user_guid: 'user.guid',
+                                                           user_name: 'user.name', user_email: 'user.email')
+    }
 
     let(:staging_message) { BuildCreateMessage.create_from_http_request(request) }
     let(:request) do
@@ -73,6 +77,9 @@ module VCAP::CloudController
           expect(build.app_guid).to eq(app.guid)
           expect(build.package_guid).to eq(package.guid)
           expect(build.lifecycle_data.to_hash).to eq(lifecycle_data)
+          expect(build.created_by_user_guid).to eq('user.guid')
+          expect(build.created_by_user_name).to eq('user.name')
+          expect(build.created_by_user_email).to eq('user.email')
         end
 
         it 'creates an app usage event for STAGING_STARTED' do

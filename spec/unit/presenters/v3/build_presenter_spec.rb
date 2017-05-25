@@ -11,7 +11,10 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::BuildModel.make(
         state:   VCAP::CloudController::BuildModel::STAGING_STATE,
         package: package,
-        app:     app
+        app:     app,
+        created_by_user_guid: 'happy user guid',
+        created_by_user_name: 'happier user name',
+        created_by_user_email: 'this user emailed in'
       )
     end
     let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpack: [buildpack], stack: stack, build: build) }
@@ -39,6 +42,12 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
           expect(result[:links]).to eq(links)
+
+          expect(result[:created_by]).to eq({
+            guid: 'happy user guid',
+            name: 'happier user name',
+            email: 'this user emailed in',
+          })
         end
 
         context 'when buildpack contains username and password' do

@@ -18,6 +18,11 @@ module VCAP::CloudController
             package: { guid: build.package_guid },
             droplet: droplet,
             links: build_links,
+            created_by: {
+              guid: build.created_by_user_guid,
+              name: build.created_by_user_name,
+              email: build.created_by_user_email,
+            }
           }
         end
 
