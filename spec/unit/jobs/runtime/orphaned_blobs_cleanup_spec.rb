@@ -12,16 +12,22 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:blobstore_files) do
+        let(:droplet_blobstore_files) do
           [
             double(:blob, key: 'so/me/blobstore-file'),
             double(:blob, key: 'so/me/blobstore-file2'),
           ]
         end
-        let(:droplet_blobstore) { double(:blobstore_client, files: blobstore_files) }
+        let(:droplet_blobstore) { double(:blobstore_client, files: droplet_blobstore_files) }
 
         before do
+          TestConfig.config[:packages][:app_package_directory_key] = 'bucket'
+          TestConfig.config[:droplets][:droplet_directory_key] = 'bucket'
+          TestConfig.config[:buildpacks][:buildpack_directory_key] = 'bucket'
+
           allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(droplet_blobstore)
+          allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(droplet_blobstore)
+          allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(droplet_blobstore)
         end
 
         it 'can mark an orphaned droplet blob as dirty' do
@@ -39,7 +45,7 @@ module VCAP::CloudController
 
         context 'when a blobstore file matches an existing droplet' do
           let!(:droplet) { DropletModel.make(guid: 'real-droplet-blob', droplet_hash: '123') }
-          let(:blobstore_files) { [double(:blob, key: 're/al/real-droplet-blob/123')] }
+          let(:droplet_blobstore_files) { [double(:blob, key: 're/al/real-droplet-blob/123')] }
 
           it 'does not mark the droplet blob as an orphan' do
             expect(OrphanedBlob.count).to eq(0)
@@ -50,7 +56,7 @@ module VCAP::CloudController
 
         context 'when a blobstore file matches an existing package' do
           let!(:package) { PackageModel.make(guid: 'real-package-blob') }
-          let(:blobstore_files) { [double(:blob, key: 're/al/real-package-blob')] }
+          let(:droplet_blobstore_files) { [double(:blob, key: 're/al/real-package-blob')] }
 
           it 'does not mark the droplet blob as an orphan' do
             expect(OrphanedBlob.count).to eq(0)
@@ -61,7 +67,7 @@ module VCAP::CloudController
 
         context 'when a blobstore file matches an existing buildpack' do
           let!(:buildpack) { Buildpack.make(key: 'real-buildpack-blob') }
-          let(:blobstore_files) { [double(:blob, key: 're/al/real-buildpack-blob')] }
+          let(:droplet_blobstore_files) { [double(:blob, key: 're/al/real-buildpack-blob')] }
 
           it 'does not mark the droplet blob as an orphan' do
             expect(OrphanedBlob.count).to eq(0)
@@ -71,7 +77,7 @@ module VCAP::CloudController
         end
 
         context 'when the blobstore file starts with an ignored prefix' do
-          let(:blobstore_files) do
+          let(:droplet_blobstore_files) do
             [
               double(:blob, key: "#{CloudController::DependencyLocator::BUILDPACK_CACHE_DIR}/so/me/blobstore-file"),
             ]
@@ -121,7 +127,7 @@ module VCAP::CloudController
           let!(:droplet) { DropletModel.make(guid: 'real-droplet-blob') }
           let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 're/al/real-droplet-blob', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD) }
 
-          let(:blobstore_files) { [double(:blob, key: 're/al/real-droplet-blob')] }
+          let(:droplet_blobstore_files) { [double(:blob, key: 're/al/real-droplet-blob')] }
 
           it 'deletes the orphaned blob entry' do
             expect {
@@ -129,6 +135,66 @@ module VCAP::CloudController
             }.to change {
               orphaned_blob.exists?
             }.from(true).to(false)
+          end
+        end
+
+        context 'when each blobstore is in its own directory' do
+          let(:package_blobstore) { double(:blobstore_client, files: package_blobstore_files) }
+          let(:buildpack_blobstore) { double(:blobstore_client, files: buildpack_blobstore_files) }
+
+          let(:droplet_blobstore_files) { [double(:blob, key: 'so/me/droplet-blobstore-file')] }
+          let(:package_blobstore_files) { [double(:blob, key: 'so/me/package-blobstore-file')] }
+          let(:buildpack_blobstore_files) { [double(:blob, key: 'so/me/buildpack-blobstore-file')] }
+
+          before do
+            TestConfig.config[:packages][:app_package_directory_key] = 'bucket-2'
+            TestConfig.config[:buildpacks][:buildpack_directory_key] = 'bucket-4'
+
+            allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+            allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
+          end
+
+          it 'can mark an orphaned droplet blob as dirty' do
+            expect(OrphanedBlob.count).to eq(0)
+            job.perform
+
+            blob = OrphanedBlob.find(blob_key: 'so/me/droplet-blobstore-file')
+            expect(blob).to_not be_nil
+            expect(blob.dirty_count).to eq(1)
+
+            blob = OrphanedBlob.find(blob_key: 'so/me/package-blobstore-file')
+            expect(blob).to_not be_nil
+            expect(blob.dirty_count).to eq(1)
+
+            blob = OrphanedBlob.find(blob_key: 'so/me/buildpack-blobstore-file')
+            expect(blob).to_not be_nil
+            expect(blob.dirty_count).to eq(1)
+          end
+        end
+
+        context 'when there is some overlap for which directory each blobstore uses' do
+          let(:droplet_blobstore_files) { [double(:blob, key: 'so/me/shared-blobstore-file')] }
+
+          let(:buildpack_blobstore) { double(:blobstore_client, files: buildpack_blobstore_files) }
+          let(:buildpack_blobstore_files) { [double(:blob, key: 'so/me/buildpack-blobstore-file')] }
+
+          before do
+            TestConfig.config[:buildpacks][:buildpack_directory_key] = 'bucket-4'
+
+            allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
+          end
+
+          it 'can mark an orphaned droplet blob as dirty' do
+            expect(OrphanedBlob.count).to eq(0)
+            job.perform
+
+            blob = OrphanedBlob.find(blob_key: 'so/me/shared-blobstore-file')
+            expect(blob).to_not be_nil
+            expect(blob.dirty_count).to eq(1)
+
+            blob = OrphanedBlob.find(blob_key: 'so/me/buildpack-blobstore-file')
+            expect(blob).to_not be_nil
+            expect(blob.dirty_count).to eq(1)
           end
         end
       end

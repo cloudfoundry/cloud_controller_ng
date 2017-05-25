@@ -5,20 +5,22 @@ module VCAP::CloudController
         DIRTY_THRESHOLD = 3
 
         def perform
-          blobstore.files.each do |blob|
-            orphaned_blob = OrphanedBlob.find(blob_key: blob.key)
-            if blob_in_use(blob)
-              if orphaned_blob.present?
-                orphaned_blob.delete
+          blobstores.each do |blobstore|
+            blobstore.files.each do |blob|
+              orphaned_blob = OrphanedBlob.find(blob_key: blob.key)
+              if blob_in_use(blob)
+                if orphaned_blob.present?
+                  orphaned_blob.delete
+                end
+
+                next
               end
 
-              next
-            end
-
-            if orphaned_blob.present?
-              update_or_delete(orphaned_blob)
-            else
-              OrphanedBlob.create(blob_key: blob.key, dirty_count: 1)
+              if orphaned_blob.present?
+                update_or_delete(orphaned_blob)
+              else
+                OrphanedBlob.create(blob_key: blob.key, dirty_count: 1)
+              end
             end
           end
         end
@@ -29,12 +31,18 @@ module VCAP::CloudController
 
         private
 
-        def logger
-          @logger ||= Steno.logger('cc.background')
+        def blobstores
+          config = Config.config
+
+          {
+            config.dig(:droplets, :droplet_directory_key)     => CloudController::DependencyLocator.instance.droplet_blobstore,
+            config.dig(:packages, :app_package_directory_key) => CloudController::DependencyLocator.instance.package_blobstore,
+            config.dig(:buildpacks, :buildpack_directory_key) => CloudController::DependencyLocator.instance.buildpack_blobstore,
+          }.values
         end
 
-        def blobstore
-          CloudController::DependencyLocator.instance.droplet_blobstore
+        def logger
+          @logger ||= Steno.logger('cc.background')
         end
 
         def blob_in_use(blob)
