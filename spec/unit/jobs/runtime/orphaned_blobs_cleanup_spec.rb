@@ -80,6 +80,7 @@ module VCAP::CloudController
           let(:droplet_blobstore_files) do
             [
               double(:blob, key: "#{CloudController::DependencyLocator::BUILDPACK_CACHE_DIR}/so/me/blobstore-file"),
+              double(:blob, key: "#{CloudController::DependencyLocator::RESOURCE_POOL_DIR}/so/me/blobstore-file"),
             ]
           end
 

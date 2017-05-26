@@ -139,7 +139,11 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates blob store' do
-      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(options: config[:resource_pool], directory_key: 'key')
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
+        options: config[:resource_pool],
+        directory_key: 'key',
+        root_dir: 'app_bits_cache',
+      )
       locator.global_app_bits_cache
     end
   end

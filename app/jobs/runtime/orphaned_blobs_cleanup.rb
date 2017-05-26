@@ -50,7 +50,7 @@ module VCAP::CloudController
           basename = parts[-1]
           potential_droplet_guid = parts[-2]
 
-          blob.key.start_with?(CloudController::DependencyLocator::BUILDPACK_CACHE_DIR) ||
+          blob.key.start_with?(CloudController::DependencyLocator::BUILDPACK_CACHE_DIR, CloudController::DependencyLocator::RESOURCE_POOL_DIR) ||
             DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present? ||
             PackageModel.find(guid: basename).present? ||
             Buildpack.find(key: basename).present?
