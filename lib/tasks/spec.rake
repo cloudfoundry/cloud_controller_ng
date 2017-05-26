@@ -10,6 +10,10 @@ namespace :spec do
     run_specs("spec")
   end
 
+  task integraton: ['db:pick', 'db:recreate'] do
+    run_specs("spec/integration")
+  end
+
   desc 'Run only previously failing tests'
   task failed: "db:pick" do
     run_failed_specs
