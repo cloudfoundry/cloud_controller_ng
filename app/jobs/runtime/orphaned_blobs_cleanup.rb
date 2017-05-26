@@ -33,11 +33,13 @@ module VCAP::CloudController
         def blobstores
           config = Config.config
 
-          {
-            config.dig(:droplets, :droplet_directory_key)     => CloudController::DependencyLocator.instance.droplet_blobstore,
-            config.dig(:packages, :app_package_directory_key) => CloudController::DependencyLocator.instance.package_blobstore,
-            config.dig(:buildpacks, :buildpack_directory_key) => CloudController::DependencyLocator.instance.buildpack_blobstore,
-          }.values
+          result = {}
+
+          result[config.dig(:droplets, :droplet_directory_key)]     = CloudController::DependencyLocator.instance.droplet_blobstore
+          result[config.dig(:packages, :app_package_directory_key)] = CloudController::DependencyLocator.instance.package_blobstore
+          result[config.dig(:buildpacks, :buildpack_directory_key)] = CloudController::DependencyLocator.instance.buildpack_blobstore
+
+          result.values
         end
 
         def logger
@@ -69,8 +71,8 @@ module VCAP::CloudController
                     limit(NUMBER_OF_BLOBS_TO_DELETE)
 
           dataset.each do |orphaned_blob|
-            blob_key = orphaned_blob.blob_key[6..-1]
-            Jobs::Enqueuer.new(BlobstoreDelete.new(blob_key, :droplet_blobstore), queue: 'cc-generic').enqueue
+            unparitioned_blob_key = orphaned_blob.blob_key[6..-1]
+            Jobs::Enqueuer.new(BlobstoreDelete.new(unparitioned_blob_key, :droplet_blobstore), queue: 'cc-generic').enqueue
             orphaned_blob.delete
           end
         end
