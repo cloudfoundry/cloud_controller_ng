@@ -3,6 +3,7 @@ module VCAP::CloudController
     module Runtime
       class OrphanedBlobsCleanup < VCAP::CloudController::Jobs::CCJob
         DIRTY_THRESHOLD = 3
+        NUMBER_OF_BLOBS_TO_DELETE = 100
 
         def perform
           blobstores.each do |blobstore|
@@ -16,13 +17,11 @@ module VCAP::CloudController
                 next
               end
 
-              if orphaned_blob.present?
-                update_or_delete(orphaned_blob)
-              else
-                OrphanedBlob.create(blob_key: blob.key, dirty_count: 1)
-              end
+              create_or_update_orphaned_blob(blob, orphaned_blob)
             end
           end
+
+          delete_orphaned_blobs
         end
 
         def max_attempts
@@ -56,13 +55,23 @@ module VCAP::CloudController
             Buildpack.find(key: basename).present?
         end
 
-        def update_or_delete(orphaned_blob)
-          if orphaned_blob.dirty_count == DIRTY_THRESHOLD
+        def create_or_update_orphaned_blob(blob, orphaned_blob)
+          if orphaned_blob.present?
+            orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
+          else
+            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1)
+          end
+        end
+
+        def delete_orphaned_blobs
+          dataset = OrphanedBlob.where { dirty_count >= DIRTY_THRESHOLD }.
+                    order(Sequel.desc(:dirty_count)).
+                    limit(NUMBER_OF_BLOBS_TO_DELETE)
+
+          dataset.each do |orphaned_blob|
             blob_key = orphaned_blob.blob_key[6..-1]
             Jobs::Enqueuer.new(BlobstoreDelete.new(blob_key, :droplet_blobstore), queue: 'cc-generic').enqueue
             orphaned_blob.delete
-          else
-            orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
           end
         end
       end

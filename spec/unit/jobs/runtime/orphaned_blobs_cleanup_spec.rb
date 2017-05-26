@@ -122,6 +122,34 @@ module VCAP::CloudController
 
             expect(orphaned_blob.exists?).to be_falsey
           end
+
+          context 'when the number of orphaned blobs exceeds NUMBER_OF_BLOBS_TO_DELETE' do
+            let(:droplet_blobstore_files) do
+              files = [double(:blob, key: 'so/me/blobstore-file')]
+              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE).times do |i|
+                files << double(:blob, key: "so/me/blobstore-file-#{i}")
+              end
+              files
+            end
+
+            before do
+              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE).times do |i|
+                OrphanedBlob.create(blob_key: "so/me/blobstore-file-#{i}", dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD + 5)
+              end
+            end
+
+            it 'only enqueues deletion jobs for NUMBER_OF_BLOBS_TO_DELETE number of blobs' do
+              job.perform
+
+              expect(BlobstoreDelete).to have_received(:new).exactly(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE).times
+            end
+
+            it 'deletes by searching for the oldest orphaned blobs' do
+              job.perform
+
+              expect(orphaned_blob.exists?).to be_truthy
+            end
+          end
         end
 
         context 'when an existing resource matches against an orphaned blob' do
