@@ -38,7 +38,7 @@ class JobPresenter < ApiPresenter
   end
 
   def error_details
-    YAML.load(@object.cf_api_error)
+    YAML.safe_load(@object.cf_api_error, [Symbol])
   end
 
   def job_exception_or_nil

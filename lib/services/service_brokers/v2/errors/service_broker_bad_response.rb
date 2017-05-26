@@ -9,12 +9,12 @@ module VCAP::Services
             rescue MultiJson::ParseError
             end
 
-            if hash.is_a?(Hash) && hash.key?('description') && !ignore_description_key
-              message = "Service broker error: #{hash['description']}"
-            else
-              message = "The service broker returned an invalid response for the request to #{uri}. " \
-                        "Status Code: #{response.code} #{response.message}, Body: #{response.body}"
-            end
+            message = if hash.is_a?(Hash) && hash.key?('description') && !ignore_description_key
+                        "Service broker error: #{hash['description']}"
+                      else
+                        "The service broker returned an invalid response for the request to #{uri}. " \
+                                  "Status Code: #{response.code} #{response.message}, Body: #{response.body}"
+                      end
 
             super(message, uri, method, response)
           end
