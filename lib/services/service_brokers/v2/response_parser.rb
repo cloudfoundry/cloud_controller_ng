@@ -367,25 +367,25 @@ module VCAP::Services
 
         class SuccessValidator
           def initialize(state: nil, &block)
-            @processor = if block_given?
-                           block
-                         else
-                           ->(response) do
-                             broker_response = MultiJson.load(response.body)
-                             state ||= broker_response.delete('state')
-                             return broker_response unless state
+            if block_given?
+              @processor = block
+            else
+              @processor = ->(response) do
+                broker_response = MultiJson.load(response.body)
+                state ||= broker_response.delete('state')
+                return broker_response unless state
 
-                             base_body = {
-                               'last_operation' => {
-                                 'state' => state
-                               }
-                             }
-                             description = broker_response.delete('description')
-                             base_body['last_operation']['description'] = description if description
+                base_body = {
+                  'last_operation' => {
+                    'state' => state
+                  }
+                }
+                description = broker_response.delete('description')
+                base_body['last_operation']['description'] = description if description
 
-                             broker_response.merge(base_body)
-                           end
-                         end
+                broker_response.merge(base_body)
+              end
+            end
           end
 
           def validate(method:, uri:, code:, response:)
