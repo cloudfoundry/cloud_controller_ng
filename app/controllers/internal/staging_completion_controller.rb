@@ -73,11 +73,9 @@ module VCAP::CloudController
         stagers.stager_for_app(build.app).staging_complete(build, staging_response, params['start'] == 'true')
       rescue CloudController::Errors::ApiError => api_err
         logger.error('diego.staging.completion-controller-api_err-error', error: api_err)
-        build.fail_to_stage!(nil, 'droplet failed to stage')
         raise api_err
       rescue => e
         logger.error('diego.staging.completion-controller-error', error: e)
-        build.fail_to_stage!(nil, 'droplet failed to stage')
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
       end
 

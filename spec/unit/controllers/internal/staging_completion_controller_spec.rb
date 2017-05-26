@@ -255,9 +255,6 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
           expect(last_response.body).to match /JobTimeout/
-          build.reload
-          expect(build.state).to eq(BuildModel::FAILED_STATE)
-          expect(build.error_description).to eq('Staging error: droplet failed to stage')
         end
 
         it 'propagates other errors from staging_response' do
@@ -266,9 +263,6 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(500)
           expect(last_response.body).to match /ServerError/
-          build.reload
-          expect(build.state).to eq(BuildModel::FAILED_STATE)
-          expect(build.error_description).to eq('Staging error: droplet failed to stage')
         end
 
         context 'when staging failed' do
