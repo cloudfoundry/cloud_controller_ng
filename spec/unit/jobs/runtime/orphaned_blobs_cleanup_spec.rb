@@ -30,7 +30,7 @@ module VCAP::CloudController
           allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(droplet_blobstore)
         end
 
-        it 'can mark an orphaned droplet blob as dirty' do
+        it 'can mark an orphaned blob as dirty' do
           expect(OrphanedBlob.count).to eq(0)
           job.perform
 
@@ -154,6 +154,22 @@ module VCAP::CloudController
           end
         end
 
+        context 'when there are more than NUMBER_OF_BLOBS_TO_DELETE blobs to mark as dirty' do
+          let(:droplet_blobstore_files) do
+            result = []
+            (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE + 1).times do |i|
+              result << double(:blob, key: "so/me/blobstore-file-#{i}")
+            end
+            result
+          end
+
+          it 'stops after marking NUMBER_OF_BLOBS_TO_DELETE of blobs as dirty' do
+            expect {
+              job.perform
+            }.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE)
+          end
+        end
+
         context 'when an existing resource matches against an orphaned blob' do
           let!(:droplet) { DropletModel.make(guid: 'real-droplet-blob') }
           let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 're/al/real-droplet-blob', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore') }
@@ -176,6 +192,29 @@ module VCAP::CloudController
           let(:droplet_blobstore_files) { [double(:blob, key: 'so/me/droplet-blobstore-file')] }
           let(:package_blobstore_files) { [double(:blob, key: 'so/me/package-blobstore-file')] }
           let(:buildpack_blobstore_files) { [double(:blob, key: 'so/me/buildpack-blobstore-file')] }
+
+          context 'when there are more than NUMBER_OF_BLOBS_TO_DELETE blobs to mark as dirty' do
+            let(:droplet_blobstore_files) do
+              result = []
+              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE + 1).times do |i|
+                result << double(:blob, key: "so/me/blobstore-file-#{i}")
+              end
+              result
+            end
+            let(:package_blobstore_files) do
+              result = []
+              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE + 1).times do |i|
+                result << double(:blob, key: "so/me/package-blobstore-file-#{i}")
+              end
+              result
+            end
+
+            it 'stops after marking NUMBER_OF_BLOBS_TO_DELETE of blobs as dirty' do
+              expect {
+                job.perform
+              }.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE)
+            end
+          end
 
           before do
             TestConfig.config[:packages][:app_package_directory_key] = 'bucket-2'

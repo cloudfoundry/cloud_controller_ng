@@ -6,23 +6,22 @@ module VCAP::CloudController
         NUMBER_OF_BLOBS_TO_DELETE = 100
 
         def perform
+          delete_orphaned_blobs
+
+          number_of_marked_blobs = 0
+
           blobstores.each do |blobstore_name|
             blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
             blobstore.files.each do |blob|
               orphaned_blob = OrphanedBlob.find(blob_key: blob.key)
-              if blob_in_use(blob)
-                if orphaned_blob.present?
-                  orphaned_blob.delete
-                end
-
-                next
-              end
+              next if skip_blob?(blob, orphaned_blob)
 
               create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_name)
+
+              number_of_marked_blobs += 1
+              return if number_of_marked_blobs == NUMBER_OF_BLOBS_TO_DELETE
             end
           end
-
-          delete_orphaned_blobs
         end
 
         def max_attempts
@@ -30,6 +29,10 @@ module VCAP::CloudController
         end
 
         private
+
+        def logger
+          @logger ||= Steno.logger('cc.background')
+        end
 
         def blobstores
           config = Config.config
@@ -43,8 +46,15 @@ module VCAP::CloudController
           result.values
         end
 
-        def logger
-          @logger ||= Steno.logger('cc.background')
+        def skip_blob?(blob, orphaned_blob)
+          if blob_in_use(blob)
+            if orphaned_blob.present?
+              orphaned_blob.delete
+            end
+
+            return true
+          end
+          false
         end
 
         def blob_in_use(blob)
@@ -72,9 +82,9 @@ module VCAP::CloudController
                     limit(NUMBER_OF_BLOBS_TO_DELETE)
 
           dataset.each do |orphaned_blob|
-            unparitioned_blob_key = orphaned_blob.blob_key[6..-1]
+            unpartitioned_blob_key = orphaned_blob.blob_key[6..-1]
             blobstore = orphaned_blob.blobstore_name
-            Jobs::Enqueuer.new(BlobstoreDelete.new(unparitioned_blob_key, blobstore.to_sym), queue: 'cc-generic').enqueue
+            Jobs::Enqueuer.new(BlobstoreDelete.new(unpartitioned_blob_key, blobstore.to_sym), queue: 'cc-generic').enqueue
             orphaned_blob.delete
           end
         end
