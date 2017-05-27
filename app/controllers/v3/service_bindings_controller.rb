@@ -60,7 +60,6 @@ class ServiceBindingsController < ApplicationController
     ServiceBindingDelete.new(user_audit_info).single_delete_sync(binding)
 
     head :no_content
-
   rescue ServiceBindingDelete::FailedToDelete => e
     unprocessable!(e.message)
   end

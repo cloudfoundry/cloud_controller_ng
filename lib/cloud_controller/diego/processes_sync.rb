@@ -50,7 +50,6 @@ module VCAP::CloudController
         end
 
         @workpool.drain
-
       rescue CloudController::Errors::ApiError => e
         if e.name == 'RunnerInvalidRequest'
           logger.info('synced-invalid-desired-lrps', error: e.name, error_message: e.message)

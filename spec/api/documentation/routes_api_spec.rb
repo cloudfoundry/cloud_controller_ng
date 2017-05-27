@@ -66,8 +66,8 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
     post '/v2/routes/' do
       include_context 'updatable_fields', required: true
 
-      param_description = <<EOF
-Set to `true` to generate a random port. Defaults to `false`. Supported for domains for TCP router groups only. Takes precedence over manually specified port.
+      param_description = <<~EOF
+        Set to `true` to generate a random port. Defaults to `false`. Supported for domains for TCP router groups only. Takes precedence over manually specified port.
 EOF
       parameter :generate_port, param_description, valid_values: [true, false]
 

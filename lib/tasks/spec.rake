@@ -1,21 +1,21 @@
-desc "Runs all specs"
+desc 'Runs all specs'
 task spec: 'spec:all'
 
 namespace :spec do
   task all: ['db:pick', 'db:parallel:recreate'] do
-    run_specs_parallel("spec")
+    run_specs_parallel('spec')
   end
 
   task serial: ['db:pick', 'db:recreate'] do
-    run_specs("spec")
+    run_specs('spec')
   end
 
   task integraton: ['db:pick', 'db:recreate'] do
-    run_specs("spec/integration")
+    run_specs('spec/integration')
   end
 
   desc 'Run only previously failing tests'
-  task failed: "db:pick" do
+  task failed: 'db:pick' do
     run_failed_specs
   end
 
@@ -28,6 +28,6 @@ namespace :spec do
   end
 
   def run_failed_specs
-    sh "bundle exec rspec --only-failures --color --tty spec --require rspec/instafail --format RSpec::Instafail"
+    sh 'bundle exec rspec --only-failures --color --tty spec --require rspec/instafail --format RSpec::Instafail'
   end
 end

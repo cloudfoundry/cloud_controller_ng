@@ -49,7 +49,6 @@ module CloudController
       def with_retries(log_prefix, log_data)
         retries ||= num_retries
         yield
-
       rescue *retryable_errors => e
         retries -= 1
 

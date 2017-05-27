@@ -17,7 +17,7 @@ class ServiceBindingPresenter
   def self.censor_volume_mounts(volume_mounts)
     return [] unless volume_mounts.is_a?(Array)
     volume_mounts.map do |mount_info|
-      mount_info.reject { |k, _v| !WHITELISTED_VOLUME_FIELDS.include?(k) }
+      mount_info.select { |k, _v| WHITELISTED_VOLUME_FIELDS.include?(k) }
     end
   end
 

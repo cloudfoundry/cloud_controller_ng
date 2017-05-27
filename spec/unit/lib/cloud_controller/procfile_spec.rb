@@ -9,10 +9,10 @@ module VCAP::CloudController
       end
 
       it 'supports multiple processes' do
-        hash = Procfile.load(<<PROCFILE)
-web: my-web args
-this is a comment
-workerz: daworker args multiple
+        hash = Procfile.load(<<~PROCFILE)
+          web: my-web args
+          this is a comment
+          workerz: daworker args multiple
 PROCFILE
         expect(hash).to eq(
           web: 'my-web args',
@@ -42,10 +42,10 @@ PROCFILE
       end
 
       it 'supports multiple processes' do
-        hash = Procfile.load(<<PROCFILE)
-web: my-web args
-this is a comment
-workerz: daworker args multiple
+        hash = Procfile.load(<<~PROCFILE)
+          web: my-web args
+          this is a comment
+          workerz: daworker args multiple
 PROCFILE
         expect(hash).to eq(
           web: 'my-web args',

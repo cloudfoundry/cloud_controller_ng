@@ -146,7 +146,7 @@ module VCAP::CloudController::RestController
     end
 
     def unversioned_api?
-      !(env['PATH_INFO'] =~ %r{\A/v\d})
+      env['PATH_INFO'] !~ %r{\A/v\d}
     end
 
     def recursive_delete?

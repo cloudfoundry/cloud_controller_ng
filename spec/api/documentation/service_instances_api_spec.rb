@@ -75,8 +75,8 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
       field :tags, 'A list of tags for the service instance. Max characters: 2048',
         required: false, example_values: [%w(db), tags], default: []
 
-      param_description = <<EOF
-Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+      param_description = <<~EOF
+        Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
@@ -118,8 +118,8 @@ EOF
       field :tags, 'A list of tags for the service instance. NOTE: Updating the tags will overwrite any old tags. Max characters: 2048.',
         required: false, example_values: [['db'], ['accounting', 'mongodb']]
 
-      param_description = <<EOF
-Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+      param_description = <<~EOF
+        Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
@@ -148,18 +148,18 @@ EOF
     end
 
     delete '/v2/service_instances/:guid' do
-      accepts_incomplete_description = <<EOF
-Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
+      accepts_incomplete_description = <<~EOF
+        Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
 EOF
-      purge_description = <<EOF
-Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker.
-The user must have the cloud_controller.admin scope on their OAuth token in order to perform a purge.
+      purge_description = <<~EOF
+        Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker.
+        The user must have the cloud_controller.admin scope on their OAuth token in order to perform a purge.
 EOF
-      recursive_description = <<EOF
-Will delete service bindings, service keys, and routes associated with the service instance.
+      recursive_description = <<~EOF
+        Will delete service bindings, service keys, and routes associated with the service instance.
 EOF
-      async_description = <<EOF
-Will run the delete request in a background job. Recommended: 'true'.
+      async_description = <<~EOF
+        Will run the delete request in a background job. Recommended: 'true'.
 EOF
 
       parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false]

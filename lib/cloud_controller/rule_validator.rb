@@ -45,7 +45,6 @@ module CloudController
       end
 
       return true
-
     rescue NetAddr::ValidationError
       return false
     end

@@ -21,7 +21,6 @@ module VCAP::CloudController
 
         service_instance.client.unbind(service_binding)
         service_binding.destroy
-
       rescue => e
         errors << e
       end

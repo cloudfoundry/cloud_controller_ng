@@ -50,7 +50,6 @@ module VCAP::CloudController
       feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
       return feature_flag.enabled if feature_flag
       DEFAULT_FLAGS.fetch(feature_flag_name)
-
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"
     end

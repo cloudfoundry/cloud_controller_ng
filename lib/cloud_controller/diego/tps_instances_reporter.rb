@@ -89,7 +89,6 @@ module VCAP::CloudController
         end
 
         result
-
       rescue CloudController::Errors::InstancesUnavailable => e
         raise e
       rescue => e

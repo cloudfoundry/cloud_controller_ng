@@ -16,11 +16,11 @@ RSpec.resource 'Security Groups', type: [:api, :legacy_api] do
   end
 
   shared_context 'updatable_fields' do |opts|
-    rules_description = <<DESC
-The egress rules for apps that belong to this security group.
-A rule consists of a protocol (tcp,icmp,udp,all), destination CIDR or destination range,
-port or port range (tcp,udp,all), type (control signal for icmp), code (control signal for icmp),
-log (enables logging for the egress rule), description (optional description of the rule). This field is limited to 16MB.
+    rules_description = <<~DESC
+      The egress rules for apps that belong to this security group.
+      A rule consists of a protocol (tcp,icmp,udp,all), destination CIDR or destination range,
+      port or port range (tcp,udp,all), type (control signal for icmp), code (control signal for icmp),
+      log (enables logging for the egress rule), description (optional description of the rule). This field is limited to 16MB.
 DESC
 
     field :name, 'The name of the security group.', required: opts[:required], example_values: ['my_super_sec_group']

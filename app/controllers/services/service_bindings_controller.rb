@@ -51,7 +51,6 @@ module VCAP::CloudController
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
        object_renderer.render_json(self.class, service_binding, @opts)
       ]
-
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::VolumeMountServiceDisabled

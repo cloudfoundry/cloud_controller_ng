@@ -25,17 +25,17 @@ module VCAP::Services::ServiceBrokers
       it 'builds a formatted string' do
         formatter = ValidationErrorsFormatter.new
 
-        expect(formatter.format(errors)).to eq(<<HEREDOC)
+        expect(formatter.format(errors)).to eq(<<~HEREDOC)
 
-Service ids must be unique
-Service service-1
-  Service id must be a string, but has value 123
-Service service-2
-  Plan ids must be unique
-  Plan plan-123
-    Plan name must be a string, but has value 123
-Service service-3
-  At least one plan is required
+          Service ids must be unique
+          Service service-1
+            Service id must be a string, but has value 123
+          Service service-2
+            Plan ids must be unique
+            Plan plan-123
+              Plan name must be a string, but has value 123
+          Service service-3
+            At least one plan is required
 HEREDOC
       end
     end

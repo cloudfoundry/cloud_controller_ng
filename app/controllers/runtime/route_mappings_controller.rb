@@ -43,7 +43,6 @@ module VCAP::CloudController
         { 'Location' => "#{self.class.path}/#{route_mapping.guid}" },
         object_renderer.render_json(self.class, route_mapping, @opts)
       ]
-
     rescue ::VCAP::CloudController::V2::RouteMappingCreate::DuplicateRouteMapping
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingTaken', route_mapping_taken_message(request_attrs))
     rescue ::VCAP::CloudController::V2::RouteMappingCreate::UnavailableAppPort

@@ -28,7 +28,6 @@ module VCAP::CloudController
           orphan_mitigator.attempt_delete_key(service_key)
           raise e
         end
-
       rescue => e
         errors << e
       end

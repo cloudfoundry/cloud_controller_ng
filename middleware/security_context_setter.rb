@@ -17,7 +17,6 @@ module CloudFoundry
         end
 
         @app.call(env)
-
       rescue VCAP::CloudController::UaaUnavailable => e
         logger.error("Failed communicating with UAA: #{e.message}")
         [502, { 'Content-Type:' => 'application/json' }, [error_message(env)]]

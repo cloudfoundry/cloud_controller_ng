@@ -10,10 +10,12 @@ AllCops:
     - vendor/**/*
     - lib/diego/bbs/models/**/*
 
+Lint/AmbiguousBlockAssociation:
+  Enabled: false
+
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
 
-# enable me for #85546748
 Lint/HandleExceptions:
   Enabled: false
 
@@ -39,6 +41,7 @@ Metrics/BlockLength:
     - spec/**/*
     - lib/cloud_controller/config.rb
     - config/routes.rb
+    - lib/tasks/db.rake
   Max: 50
 
 Metrics/ClassLength:
@@ -98,6 +101,10 @@ Style/DoubleNegation:
 Style/EachWithObject:
   Enabled: false
 
+Style/FileName:
+  Exclude:
+    - Guardfile
+
 Style/FormatString:
   EnforcedStyle: sprintf
 
@@ -155,6 +162,9 @@ Style/NumericLiterals:
 Style/NumericPredicate:
   Enabled: false
 
+Style/PercentLiteralDelimiters:
+  Enabled: false
+
 Style/PredicateName:
   Enabled: false
 
@@ -180,6 +190,9 @@ Style/SpaceAroundEqualsInParameterDefault:
   EnforcedStyle: no_space
 
 Style/StructInheritance:
+  Enabled: false
+
+Style/SymbolArray:
   Enabled: false
 
 Style/TernaryParentheses:

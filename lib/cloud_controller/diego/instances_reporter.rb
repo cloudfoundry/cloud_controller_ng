@@ -87,7 +87,6 @@ module VCAP::CloudController
           }
         end
         crashed_instances
-
       rescue => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
         logger.error('crashed_instances_for_app.error', error: e.to_s)

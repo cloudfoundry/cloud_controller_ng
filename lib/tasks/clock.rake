@@ -1,7 +1,7 @@
 namespace :clock do
-  desc "Start a recurring tasks"
+  desc 'Start a recurring tasks'
   task :start do
-    require "cloud_controller/clock/scheduler"
+    require 'cloud_controller/clock/scheduler'
 
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
     scheduler = VCAP::CloudController::Scheduler.new(RakeConfig.config)

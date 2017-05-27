@@ -44,7 +44,7 @@ module VCAP::CloudController
     end
 
     def self.valid_token?
-      token && !(token == :invalid_token)
+      token && token != :invalid_token
     end
 
     def self.invalid_token?
