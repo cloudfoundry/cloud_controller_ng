@@ -6,7 +6,8 @@ module VCAP::CloudController
         NUMBER_OF_BLOBS_TO_DELETE = 100
 
         def perform
-          blobstores.each do |blobstore|
+          blobstores.each do |blobstore_name|
+            blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
             blobstore.files.each do |blob|
               orphaned_blob = OrphanedBlob.find(blob_key: blob.key)
               if blob_in_use(blob)
@@ -17,7 +18,7 @@ module VCAP::CloudController
                 next
               end
 
-              create_or_update_orphaned_blob(blob, orphaned_blob)
+              create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_name)
             end
           end
 
@@ -35,9 +36,9 @@ module VCAP::CloudController
 
           result = {}
 
-          result[config.dig(:droplets, :droplet_directory_key)]     = CloudController::DependencyLocator.instance.droplet_blobstore
-          result[config.dig(:packages, :app_package_directory_key)] = CloudController::DependencyLocator.instance.package_blobstore
-          result[config.dig(:buildpacks, :buildpack_directory_key)] = CloudController::DependencyLocator.instance.buildpack_blobstore
+          result[config.dig(:droplets, :droplet_directory_key)]     = :droplet_blobstore
+          result[config.dig(:packages, :app_package_directory_key)] = :package_blobstore
+          result[config.dig(:buildpacks, :buildpack_directory_key)] = :buildpack_blobstore
 
           result.values
         end
@@ -57,11 +58,11 @@ module VCAP::CloudController
             Buildpack.find(key: basename).present?
         end
 
-        def create_or_update_orphaned_blob(blob, orphaned_blob)
+        def create_or_update_orphaned_blob(blob, orphaned_blob, blobstore)
           if orphaned_blob.present?
             orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
           else
-            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1)
+            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_name: blobstore.to_s)
           end
         end
 
@@ -72,7 +73,8 @@ module VCAP::CloudController
 
           dataset.each do |orphaned_blob|
             unparitioned_blob_key = orphaned_blob.blob_key[6..-1]
-            Jobs::Enqueuer.new(BlobstoreDelete.new(unparitioned_blob_key, :droplet_blobstore), queue: 'cc-generic').enqueue
+            blobstore = orphaned_blob.blobstore_name
+            Jobs::Enqueuer.new(BlobstoreDelete.new(unparitioned_blob_key, blobstore.to_sym), queue: 'cc-generic').enqueue
             orphaned_blob.delete
           end
         end
