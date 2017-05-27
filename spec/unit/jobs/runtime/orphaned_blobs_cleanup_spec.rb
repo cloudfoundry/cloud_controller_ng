@@ -45,6 +45,11 @@ module VCAP::CloudController
           expect(second_blob.blobstore_name).to eq('buildpack_blobstore')
         end
 
+        it 'attempts to ignore blobs in reserved directories' do
+          job.perform
+          expect(droplet_blobstore).to have_received(:files).with(OrphanedBlobsCleanup::IGNORED_DIRECTORY_PREFIXES)
+        end
+
         context 'when a blobstore file matches an existing droplet' do
           let!(:droplet) { DropletModel.make(guid: 'real-droplet-blob', droplet_hash: '123') }
           let(:droplet_blobstore_files) { [double(:blob, key: 're/al/real-droplet-blob/123')] }

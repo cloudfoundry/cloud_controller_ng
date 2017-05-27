@@ -1,9 +1,15 @@
+require 'cloud_controller/dependency_locator'
+
 module VCAP::CloudController
   module Jobs
     module Runtime
       class OrphanedBlobsCleanup < VCAP::CloudController::Jobs::CCJob
         DIRTY_THRESHOLD = 3
         NUMBER_OF_BLOBS_TO_DELETE = 100
+        IGNORED_DIRECTORY_PREFIXES = [
+          CloudController::DependencyLocator::BUILDPACK_CACHE_DIR,
+          CloudController::DependencyLocator::RESOURCE_POOL_DIR,
+        ].freeze
 
         def perform
           delete_orphaned_blobs
@@ -12,7 +18,7 @@ module VCAP::CloudController
 
           blobstores.each do |blobstore_name|
             blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
-            blobstore.files.each do |blob|
+            blobstore.files(IGNORED_DIRECTORY_PREFIXES).each do |blob|
               orphaned_blob = OrphanedBlob.find(blob_key: blob.key)
               next if skip_blob?(blob, orphaned_blob)
 
@@ -62,7 +68,7 @@ module VCAP::CloudController
           basename = parts[-1]
           potential_droplet_guid = parts[-2]
 
-          blob.key.start_with?(CloudController::DependencyLocator::BUILDPACK_CACHE_DIR, CloudController::DependencyLocator::RESOURCE_POOL_DIR) ||
+          blob.key.start_with?(*IGNORED_DIRECTORY_PREFIXES) ||
             DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present? ||
             PackageModel.find(guid: basename).present? ||
             Buildpack.find(key: basename).present?

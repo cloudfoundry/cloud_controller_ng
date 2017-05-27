@@ -785,6 +785,41 @@ module CloudController
 
           expect(blob_keys).to match_array(%w(nested-dir-1/some-blob nested-dir-2/some-other-blob))
         end
+
+        context 'when provided a path to ignore' do
+          let(:root_xml_body) do
+            <<-XML
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>always-ignore-first-obj</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>ignored-directory</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+            XML
+          end
+
+          it 'does not enumerate ignored directories' do
+            blob_keys = client.files(%w(some-directory ignored-directory))
+            expect(blob_keys.first).to be(nil)
+          end
+        end
       end
 
       context 'when root_dir is configured' do

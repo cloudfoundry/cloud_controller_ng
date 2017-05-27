@@ -119,9 +119,13 @@ module CloudController
         end
       end
 
-      def files
-        with_retries(__method__.to_s, {}) do
-          @wrapped_client.files
+      def files(args)
+        with_retries(__method__.to_s, {
+          args: {
+            value: args
+          }
+        }) do
+          @wrapped_client.files(args)
         end
       end
 

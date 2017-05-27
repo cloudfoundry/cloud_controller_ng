@@ -165,7 +165,7 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
-      def files
+      def files(ignored_directory_prefixes=nil)
         queue = ['']
         Enumerator.new do |yielder|
           until queue.empty?
@@ -178,6 +178,7 @@ module CloudController
             props = xml.xpath('//D:prop')[1..-1]
             props.each do |prop|
               full_path = get_full_path(path, prop.xpath('D:displayname').first.text)
+              next if ignored_directory_prefixes.any? && full_path.start_with?(*ignored_directory_prefixes)
 
               if prop.xpath('D:resourcetype').children.empty?
                 blob = DavBlob.new(key: full_path, httpmessage: nil, signer: nil)
