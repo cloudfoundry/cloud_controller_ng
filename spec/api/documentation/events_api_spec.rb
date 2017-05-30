@@ -646,7 +646,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'unique_id'    => new_plan.unique_id,
           'public'       => new_plan.public,
           'active'       => new_plan.active,
-          'bindable'     => new_plan.bindable
+          'bindable'     => new_plan.bindable,
+          'schemas'      => { 'service_instance' => { 'create' => '{}' } }
         }
       }
     end

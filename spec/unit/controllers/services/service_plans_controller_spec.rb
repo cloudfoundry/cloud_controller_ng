@@ -30,9 +30,9 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool', default: true },
               service_guid: { type: 'string', required: true },
-              service_instance_guids: { type: '[string]' }
+              service_instance_guids: { type: '[string]' },
             }
-             )
+           )
       end
 
       it do
@@ -46,7 +46,7 @@ module VCAP::CloudController
               unique_id: { type: 'string' },
               public: { type: 'bool' },
               service_guid: { type: 'string' },
-              service_instance_guids: { type: '[string]' }
+              service_instance_guids: { type: '[string]' },
             })
       end
     end
@@ -169,6 +169,20 @@ module VCAP::CloudController
 
         entity = decoded_response.fetch('entity')
         expect(entity['service_guid']).to eq service_plan.service.guid
+      end
+
+      it 'returns an empty schema for service instance creation' do
+        service_plan = ServicePlan.make
+        set_current_user_as_admin
+
+        get "/v2/service_plans/#{service_plan.guid}"
+
+        expect(last_response.status).to eq 200
+
+        schemas = decoded_response.fetch('entity')['schemas']
+
+        expect(schemas).to_not be_nil
+        expect(schemas).to eq({ 'service_instance' => { 'create' => '{}' } })
       end
 
       context 'when the plan does not set bindable' do
