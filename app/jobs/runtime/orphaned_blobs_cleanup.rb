@@ -12,7 +12,7 @@ module VCAP::CloudController
         ].freeze
 
         def perform
-          delete_orphaned_blobs
+          logger.info('Started orphaned blobs cleanup job')
 
           number_of_marked_blobs = 0
 
@@ -28,6 +28,10 @@ module VCAP::CloudController
               return 'finished-early' if number_of_marked_blobs == NUMBER_OF_BLOBS_TO_DELETE
             end
           end
+        ensure
+          logger.info('Attempting to delete orphaned blobs')
+          delete_orphaned_blobs
+          logger.info('Finished orphaned blobs cleanup job')
         end
 
         def max_attempts
@@ -37,7 +41,7 @@ module VCAP::CloudController
         private
 
         def logger
-          @logger ||= Steno.logger('cc.background')
+          @logger ||= Steno.logger('cc.background.orphaned-blobs-cleanup')
         end
 
         def blobstores
@@ -75,8 +79,10 @@ module VCAP::CloudController
 
         def create_or_update_orphaned_blob(blob, orphaned_blob, blobstore)
           if orphaned_blob.present?
+            logger.info("Incrementing dirty count for blob: #{orphaned_blob.blob_key}")
             orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
           else
+            logger.info("Creating orphaned blob: #{blob.key} in blobstore: #{blobstore.to_s}")
             OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_name: blobstore.to_s)
           end
         end
@@ -89,6 +95,7 @@ module VCAP::CloudController
           dataset.each do |orphaned_blob|
             unpartitioned_blob_key = orphaned_blob.blob_key[6..-1]
             blobstore = orphaned_blob.blobstore_name
+            logger.info("Enqueuing deletion of orphaned blob #{orphaned_blob.blob_key}")
             Jobs::Enqueuer.new(BlobstoreDelete.new(unpartitioned_blob_key, blobstore.to_sym), queue: 'cc-generic').enqueue
             orphaned_blob.delete
           end

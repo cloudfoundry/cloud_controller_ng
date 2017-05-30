@@ -111,7 +111,7 @@ module VCAP::CloudController
         end
 
         context 'when an orphaned blob exceeds the DIRTY_THRESHOLD' do
-          let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 'so/me/blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore') }
+          let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore') }
           let(:blobstore_delete) { instance_double(BlobstoreDelete) }
           let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil) }
 
@@ -120,10 +120,10 @@ module VCAP::CloudController
             allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
           end
 
-          it 'increments the blobs dirty count' do
+          it 'enqueues a BlobstoreDelete job and deletes the orphan from OrphanedBlobs' do
             job.perform
 
-            expect(BlobstoreDelete).to have_received(:new).with('blobstore-file', :droplet_blobstore)
+            expect(BlobstoreDelete).to have_received(:new).with('file-to-be-deleted', :droplet_blobstore)
             expect(Jobs::Enqueuer).to have_received(:new).with(blobstore_delete, hash_including(queue: 'cc-generic'))
             expect(enqueuer).to have_received(:enqueue)
 
