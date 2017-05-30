@@ -24,7 +24,7 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
     problems.empty?
   end
 
-  if 'managed_service_instance' == expected_service_instance.type
+  if expected_service_instance.type == 'managed_service_instance'
     service_plan = expected_service_instance.service_plan
     service = service_plan.service
     match do |actual_event|

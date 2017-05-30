@@ -20,7 +20,7 @@ namespace :db do
       puts'*' * 134
       puts''
       puts "The migration is in #{File.join(migrations_dir, filename)}"
-      puts''
+      puts ''
       puts 'Before writing a migration review our style guide: https://github.com/cloudfoundry/cloud_controller_ng/wiki/CAPI-Migration-Style-Guide'
       puts''
       puts'*' * 134

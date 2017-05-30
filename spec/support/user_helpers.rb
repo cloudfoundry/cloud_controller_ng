@@ -34,7 +34,7 @@ module UserHelpers
     current_user = user || VCAP::CloudController::User.make
     set_current_user(current_user, scopes: scopes)
 
-    unless role == 'admin' || role == 'admin_read_only'
+    unless ['admin', 'admin_read_only'].include?(role)
       org.add_user(current_user)
     end
 

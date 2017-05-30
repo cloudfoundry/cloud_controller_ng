@@ -22,6 +22,9 @@ Lint/HandleExceptions:
 Lint/ShadowedException:
   Enabled: false
 
+Lint/ScriptPermission:
+  Enabled: false
+
 Lint/UnifiedInteger:
   Exclude:
     - db/migrations/**/*

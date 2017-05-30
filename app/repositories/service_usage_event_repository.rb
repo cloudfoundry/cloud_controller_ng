@@ -21,7 +21,7 @@ module VCAP::CloudController
           service_instance_type: service_instance.type,
         }
 
-        if 'managed_service_instance' == service_instance.type
+        if service_instance.type == 'managed_service_instance'
           service_plan = service_instance.service_plan
           service      = service_plan.service
           values       = values.merge({

@@ -85,7 +85,7 @@ module VCAP::CloudController
       end
 
       context 'when the request fails' do
-        context' and the status is a 500' do
+        context ' and the status is a 500' do
           before do
             stub_request(:post, "#{hm9000_url}/bulk_app_state").
               to_return(status: 500)
