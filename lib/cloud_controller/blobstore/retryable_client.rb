@@ -119,7 +119,7 @@ module CloudController
         end
       end
 
-      def files(args)
+      def files(args=[])
         with_retries(__method__.to_s, {
           args: {
             value: args

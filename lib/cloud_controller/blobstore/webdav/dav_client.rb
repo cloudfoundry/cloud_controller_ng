@@ -165,7 +165,7 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
-      def files(ignored_directory_prefixes=nil)
+      def files(ignored_directory_prefixes=[])
         queue = ['']
         Enumerator.new do |yielder|
           until queue.empty?

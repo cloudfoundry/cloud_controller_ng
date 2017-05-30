@@ -25,7 +25,7 @@ module VCAP::CloudController
               create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_name)
 
               number_of_marked_blobs += 1
-              return if number_of_marked_blobs == NUMBER_OF_BLOBS_TO_DELETE
+              return 'finished-early' if number_of_marked_blobs == NUMBER_OF_BLOBS_TO_DELETE
             end
           end
         end
@@ -42,7 +42,6 @@ module VCAP::CloudController
 
         def blobstores
           config = Config.config
-
           result = {}
 
           result[config.dig(:droplets, :droplet_directory_key)]     = :droplet_blobstore

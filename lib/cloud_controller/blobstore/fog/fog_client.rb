@@ -119,7 +119,7 @@ module CloudController
         FogBlob.new(f, @cdn) if f
       end
 
-      def files(_ignored_directories)
+      def files(_ignored_directory_prefixes=nil)
         dir.files
       end
 

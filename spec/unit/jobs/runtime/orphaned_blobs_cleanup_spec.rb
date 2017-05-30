@@ -133,14 +133,14 @@ module VCAP::CloudController
           context 'when the number of orphaned blobs exceeds NUMBER_OF_BLOBS_TO_DELETE' do
             let(:droplet_blobstore_files) do
               files = [double(:blob, key: 'so/me/blobstore-file')]
-              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE).times do |i|
+              OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE.times do |i|
                 files << double(:blob, key: "so/me/blobstore-file-#{i}")
               end
               files
             end
 
             before do
-              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE).times do |i|
+              OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE.times do |i|
                 OrphanedBlob.create(blob_key: "so/me/blobstore-file-#{i}", dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD + 5, blobstore_name: 'droplet_blobstore')
               end
             end
