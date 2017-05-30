@@ -41,6 +41,15 @@ module VCAP::CloudController
       self.buildpack_url
     end
 
+    def buildpack_model
+      return if buildpack.nil?
+
+      known_buildpack = Buildpack.find(name: buildpack)
+      return known_buildpack if known_buildpack
+
+      CustomBuildpack.new(buildpack)
+    end
+
     def to_hash
       { buildpacks: buildpack ? [CloudController::UrlSecretObfuscator.obfuscate(buildpack)] : [], stack: stack }
     end

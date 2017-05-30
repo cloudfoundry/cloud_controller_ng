@@ -501,16 +501,7 @@ module VCAP::CloudController
     end
 
     def buildpack
-      if app && app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
-        return AutoDetectionBuildpack.new if app.lifecycle_data.buildpack.nil?
-
-        known_buildpack = Buildpack.find(name: app.lifecycle_data.buildpack)
-        return known_buildpack if known_buildpack
-
-        CustomBuildpack.new(app.lifecycle_data.buildpack)
-      else
-        AutoDetectionBuildpack.new
-      end
+      app&.lifecycle_data&.buildpack_model || AutoDetectionBuildpack.new
     end
 
     def buildpack_specified?
