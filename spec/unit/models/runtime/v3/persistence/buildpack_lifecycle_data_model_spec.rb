@@ -47,8 +47,8 @@ module VCAP::CloudController
       context 'when the buildpack is nil' do
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpack: nil) }
 
-        it 'is AutoDetectionBuildpack' do
-          expect(lifecycle_data.buildpack_model).to be_an(AutoDetectionBuildpack)
+        it 'is nil' do
+          expect(lifecycle_data.buildpack_model).to eq(nil)
         end
       end
 

@@ -7,11 +7,11 @@ module VCAP::CloudController
   RSpec.describe BuildCreate do
     subject(:action) do
       described_class.new(
-        user_audit_info:         user_audit_info,
+        user_audit_info: user_audit_info,
         memory_limit_calculator: memory_limit_calculator,
         disk_limit_calculator:   disk_limit_calculator,
         environment_presenter:   environment_builder
-      )
+                          )
     end
 
     let(:memory_limit_calculator) { double(:memory_limit_calculator) }
@@ -39,7 +39,7 @@ module VCAP::CloudController
     let(:stack) { Stack.default }
     let(:lifecycle_data) do
       {
-        stack:      stack.name,
+        stack: stack.name,
         buildpacks: [buildpack_git_url]
       }
     end
@@ -126,9 +126,9 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(app.space_guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
           expect(event.metadata).to eq({
-            'build_guid'   => build.guid,
-            'package_guid' => package.guid,
-          })
+                                         'build_guid' => build.guid,
+                                         'package_guid' => package.guid,
+                                         })
         end
 
         it 'does not create a droplet audit event' do
@@ -245,115 +245,22 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the package is not ready' do
-        let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
-        it 'raises an InvalidPackage exception' do
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle)
-          }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
-        end
-      end
-
-      context 'when there is already a staging in progress for the app' do
-        it 'raises a StagingInProgress exception' do
-          BuildModel.make(state: BuildModel::STAGING_STATE, app: app)
-          expect {
-            action.create_and_stage(package: package, lifecycle: lifecycle)
-          }.to raise_error(BuildCreate::StagingInProgress)
-        end
-      end
-
-      describe 'using custom buildpacks' do
-        let!(:app) { AppModel.make(space: space) }
-
-        context 'when custom buildpacks are disabled' do
-          before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(true)
-          end
-
-          context 'when the custom buildpack is inherited from the app' do
-            let!(:app_lifecycle_data_model) do
-              BuildpackLifecycleDataModel.make(
-                buildpack: 'http://example.com/repo.git',
-                app:       app
-              )
-            end
-
-            let(:request) do
-              {}
-            end
-
-            it 'raises an exception' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to raise_error(BuildCreate::BuildError, /Custom buildpacks are disabled/)
-            end
-
-            it 'does not create any DB records' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle) rescue nil
-              }.not_to change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] }
-            end
-          end
-
-          context 'when the custom buildpack is set on the build' do
-            let(:lifecycle_data) do
-              {
-                stack:      stack.name,
-                buildpacks: ['http://example.com/repo.git'],
-              }
-            end
-
-            it 'raises an exception' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to raise_error(BuildCreate::BuildError, /Custom buildpacks are disabled/)
-            end
-
-            it 'does not create any DB records' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle) rescue nil
-              }.not_to change { [BuildModel.count, BuildpackLifecycleDataModel.count, AppUsageEvent.count, Event.count] }
-            end
+      context 'when staging is unsuccessful' do
+        context 'when the package is not ready' do
+          let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
+          it 'raises an InvalidPackage exception' do
+            expect {
+              action.create_and_stage(package: package, lifecycle: lifecycle)
+            }.to raise_error(BuildCreate::InvalidPackage, /not ready/)
           end
         end
 
-        context 'when custom buildpacks are enabled' do
-          context 'when the custom buildpack is inherited from the app' do
-            let!(:app_lifecycle_data_model) do
-              BuildpackLifecycleDataModel.make(
-                buildpack: 'http://example.com/repo.git',
-                app:       app
-              )
-            end
-
-            let(:lifecycle_data) do
-              {
-                stack:      stack.name,
-                buildpacks: nil,
-              }
-            end
-
-            it 'successfully creates a build' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to change { BuildModel.count }.by(1)
-            end
-          end
-
-          context 'when the custom buildpack is set on the build' do
-            let(:lifecycle_data) do
-              {
-                stack:      stack.name,
-                buildpacks: ['http://example.com/repo.git'],
-              }
-            end
-
-            it 'successfully creates a build' do
-              expect {
-                action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to change { BuildModel.count }.by(1)
-            end
+        context 'when there is already a staging in progress for the app' do
+          it 'raises a StagingInProgress exception' do
+            BuildModel.make(state: BuildModel::STAGING_STATE, app: app)
+            expect {
+              action.create_and_stage(package: package, lifecycle: lifecycle)
+            }.to raise_error(BuildCreate::StagingInProgress)
           end
         end
       end

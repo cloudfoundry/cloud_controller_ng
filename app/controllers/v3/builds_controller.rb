@@ -33,8 +33,6 @@ class BuildsController < ApplicationController
     unprocessable!('disk limit exceeded')
   rescue BuildCreate::StagingInProgress
     raise CloudController::Errors::ApiError.new_from_details('StagingInProgress')
-  rescue BuildCreate::BuildError
-    unprocessable!(e.message)
   end
 
   def show

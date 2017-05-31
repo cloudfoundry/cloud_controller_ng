@@ -42,7 +42,7 @@ module VCAP::CloudController
     end
 
     def buildpack_model
-      return AutoDetectionBuildpack.new if buildpack.nil?
+      return if buildpack.nil?
 
       known_buildpack = Buildpack.find(name: buildpack)
       return known_buildpack if known_buildpack

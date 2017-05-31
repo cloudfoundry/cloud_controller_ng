@@ -501,8 +501,7 @@ module VCAP::CloudController
     end
 
     def buildpack
-      return AutoDetectionBuildpack.new unless app&.lifecycle_data
-      app.lifecycle_data.buildpack_model
+      app&.lifecycle_data&.buildpack_model || AutoDetectionBuildpack.new
     end
 
     def buildpack_specified?

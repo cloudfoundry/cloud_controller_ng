@@ -5,7 +5,7 @@ module VCAP::CloudController
     LIFECYCLE_TYPE = Lifecycles::DOCKER
 
     def buildpack_model
-      AutoDetectionBuildpack.new
+      nil
     end
 
     def to_hash
