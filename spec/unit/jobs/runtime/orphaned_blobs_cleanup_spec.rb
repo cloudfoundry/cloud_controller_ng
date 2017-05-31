@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         before do
           TestConfig.config[:packages][:app_package_directory_key] = 'bucket'
-          TestConfig.config[:droplets][:droplet_directory_key] = 'bucket'
+          TestConfig.config[:droplets][:droplet_directory_key]     = 'bucket'
           TestConfig.config[:buildpacks][:buildpack_directory_key] = 'bucket'
 
           allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(droplet_blobstore)
@@ -111,7 +111,9 @@ module VCAP::CloudController
         end
 
         context 'when an orphaned blob exceeds the DIRTY_THRESHOLD' do
-          let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore') }
+          let!(:orphaned_blob) do
+            OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore')
+          end
           let(:blobstore_delete) { instance_double(BlobstoreDelete) }
           let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil) }
 

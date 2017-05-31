@@ -82,7 +82,7 @@ module VCAP::CloudController
             logger.info("Incrementing dirty count for blob: #{orphaned_blob.blob_key}")
             orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
           else
-            logger.info("Creating orphaned blob: #{blob.key} in blobstore: #{blobstore.to_s}")
+            logger.info("Creating orphaned blob: #{blob.key} in blobstore: #{blobstore}")
             OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_name: blobstore.to_s)
           end
         end
