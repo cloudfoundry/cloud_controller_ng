@@ -105,7 +105,13 @@ module VCAP::CloudController
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'orphaned_blobs_cleanup', at: '01:00')
+          expect(args).to eql(name: 'expired_orphaned_blob_cleanup', at: '01:00')
+          expect(Jobs::Runtime::ExpiredOrphanedBlobCleanup).to receive(:new).with(no_args).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredOrphanedBlobCleanup)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'orphaned_blobs_cleanup', at: '01:30')
           expect(Jobs::Runtime::OrphanedBlobsCleanup).to receive(:new).with(no_args).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::OrphanedBlobsCleanup)
         end

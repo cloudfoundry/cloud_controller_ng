@@ -25,7 +25,7 @@ module VCAP::CloudController
               create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_name)
 
               number_of_marked_blobs += 1
-              return 'finished-early' if number_of_marked_blobs == NUMBER_OF_BLOBS_TO_DELETE
+              return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
             end
           end
         ensure
@@ -36,6 +36,10 @@ module VCAP::CloudController
 
         def max_attempts
           1
+        end
+
+        def job_name_in_configuration
+          :orphaned_blobs_cleanup
         end
 
         private
