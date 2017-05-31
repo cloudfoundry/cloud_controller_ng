@@ -1,4 +1,5 @@
 require 'cloud_controller/dependency_locator'
+require 'repositories/orphaned_blob_event_repository'
 
 module VCAP::CloudController
   module Jobs
@@ -16,13 +17,13 @@ module VCAP::CloudController
 
           number_of_marked_blobs = 0
 
-          blobstores.each do |blobstore_name|
+          blobstores.each do |directory_key, blobstore_name|
             blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
             blobstore.files(IGNORED_DIRECTORY_PREFIXES).each do |blob|
               orphaned_blob = OrphanedBlob.find(blob_key: blob.key)
               next if skip_blob?(blob, orphaned_blob)
 
-              create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_name)
+              create_or_update_orphaned_blob(blob, orphaned_blob, directory_key)
 
               number_of_marked_blobs += 1
               return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
@@ -48,15 +49,20 @@ module VCAP::CloudController
           @logger ||= Steno.logger('cc.background.orphaned-blobs-cleanup')
         end
 
+        def config
+          @config ||= Config.config
+        end
+
         def blobstores
-          config = Config.config
+          return @blobstores if @blobstores.present?
+
           result = {}
 
           result[config.dig(:droplets, :droplet_directory_key)]     = :droplet_blobstore
           result[config.dig(:packages, :app_package_directory_key)] = :package_blobstore
           result[config.dig(:buildpacks, :buildpack_directory_key)] = :buildpack_blobstore
 
-          result.values
+          @blobstores = result
         end
 
         def skip_blob?(blob, orphaned_blob)
@@ -81,13 +87,13 @@ module VCAP::CloudController
             Buildpack.find(key: basename).present?
         end
 
-        def create_or_update_orphaned_blob(blob, orphaned_blob, blobstore)
+        def create_or_update_orphaned_blob(blob, orphaned_blob, directory_key)
           if orphaned_blob.present?
             logger.info("Incrementing dirty count for blob: #{orphaned_blob.blob_key}")
             orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
           else
-            logger.info("Creating orphaned blob: #{blob.key} in blobstore: #{blobstore}")
-            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_name: blobstore.to_s)
+            logger.info("Creating orphaned blob: #{blob.key} from directory_key: #{directory_key}")
+            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, directory_key: directory_key)
           end
         end
 
@@ -98,9 +104,12 @@ module VCAP::CloudController
 
           dataset.each do |orphaned_blob|
             unpartitioned_blob_key = orphaned_blob.blob_key[6..-1]
-            blobstore = orphaned_blob.blobstore_name
-            logger.info("Enqueuing deletion of orphaned blob #{orphaned_blob.blob_key}")
-            Jobs::Enqueuer.new(BlobstoreDelete.new(unpartitioned_blob_key, blobstore.to_sym), queue: 'cc-generic').enqueue
+            directory_key = orphaned_blob.directory_key
+            blobstore = blobstores[directory_key]
+            logger.info("Enqueuing deletion of orphaned blob #{orphaned_blob.blob_key} inside directory_key #{directory_key}")
+            Jobs::Enqueuer.new(BlobstoreDelete.new(unpartitioned_blob_key, blobstore), queue: 'cc-generic').enqueue
+
+            VCAP::CloudController::Repositories::OrphanedBlobEventRepository.record_delete(directory_key, orphaned_blob.blob_key)
             orphaned_blob.delete
           end
         end

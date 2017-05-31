@@ -37,12 +37,12 @@ module VCAP::CloudController
           first_blob = OrphanedBlob.find(blob_key: 'so/me/blobstore-file')
           expect(first_blob).to_not be_nil
           expect(first_blob.dirty_count).to eq(1)
-          expect(first_blob.blobstore_name).to eq('buildpack_blobstore')
+          expect(first_blob.directory_key).to eq('bucket')
 
           second_blob = OrphanedBlob.find(blob_key: 'so/me/blobstore-file2')
           expect(second_blob).to_not be_nil
           expect(second_blob.dirty_count).to eq(1)
-          expect(second_blob.blobstore_name).to eq('buildpack_blobstore')
+          expect(second_blob.directory_key).to eq('bucket')
         end
 
         it 'attempts to ignore blobs in reserved directories' do
@@ -99,7 +99,7 @@ module VCAP::CloudController
         end
 
         context 'when a blob is already marked as an orphaned blob' do
-          before { OrphanedBlob.create(blob_key: 'so/me/blobstore-file', dirty_count: 1, blobstore_name: 'droplet_blobstore') }
+          before { OrphanedBlob.create(blob_key: 'so/me/blobstore-file', dirty_count: 1, directory_key: 'bucket') }
 
           it 'increments the blobs dirty count' do
             job.perform
@@ -112,7 +112,7 @@ module VCAP::CloudController
 
         context 'when an orphaned blob exceeds the DIRTY_THRESHOLD' do
           let!(:orphaned_blob) do
-            OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore')
+            OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, directory_key: 'bucket')
           end
           let(:blobstore_delete) { instance_double(BlobstoreDelete) }
           let(:enqueuer) { instance_double(Jobs::Enqueuer, enqueue: nil) }
@@ -125,11 +125,24 @@ module VCAP::CloudController
           it 'enqueues a BlobstoreDelete job and deletes the orphan from OrphanedBlobs' do
             job.perform
 
-            expect(BlobstoreDelete).to have_received(:new).with('file-to-be-deleted', :droplet_blobstore)
+            expect(BlobstoreDelete).to have_received(:new).with('file-to-be-deleted', :buildpack_blobstore)
             expect(Jobs::Enqueuer).to have_received(:new).with(blobstore_delete, hash_including(queue: 'cc-generic'))
             expect(enqueuer).to have_received(:enqueue)
 
             expect(orphaned_blob.exists?).to be_falsey
+          end
+
+          it 'creates an orphaned blob audit event' do
+            job.perform
+
+            event = Event.last
+            expect(event.type).to eq('blob.remove_orphan')
+            expect(event.actor).to eq('system')
+            expect(event.actor_type).to eq('system')
+            expect(event.actor_name).to eq('system')
+            expect(event.actor_username).to eq('system')
+            expect(event.actee).to eq('bucket/so/me/file-to-be-deleted')
+            expect(event.actee_type).to eq('blob')
           end
 
           context 'when the number of orphaned blobs exceeds NUMBER_OF_BLOBS_TO_DELETE' do
@@ -143,7 +156,7 @@ module VCAP::CloudController
 
             before do
               OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE.times do |i|
-                OrphanedBlob.create(blob_key: "so/me/blobstore-file-#{i}", dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD + 5, blobstore_name: 'droplet_blobstore')
+                OrphanedBlob.create(blob_key: "so/me/blobstore-file-#{i}", dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD + 5, directory_key: 'bucket')
               end
             end
 
@@ -179,7 +192,7 @@ module VCAP::CloudController
 
         context 'when an existing resource matches against an orphaned blob' do
           let!(:droplet) { DropletModel.make(guid: 'real-droplet-blob') }
-          let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 're/al/real-droplet-blob', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore') }
+          let!(:orphaned_blob) { OrphanedBlob.create(blob_key: 're/al/real-droplet-blob', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, directory_key: 'bucket') }
 
           let(:droplet_blobstore_files) { [double(:blob, key: 're/al/real-droplet-blob')] }
 
@@ -238,17 +251,17 @@ module VCAP::CloudController
             blob = OrphanedBlob.find(blob_key: 'so/me/droplet-blobstore-file')
             expect(blob).to_not be_nil
             expect(blob.dirty_count).to eq(1)
-            expect(blob.blobstore_name).to eq('droplet_blobstore')
+            expect(blob.directory_key).to eq('bucket')
 
             blob = OrphanedBlob.find(blob_key: 'so/me/package-blobstore-file')
             expect(blob).to_not be_nil
             expect(blob.dirty_count).to eq(1)
-            expect(blob.blobstore_name).to eq('package_blobstore')
+            expect(blob.directory_key).to eq('bucket-2')
 
             blob = OrphanedBlob.find(blob_key: 'so/me/buildpack-blobstore-file')
             expect(blob).to_not be_nil
             expect(blob.dirty_count).to eq(1)
-            expect(blob.blobstore_name).to eq('buildpack_blobstore')
+            expect(blob.directory_key).to eq('bucket-4')
           end
 
           context 'when there are blobs to be deleted' do
@@ -259,9 +272,9 @@ module VCAP::CloudController
               allow(BlobstoreDelete).to receive(:new).and_return(blobstore_delete)
               allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
 
-              OrphanedBlob.create(blob_key: 'so/me/droplet-blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'droplet_blobstore')
-              OrphanedBlob.create(blob_key: 'so/me/package-blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'package_blobstore')
-              OrphanedBlob.create(blob_key: 'so/me/buildpack-blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_name: 'buildpack_blobstore')
+              OrphanedBlob.create(blob_key: 'so/me/droplet-blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, directory_key: 'bucket')
+              OrphanedBlob.create(blob_key: 'so/me/package-blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, directory_key: 'bucket-2')
+              OrphanedBlob.create(blob_key: 'so/me/buildpack-blobstore-file', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, directory_key: 'bucket-4')
             end
 
             it 'can delete blobs from each blobstore' do
@@ -293,12 +306,12 @@ module VCAP::CloudController
             blob = OrphanedBlob.find(blob_key: 'so/me/shared-blobstore-file')
             expect(blob).to_not be_nil
             expect(blob.dirty_count).to eq(1)
-            expect(blob.blobstore_name).to eq('package_blobstore')
+            expect(blob.directory_key).to eq('bucket')
 
             blob = OrphanedBlob.find(blob_key: 'so/me/buildpack-blobstore-file')
             expect(blob).to_not be_nil
             expect(blob.dirty_count).to eq(1)
-            expect(blob.blobstore_name).to eq('buildpack_blobstore')
+            expect(blob.directory_key).to eq('bucket-4')
           end
         end
       end
