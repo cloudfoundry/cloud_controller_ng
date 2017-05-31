@@ -7,12 +7,18 @@ require 'repositories/app_usage_event_repository'
 
 module VCAP::CloudController
   class BuildCreate
-    class BuildError < StandardError; end
-    class InvalidPackage < BuildError; end
-    class SpaceQuotaExceeded < BuildError; end
-    class OrgQuotaExceeded < BuildError; end
-    class DiskLimitExceeded < BuildError; end
-    class StagingInProgress < BuildError; end
+    class BuildError < StandardError
+    end
+    class InvalidPackage < BuildError
+    end
+    class SpaceQuotaExceeded < BuildError
+    end
+    class OrgQuotaExceeded < BuildError
+    end
+    class DiskLimitExceeded < BuildError
+    end
+    class StagingInProgress < BuildError
+    end
 
     attr_reader :staging_response
 
@@ -21,7 +27,7 @@ module VCAP::CloudController
       disk_limit_calculator: StagingDiskCalculator.new,
       environment_presenter: StagingEnvironmentBuilder.new)
 
-      @user_audit_info = user_audit_info
+      @user_audit_info         = user_audit_info
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
       @environment_builder     = environment_presenter
@@ -36,11 +42,11 @@ module VCAP::CloudController
       staging_details.start_after_staging = start_after_staging
 
       build = BuildModel.new(
-        state:        BuildModel::STAGING_STATE,
-        package_guid: package.guid,
-        app:          package.app,
-        created_by_user_guid: @user_audit_info.user_guid,
-        created_by_user_name: @user_audit_info.user_name,
+        state:                 BuildModel::STAGING_STATE,
+        package_guid:          package.guid,
+        app:                   package.app,
+        created_by_user_guid:  @user_audit_info.user_guid,
+        created_by_user_name:  @user_audit_info.user_name,
         created_by_user_email: @user_audit_info.user_email
       )
 
@@ -48,13 +54,16 @@ module VCAP::CloudController
         build.save
         staging_details.staging_guid = build.guid
         lifecycle.create_lifecycle_data_model(build)
+
+        raise BuildError.new('Custom buildpacks are disabled') if using_disabled_custom_buildpack?(build)
+
         Repositories::AppUsageEventRepository.new.create_from_build(build, 'STAGING_STARTED')
         app = package.app
         Repositories::BuildEventRepository.record_build_create(build,
-                                                               @user_audit_info,
-                                                               app.name,
-                                                               app.space_guid,
-                                                               app.organization_guid)
+          @user_audit_info,
+          app.name,
+          app.space_guid,
+          app.organization_guid)
       end
 
       logger.info("build created: #{build.guid}")
@@ -68,6 +77,10 @@ module VCAP::CloudController
     alias_method :create_and_stage_without_event, :create_and_stage
 
     private
+
+    def using_disabled_custom_buildpack?(build)
+      build.lifecycle_data.buildpack_model.custom? && VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+    end
 
     def get_staging_details(package, lifecycle)
       app   = package.app
