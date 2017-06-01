@@ -14,7 +14,7 @@ module VCAP::CloudController
       { name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00' },
       { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },
       { name: 'expired_orphaned_blob_cleanup', class: Jobs::Runtime::ExpiredOrphanedBlobCleanup, time: '01:00' },
-      { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:30' },
+      { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:30', priority: 1 },
     ].freeze
 
     FREQUENTS = [
@@ -70,6 +70,7 @@ module VCAP::CloudController
         clock_opts = {
           name: cleanup_config[:name],
           at: cleanup_config[:time],
+          priority: cleanup_config[:priority] ? cleanup_config[:priority] : 0
         }
 
         @clock.schedule_daily_job(clock_opts) do

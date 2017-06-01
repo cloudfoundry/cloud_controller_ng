@@ -57,61 +57,61 @@ module VCAP::CloudController
         allow(clock).to receive(:schedule_frequent_inline_job)
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'app_usage_events', at: '18:00')
+          expect(args).to eql(name: 'app_usage_events', at: '18:00', priority: 0)
           expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::AppUsageEventsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'app_events', at: '19:00')
+          expect(args).to eql(name: 'app_events', at: '19:00', priority: 0)
           expect(Jobs::Runtime::AppEventsCleanup).to receive(:new).with(2).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::AppEventsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'audit_events', at: '20:00')
+          expect(args).to eql(name: 'audit_events', at: '20:00', priority: 0)
           expect(Jobs::Runtime::EventsCleanup).to receive(:new).with(3).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::EventsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'failed_jobs', at: '21:00')
+          expect(args).to eql(name: 'failed_jobs', at: '21:00', priority: 0)
           expect(Jobs::Runtime::FailedJobsCleanup).to receive(:new).with(4).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::FailedJobsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'service_usage_events', at: '22:00')
+          expect(args).to eql(name: 'service_usage_events', at: '22:00', priority: 0)
           expect(Jobs::Services::ServiceUsageEventsCleanup).to receive(:new).with(5).and_call_original
           expect(block.call).to be_instance_of(Jobs::Services::ServiceUsageEventsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'completed_tasks', at: '23:00')
+          expect(args).to eql(name: 'completed_tasks', at: '23:00', priority: 0)
           expect(Jobs::Runtime::PruneCompletedTasks).to receive(:new).with(6).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::PruneCompletedTasks)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'expired_blob_cleanup', at: '00:00')
+          expect(args).to eql(name: 'expired_blob_cleanup', at: '00:00', priority: 0)
           expect(Jobs::Runtime::ExpiredBlobCleanup).to receive(:new).with(no_args).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredBlobCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'expired_resource_cleanup', at: '00:30')
+          expect(args).to eql(name: 'expired_resource_cleanup', at: '00:30', priority: 0)
           expect(Jobs::Runtime::ExpiredResourceCleanup).to receive(:new).with(no_args).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredResourceCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'expired_orphaned_blob_cleanup', at: '01:00')
+          expect(args).to eql(name: 'expired_orphaned_blob_cleanup', at: '01:00', priority: 0)
           expect(Jobs::Runtime::ExpiredOrphanedBlobCleanup).to receive(:new).with(no_args).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::ExpiredOrphanedBlobCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'orphaned_blobs_cleanup', at: '01:30')
+          expect(args).to eql(name: 'orphaned_blobs_cleanup', at: '01:30', priority: 1)
           expect(Jobs::Runtime::OrphanedBlobsCleanup).to receive(:new).with(no_args).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::OrphanedBlobsCleanup)
         end
