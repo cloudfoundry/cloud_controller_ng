@@ -434,6 +434,13 @@ properties:
     description: "The port used to emit messages to the Metron agent"
     default: 3457
 
+  doppler.use_ssl:
+    description: "Whether to use ssl for the doppler_logging_endpoint listed at /v2/info"
+    default: true
+  doppler.port:
+    description: "Port for doppler_logging_endpoint listed at /v2/info"
+    default: 443
+
   cc.db_encryption_key:
     default: ""
     description: "key for encrypting sensitive values in the CC database"

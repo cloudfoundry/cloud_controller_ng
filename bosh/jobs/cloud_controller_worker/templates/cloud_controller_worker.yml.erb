@@ -161,6 +161,9 @@ loggregator:
   internal_url: <%= p("cc.loggregator.internal_url") %>
 <% end %>
 
+doppler:
+  url: ws<%= "s" if p("doppler.use_ssl") %>://doppler.<%= p("system_domain") %>:<%= p("doppler.port") %>
+
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
 <% db_role = p("ccdb.roles").find { |role| role["tag"] == "admin" } %>
 <%

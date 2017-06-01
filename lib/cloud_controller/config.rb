@@ -226,9 +226,8 @@ module VCAP::CloudController
           optional(:router) => String,
         },
 
-        optional(:doppler) => {
-          enabled: bool,
-          optional(:url) => String
+        doppler: {
+          url: String
         },
 
         optional(:request_timeout_in_seconds) => Integer,

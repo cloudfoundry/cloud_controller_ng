@@ -122,6 +122,9 @@ db_encryption_key: some-key
 loggregator:
   router: "127.0.0.1:8080"
 
+doppler:
+  url: 'wss://doppler.the-system-domain.com:443'
+
 renderer:
   max_results_per_page: 100
   default_results_per_page: 50

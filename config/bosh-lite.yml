@@ -86,7 +86,7 @@ loggregator:
   internal_url: 'http://loggregator-trafficcontroller.service.cf.internal:8081'
 
 doppler:
-  enabled: false
+  url: wss://doppler.bosh-lite.com:443
 
 db: &db
   database: postgres://ccadmin:admin@10.244.0.30:5524/ccdb

@@ -77,7 +77,7 @@ loggregator:
   internal_url: 'http://loggregator-trafficcontroller.service.cf.internal:8081'
 
 doppler:
-  enabled: false
+  url: 'wss://doppler.example.com:443'
 
 db:
   max_connections: 32

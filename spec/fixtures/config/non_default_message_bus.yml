@@ -58,6 +58,9 @@ logging:
   file: spec/artifacts/spec.log
   level: debug
 
+doppler:
+  url: 'wss://doppler.the-system-domain.com:443'
+
 message_bus_servers:
   - nats://127.0.0.1:4223
 pid_filename: /tmp/cloud_controller.pid

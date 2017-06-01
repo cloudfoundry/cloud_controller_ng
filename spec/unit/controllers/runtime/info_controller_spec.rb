@@ -73,18 +73,11 @@ module VCAP::CloudController
         expect(hash['routing_endpoint']).to eq('some_routing_api')
       end
 
-      it 'includes the doppler_logging_endpoint when enabled' do
-        TestConfig.override(doppler: { enabled: true, url: 'doppler_url' })
+      it 'includes the doppler_logging_endpoint' do
+        TestConfig.override(doppler: { url: 'doppler_url' })
         get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['doppler_logging_endpoint']).to eq('doppler_url')
-      end
-
-      it 'excludes the doppler_logging_endpoint when disabled' do
-        TestConfig.override(doppler: { enabled: false })
-        get '/v2/info'
-        hash = MultiJson.load(last_response.body)
-        expect(hash['doppler_logging_endpoint']).to be_nil
       end
 
       it 'includes cli version info when confgired' do
