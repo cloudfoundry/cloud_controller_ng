@@ -13,22 +13,26 @@ module VCAP::CloudController
       let(:space_guid) { space.guid }
       let(:environment_variables) { { BAKED: 'POTATO' } }
       let(:buildpack) { Buildpack.make }
+      let(:buildpack_identifier) { buildpack.name }
       let(:relationships) { { space: { data: { guid: space_guid } } } }
-      let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack.name], stack: 'cflinuxfs2' } } }
-      let(:lifecycle) { instance_double(AppBuildpackLifecycle, create_lifecycle_data_model: nil) }
+      let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: 'cflinuxfs2' } } }
+      let(:lifecycle) { AppBuildpackLifecycle.new(message) }
+      let(:message) do
+        AppCreateMessage.new(
+          {
+            name:                  'my-app',
+            relationships:         relationships,
+            environment_variables: environment_variables,
+            lifecycle:             lifecycle_request
+          })
+      end
 
       context 'when the request is valid' do
-        let(:message) do
-          AppCreateMessage.new(
-            {
-              name: 'my-app',
-              relationships: relationships,
-              environment_variables: environment_variables,
-              lifecycle: lifecycle_request
-            })
-        end
 
-        before { expect(message).to be_valid }
+        before do
+          expect(message).to be_valid
+          allow(lifecycle).to receive(:create_lifecycle_data_model)
+        end
 
         it 'creates an app' do
           app = app_create.create(message, lifecycle)
@@ -49,6 +53,40 @@ module VCAP::CloudController
             )
 
           app_create.create(message, lifecycle)
+        end
+      end
+
+      context 'when using a custom buildpack' do
+        let(:buildpack_identifier) { 'https://github.com/buildpacks/my-special-buildpack' }
+
+        context 'when custom buildpacks are disabled' do
+          before do
+            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(true)
+          end
+
+          it 'raises an error' do
+            expect {
+              app_create.create(message, lifecycle)
+            }.to raise_error(AppCreate::InvalidApp)
+          end
+
+          it 'does not create an app' do
+            expect {
+              app_create.create(message, lifecycle) rescue nil
+            }.not_to change { [AppModel.count, BuildpackLifecycleDataModel.count, Event.count] }
+          end
+        end
+
+        context 'when custom buildpacks are enabled' do
+          before do
+            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(false)
+          end
+
+          it 'allows apps with custom buildpacks' do
+            expect {
+              app_create.create(message, lifecycle)
+            }.to change(AppModel, :count).by(1)
+          end
         end
       end
 
