@@ -79,7 +79,7 @@ module VCAP::CloudController
     private
 
     def using_disabled_custom_buildpack?(build)
-      build.lifecycle_data.buildpack_model.custom? && custom_buildpacks_disabled?
+      build.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
     end
 
     def custom_buildpacks_disabled?

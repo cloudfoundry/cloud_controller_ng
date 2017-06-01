@@ -72,6 +72,24 @@ module VCAP::CloudController
       end
     end
 
+    describe '#using_custom_buildpack?' do
+      context 'when using a custom buildpack' do
+        subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpack: 'https://github.com/buildpacks/the-best') }
+
+        it 'returns true' do
+          expect(lifecycle_data.using_custom_buildpack?).to eq true
+        end
+      end
+
+      context 'when not using a custom buildpack' do
+        subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpack: nil) }
+
+        it 'returns false' do
+          expect(lifecycle_data.using_custom_buildpack?).to eq false
+        end
+      end
+    end
+
     describe '#to_hash' do
       let(:expected_lifecycle_data) do
         { buildpacks: [buildpack], stack: 'cflinuxfs2' }

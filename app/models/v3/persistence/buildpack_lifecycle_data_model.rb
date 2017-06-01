@@ -50,6 +50,10 @@ module VCAP::CloudController
       CustomBuildpack.new(buildpack)
     end
 
+    def using_custom_buildpack?
+      buildpack_model.custom?
+    end
+
     def to_hash
       { buildpacks: buildpack ? [CloudController::UrlSecretObfuscator.obfuscate(buildpack)] : [], stack: stack }
     end

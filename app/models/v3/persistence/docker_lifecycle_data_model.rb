@@ -8,6 +8,10 @@ module VCAP::CloudController
       AutoDetectionBuildpack.new
     end
 
+    def using_custom_buildpack?
+      false
+    end
+
     def to_hash
       {}
     end

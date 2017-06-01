@@ -28,7 +28,6 @@ module VCAP::CloudController
       end
 
       context 'when the request is valid' do
-
         before do
           expect(message).to be_valid
           allow(lifecycle).to receive(:create_lifecycle_data_model)
