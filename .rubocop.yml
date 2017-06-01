@@ -10,6 +10,42 @@ AllCops:
     - vendor/**/*
     - lib/diego/bbs/models/**/*
 
+Layout/AlignParameters:
+  Enabled: false
+
+Layout/ClosingParenthesisIndentation:
+  Enabled: false
+
+Layout/DotPosition:
+  EnforcedStyle: trailing
+
+Layout/IndentArray:
+  EnforcedStyle: consistent
+
+Layout/IndentHash:
+  Enabled: false
+
+Layout/MultilineArrayBraceLayout:
+  Enabled: false
+
+Layout/MultilineBlockLayout:
+  Enabled: false
+
+Layout/MultilineHashBraceLayout:
+  Enabled: false
+
+Layout/MultilineMethodCallBraceLayout:
+  Enabled: false
+
+Layout/MultilineMethodDefinitionBraceLayout:
+  Enabled: false
+
+Layout/MultilineOperationIndentation:
+  Enabled: false
+
+Layout/SpaceAroundEqualsInParameterDefault:
+  EnforcedStyle: no_space
+
 Lint/AmbiguousBlockAssociation:
   Enabled: false
 
@@ -77,9 +113,6 @@ Performance/Sample:
 Style/Alias:
   EnforcedStyle: prefer_alias_method
 
-Style/AlignParameters:
-  Enabled: false
-
 Style/BlockDelimiters:
   Enabled: false
 
@@ -89,14 +122,8 @@ Style/BracesAroundHashParameters:
 Style/ClassAndModuleChildren:
   Enabled: false
 
-Style/ClosingParenthesisIndentation:
-  Enabled: false
-
 Style/Documentation:
   Enabled: false
-
-Style/DotPosition:
-  EnforcedStyle: trailing
 
 Style/DoubleNegation:
   Enabled: false
@@ -120,34 +147,10 @@ Style/GuardClause:
 Style/IfUnlessModifier:
   Enabled: false
 
-Style/IndentArray:
-  EnforcedStyle: consistent
-
-Style/IndentHash:
-  Enabled: false
-
 Style/Lambda:
   Enabled: false
 
-Style/MultilineArrayBraceLayout:
-  Enabled: false
-
 Style/MultilineBlockChain:
-  Enabled: false
-
-Style/MultilineBlockLayout:
-  Enabled: false
-
-Style/MultilineHashBraceLayout:
-  Enabled: false
-
-Style/MultilineMethodCallBraceLayout:
-  Enabled: false
-
-Style/MultilineMethodDefinitionBraceLayout:
-  Enabled: false
-
-Style/MultilineOperationIndentation:
   Enabled: false
 
 Style/NegatedIf:
@@ -188,9 +191,6 @@ Style/SignalException:
 
 Style/SingleLineBlockParams:
   Enabled: false
-
-Style/SpaceAroundEqualsInParameterDefault:
-  EnforcedStyle: no_space
 
 Style/StructInheritance:
   Enabled: false
