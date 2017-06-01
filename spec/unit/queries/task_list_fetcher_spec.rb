@@ -208,7 +208,7 @@ module VCAP::CloudController
           end
 
           it 'generates a SQL query with the correct structure (without an inner select)' do
-            expect(results.sql).to match(/SELECT \* FROM `tasks` WHERE \(\(`name` IN \('.+', '.+'\)\) AND \(`app_guid` = '.+'\)\)/)
+            expect(results.sql).to match(/SELECT \* FROM .tasks. WHERE \(\(.name. IN \('.+', '.+'\)\) AND \(.app_guid. = '.+'\)\)/)
           end
         end
 
