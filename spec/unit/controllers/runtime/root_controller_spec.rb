@@ -50,6 +50,15 @@ module VCAP::CloudController
         expected_uri = "#{link_prefix}/networking/v0/external"
         expect(hash['links']['network_policy']['href']).to eq(expected_uri)
       end
+
+      it 'returns a link to the logging API' do
+        expected_uri = 'wss://doppler.my-super-cool-cf.com:1234'
+        TestConfig.override(doppler: { url: expected_uri })
+
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['links']['logging']['href']).to eq(expected_uri)
+      end
     end
   end
 end

@@ -35,6 +35,10 @@ module VCAP::CloudController
 
           uaa: {
             href: VCAP::CloudController::Config.config[:uaa][:url]
+          },
+
+          logging: {
+            href: VCAP::CloudController::Config.config[:doppler][:url]
           }
         }
       }
