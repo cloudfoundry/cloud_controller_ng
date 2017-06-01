@@ -206,6 +206,10 @@ module VCAP::CloudController
           it 'returns the correct set of tasks' do
             expect(results.all).to match_array([task_in_space1])
           end
+
+          it 'generates a SQL query with the correct structure (without an inner select)' do
+            expect(results.sql).to match(/SELECT \* FROM `tasks` WHERE \(\(`name` IN \('.+', '.+'\)\) AND \(`app_guid` = '.+'\)\)/)
+          end
         end
 
         context 'when task states are provided' do

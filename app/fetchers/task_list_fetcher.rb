@@ -14,7 +14,12 @@ module VCAP::CloudController
       app_dataset = AppModel.where(guid: message.app_guid).eager(:space, space: :organization)
       app = app_dataset.first
       return nil unless app
-      [app, filter(message, app_dataset)]
+
+      if message.requested?(:organization_guids) || message.requested?(:space_guids) || message.requested?(:app_guids)
+        [app, filter(message, app_dataset)]
+      else
+        [app, filter_task_dataset(message, TaskModel.dataset).where(app_guid: message.app_guid)]
+      end
     end
 
     private
