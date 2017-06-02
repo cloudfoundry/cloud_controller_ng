@@ -82,10 +82,9 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     context 'when a BuildError is raised' do
-
       before do
-        allow_any_instance_of(VCAP::CloudController::BuildCreate)
-          .to receive(:create_and_stage).and_raise(VCAP::CloudController::BuildCreate::BuildError.new('an error occurred'))
+        allow_any_instance_of(VCAP::CloudController::BuildCreate).
+          to receive(:create_and_stage).and_raise(VCAP::CloudController::BuildCreate::BuildError.new('an error occurred'))
       end
 
       it 'returns a 422 Unprocessable Entity' do
