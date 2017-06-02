@@ -35,6 +35,24 @@ module VCAP::CloudController
         expect(process.health_check_timeout).to eq(20)
       end
 
+      context 'when the new healthcheck is http' do
+        let(:health_check) do
+          {
+            type: 'http',
+            data: { endpoint: '/healthcheck' }
+          }
+        end
+
+        it 'updates the requested changes on the process' do
+          process_update.update(process, message)
+
+          process.reload
+          expect(process.command).to eq('new')
+          expect(process.health_check_type).to eq('http')
+          expect(process.health_check_http_endpoint).to eq('/healthcheck')
+        end
+      end
+
       context 'when no changes are requested' do
         let(:message) { ProcessUpdateMessage.new({}) }
 
