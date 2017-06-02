@@ -119,6 +119,10 @@ module CloudController
         FogBlob.new(f, @cdn) if f
       end
 
+      def files(_ignored_directory_prefixes=nil)
+        dir.files
+      end
+
       private
 
       def formatted_storage_options
@@ -128,10 +132,6 @@ module CloudController
         encrypt_opt = opts.delete(:encryption)
         opts['x-amz-server-side-encryption'] = encrypt_opt
         opts
-      end
-
-      def files
-        dir.files
       end
 
       def files_for(prefix)

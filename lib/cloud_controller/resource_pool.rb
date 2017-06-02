@@ -23,7 +23,8 @@ class VCAP::CloudController::ResourcePool
 
     @blobstore = CloudController::Blobstore::ClientProvider.provide(
       options: options,
-      directory_key: options.fetch(:resource_directory_key, 'cc-resources')
+      directory_key: options.fetch(:resource_directory_key),
+      root_dir: CloudController::DependencyLocator::RESOURCE_POOL_DIR,
     )
 
     @minimum_size = options[:minimum_size] || 0

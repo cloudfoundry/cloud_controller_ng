@@ -332,7 +332,7 @@ module VCAP::CloudController
       end
 
       it 'sets up the resource pool instance' do
-        Config.configure_components(@test_config.merge(resource_pool: { minimum_size: 9001, fog_connection: {} }))
+        Config.configure_components(@test_config.merge(resource_pool: { resource_directory_key: 'foo', minimum_size: 9001, fog_connection: {} }))
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 

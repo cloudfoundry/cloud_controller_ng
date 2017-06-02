@@ -3,6 +3,7 @@ require 'cloud_controller/blobstore/errors'
 require 'cloud_controller/blobstore/webdav/dav_blob'
 require 'cloud_controller/blobstore/webdav/nginx_secure_link_signer'
 require 'cloud_controller/blobstore/webdav/http_client_provider'
+require 'nokogiri'
 
 module CloudController
   module Blobstore
@@ -164,6 +165,32 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
+      def files(ignored_directory_prefixes=[])
+        queue = ['']
+        Enumerator.new do |yielder|
+          until queue.empty?
+            path = queue.shift
+
+            request_url = url_without_key + path
+            response = with_error_handling { @client.request(:propfind, request_url, nil, nil, @headers) }
+            xml = Nokogiri::XML.parse(response.body)
+
+            props = xml.xpath('//D:prop')[1..-1]
+            props.each do |prop|
+              full_path = get_full_path(path, prop.xpath('D:displayname').first.text)
+              next if ignored_directory_prefixes.any? && full_path.start_with?(*ignored_directory_prefixes)
+
+              if prop.xpath('D:resourcetype').children.empty?
+                blob = DavBlob.new(key: full_path, httpmessage: nil, signer: nil)
+                yielder << blob
+              else
+                queue.insert(0, full_path)
+              end
+            end
+          end
+        end
+      end
+
       private
 
       def url(key)
@@ -176,6 +203,14 @@ module CloudController
 
       def url_without_key
         [@endpoint, 'admin', @directory_key, @root_dir].compact.join('/') + '/'
+      end
+
+      def get_full_path(path, display_name)
+        if path.present?
+          [path, display_name].join('/')
+        else
+          display_name
+        end
       end
 
       def logger

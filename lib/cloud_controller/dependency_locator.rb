@@ -34,6 +34,8 @@ module CloudController
     include VCAP::CloudController
 
     LARGE_COLLECTION_SIZE = 10_000
+    BUILDPACK_CACHE_DIR = 'buildpack_cache'.freeze
+    RESOURCE_POOL_DIR = 'app_bits_cache'.freeze
 
     attr_accessor :config
 
@@ -126,7 +128,7 @@ module CloudController
       Blobstore::ClientProvider.provide(
         options:       options,
         directory_key: options.fetch(:droplet_directory_key),
-        root_dir:      'buildpack_cache',
+        root_dir:      BUILDPACK_CACHE_DIR,
         resource_type: :buildpack_cache
       )
     end
@@ -146,7 +148,8 @@ module CloudController
 
       Blobstore::ClientProvider.provide(
         options:       options,
-        directory_key: options.fetch(:resource_directory_key)
+        directory_key: options.fetch(:resource_directory_key),
+        root_dir:      RESOURCE_POOL_DIR,
       )
     end
 

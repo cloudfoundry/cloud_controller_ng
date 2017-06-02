@@ -76,3 +76,4 @@ require 'models/services/route_binding'
 
 require 'models/job'
 require 'models/request_count'
+require 'models/orphaned_blob'

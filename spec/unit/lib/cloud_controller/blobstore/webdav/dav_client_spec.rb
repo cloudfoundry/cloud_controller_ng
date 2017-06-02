@@ -675,6 +675,153 @@ module CloudController
         end
       end
 
+      describe '#files' do
+        let(:root_xml_body) do
+          <<-XML
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>always-ignore-first-obj</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>nested-dir-1</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>nested-dir-2</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+          XML
+        end
+        let(:nested_xml_body) do
+          <<-XML
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>always-ignore-first-obj</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>some-blob</D:displayname>
+                    <D:resourcetype></D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+          XML
+        end
+        let(:nested_xml_body_2) do
+          <<-XML
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>always-ignore-first-obj</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>some-other-blob</D:displayname>
+                    <D:resourcetype></D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+          XML
+        end
+
+        let(:fake_root_response) { double(:response, body: root_xml_body) }
+        let(:fake_nested_response) { double(:response, body: nested_xml_body) }
+        let(:fake_nested_response_2) { double(:response, body: nested_xml_body_2) }
+
+        before do
+          allow(httpclient).to receive(:request).
+            with(:propfind, 'http://localhost/admin/droplets/', nil, nil, {}).
+            and_return(fake_root_response)
+          allow(httpclient).to receive(:request).
+            with(:propfind, 'http://localhost/admin/droplets/nested-dir-2', nil, nil, {}).
+            and_return(fake_nested_response_2)
+          allow(httpclient).to receive(:request).
+            with(:propfind, 'http://localhost/admin/droplets/nested-dir-1', nil, nil, {}).
+            and_return(fake_nested_response)
+        end
+
+        it 'enumerates a web dav blobstore' do
+          blob_keys = client.files.first(2).map(&:key)
+
+          expect(blob_keys).to match_array(%w(nested-dir-1/some-blob nested-dir-2/some-other-blob))
+        end
+
+        context 'when provided a path to ignore' do
+          let(:root_xml_body) do
+            <<-XML
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>always-ignore-first-obj</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>ignored-directory</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+            XML
+          end
+
+          it 'does not enumerate ignored directories' do
+            blob_keys = client.files(%w(some-directory ignored-directory))
+            expect(blob_keys.first).to be(nil)
+          end
+        end
+      end
+
       context 'when root_dir is configured' do
         let(:root_dir) { 'root_dir' }
 

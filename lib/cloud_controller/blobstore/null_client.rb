@@ -32,6 +32,8 @@ module CloudController
       def blob(key)
         Blob.new
       end
+
+      def files(args=nil); end
     end
   end
 end

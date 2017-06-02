@@ -195,6 +195,17 @@ module CloudController
             expect(wrapped_client).to have_received(:blob).with(key).exactly(num_retries).times
           end
         end
+
+        context '#files' do
+          let(:args) { 'args' }
+          before { allow(wrapped_client).to receive(:files).and_raise(RetryableError) }
+
+          it 'retries the operation' do
+            expect { client.files(args) }.to raise_error RetryableError
+
+            expect(wrapped_client).to have_received(:files).with(args).exactly(num_retries).times
+          end
+        end
       end
 
       describe '#with_retries' do
