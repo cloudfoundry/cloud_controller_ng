@@ -81,6 +81,22 @@ RSpec.describe BuildsController, type: :controller do
       end
     end
 
+    context 'when a BuildError is raised' do
+
+      before do
+        allow_any_instance_of(VCAP::CloudController::BuildCreate)
+          .to receive(:create_and_stage).and_raise(VCAP::CloudController::BuildCreate::BuildError.new('an error occurred'))
+      end
+
+      it 'returns a 422 Unprocessable Entity' do
+        post :create, body: req_body
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('UnprocessableEntity')
+        expect(response.body).to include('an error occurred')
+      end
+    end
+
     describe 'buildpack lifecycle' do
       let(:buildpack) { VCAP::CloudController::Buildpack.make }
       let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
