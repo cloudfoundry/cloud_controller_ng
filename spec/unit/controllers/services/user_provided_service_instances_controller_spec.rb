@@ -176,15 +176,83 @@ module VCAP::CloudController
           before { set_current_user_as_admin }
 
           context 'when the operator is ":"' do
-            it 'successfully filters' do
-              instance1 = UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
-              UserProvidedServiceInstance.make(name: 'instance-2', space: space2)
+            context 'when the details fit on the first page' do
+              it 'successfully filters' do
+                instance1 = UserProvidedServiceInstance.make(name: 'instance-1', space: space1)
+                UserProvidedServiceInstance.make(name: 'instance-2', space: space2)
 
-              get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}"
+                get "v2/user_provided_service_instances?q=organization_guid:#{org1.guid}"
 
-              expect(last_response.status).to eq(200)
-              expect(decoded_response['resources'].length).to eq(1)
-              expect(decoded_response['resources'][0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
+                expect(last_response.status).to eq(200)
+                expect(decoded_response['resources'].length).to eq(1)
+                expect(decoded_response['resources'][0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
+              end
+            end
+
+            context 'with pagination' do
+              let(:results_per_page) { 1 }
+              let!(:instances) do
+                [UserProvidedServiceInstance.make(name: 'instance-1', space: space1),
+                 UserProvidedServiceInstance.make(name: 'instance-2', space: space1),
+                 UserProvidedServiceInstance.make(name: 'instance-3', space: space1),
+                 UserProvidedServiceInstance.make(name: 'instance-4', space: space2),
+                ]
+              end
+
+              context 'at page 1' do
+                let(:page) { 1 }
+                it 'passes the org_guid filter into the next_url' do
+                  get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                  expect(last_response.status).to eq(200), last_response.body
+                  services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                  expect(services.length).to eq(1)
+                  expect(services).to include(instances[0].guid)
+                  result = JSON.parse(last_response.body)
+                  expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
+                  expect(result['prev_url']).to be_nil
+                end
+              end
+
+              context 'at page 2' do
+                let(:page) { 2 }
+                it 'passes the org_guid filter into the next_url' do
+                  get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                  expect(last_response.status).to eq(200), last_response.body
+                  services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                  expect(services.length).to eq(1)
+                  expect(services).to include(instances[1].guid)
+                  result = JSON.parse(last_response.body)
+                  expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
+                  expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
+                end
+              end
+
+              context 'at page 3' do
+                let(:page) { 3 }
+                it 'passes the org_guid filter into the next_url' do
+                  get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                  expect(last_response.status).to eq(200), last_response.body
+                  services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                  expect(services.length).to eq(1)
+                  expect(services).to include(instances[2].guid)
+                  result = JSON.parse(last_response.body)
+                  expect(result['next_url']).to be_nil
+                  expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
+                end
+              end
+
+              context 'at page 4' do
+                let(:page) { 4 }
+                it 'passes the org_guid filter into the next_url' do
+                  get "v2/user_provided_service_instances?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                  expect(last_response.status).to eq(200), last_response.body
+                  services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                  expect(services.length).to eq(0)
+                  result = JSON.parse(last_response.body)
+                  expect(result['next_url']).to be_nil
+                  expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
+                end
+              end
             end
 
             context 'when filtering by other parameters as well' do

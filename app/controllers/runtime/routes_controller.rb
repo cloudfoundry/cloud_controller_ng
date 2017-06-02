@@ -165,6 +165,7 @@ module VCAP::CloudController
     end
 
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      orig_query = opts[:q] && opts[:q].clone
       org_index = opts[:q].index { |query| query.start_with?('organization_guid:') } if opts[:q]
       orgs_index = opts[:q].index { |query| query.start_with?('organization_guid IN ') } if opts[:q]
 
@@ -182,6 +183,7 @@ module VCAP::CloudController
       end
 
       filtered_dataset = super(model, ds, qp, opts)
+      opts[:q] = orig_query
 
       if org_guids.any?
         filtered_dataset.

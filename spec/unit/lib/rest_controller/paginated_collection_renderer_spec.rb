@@ -316,7 +316,7 @@ module VCAP::CloudController::RestController
         end
       end
 
-      context 'orber-by' do
+      context 'order-by' do
         before do
           VCAP::CloudController::TestModel.make
           VCAP::CloudController::TestModel.make
@@ -375,6 +375,43 @@ module VCAP::CloudController::RestController
           end
 
           expect(JSON.parse(render_json_call)['resources'][0]['entity']['unique_value']).to eq('test_value')
+        end
+      end
+
+      context 'when request_params are given' do
+        let(:results_per_page) { 1 }
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          opts[:q] = 'organization_guid:1234'
+        end
+
+        context 'at page 1' do
+          let(:page) { 1 }
+          it 'has a next link with the q' do
+            result = JSON.parse(render_json_call)
+            expect(result['prev_url']).to be_nil
+            expect(result['next_url']).to include('q=organization_guid:1234')
+          end
+        end
+
+        context 'at page 2' do
+          let(:page) { 2 }
+          it 'has a prev link with the q' do
+            result = JSON.parse(render_json_call)
+            expect(result['prev_url']).to include('q=organization_guid:1234')
+            expect(result['next_url']).to include('q=organization_guid:1234')
+          end
+        end
+
+        context 'at page 3' do
+          let(:page) { 2 }
+          it 'has a prev link with the q' do
+            result = JSON.parse(render_json_call)
+            expect(result['prev_url']).to include('q=organization_guid:1234')
+            expect(result['next_url']).to include('q=organization_guid:1234')
+          end
         end
       end
     end

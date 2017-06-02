@@ -952,6 +952,7 @@ module VCAP::CloudController
       it 'should contain links to the route_mappings resource' do
         route_guid = route.guid
         get 'v2/routes'
+        expect(last_response.status).to eq(200), last_response.body
 
         expect(decoded_response['resources'].length).to eq(1)
         expect(decoded_response['resources'][0]['entity']['route_mappings_url']).
@@ -962,7 +963,7 @@ module VCAP::CloudController
         context 'When Organization Guid Not Present' do
           it 'Return Resource length zero' do
             get 'v2/routes?q=organization_guid:notpresent'
-            expect(last_response.status).to eq(200)
+            expect(last_response.status).to eq(200), last_response.body
             expect(decoded_response['resources'].length).to eq(0)
           end
         end
@@ -979,15 +980,70 @@ module VCAP::CloudController
           let(:space2) { Space.make(organization: organization2) }
           let(:route2) { Route.make(domain: domain2, space: space2) }
 
-          it 'Allows filtering by organization_guid' do
-            org_guid = organization.guid
-            route_guid = route.guid
+          context 'when the details fit on the first page' do
+            it 'Allows filtering by organization_guid' do
+              org_guid = organization.guid
+              route_guid = route.guid
 
-            get "v2/routes?q=organization_guid:#{org_guid}"
+              get "v2/routes?q=organization_guid:#{org_guid}"
 
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['resources'].length).to eq(1)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+              expect(last_response.status).to eq(200)
+              expect(decoded_response['resources'].length).to eq(1)
+              expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+            end
+          end
+
+          context 'with pagination' do
+            let(:results_per_page) { 1 }
+            let(:route2) { Route.make(domain: domain1, space: space1) }
+            let(:route3) { Route.make(domain: domain2, space: space2) }
+            let!(:instances) do
+              [route1, route2, route3]
+            end
+            let(:domain1) { domain }
+            let(:org1) { organization }
+            let(:org2) { organization2 }
+
+            context 'at page 1' do
+              let(:page) { 1 }
+              it 'passes the org_guid filter into the next_url' do
+                get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                expect(last_response.status).to eq(200), last_response.body
+                routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(routes.length).to eq(1)
+                expect(routes).to include(instances[0].guid)
+                result = JSON.parse(last_response.body)
+                expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
+                expect(result['prev_url']).to be_nil
+              end
+            end
+
+            context 'at page 2' do
+              let(:page) { 2 }
+              it 'passes the org_guid filter into the next_url' do
+                get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                expect(last_response.status).to eq(200), last_response.body
+                routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(routes.length).to eq(1)
+                expect(routes).to include(instances[1].guid)
+                result = JSON.parse(last_response.body)
+                expect(result['next_url']).to be_nil
+                expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
+              end
+            end
+
+            context 'at page 3' do
+              let(:page) { 3 }
+              it 'passes the org_guid filter into the next_url' do
+                get "v2/routes?page=#{page}&results-per-page=#{results_per_page}&q=organization_guid:#{org1.guid}"
+                expect(last_response.status).to eq(200), last_response.body
+                routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(routes.length).to eq(0)
+                result = JSON.parse(last_response.body)
+                expect(result['next_url']).to be_nil
+                expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
+              end
+            end
           end
 
           it 'Allows organization_guid query at any place in query ' do

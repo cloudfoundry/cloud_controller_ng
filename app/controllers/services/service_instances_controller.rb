@@ -221,6 +221,7 @@ module VCAP::CloudController
       # special case: Sequel does not support querying columns not on the current table, so
       # when filtering by org_guid we have to join tables before executing the query.
 
+      orig_query = opts[:q] && opts[:q].clone
       org_filters = []
 
       opts[:q] ||= []
@@ -237,6 +238,8 @@ module VCAP::CloudController
       else
         super(model, ds, qp, opts).where(space_id: select_spaces_based_on_org_filters(org_filters))
       end
+    ensure
+      opts[:q] = orig_query
     end
 
     def add_related(guid, name, other_guid, find_model=model)

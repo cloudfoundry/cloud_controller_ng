@@ -106,6 +106,7 @@ module VCAP::CloudController
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       # special case: we cannot query columns in the org table from the UPSI
       # table, so we have to join w/ orgs and then select on the spaces of the org
+      orig_query = opts[:q] && opts[:q].clone
       org_filters = []
 
       opts[:q] ||= []
@@ -122,6 +123,8 @@ module VCAP::CloudController
       else
         super(model, ds, qp, opts).where(space_id: select_on_org_filters_using_spaces(org_filters))
       end
+    ensure
+      opts[:q] = orig_query
     end
 
     def select_on_org_filters_using_spaces(org_filters)
