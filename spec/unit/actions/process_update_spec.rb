@@ -53,6 +53,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the old healthcheck is http and the new healtcheck is not' do
+        let!(:process) do
+          App.make(
+            :process,
+            command:              'initial command',
+            health_check_type:    'http',
+            health_check_http_endpoint: '/healthcheck',
+            health_check_timeout: 10,
+            ports:                [1574, 3389]
+          )
+        end
+
+        let(:health_check) do
+          {
+            type: 'port',
+          }
+        end
+
+        it 'clears the HTTP endpoint field' do
+          process_update.update(process, message)
+
+          process.reload
+          expect(process.command).to eq('new')
+          expect(process.health_check_type).to eq('port')
+          expect(process.health_check_http_endpoint).to be_nil
+        end
+      end
+
       context 'when no changes are requested' do
         let(:message) { ProcessUpdateMessage.new({}) }
 

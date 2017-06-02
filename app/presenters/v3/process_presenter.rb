@@ -16,7 +16,8 @@ module VCAP::CloudController
             health_check: {
               type: process.health_check_type,
               data: {
-                timeout: process.health_check_timeout
+                timeout: process.health_check_timeout,
+                endpoint: process.health_check_http_endpoint
               }
             },
             created_at:   process.created_at,

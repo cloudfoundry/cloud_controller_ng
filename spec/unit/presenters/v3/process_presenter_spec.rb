@@ -14,8 +14,9 @@ module VCAP::CloudController::Presenters::V3
           disk_quota:           37,
           command:              'rackup',
           metadata:             {},
-          health_check_type:    'process',
+          health_check_type:    'http',
           health_check_timeout: 51,
+          health_check_http_endpoint: '/healthcheck',
           created_at:           Time.at(1)
         )
       }
@@ -39,8 +40,9 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:memory_in_mb]).to eq(42)
         expect(result[:disk_in_mb]).to eq(37)
         expect(result[:command]).to eq('rackup')
-        expect(result[:health_check][:type]).to eq('process')
+        expect(result[:health_check][:type]).to eq('http')
         expect(result[:health_check][:data][:timeout]).to eq(51)
+        expect(result[:health_check][:data][:endpoint]).to eq('/healthcheck')
         expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
         expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
         expect(result[:links]).to eq(links)
