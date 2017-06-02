@@ -20,6 +20,8 @@ module VCAP::CloudController
 
         lifecycle.update_lifecycle_data_model(app)
 
+        raise InvalidApp.new('Custom buildpacks are disabled') if using_disabled_custom_buildpack?(app)
+
         Repositories::AppEventRepository.new.record_app_update(
           app,
           app.space,
@@ -34,6 +36,14 @@ module VCAP::CloudController
     end
 
     private
+
+    def using_disabled_custom_buildpack?(app)
+      app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
+    end
+
+    def custom_buildpacks_disabled?
+      VCAP::CloudController::Config.config[:disable_custom_buildpacks]
+    end
 
     def validate_not_changing_lifecycle_type!(app, lifecycle)
       return if app.lifecycle_type == lifecycle.type

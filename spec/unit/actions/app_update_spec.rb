@@ -104,6 +104,37 @@ module VCAP::CloudController
           }.to raise_error(AppUpdate::InvalidApp, 'Lifecycle type cannot be changed')
         end
       end
+
+      context 'when custom buildpacks are disabled and user provides a custom buildpack' do
+        let(:message) do
+          AppUpdateMessage.new({
+            lifecycle: {
+              type: 'buildpack',
+              data: {
+                buildpacks: ['https://github.com/buildpacks/my-special-buildpack'],
+                stack:      'cflinuxfs2'
+              }
+            }
+          })
+        end
+
+        before do
+          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(true)
+        end
+
+        it 'raises an InvalidApp error' do
+          expect {
+            app_update.update(app_model, message, lifecycle)
+          }.to raise_error(AppUpdate::InvalidApp, 'Custom buildpacks are disabled')
+        end
+
+        it 'does not modify the app' do
+          lifecycle_data = app_model.lifecycle_data
+          expect {
+            app_update.update(app_model, message, lifecycle) rescue nil
+          }.not_to change { [app_model, lifecycle_data, Event.count] }
+        end
+      end
     end
   end
 end
