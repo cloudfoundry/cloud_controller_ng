@@ -14,6 +14,7 @@ module VCAP::CloudController
       super(params)
       @requested_keys << :health_check_type if HashUtils.dig(params, :health_check, :type)
       @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data, :timeout)
+      @requested_keys << :health_check_endpoint if HashUtils.dig(params, :health_check, :data, :endpoint)
     end
 
     def self.health_check_requested?
@@ -28,12 +29,17 @@ module VCAP::CloudController
     if:     proc { |a| a.requested?(:command) }
 
     validates :health_check_type,
-    inclusion: { in: %w(port process), message: 'must be "port" or "process"' },
+    inclusion: { in: %w(port process http), message: 'must be "port", "process", or "http"' },
     if: health_check_requested?
 
     validates :health_check_timeout,
     allow_nil: true,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+    if: health_check_requested?
+
+    validates :health_check_endpoint,
+    allow_nil: true,
+    uri_path: true,
     if: health_check_requested?
 
     def health_check_type
@@ -44,8 +50,12 @@ module VCAP::CloudController
       HashUtils.dig(health_check, :data, :timeout)
     end
 
+    def health_check_endpoint
+      HashUtils.dig(health_check, :data, :endpoint)
+    end
+
     def audit_hash
-      super(exclude: [:health_check_type, :health_check_timeout])
+      super(exclude: [:health_check_type, :health_check_timeout, :health_check_endpoint])
     end
 
     private

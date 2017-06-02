@@ -41,6 +41,12 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class UriPathValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      record.errors.add attribute, 'must be a valid URI path' unless UriUtils.is_uri_path?(value)
+    end
+  end
+
   class EnvironmentVariablesValidator < ActiveModel::EachValidator
     extend StandaloneValidator
 

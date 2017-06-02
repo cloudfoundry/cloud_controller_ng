@@ -43,9 +43,9 @@ module VCAP::CloudController
       it 'excludes nested health check keys' do
         message = ProcessUpdateMessage.new(
           {
-            health_check: { type: 'type', data: { timeout: 4 } }
+            health_check: { type: 'type', data: { timeout: 4, endpoint: "something" } }
           })
-        expect(message.audit_hash).to eq({ 'health_check' => { type: 'type', data: { timeout: 4 } } })
+        expect(message.audit_hash).to eq({ 'health_check' => { type: 'type', data: { timeout: 4, endpoint: "something" } } })
       end
     end
 
@@ -105,6 +105,36 @@ module VCAP::CloudController
         end
       end
 
+      context 'when health_check type is http' do
+        let(:params) { { health_check: { type: 'http' } } }
+
+        it 'is valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when health_check type is process' do
+        let(:params) { { health_check: { type: 'process' } } }
+
+        it 'is valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when health_check type is port' do
+        let(:params) { { health_check: { type: 'port' } } }
+
+        it 'is valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).to be_valid
+        end
+      end
+
       context 'when health_check type is invalid' do
         let(:params) { { health_check: { type: 'invalid' } } }
 
@@ -112,7 +142,7 @@ module VCAP::CloudController
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:health_check_type]).to include('must be "port" or "process"')
+          expect(message.errors[:health_check_type]).to include('must be "port", "process", or "http"')
         end
       end
 
@@ -156,7 +186,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when health_check timeout not requested' do
+      context 'when health_check timeout and endpoint are not requested' do
         let(:params) do
           {
             health_check: {
@@ -168,6 +198,35 @@ module VCAP::CloudController
         it 'is valid' do
           message = ProcessUpdateMessage.new(params)
           expect(message).to be_valid
+        end
+      end
+
+      context 'when health_check endpoint is requested' do
+        let(:endpoint) { "/healthcheck" }
+        let(:params) do
+          {
+            health_check: {
+              type: 'port',
+              data: {
+                endpoint: "#{endpoint}"
+              }
+            }
+          }
+        end
+
+        it 'is valid' do
+          message = ProcessUpdateMessage.new(params)
+          expect(message).to be_valid
+        end
+
+        context 'when endpoint is not a valid URI path' do
+          let(:endpoint) { "some words that aren't a uri" }
+
+          it 'is not valid' do
+            message = ProcessUpdateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors[:health_check_endpoint]).to include('must be a valid URI path')
+          end
         end
       end
     end
