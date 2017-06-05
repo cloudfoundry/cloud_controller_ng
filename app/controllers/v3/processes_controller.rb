@@ -48,16 +48,23 @@ class ProcessesController < ApplicationController
   end
 
   def update
-    guid    = params[:process_guid]
     message = ProcessUpdateMessage.create_from_http_request(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
-    unauthorized! unless can_write?(process.space.guid)
+    if app_nested?
+      app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).first
+      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      unauthorized! unless can_write?(app.space.guid)
+      process = app.processes_dataset.where(type: params[:type]).first
+      process_not_found! unless process
+    else
+      guid    = params[:process_guid]
+      process = ProcessModel.where(guid: guid).eager(:space, :organization).first
+      process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
+      unauthorized! unless can_write?(process.space.guid)
+    end
 
     ProcessUpdate.new(user_audit_info).update(process, message)
-
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(process)
   rescue ProcessUpdate::InvalidProcess => e
     unprocessable!(e.message)

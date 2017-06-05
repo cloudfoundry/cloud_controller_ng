@@ -278,6 +278,59 @@ RSpec.describe ProcessesController, type: :controller do
       expect(parsed_body['guid']).to eq(process_type.guid)
     end
 
+    context 'accessed as an app sub resource' do
+      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:process_type) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
+      let!(:process_type2) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
+
+      it 'updates the process and returns the correct things' do
+        expect(process_type.command).not_to eq('new command')
+
+        patch :update, req_body.to_json, { app_guid: app.guid, type: process_type.type }
+
+        expect(process_type.reload.command).to eq('new command')
+        expect(response.status).to eq(200)
+        expect(parsed_body['guid']).to eq(process_type.guid)
+      end
+
+      context 'when the requested process does not belong to the provided app guid' do
+        it 'returns a 404' do
+          other_app = VCAP::CloudController::AppModel.make
+          other_process = VCAP::CloudController::ProcessModel.make(app: other_app, type: 'potato')
+
+          patch :update, req_body.to_json, { app_guid: app.guid, type: other_process.type }
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Process not found'
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'returns a 404' do
+          patch :update, req_body.to_json, { app_guid: 'made-up', type: process_type.type }
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'App not found'
+        end
+      end
+
+      context 'when the user cannot read the app due to membership' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404' do
+          patch :update, req_body.to_json, { app_guid: app.guid, type: process_type.type }
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'App not found'
+        end
+      end
+    end
+
     context 'when the process does not exist' do
       it 'raises an ApiError with a 404 code' do
         patch :update, req_body.to_json, { process_guid: 'made-up-guid' }

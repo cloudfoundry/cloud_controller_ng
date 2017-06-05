@@ -833,6 +833,99 @@ RSpec.describe 'Processes' do
     end
   end
 
+  describe 'PATCH /v3/apps/:guid/processes/:type' do
+    it 'updates the process' do
+      process = VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:                  app_model,
+        type:                 'web',
+        instances:            2,
+        memory:               1024,
+        disk_quota:           1024,
+        command:              'rackup',
+        ports:                [4444, 5555],
+        health_check_type:    'port',
+        health_check_timeout: 10
+      )
+
+      update_request = {
+        command:      'new command',
+        health_check: {
+          type: 'http',
+          data: {
+            timeout: 20,
+            endpoint: '/healthcheck'
+          }
+        }
+      }.to_json
+
+      patch "/v3/apps/#{app_model.guid}/processes/web", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
+
+      expected_response = {
+        'guid'         => process.guid,
+        'type'         => 'web',
+        'command'      => 'new command',
+        'instances'    => 2,
+        'memory_in_mb' => 1024,
+        'disk_in_mb'   => 1024,
+        'health_check' => {
+          'type' => 'http',
+          'data' => {
+            'timeout' => 20,
+            'endpoint' => '/healthcheck'
+          }
+        },
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        'links'        => {
+          'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
+          'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+        },
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      process.reload
+      expect(process.command).to eq('new command')
+      expect(process.health_check_type).to eq('http')
+      expect(process.health_check_timeout).to eq(20)
+      expect(process.health_check_http_endpoint).to eq('/healthcheck')
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:              'audit.app.process.update',
+        actee:             app_model.guid,
+        actee_type:        'app',
+        actee_name:        'my_app',
+        actor:             developer.guid,
+        actor_type:        'user',
+        actor_username:    user_name,
+        space_guid:        space.guid,
+        organization_guid: space.organization.guid
+      })
+      expect(event.metadata).to eq({
+        'process_guid' => process.guid,
+        'process_type' => 'web',
+        'request'      => {
+          'command'      => 'PRIVATE DATA HIDDEN',
+          'health_check' => {
+            'type' => 'http',
+            'data' => {
+              'timeout' => 20,
+              'endpoint' => '/healthcheck',
+            }
+          }
+        }
+      })
+    end
+  end
+
   describe 'GET /v3/apps/:guid/processes/:type/stats' do
     it 'succeeds when TPS is an older version without net_info' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model)
