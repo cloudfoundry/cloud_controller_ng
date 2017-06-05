@@ -6,11 +6,11 @@ module VCAP::CloudController
 
     add_association_dependencies service_plan_visibilities: :destroy
 
-    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active, :schemas
+    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active, :create_instance_schema
 
     export_attributes_from_methods bindable: :bindable?
 
-    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable
+    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :create_instance_schema
 
     strip_attributes :name
 
@@ -127,14 +127,6 @@ module VCAP::CloudController
       if broker_private? && self.public
         errors.add(:public, 'may not be true for plans belonging to private service brokers')
       end
-    end
-
-    def schemas
-      {
-        service_instance: {
-          create: '{}'
-        }
-      }
     end
   end
 end

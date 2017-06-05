@@ -32,6 +32,9 @@ module VCAP::Services::ServiceBrokers
         'redirect_uri' => 'http://example.com'
       }
     end
+    let(:plan_schemas_hash) do
+      { 'schemas' => { 'service_instance' => { 'create' => { '$schema': 'example.com/schema' } } } }
+    end
 
     let(:catalog_hash) do
       {
@@ -52,7 +55,7 @@ module VCAP::Services::ServiceBrokers
                 'description' => plan_description,
                 'free'        => false,
                 'bindable'    => true,
-              }.merge(plan_metadata_hash)
+              }.merge(plan_metadata_hash).merge(plan_schemas_hash)
             ]
           }.merge(service_metadata_hash)
         ]
@@ -158,6 +161,7 @@ module VCAP::Services::ServiceBrokers
           'public' => service_plan.public,
           'active' => service_plan.active,
           'bindable' => true,
+          'create_instance_schema' => '{"$schema":"example.com/schema"}',
         })
       end
 
@@ -192,6 +196,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
+          expect(plan.create_instance_schema).to eq('{"$schema":"example.com/schema"}')
 
           expect(plan.free).to be false
         end
@@ -220,6 +225,36 @@ module VCAP::Services::ServiceBrokers
           service_manager.sync_services_and_plans(catalog)
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.extra).to be_nil
+        end
+      end
+
+      context 'when the catalog service plan schemas is empty' do
+        let(:plan_schemas_hash) { { 'schemas' => nil } }
+
+        it 'leaves the plan schemas field as nil' do
+          service_manager.sync_services_and_plans(catalog)
+          plan = VCAP::CloudController::ServicePlan.last
+          expect(plan.create_instance_schema).to be_nil
+        end
+      end
+
+      context 'when the catalog service plan has no schemas key' do
+        let(:plan_schemas_hash) { {} }
+
+        it 'leaves the plan schemas field as nil' do
+          service_manager.sync_services_and_plans(catalog)
+          plan = VCAP::CloudController::ServicePlan.last
+          expect(plan.create_instance_schema).to be_nil
+        end
+      end
+
+      context 'when the catalog service plan has no create schema' do
+        let(:plan_schemas_hash) { { 'schemas' => { 'service_instance' => nil } } }
+
+        it 'leaves the plan schemas field as nil' do
+          service_manager.sync_services_and_plans(catalog)
+          plan = VCAP::CloudController::ServicePlan.last
+          expect(plan.create_instance_schema).to be_nil
         end
       end
 
@@ -280,7 +315,8 @@ module VCAP::Services::ServiceBrokers
               service: service,
               unique_id: plan_id,
               free: true,
-              bindable: false
+              bindable: false,
+              create_instance_schema: nil
             )
           end
 
@@ -289,6 +325,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.description).to_not eq(plan_description)
             expect(plan.free).to be true
             expect(plan.bindable).to be false
+            expect(plan.create_instance_schema).to be_nil
 
             expect {
               service_manager.sync_services_and_plans(catalog)
@@ -299,6 +336,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.description).to eq(plan_description)
             expect(plan.free).to be false
             expect(plan.bindable).to be true
+            expect(plan.create_instance_schema).to eq('{"$schema":"example.com/schema"}')
           end
 
           it 'creates service audit events for each service plan updated' do
@@ -323,6 +361,7 @@ module VCAP::Services::ServiceBrokers
               'extra' => '{"cost":"0.0"}',
               'bindable' => true,
               'free' => false,
+              'create_instance_schema' => '{"$schema":"example.com/schema"}',
             })
           end
 

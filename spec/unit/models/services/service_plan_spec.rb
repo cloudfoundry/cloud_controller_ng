@@ -45,8 +45,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active, :schemas }
-      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable }
+      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active, :create_instance_schema }
+      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :create_instance_schema }
     end
 
     describe '#save' do

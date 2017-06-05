@@ -172,7 +172,6 @@ module VCAP::CloudController
       end
 
       it 'returns an empty schema for service instance creation' do
-        service_plan = ServicePlan.make
         set_current_user_as_admin
 
         get "/v2/service_plans/#{service_plan.guid}"
