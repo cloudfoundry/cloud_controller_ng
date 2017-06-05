@@ -58,13 +58,18 @@ module VCAP::Services::ServiceBrokers
           plan.public = false
         end
 
+        create_instance_schema = if catalog_plan.schemas && catalog_plan.schemas['service_instance'] && catalog_plan.schemas['service_instance']['create']
+                                   catalog_plan.schemas['service_instance']['create'].to_json
+                                 end
+
         plan.set({
           name:        catalog_plan.name,
           description: catalog_plan.description,
           free:        catalog_plan.free,
           bindable:    catalog_plan.bindable,
           active:      true,
-          extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
+          extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil,
+          create_instance_schema: create_instance_schema
         })
         @services_event_repository.with_service_plan_event(plan) do
           plan.save(changed: true)
