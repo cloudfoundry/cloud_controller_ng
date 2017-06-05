@@ -80,6 +80,23 @@ module VCAP::CloudController::Diego
         end
       end
 
+      context 'when the task is not in Diego' do
+        before do
+          allow(bbs_client).to receive(:cancel_task).and_return(
+            ::Diego::Bbs::Models::TaskLifecycleResponse.new(
+              error: ::Diego::Bbs::Models::Error.new(
+                type:    ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+                message: 'error message'
+              )))
+        end
+
+        it 'succeeds without error' do
+          expect {
+            client.cancel_task(task_guid)
+          }.to_not raise_error
+        end
+      end
+
       context 'when bbs returns a response with an error' do
         before do
           allow(bbs_client).to receive(:cancel_task).and_return(

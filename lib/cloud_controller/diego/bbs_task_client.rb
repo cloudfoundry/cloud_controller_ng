@@ -23,7 +23,7 @@ module VCAP::CloudController
       def cancel_task(guid)
         logger.info('cancel.task.request', task_guid: guid)
 
-        handle_diego_errors do
+        handle_diego_errors(acceptable_errors: [::Diego::Bbs::Models::Error::Type::ResourceNotFound]) do
           response = client.cancel_task(guid)
           logger.info('cancel.task.response', task_guid: guid, error: response.error)
           response
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       attr_reader :client
 
-      def handle_diego_errors
+      def handle_diego_errors(acceptable_errors: [])
         begin
           response = yield
         rescue ::Diego::Error => e
@@ -62,7 +62,11 @@ module VCAP::CloudController
         end
 
         if response.error
-          raise CloudController::Errors::ApiError.new_from_details('TaskError', response.error.message)
+          if acceptable_errors.include?(response.error.type)
+            response.error = nil
+          else
+            raise CloudController::Errors::ApiError.new_from_details('TaskError', response.error.message)
+          end
         end
 
         response
