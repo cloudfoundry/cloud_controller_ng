@@ -15,8 +15,8 @@ module VCAP::CloudController
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)
         if message.requested?(:health_check_type) && message.health_check_type != 'http'
           process.health_check_http_endpoint = nil
-        else
-          process.health_check_http_endpoint = message.health_check_endpoint if message.requested?(:health_check_endpoint)
+        elsif message.requested?(:health_check_endpoint)
+          process.health_check_http_endpoint = message.health_check_endpoint
         end
 
         process.save

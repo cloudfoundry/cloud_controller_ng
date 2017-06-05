@@ -43,9 +43,9 @@ module VCAP::CloudController
       it 'excludes nested health check keys' do
         message = ProcessUpdateMessage.new(
           {
-            health_check: { type: 'type', data: { timeout: 4, endpoint: "something" } }
+            health_check: { type: 'type', data: { timeout: 4, endpoint: 'something' } }
           })
-        expect(message.audit_hash).to eq({ 'health_check' => { type: 'type', data: { timeout: 4, endpoint: "something" } } })
+        expect(message.audit_hash).to eq({ 'health_check' => { type: 'type', data: { timeout: 4, endpoint: 'something' } } })
       end
     end
 
@@ -202,13 +202,13 @@ module VCAP::CloudController
       end
 
       context 'when health_check endpoint is requested' do
-        let(:endpoint) { "/healthcheck" }
+        let(:endpoint) { '/healthcheck' }
         let(:params) do
           {
             health_check: {
               type: 'port',
               data: {
-                endpoint: "#{endpoint}"
+                endpoint: endpoint.to_s
               }
             }
           }
