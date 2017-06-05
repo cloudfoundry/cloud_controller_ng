@@ -56,7 +56,8 @@ RSpec.describe 'Processes' do
             'health_check' => {
               'type' => 'port',
               'data' => {
-                'timeout' => nil
+                'timeout' => nil,
+                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -79,7 +80,8 @@ RSpec.describe 'Processes' do
             'health_check' => {
               'type' => 'port',
               'data' => {
-                'timeout' => nil
+                'timeout' => nil,
+                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -289,7 +291,8 @@ RSpec.describe 'Processes' do
         'health_check' => {
           'type' => 'port',
           'data' => {
-            'timeout' => nil
+            'timeout' => nil,
+            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -455,7 +458,8 @@ RSpec.describe 'Processes' do
         'health_check' => {
           'type' => 'process',
           'data' => {
-            'timeout' => 20
+            'timeout' => 20,
+            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -537,7 +541,8 @@ RSpec.describe 'Processes' do
         'health_check' => {
           'type' => 'port',
           'data' => {
-            'timeout' => nil
+            'timeout' => nil,
+            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -671,7 +676,8 @@ RSpec.describe 'Processes' do
             'health_check' => {
               'type' => 'port',
               'data' => {
-                'timeout' => nil
+                'timeout' => nil,
+                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -694,7 +700,8 @@ RSpec.describe 'Processes' do
             'health_check' => {
               'type' => 'port',
               'data' => {
-                'timeout' => nil
+                'timeout' => nil,
+                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -789,7 +796,8 @@ RSpec.describe 'Processes' do
         'health_check' => {
           'type' => 'port',
           'data' => {
-            'timeout' => nil
+            'timeout' => nil,
+            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -948,7 +956,8 @@ RSpec.describe 'Processes' do
         'health_check' => {
           'type' => 'port',
           'data' => {
-            'timeout' => nil
+            'timeout' => nil,
+            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
