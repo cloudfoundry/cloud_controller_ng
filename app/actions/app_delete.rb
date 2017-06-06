@@ -18,8 +18,6 @@ module VCAP::CloudController
     end
 
     def delete(apps, record_event: true)
-      apps = Array(apps)
-
       apps.each do |app|
         app.db.transaction do
           app.lock!

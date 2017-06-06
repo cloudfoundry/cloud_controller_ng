@@ -515,7 +515,9 @@ RSpec.describe 'Apps' do
     it 'deletes an App' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
 
-      expect(last_response.status).to eq(204)
+      expect(last_response.status).to eq(202)
+
+      Delayed::Worker.new.work_off
 
       expect(app_model.exists?).to be_falsey
       expect(package.exists?).to be_falsey

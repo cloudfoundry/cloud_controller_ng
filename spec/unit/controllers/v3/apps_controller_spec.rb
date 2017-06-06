@@ -762,13 +762,6 @@ RSpec.describe AppsV3Controller, type: :controller do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
-    it 'returns a 204' do
-      delete :destroy, guid: app_model.guid
-
-      expect(response.status).to eq 204
-      expect { app_model.reload }.to raise_error(Sequel::Error, 'Record not found')
-    end
-
     context 'permissions' do
       context 'when the user does not have the write scope' do
         before do
@@ -820,18 +813,21 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when AppDelete::InvalidDelete is raised' do
-      before do
-        allow_any_instance_of(VCAP::CloudController::AppDelete).to receive(:delete).
-          and_raise(VCAP::CloudController::AppDelete::InvalidDelete.new('it is broke'))
-      end
+    it 'successfully deletes the app in a background job' do
+      delete :destroy, guid: app_model.guid
 
-      it 'returns a 400' do
-        delete :destroy, guid: app_model.guid
+      expect(response.status).to eq(202)
+      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
 
-        expect(response.status).to eq 422
-        expect(response.body).to include 'it is broke'
-      end
+      app_delete_jobs = Delayed::Job.where("handler like '%AppDelete%'")
+      expect(app_delete_jobs.count).to eq 1
+      job = app_delete_jobs.first
+
+      Delayed::Worker.new.work_off
+
+      # a successfully completed job is removed from the table
+      expect(Delayed::Job.find(id: job.id)).to be_nil
+      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).to be_nil
     end
   end
 

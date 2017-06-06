@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
     let!(:app) { AppModel.make }
-    let!(:app_dataset) { app }
+    let!(:app_dataset) { [app] }
 
     describe '#delete' do
       it 'deletes the app record' do

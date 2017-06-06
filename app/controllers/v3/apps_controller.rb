@@ -91,11 +91,11 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    AppDelete.new(user_audit_info).delete(app)
+    delete_action =  AppDelete.new(user_audit_info)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
+    Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
 
-    head :no_content
-  rescue AppDelete::InvalidDelete => e
-    unprocessable!(e.message)
+    head HTTP::ACCEPTED
   end
 
   def start
