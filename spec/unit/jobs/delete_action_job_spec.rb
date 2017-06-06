@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:delete_action) { double(SpaceDelete, delete: []) }
       let(:space) { Space.make(name: Sham.guid) }
 
-      subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action, 'space.delete') }
+      subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action, 'space', 'space.delete') }
 
       it { is_expected.to be_a_valid_job }
 
@@ -35,6 +35,7 @@ module VCAP::CloudController
           expect(historical_job.operation).to eq('space.delete')
           expect(historical_job.state).to eq(HistoricalJobModel::PROCESSING_STATE)
           expect(historical_job.resource_guid).to eq(space.guid)
+          expect(historical_job.resource_type).to eq('space')
 
           expect(Space.where(guid: space.guid)).to be_empty
         end

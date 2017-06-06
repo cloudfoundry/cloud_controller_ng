@@ -755,11 +755,14 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:app_delete_stub) { instance_double(VCAP::CloudController::AppDelete) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
+      allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
     end
 
     context 'permissions' do
@@ -823,12 +826,13 @@ RSpec.describe AppsV3Controller, type: :controller do
       expect(response.status).to eq(202)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
       expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
-
-      Delayed::Worker.new.work_off
-
-      # a successfully completed job is removed from the table
-      expect(Delayed::Job.find(id: job.id)).to be_nil
-      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).to be_nil
+      expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
+        VCAP::CloudController::AppModel,
+        app_model.guid,
+        app_delete_stub,
+        VCAP::CloudController::HistoricalJobModel::RESOURCE_TYPE[:APP],
+        'app.delete'
+      )
     end
   end
 
@@ -1209,11 +1213,11 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     let(:expected_success_response) do
       {
-        'meep' => 'moop',
-        'beep' => 'boop',
+        'meep'  => 'moop',
+        'beep'  => 'boop',
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+          'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -1224,15 +1228,15 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'space_developer' => 200,
-        'org_manager' => 403,
-        'org_user' => 404,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_auditor' => 404,
+        'space_developer'     => 200,
+        'org_manager'         => 403,
+        'org_user'            => 404,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_auditor'         => 404,
         'org_billing_manager' => 404,
-        'admin' => 200,
-        'admin_read_only' => 200
+        'admin'               => 200,
+        'admin_read_only'     => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -1337,10 +1341,10 @@ RSpec.describe AppsV3Controller, type: :controller do
       {
         'override' => 'new-value',
         'preserve' => 'value-to-keep',
-        'new-key' => 'another-new-value',
-        'links' => {
+        'new-key'  => 'another-new-value',
+        'links'    => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+          'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -1348,7 +1352,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:request_body) do
       {
         'override' => 'new-value',
-        'new-key' => 'another-new-value',
+        'new-key'  => 'another-new-value',
       }
     end
 
@@ -1358,15 +1362,15 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'space_developer' => 200,
-        'org_manager' => 403,
-        'org_user' => 404,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_auditor' => 404,
+        'space_developer'     => 200,
+        'org_manager'         => 403,
+        'org_user'            => 404,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_auditor'         => 404,
         'org_billing_manager' => 404,
-        'admin' => 200,
-        'admin_read_only' => 403
+        'admin'               => 200,
+        'admin_read_only'     => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -1384,7 +1388,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               expect(app_model.environment_variables).to eq({
                 'override' => 'new-value',
                 'preserve' => 'value-to-keep',
-                'new-key' => 'another-new-value',
+                'new-key'  => 'another-new-value',
               })
             end
           end

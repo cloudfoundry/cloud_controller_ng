@@ -92,7 +92,9 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless can_write?(space.guid)
 
     delete_action =  AppDelete.new(user_audit_info)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(
+      AppModel, app.guid, delete_action,
+      VCAP::CloudController::HistoricalJobModel::RESOURCE_TYPE[:APP], 'app.delete')
 
     enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
 

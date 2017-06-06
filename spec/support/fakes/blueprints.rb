@@ -155,6 +155,7 @@ module VCAP::CloudController
     operation { 'some.job' }
     state { 'COMPLETE' }
     resource_guid { Sham.guid }
+    resource_type { 'some' }
   end
 
   User.blueprint do

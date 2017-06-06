@@ -1,10 +1,11 @@
 module VCAP::CloudController
   module Jobs
     class DeleteActionJob < VCAP::CloudController::Jobs::CCJob
-      def initialize(model_class, guid, delete_action, operation_name=nil)
+      def initialize(model_class, guid, delete_action, resource_type=nil, operation_name=nil)
         @model_class    = model_class
         @guid           = guid
         @delete_action  = delete_action
+        @resource_type  = resource_type
         @operation_name = operation_name
       end
 
@@ -47,13 +48,14 @@ module VCAP::CloudController
           guid:          job.guid,
           operation:     operation_name,
           state:         HistoricalJobModel::PROCESSING_STATE,
-          resource_guid: guid
+          resource_guid: guid,
+          resource_type: resource_type,
         )
       end
 
       private
 
-      attr_reader :model_class, :guid, :delete_action, :operation_name
+      attr_reader :model_class, :guid, :delete_action, :resource_type, :operation_name
     end
   end
 end
