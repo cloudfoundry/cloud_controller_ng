@@ -152,6 +152,7 @@ module VCAP::CloudController
         },
 
         :quota_definitions => Hash,
+        optional(:overwrite_quota_definitions) => bool,
         :default_quota_definition => String,
 
         :security_group_definitions => [
