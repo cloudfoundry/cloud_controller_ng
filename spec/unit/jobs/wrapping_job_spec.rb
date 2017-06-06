@@ -7,7 +7,7 @@ module VCAP::CloudController
         context 'when the wrapped job does not have the error method defined' do
           it 'should no raise an exception' do
             handler = Object.new
-            job = WrappingJob.new(handler)
+            job     = WrappingJob.new(handler)
             expect {
               job.error(job, 'foobar')
             }.to_not raise_error
@@ -19,9 +19,45 @@ module VCAP::CloudController
         context 'when the wrapped job does not have the reschedule_at method defined' do
           it 'should no raise an exception' do
             handler = Object.new
-            job = WrappingJob.new(handler)
+            job     = WrappingJob.new(handler)
             expect {
               job.reschedule_at(job, 'foobar')
+            }.to_not raise_error
+          end
+        end
+      end
+
+      describe '#before' do
+        context 'when the wrapped job does not have the before method defined' do
+          it 'should no raise an exception' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect {
+              job.before(job)
+            }.to_not raise_error
+          end
+        end
+      end
+
+      describe '#success' do
+        context 'when the wrapped job does not have the success method defined' do
+          it 'should no raise an exception' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect {
+              job.success(job)
+            }.to_not raise_error
+          end
+        end
+      end
+
+      describe '#failure' do
+        context 'when the wrapped job does not have the failure method defined' do
+          it 'should no raise an exception' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect {
+              job.failure(job)
             }.to_not raise_error
           end
         end
@@ -31,7 +67,7 @@ module VCAP::CloudController
         context 'when the job does have max_attempts' do
           it 'return 1' do
             handler = double(:job, max_attempts: 3)
-            job = WrappingJob.new(handler)
+            job     = WrappingJob.new(handler)
             expect(job.max_attempts).to eq(3)
           end
         end
@@ -39,7 +75,7 @@ module VCAP::CloudController
         context 'when the wrapped job does not have the max_attempts defined' do
           it 'return 1' do
             handler = Object.new
-            job = WrappingJob.new(handler)
+            job     = WrappingJob.new(handler)
             expect(job.max_attempts).to eq(1)
           end
         end
