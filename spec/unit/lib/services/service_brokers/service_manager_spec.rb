@@ -33,7 +33,7 @@ module VCAP::Services::ServiceBrokers
       }
     end
     let(:plan_schemas_hash) do
-      { 'schemas' => { 'service_instance' => { 'create' => { '$schema': 'example.com/schema' } } } }
+      { 'schemas' => { 'service_instance' => { 'create' => { 'parameters' => { '$schema': 'example.com/schema' } } } } }
     end
 
     let(:catalog_hash) do
