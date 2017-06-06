@@ -11,7 +11,7 @@ module VCAP::Services::ServiceBrokers::V2
         'description' => opts[:description] || 'The description of the service plan',
         'free'        => opts.fetch(:free, true),
         'bindable'    => opts[:bindable],
-        'schemas' => opts[:schemas] || {}
+        'schemas'     => opts[:schemas] || {}
       }
     end
 
@@ -113,18 +113,16 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.errors.messages).to include 'Plan bindable must be a boolean, but has value "true"'
       end
 
-      it 'validates that @schemas is a hash' do
-        attrs = build_valid_plan_attrs(schemas: ['list', 'of', 'strings'])
-        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
-        plan.valid?
-
-        expect(plan.errors.messages).to include 'Plan schemas must be a hash, but has value ["list", "of", "strings"]'
-      end
-
       describe '#valid?' do
         it 'is false if plan has errors' do
           attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
           expect(CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs).valid?).to be false
+        end
+
+        it 'is false if plan schemas has errors' do
+          attrs = build_valid_plan_attrs(schemas: { 'service_instance' => 1 })
+          plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+          expect(plan.valid?).to be false
         end
       end
     end

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'vcap/digester'
 
 RSpec.describe 'Stable API warning system', api_version_check: true do
-  API_FOLDER_CHECKSUM = '6e25a4ca98bc6f79a471f8420eeea43d63f7ee95'.freeze
+  API_FOLDER_CHECKSUM = '2f13bdc11a589f1d0fe371a220a9ea0e5a9aaceb'.freeze
 
   it 'tells the developer if the API specs change' do
     api_folder = File.expand_path('..', __FILE__)

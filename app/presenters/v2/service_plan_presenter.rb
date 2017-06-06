@@ -10,13 +10,15 @@ module CloudController
           schemas = {
             'schemas' => {
               'service_instance' => {
-                'create' => '{}'
+                'create' => {
+                  'parameters' => {}
+                }
               }
             }
           }
 
-          entity = DefaultPresenter.new.entity_hash(controller, plan, opts, depth, parents, orphans).merge(schemas)
-
+          entity = DefaultPresenter.new.entity_hash(controller, plan, opts, depth, parents, orphans)
+          entity.merge!(schemas)
           entity.delete('create_instance_schema')
           entity
         end

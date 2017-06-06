@@ -3,7 +3,6 @@ module VCAP::Services::ServiceBrokers::V2
     include CatalogValidationHelper
 
     attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors, :free, :bindable, :schemas
-
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
       @broker_provided_id = attrs['id']
@@ -13,7 +12,7 @@ module VCAP::Services::ServiceBrokers::V2
       @errors             = VCAP::Services::ValidationErrors.new
       @free               = attrs['free'].nil? ? true : attrs['free']
       @bindable           = attrs['bindable']
-      @schemas            = attrs['schemas']
+      @schemas            = CatalogSchemas.new(attrs['schemas'])
     end
 
     def cc_plan
@@ -23,6 +22,7 @@ module VCAP::Services::ServiceBrokers::V2
     def valid?
       return @valid if defined? @valid
       validate!
+      validate_schemas!
       @valid = errors.empty?
     end
 
@@ -37,7 +37,10 @@ module VCAP::Services::ServiceBrokers::V2
       validate_hash!(:metadata, metadata) if metadata
       validate_bool!(:free, free) if free
       validate_bool!(:bindable, bindable) if bindable
-      validate_hash!(:schemas, schemas) if schemas
+    end
+
+    def validate_schemas!
+      errors.add_nested(schemas, schemas.errors) unless schemas.valid?
     end
 
     def human_readable_attr_name(name)

@@ -35,7 +35,7 @@ module CloudController::Presenters::V2
            'name' => service_plan.name,
            'public' => true,
            'relationship_url' => 'http://relationship.example.com',
-           'schemas' => { 'service_instance' => { 'create' => '{}' } },
+           'schemas' => { 'service_instance' => { 'create' => { 'parameters' => {} } } },
            'service_guid' => service_plan.service_guid,
            'unique_id' => service_plan.unique_id
           }
