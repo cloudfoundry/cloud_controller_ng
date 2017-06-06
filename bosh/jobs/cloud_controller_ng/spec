@@ -423,6 +423,9 @@ properties:
     description: "Key pair name for signed download URIs"
     default: ""
 
+  cc.run_buildpacks_install:
+    description: "Indicate whether to install buildpacks."
+    default: false
   cc.buildpacks.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
     default: "fog"

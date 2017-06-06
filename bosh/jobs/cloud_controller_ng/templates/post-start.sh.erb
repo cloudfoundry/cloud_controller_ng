@@ -15,7 +15,7 @@ source /var/vcap/packages/capi_utils/syslog_utils.sh
 tee_output_to_sys_log "cloud_controller_ng.$(basename "$0")"
 
 function install_buildpacks {
-  <% if spec.bootstrap %>
+  <% if p('cc.run_buildpacks_install') || spec.bootstrap %>
   pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
     chpst -u vcap:vcap bundle exec rake buildpacks:install
 
