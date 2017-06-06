@@ -1,0 +1,47 @@
+### Get a job
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/jobs/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Completed Job Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_complete_job %>
+```
+
+```
+Failed Job Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_non_complete_job %>
+```
+
+#### Definition
+`GET /v3/jobs/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Global Auditor |
