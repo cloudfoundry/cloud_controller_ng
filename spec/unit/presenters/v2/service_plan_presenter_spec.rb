@@ -17,8 +17,10 @@ module CloudController::Presenters::V2
       end
 
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make
+        VCAP::CloudController::ServicePlan.make(create_instance_schema: create_instance_schema)
       end
+
+      let(:create_instance_schema) { nil }
 
       before do
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
@@ -40,6 +42,40 @@ module CloudController::Presenters::V2
            'unique_id' => service_plan.unique_id
           }
         )
+      end
+
+      context 'when the plan create_instance_schema is nil' do
+        let(:create_instance_schema) { nil }
+        it 'returns an empty schema in the correct format' do
+          expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
+            {
+             'schemas' => { 'service_instance' => { 'create' => { 'parameters' =>  {} } } },
+            }
+          )
+        end
+      end
+
+      context 'when the plan create_instance_schema is valid json' do
+        schema = { '$schema' => 'example.com/schema' }
+        let(:create_instance_schema) { schema.to_json }
+        it 'returns the service plan entity with the schema in the correct format' do
+          expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
+            {
+             'schemas' => { 'service_instance' => { 'create' => { 'parameters' =>  schema } } },
+            }
+          )
+        end
+      end
+
+      context 'when the plan create_instance_schema is invalid json' do
+        let(:create_instance_schema) { '{' }
+        it 'returns an empty schema in the correct format' do
+          expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
+            {
+             'schemas' => { 'service_instance' => { 'create' => { 'parameters' =>  {} } } },
+            }
+          )
+        end
       end
     end
   end
