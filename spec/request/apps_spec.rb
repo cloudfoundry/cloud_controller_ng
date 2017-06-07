@@ -34,7 +34,7 @@ RSpec.describe 'Apps' do
         }
       }
 
-      post '/v3/apps', create_request, user_header
+      post '/v3/apps', create_request.to_json, user_header
       expect(last_response.status).to eq(201)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -562,7 +562,7 @@ RSpec.describe 'Apps' do
         }
       }
 
-      patch "/v3/apps/#{app_model.guid}", update_request, user_header
+      patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
       expect(last_response.status).to eq(200)
 
       app_model.reload
@@ -879,7 +879,7 @@ RSpec.describe 'Apps' do
 
       request_body = { data: { guid: droplet.guid } }
 
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
       expected_response = {
         'data' => {
@@ -925,7 +925,7 @@ RSpec.describe 'Apps' do
 
       request_body = { data: { guid: droplet.guid } }
 
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
       expect(last_response.status).to eq(200)
 
@@ -979,7 +979,7 @@ RSpec.describe 'Apps' do
 
       request_body = { data: { guid: droplet.guid } }
 
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
       expect(last_response.status).to eq(200)
 
@@ -1020,7 +1020,7 @@ RSpec.describe 'Apps' do
 
       request_body = { data: { guid: droplet.guid } }
 
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body, user_header
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
 
       expect(last_response.status).to eq(200)
 
@@ -1062,7 +1062,7 @@ RSpec.describe 'Apps' do
         new_key:  'brand-new-value'
       }
 
-      patch "/v3/apps/#{app_model.guid}/environment_variables", update_request, user_header
+      patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)

@@ -13,7 +13,7 @@ RSpec.describe 'IsolationSegmentModels' do
         name:                  'my_segment'
       }
 
-      post '/v3/isolation_segments', create_request, user_header
+      post '/v3/isolation_segments', create_request.to_json, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(201)
@@ -113,7 +113,7 @@ RSpec.describe 'IsolationSegmentModels' do
         ]
       }
 
-      post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", assign_request, user_header
+      post "/v3/isolation_segments/#{isolation_segment.guid}/relationships/organizations", assign_request.to_json, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
@@ -386,7 +386,7 @@ RSpec.describe 'IsolationSegmentModels' do
         }
       }
 
-      patch "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request, user_header
+      patch "/v3/isolation_segments/#{isolation_segment_model.guid}", update_request.to_json, user_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)

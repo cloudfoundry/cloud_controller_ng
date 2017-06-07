@@ -50,7 +50,7 @@ RSpec.describe 'Service Broker API integration' do
               auth_username: broker_auth_username,
               auth_password: broker_auth_password
             }.to_json,
-              json_headers(admin_headers))
+              admin_headers)
           end
 
           it 'handles the free field on service plans' do
@@ -67,7 +67,7 @@ RSpec.describe 'Service Broker API integration' do
 
             put("/v2/service_brokers/#{@broker_guid}",
               {}.to_json,
-              json_headers(admin_headers))
+              admin_headers)
           end
 
           it 'handles the free field on service plans' do

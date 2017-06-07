@@ -102,7 +102,7 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
 
         expect(last_response.status).to eql(502)
         expect(decoded_response['code']).to eql(270012)
@@ -186,7 +186,7 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
 
         expect(last_response.status).to eql(502)
         expect(decoded_response['code']).to eql(270012)
@@ -239,11 +239,11 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
       end
 
       it 'sets the cc plan free field' do
-        get('/v2/service_plans', {}.to_json, json_headers(admin_headers))
+        get('/v2/service_plans', {}.to_json, admin_headers)
 
         resources     = JSON.parse(last_response.body)['resources']
         not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
@@ -271,7 +271,7 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
 
         warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
         expect(warning).to eq(VCAP::Services::SSO::DashboardClientManager::REQUESTED_FEATURE_DISABLED_WARNING)
@@ -283,7 +283,7 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
 
         expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
       end
@@ -313,7 +313,7 @@ RSpec.describe 'Service Broker' do
           auth_username: stubbed_broker_username,
           auth_password: stubbed_broker_password
         }.to_json,
-        json_headers(admin_headers)
+        admin_headers
             )
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
@@ -365,7 +365,7 @@ RSpec.describe 'Service Broker' do
       end
 
       it 'sends the correct batch request to create/update/delete clients' do
-        put("/v2/service_brokers/#{@service_broker_guid}", '{}', json_headers(admin_headers))
+        put("/v2/service_brokers/#{@service_broker_guid}", '{}', admin_headers)
 
         expect(last_response).to have_status_code(200)
 
@@ -443,7 +443,7 @@ RSpec.describe 'Service Broker' do
 
       it 'can update the service broker name' do
         put("/v2/service_brokers/#{@service_broker_guid}", '{"name":"new_broker_name"}',
-            json_headers(admin_headers))
+            admin_headers)
 
         expect(last_response).to have_status_code(200)
 
@@ -479,7 +479,7 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
 
         guid = VCAP::CloudController::ServiceBroker.first.guid
 
@@ -508,11 +508,11 @@ RSpec.describe 'Service Broker' do
           broker_url: 'http://broker-url',
           auth_username: 'username',
           auth_password: 'password'
-        }.to_json, json_headers(admin_headers))
+        }.to_json, admin_headers)
       end
 
       it 'sets the cc plan free field' do
-        get('/v2/service_plans', {}.to_json, json_headers(admin_headers))
+        get('/v2/service_plans', {}.to_json, admin_headers)
 
         resources               = JSON.parse(last_response.body)['resources']
         no_longer_not_free_plan = resources.find { |plan| plan['entity']['name'] == 'not-free-plan' }
@@ -559,7 +559,7 @@ HEREDOC
           update_broker(catalog_with_large_plan)
           expect(last_response).to have_status_code(200)
 
-          get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+          get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
           expect(last_response).to have_status_code(200)
 
           parsed_body = JSON.parse(last_response.body)
@@ -572,7 +572,7 @@ HEREDOC
           update_broker(catalog_with_no_plans)
           expect(last_response).to have_status_code(502)
 
-          get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+          get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
           expect(last_response).to have_status_code(200)
 
           parsed_body = JSON.parse(last_response.body)
@@ -602,7 +602,7 @@ HEREDOC
           auth_username: stubbed_broker_username,
           auth_password: stubbed_broker_password
         }.to_json,
-        json_headers(admin_headers)
+        admin_headers
             )
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
@@ -625,7 +625,7 @@ HEREDOC
       end
 
       it 'deletes the dashboard clients from UAA' do
-        delete("/v2/service_brokers/#{@service_broker_guid}", '', json_headers(admin_headers))
+        delete("/v2/service_brokers/#{@service_broker_guid}", '', admin_headers)
         expect(last_response).to have_status_code(204)
 
         expected_json_body = [
@@ -673,7 +673,7 @@ HEREDOC
         delete_broker
         expect(last_response).to have_status_code(400)
 
-        get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+        get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
         expect(last_response).to have_status_code(200)
 
         parsed_body = JSON.parse(last_response.body)

@@ -25,7 +25,7 @@ RSpec.describe 'Route Mappings' do
         }
       }
 
-      post '/v3/route_mappings', body, developer_headers
+      post '/v3/route_mappings', body.to_json, developer_headers
 
       route_mapping = VCAP::CloudController::RouteMappingModel.last
 

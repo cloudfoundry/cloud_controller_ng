@@ -26,7 +26,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'cc responds with success' do
-          put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", {}.to_json, json_headers(admin_headers))
+          put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", {}.to_json, admin_headers)
 
           expect(last_response.status).to eq 201
           expect(a_request(:put, service_broker_bind_request)).to have_been_made
@@ -42,7 +42,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'cc proxies the bind request' do
-          put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", {}.to_json, json_headers(admin_headers))
+          put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}", {}.to_json, admin_headers)
 
           route_binding = VCAP::CloudController::RouteBinding.last
           expect(route_binding.route_service_url).to eq('https://neopets.com')

@@ -28,7 +28,7 @@ RSpec.describe 'Service Broker API integration' do
 
           post('/v2/service_bindings',
             { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-            json_headers(admin_headers))
+            admin_headers)
         end
 
         it 'sends the app_guid as part of the request' do

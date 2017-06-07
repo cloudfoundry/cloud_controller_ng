@@ -48,7 +48,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'displays the volume mount information to the user' do
           post('/v2/service_bindings',
                { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-               json_headers(admin_headers))
+               admin_headers)
 
           parsed_body = MultiJson.load(last_response.body)
 

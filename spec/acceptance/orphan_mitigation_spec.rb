@@ -32,7 +32,7 @@ module VCAP::CloudController
           space_guid:        space_guid,
           service_plan_guid: plan_guid
         }.to_json,
-        json_headers(admin_headers))
+        admin_headers)
       end
 
       it 'makes the request to the broker and deprovisions' do
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
         post('/v2/service_bindings',
           { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-          json_headers(admin_headers))
+          admin_headers)
       end
 
       it 'makes the request to the broker and deprovisions' do

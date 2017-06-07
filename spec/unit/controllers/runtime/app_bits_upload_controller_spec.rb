@@ -23,7 +23,7 @@ module VCAP::CloudController
       let(:headers) { headers_for(user) }
 
       def make_request
-        put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
+        put "/v2/apps/#{app_obj.guid}/bits", req_body, form_headers(headers)
       end
 
       context 'as an admin' do
@@ -295,7 +295,7 @@ module VCAP::CloudController
 
             it 'fails to upload' do
               expect {
-                put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+                put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, form_headers(headers_for(user))
               }.to change {
                 Delayed::Job.count
               }.by(1)
@@ -318,7 +318,7 @@ module VCAP::CloudController
 
               it 'fails to upload' do
                 expect {
-                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, form_headers(headers_for(user))
                 }.to change {
                   Delayed::Job.count
                 }.by(1)
@@ -336,7 +336,7 @@ module VCAP::CloudController
 
               it 'fails to upload' do
                 expect {
-                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, form_headers(headers_for(user))
                 }.to change {
                   Delayed::Job.count
                 }.by(1)
