@@ -227,6 +227,38 @@ module VCAP::CloudController
       end
     end
 
+    describe '.space_visible' do
+      it 'returns plans that are visible to the space' do
+        hidden_private_plan = ServicePlan.make(public: false)
+        visible_public_plan = ServicePlan.make(public: true)
+        visible_private_plan = ServicePlan.make(public: false)
+        inactive_public_plan = ServicePlan.make(public: true, active: false)
+
+        organization = Organization.make
+        space = Space.make(organization: organization)
+        ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+
+        space_scoped_broker1 = ServiceBroker.make(space: space)
+        space_scoped_broker1_service = Service.make(service_broker: space_scoped_broker1)
+        space_scoped_broker1_plan = ServicePlan.make(service: space_scoped_broker1_service)
+        space_scoped_broker1_plan_inactive = ServicePlan.make(service: space_scoped_broker1_service, active: false)
+
+        space_scoped_broker2 = ServiceBroker.make(space: Space.make)
+        space_scoped_broker2_service = Service.make(service_broker: space_scoped_broker2)
+        space_scoped_broker2_plan = ServicePlan.make(service: space_scoped_broker2_service)
+
+        visible = ServicePlan.space_visible(space).all
+        expect(visible).to include(visible_public_plan)
+        expect(visible).to include(visible_private_plan)
+        expect(visible).not_to include(hidden_private_plan)
+        expect(visible).not_to include(inactive_public_plan)
+
+        expect(visible).to include(space_scoped_broker1_plan)
+        expect(visible).not_to include(space_scoped_broker1_plan_inactive)
+        expect(visible).not_to include(space_scoped_broker2_plan)
+      end
+    end
+
     describe '#bindable?' do
       let(:service_plan) { ServicePlan.make(service: service, bindable: plan_bindable) }
 

@@ -505,10 +505,25 @@ module VCAP::CloudController
         let(:manager) { make_manager_for_space(space_one) }
         let(:outside_manager) { make_manager_for_space(space_two) }
 
-        it 'should be visible to SpaceDevelopers' do
-          set_current_user(developer)
-          get "v2/spaces/#{space_one.guid}/services"
-          expect(decoded_guids).to include(@service.guid)
+        context 'when the user is a SpaceDeveloper' do
+          it 'is visible' do
+            set_current_user(developer)
+            get "v2/spaces/#{space_one.guid}/services"
+            expect(decoded_guids).to include(@service.guid)
+          end
+
+          context 'when inline-relations-depth is 1' do
+            it 'has a visible list of plans' do
+              set_current_user(developer)
+              get "v2/spaces/#{space_one.guid}/services?inline-relations-depth=1"
+              expect(last_response.status).to eq(200), last_response.body
+
+              scoped_service = decoded_response['resources'].find { |r| r['metadata']['guid'] == @service.guid }
+
+              expect(scoped_service['entity']['service_plans'].length).to eq(1)
+              expect(scoped_service['entity']['service_plans'][0]['metadata']['guid']).to eq(@service_plan.guid)
+            end
+          end
         end
 
         it 'should not be visible to outside SpaceDevelopers, even in their own space' do

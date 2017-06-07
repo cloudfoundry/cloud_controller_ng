@@ -38,6 +38,14 @@ module VCAP::CloudController
       ).&(active: true))
     end
 
+    def_dataset_method(:space_visible) do |space|
+      filter(Sequel.|(
+        { public: true },
+        { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(space.organization) },
+        { id: ServicePlan.plan_ids_from_private_brokers_by_space(space) }
+      ).&(active: true))
+    end
+
     def self.user_visible(user, admin_override=false, op=nil)
       dataset.filter(user_visibility(user, admin_override, op))
     end
@@ -67,9 +75,15 @@ module VCAP::CloudController
     end
 
     def self.plan_ids_from_private_brokers(user)
-      user.membership_spaces.
-        join(:service_brokers, space_id: :id).
-        join(:services, service_broker_id: :id).
+      plan_ids_from_brokers(user.membership_spaces.join(:service_brokers, space_id: :id))
+    end
+
+    def self.plan_ids_from_private_brokers_by_space(space)
+      plan_ids_from_brokers(ServiceBroker.where(space_id: space.id))
+    end
+
+    def self.plan_ids_from_brokers(broker_ds)
+      broker_ds.join(:services, service_broker_id: :id).
         join(:service_plans, service_id: :id).
         map(&:id).flatten.uniq
     end

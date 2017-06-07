@@ -115,7 +115,7 @@ module VCAP::CloudController
 
       opts = @opts.merge(
         additional_visibility_filters: {
-          service_plans: proc { |ds| ds.organization_visible(space.organization) },
+          service_plans: proc { |ds| ds.space_visible(space) },
         }
       )
 
