@@ -93,9 +93,11 @@ class AppsV3Controller < ApplicationController
 
     delete_action =  AppDelete.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
-    Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
 
-    head HTTP::ACCEPTED
+    enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{enqueued_job.guid}")
   end
 
   def start

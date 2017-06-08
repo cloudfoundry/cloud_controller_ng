@@ -150,6 +150,13 @@ module VCAP::CloudController
     sequence_id { Sham.sequence_id }
   end
 
+  HistoricalJobModel.blueprint do
+    guid { Sham.guid }
+    operation { 'some.job' }
+    state { 'COMPLETE' }
+    resource_guid { Sham.guid }
+  end
+
   User.blueprint do
     guid { Sham.uaa_id }
   end

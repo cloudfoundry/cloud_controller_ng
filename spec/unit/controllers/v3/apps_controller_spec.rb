@@ -816,12 +816,13 @@ RSpec.describe AppsV3Controller, type: :controller do
     it 'successfully deletes the app in a background job' do
       delete :destroy, guid: app_model.guid
 
-      expect(response.status).to eq(202)
-      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
-
       app_delete_jobs = Delayed::Job.where("handler like '%AppDelete%'")
       expect(app_delete_jobs.count).to eq 1
       job = app_delete_jobs.first
+
+      expect(response.status).to eq(202)
+      expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
+      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
 
       Delayed::Worker.new.work_off
 

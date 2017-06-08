@@ -72,6 +72,9 @@ Rails.application.routes.draw do
   get '/isolation_segments/:guid/relationships/organizations', to: 'isolation_segments#relationships_orgs'
   get '/isolation_segments/:guid/relationships/spaces', to: 'isolation_segments#relationships_spaces'
 
+  # jobs
+  get '/jobs/:guid', to: 'v3/jobs#show'
+
   # organizations
   get '/organizations', to: 'organizations_v3#index'
   get '/isolation_segments/:isolation_segment_guid/organizations', to: 'organizations_v3#index'
