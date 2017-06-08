@@ -1,12 +1,12 @@
 module VCAP::CloudController
   module Jobs
     class DeleteActionJob < VCAP::CloudController::Jobs::CCJob
-      def initialize(model_class, guid, delete_action, resource_type=nil, operation_name=nil)
+      attr_reader :guid
+
+      def initialize(model_class, guid, delete_action)
         @model_class    = model_class
         @guid           = guid
         @delete_action  = delete_action
-        @resource_type  = resource_type
-        @operation_name = operation_name
       end
 
       def perform
@@ -36,26 +36,16 @@ module VCAP::CloudController
       end
 
       def success(job)
-        HistoricalJobModel.where(guid: job.guid).update(state: HistoricalJobModel::COMPLETE_STATE)
+        JobModel.where(guid: job.guid).update(state: JobModel::COMPLETE_STATE)
       end
 
       def failure(job)
-        HistoricalJobModel.where(guid: job.guid).update(state: HistoricalJobModel::FAILED_STATE)
-      end
-
-      def before(job)
-        HistoricalJobModel.create(
-          guid:          job.guid,
-          operation:     operation_name,
-          state:         HistoricalJobModel::PROCESSING_STATE,
-          resource_guid: guid,
-          resource_type: resource_type,
-        )
+        JobModel.where(guid: job.guid).update(state: JobModel::FAILED_STATE)
       end
 
       private
 
-      attr_reader :model_class, :guid, :delete_action, :resource_type, :operation_name
+      attr_reader :model_class, :delete_action
     end
   end
 end

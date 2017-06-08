@@ -830,9 +830,23 @@ RSpec.describe AppsV3Controller, type: :controller do
         VCAP::CloudController::AppModel,
         app_model.guid,
         app_delete_stub,
-        VCAP::CloudController::HistoricalJobModel::RESOURCE_TYPE[:APP],
-        'app.delete'
       )
+    end
+
+    it 'creates a job to track the deletion' do
+      expect {
+        delete :destroy, guid: app_model.guid
+      }.to change {
+        VCAP::CloudController::JobModel.count
+      }.by(1)
+
+      job = VCAP::CloudController::JobModel.last
+      enqueued_job = Delayed::Job.last
+      expect(job.guid).to eq(enqueued_job.guid)
+      expect(job.operation).to eq('app.delete')
+      expect(job.state).to eq('PROCESSING')
+      expect(job.resource_guid).to eq(app_model.guid)
+      expect(job.resource_type).to eq('app')
     end
   end
 

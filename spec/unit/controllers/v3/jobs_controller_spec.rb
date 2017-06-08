@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe V3::JobsController, type: :controller do
   describe '#show' do
-    let!(:historical_job) { VCAP::CloudController::HistoricalJobModel.make }
+    let!(:job) { VCAP::CloudController::JobModel.make }
     let(:user) { VCAP::CloudController::User.make }
 
     before do
@@ -14,7 +14,7 @@ RSpec.describe V3::JobsController, type: :controller do
         it 'returns a 403 unauthorized error' do
           set_current_user(user, scopes: ['cloud_controller.write'])
 
-          get :show, guid: historical_job.guid
+          get :show, guid: job.guid
           expect(response.status).to eq(403)
           expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
         end
@@ -22,7 +22,7 @@ RSpec.describe V3::JobsController, type: :controller do
 
       context 'when the user has cc.read' do
         it 'allows the user to access the job' do
-          get :show, guid: historical_job.guid
+          get :show, guid: job.guid
           expect(response.status).to eq(200)
         end
       end
@@ -30,7 +30,7 @@ RSpec.describe V3::JobsController, type: :controller do
       context 'when the user is an admin' do
         it 'allows the user to access the job' do
           set_current_user(user, scopes: ['cloud_controller.admin'])
-          get :show, guid: historical_job.guid
+          get :show, guid: job.guid
           expect(response.status).to eq(200)
         end
       end
@@ -38,9 +38,9 @@ RSpec.describe V3::JobsController, type: :controller do
 
     context 'when the requested job exists' do
       it 'returns the job details' do
-        get :show, guid: historical_job.guid
-        expect(parsed_body['operation']).to eq historical_job.operation
-        expect(parsed_body['state']).to eq historical_job.state
+        get :show, guid: job.guid
+        expect(parsed_body['operation']).to eq job.operation
+        expect(parsed_body['state']).to eq job.state
       end
     end
 

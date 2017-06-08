@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:delete_action) { double(SpaceDelete, delete: []) }
       let(:space) { Space.make(name: Sham.guid) }
 
-      subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action, 'space', 'space.delete') }
+      subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
 
       it { is_expected.to be_a_valid_job }
 
@@ -24,40 +24,58 @@ module VCAP::CloudController
       describe 'DeleteActionJob callbacks' do
         let(:delete_action) { VCAP::CloudController::SpaceDelete.new('foo', 'foo') }
 
-        it 'creates a historical job' do
-          allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:success)
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
-          Delayed::Worker.new.work_off
+        context 'when the delayed job completes successfully' do
+          context 'when there is an associated job model' do
+            it 'marks the job model completed' do
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+              job_model = VCAP::CloudController::JobModel.make(guid: enqueued_job.guid, state: JobModel::PROCESSING_STATE)
+              successes, failures = Delayed::Worker.new.work_off
 
-          historical_job = HistoricalJobModel.last
-          expect(HistoricalJobModel.count).to eq(1)
-          expect(historical_job.guid).to eq(enqueued_job.guid)
-          expect(historical_job.operation).to eq('space.delete')
-          expect(historical_job.state).to eq(HistoricalJobModel::PROCESSING_STATE)
-          expect(historical_job.resource_guid).to eq(space.guid)
-          expect(historical_job.resource_type).to eq('space')
+              expect(successes).to eq(1)
+              expect(failures).to eq(0)
 
-          expect(Space.where(guid: space.guid)).to be_empty
+              expect(job_model.reload.state).to eq(JobModel::COMPLETE_STATE)
+            end
+          end
+
+          context 'when there is NOT an associated job model' do
+            it 'does NOT choke' do
+              VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+
+              successes, failures = Delayed::Worker.new.work_off
+              expect(successes).to eq(1)
+              expect(failures).to eq(0)
+            end
+          end
         end
 
-        it 'marks the historical job completed when the job completes successfully' do
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
-          Delayed::Worker.new.work_off
+        context 'when the job fails' do
+          before do
+            allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:perform).and_raise
+          end
 
-          historical_job = HistoricalJobModel.last
-          expect(historical_job.guid).to eq(enqueued_job.guid)
-          expect(historical_job.reload.state).to eq(HistoricalJobModel::COMPLETE_STATE)
-        end
+          context 'when there is an associated job model' do
+            it 'marks the job model failed' do
+              enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+              job_model = VCAP::CloudController::JobModel.make(guid: enqueued_job.guid, state: JobModel::PROCESSING_STATE)
+              successes, failures = Delayed::Worker.new.work_off
 
-        it 'marks the historical job failed when the job fails' do
-          allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:perform).and_raise
+              expect(successes).to eq(0)
+              expect(failures).to eq(1)
 
-          enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
-          Delayed::Worker.new.work_off
+              expect(job_model.reload.state).to eq(JobModel::FAILED_STATE)
+            end
+          end
 
-          historical_job = HistoricalJobModel.last
-          expect(historical_job.guid).to eq(enqueued_job.guid)
-          expect(historical_job.reload.state).to eq(HistoricalJobModel::FAILED_STATE)
+          context 'when there is NOT an associated job model' do
+            it 'does NOT choke' do
+              VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+
+              successes, failures = Delayed::Worker.new.work_off
+              expect(successes).to eq(0)
+              expect(failures).to eq(1)
+            end
+          end
         end
       end
 

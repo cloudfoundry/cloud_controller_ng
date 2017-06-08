@@ -14,13 +14,13 @@ module VCAP::CloudController
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
-      @logger = Steno.logger('cc.action.app_delete')
     end
 
     def delete(apps, record_event: true)
       apps.each do |app|
         app.db.transaction do
           app.lock!
+          logger.info("Deleting app: #{app.guid}")
 
           delete_subresources(app)
 
@@ -28,6 +28,7 @@ module VCAP::CloudController
 
           app.destroy
         end
+        logger.info("Deleted app: #{app.guid}")
       end
     end
 
@@ -68,6 +69,10 @@ module VCAP::CloudController
     def delete_buildpack_cache(app)
       delete_job = Jobs::V3::BuildpackCacheDelete.new(app.guid)
       Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.action.app_delete')
     end
   end
 end

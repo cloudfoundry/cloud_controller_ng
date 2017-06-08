@@ -14,7 +14,7 @@ RSpec.describe 'Organizations' do
     organization3.add_user(user)
   end
 
-  describe 'GET /v3/organization' do
+  describe 'GET /v3/organizations' do
     it 'returns a paginated list of orgs the user has access to' do
       get '/v3/organizations?per_page=2', nil, user_header
       expect(last_response.status).to eq(200)

@@ -91,15 +91,23 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    delete_action =  AppDelete.new(user_audit_info)
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(
-      AppModel, app.guid, delete_action,
-      VCAP::CloudController::HistoricalJobModel::RESOURCE_TYPE[:APP], 'app.delete')
+    delete_action = AppDelete.new(user_audit_info)
+    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+    job = JobModel.db.transaction do
+      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+
+      JobModel.create(
+        guid:          enqueued_job.guid,
+        operation:     'app.delete',
+        state:         JobModel::PROCESSING_STATE,
+        resource_guid: app.guid,
+        resource_type: VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP],
+      )
+    end
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{enqueued_job.guid}")
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
   def start

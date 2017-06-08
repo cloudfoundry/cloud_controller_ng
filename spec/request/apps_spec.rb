@@ -516,6 +516,7 @@ RSpec.describe 'Apps' do
       delete "/v3/apps/#{app_model.guid}", nil, user_header
 
       expect(last_response.status).to eq(202)
+      expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{VCAP::CloudController::JobModel.last.guid}))
 
       Delayed::Worker.new.work_off
 

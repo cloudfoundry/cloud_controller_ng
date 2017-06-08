@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'presenters/v3/historical_job_presenter'
+require 'presenters/v3/job_presenter'
 
 module VCAP::CloudController::Presenters::V3
-  RSpec.describe HistoricalJobPresenter do
-    let(:job) { VCAP::CloudController::HistoricalJobModel.make(
-      state:         VCAP::CloudController::HistoricalJobModel::COMPLETE_STATE,
+  RSpec.describe JobPresenter do
+    let(:job) { VCAP::CloudController::JobModel.make(
+      state:         VCAP::CloudController::JobModel::COMPLETE_STATE,
       operation:     'app.delete',
       resource_guid: 'app-guid',
       resource_type: 'app',
     )
     }
-    let(:result) { HistoricalJobPresenter.new(job).to_hash }
+    let(:result) { JobPresenter.new(job).to_hash }
 
     describe '#to_hash' do
       it 'presents the job as json' do
@@ -19,13 +19,13 @@ module VCAP::CloudController::Presenters::V3
         }
 
         expect(result[:operation]).to eq('app.delete')
-        expect(result[:state]).to eq(VCAP::CloudController::HistoricalJobModel::COMPLETE_STATE)
+        expect(result[:state]).to eq(VCAP::CloudController::JobModel::COMPLETE_STATE)
         expect(result[:links]).to eq(links)
       end
 
       context 'when the job has not completed' do
         before do
-          job.update(state: VCAP::CloudController::HistoricalJobModel::PROCESSING_STATE)
+          job.update(state: VCAP::CloudController::JobModel::PROCESSING_STATE)
         end
 
         it 'shows the resource link when the jobs resource_type is defined' do
@@ -39,7 +39,7 @@ module VCAP::CloudController::Presenters::V3
 
         it 'does not show the resource link when the jobs resource_type is undefined' do
           job.update(resource_type: nil)
-          result = HistoricalJobPresenter.new(job).to_hash
+          result = JobPresenter.new(job).to_hash
           links  = {
             self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
           }

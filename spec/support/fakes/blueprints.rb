@@ -150,7 +150,7 @@ module VCAP::CloudController
     sequence_id { Sham.sequence_id }
   end
 
-  HistoricalJobModel.blueprint do
+  JobModel.blueprint do
     guid { Sham.guid }
     operation { 'some.job' }
     state { 'COMPLETE' }

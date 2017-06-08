@@ -3,7 +3,7 @@ require 'presenters/v3/base_presenter'
 module VCAP::CloudController
   module Presenters
     module V3
-      class HistoricalJobPresenter < BasePresenter
+      class JobPresenter < BasePresenter
         RESOURCE_LINKS = {
           app: '/v3/apps/'
         }.freeze
