@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CC_DIR="${DIR}/.."
+scripts_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cc_dir="$( cd "${scripts_dir}/.." && pwd )"
+tmp_dir="${cc_dir}/tmp"
 
-echo "this no longer does anything, because of mutual TLS the worker has to run inside bosh-lite until we come up with a solution"
-exit 1
-
-pushd "${CC_DIR}" > /dev/null
-  export CLOUD_CONTROLLER_NG_CONFIG="${CC_DIR}/config/bosh-lite.yml"
-  export BUNDLE_GEMFILE="${CC_DIR}/Gemfile"
+pushd "${cc_dir}" > /dev/null
+  echo "Running local CC worker..."
+  export CLOUD_CONTROLLER_NG_CONFIG="${tmp_dir}/local-cc/cloud_controller_ng.yml"
+  export BUNDLE_GEMFILE="${cc_dir}/Gemfile"
 
   bundle exec rake jobs:local[worker.0]
 popd > /dev/null
