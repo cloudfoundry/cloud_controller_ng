@@ -20,7 +20,7 @@ bosh ssh "${BOSH_API_INSTANCE}" -c "\
 echo "Removing internal hostnames from /etc/hosts..."
 sudo sed -i.bak "/.*\.service\.cf\.internal/d" /etc/hosts > /dev/null
 
-echo "Removing local config file..."
-rm -rf "${tmp_dir}/local-cc-config.yml"
+echo "Removing local config files..."
+rm -rf "${tmp_dir}/local-cc/"
 
 echo "Done"

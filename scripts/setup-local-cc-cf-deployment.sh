@@ -67,12 +67,26 @@ uaa.service.cf.internal"
   done <<< "${ip_to_dns}"
 }
 
-download_cc_config() {
-  echo "Downloading CC config file from ${BOSH_API_INSTANCE}..."
+download_cc_config_dir() {
+  echo "Downloading CC config dir from ${BOSH_API_INSTANCE}..."
 
-  bosh scp \
-    "${BOSH_API_INSTANCE}:/var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml" \
+  bosh scp -r \
+    "${BOSH_API_INSTANCE}:/var/vcap/jobs/cloud_controller_ng/config/*" \
     "$1" > /dev/null
+}
+
+rewrite_config_paths() {
+  echo "Rewriting paths in local config..."
+
+  config_dir="$1"
+  config_file="${config_dir}cloud_controller_ng.yml"
+  sed -i.bak "s~/var/vcap/jobs/cloud_controller_ng/config/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/sys/run/cloud_controller_ng/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/data/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/sys/log/cloud_controller_ng/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/sys/log/cloud_controller_ng/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~use_nginx: true~use_nginx: false~g" "${config_file}"
+  rm -rf "${config_file}.bak"
 }
 
 redirect_traffic_to_local_cc() {
@@ -86,22 +100,35 @@ redirect_traffic_to_local_cc() {
 print_directions() {
   echo -e "\n${green}## Instructions ##${nc}"
   echo -e "The CC API process inside your bosh-lite will now route traffic to port 9022 on your workstation."
-  echo -e "\n${green}1. Start local CC process${nc}"
-  echo -e "${cc_dir}/scripts/run-local-cc-cf-deployment.sh -c ${cc_dir}/tmp/local-cc-config.yml"
-  echo -e "\n${green}2. Restore bosh-lite when finished testing${nc}"
-  echo -e "${cc_dir}/scripts/restore-bosh-lite-cc-cf-deployment.sh"
+  echo -e "\n${green}Option 1: Debug with RubyMine${nc}"
+  echo -e "- RubyMine > Run > Edit Configurations... > + > Ruby"
+  echo -e "  - Name: 'local_cc'"
+  echo -e "  - Ruby script: '${cc_dir}/bin/cloud_controller'"
+  echo -e "  - Script arguments: '-c $1cloud_controller_ng.yml'"
+  echo -e "  - Hit 'OK'"
+  echo -e "- Add breakpoints in code"
+  echo -e "- Run > Debug local_cc"
+  echo -e "\n${green}Option 2: Debug with pry${nc}"
+  echo -e "- Add 'binding.pry' calls in code"
+  echo -e "- Run '${cc_dir}/scripts/run-local-cc-cf-deployment.sh'"
+  echo -e "\n${green}Tail CC logs${nc}"
+  echo -e "Run 'tail -f ${cc_dir}/tmp/local-cc/cloud_controller_ng.log'"
+  echo -e "\n${green}Restore bosh-lite when finished testing${nc}"
+  echo -e "- Run '${cc_dir}/scripts/restore-bosh-lite-cc-cf-deployment.sh'"
 }
 
 main() {
   enable_direct_container_access
   add_internal_hostnames_to_etc_hosts
 
-  cc_config="${tmp_dir}/local-cc-config.yml"
-  download_cc_config "${cc_config}"
+  cc_config_dir="${tmp_dir}/local-cc/"
+  rm -rf "${cc_config_dir}" && mkdir -p "${cc_config_dir}"
+  download_cc_config_dir "${cc_config_dir}"
+  rewrite_config_paths "${cc_config_dir}"
   redirect_traffic_to_local_cc
   echo "Done"
 
-  print_directions
+  print_directions "${cc_config_dir}"
 }
 
 main

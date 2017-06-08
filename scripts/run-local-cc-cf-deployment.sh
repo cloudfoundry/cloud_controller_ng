@@ -8,5 +8,5 @@ tmp_dir="${cc_dir}/tmp"
 
 pushd "${cc_dir}" > /dev/null
   echo "Running local CC..."
-  bundle exec bin/cloud_controller -c "${tmp_dir}/local-cc-config.yml"
+  bundle exec bin/cloud_controller -c "${tmp_dir}/local-cc/cloud_controller_ng.yml"
 popd > /dev/null
