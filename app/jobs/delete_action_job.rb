@@ -36,11 +36,11 @@ module VCAP::CloudController
       end
 
       def success(job)
-        JobModel.where(guid: job.guid).update(state: JobModel::COMPLETE_STATE)
+        JobModel.where(delayed_job_guid: job.guid).update(state: JobModel::COMPLETE_STATE)
       end
 
       def failure(job)
-        JobModel.where(guid: job.guid).update(state: JobModel::FAILED_STATE)
+        JobModel.where(delayed_job_guid: job.guid).update(state: JobModel::FAILED_STATE)
       end
 
       private

@@ -28,7 +28,7 @@ module VCAP::CloudController
           context 'when there is an associated job model' do
             it 'marks the job model completed' do
               enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
-              job_model = VCAP::CloudController::JobModel.make(guid: enqueued_job.guid, state: JobModel::PROCESSING_STATE)
+              job_model = VCAP::CloudController::JobModel.make(delayed_job_guid: enqueued_job.guid, state: JobModel::PROCESSING_STATE)
               successes, failures = Delayed::Worker.new.work_off
 
               expect(successes).to eq(1)
@@ -57,7 +57,7 @@ module VCAP::CloudController
           context 'when there is an associated job model' do
             it 'marks the job model failed' do
               enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
-              job_model = VCAP::CloudController::JobModel.make(guid: enqueued_job.guid, state: JobModel::PROCESSING_STATE)
+              job_model = VCAP::CloudController::JobModel.make(delayed_job_guid: enqueued_job.guid, state: JobModel::PROCESSING_STATE)
               successes, failures = Delayed::Worker.new.work_off
 
               expect(successes).to eq(0)

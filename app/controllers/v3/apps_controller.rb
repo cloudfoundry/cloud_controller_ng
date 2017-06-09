@@ -98,11 +98,11 @@ class AppsV3Controller < ApplicationController
       enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
 
       JobModel.create(
-        guid:          enqueued_job.guid,
-        operation:     'app.delete',
-        state:         JobModel::PROCESSING_STATE,
-        resource_guid: app.guid,
-        resource_type: VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP],
+        delayed_job_guid: enqueued_job.guid,
+        operation:        'app.delete',
+        state:            JobModel::PROCESSING_STATE,
+        resource_guid:    app.guid,
+        resource_type:    VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP],
       )
     end
 

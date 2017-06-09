@@ -821,10 +821,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       app_delete_jobs = Delayed::Job.where("handler like '%AppDelete%'")
       expect(app_delete_jobs.count).to eq 1
-      job = app_delete_jobs.first
+      app_delete_jobs.first
 
-      expect(response.status).to eq(202)
-      expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
       expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
       expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
         VCAP::CloudController::AppModel,
@@ -833,7 +831,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       )
     end
 
-    it 'creates a job to track the deletion' do
+    it 'creates a job to track the deletion and returns it in the location header' do
       expect {
         delete :destroy, guid: app_model.guid
       }.to change {
@@ -842,11 +840,14 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       job = VCAP::CloudController::JobModel.last
       enqueued_job = Delayed::Job.last
-      expect(job.guid).to eq(enqueued_job.guid)
+      expect(job.delayed_job_guid).to eq(enqueued_job.guid)
       expect(job.operation).to eq('app.delete')
       expect(job.state).to eq('PROCESSING')
       expect(job.resource_guid).to eq(app_model.guid)
       expect(job.resource_type).to eq('app')
+
+      expect(response.status).to eq(202)
+      expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
   end
 
