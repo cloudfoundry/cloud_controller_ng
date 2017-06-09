@@ -5661,12 +5661,17 @@ the request in that case. Clients may need to follow the redirect without includ
 <tr>
 <td><strong>type</strong></td>
 <td><em>string</em></td>
-<td>The type of health check to perform. Valid values are <code class="prettyprint">port</code>, <code class="prettyprint">process</code></td>
+<td>The type of health check to perform. Valid values are <code class="prettyprint">http</code>, <code class="prettyprint">port</code>, and <code class="prettyprint">process</code>. Default is <code class="prettyprint">port</code>.</td>
 </tr>
 <tr>
 <td><strong>data.timeout</strong></td>
 <td><em>integer</em></td>
 <td>The duration in seconds that the health check can fail before the process is restarted.</td>
+</tr>
+<tr>
+<td><strong>data.endpoint</strong></td>
+<td><em>string</em></td>
+<td>The endpoint called to determine if the app is healthy. Only used for <code class="prettyprint">http</code> health checks.</td>
 </tr>
 </tbody></table>
 
@@ -5768,7 +5773,8 @@ the request in that case. Clients may need to follow the redirect without includ
   </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
@@ -5930,7 +5936,8 @@ the request in that case. Clients may need to follow the redirect without includ
   </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
@@ -6025,7 +6032,8 @@ the request in that case. Clients may need to follow the redirect without includ
   </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
@@ -6172,7 +6180,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
@@ -6207,7 +6216,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"process"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
@@ -6331,7 +6341,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"port"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
@@ -6366,7 +6377,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"process"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+          </span><span class="nt">"timeout"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-23T18:48:22Z"</span><span class="p">,</span><span class="w">
