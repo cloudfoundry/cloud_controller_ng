@@ -529,7 +529,7 @@ RSpec.describe 'Processes' do
         disk_in_mb:   20,
       }
 
-      put "/v3/processes/#{process.guid}/scale", scale_request, developer_headers
+      put "/v3/processes/#{process.guid}/scale", scale_request.to_json, developer_headers
 
       expected_response = {
         'guid'         => process.guid,
@@ -584,9 +584,9 @@ RSpec.describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'instances'    => '5',
-          'memory_in_mb' => '10',
-          'disk_in_mb'   => '20'
+          'instances'    => 5,
+          'memory_in_mb' => 10,
+          'disk_in_mb'   => 20
         }
       })
     end
@@ -1037,7 +1037,7 @@ RSpec.describe 'Processes' do
         disk_in_mb:   20,
       }
 
-      put "/v3/apps/#{app_model.guid}/processes/web/scale", scale_request, developer_headers
+      put "/v3/apps/#{app_model.guid}/processes/web/scale", scale_request.to_json, developer_headers
 
       expected_response = {
         'guid'         => process.guid,
@@ -1092,9 +1092,9 @@ RSpec.describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'instances'    => '5',
-          'memory_in_mb' => '10',
-          'disk_in_mb'   => '20'
+          'instances'    => 5,
+          'memory_in_mb' => 10,
+          'disk_in_mb'   => 20
         }
       })
     end

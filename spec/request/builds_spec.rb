@@ -59,7 +59,7 @@ RSpec.describe 'Builds' do
     end
 
     it 'creates a Builds resource' do
-      post '/v3/builds', create_request.to_json, json_headers(developer_headers)
+      post '/v3/builds', create_request.to_json, developer_headers
 
       created_build = VCAP::CloudController::BuildModel.last
 
@@ -138,7 +138,7 @@ RSpec.describe 'Builds' do
     end
 
     it 'shows the build' do
-      get "v3/builds/#{build.guid}", nil, json_headers(developer_headers)
+      get "v3/builds/#{build.guid}", nil, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
 

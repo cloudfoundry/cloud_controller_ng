@@ -25,7 +25,7 @@ RSpec.describe 'Packages' do
     describe 'creation' do
       it 'creates a package' do
         expect {
-          post '/v3/packages', { type: type, data: data, relationships: relationships }, user_header
+          post '/v3/packages', { type: type, data: data, relationships: relationships }.to_json, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -91,7 +91,7 @@ RSpec.describe 'Packages' do
               relationships: {
                 app: { data: { guid: guid } },
               }
-            },
+            }.to_json,
             user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
@@ -613,7 +613,7 @@ RSpec.describe 'Packages' do
     it 'uploads the bits for the package' do
       expect(Delayed::Job.count).to eq 0
 
-      post "/v3/packages/#{guid}/upload", packages_params, user_header
+      post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
 
       expect(Delayed::Job.count).to eq 1
 
@@ -684,7 +684,7 @@ RSpec.describe 'Packages' do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
-      post "/v3/packages/#{guid}/upload", upload_body, user_header
+      post "/v3/packages/#{guid}/upload", upload_body.to_json, user_header
       Delayed::Worker.new.work_off
     end
 

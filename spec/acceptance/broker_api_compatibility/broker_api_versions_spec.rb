@@ -3,17 +3,17 @@ require 'spec_helper'
 RSpec.describe 'Broker API Versions' do
   let(:spec_sha) do
     {
-      'broker_api_v2.0_spec.rb' => 'bfcf4a3ee89c8e6a85e04907a8dcd675',
-      'broker_api_v2.1_spec.rb' => '08684c8e80c16c20274b5318908fc34d',
-      'broker_api_v2.2_spec.rb' => '061f3170c242aa7e7b42178d478e2a9a',
-      'broker_api_v2.3_spec.rb' => '3ff19f2ce9888c817d6e2a49c7306cc8',
+      'broker_api_v2.0_spec.rb' => '4b18861a044ec57709ff529557a656d3',
+      'broker_api_v2.1_spec.rb' => 'd0559352542dda5cbd3f010cbdc622f2',
+      'broker_api_v2.2_spec.rb' => '4fc472fc502b50aa7451b3e376823fe0',
+      'broker_api_v2.3_spec.rb' => 'b226a2bcd068ba6db28dd4ea26a94cdb',
       'broker_api_v2.4_spec.rb' => '17ddf45ce44d07f8912f3a8031ae8016',
       'broker_api_v2.5_spec.rb' => 'a1c55e4193072955fa600197e07ac64a',
       'broker_api_v2.6_spec.rb' => 'd814f5d1665d1be3ae36e673d288161b',
       'broker_api_v2.7_spec.rb' => '6ac3a8f83f3bc2492715b42a8fecb2a0',
-      'broker_api_v2.8_spec.rb' => '54c9fe10b8a3127c18d28ddf4a1bce9b',
+      'broker_api_v2.8_spec.rb' => '2b1b662b4874f5bac4481de7cf15b363',
       'broker_api_v2.9_spec.rb' => '9de8ebbdc0e2b60b791c6f7db4e1c8ee',
-      'broker_api_v2.10_spec.rb' => 'e0e22844e576d69067c4891c8ada611c',
+      'broker_api_v2.10_spec.rb' => '27e81c4c540e39a4e4eac70c8efb14ba',
       'broker_api_v2.11_spec.rb' => '99e61dc50ceb635b09b3bd16901a4fa6',
     }
   end
@@ -27,7 +27,7 @@ RSpec.describe 'Broker API Versions' do
 
     post('/v2/service_brokers',
       { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
-      json_headers(admin_headers))
+      admin_headers)
 
     major_version, current_minor_version = @version.split('.').map(&:to_i)
     broker_api_specs = (0..current_minor_version).to_a.map do |minor_version|

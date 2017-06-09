@@ -13,7 +13,7 @@ module VCAP::CloudController
       req = MultiJson.dump(matches + non_matches)
 
       set_current_user(user)
-      send(verb, path, req, json_headers(headers_for(user)))
+      send(verb, path, req, headers_for(user))
       expect(last_response.status).to eq(200)
 
       resp = MultiJson.load(last_response.body)

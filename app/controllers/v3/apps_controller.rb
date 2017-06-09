@@ -91,11 +91,17 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    AppDelete.new(user_audit_info).delete(app)
+    delete_action = AppDelete.new(user_audit_info)
+    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    head :no_content
-  rescue AppDelete::InvalidDelete => e
-    unprocessable!(e.message)
+    operation = 'app.delete'
+    resource_type = VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP]
+    resource_guid = app.guid
+
+    job = enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
   def start
@@ -213,6 +219,20 @@ class AppsV3Controller < ApplicationController
   end
 
   private
+
+  def enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
+    JobModel.db.transaction do
+      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+
+      JobModel.create(
+        delayed_job_guid: enqueued_job.guid,
+        operation:        operation,
+        state:            JobModel::PROCESSING_STATE,
+        resource_guid:    resource_guid,
+        resource_type:    resource_type,
+      )
+    end
+  end
 
   def droplet_not_found!
     resource_not_found!(:droplet)

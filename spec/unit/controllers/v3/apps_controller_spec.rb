@@ -755,18 +755,14 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:app_delete_stub) { instance_double(VCAP::CloudController::AppDelete) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-    end
-
-    it 'returns a 204' do
-      delete :destroy, guid: app_model.guid
-
-      expect(response.status).to eq 204
-      expect { app_model.reload }.to raise_error(Sequel::Error, 'Record not found')
+      allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
+      allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
     end
 
     context 'permissions' do
@@ -820,18 +816,38 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when AppDelete::InvalidDelete is raised' do
-      before do
-        allow_any_instance_of(VCAP::CloudController::AppDelete).to receive(:delete).
-          and_raise(VCAP::CloudController::AppDelete::InvalidDelete.new('it is broke'))
-      end
+    it 'successfully deletes the app in a background job' do
+      delete :destroy, guid: app_model.guid
 
-      it 'returns a 400' do
+      app_delete_jobs = Delayed::Job.where("handler like '%AppDelete%'")
+      expect(app_delete_jobs.count).to eq 1
+      app_delete_jobs.first
+
+      expect(VCAP::CloudController::AppModel.find(guid: app_model.guid)).not_to be_nil
+      expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
+        VCAP::CloudController::AppModel,
+        app_model.guid,
+        app_delete_stub,
+      )
+    end
+
+    it 'creates a job to track the deletion and returns it in the location header' do
+      expect {
         delete :destroy, guid: app_model.guid
+      }.to change {
+        VCAP::CloudController::JobModel.count
+      }.by(1)
 
-        expect(response.status).to eq 422
-        expect(response.body).to include 'it is broke'
-      end
+      job = VCAP::CloudController::JobModel.last
+      enqueued_job = Delayed::Job.last
+      expect(job.delayed_job_guid).to eq(enqueued_job.guid)
+      expect(job.operation).to eq('app.delete')
+      expect(job.state).to eq('PROCESSING')
+      expect(job.resource_guid).to eq(app_model.guid)
+      expect(job.resource_type).to eq('app')
+
+      expect(response.status).to eq(202)
+      expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
   end
 
@@ -1212,11 +1228,11 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     let(:expected_success_response) do
       {
-        'meep' => 'moop',
-        'beep' => 'boop',
+        'meep'  => 'moop',
+        'beep'  => 'boop',
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+          'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -1227,15 +1243,15 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'space_developer' => 200,
-        'org_manager' => 403,
-        'org_user' => 404,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_auditor' => 404,
+        'space_developer'     => 200,
+        'org_manager'         => 403,
+        'org_user'            => 404,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_auditor'         => 404,
         'org_billing_manager' => 404,
-        'admin' => 200,
-        'admin_read_only' => 200
+        'admin'               => 200,
+        'admin_read_only'     => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -1340,10 +1356,10 @@ RSpec.describe AppsV3Controller, type: :controller do
       {
         'override' => 'new-value',
         'preserve' => 'value-to-keep',
-        'new-key' => 'another-new-value',
-        'links' => {
+        'new-key'  => 'another-new-value',
+        'links'    => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+          'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -1351,7 +1367,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:request_body) do
       {
         'override' => 'new-value',
-        'new-key' => 'another-new-value',
+        'new-key'  => 'another-new-value',
       }
     end
 
@@ -1361,15 +1377,15 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'space_developer' => 200,
-        'org_manager' => 403,
-        'org_user' => 404,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_auditor' => 404,
+        'space_developer'     => 200,
+        'org_manager'         => 403,
+        'org_user'            => 404,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_auditor'         => 404,
         'org_billing_manager' => 404,
-        'admin' => 200,
-        'admin_read_only' => 403
+        'admin'               => 200,
+        'admin_read_only'     => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -1387,7 +1403,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               expect(app_model.environment_variables).to eq({
                 'override' => 'new-value',
                 'preserve' => 'value-to-keep',
-                'new-key' => 'another-new-value',
+                'new-key'  => 'another-new-value',
               })
             end
           end

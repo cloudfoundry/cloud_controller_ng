@@ -1,0 +1,26 @@
+<% content_for :single_complete_job do %>
+{
+  "operation": "app.delete",
+  "state": "COMPLETE",
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/jobs/585bc3c1-3743-497d-88b0-403ad6b56d16"
+    }
+  }
+}
+<% end %>
+
+<% content_for :single_non_complete_job do %>
+{
+  "operation": "app.delete",
+  "state": "FAILED",
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/jobs/585bc3c1-3743-497d-88b0-403ad6b56d16"
+    },
+    "app": {
+      "href": "https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+    }
+  }
+}
+<% end %>

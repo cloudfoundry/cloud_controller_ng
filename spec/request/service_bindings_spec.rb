@@ -31,7 +31,7 @@ RSpec.describe 'v3 service bindings' do
           }
         }.to_json
 
-        post '/v3/service_bindings', request_body, json_headers(user_headers)
+        post '/v3/service_bindings', request_body, user_headers
 
         parsed_response = MultiJson.load(last_response.body)
         guid            = parsed_response['guid']
@@ -118,7 +118,7 @@ RSpec.describe 'v3 service bindings' do
           }
         }.to_json
 
-        post '/v3/service_bindings', request_body, json_headers(user_headers)
+        post '/v3/service_bindings', request_body, user_headers
 
         parsed_response = MultiJson.load(last_response.body)
         guid            = parsed_response['guid']

@@ -660,7 +660,7 @@ RSpec.describe 'Droplets' do
     end
 
     it 'copies a droplet' do
-      post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, json_headers(developer_headers)
+      post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
       copied_droplet  = VCAP::CloudController::DropletModel.last

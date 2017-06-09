@@ -475,7 +475,7 @@ RSpec.describe 'Tasks' do
         disk_in_mb:   1000,
       }
 
-      post "/v3/apps/#{app_model.guid}/tasks", body, developer_headers
+      post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
       guid            = parsed_response['guid']
@@ -551,7 +551,7 @@ RSpec.describe 'Tasks' do
           droplet_guid: non_assigned_droplet.guid
         }
 
-        post "/v3/apps/#{app_model.guid}/tasks", body, developer_headers
+        post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
 
         parsed_response = MultiJson.load(last_response.body)
         guid            = parsed_response['guid']

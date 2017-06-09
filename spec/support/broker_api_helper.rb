@@ -66,11 +66,11 @@ module VCAP::CloudController::BrokerApiHelper
 
     post('/v2/service_brokers',
          { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
-         json_headers(admin_headers))
+         admin_headers)
     response = JSON.parse(last_response.body)
     @broker_guid = response['metadata']['guid']
 
-    get('/v2/services?inline-relations-depth=1', '{}', json_headers(admin_headers))
+    get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
     response = JSON.parse(last_response.body)
     service_plans = response['resources'].first['entity']['service_plans']
     @plan_guid = service_plans.find { |plan| plan['entity']['name'] == 'small' }['metadata']['guid']
@@ -85,19 +85,19 @@ module VCAP::CloudController::BrokerApiHelper
   def update_broker(catalog)
     stub_catalog_fetch(200, catalog)
 
-    put("/v2/service_brokers/#{@broker_guid}", '{}', json_headers(admin_headers))
+    put("/v2/service_brokers/#{@broker_guid}", '{}', admin_headers)
   end
 
   def make_all_plans_public
-    response = get('/v2/service_plans', '{}', json_headers(admin_headers))
+    response = get('/v2/service_plans', '{}', admin_headers)
     service_plan_guids = JSON.parse(response.body).fetch('resources').map { |plan| plan.fetch('metadata').fetch('guid') }
     service_plan_guids.each do |service_plan_guid|
-      put("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), json_headers(admin_headers))
+      put("/v2/service_plans/#{service_plan_guid}", JSON.dump(public: true), admin_headers)
     end
   end
 
   def delete_broker
-    delete("/v2/service_brokers/#{@broker_guid}", '{}', json_headers(admin_headers))
+    delete("/v2/service_brokers/#{@broker_guid}", '{}', admin_headers)
   end
 
   def async_delete_service(status: 202, operation_data: nil)
@@ -108,7 +108,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     delete("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
       {}.to_json,
-      json_headers(admin_headers))
+      admin_headers)
   end
 
   def async_provision_service(status: 202, operation_data: nil)
@@ -127,7 +127,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     post('/v2/service_instances?accepts_incomplete=true',
       body.to_json,
-      json_headers(admin_headers))
+      admin_headers)
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
@@ -166,7 +166,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     post('/v2/service_instances',
          body.to_json,
-         json_headers(admin_headers))
+         admin_headers)
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
@@ -184,7 +184,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     put("/v2/service_instances/#{@service_instance_guid}",
         body.to_json,
-        json_headers(admin_headers)
+        admin_headers
     )
   end
 
@@ -200,7 +200,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     put("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
       body.to_json,
-      json_headers(admin_headers))
+      admin_headers)
   end
 
   def create_app
@@ -219,7 +219,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     post('/v2/service_bindings',
          body.to_json,
-         json_headers(admin_headers)
+         admin_headers
     )
 
     metadata = JSON.parse(last_response.body).fetch('metadata', {})
@@ -232,7 +232,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     delete("/v2/service_bindings/#{@binding_id}",
       '{}',
-      json_headers(admin_headers)
+      admin_headers
     )
   end
 
@@ -247,7 +247,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     post('/v2/service_keys',
          body.to_json,
-         json_headers(admin_headers)
+         admin_headers
     )
 
     @service_key_id = JSON.parse(last_response.body)['metadata']['guid']
@@ -259,7 +259,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     delete("/v2/service_keys/#{@service_key_id}",
       '{}',
-      json_headers(admin_headers)
+      admin_headers
     )
   end
 
@@ -267,6 +267,6 @@ module VCAP::CloudController::BrokerApiHelper
     stub_request(:delete, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
       to_return(status: 200, body: '{}')
 
-    delete("/v2/service_instances/#{@service_instance_guid}", '{}', json_headers(admin_headers))
+    delete("/v2/service_instances/#{@service_instance_guid}", '{}', admin_headers)
   end
 end

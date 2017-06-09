@@ -72,11 +72,15 @@ module ControllerHelpers
     headers = {}
     headers['HTTP_AUTHORIZATION'] = "bearer #{user_token(user, opts)}"
     headers['HTTP_X_FORWARDED_PROTO'] = 'https' if opts[:https]
-    headers
+    json_headers(headers)
   end
 
   def json_headers(headers)
     headers.merge({ 'CONTENT_TYPE' => 'application/json' })
+  end
+
+  def form_headers(headers)
+    headers.merge({ 'CONTENT_TYPE' => 'multipart/form-data' })
   end
 
   def decoded_response(options={})

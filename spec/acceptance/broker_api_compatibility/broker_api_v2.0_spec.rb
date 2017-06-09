@@ -100,7 +100,7 @@ RSpec.describe 'Service Broker API integration' do
                 auth_username: broker_auth_username,
                 auth_password: broker_auth_password
               }.to_json,
-              json_headers(admin_headers))
+              admin_headers)
           end
 
           it_behaves_like 'a catalog fetch request'
@@ -121,7 +121,7 @@ RSpec.describe 'Service Broker API integration' do
 
             put("/v2/service_brokers/#{@broker_guid}",
               {}.to_json,
-              json_headers(admin_headers))
+              admin_headers)
           end
 
           it_behaves_like 'a catalog fetch request'
@@ -166,7 +166,7 @@ RSpec.describe 'Service Broker API integration' do
               space_guid:        space_guid,
               service_plan_guid: plan_guid
             }.to_json,
-            json_headers(admin_headers))
+            admin_headers)
         end
 
         include_examples 'broker errors'
@@ -255,7 +255,7 @@ RSpec.describe 'Service Broker API integration' do
 
           post('/v2/service_bindings',
             { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
-            json_headers(admin_headers))
+            admin_headers)
         end
 
         include_examples 'broker errors'
@@ -338,7 +338,7 @@ RSpec.describe 'Service Broker API integration' do
 
           delete("v2/service_bindings/#{binding_id}",
             '{}',
-            json_headers(admin_headers)
+            admin_headers
           )
         end
 
@@ -396,7 +396,7 @@ RSpec.describe 'Service Broker API integration' do
 
           delete("v2/service_instances/#{service_instance_guid}",
             '{}',
-            json_headers(admin_headers)
+            admin_headers
           )
         end
 

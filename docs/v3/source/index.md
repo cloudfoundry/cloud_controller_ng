@@ -12,6 +12,7 @@ includes:
   - api_resources/builds
   - api_resources/droplets
   - api_resources/isolation_segments
+  - api_resources/jobs
   - api_resources/organizations
   - api_resources/packages
   - api_resources/processes
@@ -69,6 +70,9 @@ includes:
   - experimental_resources/droplets/list
   - experimental_resources/droplets/app/list
   - experimental_resources/droplets/package/list
+  - experimental_resources/jobs/header
+  - experimental_resources/jobs/object
+  - experimental_resources/jobs/get
   - experimental_resources/organizations/header
   - experimental_resources/organizations/object
   - experimental_resources/organizations/list

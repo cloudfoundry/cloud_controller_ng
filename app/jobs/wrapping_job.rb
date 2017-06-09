@@ -9,6 +9,18 @@ module VCAP::CloudController
         @handler.perform
       end
 
+      def before(job)
+        @handler.before(job) if @handler.respond_to?(:before)
+      end
+
+      def success(job)
+        @handler.success(job) if @handler.respond_to?(:success)
+      end
+
+      def failure(job)
+        @handler.failure(job) if @handler.respond_to?(:failure)
+      end
+
       def max_attempts
         @handler.respond_to?(:max_attempts) ? @handler.max_attempts : 1
       end
