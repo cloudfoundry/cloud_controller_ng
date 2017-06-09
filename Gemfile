@@ -81,5 +81,6 @@ end
 group :development do
   gem 'byebug'
   gem 'roodi'
-  gem 'ruby-debug-ide'
+  gem 'ruby-debug-ide', '>= 0.6.1.beta4'
+  gem 'debase', '>= 0.2.2.beta10'
 end

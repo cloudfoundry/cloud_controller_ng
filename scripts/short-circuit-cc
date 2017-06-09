@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+
+set -eu
+
+: "${BOSH_ENVIRONMENT:?}"
+: "${BOSH_CLIENT:?}"
+: "${BOSH_CLIENT_SECRET:?}"
+: "${BOSH_DEPLOYMENT:="cf"}"
+: "${BOSH_API_INSTANCE:="api/0"}"
+: "${LOCAL_CC_PORT:=9022}"
+: "${LOCAL_TUNNEL_PORT:="9028"}"
+: "${REMOTE_TUNNEL_PORT:="9029"}"
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cc_dir="$( cd "${script_dir}/.." && pwd )"
+tmp_dir="${cc_dir}/tmp/local-cc"
+proxychains_conf="${tmp_dir}/proxychains.conf"
+socks_tunnel_pidfile="${tmp_dir}/sock_tunnel.pid"
+reverse_tunnel_pidfile="${tmp_dir}/reverse_tunnel.pid"
+
+green='\033[32m'
+red='\033[31m'
+nc='\033[0m'
+
+check_dependencies() {
+  if ! which proxychains4 &> /dev/null; then
+    echo -e "${red}ERROR: Command 'proxychains4' not found.${nc}"
+    if [ "$(uname)" == "Darwin" ]; then
+      echo -e "${red}Run 'brew install proxychains-ng' and re-run.${nc}"
+    else
+      echo -e "${red}Follow installation instructions at 'https://github.com/rofl0r/proxychains-ng' and re-run.${nc}"
+    fi
+    exit 1
+  fi
+}
+
+add_internal_hostnames_to_etc_hosts() {
+  echo "Adding internal hostnames to /etc/hosts..."
+
+  # for each DNS name in list, run dig on the remote VM to print "$IP $HOSTNAME" or "UNKNOWN $HOSTNAME" if the DNS record can't be resolved
+  internal_hostnames="auctioneer.service.cf.internal \
+bbs.service.cf.internal \
+bits-service.service.cf.internal \
+blobstore.service.cf.internal \
+cc-uploader.service.cf.internal \
+cell.service.cf.internal \
+cloud-controller-ng.service.cf.internal \
+loggregator-trafficcontroller.service.cf.internal \
+sql-db.service.cf.internal \
+uaa.service.cf.internal"
+  ip_to_dns="$(bosh ssh "${BOSH_API_INSTANCE}" -c "for addr in ${internal_hostnames}; do ip=\"\$(dig +short \${addr})\" && echo \"\${ip:-\"UNKNOWN\"} \${addr}\"; done"  -r --column=Stdout | cat)"
+
+  while read -r line; do
+    if [[ -z "${line}" || "${line}" == UNKNOWN* ]]; then
+      continue
+    fi
+
+    ip=$(cut -d' ' -f1 <<< "${line}")
+    hostname=$(cut -d' ' -f2 <<< "${line}")
+
+    if grep -q "${hostname}" /etc/hosts; then
+      sudo sed -i.bak "s/.*${hostname}$/${ip} ${hostname}/g" /etc/hosts
+    else
+      echo "${ip} ${hostname}" | sudo tee -a /etc/hosts > /dev/null
+    fi
+  done <<< "${ip_to_dns}"
+}
+
+download_cc_config_dir() {
+  echo "Downloading CC config dir from ${BOSH_API_INSTANCE}..."
+
+  bosh scp -r \
+    "${BOSH_API_INSTANCE}:/var/vcap/jobs/cloud_controller_ng/config/*" \
+    "$1" > /dev/null
+}
+
+rewrite_config_paths() {
+  echo "Rewriting paths in local config..."
+
+  config_dir="$1"
+  config_file="${config_dir}cloud_controller_ng.yml"
+  sed -i.bak "s~/var/vcap/jobs/cloud_controller_ng/config/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/sys/run/cloud_controller_ng/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/data/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/sys/log/cloud_controller_ng/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~/var/vcap/sys/log/cloud_controller_ng/~${config_dir}~g" "${config_file}"
+  sed -i.bak "s~use_nginx: true~use_nginx: false~g" "${config_file}"
+  sed -i.bak "s~local_route: .*$~local_route: 0.0.0.0~g" "${config_file}"
+  rm -rf "${config_file}.bak"
+}
+
+start_background_socks_tunnel() {
+  echo "Creating SOCKS tunnel to bosh lite..."
+  bosh ssh "${BOSH_API_INSTANCE}" \
+    --opts="-D ${LOCAL_TUNNEL_PORT}" \
+    --opts='-N' &> /dev/null &
+  echo "$!" > "${socks_tunnel_pidfile}"
+  disown
+
+  cat << EOF > "${proxychains_conf}"
+strict_chain
+proxy_dns
+tcp_read_time_out 15000
+tcp_connect_time_out 8000
+
+[ProxyList]
+socks5 	127.0.0.1 ${LOCAL_TUNNEL_PORT}
+EOF
+}
+
+redirect_traffic_to_local_cc() {
+  echo "Redirecting traffic from bosh-lite to local process..."
+  bosh ssh "${BOSH_API_INSTANCE}" \
+    --opts="-R ${REMOTE_TUNNEL_PORT}:localhost:${LOCAL_CC_PORT}" \
+    --opts='-N' &> /dev/null &
+  echo "$!" > "${reverse_tunnel_pidfile}"
+  disown
+
+  bosh ssh "${BOSH_API_INSTANCE}" -c "\
+    sudo sed -i -- 's#unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller\.sock#127.0.0.1:${REMOTE_TUNNEL_PORT}#g' '/var/vcap/jobs/cloud_controller_ng/config/nginx.conf' && \
+    sudo /var/vcap/bosh/bin/monit restart nginx_cc" > /dev/null
+}
+
+print_directions() {
+  echo -e "\n${green}## Instructions ##${nc}"
+  echo -e "The CC API process inside your bosh-lite will now route traffic to port 9022 on your workstation."
+  echo -e "\n${green}Option 1: Debug with RubyMine${nc}"
+  echo -e "- Add breakpoints in code"
+  echo -e "- RubyMine > Run > Attach to Local Process... > Select 'bin/cloud_controller -c ...'"
+  echo -e "\n${green}Option 2: Debug with pry${nc}"
+  echo -e "- Add 'binding.pry' calls in code"
+  echo -e "- Re-run this script"
+  echo -e "\n${green}Tail CC logs${nc}"
+  echo -e "Run 'tail -f ${tmp_dir}/cloud_controller_ng.log'"
+  echo -e ""
+}
+
+cleanup() {
+  echo -e "\nClosing existing tunnels..."
+  if [ -f "${reverse_tunnel_pidfile}" ] && ps -p "$(cat "${socks_tunnel_pidfile}")" &> /dev/null; then
+    pkill -P "$(cat "${socks_tunnel_pidfile}")" &> /dev/null
+  fi
+  if [ -f "${reverse_tunnel_pidfile}" ] && ps -p "$(cat "${reverse_tunnel_pidfile}")" &> /dev/null; then
+    pkill -P "$(cat "${reverse_tunnel_pidfile}")" &> /dev/null
+  fi
+
+  echo "Resetting nginx to original socket..."
+  bosh ssh "${BOSH_API_INSTANCE}" -c "\
+    sudo sed -i -- 's/127\.0\.0\.1:9029/unix:\/var\/vcap\/sys\/run\/cloud_controller_ng\/cloud_controller\.sock/g' '/var/vcap/jobs/cloud_controller_ng/config/nginx.conf' && \
+    sudo /var/vcap/bosh/bin/monit restart nginx_cc" > /dev/null
+
+  echo "Removing internal hostnames from /etc/hosts..."
+  sudo sed -i.bak "/.*\.service\.cf\.internal/d" /etc/hosts > /dev/null
+
+  echo "Removing local config files..."
+  rm -rf "${tmp_dir}"
+}
+
+main() {
+  check_dependencies
+
+  trap cleanup EXIT
+  add_internal_hostnames_to_etc_hosts
+
+  rm -rf "${tmp_dir}" && mkdir -p "${tmp_dir}"
+  download_cc_config_dir "${tmp_dir}"
+  rewrite_config_paths "${tmp_dir}"
+
+  start_background_socks_tunnel
+  redirect_traffic_to_local_cc
+  echo "Finished setup"
+
+  print_directions "${tmp_dir}"
+  pushd "${cc_dir}" > /dev/null
+    echo "Running local CC, hit Ctrl-C once to stop..."
+    proxychains4 -q -f "${proxychains_conf}" bundle exec bin/cloud_controller -c "${tmp_dir}/cloud_controller_ng.yml"
+  popd > /dev/null
+}
+
+main
