@@ -84,20 +84,12 @@ RSpec.describe 'IsolationSegmentModels' do
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
 
-      expected_response = {
-        'data' => [
-          { 'guid' => space1.guid },
-          { 'guid' => space2.guid },
-        ],
-        'links' => {
-          'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
-        }
-      }
-
       expect(parsed_response['data'].length).to eq 2
-      expect(parsed_response['data']).to include(expected_response['data'][0])
-      expect(parsed_response['data']).to include(expected_response['data'][1])
-      expect(parsed_response).to be_a_response_like(expected_response)
+      expect(parsed_response['data']).to include({ 'guid' => space1.guid })
+      expect(parsed_response['data']).to include({ 'guid' => space2.guid })
+      expect(parsed_response['links']).to eq({
+        'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/relationships/spaces" },
+      })
     end
   end
 

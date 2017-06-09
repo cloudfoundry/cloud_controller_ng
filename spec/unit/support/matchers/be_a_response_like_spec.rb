@@ -57,6 +57,12 @@ RSpec.describe 'be_a_response_like matcher' do
     }.to raise_expectation_not_met_error(expected: '{"a"=>[1]}', actual: '{"a"=>[1, 2]}')
   end
 
+  it 'fails when array values are permuted' do
+    expect {
+      expect({ 'a' => [1, 2] }).to be_a_response_like({ 'a' => [2, 1] })
+    }.to raise_expectation_not_met_error(expected: '{"a"=>[2, 1]}', actual: '{"a"=>[1, 2]}')
+  end
+
   it 'fails when hash values within arrays do not match' do
     expect {
       expect({ 'a' => [{ 'b' => 1 }] }).to be_a_response_like({ 'a' => [{ 'b' => 2 }] })
