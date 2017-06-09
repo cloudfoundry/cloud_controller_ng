@@ -94,17 +94,11 @@ class AppsV3Controller < ApplicationController
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    job = JobModel.db.transaction do
-      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+    operation = 'app.delete'
+    resource_type = VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP]
+    resource_guid = app.guid
 
-      JobModel.create(
-        delayed_job_guid: enqueued_job.guid,
-        operation:        'app.delete',
-        state:            JobModel::PROCESSING_STATE,
-        resource_guid:    app.guid,
-        resource_type:    VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP],
-      )
-    end
+    job = enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
@@ -225,6 +219,20 @@ class AppsV3Controller < ApplicationController
   end
 
   private
+
+  def enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
+    JobModel.db.transaction do
+      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+
+      JobModel.create(
+        delayed_job_guid: enqueued_job.guid,
+        operation:        operation,
+        state:            JobModel::PROCESSING_STATE,
+        resource_guid:    resource_guid,
+        resource_type:    resource_type,
+      )
+    end
+  end
 
   def droplet_not_found!
     resource_not_found!(:droplet)
