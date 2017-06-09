@@ -46,25 +46,8 @@ module VCAP::CloudController
       context 'has custom ports' do
         let(:app) { App.make(ports: [8081, 8082]) }
 
-        context 'with default_to_diego_backend set to true' do
-          before { TestConfig.override(default_to_diego_backend: true) }
-
-          it 'return an app with custom port configuration' do
-            expect(app.ports).to eq([8081, 8082])
-          end
-        end
-
-        context 'with default_to_diego_backend set to false' do
-          before { TestConfig.override(default_to_diego_backend: false) }
-
-          it 'raises a validation error' do
-            expect {
-              app.save
-            }.to raise_error do |e|
-              expect(e.message).
-                to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports')
-            end
-          end
+        it 'return an app with custom port configuration' do
+          expect(app.ports).to eq([8081, 8082])
         end
       end
     end
@@ -74,7 +57,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :events, class: AppEvent }
 
       it 'has service_bindings through the parent app' do
-        process = AppFactory.make(type: 'potato')
+        process  = AppFactory.make(type: 'potato')
         binding1 = ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space))
         binding2 = ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space))
 
@@ -83,8 +66,8 @@ module VCAP::CloudController
 
       it 'has route_mappings' do
         process = AppFactory.make
-        route1 = Route.make(space: process.space)
-        route2 = Route.make(space: process.space)
+        route1  = Route.make(space: process.space)
+        route2  = Route.make(space: process.space)
 
         mapping1 = RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
         mapping2 = RouteMappingModel.make(app: process.app, route: route2, process_type: process.type)
@@ -94,8 +77,8 @@ module VCAP::CloudController
 
       it 'has routes through route_mappings' do
         process = AppFactory.make
-        route1 = Route.make(space: process.space)
-        route2 = Route.make(space: process.space)
+        route1  = Route.make(space: process.space)
+        route2  = Route.make(space: process.space)
 
         RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
         RouteMappingModel.make(app: process.app, route: route2, process_type: process.type)
@@ -105,7 +88,7 @@ module VCAP::CloudController
 
       it 'has a current_droplet from the parent app' do
         parent_app = AppModel.make
-        droplet = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
+        droplet    = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
         parent_app.update(droplet: droplet)
         app = App.make(app: parent_app)
 
@@ -160,6 +143,7 @@ module VCAP::CloudController
           # use tap to ensure there is an updated_at
           app = AppFactory.make.tap do |a|
             a.instances = 1
+            a.diego = false
             a.save.reload
           end
           original_updated_at = app.updated_at
@@ -280,13 +264,13 @@ module VCAP::CloudController
 
       describe 'health_check_http_endpoint' do
         it 'can be set to the root path' do
-          app.health_check_type = 'http'
+          app.health_check_type          = 'http'
           app.health_check_http_endpoint = '/'
           expect(app).to be_valid
         end
 
         it 'can be set to a valid uri path' do
-          app.health_check_type = 'http'
+          app.health_check_type          = 'http'
           app.health_check_http_endpoint = '/v2'
           expect(app).to be_valid
         end
@@ -298,14 +282,14 @@ module VCAP::CloudController
         end
 
         it 'cannot be set to a relative path' do
-          app.health_check_type = 'http'
+          app.health_check_type          = 'http'
           app.health_check_http_endpoint = 'relative/path'
           expect(app).to_not be_valid
           expect(app.errors.on(:health_check_http_endpoint)).to be_present
         end
 
         it 'cannot be set to an empty string' do
-          app.health_check_type = 'http'
+          app.health_check_type          = 'http'
           app.health_check_http_endpoint = ' '
           expect(app).to_not be_valid
           expect(app.errors.on(:health_check_http_endpoint)).to be_present
@@ -1359,7 +1343,7 @@ module VCAP::CloudController
       end
 
       context 'when AppObserver.updated fails' do
-        let(:app) { AppFactory.make }
+        let(:app) { AppFactory.make(diego: false) }
         let(:undo_app) { double(:undo_app_changes, undo: true) }
 
         context 'when the app is a dea app' do
@@ -1566,22 +1550,8 @@ module VCAP::CloudController
     describe 'diego' do
       subject { AppFactory.make }
 
-      context 'default values' do
-        context 'when the config specifies dea as the default backend' do
-          before { TestConfig.override(default_to_diego_backend: false) }
-
-          it 'does not run on diego' do
-            expect(subject.diego).to be_falsey
-          end
-        end
-
-        context 'when the config specifies diego as the default backend' do
-          before { TestConfig.override(default_to_diego_backend: true) }
-
-          it 'runs on diego' do
-            expect(subject.diego).to be_truthy
-          end
-        end
+      it 'defaults to run on diego' do
+        expect(subject.diego).to be_truthy
       end
 
       context 'when updating app ports' do

@@ -324,7 +324,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     include_context 'guid_parameter'
     parameter :index, 'The index of the App Instance to terminate'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', instances: 2) }
+    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', instances: 2, diego: false) }
 
     example 'Terminate the running App Instance at the given index' do
       allow(VCAP::CloudController::Dea::Client).to receive(:stop_indices)

@@ -180,23 +180,6 @@ module VCAP::CloudController
           end
         end
 
-        context 'when there is a mixture of diego and dea apps' do
-          before do
-            app = AppFactory.make
-            expect(app.diego).to be_falsey
-          end
-
-          it 'only returns diego apps' do
-            get '/internal/bulk/apps', {
-              'batch_size' => App.count,
-              'token' => '{}',
-            }
-
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count - 1)
-          end
-        end
-
         context 'when docker is enabled' do
           let(:space) { Space.make }
           let(:docker_app) do

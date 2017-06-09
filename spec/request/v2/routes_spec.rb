@@ -53,7 +53,7 @@ RSpec.describe 'Routes' do
     end
 
     context 'with inline-relations-depth' do
-      let!(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+      let!(:process) { VCAP::CloudController::AppFactory.make(space: space, diego: false) }
       let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
       it 'includes related records' do

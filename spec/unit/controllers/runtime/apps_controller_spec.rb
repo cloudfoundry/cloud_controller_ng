@@ -561,7 +561,7 @@ module VCAP::CloudController
     describe 'update app' do
       let(:update_hash) { {} }
 
-      let(:app_obj) { AppFactory.make(instances: 1) }
+      let(:app_obj) { AppFactory.make(diego: false, instances: 1) }
       let(:developer) { make_developer_for_space(app_obj.space) }
 
       before do
@@ -1606,7 +1606,7 @@ module VCAP::CloudController
 
       context 'when app will be staged', isolation: :truncation do
         let(:app_obj) do
-          a = AppFactory.make(state: 'STOPPED', instances: 1)
+          a = AppFactory.make(diego: false, state: 'STOPPED', instances: 1)
           a.current_droplet.destroy
           a.reload
         end
@@ -1739,7 +1739,7 @@ module VCAP::CloudController
       let(:domain) do
         PrivateDomain.make(name: 'jesse.cloud', owning_organization: space.organization)
       end
-      let(:app_obj) { AppFactory.make(state: 'STARTED') }
+      let(:app_obj) { AppFactory.make(diego: false, state: 'STARTED') }
 
       before do
         FeatureFlag.create(name: 'diego_docker', enabled: true)

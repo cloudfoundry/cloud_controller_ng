@@ -380,7 +380,6 @@ cloud_controller_username_lookup_client_secret: <%= p("uaa.clients.cloud_control
 users_can_select_backend: <%= p("cc.users_can_select_backend") %>
 allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 default_app_ssh_access: <%= p("cc.default_app_ssh_access") %>
-default_to_diego_backend: <%= p("cc.default_to_diego_backend") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>

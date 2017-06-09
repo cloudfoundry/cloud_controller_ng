@@ -253,7 +253,6 @@ module VCAP::CloudController
         optional(:minimum_candidate_stagers) => Integer,
 
         optional(:users_can_select_backend) => bool,
-        optional(:default_to_diego_backend) => bool,
         optional(:routing_api) => {
           url: String,
           routing_client_name: String,
@@ -416,7 +415,6 @@ module VCAP::CloudController
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
-        config[:default_to_diego_backend] ||= false
         config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:placement_top_stager_percentage] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024

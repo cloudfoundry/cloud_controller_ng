@@ -100,7 +100,7 @@ module VCAP::CloudController
       end
 
       context 'with a dea app' do
-        let(:dea_app) { AppFactory.make(state: 'STARTED') }
+        let(:dea_app) { AppFactory.make(state: 'STARTED', diego: false) }
         let(:process_guid) { Diego::ProcessGuid.from(dea_app.guid, 'some-version-guid') }
         let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
       end
 
       context 'with a dea app' do
-        let(:dea_app) { AppFactory.make(state: 'STARTED') }
+        let(:dea_app) { AppFactory.make(state: 'STARTED', diego: false) }
         let(:process_guid) { Diego::ProcessGuid.from(dea_app.guid, 'some-version-guid') }
 
         it 'fails with a 403' do

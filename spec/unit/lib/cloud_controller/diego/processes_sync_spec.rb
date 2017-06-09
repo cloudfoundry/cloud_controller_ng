@@ -10,7 +10,6 @@ module VCAP::CloudController
 
       let!(:missing_process_unstarted) { ProcessModel.make(:diego_runnable, state: 'STOPPED') }
       let!(:missing_process_no_droplet) { ProcessModel.make(:process) }
-      let!(:missing_process_dea) { ProcessModel.make(:dea_runnable) }
 
       let(:scheduling_infos) { [] }
 

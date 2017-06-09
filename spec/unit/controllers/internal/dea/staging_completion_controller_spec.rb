@@ -26,7 +26,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:v2_app) { AppFactory.make(state: 'STOPPED') }
+      let(:v2_app) { AppFactory.make(diego: false, state: 'STOPPED') }
       let!(:build) { BuildModel.make(app: v2_app, package: v2_app.latest_package, state: BuildModel::STAGING_STATE) }
 
       let(:task_id) { build.guid }

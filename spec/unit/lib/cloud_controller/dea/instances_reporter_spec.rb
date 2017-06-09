@@ -77,7 +77,7 @@ module VCAP::CloudController
 
       let!(:running_apps) do
         Array.new(3) do
-          AppFactory.make(state: 'STARTED', space: space_with_running_apps)
+          AppFactory.make(state: 'STARTED', diego: false, space: space_with_running_apps)
         end
       end
 

@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is not configured to run on Diego' do
-        let(:app) { AppFactory.make }
+        let(:app) { AppFactory.make(diego: false) }
 
         it 'finds a DEA backend' do
           expect(runners).to receive(:dea_runner).with(app).and_call_original
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
     describe '#run_with_diego?' do
       let(:diego_app) { AppFactory.make(diego: true) }
-      let(:dea_app) { AppFactory.make }
+      let(:dea_app) { AppFactory.make(diego: false) }
 
       it 'returns true for a diego app' do
         expect(runners.run_with_diego?(diego_app)).to be_truthy
@@ -71,7 +71,7 @@ module VCAP::CloudController
       let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:dea_app) { AppFactory.make(state: 'STARTED') }
+      let!(:dea_app) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
         last_app = AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
@@ -130,7 +130,7 @@ module VCAP::CloudController
       let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:dea_app) { AppFactory.make(state: 'STARTED') }
+      let!(:dea_app) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'does not return unstaged apps' do
         unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
@@ -191,7 +191,7 @@ module VCAP::CloudController
       let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:dea_app) { AppFactory.make(state: 'STARTED') }
+      let!(:dea_app) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'respects the batch_size' do
         data_count = [3, 5].map do |batch_size|
@@ -280,14 +280,14 @@ module VCAP::CloudController
     end
 
     describe '#dea_apps_hm9k' do
-      let!(:dea_app1) { AppFactory.make(state: 'STARTED') }
-      let!(:dea_app2) { AppFactory.make(state: 'STARTED') }
-      let!(:dea_app3) { AppFactory.make(state: 'STARTED') }
-      let!(:dea_app4) { AppFactory.make(state: 'STARTED') }
-      let!(:dea_app5) { AppFactory.make(state: 'STARTED') }
+      let!(:dea_app1) { AppFactory.make(diego: false, state: 'STARTED') }
+      let!(:dea_app2) { AppFactory.make(diego: false, state: 'STARTED') }
+      let!(:dea_app3) { AppFactory.make(diego: false, state: 'STARTED') }
+      let!(:dea_app4) { AppFactory.make(diego: false, state: 'STARTED') }
+      let!(:dea_app5) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
-        last_app = AppFactory.make(state: 'STARTED')
+        last_app = AppFactory.make(diego: false, state: 'STARTED')
 
         apps, _ = runners.dea_apps_hm9k
         expect(apps.count).to eq(6)

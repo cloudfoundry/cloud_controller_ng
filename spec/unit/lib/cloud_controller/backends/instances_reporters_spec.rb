@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:bbs_instances_client) { instance_double(Diego::BbsInstancesClient) }
     let(:traffic_controller_client) { instance_double(::TrafficController::Client) }
 
-    let(:dea_app) { AppFactory.make }
+    let(:dea_app) { AppFactory.make(diego: false) }
     let(:diego_app) { AppFactory.make(diego: true) }
 
     let(:dea_reporter) { instance_double(Dea::InstancesReporter) }

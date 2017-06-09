@@ -65,7 +65,7 @@ RSpec.describe 'v3 service bindings' do
           }
         }
 
-        expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(201), last_response.body
         expect(parsed_response).to be_a_response_like(expected_response)
         expect(VCAP::CloudController::ServiceBinding.find(guid: guid)).to be_present
 

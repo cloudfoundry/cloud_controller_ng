@@ -32,7 +32,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/bulk/apps' do
-      before { 5.times { AppFactory.make(state: 'STARTED') } }
+      before { 5.times { AppFactory.make(state: 'STARTED', diego: false) } }
 
       it 'requires authentication' do
         get '/bulk/apps'

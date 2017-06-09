@@ -11,7 +11,7 @@ RSpec.describe 'ServiceBindings' do
 
   describe 'GET /v2/service_bindings' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process1) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process1) { VCAP::CloudController::AppFactory.make(diego: false, space: space) }
     let(:process2) { VCAP::CloudController::AppFactory.make(space: space) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })

@@ -65,7 +65,7 @@ RSpec.describe 'Apps' do
               'health_check_http_endpoint' => '/health',
               'staging_failed_reason'      => nil,
               'staging_failed_description' => nil,
-              'diego'                      => false,
+              'diego'                      => true,
               'docker_image'               => nil,
               'docker_credentials'         => {
                 'username' => nil,
@@ -74,7 +74,7 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'ports'                      => nil,
+              'ports'                      => [8080],
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
               'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -144,7 +144,7 @@ RSpec.describe 'Apps' do
                 'health_check_http_endpoint' => '/health',
                 'staging_failed_reason'      => nil,
                 'staging_failed_description' => nil,
-                'diego'                      => false,
+                'diego'                      => true,
                 'docker_image'               => nil,
                 'docker_credentials'         => {
                   'username' => nil,
@@ -153,7 +153,7 @@ RSpec.describe 'Apps' do
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
-                'ports'                      => nil,
+                'ports'                      => [8080],
                 'space_url'                  => "/v2/spaces/#{space.guid}",
                 'space'                      => {
                   'metadata' => {
@@ -286,14 +286,13 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by diego' do
-        app = VCAP::CloudController::AppFactory.make(diego: true)
+        VCAP::CloudController::AppFactory.make(diego: true)
 
         get '/v2/apps?q=diego:true', nil, admin_headers
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
-        expect(parsed_response['total_results']).to eq(1)
-        expect(parsed_response['resources'][0]['metadata']['guid']).to eq(app.guid)
+        expect(parsed_response['total_results']).to eq(2)
       end
 
       it 'filters by stack_guid' do
@@ -355,7 +354,7 @@ RSpec.describe 'Apps' do
             'health_check_http_endpoint' => nil,
             'staging_failed_reason'      => nil,
             'staging_failed_description' => nil,
-            'diego'                      => false,
+            'diego'                      => true,
             'docker_image'               => nil,
             'docker_credentials'         => {
               'username' => nil,
@@ -364,7 +363,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'ports'                      => nil,
+            'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{process.space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
             'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -430,7 +429,7 @@ RSpec.describe 'Apps' do
             'health_check_http_endpoint' => nil,
             'staging_failed_reason'      => nil,
             'staging_failed_description' => nil,
-            'diego'                      => false,
+            'diego'                      => true,
             'docker_image'               => nil,
             'docker_credentials'         => {
               'username' => nil,
@@ -439,7 +438,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => nil,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'ports'                      => nil,
+            'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
             'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -497,7 +496,7 @@ RSpec.describe 'Apps' do
               'health_check_http_endpoint' => nil,
               'staging_failed_reason'      => nil,
               'staging_failed_description' => nil,
-              'diego'                      => false,
+              'diego'                      => true,
               'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
               'docker_credentials'         => {
                 'username' => 'bob',
@@ -506,7 +505,7 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'ports'                      => nil,
+              'ports'                      => [],
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
               'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -576,7 +575,7 @@ RSpec.describe 'Apps' do
             'health_check_http_endpoint' => nil,
             'staging_failed_reason'      => nil,
             'staging_failed_description' => nil,
-            'diego'                      => false,
+            'diego'                      => true,
             'docker_image'               => nil,
             'docker_credentials'         => {
               'username' => nil,
@@ -585,7 +584,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'ports'                      => nil,
+            'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
             'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -657,7 +656,7 @@ RSpec.describe 'Apps' do
               'health_check_http_endpoint' => nil,
               'staging_failed_reason'      => nil,
               'staging_failed_description' => nil,
-              'diego'                      => false,
+              'diego'                      => true,
               'docker_image'               => 'cloudfoundry/diego-docker-app:latest',
               'docker_credentials'         => {
                 'username' => 'bob',
@@ -666,7 +665,7 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'ports'                      => nil,
+              'ports'                      => [],
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
               'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -734,7 +733,7 @@ RSpec.describe 'Apps' do
                 'health_check_http_endpoint' => nil,
                 'staging_failed_reason'      => nil,
                 'staging_failed_description' => nil,
-                'diego'                      => false,
+                'diego'                      => true,
                 'docker_image'               => 'cloudfoundry/diego-docker-app:even-more-latest',
                 'docker_credentials'         => {
                   'username' => 'somedude',
@@ -743,7 +742,7 @@ RSpec.describe 'Apps' do
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
-                'ports'                      => nil,
+                'ports'                      => [],
                 'space_url'                  => "/v2/spaces/#{space.guid}",
                 'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
                 'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -836,7 +835,7 @@ RSpec.describe 'Apps' do
           'health_check_http_endpoint' => nil,
           'staging_failed_reason'      => nil,
           'staging_failed_description' => nil,
-          'diego'                      => false,
+          'diego'                      => true,
           'docker_image'               => nil,
           'package_updated_at'         => iso8601,
           'detected_start_command'     => '',
@@ -1350,7 +1349,7 @@ RSpec.describe 'Apps' do
             'health_check_http_endpoint' => nil,
             'staging_failed_reason'      => nil,
             'staging_failed_description' => nil,
-            'diego'                      => false,
+            'diego'                      => true,
             'docker_image'               => nil,
             'docker_credentials'         => {
               'username' => nil,
@@ -1359,7 +1358,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'ports'                      => nil,
+            'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{space.guid}",
             'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
             'routes_url'                 => "/v2/apps/#{process.guid}/routes",

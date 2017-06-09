@@ -274,7 +274,7 @@ module VCAP::CloudController
     def before_validation
       # This is in before_validation because we need to validate ports based on diego flag
       if diego.nil?
-        self.diego = Config.config[:default_to_diego_backend]
+        self.diego = true
       end
 
       # column_changed?(:ports) reports false here for reasons unknown

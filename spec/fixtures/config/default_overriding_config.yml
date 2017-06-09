@@ -159,7 +159,6 @@ allowed_cors_domains:
 - http://sharon.corr
 
 users_can_select_backend: false
-default_to_diego_backend: true
 allow_app_ssh_access: true
 
 broker_client_timeout_seconds: 120

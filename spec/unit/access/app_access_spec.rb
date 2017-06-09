@@ -119,7 +119,7 @@ module VCAP::CloudController
         before { TestConfig.override(users_can_select_backend: false) }
 
         it 'does not allow user to change the diego flag' do
-          expect { subject.read_for_update?(object, { 'diego' => true }) }.to raise_error(CloudController::Errors::ApiError, /backend/)
+          expect { subject.read_for_update?(object, { 'diego' => false }) }.to raise_error(CloudController::Errors::ApiError, /backend/)
         end
       end
     end

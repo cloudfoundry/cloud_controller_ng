@@ -272,6 +272,7 @@ module VCAP::CloudController
   App.blueprint do
     instances { 1 }
     type { 'web' }
+    diego { true }
     app { AppModel.make }
   end
 
@@ -286,15 +287,6 @@ module VCAP::CloudController
   App.blueprint(:diego_runnable) do
     app { AppModel.make(droplet: DropletModel.make) }
     diego { true }
-    instances { 1 }
-    type { Sham.name }
-    metadata { {} }
-    state { 'STARTED' }
-  end
-
-  App.blueprint(:dea_runnable) do
-    app { AppModel.make(droplet: DropletModel.make) }
-    diego { false }
     instances { 1 }
     type { Sham.name }
     metadata { {} }
