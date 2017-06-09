@@ -6,8 +6,6 @@ require 'delayed_job'
 
 require 'allowy'
 
-require 'eventmachine/schedule_sync'
-
 require 'vcap/common'
 require 'uaa/token_coder'
 
@@ -48,10 +46,6 @@ require 'cloud_controller/config'
 require 'cloud_controller/db'
 require 'cloud_controller/runner'
 require 'cloud_controller/app_observer'
-require 'cloud_controller/dea/staging_response'
-require 'cloud_controller/dea/staging_message'
-require 'cloud_controller/dea/app_stager_task'
-require 'cloud_controller/dea/app_starter_task'
 require 'cloud_controller/collection_transformers'
 require 'cloud_controller/controllers'
 require 'cloud_controller/roles'
@@ -68,7 +62,6 @@ require 'cloud_controller/rule_validator'
 require 'cloud_controller/transport_rule_validator'
 require 'cloud_controller/icmp_rule_validator'
 require 'cloud_controller/controller_factory'
-require 'cloud_controller/dea/start_app_message'
 require 'cloud_controller/egress_network_rules_presenter'
 require 'cloud_controller/admin_buildpacks_presenter'
 require 'cloud_controller/organization_instance_usage_calculator'
@@ -80,17 +73,9 @@ require 'cloud_controller/legacy_api/legacy_bulk'
 
 require 'cloud_controller/resource_pool'
 
-require 'cloud_controller/dea/pool'
-require 'cloud_controller/dea/client'
-require 'cloud_controller/dea/respondent'
-
 require 'cloud_controller/diego/nsync_client'
 require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/tps_client'
-
-require 'cloud_controller/dea/hm9000/client'
-require 'cloud_controller/dea/hm9000/legacy_client'
-require 'cloud_controller/dea/hm9000/respondent'
 
 require 'cloud_controller/structured_error'
 require 'cloud_controller/http_request_error'

@@ -15,12 +15,6 @@ RSpec.describe CloudController::DependencyLocator do
 
   before { locator.config = config }
 
-  describe '#health_manager_client' do
-    it 'should return the hm9000 client' do
-      expect(locator.health_manager_client).to be_an_instance_of(VCAP::CloudController::Dea::HM9000::Client)
-    end
-  end
-
   describe '#droplet_blobstore' do
     let(:config) do
       {

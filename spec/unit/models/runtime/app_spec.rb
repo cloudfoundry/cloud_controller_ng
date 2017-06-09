@@ -134,33 +134,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#after_commit' do
-      let(:error) { CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty') }
-
-      # undo happens in after_commit, which only runs if tests use a :truncation strategy instead of :transaction
-      context 'when an error happens in AppObserver update' do
-        it 'undoes previous changes', isolation: :truncation do
-          # use tap to ensure there is an updated_at
-          app = AppFactory.make.tap do |a|
-            a.instances = 1
-            a.diego = false
-            a.save.reload
-          end
-          original_updated_at = app.updated_at
-
-          allow(AppObserver).to receive(:updated).and_raise(error)
-
-          expect {
-            app.update(instances: 2)
-          }.to raise_error(CloudController::Errors::ApiError, /The app package hash is empty/)
-
-          app.reload
-          expect(app.instances).to eq(1)
-          expect(app.updated_at).to eq(original_updated_at)
-        end
-      end
-    end
-
     describe 'Validations' do
       let(:app) { AppFactory.make }
 
@@ -1340,43 +1313,6 @@ module VCAP::CloudController
         app = AppFactory.make
         expect(AppObserver).to receive(:updated).with(app)
         app.update(instances: app.instances + 1)
-      end
-
-      context 'when AppObserver.updated fails' do
-        let(:app) { AppFactory.make(diego: false) }
-        let(:undo_app) { double(:undo_app_changes, undo: true) }
-
-        context 'when the app is a dea app' do
-          it 'should undo any change', isolation: :truncation do
-            allow(UndoAppChanges).to receive(:new).with(app).and_return(undo_app)
-
-            expect(AppObserver).to receive(:updated).once.with(app).
-              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
-            expect(undo_app).to receive(:undo)
-            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
-          end
-        end
-
-        context 'when the app is a diego app' do
-          before do
-            allow(UndoAppChanges).to receive(:new)
-          end
-
-          let(:app) { AppFactory.make(diego: true) }
-
-          it 'does not call UndoAppChanges', isolation: :truncation do
-            expect(AppObserver).to receive(:updated).once.with(app).
-              and_raise(CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty'))
-            expect { app.update(state: 'STARTED') }.to raise_error(CloudController::Errors::ApiError, /app package hash/)
-            expect(UndoAppChanges).not_to have_received(:new)
-          end
-        end
-
-        it 'does not call UndoAppChanges when its not an ApiError', isolation: :truncation do
-          expect(AppObserver).to receive(:updated).once.with(app).and_raise('boom')
-          expect(UndoAppChanges).not_to receive(:new)
-          expect { app.update(state: 'STARTED') }.to raise_error('boom')
-        end
       end
 
       context 'when app state changes from STOPPED to STARTED' do

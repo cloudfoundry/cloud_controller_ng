@@ -1,3 +1,7 @@
+# TODO: why are we using the message bus presenters here?
+require 'presenters/message_bus/service_instance_presenter'
+require 'presenters/message_bus/service_binding_presenter'
+
 class SystemEnvPresenter
   def initialize(service_bindings)
     @service_bindings = service_bindings

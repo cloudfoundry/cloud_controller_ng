@@ -19,7 +19,6 @@ require 'awesome_print'
 
 require 'steno'
 require 'webmock/rspec'
-require 'cf_message_bus/mock_message_bus'
 
 require 'pry'
 

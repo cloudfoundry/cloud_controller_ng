@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe Runner do
     let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/minimal_config.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
-    let(:message_bus) { CfMessageBus::MockMessageBus.new }
+    let(:message_bus) { nil }
     let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
     let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group_guid: '') }
@@ -13,7 +13,6 @@ module VCAP::CloudController
 
     before do
       allow(Steno).to receive(:init)
-      allow_any_instance_of(MessageBus::Configurer).to receive(:go).and_return(message_bus)
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
       allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield

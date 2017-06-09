@@ -86,7 +86,6 @@ module VCAP::CloudController
           optional(:syslog)   => String,      # Name to associate with syslog messages (should start with 'vcap.')
         },
 
-        :message_bus_servers   => [String],   # A list of NATS uris of the form nats://<user>:<pass>@<host>:<port>
         :pid_filename          => String,     # Pid filename to use
 
         optional(:directories) => {
@@ -248,7 +247,6 @@ module VCAP::CloudController
         optional(:default_locale) => String,
         optional(:allowed_cors_domains) => [String],
 
-        optional(:dea_advertisement_timeout_in_seconds) => Integer,
         optional(:placement_top_stager_percentage) => Integer,
         optional(:minimum_candidate_stagers) => Integer,
 
@@ -343,31 +341,21 @@ module VCAP::CloudController
         @message_bus = message_bus
         dependency_locator = CloudController::DependencyLocator.instance
         dependency_locator.config = @config
-        legacy_hm_client = Dea::HM9000::LegacyClient.new(@message_bus, @config)
-        hm_client = Dea::HM9000::Client.new(legacy_hm_client, @config)
-        dependency_locator.register(:health_manager_client, hm_client)
         tps_client = Diego::TPSClient.new(@config)
         dependency_locator.register(:tps_client, tps_client)
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
         dependency_locator.register(:app_event_repository, Repositories::AppEventRepository.new)
 
-        blobstore_url_generator = dependency_locator.blobstore_url_generator
-        dea_pool = Dea::Pool.new(@config, message_bus)
-
-        runners = Runners.new(@config, message_bus, dea_pool)
+        runners = Runners.new(@config, message_bus, nil)
         dependency_locator.register(:runners, runners)
 
-        stagers = Stagers.new(@config, message_bus, dea_pool)
+        stagers = Stagers.new(@config, message_bus, nil)
         dependency_locator.register(:stagers, stagers)
 
         dependency_locator.register(:instances_reporters, InstancesReporters.new)
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
-        Dea::Client.configure(@config, message_bus, dea_pool, blobstore_url_generator)
-
         AppObserver.configure(stagers, runners)
-
-        LegacyBulk.configure(@config, message_bus)
 
         InternalApi.configure(@config)
       end
@@ -417,7 +405,6 @@ module VCAP::CloudController
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
-        config[:dea_advertisement_timeout_in_seconds] ||= 10
         config[:placement_top_stager_percentage] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024
         config[:staging][:minimum_staging_disk_mb] ||= 4096

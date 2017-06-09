@@ -4,15 +4,11 @@ require 'i18n'
 require 'i18n/backend/fallbacks'
 require 'cloud_controller/uaa/uaa_token_decoder'
 require 'cloud_controller/uaa/uaa_verification_keys'
-require 'cf_message_bus/message_bus'
 require 'loggregator_emitter'
 require 'loggregator'
-require 'cloud_controller/dea/sub_system'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
-
-require_relative 'message_bus_configurer'
 
 module VCAP::CloudController
   class Runner
@@ -78,16 +74,12 @@ module VCAP::CloudController
 
       EM.run do
         begin
-          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
-
-          start_cloud_controller(message_bus)
-
-          Dea::SubSystem.setup!(message_bus)
+          start_cloud_controller(nil)
 
           VCAP::Component.varz.threadsafe! # initialize varz
 
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-          gather_periodic_metrics(message_bus)
+          gather_periodic_metrics(nil)
 
           builder = RackAppBuilder.new
           app     = builder.build(@config, request_metrics)

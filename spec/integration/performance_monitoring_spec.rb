@@ -15,7 +15,6 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
 
   before :each do
     FileUtils.rm_f('/tmp/newrelic/development.log')
-    start_nats(debug: false)
     opts = {
       debug: false,
       config: cc_config_file.path,
@@ -37,7 +36,6 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
 
   after :each do
     stop_cc
-    stop_nats
     cc_config_file.unlink
     FileUtils.rm_f('/tmp/newrelic/development.log')
   end

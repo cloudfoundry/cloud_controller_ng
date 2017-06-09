@@ -35,17 +35,6 @@ pid_filename: /var/vcap/sys/run/cloud_controller_ng/cloud_controller_ng.pid
 newrelic_enabled: <%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
 development_mode: <%= p("cc.development_mode") %>
 
-message_bus_servers:
-<% if_p("nats.machines") do %>
-  <% p("nats.machines").each do |address| %>
-    - nats://<%= p("nats.user") %>:<%= URI.escape(p("nats.password")) %>@<%= address %>:<%= p("nats.port") %>
-  <% end %>
-<% end.else do %>
-  <% link("nats").instances.each do |instance| %>
-    - nats://<%= link("nats").p("nats.user") %>:<%= URI.escape(link("nats").p("nats.password")) %>@<%= instance.address %>:<%= link("nats").p("nats.port") %>
-  <% end %>
-<% end %>
-
 external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
@@ -399,7 +388,6 @@ feature_disabled_message: <%= p("cc.feature_disabled_message") %>
 
 allowed_cors_domains: <%= p("cc.allowed_cors_domains").to_json %>
 
-dea_advertisement_timeout_in_seconds: <%= p("dea_next.advertise_interval_in_seconds") * 3 %>
 placement_top_stager_percentage: <%= p("cc.placement_top_stager_percentage") %>
 minimum_candidate_stagers: <%= p("cc.minimum_candidate_stagers") %>
 

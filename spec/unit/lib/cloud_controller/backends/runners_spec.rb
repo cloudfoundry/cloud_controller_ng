@@ -12,8 +12,8 @@ module VCAP::CloudController
         }
       }
     end
-    let(:message_bus) { instance_double(CfMessageBus::MessageBus) }
-    let(:dea_pool) { instance_double(Dea::Pool) }
+    let(:message_bus) { nil }
+    let(:dea_pool) { nil }
     let(:package_hash) { 'fake-package-hash' }
     let(:custom_buildpacks_enabled?) { true }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
@@ -41,28 +41,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'when the app is not configured to run on Diego' do
-        let(:app) { AppFactory.make(diego: false) }
-
-        it 'finds a DEA backend' do
-          expect(runners).to receive(:dea_runner).with(app).and_call_original
-          expect(runner).to be_a(Dea::Runner)
-        end
-      end
-    end
-
-    describe '#run_with_diego?' do
-      let(:diego_app) { AppFactory.make(diego: true) }
-      let(:dea_app) { AppFactory.make(diego: false) }
-
-      it 'returns true for a diego app' do
-        expect(runners.run_with_diego?(diego_app)).to be_truthy
-      end
-
-      it 'returns false for a dea app' do
-        expect(runners.run_with_diego?(dea_app)).to be_falsey
-      end
     end
 
     describe '#diego_apps' do
@@ -71,7 +49,6 @@ module VCAP::CloudController
       let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:dea_app) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
         last_app = AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
@@ -117,11 +94,6 @@ module VCAP::CloudController
 
         expect(batch).not_to include(stopped_app)
       end
-
-      it 'only includes apps that have the diego attribute set' do
-        batch = runners.diego_apps(100, 0)
-        expect(batch).not_to include(dea_app)
-      end
     end
 
     describe '#diego_apps_from_process_guids' do
@@ -130,7 +102,6 @@ module VCAP::CloudController
       let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:dea_app) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'does not return unstaged apps' do
         unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
@@ -147,12 +118,6 @@ module VCAP::CloudController
         batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_app))
 
         expect(batch).not_to include(stopped_app)
-      end
-
-      it 'only includes diego apps' do
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(dea_app))
-
-        expect(batch).not_to include(dea_app)
       end
 
       it 'accepts a process guid or an array of process guids' do
@@ -191,7 +156,6 @@ module VCAP::CloudController
       let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
       let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:dea_app) { AppFactory.make(diego: false, state: 'STARTED') }
 
       it 'respects the batch_size' do
         data_count = [3, 5].map do |batch_size|
@@ -227,13 +191,6 @@ module VCAP::CloudController
         app_ids = batch.map { |data| data[0] }
 
         expect(app_ids).not_to include(stopped_app.id)
-      end
-
-      it 'only includes diego apps' do
-        batch   = runners.diego_apps_cache_data(100, 0)
-        app_ids = batch.map { |data| data[0] }
-
-        expect(app_ids).not_to include(dea_app.id)
       end
 
       it 'acquires the data in one select' do
@@ -276,67 +233,6 @@ module VCAP::CloudController
             expect(app_ids).not_to include(docker_app.id)
           end
         end
-      end
-    end
-
-    describe '#dea_apps_hm9k' do
-      let!(:dea_app1) { AppFactory.make(diego: false, state: 'STARTED') }
-      let!(:dea_app2) { AppFactory.make(diego: false, state: 'STARTED') }
-      let!(:dea_app3) { AppFactory.make(diego: false, state: 'STARTED') }
-      let!(:dea_app4) { AppFactory.make(diego: false, state: 'STARTED') }
-      let!(:dea_app5) { AppFactory.make(diego: false, state: 'STARTED') }
-
-      it 'returns apps that have the desired data' do
-        last_app = AppFactory.make(diego: false, state: 'STARTED')
-
-        apps, _ = runners.dea_apps_hm9k
-        expect(apps.count).to eq(6)
-
-        expect(apps).to include(
-          {
-            'id'            => last_app.guid,
-            'instances'     => last_app.instances,
-            'state'         => last_app.state,
-            'package_state' => 'STAGED',
-            'version'       => last_app.version,
-          }
-        )
-      end
-
-      it 'does not return stopped apps' do
-        stopped_app = AppFactory.make(state: 'STOPPED')
-
-        batch, _ = runners.dea_apps_hm9k
-
-        guids = batch.map { |entry| entry['id'] }
-        expect(guids).not_to include(stopped_app.guid)
-      end
-
-      it 'does not return apps that failed to stage' do
-        staging_failed_app = dea_app1
-        DropletModel.make(package: dea_app1.latest_package, app: dea_app1.app, state: DropletModel::FAILED_STATE)
-
-        batch, _ = runners.dea_apps_hm9k
-
-        guids = batch.map { |entry| entry['id'] }
-        expect(guids).not_to include(staging_failed_app.guid)
-      end
-
-      it 'returns apps that have not yet been staged' do
-        staging_pending_app = dea_app1
-        PackageModel.make(app: dea_app1.app, state: PackageModel::PENDING_STATE)
-
-        batch, _ = runners.dea_apps_hm9k
-
-        expect(batch).to include(hash_including({
-          'id' => staging_pending_app.guid,
-          'package_state' => 'PENDING'
-        }))
-      end
-
-      it 'returns the largest process id from the query' do
-        _, process_id = runners.dea_apps_hm9k
-        expect(process_id).to equal(App.dataset.order(:id).last.id)
       end
     end
 

@@ -4,8 +4,8 @@ module VCAP::CloudController
   RSpec.describe Stagers do
     subject(:stagers) { Stagers.new(config, message_bus, dea_pool) }
     let(:config) { TestConfig.config }
-    let(:message_bus) { instance_double(CfMessageBus::MessageBus) }
-    let(:dea_pool) { instance_double(Dea::Pool) }
+    let(:message_bus) { nil }
+    let(:dea_pool) { nil }
 
     describe '#validate_app' do
       let(:app) do
@@ -140,17 +140,6 @@ module VCAP::CloudController
         it 'finds a diego stager' do
           stager = stagers.stager_for_app(app)
           expect(stager).to be_a(Diego::Stager)
-        end
-      end
-
-      context 'when the app has dea processes' do
-        before do
-          App.make(app: app, diego: false)
-        end
-
-        it 'finds a DEA backend' do
-          stager = stagers.stager_for_app(app)
-          expect(stager).to be_a(Dea::Stager)
         end
       end
 

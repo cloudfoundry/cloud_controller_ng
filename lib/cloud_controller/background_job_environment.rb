@@ -14,10 +14,7 @@ class BackgroundJobEnvironment
 
     Thread.new do
       EM.run do
-        message_bus = MessageBus::Configurer.new(
-          servers: @config[:message_bus_servers],
-          logger: Steno.logger('cc.message_bus')).go
-
+        message_bus = nil
         # The AppObserver need no knowledge of the DEA or stager pools
         # so we are passing in no-op objects for these arguments
         no_op_dea_pool = Object.new
@@ -29,9 +26,6 @@ class BackgroundJobEnvironment
         CloudController::DependencyLocator.instance.register(:stagers, stagers)
 
         VCAP::CloudController::AppObserver.configure(stagers, runners)
-
-        blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
-        VCAP::CloudController::Dea::Client.configure(@config, message_bus, no_op_dea_pool, blobstore_url_generator)
       end
     end
 

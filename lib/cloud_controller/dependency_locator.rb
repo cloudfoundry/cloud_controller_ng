@@ -52,10 +52,6 @@ module CloudController
       @dependencies[name] = value
     end
 
-    def health_manager_client
-      @dependencies[:health_manager_client] || raise('health_manager_client not set')
-    end
-
     def runners
       @dependencies[:runners] || raise('runners not set')
     end

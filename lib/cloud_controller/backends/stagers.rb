@@ -1,4 +1,3 @@
-require 'cloud_controller/dea/stager'
 require 'cloud_controller/diego/stager'
 require 'cloud_controller/diego/protocol'
 require 'cloud_controller/diego/buildpack/staging_completion_handler'
@@ -33,12 +32,8 @@ module VCAP::CloudController
       end
     end
 
-    def stager_for_app(app)
-      if app.processes.any?(&:dea?)
-        Dea::Stager.new(app, @config, @message_bus, @dea_pool)
-      else
-        Diego::Stager.new(@config)
-      end
+    def stager_for_app(_)
+      Diego::Stager.new(@config)
     end
 
     private

@@ -41,13 +41,7 @@ gem 'fog-google'
 gem 'fog-local'
 gem 'fog-openstack'
 
-# Requiring this particular commit to get a fix to a race condition when subscribing before a connection is made.
-# (see https://github.com/nats-io/ruby-nats/commit/3f3efc6bc41cc483f2d90cb9d401ba4aa3e727d3)
-# If a release newer than 0.5.1 is made that includes this commit, we may wish to switch to that.
-gem 'nats', git: 'https://github.com/nats-io/ruby-nats', ref: '8571cf9d685b6063002486614b66a28bad254a64'
-
 gem 'bits_service_client'
-gem 'cf-message-bus', '~> 0.3.0'
 gem 'cf-uaa-lib', '~> 3.7.0'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 

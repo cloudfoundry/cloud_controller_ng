@@ -30,17 +30,6 @@ pid_filename: /this/isnt/used/by/the/worker
 newrelic_enabled: <%= !!properties.cc.newrelic.license_key %>
 development_mode: <%= p("cc.development_mode") %>
 
-message_bus_servers:
-<% if_p("nats.machines") do %>
-  <% p("nats.machines").each do |address| %>
-    - nats://<%= p("nats.user") %>:<%= URI.escape(p("nats.password")) %>@<%= address %>:<%= p("nats.port") %>
-  <% end %>
-<% end.else do %>
-  <% link("nats").instances.each do |instance| %>
-    - nats://<%= link("nats").p("nats.user") %>:<%= URI.escape(link("nats").p("nats.password")) %>@<%= instance.address %>:<%= link("nats").p("nats.port") %>
-  <% end %>
-<% end %>
-
 external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 

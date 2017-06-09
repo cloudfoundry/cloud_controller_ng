@@ -1611,14 +1611,14 @@ module VCAP::CloudController
           a.reload
         end
         let(:stager_response) do
-          Dea::StagingResponse.new('task_streaming_log_url' => 'streaming-log-url')
+          double('StagingResponse', streaming_log_url: 'streaming-log-url')
         end
         let(:app_stager_task) do
-          double(Dea::AppStagerTask, stage: stager_response)
+          double(Diego::Stager, stage: stager_response)
         end
 
         before do
-          allow(Dea::AppStagerTask).to receive(:new).and_return(app_stager_task)
+          allow(Diego::Stager).to receive(:new).and_return(app_stager_task)
         end
 
         it 'returns X-App-Staging-Log header with staging log url' do
@@ -1746,15 +1746,15 @@ module VCAP::CloudController
         set_current_user(make_developer_for_space(space))
       end
 
-      it 'tells the dea client to update when we add one url through PUT /v2/apps/:guid' do
+      it 'creates a route mapping when we add one url through PUT /v2/apps/:guid' do
         route = domain.add_route(
           host:  'app',
           space: space,
         )
 
-        expect(Dea::Client).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
-          expect(app.uris).to include('app.jesse.cloud')
-        end
+        fake_route_mapping_create = instance_double( V2::RouteMappingCreate )
+        allow(V2::RouteMappingCreate).to receive(:new).with(anything, route, app_obj, anything).and_return(fake_route_mapping_create)
+        expect(fake_route_mapping_create).to receive(:add)
 
         put "/v2/apps/#{app_obj.guid}/routes/#{route.guid}", nil
         expect(last_response.status).to eq(201)
@@ -1796,32 +1796,6 @@ module VCAP::CloudController
             end
           end
         end
-      end
-
-      it 'tells the dea client to update when we remove a url through PUT /v2/apps/:guid' do
-        bar_route = Route.make(
-          host:   'bar',
-          space:  space,
-          domain: domain,
-        )
-        RouteMappingModel.make(app: app_obj.app, route: bar_route, process_type: app_obj.type)
-        new_route = Route.make(
-          host:   'foo',
-          space:  space,
-          domain: domain,
-        )
-        get "/v2/apps/#{app_obj.guid}/routes"
-        expect(decoded_response['resources'].map { |r|
-          r['metadata']['guid']
-        }).to match_array([bar_route.guid])
-
-        expect(Dea::Client).to receive(:update_uris).with(an_instance_of(VCAP::CloudController::App)) do |app|
-          expect(app.uris).to include('foo.jesse.cloud')
-        end
-
-        put "/v2/apps/#{app_obj.guid}/routes/#{new_route.guid}"
-
-        expect(last_response.status).to eq(201)
       end
     end
 

@@ -6,7 +6,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_obj) { VCAP::CloudController::AppFactory.make space: space }
   let(:user) { make_developer_for_space(app_obj.space) }
-  let(:stager) { instance_double(VCAP::CloudController::Dea::Stager, stage: nil) }
+  let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stage: nil) }
 
   before do
     allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_app)

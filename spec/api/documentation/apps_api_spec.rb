@@ -327,7 +327,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', instances: 2, diego: false) }
 
     example 'Terminate the running App Instance at the given index' do
-      allow(VCAP::CloudController::Dea::Client).to receive(:stop_indices)
+      expect_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop_index)
       client.delete "/v2/apps/#{app_obj.guid}/instances/0", {}, headers
       expect(status).to eq(204)
     end

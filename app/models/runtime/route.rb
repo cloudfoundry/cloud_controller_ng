@@ -1,4 +1,3 @@
-require 'cloud_controller/dea/client'
 require 'utils/uri_utils'
 
 module VCAP::CloudController
