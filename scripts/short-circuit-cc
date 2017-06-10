@@ -78,7 +78,7 @@ rewrite_config_paths() {
   echo "Rewriting paths in local config..."
 
   config_dir="$1"
-  config_file="${config_dir}cloud_controller_ng.yml"
+  config_file="${config_dir}/cloud_controller_ng.yml"
   sed -i.bak "s~/var/vcap/jobs/cloud_controller_ng/config/~${config_dir}/~g" "${config_file}"
   sed -i.bak "s~/var/vcap/sys/run/cloud_controller_ng/~${config_dir}/~g" "${config_file}"
   sed -i.bak "s~/var/vcap/data/~${config_dir}/~g" "${config_file}"
