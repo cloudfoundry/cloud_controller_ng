@@ -535,6 +535,9 @@ properties:
     description: "Used to grant scope for SSO clients for service brokers"
     default: "openid,cloud_controller_service_permissions.read"
 
+  uaa.clients.cc_routing.secret:
+    description: "Used for fetching routing information from the Routing API"
+
   cc.install_buildpacks:
       description: "Set of buildpacks to install during deploy"
 
@@ -646,3 +649,7 @@ properties:
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024
+
+  routing_api.enabled:
+    description: "Whether to expose the routing_endpoint listed at /v2/info. Enable this after deploying the Routing API"
+    default: false

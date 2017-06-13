@@ -395,3 +395,10 @@ diego:
     cert_file: /var/vcap/jobs/cloud_controller_clock/config/certs/mutual_tls.crt
     ca_file: /var/vcap/jobs/cloud_controller_clock/config/certs/mutual_tls_ca.crt
   pid_limit: <%= p("cc.diego.pid_limit") %>
+
+<% if p("routing_api.enabled") %>
+routing_api:
+  url: <%= "https://api.#{system_domain}/routing" %>
+  routing_client_name: "cc_routing"
+  routing_client_secret: <%= p("uaa.clients.cc_routing.secret") %>
+<% end %>

@@ -386,8 +386,6 @@ diego:
     ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls_ca.crt
   pid_limit: <%= p("cc.diego.pid_limit") %>
 
-<% if p("routing_api.enabled") %>
-
 uaa :
   url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
   internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
@@ -397,6 +395,7 @@ uaa :
   <% end %>
   ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/uaa_ca.crt
 
+<% if p("routing_api.enabled") %>
 routing_api:
   url: <%= "https://api.#{system_domain}/routing" %>
   routing_client_name: "cc_routing"
