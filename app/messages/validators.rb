@@ -116,29 +116,6 @@ module VCAP::CloudController::Validators
   end
 
   class ToOneRelationshipValidator < ActiveModel::EachValidator
-    def error_message(attribute)
-      "must be structured like this: \"#{attribute}: {\"guid\": \"valid-guid\"}\""
-    end
-
-    def validate_each(record, attribute, value)
-      if has_correct_structure?(value)
-        validate_guid(record, attribute, value)
-      else
-        record.errors.add(attribute, error_message(attribute))
-      end
-    end
-
-    def validate_guid(record, attribute, value)
-      VCAP::CloudController::BaseMessage::GuidValidator.
-        validate_each(record, "#{attribute} Guid", value.values.first)
-    end
-
-    def has_correct_structure?(value)
-      (value.is_a?(Hash) && (value.keys.map(&:to_s) == ['guid']))
-    end
-  end
-
-  class ToOneRelationship2Validator < ActiveModel::EachValidator
     def validate_each(record, attribute, relationship)
       if has_correct_structure?(relationship)
         validate_guid(record, attribute, relationship) if relationship[:data]

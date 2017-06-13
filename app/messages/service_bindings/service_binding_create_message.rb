@@ -46,8 +46,8 @@ module VCAP::CloudController
 
       validates_with NoAdditionalKeysValidator
 
-      validates :service_instance, presence: true, allow_nil: false, to_one_relationship2: true
-      validates :app, presence: true, allow_nil: false, to_one_relationship2: true
+      validates :service_instance, presence: true, allow_nil: false, to_one_relationship: true
+      validates :app, presence: true, allow_nil: false, to_one_relationship: true
     end
 
     class Data < BaseMessage

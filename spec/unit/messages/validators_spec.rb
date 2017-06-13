@@ -320,24 +320,6 @@ module VCAP::CloudController::Validators
       end
 
       it 'ensures that the data has the correct structure' do
-        invalid_one = to_one_class.new({ field: { not_a_guid: 1234 } })
-        invalid_two = to_one_class.new({ field: { guid: { woah: 1234 } } })
-        valid       = to_one_class.new(field: { guid: '123' })
-
-        expect(invalid_one).not_to be_valid
-        expect(invalid_two).not_to be_valid
-        expect(valid).to be_valid
-      end
-    end
-
-    describe 'ToOneRelationship2Validator' do
-      let(:to_one_class) do
-        Class.new(fake_class) do
-          validates :field, to_one_relationship_2: true
-        end
-      end
-
-      it 'ensures that the data has the correct structure' do
         bad_guid_key = to_one_class.new({ field: { data: { not_a_guid: '1234' } } })
         bad_guid_value = to_one_class.new({ field: { data: { guid: { woah: '1234' } } } })
 
