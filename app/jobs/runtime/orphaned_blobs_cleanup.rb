@@ -17,13 +17,18 @@ module VCAP::CloudController
 
           number_of_marked_blobs = 0
 
-          blobstores.each do |directory_key, blobstore_name|
-            blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_name)
-            blobstore.files(IGNORED_DIRECTORY_PREFIXES).each do |blob|
-              orphaned_blob = OrphanedBlob.find(blob_key: blob.key, directory_key: directory_key)
-              next if skip_blob?(blob.key, orphaned_blob)
+          unique_blobstores.each do |blobstore_config|
+            blobstore_type = blobstore_config[:type].to_s
+            directory_key = blobstore_config[:directory_key]
 
-              create_or_update_orphaned_blob(blob, orphaned_blob, directory_key)
+            blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_type)
+            blobstore.files(IGNORED_DIRECTORY_PREFIXES).each do |blob|
+              orphaned_blob = OrphanedBlob.find(blob_key: blob.key, blobstore_type: blobstore_type)
+              if blob_in_use?(blob.key)
+                unorphan_blob(orphaned_blob) unless orphaned_blob.nil?
+                next
+              end
+              create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_type, directory_key)
 
               number_of_marked_blobs += 1
               return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
@@ -45,6 +50,42 @@ module VCAP::CloudController
 
         private
 
+        def unique_blobstores
+          return @unique_blobstores if @unique_blobstores.present?
+
+          full_list = [
+            {
+              type: :droplet_blobstore,
+              directory_key: config.dig(:droplets, :droplet_directory_key),
+              root_dir:    CloudController::DependencyLocator.instance.public_send(:droplet_blobstore).root_dir
+            },
+            {
+              type: :package_blobstore,
+              directory_key: config.dig(:packages, :app_package_directory_key),
+              root_dir:    CloudController::DependencyLocator.instance.public_send(:package_blobstore).root_dir
+            },
+            {
+              type: :buildpack_blobstore,
+              directory_key: config.dig(:buildpacks, :buildpack_directory_key),
+              root_dir:    CloudController::DependencyLocator.instance.public_send(:buildpack_blobstore).root_dir
+            },
+            {
+              type: :legacy_global_app_bits_cache,
+              directory_key: config.dig(:resource_pool, :resource_directory_key),
+              root_dir:    CloudController::DependencyLocator.instance.public_send(:legacy_global_app_bits_cache).root_dir
+            },
+          ]
+
+          unique_blobstores = []
+          full_list.each do |blobstore_config|
+            unique_blobstores << blobstore_config unless unique_blobstores.any? do |b|
+              b[:directory_key] == blobstore_config[:directory_key] && b[:root_dir] == blobstore_config[:root_dir]
+            end
+          end
+
+          @unique_blobstores = unique_blobstores
+        end
+
         def logger
           @logger ||= Steno.logger('cc.background.orphaned-blobs-cleanup')
         end
@@ -53,34 +94,10 @@ module VCAP::CloudController
           @config ||= Config.config
         end
 
-        def blobstores
-          return @blobstores if @blobstores.present?
-
-          result = {}
-
-          result[config.dig(:droplets, :droplet_directory_key)]       = :droplet_blobstore
-          result[config.dig(:packages, :app_package_directory_key)]   = :package_blobstore
-          result[config.dig(:buildpacks, :buildpack_directory_key)]   = :buildpack_blobstore
-          result[config.dig(:resource_pool, :resource_directory_key)] = :legacy_global_app_bits_cache
-
-          @blobstores = result
-        end
-
-        def skip_blob?(blob_key, orphaned_blob)
-          if blob_in_use(blob_key)
-            if orphaned_blob.present?
-              orphaned_blob.delete
-            end
-
-            return true
-          end
-          false
-        end
-
-        def blob_in_use(blob_key)
-          path_parts = blob_key.split(File::Separator)
+        def blob_in_use?(blob_key)
+          path_parts             = blob_key.split(File::Separator)
           potential_droplet_guid = path_parts[-2]
-          basename = path_parts[-1]
+          basename               = path_parts[-1]
 
           blob_key.start_with?(*IGNORED_DIRECTORY_PREFIXES) ||
             DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present? ||
@@ -88,13 +105,17 @@ module VCAP::CloudController
             Buildpack.find(key: basename).present?
         end
 
-        def create_or_update_orphaned_blob(blob, orphaned_blob, directory_key)
+        def unorphan_blob(blob)
+          blob.delete
+        end
+
+        def create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_type, directory_key)
           if orphaned_blob.present?
             logger.info("Incrementing dirty count for blob: #{orphaned_blob.blob_key}")
             orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
           else
             logger.info("Creating orphaned blob: #{blob.key} from directory_key: #{directory_key}")
-            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, directory_key: directory_key)
+            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_type: blobstore_type)
           end
         end
 
@@ -105,15 +126,23 @@ module VCAP::CloudController
 
           dataset.each do |orphaned_blob|
             unpartitioned_blob_key = CloudController::Blobstore::BlobKeyGenerator.key_from_full_path(orphaned_blob.blob_key)
-            directory_key          = orphaned_blob.directory_key
-            blobstore              = blobstores[directory_key]
+            blobstore_type         = orphaned_blob.blobstore_type.to_sym
+            directory_key          = directory_key_for_type(blobstore_type)
 
             logger.info("Enqueuing deletion of orphaned blob #{orphaned_blob.blob_key} inside directory_key #{directory_key}")
-            Jobs::Enqueuer.new(BlobstoreDelete.new(unpartitioned_blob_key, blobstore), queue: 'cc-generic').enqueue
+            Jobs::Enqueuer.new(BlobstoreDelete.new(unpartitioned_blob_key, blobstore_type), queue: 'cc-generic').enqueue
 
             VCAP::CloudController::Repositories::OrphanedBlobEventRepository.record_delete(directory_key, orphaned_blob.blob_key)
             orphaned_blob.delete
           end
+        end
+
+        def directory_key_for_type(type)
+          blobstore_config = unique_blobstores.find { |b| b[:type].to_s == type.to_s }
+          if blobstore_config.nil?
+            raise "Could not find blobstore config matching blobstore type '#{type}': #{unique_blobstores.inspect}"
+          end
+          blobstore_config[:directory_key]
         end
       end
     end

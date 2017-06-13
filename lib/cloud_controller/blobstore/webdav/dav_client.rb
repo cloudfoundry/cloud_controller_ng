@@ -8,6 +8,8 @@ require 'nokogiri'
 module CloudController
   module Blobstore
     class DavClient < BaseClient
+      attr_reader :root_dir
+
       def initialize(
         directory_key:,
         httpclient:,
