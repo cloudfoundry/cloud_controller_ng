@@ -143,6 +143,15 @@ module CloudController
       )
     end
 
+    def legacy_global_app_bits_cache
+      options = @config.fetch(:resource_pool)
+
+      Blobstore::ClientProvider.provide(
+        options:       options,
+        directory_key: options.fetch(:resource_directory_key),
+      )
+    end
+
     def global_app_bits_cache
       options = @config.fetch(:resource_pool)
 

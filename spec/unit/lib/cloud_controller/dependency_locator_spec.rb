@@ -128,7 +128,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#global_app_bits_cache' do
+  describe '#legacy_global_app_bits_cache' do
     let(:config) do
       {
         resource_pool: {
@@ -139,6 +139,25 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates blob store' do
+      expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
+        options: config[:resource_pool],
+        directory_key: 'key',
+      )
+      locator.legacy_global_app_bits_cache
+    end
+  end
+
+  describe '#global_app_bits_cache' do
+    let(:config) do
+      {
+        resource_pool: {
+          fog_connection:         'fog_connection',
+          resource_directory_key: 'key',
+        }
+      }
+    end
+
+    it 'creates blob store with a app_bits_cache as root_dir' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
         options: config[:resource_pool],
         directory_key: 'key',

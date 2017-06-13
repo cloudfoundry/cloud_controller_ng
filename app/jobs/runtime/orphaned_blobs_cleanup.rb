@@ -58,9 +58,10 @@ module VCAP::CloudController
 
           result = {}
 
-          result[config.dig(:droplets, :droplet_directory_key)]     = :droplet_blobstore
-          result[config.dig(:packages, :app_package_directory_key)] = :package_blobstore
-          result[config.dig(:buildpacks, :buildpack_directory_key)] = :buildpack_blobstore
+          result[config.dig(:droplets, :droplet_directory_key)]       = :droplet_blobstore
+          result[config.dig(:packages, :app_package_directory_key)]   = :package_blobstore
+          result[config.dig(:buildpacks, :buildpack_directory_key)]   = :buildpack_blobstore
+          result[config.dig(:resource_pool, :resource_directory_key)] = :legacy_global_app_bits_cache
 
           @blobstores = result
         end
@@ -77,8 +78,9 @@ module VCAP::CloudController
         end
 
         def blob_in_use(blob_key)
-          path_parts                       = blob_key.split(File::Separator)
-          potential_droplet_guid, basename = path_parts[-2], path_parts[-1]
+          path_parts = blob_key.split(File::Separator)
+          potential_droplet_guid = path_parts[-2]
+          basename = path_parts[-1]
 
           blob_key.start_with?(*IGNORED_DIRECTORY_PREFIXES) ||
             DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present? ||
@@ -98,8 +100,8 @@ module VCAP::CloudController
 
         def delete_orphaned_blobs
           dataset = OrphanedBlob.where { dirty_count >= DIRTY_THRESHOLD }.
-            order(Sequel.desc(:dirty_count)).
-            limit(NUMBER_OF_BLOBS_TO_DELETE)
+                    order(Sequel.desc(:dirty_count)).
+                    limit(NUMBER_OF_BLOBS_TO_DELETE)
 
           dataset.each do |orphaned_blob|
             unpartitioned_blob_key = CloudController::Blobstore::BlobKeyGenerator.key_from_full_path(orphaned_blob.blob_key)
