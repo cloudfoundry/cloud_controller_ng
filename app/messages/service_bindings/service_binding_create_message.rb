@@ -37,17 +37,17 @@ module VCAP::CloudController
       end
 
       def app_guid
-        HashUtils.dig(app, :guid)
+        HashUtils.dig(app, :data, :guid)
       end
 
       def service_instance_guid
-        HashUtils.dig(service_instance, :guid)
+        HashUtils.dig(service_instance, :data, :guid)
       end
 
       validates_with NoAdditionalKeysValidator
 
-      validates :service_instance, presence: true, allow_nil: false, to_one_relationship: true
-      validates :app, presence: true, allow_nil: false, to_one_relationship: true
+      validates :service_instance, presence: true, allow_nil: false, to_one_relationship2: true
+      validates :app, presence: true, allow_nil: false, to_one_relationship2: true
     end
 
     class Data < BaseMessage

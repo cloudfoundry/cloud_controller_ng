@@ -235,8 +235,12 @@ module VCAP::CloudController
             'request' => {
               'type'          => 'app',
               'relationships' => {
-                'app'              => { 'guid' => req[:app_guid] },
-                'service_instance' => { 'guid' => req[:service_instance_guid] }
+                'app' => {
+                  'data' => { 'guid' => req[:app_guid] }
+                },
+                'service_instance' => {
+                  'data' => { 'guid' => req[:service_instance_guid] }
+                },
               },
               'data' => 'PRIVATE DATA HIDDEN'
             }

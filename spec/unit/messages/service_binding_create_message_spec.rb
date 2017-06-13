@@ -9,10 +9,14 @@ module VCAP::CloudController
           'type' => 'pipe',
           'relationships' => {
             'app' => {
-              'guid' => 'fluid'
+              'data' => {
+                'guid' => 'fluid'
+              }
             },
             'service_instance' => {
-              'guid' => 'druid'
+              'data' => {
+                'guid' => 'druid'
+              }
             },
           },
         }
@@ -29,20 +33,43 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
+      let(:valid_body) {
+        {
+          type: 'app',
+          relationships: {
+            app: {
+              data: {
+                guid: 'fluid'
+              }
+            },
+            service_instance: {
+              data: {
+                guid: 'druid'
+              }
+            },
+          },
+        }
+      }
+
+      context 'when all values are correct' do
+        let(:symbolized_body) { valid_body }
+
+        it 'is valid' do
+          message = ServiceBindingCreateMessage.new(symbolized_body)
+          expect(message).to be_valid
+        end
+      end
+
       context 'service_instance' do
         context 'when service instance guid is not a string' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                },
-                service_instance: {
+            valid_body.tap do |hash|
+              hash[:relationships][:service_instance] = {
+                data: {
                   guid: true
-                },
-              },
-            }
+                }
+              }
+            end
           end
 
           it 'is not valid' do
@@ -53,16 +80,11 @@ module VCAP::CloudController
           end
         end
 
-        context 'when service_instance does not exist' do
+        context 'when service_instance relationship is missing' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                }
-              },
-            }
+            valid_body.tap do |hash|
+              hash[:relationships].delete(:service_instance)
+            end
           end
 
           it 'is not valid' do
@@ -73,26 +95,37 @@ module VCAP::CloudController
           end
         end
 
-        context 'when service instance guid is malformed' do
+        context 'when the service instance data key is missing' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                },
-                service_instance: {
-                  what: 'how do you guid'
-                },
-              },
-            }
+            valid_body.tap do |hash|
+              hash[:relationships][:service_instance] = { guid: 'How important could that data key be?' }
+            end
           end
 
           it 'is not valid' do
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: \"service_instance: {\"guid\": \"valid-guid"}\"/)
+            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: \"service_instance: {\"data\": {\"guid\": \"valid-guid"}}\"/)
+          end
+        end
+
+        context 'when the service instance guid is missing' do
+          let(:symbolized_body) do
+            valid_body.tap do |hash|
+              hash[:relationships][:service_instance] = {
+                data: {
+                  what: 'how do you guid'
+                }
+              }
+            end
+          end
+
+          it 'is not valid' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: \"service_instance: {\"data\": {\"guid\": \"valid-guid"}}\"/)
           end
         end
       end
@@ -100,17 +133,13 @@ module VCAP::CloudController
       context 'app_guid' do
         context 'when app guid is not a string' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
+            valid_body.tap do |hash|
+              hash[:relationships][:app] = {
+                data: {
                   guid: true
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-              },
-            }
+                }
+              }
+            end
           end
 
           it 'is not valid' do
@@ -121,16 +150,11 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app guid does not exist' do
+        context 'when the app key is missing' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                service_instance: {
-                  guid: 'druid'
-                },
-              },
-            }
+            valid_body.tap do |hash|
+              hash[:relationships].delete(:app)
+            end
           end
 
           it 'is not valid' do
@@ -141,44 +165,44 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app guid is malformed' do
+        context 'when the app data key is missing' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
-                  nap: 'now'
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-              },
-            }
+            valid_body.tap do |hash|
+              hash[:relationships][:app] = { guid: 'How important could that data key be?' }
+            end
           end
 
           it 'is not valid' do
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include(/App must be structured like this: \"app: {\"guid\": \"valid-guid"}\"/)
+            expect(message.errors_on(:relationships)).to include(/App must be structured like this: "app: {"data": {"guid": "valid-guid"}}"/)
+          end
+        end
+
+        context 'when the app guid is missing' do
+          let(:symbolized_body) do
+            valid_body.tap do |hash|
+              hash[:relationships][:app] = {
+                data: {
+                  nap: 'now'
+                }
+              }
+            end
+          end
+
+          it 'is not valid' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include(/App must be structured like this: "app: {"data": {"guid": "valid-guid"}}"/)
           end
         end
       end
 
       context 'when unexpected keys are requested' do
         let(:symbolized_body) do
-          {
-            surprise_key: 'boo',
-            type: 'app',
-            relationships: {
-              app: {
-                guid: 'fluid'
-              },
-              service_instance: {
-                guid: 'druid'
-              },
-            },
-          }
+          valid_body.merge(surprise_key: 'boo')
         end
 
         it 'is not valid' do
@@ -192,17 +216,7 @@ module VCAP::CloudController
       context 'type' do
         context 'when type is not a string' do
           let(:symbolized_body) do
-            {
-              type: true,
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-              },
-            }
+            valid_body.merge(type: true)
           end
 
           it 'is not valid' do
@@ -213,18 +227,11 @@ module VCAP::CloudController
           end
         end
 
-        context 'when type does not exist' do
+        context 'when type key is missing' do
           let(:symbolized_body) do
-            {
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-              },
-            }
+            valid_body.tap do |hash|
+              hash.delete(:type)
+            end
           end
 
           it 'is not valid' do
@@ -237,17 +244,7 @@ module VCAP::CloudController
 
         context 'when the type is not an app' do
           let(:symbolized_body) do
-            {
-              type: 'not an app',
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-              },
-            }
+            valid_body.merge(type: 'not an app')
           end
 
           it 'is not valid' do
@@ -301,19 +298,7 @@ module VCAP::CloudController
       context 'data' do
         context 'when data is not a hash' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
-                  guid: true
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-
-              },
-              data: 'tricked you not a hash'
-            }
+            valid_body.merge(data: 'tricked you not a hash')
           end
 
           it 'is not valid' do
@@ -326,21 +311,7 @@ module VCAP::CloudController
 
         context 'when data includes unexpected keys' do
           let(:symbolized_body) do
-            {
-              type: 'app',
-              relationships: {
-                app: {
-                  guid: 'fluid'
-                },
-                service_instance: {
-                  guid: 'druid'
-                },
-
-              },
-              data: {
-                sparameters: 'not a valid field'
-              }
-            }
+            valid_body.merge(data: { sparameters: 'not a valid field' })
           end
 
           it 'is not valid' do

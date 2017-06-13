@@ -11,10 +11,13 @@ RSpec.describe ServiceBindingsController, type: :controller do
     let(:req_body) do
       {
         type: service_binding_type,
-        relationships:
-        {
-          app: { guid: app_model.guid },
-          service_instance: { guid: service_instance.guid }
+        relationships: {
+          app: {
+            data: { guid: app_model.guid },
+          },
+          service_instance: {
+            data: { guid: service_instance.guid },
+          },
         }
       }
     end
@@ -85,8 +88,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     context 'when the request is missing required fields' do
       let(:req_body) do
         {
-          relationships:
-          {
+          relationships: {
             app: { guid: app_model.guid },
             service_instance: { guid: service_instance.guid }
           }
@@ -105,8 +107,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       let(:req_body) do
         {
           type: 1234,
-          relationships:
-          {
+          relationships: {
             app: { guid: app_model.guid },
             service_instance: { guid: service_instance.guid }
           }
@@ -126,10 +127,10 @@ RSpec.describe ServiceBindingsController, type: :controller do
         {
           type: 'app',
           relationships:
-          {
-            app: { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid }
-          },
+            {
+              app: { guid: app_model.guid },
+              service_instance: { guid: service_instance.guid }
+            },
           potato: 'tomato'
         }
       end
@@ -146,10 +147,13 @@ RSpec.describe ServiceBindingsController, type: :controller do
       let(:req_body) do
         {
           type: service_binding_type,
-          relationships:
-          {
-            app: { guid: 'schmuid' },
-            service_instance: { guid: service_instance.guid }
+          relationships: {
+            app: {
+              data: { guid: 'schmuid' },
+            },
+            service_instance: {
+              data: { guid: service_instance.guid },
+            },
           }
         }
       end
@@ -167,10 +171,13 @@ RSpec.describe ServiceBindingsController, type: :controller do
       let(:req_body) do
         {
           type: service_binding_type,
-          relationships:
-          {
-            app: { guid: app_model.guid },
-            service_instance: { guid: 'schmuid' }
+          relationships: {
+            app: {
+              data: { guid: app_model.guid },
+            },
+            service_instance: {
+              data: { guid: 'schmuid' },
+            },
           }
         }
       end
@@ -188,10 +195,13 @@ RSpec.describe ServiceBindingsController, type: :controller do
       let(:req_body) do
         {
           type: 'app',
-          relationships:
-          {
-            app: { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid }
+          relationships: {
+            app: {
+              data: { guid: app_model.guid },
+            },
+            service_instance: {
+              data: { guid: service_instance.guid },
+            },
           },
           data: {
             parameters: {
@@ -215,10 +225,13 @@ RSpec.describe ServiceBindingsController, type: :controller do
         let(:req_body) do
           {
             type: 'app',
-            relationships:
-            {
-              app: { guid: app_model.guid },
-              service_instance: { guid: service_instance.guid }
+            relationships: {
+              app: {
+                data: { guid: app_model.guid }
+              },
+              service_instance: {
+                data: { guid: service_instance.guid }
+              },
             },
             data: {
               sparameters: {

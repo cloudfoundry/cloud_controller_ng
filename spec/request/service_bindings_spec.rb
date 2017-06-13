@@ -13,33 +13,41 @@ RSpec.describe 'v3 service bindings' do
 
       before do
         allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
-          fb                  = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
-          fb.credentials      = { 'username' => 'managed_username' }
+          fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+          fb.credentials = { 'username' => 'managed_username' }
           fb.syslog_drain_url = 'syslog://mydrain.example.com'
-          fb.volume_mounts    = [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }]
+          fb.volume_mounts = [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }]
           fb
         end
       end
 
       it 'creates a service binding' do
         request_body = {
-          type:          'app',
-          data:          { parameters: { potato: 'tomato' } },
+          type: 'app',
+          data: { parameters: { potato: 'tomato' } },
           relationships: {
-            app:              { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid },
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+            service_instance: {
+              data: {
+                guid: service_instance.guid
+              }
+            },
           }
         }.to_json
 
         post '/v3/service_bindings', request_body, user_headers
 
         parsed_response = MultiJson.load(last_response.body)
-        guid            = parsed_response['guid']
+        guid = parsed_response['guid']
 
         expected_response = {
-          'guid'       => guid,
-          'type'       => 'app',
-          'data'       => {
+          'guid' => guid,
+          'type' => 'app',
+          'data' => {
             'credentials' => {
               'username' => 'managed_username'
             },
@@ -52,7 +60,7 @@ RSpec.describe 'v3 service bindings' do
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
-          'links'      => {
+          'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/service_bindings/#{guid}"
             },
@@ -72,61 +80,69 @@ RSpec.describe 'v3 service bindings' do
         event = VCAP::CloudController::Event.last
         expect(event.values).to match(
           hash_including({
-            type:              'audit.service_binding.create',
-            actee:             guid,
-            actee_type:        'service_binding',
-            actee_name:        '',
-            actor:             user.guid,
-            actor_type:        'user',
-            actor_username:    user_name,
-            space_guid:        space.guid,
-            organization_guid: space.organization.guid
-          })
-        )
+                           type: 'audit.service_binding.create',
+                           actee: guid,
+                           actee_type: 'service_binding',
+                           actee_name: '',
+                           actor: user.guid,
+                           actor_type: 'user',
+                           actor_username: user_name,
+                           space_guid: space.guid,
+                           organization_guid: space.organization.guid
+                         })
+                                )
         expect(event.metadata).to eq({
-          'request' => {
-            'type'          => 'app',
-            'relationships' => {
-              'app' => {
-                'guid' => app_model.guid,
-              },
-              'service_instance' => {
-                'guid' => service_instance.guid,
-              },
-            },
-            'data' => 'PRIVATE DATA HIDDEN'
-          }
-        })
+                                       'request' => {
+                                         'type' => 'app',
+                                         'relationships' => {
+                                           'app' => {
+                                             'data' => {
+                                               'guid' => app_model.guid,
+                                             },
+                                           },
+                                           'service_instance' => {
+                                             'data' => {
+                                               'guid' => service_instance.guid,
+                                             },
+                                           },
+                                         },
+                                         'data' => 'PRIVATE DATA HIDDEN'
+                                       }
+                                     })
       end
     end
 
     context 'user provided service instance' do
       let(:service_instance) do
         VCAP::CloudController::UserProvidedServiceInstance.make(
-          space:            space,
-          credentials:      { 'username': 'user_provided_username' },
+          space: space,
+          credentials: { 'username': 'user_provided_username' },
           syslog_drain_url: 'syslog://drain.url.com'
         )
       end
 
       it 'creates a service binding' do
         request_body = {
-          type:          'app',
+          type: 'app',
           relationships: {
-            app:              { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid },
+            app: {
+              data: { guid: app_model.guid }
+            },
+            service_instance: {
+              data: { guid: service_instance.guid }
+            },
           }
         }.to_json
 
         post '/v3/service_bindings', request_body, user_headers
 
         parsed_response = MultiJson.load(last_response.body)
-        guid            = parsed_response['guid']
+        guid = parsed_response['guid']
 
         expected_response = {
-          'guid'       => guid,
-          'type'       => 'app',
-          'data'       => {
+          'guid' => guid,
+          'type' => 'app',
+          'data' => {
             'credentials' => {
               'username' => 'user_provided_username'
             },
@@ -135,7 +151,7 @@ RSpec.describe 'v3 service bindings' do
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
-          'links'      => {
+          'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/service_bindings/#{guid}"
             },
@@ -178,18 +194,18 @@ RSpec.describe 'v3 service bindings' do
         event = VCAP::CloudController::Event.last
         expect(event.values).to match(
           hash_including({
-            type:              'audit.service_binding.delete',
-            actee:             service_binding.guid,
-            actee_type:        'service_binding',
-            actee_name:        '',
-            actor:             user.guid,
-            actor_type:        'user',
-            actor_username:    user_name,
-            space_guid:        space.guid,
-            organization_guid: space.organization.guid,
-            metadata:          '{}'
-          })
-        )
+                           type: 'audit.service_binding.delete',
+                           actee: service_binding.guid,
+                           actee_type: 'service_binding',
+                           actee_name: '',
+                           actor: user.guid,
+                           actor_type: 'user',
+                           actor_username: user_name,
+                           space_guid: space.guid,
+                           organization_guid: space.organization.guid,
+                           metadata: '{}'
+                         })
+                                )
       end
     end
 
@@ -205,18 +221,18 @@ RSpec.describe 'v3 service bindings' do
         event = VCAP::CloudController::Event.last
         expect(event.values).to match(
           hash_including({
-            type:              'audit.service_binding.delete',
-            actee:             service_binding.guid,
-            actee_type:        'service_binding',
-            actee_name:        '',
-            actor:             user.guid,
-            actor_type:        'user',
-            actor_username:    user_name,
-            space_guid:        space.guid,
-            organization_guid: space.organization.guid,
-            metadata:          '{}'
-          })
-        )
+                           type: 'audit.service_binding.delete',
+                           actee: service_binding.guid,
+                           actee_type: 'service_binding',
+                           actee_name: '',
+                           actor: user.guid,
+                           actor_type: 'user',
+                           actor_username: user_name,
+                           space_guid: space.guid,
+                           organization_guid: space.organization.guid,
+                           metadata: '{}'
+                         })
+                                )
       end
     end
   end
@@ -226,10 +242,10 @@ RSpec.describe 'v3 service bindings' do
     let(:service_binding) do
       VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
-        app:              app_model,
-        credentials:      { 'username' => 'managed_username' },
+        app: app_model,
+        credentials: { 'username' => 'managed_username' },
         syslog_drain_url: 'syslog://mydrain.example.com',
-        volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+        volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
       )
     end
 
@@ -239,9 +255,9 @@ RSpec.describe 'v3 service bindings' do
       parsed_response = MultiJson.load(last_response.body)
 
       expected_response = {
-        'guid'       => service_binding.guid,
-        'type'       => 'app',
-        'data'       => {
+        'guid' => service_binding.guid,
+        'type' => 'app',
+        'data' => {
           'credentials' => {
             'username' => 'managed_username'
           },
@@ -250,7 +266,7 @@ RSpec.describe 'v3 service bindings' do
         },
         'created_at' => iso8601,
         'updated_at' => iso8601,
-        'links'      => {
+        'links' => {
           'self' => {
             'href' => "#{link_prefix}/v3/service_bindings/#{service_binding.guid}"
           },
@@ -287,18 +303,18 @@ RSpec.describe 'v3 service bindings' do
     let(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let!(:service_binding1) { VCAP::CloudController::ServiceBinding.make(
       service_instance: service_instance1,
-      app:              app_model,
-      credentials:      { 'binding1' => 'shtuff' },
+      app: app_model,
+      credentials: { 'binding1' => 'shtuff' },
       syslog_drain_url: 'syslog://binding1.example.com',
-      volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+      volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
     )
     }
     let!(:service_binding2) { VCAP::CloudController::ServiceBinding.make(
       service_instance: service_instance2,
-      app:              app_model,
-      credentials:      { 'binding2' => 'things' },
+      app: app_model,
+      credentials: { 'binding2' => 'things' },
       syslog_drain_url: 'syslog://binding2.example.com',
-      volume_mounts:    [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
+      volume_mounts: [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
     )
     }
 
@@ -310,17 +326,17 @@ RSpec.describe 'v3 service bindings' do
       expected_response = {
         'pagination' => {
           'total_results' => 3,
-          'total_pages'   => 2,
-          'first'         => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/service_bindings?page=2&per_page=2" },
-          'next'          => { 'href' => "#{link_prefix}/v3/service_bindings?page=2&per_page=2" },
-          'previous'      => nil,
+          'total_pages' => 2,
+          'first' => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2" },
+          'last' => { 'href' => "#{link_prefix}/v3/service_bindings?page=2&per_page=2" },
+          'next' => { 'href' => "#{link_prefix}/v3/service_bindings?page=2&per_page=2" },
+          'previous' => nil,
         },
         'resources' => [
           {
-            'guid'       => service_binding1.guid,
-            'type'       => 'app',
-            'data'       => {
+            'guid' => service_binding1.guid,
+            'type' => 'app',
+            'data' => {
               'credentials' => {
                 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
@@ -329,7 +345,7 @@ RSpec.describe 'v3 service bindings' do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'links'      => {
+            'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/service_bindings/#{service_binding1.guid}"
               },
@@ -342,9 +358,9 @@ RSpec.describe 'v3 service bindings' do
             }
           },
           {
-            'guid'       => service_binding2.guid,
-            'type'       => 'app',
-            'data'       => {
+            'guid' => service_binding2.guid,
+            'type' => 'app',
+            'data' => {
               'credentials' => {
                 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
@@ -353,7 +369,7 @@ RSpec.describe 'v3 service bindings' do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'links'      => {
+            'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/service_bindings/#{service_binding2.guid}"
               },
@@ -382,8 +398,8 @@ RSpec.describe 'v3 service bindings' do
                                                      app: app_model2,
                                                      credentials: { 'utako' => 'secret' },
                                                      syslog_drain_url: 'syslog://example.com',
-                                                     volume_mounts:    [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
-                                                         )
+                                                     volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+          )
         end
         let(:app_model3) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:another_apps_service_binding2) do
@@ -391,8 +407,8 @@ RSpec.describe 'v3 service bindings' do
                                                      app: app_model3,
                                                      credentials: { 'amelia' => 'apples' },
                                                      syslog_drain_url: 'www.neopets.com',
-                                                     volume_mounts:    [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
-                                                         )
+                                                     volume_mounts: [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
+          )
         end
 
         it 'returns only the matching service bindings' do
@@ -405,13 +421,13 @@ RSpec.describe 'v3 service bindings' do
           expect(parsed_response['pagination']).to be_a_response_like(
             {
               'total_results' => 2,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "#{link_prefix}/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
-              'last'          => { 'href' => "#{link_prefix}/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
-              'next'          => nil,
-              'previous'      => nil,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
+              'last' => { 'href' => "#{link_prefix}/v3/service_bindings?app_guids=#{app_model2.guid}%2C#{app_model3.guid}&page=1&per_page=2" },
+              'next' => nil,
+              'previous' => nil,
             }
-          )
+                                                   )
         end
       end
 
@@ -426,13 +442,13 @@ RSpec.describe 'v3 service bindings' do
           expect(parsed_response['pagination']).to be_a_response_like(
             {
               'total_results' => 2,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
-              'last'          => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
-              'next'          => nil,
-              'previous'      => nil,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
+              'last' => { 'href' => "#{link_prefix}/v3/service_bindings?page=1&per_page=2&service_instance_guids=#{service_instance1.guid}%2C#{service_instance2.guid}" },
+              'next' => nil,
+              'previous' => nil,
             }
-          )
+                                                   )
         end
       end
     end

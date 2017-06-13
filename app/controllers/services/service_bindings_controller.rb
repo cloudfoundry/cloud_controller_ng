@@ -15,6 +15,7 @@ module VCAP::CloudController
     query_parameters :app_guid, :service_instance_guid
 
     get path_guid, :read
+
     def read(guid)
       obj = find_guid(guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless obj.v2_app.present?
@@ -23,6 +24,7 @@ module VCAP::CloudController
     end
 
     post path, :create
+
     def create
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
@@ -31,8 +33,12 @@ module VCAP::CloudController
       message = ServiceBindingCreateMessage.new({
         type: 'app',
         relationships: {
-          app: { guid: request_attrs['app_guid'] },
-          service_instance: { guid: request_attrs['service_instance_guid'] }
+          app: {
+            data: { guid: request_attrs['app_guid'] }
+          },
+          service_instance: {
+            data: { guid: request_attrs['service_instance_guid'] }
+          },
         },
         data: {
           parameters: request_attrs['parameters']
@@ -60,6 +66,7 @@ module VCAP::CloudController
     end
 
     delete path_guid, :delete
+
     def delete(guid)
       binding = ServiceBinding.find(guid: guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding
