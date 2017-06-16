@@ -34,7 +34,7 @@ module VCAP::CloudController
       start_frequent_jobs
       start_inline_jobs
 
-      Clockwork.error_handler { |error| @logger.error(error) }
+      Clockwork.error_handler { |error| @logger.error("#{error} (#{error.class.name})") }
       Clockwork.run
     end
 
