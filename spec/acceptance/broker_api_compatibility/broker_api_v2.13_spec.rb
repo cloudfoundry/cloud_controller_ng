@@ -51,5 +51,18 @@ RSpec.describe 'Service Broker API integration' do
         expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => { 'create' => { 'parameters' => {} } } })
       end
     end
+
+    context 'when the broker catalog has an invalid schema' do
+      before do
+        update_broker(default_catalog(plan_schemas: { 'service_instance' => { 'create' => true } }))
+      end
+
+      it 'returns an error' do
+        parsed_body = MultiJson.load(last_response.body)
+
+        expect(parsed_body['code']).to eq(270012)
+        expect(parsed_body['description']).to include('Schemas service_instance.create must be a hash, but has value true')
+      end
+    end
   end
 end
