@@ -1,4 +1,5 @@
 require 'cloud_controller/blobstore/blob'
+require 'cloud_controller/blobstore/blob_key_generator'
 
 module CloudController
   module Blobstore
@@ -22,12 +23,12 @@ module CloudController
       private
 
       def partitioned_key(key)
-        key = key.to_s.downcase
-        key = File.join(key[0..1], key[2..3], key)
+        key             = key.to_s.downcase
+        partitioned_key = BlobKeyGenerator.full_path_from_key(key)
         if @root_dir
-          key = File.join(@root_dir, key)
+          partitioned_key = File.join(@root_dir, partitioned_key)
         end
-        key
+        partitioned_key
       end
 
       def within_limits?(size)

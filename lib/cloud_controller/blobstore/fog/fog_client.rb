@@ -12,6 +12,8 @@ require 'cloud_controller/blobstore/errors'
 module CloudController
   module Blobstore
     class FogClient < BaseClient
+      attr_reader :root_dir
+
       DEFAULT_BATCH_SIZE = 1000
 
       def initialize(connection_config:,
