@@ -674,3 +674,7 @@ properties:
   cc.loggregator.internal_url:
     description: "Internal url used to communicate with traffic_controller"
     default: "http://loggregator-trafficcontroller.service.cf.internal:8081"
+
+  cc.perform_blob_cleanup:
+    description: "Whether or not to perform the blob cleanup job"
+    default: false

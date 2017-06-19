@@ -4,6 +4,8 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe OrphanedBlobsCleanup do
       subject(:job) { described_class.new }
+      let(:perform_blob_cleanup) { true }
+      let(:logger) { double(:logger, info: nil, error: nil) }
 
       it { is_expected.to be_a_valid_job }
 
@@ -12,6 +14,32 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
+        before do
+          allow(job).to receive(:logger).and_return(logger)
+          TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
+        end
+
+        context 'when perform_blob_cleanup is enabled' do
+          it 'starts the job' do
+            job.perform
+            expect(logger).to have_received(:info).with('Started orphaned blobs cleanup job')
+            expect(logger).not_to have_received(:info).with('Skipping OrphanedBlobsCleanup as the `perform_blob_cleanup` manifest property is false')
+          end
+        end
+
+        context 'when perform_blob_cleanup is disabled' do
+          let(:perform_blob_cleanup) { false }
+
+          it 'skips the job' do
+            job.perform
+            expect(logger).to have_received(:info).with('Skipping OrphanedBlobsCleanup as the `perform_blob_cleanup` manifest property is false')
+            expect(job).not_to receive(:cleanup)
+            expect(logger).not_to have_received(:info).with('Started orphaned blobs cleanup job')
+          end
+        end
+      end
+
+      describe '#cleanup' do
         let(:droplet_blobstore) { instance_double(CloudController::Blobstore::DavClient, files: droplet_files, root_dir: droplet_root_dir) }
         let(:droplet_files) { [] }
         let(:droplet_root_dir) { nil }
@@ -26,6 +54,8 @@ module VCAP::CloudController
         let(:legacy_resource_root_dir) { nil }
 
         before do
+          TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
+
           TestConfig.config[:packages][:app_package_directory_key]   = 'packages'
           TestConfig.config[:droplets][:droplet_directory_key]       = 'droplets'
           TestConfig.config[:buildpacks][:buildpack_directory_key]   = 'buildpacks'
@@ -347,6 +377,18 @@ module VCAP::CloudController
               }.from(true).to(false)
               expect(BlobstoreDelete).not_to have_received(:new).with('real-package-blob', :package_blobstore)
             end
+          end
+        end
+
+        context 'when a BlobstoreError occurs' do
+          before do
+            allow(job).to receive(:logger).and_return(logger)
+            allow(droplet_blobstore).to receive(:files).and_raise(CloudController::Blobstore::BlobstoreError.new('error'))
+          end
+
+          it 'rescues and logs the error' do
+            expect { job.cleanup }.not_to raise_error
+            expect(logger).to have_received(:error).with('Failed orphaned blobs cleanup job with BlobstoreError: error')
           end
         end
       end

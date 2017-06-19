@@ -305,6 +305,8 @@ module VCAP::CloudController
           use_privileged_containers_for_running: bool,
           use_privileged_containers_for_staging: bool,
         },
+
+        optional(:perform_blob_cleanup) => bool,
       }
     end
 

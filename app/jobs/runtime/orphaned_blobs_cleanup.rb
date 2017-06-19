@@ -13,13 +13,22 @@ module VCAP::CloudController
         ].freeze
 
         def perform
+          unless HashUtils.dig(config, :perform_blob_cleanup)
+            logger.info('Skipping OrphanedBlobsCleanup as the `perform_blob_cleanup` manifest property is false')
+            return
+          end
+
+          cleanup
+        end
+
+        def cleanup
           logger.info('Started orphaned blobs cleanup job')
 
           number_of_marked_blobs = 0
 
           unique_blobstores.each do |blobstore_config|
             blobstore_type = blobstore_config[:type].to_s
-            directory_key = blobstore_config[:directory_key]
+            directory_key  = blobstore_config[:directory_key]
 
             blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_type)
             blobstore.files(IGNORED_DIRECTORY_PREFIXES).each do |blob|
@@ -28,14 +37,16 @@ module VCAP::CloudController
                 unorphan_blob(orphaned_blob) unless orphaned_blob.nil?
                 next
               end
+
               create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_type, directory_key)
 
               number_of_marked_blobs += 1
               return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
             end
           end
+        rescue CloudController::Blobstore::BlobstoreError => e
+          logger.error("Failed orphaned blobs cleanup job with BlobstoreError: #{e.message}")
         ensure
-          logger.info('Attempting to delete orphaned blobs')
           delete_orphaned_blobs
           logger.info('Finished orphaned blobs cleanup job')
         end
@@ -55,24 +66,24 @@ module VCAP::CloudController
 
           full_list = [
             {
-              type: :droplet_blobstore,
+              type:          :droplet_blobstore,
               directory_key: config.dig(:droplets, :droplet_directory_key),
-              root_dir:    CloudController::DependencyLocator.instance.public_send(:droplet_blobstore).root_dir
+              root_dir:      CloudController::DependencyLocator.instance.public_send(:droplet_blobstore).root_dir
             },
             {
-              type: :package_blobstore,
+              type:          :package_blobstore,
               directory_key: config.dig(:packages, :app_package_directory_key),
-              root_dir:    CloudController::DependencyLocator.instance.public_send(:package_blobstore).root_dir
+              root_dir:      CloudController::DependencyLocator.instance.public_send(:package_blobstore).root_dir
             },
             {
-              type: :buildpack_blobstore,
+              type:          :buildpack_blobstore,
               directory_key: config.dig(:buildpacks, :buildpack_directory_key),
-              root_dir:    CloudController::DependencyLocator.instance.public_send(:buildpack_blobstore).root_dir
+              root_dir:      CloudController::DependencyLocator.instance.public_send(:buildpack_blobstore).root_dir
             },
             {
-              type: :legacy_global_app_bits_cache,
+              type:          :legacy_global_app_bits_cache,
               directory_key: config.dig(:resource_pool, :resource_directory_key),
-              root_dir:    CloudController::DependencyLocator.instance.public_send(:legacy_global_app_bits_cache).root_dir
+              root_dir:      CloudController::DependencyLocator.instance.public_send(:legacy_global_app_bits_cache).root_dir
             },
           ]
 
@@ -120,6 +131,8 @@ module VCAP::CloudController
         end
 
         def delete_orphaned_blobs
+          logger.info('Attempting to delete orphaned blobs')
+
           dataset = OrphanedBlob.where { dirty_count >= DIRTY_THRESHOLD }.
                     order(Sequel.desc(:dirty_count)).
                     limit(NUMBER_OF_BLOBS_TO_DELETE)
