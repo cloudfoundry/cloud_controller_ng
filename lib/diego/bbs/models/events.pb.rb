@@ -27,6 +27,7 @@ module Diego
       class DesiredLRPChangedEvent < ::Protobuf::Message; end
       class DesiredLRPRemovedEvent < ::Protobuf::Message; end
       class ActualLRPCrashedEvent < ::Protobuf::Message; end
+      class EventsByCellId < ::Protobuf::Message; end
 
 
       ##
@@ -64,6 +65,10 @@ module Diego
         optional :int32, :crash_count, 3
         optional :string, :crash_reason, 4
         optional :int64, :since, 5
+      end
+
+      class EventsByCellId
+        optional :string, :cell_id, 1
       end
 
     end

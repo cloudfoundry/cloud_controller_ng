@@ -18,6 +18,7 @@ require 'modification_tag.pb'
 require 'network.pb'
 require 'security_group.pb'
 require 'volume_mount.pb'
+require 'check_definition.pb'
 
 module Diego
   module Bbs
@@ -76,6 +77,7 @@ module Diego
         optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 20
         optional :string, :image_username, 21
         optional :string, :image_password, 22
+        optional ::Diego::Bbs::Models::CheckDefinition, :check_definition, 23
       end
 
       class ProtoRoutes
@@ -139,6 +141,7 @@ module Diego
         optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 30
         optional :string, :image_username, 31
         optional :string, :image_password, 32
+        optional ::Diego::Bbs::Models::CheckDefinition, :check_definition, 33
       end
 
     end

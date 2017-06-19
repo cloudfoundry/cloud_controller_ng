@@ -66,6 +66,7 @@ module VCAP::CloudController
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
           PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
+          check_definition:                  generate_healthcheck_definition(desired_lrp_builder),
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config[:diego][:pid_limit],
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
@@ -198,6 +199,38 @@ module VCAP::CloudController
         actions << generate_app_action(lrp_builder.start_command, lrp_builder.action_user, environment_variables)
         actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
         codependent(actions)
+      end
+
+      def generate_healthcheck_definition(lrp_builder)
+        return unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
+
+        desired_ports = lrp_builder.ports
+        checks = []
+        desired_ports.each_with_index do |port, index|
+          checks << build_check(port, index)
+        end
+
+        ::Diego::Bbs::Models::CheckDefinition.new(checks: checks)
+      end
+
+      def build_check(port, index)
+        timeout = health_check_timeout_in_seconds * 1000
+        if process.health_check_type == 'http' && index == 0
+          ::Diego::Bbs::Models::Check.new(http_check:
+            ::Diego::Bbs::Models::HTTPCheck.new(
+              path:               process.health_check_http_endpoint,
+              port:               port,
+              request_timeout_ms: timeout,
+            )
+          )
+        else
+          ::Diego::Bbs::Models::Check.new(tcp_check:
+            ::Diego::Bbs::Models::TCPCheck.new(
+              port:               port,
+              connect_timeout_ms: timeout,
+            )
+          )
+        end
       end
 
       def generate_monitor_action(lrp_builder)

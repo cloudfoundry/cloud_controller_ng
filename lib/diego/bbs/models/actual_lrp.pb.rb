@@ -54,6 +54,7 @@ module Diego
       class ActualLRPNetInfo
         optional :string, :address, 1
         repeated ::Diego::Bbs::Models::PortMapping, :ports, 2
+        optional :string, :instance_address, 3
       end
 
       class ActualLRP

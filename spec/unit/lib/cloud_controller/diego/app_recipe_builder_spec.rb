@@ -352,6 +352,12 @@ module VCAP::CloudController
                 lrp = builder.build_app_lrp
                 expect(lrp.start_timeout_ms).to eq(12345000)
               end
+
+              it 'sets the healthcheck definition timeout to the default' do
+                lrp = builder.build_app_lrp
+                tcp_check = lrp.check_definition.checks.first.tcp_check
+                expect(tcp_check.connect_timeout_ms).to eq(12345000)
+              end
             end
 
             context 'when the health check type is not set' do
@@ -364,6 +370,13 @@ module VCAP::CloudController
 
                 expect(lrp.monitor).to eq(expected_monitor_action)
               end
+
+              it 'adds a TCP health check definition' do
+                lrp = builder.build_app_lrp
+                tcp_check = lrp.check_definition.checks.first.tcp_check
+                expect(tcp_check.port).to eq(4444)
+                expect(tcp_check.connect_timeout_ms).to eq(12000)
+              end
             end
 
             context 'when the health check type is set to "none"' do
@@ -371,10 +384,16 @@ module VCAP::CloudController
                 process.health_check_type = 'none'
               end
 
-              it 'adds a port healthcheck action for backwards compatibility' do
+              it 'does not add a monitor action' do
                 lrp = builder.build_app_lrp
 
                 expect(lrp.monitor).to eq(nil)
+              end
+
+              it 'does not add healthcheck definitions' do
+                lrp = builder.build_app_lrp
+                check_definition = lrp.check_definition
+                expect(check_definition).to be_nil
               end
             end
 
@@ -387,6 +406,13 @@ module VCAP::CloudController
                 lrp = builder.build_app_lrp
 
                 expect(lrp.monitor).to eq(expected_monitor_action)
+              end
+
+              it 'adds a TCP health check definition' do
+                lrp = builder.build_app_lrp
+                tcp_check = lrp.check_definition.checks.first.tcp_check
+                expect(tcp_check.port).to eq(4444)
+                expect(tcp_check.connect_timeout_ms).to eq(12000)
               end
             end
 
@@ -435,6 +461,21 @@ module VCAP::CloudController
 
                 expect(lrp.monitor).to eq(expected_monitor_action)
               end
+
+              it 'adds an HTTP health check definition using the first port' do
+                lrp = builder.build_app_lrp
+                http_check = lrp.check_definition.checks.first.http_check
+                expect(http_check.port).to eq(4444)
+                expect(http_check.path).to eq('http-endpoint')
+                expect(http_check.request_timeout_ms).to eq(12000)
+              end
+
+              it 'keeps a TCP health check definition for other ports' do
+                lrp = builder.build_app_lrp
+                tcp_check = lrp.check_definition.checks.second.tcp_check
+                expect(tcp_check.port).to eq(5555)
+                expect(tcp_check.connect_timeout_ms).to eq(12000)
+              end
             end
 
             context 'when the health check type is not recognized' do
@@ -446,6 +487,12 @@ module VCAP::CloudController
                 lrp = builder.build_app_lrp
 
                 expect(lrp.monitor).to eq(nil)
+              end
+
+              it 'does not add healthcheck definitions' do
+                lrp = builder.build_app_lrp
+                check_definition = lrp.check_definition
+                expect(check_definition).to be_nil
               end
             end
           end
