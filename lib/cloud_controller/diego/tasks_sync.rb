@@ -9,7 +9,7 @@ module VCAP::CloudController
       end
 
       def initialize(config)
-        @config = config
+        @config   = config
         @workpool = WorkPool.new(50)
       end
 
@@ -47,10 +47,17 @@ module VCAP::CloudController
 
         @workpool.drain
 
+        first_exception = nil
+        @workpool.exceptions.each do |e|
+          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message)
+          first_exception ||= e
+        end
+        raise first_exception if first_exception
+
         bbs_task_client.bump_freshness
         logger.info('finished-task-sync')
       rescue CloudController::Errors::ApiError => e
-        logger.info('sync-failed', error: e.message)
+        logger.info('sync-failed')
         raise BBSFetchError.new(e.message)
       end
 

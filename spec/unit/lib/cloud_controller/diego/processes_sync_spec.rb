@@ -113,6 +113,7 @@ module VCAP::CloudController
         end
 
         context 'when diego does not contain the LRP' do
+          let(:scheduling_infos) { [] }
           let!(:missing_process) { ProcessModel.make(:diego_runnable) }
           let(:missing_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: 'missing-lrp') }
 
@@ -151,7 +152,7 @@ module VCAP::CloudController
 
               it 'does not bump freshness' do
                 expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
-                expect(bbs_apps_client).not_to receive(:bump_freshness)
+                expect(bbs_apps_client).not_to have_received(:bump_freshness)
               end
             end
           end
@@ -201,6 +202,89 @@ module VCAP::CloudController
           it 'does not bump freshness' do
             expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
             expect(bbs_apps_client).not_to receive(:bump_freshness)
+          end
+        end
+
+        context 'when a non-Diego error is raised outside of the workpool' do
+          let(:error) { Sequel::Error.new('Generic Database Error') }
+
+          before do
+            allow(ProcessModel).to receive(:table_name).and_raise(error)
+          end
+
+          it 'does not bump freshness' do
+            expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
+            expect(bbs_apps_client).not_to receive(:bump_freshness)
+          end
+        end
+
+        context 'when updating LRP state on diego fails multiple times with ignorable errors' do
+          let(:scheduling_infos) { [] }
+          let!(:missing_process1) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
+          let(:ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
+          let(:fake_app_recipe) { instance_double(AppRecipeBuilder, build_app_lrp: double(:app_lrp_recipe)) }
+
+          before do
+            allow(AppRecipeBuilder).to receive(:new).and_return(fake_app_recipe)
+            allow(bbs_apps_client).to receive(:desire_app).and_raise(ignorable_error)
+          end
+
+          it 'updates freshness' do
+            subject.sync
+            expect(bbs_apps_client).to have_received(:bump_freshness)
+          end
+        end
+
+        context 'when updating LRP state on diego fails multiple times with some non-ignorable errors' do
+          let(:scheduling_infos) { [] }
+          let!(:missing_process1) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process3) { ProcessModel.make(:diego_runnable) }
+          let(:ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
+          let(:non_ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
+          let(:non_api_error) { StandardError.new('something went wrong') }
+          let(:fake_app_recipe) { instance_double(AppRecipeBuilder, build_app_lrp: double(:app_lrp_recipe)) }
+          let(:logger) { double(:logger, info: nil, error: nil) }
+
+          before do
+            allow(AppRecipeBuilder).to receive(:new).and_return(fake_app_recipe)
+            allow(Steno).to receive(:logger).and_return(logger)
+
+            calls = 0
+            allow(bbs_apps_client).to receive(:desire_app) do
+              begin
+                raise ignorable_error if calls == 0
+                raise non_ignorable_error if calls == 1
+                raise non_api_error
+              ensure
+                calls += 1
+              end
+            end
+          end
+
+          it 'does not update freshness' do
+            expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, non_ignorable_error.message)
+            expect(bbs_apps_client).not_to have_received(:bump_freshness)
+          end
+
+          it 'logs all exceptions' do
+            subject.sync rescue nil
+            expect(logger).to have_received(:info).with(
+              'synced-invalid-desired-lrps',
+              error: ignorable_error.name,
+              error_message: ignorable_error.message
+            )
+            expect(logger).to have_received(:error).with(
+              'error-updating-lrp-state',
+              error: non_ignorable_error.name,
+              error_message: non_ignorable_error.message
+            )
+            expect(logger).to have_received(:error).with(
+              'error-updating-lrp-state',
+              error: non_api_error.class.name,
+              error_message: non_api_error.message
+            )
           end
         end
 

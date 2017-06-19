@@ -8,7 +8,7 @@ module VCAP::CloudController
       def desire_app(lrp)
         logger.info('desire.app.request', process_guid: lrp.process_guid)
 
-        handle_diego_errors do
+        handle_diego_errors(lrp.process_guid) do
           response = @client.desire_lrp(lrp)
           logger.info('desire.app.response', process_guid: lrp.process_guid, error: response.error)
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
       def update_app(process_guid, lrp_update)
         logger.info('update.app.request', process_guid: process_guid)
 
-        handle_diego_errors do
+        handle_diego_errors(process_guid) do
           response = @client.update_desired_lrp(process_guid, lrp_update)
           logger.info('update.app.response', process_guid: process_guid, error: response.error)
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
       def get_app(process_guid)
         logger.info('get.app.request', process_guid: process_guid)
 
-        result = handle_diego_errors do
+        result = handle_diego_errors(process_guid) do
           response = @client.desired_lrp_by_process_guid(process_guid)
           logger.info('get.app.response', process_guid: process_guid, error: response.error)
 
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
       def stop_app(process_guid)
         logger.info('stop.app.request', process_guid: process_guid)
-        handle_diego_errors do
+        handle_diego_errors(process_guid) do
           response = @client.remove_desired_lrp(process_guid)
           logger.info('stop.app.response', process_guid: process_guid, error: response.error)
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
       def stop_index(process_guid, index)
         logger.info('stop.index.request', process_guid: process_guid, index: index)
         actual_lrp_key = ::Diego::Bbs::Models::ActualLRPKey.new(process_guid: process_guid, index: index, domain: APP_LRP_DOMAIN)
-        handle_diego_errors do
+        handle_diego_errors(process_guid) do
           response = @client.retire_actual_lrp(actual_lrp_key)
           logger.info('stop.index.response', process_guid: process_guid, index: index, error: response.error)
 
@@ -101,15 +101,17 @@ module VCAP::CloudController
 
       private
 
-      def handle_diego_errors
+      def handle_diego_errors(process_guid=nil)
         begin
           response = yield
         rescue ::Diego::Error => e
-          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', e)
+          error_message = process_guid.nil? ? e : "Process Guid: #{process_guid}: #{e}"
+          raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', error_message)
         end
 
         if response.error
-          raise CloudController::Errors::ApiError.new_from_details('RunnerError', response.error.message)
+          error_message = process_guid.nil? ? response.error.message : "Process Guid: #{process_guid}: #{response.error.message}"
+          raise CloudController::Errors::ApiError.new_from_details('RunnerError', error_message)
         end
 
         response

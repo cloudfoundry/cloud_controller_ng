@@ -158,6 +158,52 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a non-Diego error is raised outside of the workpool' do
+          let(:error) { Sequel::Error.new('Generic Database Error') }
+
+          before do
+            allow(TaskModel).to receive(:where).and_raise(error)
+          end
+
+          it 'does not bump freshness' do
+            expect { subject.sync }.to raise_error(error)
+            expect(bbs_task_client).not_to receive(:bump_freshness)
+          end
+        end
+
+        context 'when cancelling tasks on diego fails multiple times' do
+          let(:bbs_tasks) do
+            [
+              ::Diego::Bbs::Models::Task.new(task_guid: 'task-guid-1', state: ::Diego::Bbs::Models::Task::State::Running),
+              ::Diego::Bbs::Models::Task.new(task_guid: 'task-guid-2', state: ::Diego::Bbs::Models::Task::State::Running),
+            ]
+          end
+
+          let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
+          let(:logger) { double(:logger, info: nil, error: nil) }
+
+          before do
+            allow(bbs_task_client).to receive(:cancel_task).and_raise(error)
+            allow(Steno).to receive(:logger).and_return(logger)
+          end
+
+          it 'does not update freshness' do
+            expect { subject.sync }.to raise_error(TasksSync::BBSFetchError, error.message)
+            expect(bbs_task_client).not_to have_received(:bump_freshness)
+          end
+
+          it 'logs all of the exceptions' do
+            subject.sync rescue nil
+            expect(logger).to have_received(:error).with(
+              'error-cancelling-task',
+              error: error.class.name,
+              error_message: error.message,
+            ).twice
+            expect(logger).to have_received(:info).with('run-task-sync')
+            expect(logger).to have_received(:info).with('sync-failed')
+          end
+        end
+
         context 'correctly syncs in batches' do
           let!(:bbs_tasks) { [] }
 
