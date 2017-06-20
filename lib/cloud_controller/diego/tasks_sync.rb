@@ -59,6 +59,9 @@ module VCAP::CloudController
       rescue CloudController::Errors::ApiError => e
         logger.info('sync-failed')
         raise BBSFetchError.new(e.message)
+      rescue
+        logger.info('sync-failed')
+        raise
       end
 
       private
