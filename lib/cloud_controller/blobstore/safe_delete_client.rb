@@ -32,6 +32,7 @@ module CloudController
         :download_uri,
         :blob,
         :files,
+        :files_for,
         :root_dir
     end
   end

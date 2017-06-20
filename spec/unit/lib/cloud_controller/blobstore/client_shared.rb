@@ -77,4 +77,10 @@ RSpec.shared_examples_for 'a blobstore client' do
       subject.files
     }.not_to raise_error
   end
+
+  it 'returns all the files for a given directory prefix' do
+    expect {
+      subject.files_for('aa')
+    }.not_to raise_error
+  end
 end

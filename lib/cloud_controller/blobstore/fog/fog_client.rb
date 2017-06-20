@@ -125,6 +125,15 @@ module CloudController
         dir.files
       end
 
+      def files_for(prefix)
+        if connection.is_a? Fog::Storage::Local::Real
+          directory = connection.directories.get(File.join(dir.key, prefix || ''))
+          directory ? directory.files : []
+        else
+          connection.directories.get(dir.key, prefix: prefix).files
+        end
+      end
+
       private
 
       def formatted_storage_options
@@ -134,15 +143,6 @@ module CloudController
         encrypt_opt = opts.delete(:encryption)
         opts['x-amz-server-side-encryption'] = encrypt_opt
         opts
-      end
-
-      def files_for(prefix)
-        if connection.is_a? Fog::Storage::Local::Real
-          directory = connection.directories.get(File.join(dir.key, prefix || ''))
-          directory ? directory.files : []
-        else
-          connection.directories.get(dir.key, prefix: prefix).files
-        end
       end
 
       def delete_file(file)

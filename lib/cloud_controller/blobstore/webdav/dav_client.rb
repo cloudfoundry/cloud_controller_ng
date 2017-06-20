@@ -193,6 +193,8 @@ module CloudController
         end
       end
 
+      def files_for(prefix); end
+
       private
 
       def url(key)

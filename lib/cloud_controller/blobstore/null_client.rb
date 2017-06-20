@@ -34,6 +34,8 @@ module CloudController
       end
 
       def files(args=nil); end
+
+      def files_for(args=nil); end
     end
   end
 end
