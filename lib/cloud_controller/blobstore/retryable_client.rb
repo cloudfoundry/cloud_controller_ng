@@ -121,23 +121,14 @@ module CloudController
         end
       end
 
-      def files(args=[])
+      def files_for(prefix, ignored_directory_prefixes=[])
         with_retries(__method__.to_s, {
           args: {
-            value: args
+            prefix: prefix,
+            ignored_directory_prefixes: ignored_directory_prefixes
           }
         }) do
-          @wrapped_client.files(args)
-        end
-      end
-
-      def files_for(args=[])
-        with_retries(__method__.to_s, {
-          args: {
-            value: args
-          }
-        }) do
-          @wrapped_client.files_for(args)
+          @wrapped_client.files_for(prefix, ignored_directory_prefixes)
         end
       end
 

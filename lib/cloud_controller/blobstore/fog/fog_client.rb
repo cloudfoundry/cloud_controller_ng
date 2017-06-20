@@ -121,11 +121,7 @@ module CloudController
         FogBlob.new(f, @cdn) if f
       end
 
-      def files(_ignored_directory_prefixes=nil)
-        dir.files
-      end
-
-      def files_for(prefix)
+      def files_for(prefix, _ignored_directory_prefixes=[])
         if connection.is_a? Fog::Storage::Local::Real
           directory = connection.directories.get(File.join(dir.key, prefix || ''))
           directory ? directory.files : []
@@ -135,6 +131,10 @@ module CloudController
       end
 
       private
+
+      def files
+        dir.files
+      end
 
       def formatted_storage_options
         return {} unless @storage_options && @storage_options[:encryption]

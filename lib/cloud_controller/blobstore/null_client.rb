@@ -33,9 +33,7 @@ module CloudController
         Blob.new
       end
 
-      def files(args=nil); end
-
-      def files_for(args=nil); end
+      def files_for(prefix, ignored_directories=[]); end
     end
   end
 end

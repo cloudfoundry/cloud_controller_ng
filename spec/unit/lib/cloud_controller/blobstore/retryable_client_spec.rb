@@ -196,25 +196,16 @@ module CloudController
           end
         end
 
-        context '#files' do
-          let(:args) { 'args' }
-          before { allow(wrapped_client).to receive(:files).and_raise(RetryableError) }
-
-          it 'retries the operation' do
-            expect { client.files(args) }.to raise_error RetryableError
-
-            expect(wrapped_client).to have_received(:files).with(args).exactly(num_retries).times
-          end
-        end
-
         context '#files_for' do
-          let(:args) { 'args' }
+          let(:prefix) { 'pre' }
+          let(:ignored_directory_prefixes) { ['no'] }
+
           before { allow(wrapped_client).to receive(:files_for).and_raise(RetryableError) }
 
           it 'retries the operation' do
-            expect { client.files_for(args) }.to raise_error RetryableError
+            expect { client.files_for(prefix, ignored_directory_prefixes) }.to raise_error RetryableError
 
-            expect(wrapped_client).to have_received(:files_for).with(args).exactly(num_retries).times
+            expect(wrapped_client).to have_received(:files_for).with(prefix, ignored_directory_prefixes).exactly(num_retries).times
           end
         end
       end

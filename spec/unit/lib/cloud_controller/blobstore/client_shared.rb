@@ -72,12 +72,6 @@ RSpec.shared_examples_for 'a blobstore client' do
     expect(subject.blob(key)).to be_a(CloudController::Blobstore::Blob)
   end
 
-  it 'returns all the files' do
-    expect {
-      subject.files
-    }.not_to raise_error
-  end
-
   it 'returns all the files for a given directory prefix' do
     expect {
       subject.files_for('aa')

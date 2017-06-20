@@ -167,7 +167,7 @@ module CloudController
         raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
-      def files(ignored_directory_prefixes=[])
+      def files_for(prefix, ignored_directory_prefixes=[])
         queue = ['']
         Enumerator.new do |yielder|
           until queue.empty?
@@ -180,6 +180,7 @@ module CloudController
             props = xml.xpath('//D:prop')[1..-1]
             props.each do |prop|
               full_path = get_full_path(path, prop.xpath('D:displayname').first.text)
+              next if prefix && !full_path.start_with?(prefix)
               next if ignored_directory_prefixes.any? && full_path.start_with?(*ignored_directory_prefixes)
 
               if prop.xpath('D:resourcetype').children.empty?
@@ -192,8 +193,6 @@ module CloudController
           end
         end
       end
-
-      def files_for(prefix); end
 
       private
 

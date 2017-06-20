@@ -24,7 +24,6 @@ module CloudController
       :delete_blob,
       :download_uri,
       :blob,
-      :files,
       :files_for,
       :root_dir
     end

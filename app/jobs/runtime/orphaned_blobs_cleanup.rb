@@ -18,34 +18,40 @@ module VCAP::CloudController
             return
           end
 
-          cleanup
+          day_of_week = Time.now.wday
+          cleanup(day_of_week)
         end
 
-        def cleanup
-          logger.info('Started orphaned blobs cleanup job')
+        def cleanup(day_of_week)
+          logger.info("Started orphaned blobs cleanup job for day of week: #{day_of_week}")
+
+          update_existing_orphaned_blobs
 
           number_of_marked_blobs = 0
 
           unique_blobstores.each do |blobstore_config|
             blobstore_type = blobstore_config[:type].to_s
             directory_key  = blobstore_config[:directory_key]
+            blobstore      = CloudController::DependencyLocator.instance.public_send(blobstore_type)
 
-            blobstore = CloudController::DependencyLocator.instance.public_send(blobstore_type)
-            blobstore.files(IGNORED_DIRECTORY_PREFIXES).each do |blob|
-              orphaned_blob = OrphanedBlob.find(blob_key: blob.key, blobstore_type: blobstore_type)
-              if blob_in_use?(blob.key)
-                unorphan_blob(orphaned_blob) unless orphaned_blob.nil?
-                next
+            daily_directory_subset(day_of_week).each do |prefix|
+              blobstore.files_for(prefix).each do |blob|
+                next if blob_in_use?(blob.key)
+
+                orphaned_blob = OrphanedBlob.find(blob_key: blob.key, blobstore_type: blobstore_type)
+                if orphaned_blob.nil?
+                  logger.info("Creating orphaned blob: #{blob.key} from directory_key: #{directory_key}")
+                  OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_type: blobstore_type)
+                  number_of_marked_blobs += 1
+                end
+
+                return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
               end
-
-              create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_type, directory_key)
-
-              number_of_marked_blobs += 1
-              return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
             end
           end
         rescue CloudController::Blobstore::BlobstoreError => e
           logger.error("Failed orphaned blobs cleanup job with BlobstoreError: #{e.message}")
+          raise
         ensure
           delete_orphaned_blobs
           logger.info('Finished orphaned blobs cleanup job')
@@ -97,12 +103,31 @@ module VCAP::CloudController
           @unique_blobstores = unique_blobstores
         end
 
-        def logger
-          @logger ||= Steno.logger('cc.background.orphaned-blobs-cleanup')
+        def update_existing_orphaned_blobs
+          dataset = OrphanedBlob.all
+
+          dataset.each do |orphaned_blob|
+            if blob_in_use?(orphaned_blob.blob_key)
+              unorphan_blob(orphaned_blob)
+              next
+            end
+
+            logger.info("Incrementing dirty count for blob: #{orphaned_blob.blob_key}")
+            orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
+          end
         end
 
-        def config
-          @config ||= Config.config
+        def unorphan_blob(orphaned_blob)
+          logger.info("Un-orphaning previously orphaned blob: #{orphaned_blob.blob_key}")
+          orphaned_blob.delete
+        end
+
+        def daily_directory_subset(day_of_week)
+          # Our blobstore directories are namespaced using hex-values (e.g. 00/6c, ff/56, etc.)
+          directory_subsets = [0x00..0x24, 0x25..0x48, 0x49..0x6c, 0x6d..0x90, 0x91..0xb4, 0xb5..0xd8, 0xd9..0xff].freeze
+
+          directories_to_iterate = directory_subsets[day_of_week]
+          directories_to_iterate.map { |decimal| decimal.to_s(16).rjust(2, '0') }
         end
 
         def blob_in_use?(blob_key)
@@ -114,20 +139,6 @@ module VCAP::CloudController
             DropletModel.find(guid: potential_droplet_guid, droplet_hash: basename).present? ||
             PackageModel.find(guid: basename).present? ||
             Buildpack.find(key: basename).present?
-        end
-
-        def unorphan_blob(blob)
-          blob.delete
-        end
-
-        def create_or_update_orphaned_blob(blob, orphaned_blob, blobstore_type, directory_key)
-          if orphaned_blob.present?
-            logger.info("Incrementing dirty count for blob: #{orphaned_blob.blob_key}")
-            orphaned_blob.update(dirty_count: Sequel.+(:dirty_count, 1))
-          else
-            logger.info("Creating orphaned blob: #{blob.key} from directory_key: #{directory_key}")
-            OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_type: blobstore_type)
-          end
         end
 
         def delete_orphaned_blobs
@@ -156,6 +167,14 @@ module VCAP::CloudController
             raise "Could not find blobstore config matching blobstore type '#{type}': #{unique_blobstores.inspect}"
           end
           blobstore_config[:directory_key]
+        end
+
+        def logger
+          @logger ||= Steno.logger('cc.background.orphaned-blobs-cleanup')
+        end
+
+        def config
+          @config ||= Config.config
         end
       end
     end

@@ -16,13 +16,14 @@ module VCAP::CloudController
       describe '#perform' do
         before do
           allow(job).to receive(:logger).and_return(logger)
+          allow(job).to receive(:cleanup).and_call_original
           TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
         end
 
         context 'when perform_blob_cleanup is enabled' do
           it 'starts the job' do
             job.perform
-            expect(logger).to have_received(:info).with('Started orphaned blobs cleanup job')
+            expect(job).to have_received(:cleanup)
             expect(logger).not_to have_received(:info).with('Skipping OrphanedBlobsCleanup as the `perform_blob_cleanup` manifest property is false')
           end
         end
@@ -34,22 +35,21 @@ module VCAP::CloudController
             job.perform
             expect(logger).to have_received(:info).with('Skipping OrphanedBlobsCleanup as the `perform_blob_cleanup` manifest property is false')
             expect(job).not_to receive(:cleanup)
-            expect(logger).not_to have_received(:info).with('Started orphaned blobs cleanup job')
           end
         end
       end
 
       describe '#cleanup' do
-        let(:droplet_blobstore) { instance_double(CloudController::Blobstore::DavClient, files: droplet_files, root_dir: droplet_root_dir) }
+        let(:droplet_blobstore) { instance_double(CloudController::Blobstore::DavClient, files_for: droplet_files, root_dir: droplet_root_dir) }
         let(:droplet_files) { [] }
         let(:droplet_root_dir) { nil }
-        let(:package_blobstore) { instance_double(CloudController::Blobstore::DavClient, files: package_files, root_dir: package_root_dir) }
+        let(:package_blobstore) { instance_double(CloudController::Blobstore::DavClient, files_for: package_files, root_dir: package_root_dir) }
         let(:package_files) { [] }
         let(:package_root_dir) { nil }
-        let(:buildpack_blobstore) { instance_double(CloudController::Blobstore::FogClient, files: buildpack_files, root_dir: buildpack_root_dir) }
+        let(:buildpack_blobstore) { instance_double(CloudController::Blobstore::FogClient, files_for: buildpack_files, root_dir: buildpack_root_dir) }
         let(:buildpack_files) { [] }
         let(:buildpack_root_dir) { nil }
-        let(:legacy_resources_blobstore) { instance_double(CloudController::Blobstore::FogClient, files: legacy_resource_files, root_dir: legacy_resource_root_dir) }
+        let(:legacy_resources_blobstore) { instance_double(CloudController::Blobstore::FogClient, files_for: legacy_resource_files, root_dir: legacy_resource_root_dir) }
         let(:legacy_resource_files) { [] }
         let(:legacy_resource_root_dir) { nil }
 
@@ -65,6 +65,151 @@ module VCAP::CloudController
           allow(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
           allow(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
           allow(CloudController::DependencyLocator.instance).to receive(:legacy_global_app_bits_cache).and_return(legacy_resources_blobstore)
+
+          allow(job).to receive(:daily_directory_subset).and_return(['00'])
+        end
+
+        describe 'when iterating a blobstore' do
+          before do
+            allow(job).to receive(:daily_directory_subset).and_call_original
+          end
+
+          context 'when there are existing OrphanedBlob candidates in directories that will NOT be iterated over' do
+            let(:blob_to_be_orphaned) { '25/ff/25fffile-to-be-deleted' }
+            let(:pre_existing_orphaned_blob) { '00/00/00file-to-be-deleted' }
+
+            before do
+              allow(buildpack_blobstore).to receive(:files_for).with('25').and_return([double(:blob, key: blob_to_be_orphaned)])
+              OrphanedBlob.create(blob_key: pre_existing_orphaned_blob, dirty_count: 1, blobstore_type: 'legacy_resources_blobstore')
+            end
+
+            it 'increments the count for a previously orphaned blob and performs cleanup as usual' do
+              expect(OrphanedBlob.count).to eq(1)
+              job.cleanup(1)
+              expect(OrphanedBlob.count).to eq(2)
+              expect(OrphanedBlob.find(blob_key: pre_existing_orphaned_blob).dirty_count).to eq(2)
+              expect(OrphanedBlob.find(blob_key: blob_to_be_orphaned).dirty_count).to eq(1)
+            end
+          end
+
+          context 'when the job runs on Sunday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('00').and_return([double(:blob, key: '00/00/0000file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('12').and_return([double(:blob, key: '12/ff/12fffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('24').and_return([double(:blob, key: '24/ff/24fffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the first 36 directory prefixes' do
+              job.cleanup(0)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: '00/00/0000file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '12/ff/12fffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '24/ff/24fffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('25')
+            end
+          end
+
+          context 'when the job runs on Monday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('25').and_return([double(:blob, key: '25/00/2500file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('30').and_return([double(:blob, key: '30/ff/30fffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('48').and_return([double(:blob, key: '48/ff/48fffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the second 36 directory prefixes' do
+              job.cleanup(1)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: '25/00/2500file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '30/ff/30fffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '48/ff/48fffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('49')
+            end
+          end
+
+          context 'when the job runs on Tuesday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('49').and_return([double(:blob, key: '49/00/4900file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('50').and_return([double(:blob, key: '50/ff/50fffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('6c').and_return([double(:blob, key: '6c/ff/6cfffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the third 36 directory prefixes' do
+              job.cleanup(2)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: '49/00/4900file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '50/ff/50fffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '6c/ff/6cfffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('6d')
+            end
+          end
+
+          context 'when the job runs on Wednesday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('6d').and_return([double(:blob, key: '6d/00/6d00file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('6f').and_return([double(:blob, key: '6f/ff/6ffffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('90').and_return([double(:blob, key: '90/ff/90fffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the fourth 36 directory prefixes' do
+              job.cleanup(3)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: '6d/00/6d00file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '6f/ff/6ffffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: '90/ff/90fffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('91')
+            end
+          end
+
+          context 'when the job runs on Thursday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('91').and_return([double(:blob, key: '91/00/9100file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('ac').and_return([double(:blob, key: 'ac/ff/acfffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('b4').and_return([double(:blob, key: 'b4/ff/b4fffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the fifth 36 directory prefixes' do
+              job.cleanup(4)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: '91/00/9100file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: 'ac/ff/acfffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: 'b4/ff/b4fffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('b5')
+            end
+          end
+
+          context 'when the job runs on Friday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('b5').and_return([double(:blob, key: 'b5/00/b500file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('b8').and_return([double(:blob, key: 'b8/ff/b8fffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('d8').and_return([double(:blob, key: 'd8/ff/d8fffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the sixth 36 directory prefixes' do
+              job.cleanup(5)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: 'b5/00/b500file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: 'b8/ff/b8fffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: 'd8/ff/d8fffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('d9')
+            end
+          end
+
+          context 'when the job runs on Saturday' do
+            before do
+              allow(package_blobstore).to receive(:files_for).with('d9').and_return([double(:blob, key: 'd9/00/d900file-to-be-deleted')])
+              allow(droplet_blobstore).to receive(:files_for).with('f1').and_return([double(:blob, key: 'f1/ff/f1fffile-to-be-deleted')])
+              allow(buildpack_blobstore).to receive(:files_for).with('ff').and_return([double(:blob, key: 'ff/ff/fffffile-to-be-deleted')])
+            end
+
+            it 'only checks files in the seventh 36 directory prefixes' do
+              job.cleanup(6)
+              expect(OrphanedBlob.count).to eq(3)
+              expect(OrphanedBlob.where(blob_key: 'd9/00/d900file-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: 'f1/ff/f1fffile-to-be-deleted').count).to eq(1)
+              expect(OrphanedBlob.where(blob_key: 'ff/ff/fffffile-to-be-deleted').count).to eq(1)
+              expect(legacy_resources_blobstore).not_to have_received(:files_for).with('00')
+            end
+          end
         end
 
         describe 'when determining whether a blob is in use' do
@@ -110,10 +255,9 @@ module VCAP::CloudController
             end
 
             it 'will never mark the blob as an orphan' do
-              expect {
-                job.perform
-              }.to_not change { OrphanedBlob.count }
-              expect(droplet_blobstore).to have_received(:files).with(OrphanedBlobsCleanup::IGNORED_DIRECTORY_PREFIXES)
+              expect(OrphanedBlob.count).to eq(0)
+              job.perform
+              expect(OrphanedBlob.count).to eq(0)
             end
           end
         end
@@ -381,13 +525,14 @@ module VCAP::CloudController
         end
 
         context 'when a BlobstoreError occurs' do
+          let(:error) { CloudController::Blobstore::BlobstoreError.new('error') }
           before do
             allow(job).to receive(:logger).and_return(logger)
-            allow(droplet_blobstore).to receive(:files).and_raise(CloudController::Blobstore::BlobstoreError.new('error'))
+            allow(droplet_blobstore).to receive(:files_for).and_raise(error)
           end
 
-          it 'rescues and logs the error' do
-            expect { job.cleanup }.not_to raise_error
+          it 'logs the error and re-raises' do
+            expect { job.perform }.to raise_error(error)
             expect(logger).to have_received(:error).with('Failed orphaned blobs cleanup job with BlobstoreError: error')
           end
         end

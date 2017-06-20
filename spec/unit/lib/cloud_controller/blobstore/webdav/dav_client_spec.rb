@@ -675,7 +675,7 @@ module CloudController
         end
       end
 
-      describe '#files' do
+      describe '#files_for' do
         let(:root_xml_body) do
           <<-XML
             <?xml version="1.0" encoding="utf-8" ?>
@@ -781,7 +781,7 @@ module CloudController
         end
 
         it 'enumerates a web dav blobstore' do
-          blob_keys = client.files.first(2).map(&:key)
+          blob_keys = client.files_for('nested').first(2).map(&:key)
 
           expect(blob_keys).to match_array(%w(nested-dir-1/some-blob nested-dir-2/some-other-blob))
         end
@@ -816,8 +816,60 @@ module CloudController
           end
 
           it 'does not enumerate ignored directories' do
-            blob_keys = client.files(%w(some-directory ignored-directory))
+            blob_keys = client.files_for('', %w(some-directory ignored-directory))
             expect(blob_keys.first).to be(nil)
+          end
+        end
+
+        context 'when provided a prefix to enumerate' do
+          let(:root_xml_body) do
+            <<-XML
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:multistatus xmlns:D="DAV:">
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>always-ignore-first-obj</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>ab-directory</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+              <D:response>
+                <D:propstat>
+                  <D:prop>
+                    <D:displayname>cd-directory</D:displayname>
+                    <D:resourcetype>
+                      <D:collection/>
+                    </D:resourcetype>
+                  </D:prop>
+                </D:propstat>
+              </D:response>
+            </D:multistatus>
+            XML
+          end
+
+          before do
+            allow(httpclient).to receive(:request).
+              with(:propfind, 'http://localhost/admin/droplets/ab-directory', nil, nil, {}).
+              and_return(fake_nested_response)
+          end
+
+          it 'only enumerates directories that start with the prefix' do
+            blob_keys = client.files_for('ab').map(&:key)
+
+            expect(blob_keys).to match_array(%w(ab-directory/some-blob))
           end
         end
       end
