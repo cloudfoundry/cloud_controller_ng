@@ -15,6 +15,7 @@ RSpec.describe 'Broker API Versions' do
       'broker_api_v2.9_spec.rb' => '9de8ebbdc0e2b60b791c6f7db4e1c8ee',
       'broker_api_v2.10_spec.rb' => '27e81c4c540e39a4e4eac70c8efb14ba',
       'broker_api_v2.11_spec.rb' => '99e61dc50ceb635b09b3bd16901a4fa6',
+      'broker_api_v2.12_spec.rb' => 'b9626f09abf20d9d1d0e71ef1ac0df70',
     }
   end
   let(:digester) { Digester.new(algorithm: Digest::MD5) }
