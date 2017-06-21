@@ -3032,7 +3032,8 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
 </code></pre>
 
 <h4 id="definition">Definition</h4>
@@ -4355,7 +4356,7 @@ environment variables listed on the source droplet.</p>
 <tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
-<td>State of the job. Valid values are <code class="prettyprint">PROCESSING</code>, <code class="prettyprint">COMPLETE,</code>, or<code class="prettyprint">FAILED</code>.</td>
+<td>State of the job. Valid values are <code class="prettyprint">PROCESSING</code>, <code class="prettyprint">COMPLETE</code>, or<code class="prettyprint">FAILED</code>.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -7074,11 +7075,15 @@ the request in that case. Clients may need to follow the redirect without includ
     "type": "app",
     "relationships": {
       "app": {
-        "guid": "74f7c078-0934-470f-9883-4fddss5b8f13"
+        "data": {
+          "guid": "74f7c078-0934-470f-9883-4fddss5b8f13"
+        }
       },
       "service_instance": {
-        "guid": "8bfe4c1b-9e18-45b1-83be-124163f31f9e"
-      },
+        "data": {
+          "guid": "8bfe4c1b-9e18-45b1-83be-124163f31f9e"
+        }
+      }
     },
     "data": {
       "parameters": {
