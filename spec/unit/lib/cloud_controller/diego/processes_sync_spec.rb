@@ -158,6 +158,35 @@ module VCAP::CloudController
           end
         end
 
+        context 'when diego already contains the LRP' do
+          let(:good_process) { ProcessModel.make(:diego_runnable) }
+          let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'the requested resource already exists') }
+          let(:indexed_by_thing) { instance_double(Hash) }
+          let(:existing_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: "#{good_process.guid}-#{good_process.version}") }
+          let(:logger) { double(:logger, info: nil, error: nil) }
+          let(:workpool) { double(:workpool, submit: nil, exceptions: nil, drain: nil) }
+
+          before do
+            allow(existing_lrp).to receive(:nil?).and_return(true)
+            allow(bbs_apps_client).to receive(:fetch_scheduling_infos).and_return(indexed_by_thing)
+            allow(indexed_by_thing).to receive(:index_by).and_return({ existing_lrp.process_guid => existing_lrp })
+            allow(Steno).to receive(:logger).and_return(logger)
+            allow(WorkPool).to receive(:new).and_return(workpool)
+            allow(workpool).to receive(:submit)
+            allow(workpool).to receive(:exceptions).and_return([error])
+          end
+
+          it 'bumps freshness, ignoring the error' do
+            subject.sync
+            expect(workpool).to have_received(:submit)
+            expect(bbs_apps_client).to have_received(:bump_freshness)
+            expect(logger).to_not have_received(:error)
+            expect(logger).to have_received(:info).with(
+              'ignore-existing-resource', error: error.name, error_message: error.message
+            )
+          end
+        end
+
         context 'when CC does not know about a LRP' do
           let(:scheduling_infos) { [deleted_lrp_scheduling_info] }
           let(:deleted_lrp_scheduling_info) do

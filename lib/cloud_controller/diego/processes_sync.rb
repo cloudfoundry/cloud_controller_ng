@@ -56,6 +56,8 @@ module VCAP::CloudController
           error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
           if error_name == 'RunnerInvalidRequest'
             logger.info('synced-invalid-desired-lrps', error: error_name, error_message: e.message)
+          elsif error_name == 'RunnerError' && e.message['the requested resource already exists']
+            logger.info('ignore-existing-resource', error: error_name, error_message: e.message)
           else
             logger.error('error-updating-lrp-state', error: error_name, error_message: e.message)
             first_exception ||= e
