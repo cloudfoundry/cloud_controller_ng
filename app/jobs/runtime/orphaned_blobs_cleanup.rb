@@ -6,7 +6,7 @@ module VCAP::CloudController
     module Runtime
       class OrphanedBlobsCleanup < VCAP::CloudController::Jobs::CCJob
         DIRTY_THRESHOLD            = 3
-        NUMBER_OF_BLOBS_TO_DELETE  = 100
+        NUMBER_OF_BLOBS_TO_DELETE  = 10000
         IGNORED_DIRECTORY_PREFIXES = [
           CloudController::DependencyLocator::BUILDPACK_CACHE_DIR,
           CloudController::DependencyLocator::RESOURCE_POOL_DIR,
@@ -36,16 +36,16 @@ module VCAP::CloudController
 
             daily_directory_subset(day_of_week).each do |prefix|
               blobstore.files_for(prefix).each do |blob|
-                next if blob_in_use?(blob.key)
+                next if blob_in_use?(blob.key) || OrphanedBlob.find(blob_key: blob.key, blobstore_type: blobstore_type)
 
-                orphaned_blob = OrphanedBlob.find(blob_key: blob.key, blobstore_type: blobstore_type)
-                if orphaned_blob.nil?
-                  logger.info("Creating orphaned blob: #{blob.key} from directory_key: #{directory_key}")
-                  OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_type: blobstore_type)
-                  number_of_marked_blobs += 1
+                logger.info("Creating orphaned blob: #{blob.key} from directory_key: #{directory_key}")
+                OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_type: blobstore_type)
+                number_of_marked_blobs += 1
+
+                if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
+                  logger.info("Finished orphaned blobs cleanup job early after marking #{number_of_marked_blobs} blobs")
+                  return 'finished-early'
                 end
-
-                return 'finished-early' if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
               end
             end
           end

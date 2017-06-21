@@ -13,11 +13,15 @@ module VCAP::CloudController
         expect(job.max_attempts).to eq 1
       end
 
+      before do
+        TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
+        stub_const('VCAP::CloudController::Jobs::Runtime::OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE', 20)
+      end
+
       describe '#perform' do
         before do
           allow(job).to receive(:logger).and_return(logger)
           allow(job).to receive(:cleanup).and_call_original
-          TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
         end
 
         context 'when perform_blob_cleanup is enabled' do
@@ -54,8 +58,6 @@ module VCAP::CloudController
         let(:legacy_resource_root_dir) { nil }
 
         before do
-          TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
-
           TestConfig.config[:packages][:app_package_directory_key]   = 'packages'
           TestConfig.config[:droplets][:droplet_directory_key]       = 'droplets'
           TestConfig.config[:buildpacks][:buildpack_directory_key]   = 'buildpacks'
