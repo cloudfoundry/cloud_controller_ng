@@ -962,6 +962,18 @@ module VCAP::CloudController
             )
             expect(r.uri).to eq("www.#{domain.name}/path")
           end
+          context 'that has a port' do
+            it 'should return the fqdn with the path and port' do
+              r = Route.make(
+                host: 'www',
+                domain: domain,
+                space: space,
+                path: '/path'
+              )
+              r.port = 1041
+              expect(r.uri).to eq("www.#{domain.name}/path:1041")
+            end
+          end
         end
 
         context 'for a nil path' do

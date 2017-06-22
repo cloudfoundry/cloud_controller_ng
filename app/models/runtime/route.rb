@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def uri
-      "#{fqdn}#{path}"
+      "#{fqdn}#{path}#{":#{port}" if !port.nil?}"
     end
 
     def as_summary_json
