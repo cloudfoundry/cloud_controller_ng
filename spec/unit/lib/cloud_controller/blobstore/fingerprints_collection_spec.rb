@@ -71,7 +71,7 @@ module CloudController
 
           context 'when mode is provided' do
             let(:unpresented_fingerprints) { [
-              { 'fn' => 'path/to/file', 'size' => 'my_filesize', 'sha1' => 'mysha', 'mode' => mode }
+              { 'fn' => 'path/to/mode-modified-file', 'size' => 'my_filesize', 'sha1' => 'mysha', 'mode' => mode }
             ]
             }
             let(:mode) { '0653' }
@@ -102,7 +102,7 @@ module CloudController
                     fingerprint
                   }.to raise_error do |error|
                     expect(error.name).to eq 'AppResourcesFileModeInvalid'
-                    expect(error.message).to eq "The resource file mode is invalid: File mode '144' is invalid. Minimum file mode is '0600'"
+                    expect(error.message).to eq "The resource file mode is invalid: File mode '144' with path 'path/to/mode-modified-file' is invalid. Minimum file mode is '0600'"
                     expect(error.response_code).to eq 400
                   end
                 end

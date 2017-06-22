@@ -17,7 +17,7 @@ module CloudController
             'fn' => validate_path(fingerprint['fn']),
             'size' => fingerprint['size'],
             'sha1' => fingerprint['sha1'],
-            'mode' => parse_mode(fingerprint['mode'])
+            'mode' => parse_mode(fingerprint['mode'], fingerprint['fn'])
           }
         end
       end
@@ -36,11 +36,11 @@ module CloudController
 
       private
 
-      def parse_mode(raw_mode)
+      def parse_mode(raw_mode, filename)
         mode = raw_mode ? raw_mode.to_i(8) : DEFAULT_FILE_MODE
         unless (mode & 0600) == 0600
           raise CloudController::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid',
-            "File mode '#{raw_mode}' is invalid. Minimum file mode is '0600'")
+            "File mode '#{raw_mode}' with path '#{filename}' is invalid. Minimum file mode is '0600'")
         end
         mode
       end
