@@ -77,20 +77,33 @@ module VCAP::CloudController
           end
 
           context 'when there are existing OrphanedBlob candidates in directories that will NOT be iterated over' do
-            let(:blob_to_be_orphaned) { '25/ff/25fffile-to-be-deleted' }
-            let(:pre_existing_orphaned_blob) { '00/00/00file-to-be-deleted' }
+            let!(:existing_orphaned_blob) { OrphanedBlob.create(blob_key: '00/00/0000file-to-be-updated', dirty_count: 1, blobstore_type: 'buildpack_blobstore') }
 
             before do
-              allow(buildpack_blobstore).to receive(:files_for).with('25').and_return([double(:blob, key: blob_to_be_orphaned)])
-              OrphanedBlob.create(blob_key: pre_existing_orphaned_blob, dirty_count: 1, blobstore_type: 'legacy_resources_blobstore')
+              allow(buildpack_blobstore).to receive(:files_for).with('25').and_return([double(:blob, key: '25/ff/25ffnew-file-found')])
             end
 
             it 'increments the count for a previously orphaned blob and performs cleanup as usual' do
               expect(OrphanedBlob.count).to eq(1)
               job.cleanup(1)
               expect(OrphanedBlob.count).to eq(2)
-              expect(OrphanedBlob.find(blob_key: pre_existing_orphaned_blob).dirty_count).to eq(2)
-              expect(OrphanedBlob.find(blob_key: blob_to_be_orphaned).dirty_count).to eq(1)
+              expect(OrphanedBlob.find(blob_key: '00/00/0000file-to-be-updated').dirty_count).to eq(2)
+              expect(OrphanedBlob.find(blob_key: '25/ff/25ffnew-file-found').dirty_count).to eq(1)
+            end
+
+            context 'when there are more than "NUMBER_OF_BLOBS_TO_DELETE" blobs to update' do
+              before do
+                OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE.times do |i|
+                  OrphanedBlob.create(blob_key: "so/me/older-blobstore-file-#{i}", dirty_count: 2, blobstore_type: 'package_blobstore')
+                end
+              end
+
+              it 'only updates the oldest "NUMBER_OF_BLOBS_TO_DELETE" number of blobs' do
+                expect(OrphanedBlob.count).to eq(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE + 1)
+                job.perform
+                expect(OrphanedBlob.count).to eq(1)
+                expect(existing_orphaned_blob.reload.dirty_count).to eq(1)
+              end
             end
           end
 

@@ -104,7 +104,7 @@ module VCAP::CloudController
         end
 
         def update_existing_orphaned_blobs
-          dataset = OrphanedBlob.all
+          dataset = OrphanedBlob.order(Sequel.desc(:dirty_count)).limit(NUMBER_OF_BLOBS_TO_DELETE)
 
           dataset.each do |orphaned_blob|
             if blob_in_use?(orphaned_blob.blob_key)
