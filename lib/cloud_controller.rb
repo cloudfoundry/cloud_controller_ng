@@ -69,7 +69,6 @@ require 'cloud_controller/url_secret_obfuscator'
 
 require 'cloud_controller/legacy_api/legacy_api_base'
 require 'cloud_controller/legacy_api/legacy_info'
-require 'cloud_controller/legacy_api/legacy_bulk'
 
 require 'cloud_controller/resource_pool'
 
