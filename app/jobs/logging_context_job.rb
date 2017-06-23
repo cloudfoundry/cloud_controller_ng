@@ -12,6 +12,7 @@ module VCAP::CloudController
 
       def perform
         with_request_id_set do
+          logger.info("about to run job #{wrapped_handler.inspect}")
           super
         end
       rescue CloudController::Blobstore::BlobstoreError => e

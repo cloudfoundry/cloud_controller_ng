@@ -38,6 +38,10 @@ module VCAP::CloudController
       def display_name
         handler.respond_to?(:display_name) ? handler.display_name : handler.class.name
       end
+
+      def wrapped_handler
+        handler.respond_to?(:wrapped_handler) ? handler.wrapped_handler : handler
+      end
     end
   end
 end

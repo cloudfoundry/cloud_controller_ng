@@ -3,31 +3,41 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs
     RSpec.describe LoggingContextJob do
-      subject(:exception_catching_job) do
+      subject(:logging_context_job) do
         LoggingContextJob.new(handler, request_id)
       end
       let(:request_id) { 'abc123' }
+      let(:background_logger) { instance_double(Steno::Logger).as_null_object }
 
       let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
 
+      before do
+        allow(Steno).to receive(:logger).and_return(background_logger)
+      end
+
       context '#perform' do
         it 'delegates to the handler' do
-          expect(exception_catching_job.perform).to eq('fake-perform')
+          expect(logging_context_job.perform).to eq('fake-perform')
+        end
+
+        it 'logs its parameters' do
+          logging_context_job.perform
+          expect(background_logger).to have_received(:info).with("about to run job #{handler.inspect}")
         end
 
         it "sets the thread-local VCAP Request ID during execution of the wrapped job's perform method" do
-          allow(handler).to receive(:perform) do
+          expect(handler).to receive(:perform) do
             expect(::VCAP::Request.current_id).to eq request_id
           end
 
-          exception_catching_job.perform
+          logging_context_job.perform
         end
 
         it "restores the original VCAP Request ID after execution of the wrapped job's perform method" do
-          random_request_id = SecureRandom.uuid
+          random_request_id          = SecureRandom.uuid
           ::VCAP::Request.current_id = random_request_id
 
-          exception_catching_job.perform
+          logging_context_job.perform
 
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
@@ -37,10 +47,10 @@ module VCAP::CloudController
             raise 'runtime test exception'
           end
 
-          random_request_id = SecureRandom.uuid
+          random_request_id          = SecureRandom.uuid
           ::VCAP::Request.current_id = random_request_id
 
-          expect { exception_catching_job.perform }.to raise_error 'runtime test exception'
+          expect { logging_context_job.perform }.to raise_error 'runtime test exception'
 
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
@@ -50,25 +60,25 @@ module VCAP::CloudController
             allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
 
             expect {
-              exception_catching_job.perform
+              logging_context_job.perform
             }.to raise_error(CloudController::Errors::ApiError, /three retries/)
           end
         end
+
       end
 
       context '#max_attempts' do
         it 'delegates to the handler' do
-          expect(exception_catching_job.max_attempts).to eq(1)
+          expect(logging_context_job.max_attempts).to eq(1)
         end
       end
 
       context '#error(job, exception)' do
         let(:job) { double('Job', guid: 'gregid').as_null_object }
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
-        let(:background_logger) { instance_double(Steno::Logger).as_null_object }
+
 
         before do
-          allow(Steno).to receive(:logger).and_return(background_logger)
           allow(ErrorPresenter).to receive(:new).with('exception').and_return(error_presenter)
           allow(error_presenter).to receive(:log_message).and_return('log message')
         end
@@ -78,7 +88,7 @@ module VCAP::CloudController
           expect(job).to receive(:cf_api_error=).with('marshaled hash')
           expect(job).to receive(:save)
 
-          exception_catching_job.error(job, 'exception')
+          logging_context_job.error(job, 'exception')
         end
 
         it 'calls the wrapped jobs error method' do
@@ -86,7 +96,7 @@ module VCAP::CloudController
           expect(handler).to receive(:error).with(job, 'exception')
           expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
           expect(background_logger).to receive(:info).with('log message', job_guid: 'gregid')
-          exception_catching_job.error(job, 'exception')
+          logging_context_job.error(job, 'exception')
         end
 
         it 'sets the thread-local VCAP Request ID while logging method' do
@@ -94,14 +104,14 @@ module VCAP::CloudController
             expect(::VCAP::Request.current_id).to eq request_id
           end
 
-          exception_catching_job.error(job, 'exception')
+          logging_context_job.error(job, 'exception')
         end
 
         it "restores the original VCAP Request ID after execution of the wrapped job's perform method" do
-          random_request_id = SecureRandom.uuid
+          random_request_id          = SecureRandom.uuid
           ::VCAP::Request.current_id = random_request_id
 
-          exception_catching_job.error(job, 'exception')
+          logging_context_job.error(job, 'exception')
 
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
@@ -111,10 +121,10 @@ module VCAP::CloudController
             raise 'runtime test exception'
           end
 
-          random_request_id = SecureRandom.uuid
+          random_request_id          = SecureRandom.uuid
           ::VCAP::Request.current_id = random_request_id
 
-          expect { exception_catching_job.error(job, 'exception') }.to raise_error 'runtime test exception'
+          expect { logging_context_job.error(job, 'exception') }.to raise_error 'runtime test exception'
 
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
@@ -127,7 +137,7 @@ module VCAP::CloudController
           it 'logs the unsanitized information' do
             expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
             expect(background_logger).to receive(:info).with('log message', job_guid: 'gregid')
-            exception_catching_job.error(job, 'exception')
+            logging_context_job.error(job, 'exception')
           end
         end
 
@@ -139,7 +149,7 @@ module VCAP::CloudController
           it 'logs the unsanitized information as an error' do
             expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
             expect(background_logger).to receive(:error).with('log message', job_guid: 'gregid')
-            exception_catching_job.error(job, 'exception')
+            logging_context_job.error(job, 'exception')
           end
         end
 
@@ -150,7 +160,7 @@ module VCAP::CloudController
             end
 
             it 'deprioritizes the job to priority 1' do
-              exception_catching_job.error(job, 'exception')
+              logging_context_job.error(job, 'exception')
 
               expect(job).to have_received(:priority=).with(1).ordered
               expect(job).to have_received(:save).ordered
@@ -163,7 +173,7 @@ module VCAP::CloudController
             end
 
             it 'doubles the job priority' do
-              exception_catching_job.error(job, 'exception')
+              logging_context_job.error(job, 'exception')
 
               expect(job).to have_received(:priority=).with(34).ordered
               expect(job).to have_received(:save).ordered
@@ -174,9 +184,9 @@ module VCAP::CloudController
 
       describe '#reschedule_at' do
         it 'delegates to the handler' do
-          time = Time.now
+          time     = Time.now
           attempts = 5
-          expect(exception_catching_job.reschedule_at(time, attempts)).to eq(handler.reschedule_at(time, attempts))
+          expect(logging_context_job.reschedule_at(time, attempts)).to eq(handler.reschedule_at(time, attempts))
         end
       end
     end

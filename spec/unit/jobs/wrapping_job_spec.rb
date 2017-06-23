@@ -100,6 +100,27 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#wrapped_handler' do
+        subject(:wrapping_job) { WrappingJob.new(handler) }
+
+        context 'when handler is a non-WrappedJob' do
+          let(:handler) { double(:handler) }
+
+          it 'returns the handler' do
+            expect(wrapping_job.wrapped_handler).to eq(handler)
+          end
+        end
+
+        context 'when handler is another WrappedJob' do
+          let(:handler) { WrappingJob.new(wrapped_handler) }
+          let(:wrapped_handler) { double(:handler) }
+
+          it 'returns the leaf handler' do
+            expect(wrapping_job.wrapped_handler).to eq(wrapped_handler)
+          end
+        end
+      end
     end
   end
 end
