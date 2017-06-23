@@ -215,7 +215,7 @@ module VCAP::CloudController
                 it 'fails to upload' do
                   make_request
                   expect(last_response.status).to eq(400)
-                  expect(JSON.parse(last_response.body)['description']).to include("'377' is invalid")
+                  expect(JSON.parse(last_response.body)['description']).to include("'377' with path 'lol' is invalid")
 
                   app_obj.refresh
                   expect(app_obj.package_hash).to be_nil
@@ -229,7 +229,7 @@ module VCAP::CloudController
                 it 'fails to upload' do
                   make_request
                   expect(last_response.status).to eq(400)
-                  expect(JSON.parse(last_response.body)['description']).to include("'577' is invalid")
+                  expect(JSON.parse(last_response.body)['description']).to include("'577' with path 'lol' is invalid")
 
                   app_obj.refresh
                   expect(app_obj.package_hash).to be_nil
