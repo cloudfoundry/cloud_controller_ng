@@ -80,6 +80,26 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#display_name' do
+        subject(:wrapping_job) { WrappingJob.new(handler) }
+
+        context 'when the handler implements #display_name' do
+          let(:handler) { double(display_name: 'bob') }
+
+          it 'delegates to the handler' do
+            expect(wrapping_job.display_name).to eq(handler.display_name)
+          end
+        end
+
+        context 'when the handler does not implement #display_name' do
+          let(:handler) { Object.new }
+
+          it 'returns the handler class name' do
+            expect(wrapping_job.display_name).to eq('Object')
+          end
+        end
+      end
     end
   end
 end
