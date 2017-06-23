@@ -119,7 +119,6 @@ module VCAP::CloudController
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
 
-
         context 'when the error is a client error' do
           before do
             allow(error_presenter).to receive(:client_error?).and_return(true)

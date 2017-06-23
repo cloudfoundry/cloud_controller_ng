@@ -58,13 +58,10 @@ module VCAP::CloudController
       def with_request_id_set(&block)
         current_request_id         = ::VCAP::Request.current_id
         ::VCAP::Request.current_id = @request_id
-        block.call
+        yield
       ensure
         ::VCAP::Request.current_id = current_request_id
       end
     end
   end
 end
-
-
-
