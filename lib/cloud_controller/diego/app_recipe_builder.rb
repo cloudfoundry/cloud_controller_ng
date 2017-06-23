@@ -214,20 +214,17 @@ module VCAP::CloudController
       end
 
       def build_check(port, index)
-        timeout = health_check_timeout_in_seconds * 1000
         if process.health_check_type == 'http' && index == 0
           ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
               path:               process.health_check_http_endpoint,
               port:               port,
-              request_timeout_ms: timeout,
             )
           )
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port:               port,
-              connect_timeout_ms: timeout,
             )
           )
         end
