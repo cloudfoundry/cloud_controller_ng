@@ -64,7 +64,6 @@ module VCAP::CloudController
             }.to raise_error(CloudController::Errors::ApiError, /three retries/)
           end
         end
-
       end
 
       context '#max_attempts' do
@@ -76,7 +75,6 @@ module VCAP::CloudController
       context '#error(job, exception)' do
         let(:job) { double('Job', guid: 'gregid').as_null_object }
         let(:error_presenter) { instance_double(ErrorPresenter, to_hash: 'sanitized exception hash').as_null_object }
-
 
         before do
           allow(ErrorPresenter).to receive(:new).with('exception').and_return(error_presenter)
