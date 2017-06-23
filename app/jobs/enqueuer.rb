@@ -12,7 +12,10 @@ module VCAP::CloudController
 
       def enqueue
         request_id = ::VCAP::Request.current_id
-        Delayed::Job.enqueue(ExceptionCatchingJob.new(RequestJob.new(TimeoutJob.new(@job, job_timeout), request_id)), @opts)
+        Delayed::Job.enqueue(
+          LoggingContextJob.new(TimeoutJob.new(@job, job_timeout), request_id),
+          @opts
+        )
       end
 
       def run_inline

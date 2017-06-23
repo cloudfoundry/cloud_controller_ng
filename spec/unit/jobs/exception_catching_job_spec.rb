@@ -2,16 +2,47 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    RSpec.describe ExceptionCatchingJob do
+    RSpec.describe LoggingContextJob do
       subject(:exception_catching_job) do
-        ExceptionCatchingJob.new(handler)
+        LoggingContextJob.new(handler, request_id)
       end
+      let(:request_id) { 'abc123' }
 
       let(:handler) { double('Handler', error: nil, perform: 'fake-perform', max_attempts: 1, reschedule_at: Time.now) }
 
       context '#perform' do
         it 'delegates to the handler' do
           expect(exception_catching_job.perform).to eq('fake-perform')
+        end
+
+        it "sets the thread-local VCAP Request ID during execution of the wrapped job's perform method" do
+          allow(handler).to receive(:perform) do
+            expect(::VCAP::Request.current_id).to eq request_id
+          end
+
+          exception_catching_job.perform
+        end
+
+        it "restores the original VCAP Request ID after execution of the wrapped job's perform method" do
+          random_request_id = SecureRandom.uuid
+          ::VCAP::Request.current_id = random_request_id
+
+          exception_catching_job.perform
+
+          expect(::VCAP::Request.current_id).to eq random_request_id
+        end
+
+        it "restores the original VCAP Request ID after exception within execution of the wrapped job's perform method" do
+          allow(handler).to receive(:perform) do
+            raise 'runtime test exception'
+          end
+
+          random_request_id = SecureRandom.uuid
+          ::VCAP::Request.current_id = random_request_id
+
+          expect { exception_catching_job.perform }.to raise_error 'runtime test exception'
+
+          expect(::VCAP::Request.current_id).to eq random_request_id
         end
 
         context 'when a BlobstoreError occurs' do
@@ -42,6 +73,53 @@ module VCAP::CloudController
           allow(error_presenter).to receive(:log_message).and_return('log message')
         end
 
+        it 'saves the exception on the job as cf_api_error' do
+          expect(YAML).to receive(:dump).with('sanitized exception hash').and_return('marshaled hash')
+          expect(job).to receive(:cf_api_error=).with('marshaled hash')
+          expect(job).to receive(:save)
+
+          exception_catching_job.error(job, 'exception')
+        end
+
+        it 'calls the wrapped jobs error method' do
+          allow(error_presenter).to receive(:client_error?).and_return(true)
+          expect(handler).to receive(:error).with(job, 'exception')
+          expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
+          expect(background_logger).to receive(:info).with('log message', job_guid: 'gregid')
+          exception_catching_job.error(job, 'exception')
+        end
+
+        it 'sets the thread-local VCAP Request ID while logging method' do
+          expect(background_logger).to receive(:info) do
+            expect(::VCAP::Request.current_id).to eq request_id
+          end
+
+          exception_catching_job.error(job, 'exception')
+        end
+
+        it "restores the original VCAP Request ID after execution of the wrapped job's perform method" do
+          random_request_id = SecureRandom.uuid
+          ::VCAP::Request.current_id = random_request_id
+
+          exception_catching_job.error(job, 'exception')
+
+          expect(::VCAP::Request.current_id).to eq random_request_id
+        end
+
+        it "restores the original VCAP Request ID after exception within execution of the wrapped job's perform method" do
+          allow(handler).to receive(:error) do
+            raise 'runtime test exception'
+          end
+
+          random_request_id = SecureRandom.uuid
+          ::VCAP::Request.current_id = random_request_id
+
+          expect { exception_catching_job.error(job, 'exception') }.to raise_error 'runtime test exception'
+
+          expect(::VCAP::Request.current_id).to eq random_request_id
+        end
+
+
         context 'when the error is a client error' do
           before do
             allow(error_presenter).to receive(:client_error?).and_return(true)
@@ -64,22 +142,6 @@ module VCAP::CloudController
             expect(background_logger).to receive(:error).with('log message', job_guid: 'gregid')
             exception_catching_job.error(job, 'exception')
           end
-        end
-
-        it 'saves the exception on the job as cf_api_error' do
-          expect(YAML).to receive(:dump).with('sanitized exception hash').and_return('marshaled hash')
-          expect(job).to receive(:cf_api_error=).with('marshaled hash')
-          expect(job).to receive(:save)
-
-          exception_catching_job.error(job, 'exception')
-        end
-
-        it 'calls the wrapped jobs error method' do
-          allow(error_presenter).to receive(:client_error?).and_return(true)
-          expect(handler).to receive(:error).with(job, 'exception')
-          expect(Steno).to receive(:logger).with('cc.background').and_return(background_logger)
-          expect(background_logger).to receive(:info).with('log message', job_guid: 'gregid')
-          exception_catching_job.error(job, 'exception')
         end
 
         describe 'job priority' do

@@ -63,7 +63,7 @@ module VCAP::CloudController
 
       job = Delayed::Job.last
       expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
-      inner_job = job.payload_object.handler.job.job
+      inner_job = job.payload_object.handler.handler
       expect(inner_job.droplet_guid).to eq(droplet.guid)
     end
 
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
       job = Delayed::Job.last
       expect(job).to be_a_fully_wrapped_job_of VCAP::CloudController::Jobs::V3::DropletUpload
-      inner_job = job.payload_object.handler.job.job
+      inner_job = job.payload_object.handler.handler
       expect(inner_job.droplet_guid).to eq(droplet.guid)
     end
   end

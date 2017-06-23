@@ -110,7 +110,7 @@ module VCAP::CloudController
           job = Delayed::Job.last
           expect(job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
 
-          inner_job = job.payload_object.handler.job.job
+          inner_job = job.payload_object.handler.handler
           expect(inner_job.name).to eq 'service-instance-state-fetch'
           expect(inner_job.client_attrs).to eq service_instance.client.attrs
           expect(inner_job.service_instance_guid).to eq service_instance.guid

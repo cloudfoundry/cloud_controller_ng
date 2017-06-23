@@ -2,9 +2,18 @@ require 'presenters/error_presenter'
 
 module VCAP::CloudController
   module Jobs
-    class ExceptionCatchingJob < WrappingJob
+    class LoggingContextJob < WrappingJob
+      attr_reader :request_id
+
+      def initialize(handler, request_id)
+        super(handler)
+        @request_id = request_id
+      end
+
       def perform
-        super
+        with_request_id_set do
+          super
+        end
       rescue CloudController::Blobstore::BlobstoreError => e
         raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
       end
@@ -25,10 +34,12 @@ module VCAP::CloudController
       end
 
       def log_error(error_presenter, job)
-        if error_presenter.client_error?
-          logger.info(error_presenter.log_message, job_guid: job.guid)
-        else
-          logger.error(error_presenter.log_message, job_guid: job.guid)
+        with_request_id_set do
+          if error_presenter.client_error?
+            logger.info(error_presenter.log_message, job_guid: job.guid)
+          else
+            logger.error(error_presenter.log_message, job_guid: job.guid)
+          end
         end
       end
 
@@ -43,6 +54,17 @@ module VCAP::CloudController
       def logger
         Steno.logger('cc.background')
       end
+
+      def with_request_id_set(&block)
+        current_request_id         = ::VCAP::Request.current_id
+        ::VCAP::Request.current_id = @request_id
+        block.call
+      ensure
+        ::VCAP::Request.current_id = current_request_id
+      end
     end
   end
 end
+
+
+
