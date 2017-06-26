@@ -18,8 +18,8 @@ module VCAP::CloudController
 
         before do
           allow(CloudController::DependencyLocator.instance).to receive(:config).and_return(config)
-          allow(Diego::ProcessesSync).to receive(:new).with(config).and_return(processes_sync)
-          allow(Diego::TasksSync).to receive(:new).with(config).and_return(tasks_sync)
+          allow(Diego::ProcessesSync).to receive(:new).with(config: config).and_return(processes_sync)
+          allow(Diego::TasksSync).to receive(:new).with(config: config).and_return(tasks_sync)
 
           allow(processes_sync).to receive(:sync)
           allow(tasks_sync).to receive(:sync)

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     RSpec.describe ProcessesSync do
-      subject { ProcessesSync.new(config) }
+      subject { ProcessesSync.new(config: config, statsd_updater: statsd_updater) }
       let(:config) { double(:config) }
 
       let(:bbs_apps_client) { instance_double(BbsAppsClient) }
@@ -12,6 +12,7 @@ module VCAP::CloudController
       let!(:missing_process_no_droplet) { ProcessModel.make(:process) }
 
       let(:scheduling_infos) { [] }
+      let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater, update_synced_invalid_lrps: nil) }
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
@@ -345,6 +346,32 @@ module VCAP::CloudController
             expect(bbs_apps_client).not_to have_received(:desire_app)
             expect(bbs_apps_client).not_to have_received(:update_app)
             expect(bbs_apps_client).not_to have_received(:stop_app)
+          end
+        end
+
+        context 'when logging invalid-lrp-request count to statsd' do
+          let!(:missing_process) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process3) { ProcessModel.make(:diego_runnable) }
+          let(:invalid_request_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
+          let(:other_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'bad error!') }
+
+          before do
+            missing_lrp_recipe_builder  = instance_double(AppRecipeBuilder)
+            missing_lrp_recipe_builder2 = instance_double(AppRecipeBuilder)
+            missing_lrp_recipe_builder3 = instance_double(AppRecipeBuilder)
+            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process).and_return(missing_lrp_recipe_builder)
+            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process2).and_return(missing_lrp_recipe_builder2)
+            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process3).and_return(missing_lrp_recipe_builder3)
+            allow(missing_lrp_recipe_builder).to receive(:build_app_lrp).and_raise(invalid_request_error)
+            allow(missing_lrp_recipe_builder2).to receive(:build_app_lrp).and_raise(invalid_request_error)
+            allow(missing_lrp_recipe_builder3).to receive(:build_app_lrp).and_raise(other_error)
+          end
+
+          it 'updates invalid-request count even if another error is thrown' do
+            expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, other_error.message)
+            expect(bbs_apps_client).not_to receive(:bump_freshness)
+            expect(statsd_updater).to have_received(:update_synced_invalid_lrps).with(2)
           end
         end
       end

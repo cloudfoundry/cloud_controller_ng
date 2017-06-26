@@ -61,5 +61,9 @@ module VCAP::CloudController::Metrics
         batch.gauge('cc.tasks_running.memory_in_mb', total_memory_in_mb)
       end
     end
+
+    def update_synced_invalid_lrps(lrp_count)
+      @statsd.gauge('cc.diego_sync.invalid_desired_lrps', lrp_count)
+    end
   end
 end

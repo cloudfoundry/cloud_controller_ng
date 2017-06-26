@@ -10,9 +10,10 @@ module VCAP::CloudController
       class BBSFetchError < Error
       end
 
-      def initialize(config)
+      def initialize(config:, statsd_updater: VCAP::CloudController::Metrics::StatsdUpdater.new)
         @config   = config
         @workpool = WorkPool.new(50)
+        @statsd_updater = statsd_updater
       end
 
       def sync
@@ -52,10 +53,12 @@ module VCAP::CloudController
         @workpool.drain
 
         first_exception = nil
+        invalid_lrps = 0
         @workpool.exceptions.each do |e|
           error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
           if error_name == 'RunnerInvalidRequest'
             logger.info('synced-invalid-desired-lrps', error: error_name, error_message: e.message)
+            invalid_lrps += 1
           elsif error_name == 'RunnerError' && e.message['the requested resource already exists']
             logger.info('ignore-existing-resource', error: error_name, error_message: e.message)
           else
@@ -63,6 +66,7 @@ module VCAP::CloudController
             first_exception ||= e
           end
         end
+        @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
         raise first_exception if first_exception
       rescue => e
         error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name

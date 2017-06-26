@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     RSpec.describe TasksSync do
-      subject { TasksSync.new(config) }
+      subject { TasksSync.new(config: config) }
       let(:config) { double(:config) }
 
       let(:bbs_task_client) { instance_double(BbsTaskClient) }

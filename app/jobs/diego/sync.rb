@@ -14,8 +14,8 @@ module VCAP::CloudController
           config = CloudController::DependencyLocator.instance.config
           if HashUtils.dig(config, :diego, :temporary_local_sync)
             @statsd.time('cc.diego_sync.duration') do
-              VCAP::CloudController::Diego::ProcessesSync.new(config).sync
-              VCAP::CloudController::Diego::TasksSync.new(config).sync
+              VCAP::CloudController::Diego::ProcessesSync.new(config: config).sync
+              VCAP::CloudController::Diego::TasksSync.new(config: config).sync
             end
           else
             logger.info('Skipping diego sync as the `diego.temporary_local_sync` manifest property is false')

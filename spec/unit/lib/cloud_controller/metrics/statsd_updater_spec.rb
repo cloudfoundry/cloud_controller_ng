@@ -187,5 +187,17 @@ module VCAP::CloudController::Metrics
         expect(batch).to have_received(:gauge).with('cc.tasks_running.memory_in_mb', 512)
       end
     end
+
+    describe '#update_synced_invalid_lrps' do
+      before do
+        allow(statsd_client).to receive(:gauge)
+      end
+
+      it 'emits number of running tasks and task memory to statsd' do
+        updater.update_synced_invalid_lrps(5)
+
+        expect(statsd_client).to have_received(:gauge).with('cc.diego_sync.invalid_desired_lrps', 5)
+      end
+    end
   end
 end
