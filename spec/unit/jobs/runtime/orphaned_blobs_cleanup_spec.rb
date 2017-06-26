@@ -82,7 +82,7 @@ module VCAP::CloudController
             it 'increments the count for a previously orphaned blob and performs cleanup as usual' do
               allow(buildpack_blobstore).to receive(:files_for).with('25').and_return([double(:blob, key: '25/ff/25ffnew-file-found')])
               expect(OrphanedBlob.count).to eq(1)
-              job.perform
+              job.cleanup(1)
               expect(OrphanedBlob.count).to eq(2)
               expect(OrphanedBlob.find(blob_key: '00/00/0000file-to-be-updated').dirty_count).to eq(2)
               expect(OrphanedBlob.find(blob_key: '25/ff/25ffnew-file-found').dirty_count).to eq(1)
