@@ -63,6 +63,8 @@ module VCAP::CloudController
 
     def parse_config
       @config = Config.from_file(@config_file)
+
+      @config[:statsd_port] = @config[:statsd_port].try(:to_i)
     rescue Membrane::SchemaValidationError => ve
       puts "ERROR: There was a problem validating the supplied config: #{ve}"
       exit 1
@@ -225,7 +227,7 @@ module VCAP::CloudController
 
       logger.info("configuring statsd server at #{@config[:statsd_host]}:#{@config[:statsd_port]}")
       Statsd.logger = Steno.logger('statsd.client')
-      @statsd_client = Statsd.new(@config[:statsd_host], @config[:statsd_port].to_i)
+      @statsd_client = Statsd.new(@config[:statsd_host], @config[:statsd_port])
     end
 
     def collect_diagnostics

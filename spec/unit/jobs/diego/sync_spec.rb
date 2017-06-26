@@ -54,6 +54,23 @@ module VCAP::CloudController
             expect(tasks_sync).not_to have_received(:sync)
           end
         end
+
+        it 'records sync duration' do
+          yielded_block = nil
+
+          allow_any_instance_of(Statsd).to receive(:time) do |_, metric_name, &block|
+            expect(metric_name).to eq 'cc.diego_sync.duration'
+            yielded_block = block
+          end
+
+          job.perform
+          expect(processes_sync).to_not have_received(:sync)
+          expect(tasks_sync).to_not have_received(:sync)
+
+          yielded_block.call
+          expect(processes_sync).to have_received(:sync)
+          expect(tasks_sync).to have_received(:sync)
+        end
       end
     end
   end
