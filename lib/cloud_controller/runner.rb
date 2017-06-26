@@ -189,7 +189,14 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    def register_with_collector(message_bus)
+    class MockNats
+      # VCAP::Component.register is owned by vcap_common, not cloud_controller_ng,
+      # and CC no longer starts up a NATs server, so give register a mock NATs server.
+      def subscribe(*args); end
+      def publish(*args); end
+    end
+
+    def register_with_collector(_)
       VCAP::Component.register(
         type: 'CloudController',
         host: @config[:external_host],
@@ -197,7 +204,7 @@ module VCAP::CloudController
         user: @config[:varz_user],
         password: @config[:varz_password],
         index: @config[:index],
-        nats: message_bus,
+        nats: MockNats.new,
         logger: logger,
         log_counter: @log_counter
       )

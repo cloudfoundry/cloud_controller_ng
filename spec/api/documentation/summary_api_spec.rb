@@ -72,8 +72,12 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
   let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
+  let(:instances_reporters) { double(:instances_reporters) }
+  let(:running_instances) { { app_obj.guid => 1 } }
 
   before do
+    allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
+    allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_processes).and_return(running_instances)
     service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
   end
 
