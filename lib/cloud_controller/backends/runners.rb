@@ -7,10 +7,8 @@ require 'cloud_controller/diego/egress_rules'
 
 module VCAP::CloudController
   class Runners
-    def initialize(config, message_bus, dea_pool)
+    def initialize(config)
       @config = config
-      @message_bus = message_bus
-      @dea_pool = dea_pool
     end
 
     def runner_for_app(app)

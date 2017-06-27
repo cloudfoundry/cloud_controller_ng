@@ -3,7 +3,7 @@ require 'cloud_controller/diego/process_guid'
 
 module VCAP::CloudController
   RSpec.describe Runners do
-    subject(:runners) { Runners.new(config, message_bus, dea_pool) }
+    subject(:runners) { Runners.new(config) }
 
     let(:config) do
       {
@@ -12,8 +12,6 @@ module VCAP::CloudController
         }
       }
     end
-    let(:message_bus) { nil }
-    let(:dea_pool) { nil }
     let(:package_hash) { 'fake-package-hash' }
     let(:custom_buildpacks_enabled?) { true }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }

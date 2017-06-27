@@ -2,8 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Config do
-    let(:message_bus) { Config.message_bus }
-
     describe '.from_file' do
       it 'raises if the file does not exist' do
         expect {
@@ -325,30 +323,22 @@ module VCAP::CloudController
       end
 
       it 'creates the runners' do
-        expect(VCAP::CloudController::Runners).to receive(:new).with(
-          @test_config,
-          nil,
-          nil
-        )
+        expect(VCAP::CloudController::Runners).to receive(:new).with(@test_config)
         Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
+        Config.configure_runner_components
       end
 
       it 'creates the stagers' do
-        expect(VCAP::CloudController::Stagers).to receive(:new).with(
-          @test_config,
-          nil,
-          nil
-        )
+        expect(VCAP::CloudController::Stagers).to receive(:new).with(@test_config)
         Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
+        Config.configure_runner_components
       end
 
       it 'sets up the app manager' do
         expect(AppObserver).to receive(:configure).with(instance_of(VCAP::CloudController::Stagers), instance_of(VCAP::CloudController::Runners))
 
         Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
+        Config.configure_runner_components
       end
 
       it 'sets up the quota definition' do

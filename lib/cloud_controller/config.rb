@@ -314,7 +314,7 @@ module VCAP::CloudController
         merge_defaults(config)
       end
 
-      attr_reader :config, :message_bus
+      attr_reader :config
 
       def configure_components(config)
         @config = config
@@ -337,8 +337,7 @@ module VCAP::CloudController
         run_initializers(config)
       end
 
-      def configure_components_depending_on_message_bus(message_bus)
-        @message_bus = message_bus
+      def configure_runner_components
         dependency_locator = CloudController::DependencyLocator.instance
         dependency_locator.config = @config
         tps_client = Diego::TPSClient.new(@config)
@@ -346,10 +345,10 @@ module VCAP::CloudController
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
         dependency_locator.register(:app_event_repository, Repositories::AppEventRepository.new)
 
-        runners = Runners.new(@config, message_bus, nil)
+        runners = Runners.new(@config)
         dependency_locator.register(:runners, runners)
 
-        stagers = Stagers.new(@config, message_bus, nil)
+        stagers = Stagers.new(@config)
         dependency_locator.register(:stagers, stagers)
 
         dependency_locator.register(:instances_reporters, InstancesReporters.new)

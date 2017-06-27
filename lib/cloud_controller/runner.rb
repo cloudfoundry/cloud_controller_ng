@@ -74,12 +74,12 @@ module VCAP::CloudController
 
       EM.run do
         begin
-          start_cloud_controller(nil)
+          start_cloud_controller
 
           VCAP::Component.varz.threadsafe! # initialize varz
 
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-          gather_periodic_metrics(nil)
+          gather_periodic_metrics
 
           builder = RackAppBuilder.new
           app     = builder.build(@config, request_metrics)
@@ -92,11 +92,11 @@ module VCAP::CloudController
       end
     end
 
-    def gather_periodic_metrics(message_bus)
+    def gather_periodic_metrics
       logger.info('setting up metrics')
 
       logger.info('registering with collector')
-      register_with_collector(message_bus)
+      register_with_collector
 
       logger.info('starting periodic metrics updater')
       periodic_updater.setup_updates
@@ -128,14 +128,14 @@ module VCAP::CloudController
 
     private
 
-    def start_cloud_controller(message_bus)
+    def start_cloud_controller
       setup_logging
       setup_db
       Config.configure_components(@config)
       setup_loggregator_emitter
 
       @config[:external_host] = VCAP.local_ip(@config[:local_route])
-      Config.configure_components_depending_on_message_bus(message_bus)
+      Config.configure_runner_components
     end
 
     def create_pidfile
@@ -193,10 +193,11 @@ module VCAP::CloudController
       # VCAP::Component.register is owned by vcap_common, not cloud_controller_ng,
       # and CC no longer starts up a NATs server, so give register a mock NATs server.
       def subscribe(*args); end
+
       def publish(*args); end
     end
 
-    def register_with_collector(_)
+    def register_with_collector
       VCAP::Component.register(
         type: 'CloudController',
         host: @config[:external_host],

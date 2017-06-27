@@ -68,7 +68,7 @@ module VCAP::CloudController
 
       logger.info("build created: #{build.guid}")
       logger.info("staging package: #{package.inspect} for build #{build.guid}")
-      @staging_response = stagers.stager_for_app(package.app).stage(staging_details)
+      @staging_response = stagers.stager_for_app.stage(staging_details)
       logger.info("package staging requested: #{package.inspect}")
 
       build

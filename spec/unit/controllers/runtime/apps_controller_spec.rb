@@ -1752,7 +1752,7 @@ module VCAP::CloudController
           space: space,
         )
 
-        fake_route_mapping_create = instance_double( V2::RouteMappingCreate )
+        fake_route_mapping_create = instance_double(V2::RouteMappingCreate)
         allow(V2::RouteMappingCreate).to receive(:new).with(anything, route, app_obj, anything).and_return(fake_route_mapping_create)
         expect(fake_route_mapping_create).to receive(:add)
 

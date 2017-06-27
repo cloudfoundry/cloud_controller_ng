@@ -14,15 +14,10 @@ class BackgroundJobEnvironment
 
     Thread.new do
       EM.run do
-        message_bus = nil
-        # The AppObserver need no knowledge of the DEA or stager pools
-        # so we are passing in no-op objects for these arguments
-        no_op_dea_pool = Object.new
-
-        runners = VCAP::CloudController::Runners.new(@config, message_bus, no_op_dea_pool)
+        runners = VCAP::CloudController::Runners.new(@config)
         CloudController::DependencyLocator.instance.register(:runners, runners)
 
-        stagers = VCAP::CloudController::Stagers.new(@config, message_bus, no_op_dea_pool)
+        stagers = VCAP::CloudController::Stagers.new(@config)
         CloudController::DependencyLocator.instance.register(:stagers, stagers)
 
         VCAP::CloudController::AppObserver.configure(stagers, runners)

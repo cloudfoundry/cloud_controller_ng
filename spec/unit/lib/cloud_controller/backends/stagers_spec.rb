@@ -2,10 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Stagers do
-    subject(:stagers) { Stagers.new(config, message_bus, dea_pool) }
+    subject(:stagers) { Stagers.new(config) }
     let(:config) { TestConfig.config }
-    let(:message_bus) { nil }
-    let(:dea_pool) { nil }
 
     describe '#validate_app' do
       let(:app) do
@@ -138,14 +136,14 @@ module VCAP::CloudController
         end
 
         it 'finds a diego stager' do
-          stager = stagers.stager_for_app(app)
+          stager = stagers.stager_for_app
           expect(stager).to be_a(Diego::Stager)
         end
       end
 
       context 'when there are no processes' do
         it 'finds a diego stager' do
-          stager = stagers.stager_for_app(app)
+          stager = stagers.stager_for_app
           expect(stager).to be_a(Diego::Stager)
         end
       end

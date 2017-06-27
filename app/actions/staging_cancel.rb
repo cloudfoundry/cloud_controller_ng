@@ -12,7 +12,7 @@ module VCAP::CloudController
         build.record_staging_stopped
 
         begin
-          @stagers.stager_for_app(build.app).stop_stage(build.guid)
+          @stagers.stager_for_app.stop_stage(build.guid)
         rescue => e
           logger.error("failed to request staging cancellation for build: #{build.guid}, error: #{e.message}")
         end
