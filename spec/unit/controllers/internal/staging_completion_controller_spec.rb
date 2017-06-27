@@ -11,17 +11,22 @@ module VCAP::CloudController
     let(:staging_response) do
       {
         result: {
-          lifecycle_type: 'buildpack',
+          lifecycle_type:     'buildpack',
           lifecycle_metadata: {
-            buildpack_key: buildpack_key,
+            buildpack_key:      buildpack_key,
             detected_buildpack: detected_buildpack,
           },
           execution_metadata: execution_metadata,
-          process_types: { web: 'start me' }
+          process_types:      { web: 'start me' }
         }
       }
     end
-    let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater, increment_staging_succeeded: nil) }
+    let(:statsd_updater) do
+      instance_double(VCAP::CloudController::Metrics::StatsdUpdater,
+        increment_staging_succeeded: nil,
+        increment_staging_failed:    nil,
+      )
+    end
 
     before do
       allow(VCAP::CloudController::Metrics::StatsdUpdater).to receive(:new).and_return(statsd_updater)
@@ -35,7 +40,7 @@ module VCAP::CloudController
       let(:staging_guid) { droplet.guid }
 
       before do
-        @internal_user = 'internal_user'
+        @internal_user     = 'internal_user'
         @internal_password = 'internal_password'
         authorize @internal_user, @internal_password
       end
@@ -81,13 +86,13 @@ module VCAP::CloudController
       context 'when receiving the callback directly from BBS' do
         let(:staging_result) do
           {
-            lifecycle_type: 'buildpack',
+            lifecycle_type:     'buildpack',
             lifecycle_metadata: {
-              buildpack_key: buildpack_key,
+              buildpack_key:      buildpack_key,
               detected_buildpack: detected_buildpack,
             },
             execution_metadata: execution_metadata,
-            process_types: { web: 'start me' }
+            process_types:      { web: 'start me' }
           }
         end
         let(:failure_reason) { '' }
@@ -95,9 +100,9 @@ module VCAP::CloudController
         let(:staging_result_json) { MultiJson.dump(staging_result) }
         let(:staging_response) do
           {
-            failed: failure_reason.present?,
+            failed:         failure_reason.present?,
             failure_reason: failure_reason,
-            result: staging_result_json,
+            result:         staging_result_json,
           }
         end
 
@@ -132,6 +137,11 @@ module VCAP::CloudController
           it 'passes down the sanitized version of the error to the diego stager' do
             expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { error: sanitized_failure_reason }, false)
 
+            post url, MultiJson.dump(staging_response)
+          end
+
+          it 'increments the staging failed metric' do
+            expect(statsd_updater).to receive(:increment_staging_failed)
             post url, MultiJson.dump(staging_response)
           end
         end
@@ -204,7 +214,7 @@ module VCAP::CloudController
       let(:staging_guid) { build.guid }
 
       before do
-        @internal_user = 'internal_user'
+        @internal_user     = 'internal_user'
         @internal_password = 'internal_password'
         authorize @internal_user, @internal_password
         build.droplet = droplet
@@ -228,13 +238,13 @@ module VCAP::CloudController
       context 'when receiving the callback directly from BBS' do
         let(:staging_result) do
           {
-            lifecycle_type: 'buildpack',
+            lifecycle_type:     'buildpack',
             lifecycle_metadata: {
-              buildpack_key: buildpack_key,
+              buildpack_key:      buildpack_key,
               detected_buildpack: detected_buildpack,
             },
             execution_metadata: execution_metadata,
-            process_types: { web: 'start me' }
+            process_types:      { web: 'start me' }
           }
         end
         let(:failure_reason) { '' }
@@ -242,9 +252,9 @@ module VCAP::CloudController
         let(:staging_result_json) { MultiJson.dump(staging_result) }
         let(:staging_response) do
           {
-            failed: failure_reason.present?,
+            failed:         failure_reason.present?,
             failure_reason: failure_reason,
-            result: staging_result_json,
+            result:         staging_result_json,
           }
         end
 
@@ -260,8 +270,8 @@ module VCAP::CloudController
         end
 
         it 'increments the staging succeeded metric' do
+          expect(statsd_updater).to receive(:increment_staging_succeeded)
           post url, MultiJson.dump(staging_response)
-          expect(statsd_updater).to have_received(:increment_staging_succeeded)
         end
 
         it 'propagates api errors from staging_response' do
@@ -289,6 +299,11 @@ module VCAP::CloudController
 
             post url, MultiJson.dump(staging_response)
             expect(last_response.status).to eq(200)
+          end
+
+          it 'increments the staging failed metric' do
+            expect(statsd_updater).to receive(:increment_staging_failed)
+            post url, MultiJson.dump(staging_response)
           end
         end
       end

@@ -215,9 +215,20 @@ module VCAP::CloudController::Metrics
         allow(statsd_client).to receive(:increment)
       end
 
-      it 'increments "cc.staging.requested"' do
+      it 'increments "cc.staging.succeeded"' do
         updater.increment_staging_succeeded
         expect(statsd_client).to have_received(:increment).with('cc.staging.succeeded')
+      end
+    end
+
+    describe '#increment_staging_failed' do
+      before do
+        allow(statsd_client).to receive(:increment)
+      end
+
+      it 'increments "cc.staging.failed"' do
+        updater.increment_staging_failed
+        expect(statsd_client).to have_received(:increment).with('cc.staging.failed')
       end
     end
   end

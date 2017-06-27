@@ -73,5 +73,9 @@ module VCAP::CloudController::Metrics
     def increment_staging_succeeded
       @statsd.increment('cc.staging.succeeded')
     end
+
+    def increment_staging_failed
+      @statsd.increment('cc.staging.failed')
+    end
   end
 end
