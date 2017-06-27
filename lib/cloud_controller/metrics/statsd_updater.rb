@@ -65,5 +65,9 @@ module VCAP::CloudController::Metrics
     def update_synced_invalid_lrps(lrp_count)
       @statsd.gauge('cc.diego_sync.invalid_desired_lrps', lrp_count)
     end
+
+    def start_staging_request_received
+      @statsd.increment('cc.staging.requested')
+    end
   end
 end

@@ -195,8 +195,18 @@ module VCAP::CloudController::Metrics
 
       it 'emits number of running tasks and task memory to statsd' do
         updater.update_synced_invalid_lrps(5)
-
         expect(statsd_client).to have_received(:gauge).with('cc.diego_sync.invalid_desired_lrps', 5)
+      end
+    end
+
+    describe '#start_staging_request_received' do
+      before do
+        allow(statsd_client).to receive(:increment)
+      end
+
+      it 'increments "cc.staging.requested"' do
+        updater.start_staging_request_received
+        expect(statsd_client).to have_received(:increment).with('cc.staging.requested')
       end
     end
   end
