@@ -21,6 +21,11 @@ module VCAP::CloudController
         }
       }
     end
+    let(:statsd_updater) { instance_double(VCAP::CloudController::Metrics::StatsdUpdater, increment_staging_succeeded: nil) }
+
+    before do
+      allow(VCAP::CloudController::Metrics::StatsdUpdater).to receive(:new).and_return(statsd_updater)
+    end
 
     context 'staging a package through /droplet_completed (legacy for rolling deploy)' do
       let(:url) { "/internal/v3/staging/#{staging_guid}/droplet_completed" }
@@ -113,6 +118,11 @@ module VCAP::CloudController
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(524)
           expect(last_response.body).to match /JobTimeout/
+        end
+
+        it 'increments the staging succeeded metric' do
+          post url, MultiJson.dump(staging_response)
+          expect(statsd_updater).to have_received(:increment_staging_succeeded)
         end
 
         context 'when staging failed' do
@@ -247,6 +257,11 @@ module VCAP::CloudController
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
+        end
+
+        it 'increments the staging succeeded metric' do
+          post url, MultiJson.dump(staging_response)
+          expect(statsd_updater).to have_received(:increment_staging_succeeded)
         end
 
         it 'propagates api errors from staging_response' do

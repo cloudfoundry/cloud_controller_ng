@@ -26,7 +26,6 @@ module VCAP::CloudController
     end
 
     post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed
-
     def droplet_completed(staging_guid)
       staging_response = read_body
       droplet          = DropletModel.find(guid: staging_guid)
@@ -42,8 +41,9 @@ module VCAP::CloudController
         )
       end
 
-      if staging_response.key? :failed
+      if staging_response.key?(:failed)
         staging_response = parse_bbs_task_callback(staging_response)
+        report_metrics(staging_response)
       end
 
       begin
@@ -59,14 +59,14 @@ module VCAP::CloudController
     end
 
     post '/internal/v3/staging/:staging_guid/build_completed', :build_completed
-
     def build_completed(staging_guid)
       staging_response = read_body
       build            = BuildModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Build not found') if build.nil?
 
-      if staging_response.key? :failed
+      if staging_response.key?(:failed)
         staging_response = parse_bbs_task_callback(staging_response)
+        report_metrics(staging_response)
       end
 
       begin
@@ -92,6 +92,16 @@ module VCAP::CloudController
         result[:result] = MultiJson.load(staging_response[:result], symbolize_keys: true)
       end
       result
+    end
+
+    def report_metrics(staging_response)
+      unless staging_response[:error]
+        statsd_updater.increment_staging_succeeded
+      end
+    end
+
+    def statsd_updater
+      @statsd_updater ||= VCAP::CloudController::Metrics::StatsdUpdater.new
     end
 
     attr_reader :stagers
