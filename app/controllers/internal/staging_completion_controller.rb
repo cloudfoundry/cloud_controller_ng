@@ -42,8 +42,8 @@ module VCAP::CloudController
       end
 
       if staging_response.key?(:failed)
-        staging_response = parse_bbs_task_callback(staging_response)
         report_metrics(staging_response)
+        staging_response = parse_bbs_task_callback(staging_response)
       end
 
       begin
@@ -65,8 +65,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Build not found') if build.nil?
 
       if staging_response.key?(:failed)
-        staging_response = parse_bbs_task_callback(staging_response)
         report_metrics(staging_response)
+        staging_response = parse_bbs_task_callback(staging_response)
       end
 
       begin
@@ -94,8 +94,10 @@ module VCAP::CloudController
       result
     end
 
-    def report_metrics(staging_response)
-      unless staging_response[:error]
+    def report_metrics(bbs_staging_response)
+      if bbs_staging_response[:failed]
+        statsd_updater.increment_staging_failed
+      else
         statsd_updater.increment_staging_succeeded
       end
     end
