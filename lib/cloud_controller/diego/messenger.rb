@@ -4,6 +4,10 @@ require 'cloud_controller/diego/desire_app_handler'
 module VCAP::CloudController
   module Diego
     class Messenger
+      def initialize(statsd_updater=VCAP::CloudController::Metrics::StatsdUpdater.new)
+        @statsd_updater = statsd_updater
+      end
+
       def send_stage_request(config, staging_details)
         logger.info('staging.begin', package_guid: staging_details.package.guid)
 
@@ -12,6 +16,7 @@ module VCAP::CloudController
         if do_local_staging
           task_definition = task_recipe_builder.build_staging_task(config, staging_details)
           bbs_stager_client.stage(staging_guid, task_definition)
+          @statsd_updater.start_staging_request_received
         else
           staging_message = protocol.stage_package_request(config, staging_details)
           stager_client.stage(staging_guid, staging_message)
