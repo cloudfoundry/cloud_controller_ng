@@ -28,12 +28,8 @@ module TestConfig
     packages_connection_provider = config[:packages][:fog_connection][:provider].downcase
     Fog.mock! unless res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
 
-    # DO NOT override the message bus, use the same mock that's set the first time
-    message_bus = VCAP::CloudController::Config.message_bus || CfMessageBus::MockMessageBus.new
-    message_bus.reset
-
     VCAP::CloudController::Config.configure_components(config)
-    VCAP::CloudController::Config.configure_components_depending_on_message_bus(message_bus)
+    VCAP::CloudController::Config.configure_runner_components
 
     # configure the dependency locator
     CloudController::DependencyLocator.instance.config = config

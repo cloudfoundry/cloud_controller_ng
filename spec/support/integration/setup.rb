@@ -3,25 +3,6 @@ require 'English'
 module IntegrationSetup
   CC_START_TIMEOUT = 20
   SLEEP_INTERVAL = 0.5
-  def start_nats(opts={})
-    port = opts.delete(:port) || 4222
-    @nats_pid = run_cmd("gnatsd -V -D -p #{port}", opts)
-    wait_for_nats_to_start(port)
-  end
-
-  def stop_nats
-    if @nats_pid
-      graceful_kill(:nats, @nats_pid)
-      @nats_pid = nil
-    end
-  end
-
-  def kill_nats
-    if @nats_pid
-      Process.kill('KILL', @nats_pid)
-      @nats_pid = nil
-    end
-  end
 
   def start_cc(opts={})
     @cc_pids ||= []
@@ -57,24 +38,6 @@ module IntegrationSetup
 
   def stop_cc
     @cc_pids.dup.each { |pid| graceful_kill(:cc, @cc_pids.delete(pid)) }
-  end
-
-  def wait_for_nats_to_start(port)
-    Timeout.timeout(10) do
-      loop do
-        sleep 0.2
-        break if nats_up?(port)
-      end
-    end
-  end
-
-  def nats_up?(port)
-    NATS.start(uri: "nats://127.0.0.1:#{port}") do
-      NATS.stop
-      return true
-    end
-  rescue NATS::ConnectError
-    nil
   end
 end
 

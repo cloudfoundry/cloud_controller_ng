@@ -1,3 +1,6 @@
+require 'presenters/v2/base_presenter'
+require 'presenters/v2/presenter_provider'
+
 module CloudController
   module Presenters
     module V2

@@ -12,7 +12,6 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
         'Content-Type' => 'application/json'
     }
 
-    start_nats debug: false
     start_cc(debug: false, config: 'spec/fixtures/config/port_8181_config.yml')
 
     org = org_with_default_quota(@authed_headers)
@@ -31,7 +30,6 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
 
   after(:all) do
     stop_cc
-    stop_nats
     @loggregator_server.stop
   end
 

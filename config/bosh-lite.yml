@@ -8,9 +8,6 @@ pid_filename: /tmp/cloud_controller.pid
 newrelic_enabled: false
 development_mode: false
 
-message_bus_servers:
-  - nats://nats:nats@10.244.0.6:4222
-
 external_protocol: https
 external_domain: api.bosh-lite.com
 
@@ -256,7 +253,6 @@ default_staging_security_groups: ["public_networks","dns"]
 
 allowed_cors_domains: []
 
-dea_advertisement_timeout_in_seconds: 15
 placement_top_stager_percentage: 10
 
 system_hostnames: ["api", "uaa", "login", "doppler", "loggregator", "hm9000"]

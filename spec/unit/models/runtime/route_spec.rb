@@ -1078,6 +1078,9 @@ module VCAP::CloudController
 
     describe '#destroy' do
       it 'marks the apps routes as changed and sends an update to the dea' do
+        fake_route_handler_app1 = instance_double(ProcessRouteHandler)
+        fake_route_handler_app2 = instance_double(ProcessRouteHandler)
+
         space = Space.make
         app1   = AppFactory.make(space: space, state: 'STARTED', diego: false)
         app2   = AppFactory.make(space: space, state: 'STARTED', diego: false)
@@ -1090,8 +1093,11 @@ module VCAP::CloudController
         app1   = route.apps[0]
         app2   = route.apps[1]
 
-        expect(Dea::Client).to receive(:update_uris).with(app1)
-        expect(Dea::Client).to receive(:update_uris).with(app2)
+        allow(ProcessRouteHandler).to receive(:new).with(app1).and_return(fake_route_handler_app1)
+        allow(ProcessRouteHandler).to receive(:new).with(app2).and_return(fake_route_handler_app2)
+
+        expect(fake_route_handler_app1).to receive(:notify_backend_of_route_update)
+        expect(fake_route_handler_app2).to receive(:notify_backend_of_route_update)
 
         route.destroy
       end

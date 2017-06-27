@@ -2,13 +2,11 @@ require 'spec_helper'
 
 RSpec.describe 'Cloud Controller', type: :integration do
   before(:all) do
-    start_nats
     start_cc
   end
 
   after(:all) do
     stop_cc
-    stop_nats
   end
 
   it 'responds to /varz with the expected keys' do

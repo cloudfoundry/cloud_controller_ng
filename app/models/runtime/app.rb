@@ -1,6 +1,5 @@
 require 'cloud_controller/app_observer'
 require 'cloud_controller/database_uri_generator'
-require 'cloud_controller/undo_app_changes'
 require 'cloud_controller/errors/application_missing'
 require 'repositories/app_usage_event_repository'
 require 'presenters/v3/cache_key_presenter'
@@ -520,12 +519,7 @@ module VCAP::CloudController
     def after_commit
       super
 
-      begin
-        AppObserver.updated(self)
-      rescue CloudController::Errors::ApiError => e
-        UndoAppChanges.new(self).undo(previous_changes) unless diego?
-        raise e
-      end
+      AppObserver.updated(self)
     end
 
     def to_hash(opts={})

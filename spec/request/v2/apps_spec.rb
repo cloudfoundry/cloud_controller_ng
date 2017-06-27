@@ -804,7 +804,7 @@ RSpec.describe 'Apps' do
 
       get "/v2/apps/#{process.guid}/summary", nil, headers_for(user)
 
-      expect(last_response.status).to eq(200)
+      expect(last_response.status).to eq(200), last_response.body
       expect(MultiJson.load(last_response.body)).to be_a_response_like(
         {
           'guid'                       => process.guid,
@@ -1037,7 +1037,7 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v2/apps/:guid/restage' do
     let(:process) { VCAP::CloudController::AppFactory.make(name: 'maria', space: space, diego: true) }
-    let(:stager) { instance_double(VCAP::CloudController::Dea::Stager, stage: nil) }
+    let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stage: nil) }
 
     before do
       allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_app)

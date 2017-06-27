@@ -4,15 +4,11 @@ require 'i18n'
 require 'i18n/backend/fallbacks'
 require 'cloud_controller/uaa/uaa_token_decoder'
 require 'cloud_controller/uaa/uaa_verification_keys'
-require 'cf_message_bus/message_bus'
 require 'loggregator_emitter'
 require 'loggregator'
-require 'cloud_controller/dea/sub_system'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
-
-require_relative 'message_bus_configurer'
 
 module VCAP::CloudController
   class Runner
@@ -78,16 +74,12 @@ module VCAP::CloudController
 
       EM.run do
         begin
-          message_bus = MessageBus::Configurer.new(servers: @config[:message_bus_servers], logger: logger).go
-
-          start_cloud_controller(message_bus)
-
-          Dea::SubSystem.setup!(message_bus)
+          start_cloud_controller
 
           VCAP::Component.varz.threadsafe! # initialize varz
 
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-          gather_periodic_metrics(message_bus)
+          gather_periodic_metrics
 
           builder = RackAppBuilder.new
           app     = builder.build(@config, request_metrics)
@@ -100,11 +92,11 @@ module VCAP::CloudController
       end
     end
 
-    def gather_periodic_metrics(message_bus)
+    def gather_periodic_metrics
       logger.info('setting up metrics')
 
       logger.info('registering with collector')
-      register_with_collector(message_bus)
+      register_with_collector
 
       logger.info('starting periodic metrics updater')
       periodic_updater.setup_updates
@@ -136,14 +128,14 @@ module VCAP::CloudController
 
     private
 
-    def start_cloud_controller(message_bus)
+    def start_cloud_controller
       setup_logging
       setup_db
       Config.configure_components(@config)
       setup_loggregator_emitter
 
       @config[:external_host] = VCAP.local_ip(@config[:local_route])
-      Config.configure_components_depending_on_message_bus(message_bus)
+      Config.configure_runner_components
     end
 
     def create_pidfile
@@ -197,7 +189,15 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    def register_with_collector(message_bus)
+    class MockNats
+      # VCAP::Component.register is owned by vcap_common, not cloud_controller_ng,
+      # and CC no longer starts up a NATs server, so give register a mock NATs server.
+      def subscribe(*args); end
+
+      def publish(*args); end
+    end
+
+    def register_with_collector
       VCAP::Component.register(
         type: 'CloudController',
         host: @config[:external_host],
@@ -205,7 +205,7 @@ module VCAP::CloudController
         user: @config[:varz_user],
         password: @config[:varz_password],
         index: @config[:index],
-        nats: message_bus,
+        nats: MockNats.new,
         logger: logger,
         log_counter: @log_counter
       )

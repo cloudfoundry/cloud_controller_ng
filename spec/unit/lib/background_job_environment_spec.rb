@@ -12,11 +12,7 @@ RSpec.describe BackgroundJobEnvironment do
   end
 
   describe '#setup_environment' do
-    let(:message_bus) { double(:message_bus) }
-    let(:message_bus_configurer) { double(MessageBus::Configurer, go: message_bus) }
-
     before do
-      allow(MessageBus::Configurer).to receive(:new).and_return(message_bus_configurer)
       allow(VCAP::CloudController::DB).to receive(:load_models)
       allow(Thread).to receive(:new).and_yield
       allow(EM).to receive(:run).and_yield

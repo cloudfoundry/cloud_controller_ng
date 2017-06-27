@@ -15,17 +15,6 @@ GIT
     vcap-concurrency (0.1.0)
 
 GIT
-  remote: https://github.com/nats-io/ruby-nats
-  revision: 8571cf9d685b6063002486614b66a28bad254a64
-  ref: 8571cf9d685b6063002486614b66a28bad254a64
-  specs:
-    nats (0.5.1)
-      daemons (~> 1.1, >= 1.2.2)
-      eventmachine (~> 1.0, >= 1.0.7)
-      json_pure (~> 1.8, >= 1.8.1)
-      thin (~> 1.6, >= 1.6.3)
-
-GIT
   remote: https://github.com/zipmark/rspec_api_documentation.git
   revision: de69a7a87adace29f39cbe937ae7bb8da9a4c9c1
   specs:
@@ -103,11 +92,6 @@ GEM
       steno
     builder (3.2.3)
     byebug (9.0.6)
-    cf-message-bus (0.3.4)
-      eventmachine (~> 1.0.0)
-      nats (>= 0.5.0, < 0.6)
-      vcap-concurrency
-      yajl-ruby
     cf-uaa-lib (3.7.0)
       httpclient (~> 2.8.2.4)
       multi_json
@@ -220,7 +204,7 @@ GEM
     i18n (0.7.0)
     ipaddress (0.8.3)
     json (1.8.3)
-    json_pure (1.8.3)
+    json_pure (1.8.6)
     jwt (1.5.6)
     launchy (2.4.3)
       addressable (~> 2.3)
@@ -254,6 +238,11 @@ GEM
     multipart-post (2.0.0)
     mustache (0.99.8)
     mysql2 (0.4.5)
+    nats (0.5.0)
+      daemons (~> 1.1, >= 1.2.2)
+      eventmachine (~> 1.0, >= 1.0.7)
+      json_pure (~> 1.8, >= 1.8.1)
+      thin (~> 1.6, >= 1.6.3)
     net-ssh (2.9.2)
     netaddr (1.5.1)
     netrc (0.11.0)
@@ -282,7 +271,7 @@ GEM
       byebug (~> 9.0)
       pry (~> 0.10)
     public_suffix (1.5.3)
-    rack (1.6.5)
+    rack (1.6.8)
     rack-protection (1.5.3)
       rack
     rack-test (0.6.3)
@@ -432,7 +421,6 @@ DEPENDENCIES
   awesome_print
   bits_service_client
   byebug
-  cf-message-bus (~> 0.3.0)
   cf-uaa-lib (~> 3.7.0)
   clockwork
   cloudfront-signer
@@ -455,7 +443,6 @@ DEPENDENCIES
   mime-types (~> 2.6.2)
   multi_json
   mysql2 (= 0.4.5)
-  nats!
   net-ssh
   netaddr
   newrelic_rpm (>= 3.12)

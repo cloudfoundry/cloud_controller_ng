@@ -4,7 +4,6 @@ module VCAP::CloudController
   RSpec.describe Runner do
     let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/minimal_config.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
-    let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
     let(:routing_api_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group_guid: '') }
@@ -13,7 +12,6 @@ module VCAP::CloudController
 
     before do
       allow(Steno).to receive(:init)
-      allow_any_instance_of(MessageBus::Configurer).to receive(:go).and_return(message_bus)
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
       allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield
@@ -32,93 +30,67 @@ module VCAP::CloudController
     end
 
     describe '#run!' do
-      shared_examples 'running Cloud Controller' do
-        it 'creates a pidfile' do
-          expect(VCAP::PidFile).to receive(:new).with('/tmp/cloud_controller.pid')
+      it 'creates a pidfile' do
+        expect(VCAP::PidFile).to receive(:new).with('/tmp/cloud_controller.pid')
+        subject.run!
+      end
+
+      it 'registers a log counter with the component' do
+        log_counter = Steno::Sink::Counter.new
+        expect(Steno::Sink::Counter).to receive(:new).once.and_return(log_counter)
+
+        expect(Steno).to receive(:init) do |steno_config|
+          expect(steno_config.sinks).to include log_counter
+        end
+
+        expect(VCAP::Component).to receive(:register).with(hash_including(log_counter: log_counter))
+        subject.run!
+      end
+
+      it 'sets up database' do
+        expect(DB).to receive(:load_models)
+        subject.run!
+      end
+
+      it 'configures components' do
+        expect(Config).to receive(:configure_components)
+        subject.run!
+      end
+
+      it 'sets up loggregator emitter' do
+        loggregator_emitter = double(:loggregator_emitter)
+        expect(LoggregatorEmitter::Emitter).to receive(:new).and_return(loggregator_emitter)
+        expect(Loggregator).to receive(:emitter=).with(loggregator_emitter)
+        subject.run!
+      end
+
+      it 'configures components depending on message bus' do
+        expect(Config).to receive(:configure_runner_components)
+        subject.run!
+      end
+
+      it 'starts thin server on set up bind address' do
+        allow(subject).to receive(:start_thin_server).and_call_original
+        expect(VCAP).to receive(:local_ip).and_return('some_local_ip')
+        expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(double(:thin_server).as_null_object)
+        subject.run!
+      end
+
+      it 'sets up varz updates' do
+        expect(periodic_updater).to receive(:setup_updates)
+        subject.run!
+      end
+
+      it 'logs an error if an exception is raised' do
+        allow(subject).to receive(:start_cloud_controller).and_raise('we have a problem')
+        expect(subject.logger).to receive(:error)
+        expect { subject.run! }.to raise_exception('we have a problem')
+      end
+
+      it 'initializes varz threadsafety' do
+        VCAP::Component.varz.synchronize do
+          expect(VCAP::Component.varz).to receive(:threadsafe!)
           subject.run!
-        end
-
-        it 'registers a log counter with the component' do
-          log_counter = Steno::Sink::Counter.new
-          expect(Steno::Sink::Counter).to receive(:new).once.and_return(log_counter)
-
-          expect(Steno).to receive(:init) do |steno_config|
-            expect(steno_config.sinks).to include log_counter
-          end
-
-          expect(VCAP::Component).to receive(:register).with(hash_including(log_counter: log_counter))
-          subject.run!
-        end
-
-        it 'sets up database' do
-          expect(DB).to receive(:load_models)
-          subject.run!
-        end
-
-        it 'configures components' do
-          expect(Config).to receive(:configure_components)
-          subject.run!
-        end
-
-        it 'sets up loggregator emitter' do
-          loggregator_emitter = double(:loggregator_emitter)
-          expect(LoggregatorEmitter::Emitter).to receive(:new).and_return(loggregator_emitter)
-          expect(Loggregator).to receive(:emitter=).with(loggregator_emitter)
-          subject.run!
-        end
-
-        it 'configures components depending on message bus' do
-          expect(Config).to receive(:configure_components_depending_on_message_bus).with(message_bus)
-          subject.run!
-        end
-
-        it 'starts thin server on set up bind address' do
-          allow(subject).to receive(:start_thin_server).and_call_original
-          expect(VCAP).to receive(:local_ip).and_return('some_local_ip')
-          expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(double(:thin_server).as_null_object)
-          subject.run!
-        end
-
-        it 'starts running dea client (one time set up to start tracking deas)' do
-          expect(Dea::Client).to receive(:run)
-          subject.run!
-        end
-
-        it 'registers subscription for Bulk API' do
-          expect(LegacyBulk).to receive(:register_subscription)
-          subject.run!
-        end
-
-        it 'starts handling hm9000 requests' do
-          hm9000respondent = double(:hm9000respondent)
-          expect(Dea::HM9000::Respondent).to receive(:new).with(Dea::Client, message_bus).and_return(hm9000respondent)
-          expect(hm9000respondent).to receive(:handle_requests)
-          subject.run!
-        end
-
-        it 'starts dea respondent' do
-          dea_respondent = double(:dea_respondent)
-          expect(Dea::Respondent).to receive(:new).with(message_bus).and_return(dea_respondent)
-          expect(dea_respondent).to receive(:start)
-          subject.run!
-        end
-
-        it 'sets up varz updates' do
-          expect(periodic_updater).to receive(:setup_updates)
-          subject.run!
-        end
-
-        it 'logs an error if an exception is raised' do
-          allow(subject).to receive(:start_cloud_controller).and_raise('we have a problem')
-          expect(subject.logger).to receive(:error)
-          expect { subject.run! }.to raise_exception('we have a problem')
-        end
-
-        it 'initializes varz threadsafety' do
-          VCAP::Component.varz.synchronize do
-            expect(VCAP::Component.varz).to receive(:threadsafe!)
-            subject.run!
-          end
         end
       end
 

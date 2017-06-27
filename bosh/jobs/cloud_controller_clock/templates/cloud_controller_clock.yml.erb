@@ -30,17 +30,6 @@ pid_filename: /var/vcap/sys/run/cloud_controller_clock/cloud_controller_clock.pi
 newrelic_enabled: false
 development_mode: false
 
-message_bus_servers:
-<% if_p("nats.machines") do %>
-  <% p("nats.machines").each do |address| %>
-    - nats://<%= p("nats.user") %>:<%= URI.escape(p("nats.password")) %>@<%= address %>:<%= p("nats.port") %>
-  <% end %>
-<% end.else do %>
-  <% link("nats").instances.each do |instance| %>
-    - nats://<%= link("nats").p("nats.user") %>:<%= URI.escape(link("nats").p("nats.password")) %>@<%= instance.address %>:<%= link("nats").p("nats.port") %>
-  <% end %>
-<% end %>
-
 external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
