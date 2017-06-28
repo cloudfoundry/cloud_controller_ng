@@ -204,6 +204,8 @@ GEM
     i18n (0.7.0)
     ipaddress (0.8.3)
     json (1.8.3)
+    json-schema (2.8.0)
+      addressable (>= 2.4)
     json_pure (1.8.6)
     jwt (1.5.6)
     launchy (2.4.3)
@@ -437,6 +439,7 @@ DEPENDENCIES
   google-api-client (~> 0.8.6)
   httpclient
   i18n
+  json-schema
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
