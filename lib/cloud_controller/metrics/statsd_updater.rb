@@ -70,12 +70,20 @@ module VCAP::CloudController::Metrics
       @statsd.increment('cc.staging.requested')
     end
 
-    def increment_staging_succeeded
+    def report_staging_success_metrics(duration_ns)
       @statsd.increment('cc.staging.succeeded')
+      @statsd.timing('cc.staging.succeeded_duration', nanoseconds_to_milliseconds(duration_ns))
     end
 
-    def increment_staging_failed
+    def report_staging_failure_metrics(duration_ns)
       @statsd.increment('cc.staging.failed')
+      @statsd.timing('cc.staging.failed_duration', nanoseconds_to_milliseconds(duration_ns))
+    end
+
+    private
+
+    def nanoseconds_to_milliseconds(time_ns)
+      (time_ns / 1e6).to_i
     end
   end
 end

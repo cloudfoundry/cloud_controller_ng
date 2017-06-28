@@ -23,10 +23,12 @@ module VCAP::CloudController
     end
     let(:statsd_updater) do
       instance_double(VCAP::CloudController::Metrics::StatsdUpdater,
-        increment_staging_succeeded: nil,
-        increment_staging_failed:    nil,
+        report_staging_success_metrics: nil,
+        report_staging_failure_metrics:    nil,
       )
     end
+    let(:one_hour) { 1.hour.to_i }
+    let(:one_hour_in_nanoseconds) { (1.hour.to_i * 1e9).to_i }
 
     before do
       allow(VCAP::CloudController::Metrics::StatsdUpdater).to receive(:new).and_return(statsd_updater)
@@ -103,6 +105,7 @@ module VCAP::CloudController
             failed:         failure_reason.present?,
             failure_reason: failure_reason,
             result:         staging_result_json,
+            created_at: (Time.now.utc.to_i - one_hour) * 1e9,
           }
         end
 
@@ -125,9 +128,12 @@ module VCAP::CloudController
           expect(last_response.body).to match /JobTimeout/
         end
 
-        it 'increments the staging succeeded metric' do
-          post url, MultiJson.dump(staging_response)
-          expect(statsd_updater).to have_received(:increment_staging_succeeded)
+        it 'emits metrics for staging success' do
+          one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
+          expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
+          Timecop.freeze(Time.now) do
+            post url, MultiJson.dump(staging_response)
+          end
         end
 
         context 'when staging failed' do
@@ -140,9 +146,12 @@ module VCAP::CloudController
             post url, MultiJson.dump(staging_response)
           end
 
-          it 'increments the staging failed metric' do
-            expect(statsd_updater).to receive(:increment_staging_failed)
-            post url, MultiJson.dump(staging_response)
+          it 'emits metrics for staging failure' do
+            one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
+            expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
+            Timecop.freeze(Time.now) do
+              post url, MultiJson.dump(staging_response)
+            end
           end
         end
       end
@@ -255,6 +264,7 @@ module VCAP::CloudController
             failed:         failure_reason.present?,
             failure_reason: failure_reason,
             result:         staging_result_json,
+            created_at: (Time.now.utc.to_i - one_hour) * 1e9,
           }
         end
 
@@ -269,9 +279,12 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
         end
 
-        it 'increments the staging succeeded metric' do
-          expect(statsd_updater).to receive(:increment_staging_succeeded)
-          post url, MultiJson.dump(staging_response)
+        it 'emits metrics for staging success' do
+          one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
+          expect(statsd_updater).to receive(:report_staging_success_metrics).with(one_hour_in_nanoseconds)
+          Timecop.freeze(Time.now) do
+            post url, MultiJson.dump(staging_response)
+          end
         end
 
         it 'propagates api errors from staging_response' do
@@ -301,9 +314,12 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200)
           end
 
-          it 'increments the staging failed metric' do
-            expect(statsd_updater).to receive(:increment_staging_failed)
-            post url, MultiJson.dump(staging_response)
+          it 'emits metrics for staging failure' do
+            one_hour_in_nanoseconds = (1.hour.to_i * 1e9).to_i
+            expect(statsd_updater).to receive(:report_staging_failure_metrics).with(one_hour_in_nanoseconds)
+            Timecop.freeze(Time.now) do
+              post url, MultiJson.dump(staging_response)
+            end
           end
         end
       end

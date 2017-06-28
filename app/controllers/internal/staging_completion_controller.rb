@@ -95,10 +95,11 @@ module VCAP::CloudController
     end
 
     def report_metrics(bbs_staging_response)
+      duration = Time.now.utc.to_i * 1e9 - bbs_staging_response[:created_at]
       if bbs_staging_response[:failed]
-        statsd_updater.increment_staging_failed
+        statsd_updater.report_staging_failure_metrics(duration)
       else
-        statsd_updater.increment_staging_succeeded
+        statsd_updater.report_staging_success_metrics(duration)
       end
     end
 

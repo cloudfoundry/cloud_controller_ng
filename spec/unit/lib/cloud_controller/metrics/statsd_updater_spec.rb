@@ -210,25 +210,35 @@ module VCAP::CloudController::Metrics
       end
     end
 
-    describe '#increment_staging_succeeded' do
+    describe '#report_staging_success_metrics' do
       before do
         allow(statsd_client).to receive(:increment)
+        allow(statsd_client).to receive(:timing)
       end
 
-      it 'increments "cc.staging.succeeded"' do
-        updater.increment_staging_succeeded
+      it 'emits staging success metrics' do
+        duration_ns = 10 * 1e9
+        duration_ms = (duration_ns / 1e6).to_i
+
+        updater.report_staging_success_metrics(duration_ns)
         expect(statsd_client).to have_received(:increment).with('cc.staging.succeeded')
+        expect(statsd_client).to have_received(:timing).with('cc.staging.succeeded_duration', duration_ms)
       end
     end
 
-    describe '#increment_staging_failed' do
+    describe '#report_staging_failure_metrics' do
       before do
         allow(statsd_client).to receive(:increment)
+        allow(statsd_client).to receive(:timing)
       end
 
-      it 'increments "cc.staging.failed"' do
-        updater.increment_staging_failed
+      it 'emits staging failure metrics' do
+        duration_ns = 10 * 1e9
+        duration_ms = (duration_ns / 1e6).to_i
+
+        updater.report_staging_failure_metrics(duration_ns)
         expect(statsd_client).to have_received(:increment).with('cc.staging.failed')
+        expect(statsd_client).to have_received(:timing).with('cc.staging.failed_duration', duration_ms)
       end
     end
   end
