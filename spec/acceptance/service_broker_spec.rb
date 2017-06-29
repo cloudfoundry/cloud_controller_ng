@@ -205,7 +205,9 @@ RSpec.describe 'Service Broker' do
           "  Service id must be a string, but has value 12345\n" \
           "  Plan small\n" \
           "    Schemas\n" \
-          "      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04\n" \
+          '      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04: '\
+          "The property '#/properties' of type boolean did not match the following type: object in schema "\
+          "http://json-schema.org/draft-04/schema#\n" \
           "Service service-2\n" \
           "  Plan ids must be unique within a service. Service service-2 already has a plan with id 'plan-b'\n" \
           "  Plan large\n" \
