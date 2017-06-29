@@ -37,6 +37,15 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the requested_limit is passed as an integer string' do
+        let(:requested_limit) { '100' }
+
+        it 'uses the requested_limit' do
+          limit = calculator.get_limit(requested_limit, space, org)
+          expect(limit).to eq(100)
+        end
+      end
+
       context 'when the requested_limit is greater than the minimum limit' do
         context 'when the requested_limit exceeds the space quota' do
           let(:space_quota_limit) { requested_limit - 1 }

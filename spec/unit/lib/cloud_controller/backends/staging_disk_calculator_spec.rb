@@ -29,6 +29,15 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the requested_limit is less than the minimum limit' do
+        let(:requested_limit) { '100' }
+
+        it 'uses the requested_limit' do
+          limit = calculator.get_limit(requested_limit)
+          expect(limit).to eq(100)
+        end
+      end
+
       context 'when the requested_limit is greater than the maximum limit' do
         let(:requested_limit) { maximum_limit + 1 }
 

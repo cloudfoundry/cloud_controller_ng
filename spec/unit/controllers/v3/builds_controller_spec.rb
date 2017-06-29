@@ -13,6 +13,7 @@ RSpec.describe BuildsController, type: :controller do
       )
     end
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
+    let(:stager) { double(:stager, stage: nil) }
     let(:req_body) do
       {
         package: {
@@ -23,7 +24,7 @@ RSpec.describe BuildsController, type: :controller do
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-      allow(stagers).to receive(:stager_for_app).and_return(double(:stager, stage: nil))
+      allow(stagers).to receive(:stager_for_app).and_return(stager)
       app_model.lifecycle_data.update(buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
       set_current_user_as_admin
     end
@@ -285,6 +286,49 @@ RSpec.describe BuildsController, type: :controller do
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
           expect(response.body).to include('diego_docker')
+        end
+      end
+    end
+
+    describe 'staging_details' do
+      let(:memory_in_mb) { TestConfig.config[:staging][:minimum_staging_memory_mb] + 1 }
+      let(:disk_in_mb) { TestConfig.config[:staging][:minimum_staging_disk_mb] + 1 }
+      let(:environment_variables) do
+        { envVarName: 'envVarValue' }
+      end
+
+      let(:req_body) do
+        {
+          package: {
+            guid: package.guid
+          },
+          staging_memory_in_mb: memory_in_mb,
+          staging_disk_in_mb: disk_in_mb,
+          environment_variables: environment_variables,
+        }
+      end
+
+      before do
+        TestConfig.override(
+          {
+            staging: {
+              minimum_staging_memory_mb: 5,
+              minimum_staging_disk_mb: 5,
+            },
+            maximum_app_disk_in_mb: 10,
+          }
+        )
+      end
+
+      context 'staging_memory_in_mb' do
+        it 'sets the staging_memory_in_mb in staging_details' do
+          post :create, body: req_body
+          expect(response.status).to eq(201), response.body
+          expect(stager).to have_received(:stage) do |staging_details|
+            expect(staging_details.staging_memory_in_mb).to eq(memory_in_mb)
+            expect(staging_details.staging_disk_in_mb).to eq(disk_in_mb)
+            expect(staging_details.environment_variables['envVarName']).to eq('envVarValue')
+          end
         end
       end
     end
