@@ -38,22 +38,26 @@ module VCAP::CloudController
         end
 
         it 'provides a docker lifecycle for docker apps' do
-          process = AppFactory.make(docker_image: 'some-image')
+          process = AppFactory.make(docker_image: 'some-image', memory: 765, disk_quota: 1234)
 
           action.stage(process)
 
           expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:lifecycle].type).to equal(Lifecycles::DOCKER)
+            expect(parameter_hash[:lifecycle].staging_message.staging_memory_in_mb).to equal(765)
+            expect(parameter_hash[:lifecycle].staging_message.staging_disk_in_mb).to equal(1234)
           end
         end
 
         it 'provides a buildpack lifecyle for buildpack apps' do
-          process = AppFactory.make
+          process = AppFactory.make(memory: 765, disk_quota: 1234)
 
           action.stage(process)
 
           expect(build_create).to have_received(:create_and_stage_without_event) do |parameter_hash|
             expect(parameter_hash[:lifecycle].type).to equal(Lifecycles::BUILDPACK)
+            expect(parameter_hash[:lifecycle].staging_message.staging_memory_in_mb).to equal(765)
+            expect(parameter_hash[:lifecycle].staging_message.staging_disk_in_mb).to equal(1234)
           end
         end
 
