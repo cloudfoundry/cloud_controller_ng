@@ -47,14 +47,14 @@ module VCAP::Services::ServiceBrokers::V2
       metaschema = JSON::Validator.validator_for_name('draft4').metaschema
 
       begin
-        valid = JSON::Validator.validate(metaschema, schema)
+        errors = JSON::Validator.fully_validate(metaschema, schema)
       rescue => e
         add_schema_error_msg(path, e)
         return nil
       end
 
-      if !valid
-        add_schema_error_msg(path, 'Must conform to JSON Schema Draft 04')
+      errors.each do |error|
+        add_schema_error_msg(path, "Must conform to JSON Schema Draft 04: #{error}")
       end
     end
 
@@ -64,7 +64,7 @@ module VCAP::Services::ServiceBrokers::V2
       begin
         JSON::Validator.validate!(schema, {})
       rescue JSON::Schema::SchemaError => e
-        add_schema_error_msg(path, "Custom meta schemas are not supported. #{e}")
+        add_schema_error_msg(path, "Custom meta schemas are not supported: #{e}")
       rescue JSON::Schema::ReadRefused => e
         add_schema_error_msg(path, "No external references are allowed: #{e}")
       rescue JSON::Schema::ValidationError

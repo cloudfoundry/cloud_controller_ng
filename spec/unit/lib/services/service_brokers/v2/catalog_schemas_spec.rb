@@ -67,8 +67,16 @@ module VCAP::Services::ServiceBrokers::V2
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
-          should match 'Schema service_instance.create.parameters is not valid\. Must conform to JSON Schema Draft 04'
+          should match 'Schema service_instance.create.parameters is not valid\. Must conform to JSON Schema Draft 04.+properties'
         }
+      end
+
+      context 'when the schema does not conform to JSON Schema Draft 04 with multiple problems' do
+        let(:create_instance_schema) { { 'type': 'foo', 'properties': true } }
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(2).items }
+        its('errors.messages.first') { should match 'properties' }
+        its('errors.messages.second') { should match 'type' }
       end
 
       context 'when the schema has an external schema' do
