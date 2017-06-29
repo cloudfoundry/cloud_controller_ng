@@ -3,7 +3,8 @@ module VCAP::CloudController
     class LimitExceeded < StandardError; end
 
     def get_limit(requested_limit)
-      return minimum_limit if requested_limit.nil? || requested_limit < minimum_limit
+      requested_limit = requested_limit.to_i
+      return minimum_limit if requested_limit < minimum_limit
       raise LimitExceeded if requested_limit > maximum_limit
       requested_limit
     end

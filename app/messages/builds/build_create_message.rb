@@ -15,6 +15,9 @@ module VCAP::CloudController
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
 
+    validates :staging_disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+    validates :staging_memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
 
