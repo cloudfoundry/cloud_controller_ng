@@ -68,11 +68,14 @@ module VCAP::CloudController
         end
         @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
         raise first_exception if first_exception
-      rescue => e
-        error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
-        logger.info('sync-failed', error: error_name, error_message: e.message)
+      rescue CloudController::Errors::ApiError => e
+        logger.info('sync-failed', error: e.name, error_message: e.message)
         bump_freshness = false
         raise BBSFetchError.new(e.message)
+      rescue => e
+        logger.info('sync-failed', error: e.class.name, error_message: e.message)
+        bump_freshness = false
+        raise
       ensure
         if bump_freshness
           bbs_apps_client.bump_freshness

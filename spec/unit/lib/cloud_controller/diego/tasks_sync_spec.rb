@@ -200,7 +200,7 @@ module VCAP::CloudController
               error_message: error.message,
             ).twice
             expect(logger).to have_received(:info).with('run-task-sync')
-            expect(logger).to have_received(:info).with('sync-failed')
+            expect(logger).to have_received(:info).with('sync-failed', error: error.name, error_message: error.message)
           end
         end
 

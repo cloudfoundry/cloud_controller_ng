@@ -57,10 +57,10 @@ module VCAP::CloudController
         bbs_task_client.bump_freshness
         logger.info('finished-task-sync')
       rescue CloudController::Errors::ApiError => e
-        logger.info('sync-failed')
+        logger.info('sync-failed', error: e.name, error_message: e.message)
         raise BBSFetchError.new(e.message)
-      rescue
-        logger.info('sync-failed')
+      rescue => e
+        logger.info('sync-failed', error: e.class.name, error_message: e.message)
         raise
       end
 
