@@ -66,8 +66,15 @@ RSpec.configure do |rspec_config|
   rspec_config.include IntegrationSetup, type: :integration
 
   rspec_config.before(:all) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
-  rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
-  rspec_config.after(:all, type: :integration) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
+  rspec_config.before(:all, type: :integration) do
+    WebMock.allow_net_connect!
+    @uaa_server = FakeUAAServer.new(6789)
+    @uaa_server.start
+  end
+  rspec_config.after(:all, type: :integration) do
+    WebMock.disable_net_connect!(allow: 'codeclimate.com')
+    @uaa_server.stop
+  end
 
   rspec_config.example_status_persistence_file_path = 'spec/examples.txt'
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
@@ -87,6 +94,8 @@ RSpec.configure do |rspec_config|
     TestConfig.reset
 
     VCAP::CloudController::SecurityContext.clear
+    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(nil)
+    TestConfig.config[:uaa][:internal_url] = 'https://uaa.service.cf.internal'
   end
 
   rspec_config.around :each do |example|
