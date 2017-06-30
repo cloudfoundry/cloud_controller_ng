@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     def decode_token_with_asymmetric_key(auth_token)
-      tries = 2
+      tries      = 2
       last_error = nil
       while tries > 0
         tries -= 1
@@ -64,12 +64,15 @@ module VCAP::CloudController
     end
 
     def decode_token_with_key(auth_token, options)
-      options = { audience_ids: uaa_config[:resource_id] }.merge(options)
-      token = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.utc.to_i - @grace_period_in_seconds)
+      options         = { audience_ids: uaa_config[:resource_id] }.merge(options)
+      token           = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.utc.to_i - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
       if expiration_time && expiration_time < Time.now.utc.to_i
         @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds")
       end
+
+      raise BadToken.new('Incorrect issuer') if token['iss'] != uaa_issuer
+
       token
     end
 
@@ -87,6 +90,31 @@ module VCAP::CloudController
 
     def uaa_client
       ::CloudController::DependencyLocator.instance.uaa_client
+    end
+
+    def uaa_issuer
+      @uaa_issuer ||= with_request_error_handling do
+        response = http_client.get('.well-known/openid-configuration')
+        raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
+        JSON.parse(response.body).fetch('issuer')
+      end
+    end
+
+    def http_client
+      uaa_target                    = VCAP::CloudController::Config.config[:uaa][:internal_url]
+      uaa_ca                        = VCAP::CloudController::Config.config[:uaa][:ca_file]
+      client                        = HTTPClient.new(base_url: uaa_target)
+      client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      client.ssl_config.set_trust_ca(uaa_ca)
+      client
+    end
+
+    def with_request_error_handling(&blk)
+      tries ||= 3
+      yield
+    rescue
+      retry unless (tries -= 1).zero?
+      raise
     end
   end
 end
