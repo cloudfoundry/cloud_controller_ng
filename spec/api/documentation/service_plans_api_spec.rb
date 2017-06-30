@@ -11,8 +11,10 @@ RSpec.resource 'Service Plans', type: [:api, :legacy_api] do
     field :guid, 'The guid of the service plan', required: false
     field :public, 'A boolean describing that the plan is visible to the all users', required: false, default: true
 
-    standard_model_list(:service_plans, VCAP::CloudController::ServicePlansController)
-    standard_model_get(:service_plans, nested_attributes: [:service])
+    expected_attributes = VCAP::CloudController::ServicePlan.new.export_attrs - [:create_instance_schema] + [:schemas]
+
+    standard_model_list(:service_plans, VCAP::CloudController::ServicePlansController, export_attributes: expected_attributes)
+    standard_model_get(:service_plans, export_attributes: expected_attributes)
     standard_model_delete(:service_plans)
 
     put '/v2/service_plans' do
@@ -20,7 +22,7 @@ RSpec.resource 'Service Plans', type: [:api, :legacy_api] do
         client.put "/v2/service_plans/#{guid}", fields_json(public: false), headers
         expect(status).to eq(201)
 
-        standard_entity_response parsed_response, :service_plans
+        standard_entity_response parsed_response, :service_plans, expected_attributes: expected_attributes
       end
     end
   end

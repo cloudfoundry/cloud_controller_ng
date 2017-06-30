@@ -10,7 +10,8 @@ module VCAP::Services::ServiceBrokers::V2
         'name'        => opts[:name] || 'service-plan-name',
         'description' => opts[:description] || 'The description of the service plan',
         'free'        => opts.fetch(:free, true),
-        'bindable'    => opts[:bindable]
+        'bindable'    => opts[:bindable],
+        'schemas'     => opts[:schemas] || {}
       }
     end
 
@@ -116,6 +117,12 @@ module VCAP::Services::ServiceBrokers::V2
         it 'is false if plan has errors' do
           attrs = build_valid_plan_attrs(metadata: ['list', 'of', 'strings'])
           expect(CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs).valid?).to be false
+        end
+
+        it 'is false if plan schemas has errors' do
+          attrs = build_valid_plan_attrs(schemas: { 'service_instance' => 1 })
+          plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+          expect(plan.valid?).to be false
         end
       end
     end

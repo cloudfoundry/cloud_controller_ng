@@ -613,15 +613,16 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
 
     example 'List Service Plan Create Events' do
       new_plan = VCAP::CloudController::ServicePlan.new(
-        guid:        'guid',
-        name:        'plan-name',
-        service:     test_service,
-        description: 'A plan',
-        unique_id:   'guid',
-        free:        true,
-        public:      true,
-        active:      true,
-        bindable:    true
+        guid:                   'guid',
+        name:                   'plan-name',
+        service:                test_service,
+        description:            'A plan',
+        unique_id:              'guid',
+        free:                   true,
+        public:                 true,
+        active:                 true,
+        bindable:               true,
+        create_instance_schema: '{}'
       )
       service_event_repository.with_service_plan_event(new_plan) do
         new_plan.save
@@ -638,15 +639,16 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actee_name: new_plan.name,
         space_guid: '',
         metadata:   {
-          'name'         => new_plan.name,
-          'free'         => new_plan.free,
-          'description'  => new_plan.description,
-          'service_guid' => new_plan.service.guid,
-          'extra'        => new_plan.extra,
-          'unique_id'    => new_plan.unique_id,
-          'public'       => new_plan.public,
-          'active'       => new_plan.active,
-          'bindable'     => new_plan.bindable
+          'name'                   => new_plan.name,
+          'free'                   => new_plan.free,
+          'description'            => new_plan.description,
+          'service_guid'           => new_plan.service.guid,
+          'extra'                  => new_plan.extra,
+          'unique_id'              => new_plan.unique_id,
+          'public'                 => new_plan.public,
+          'active'                 => new_plan.active,
+          'bindable'               => new_plan.bindable,
+          'create_instance_schema' => new_plan.create_instance_schema
         }
       }
     end
