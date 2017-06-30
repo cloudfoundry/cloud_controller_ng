@@ -31,7 +31,7 @@ RSpec.describe 'Service Broker API integration' do
         }
       }
 
-      it 'is responds with the schema for a service plan entry' do
+      it 'responds with the schema for a service plan entry' do
         get("/v2/service_plans/#{@plan_guid}",
             {}.to_json,
             json_headers(admin_headers))
