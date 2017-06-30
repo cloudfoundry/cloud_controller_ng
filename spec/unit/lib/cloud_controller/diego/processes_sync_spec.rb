@@ -243,7 +243,7 @@ module VCAP::CloudController
           end
 
           it 'does not bump freshness' do
-            expect { subject.sync }.to raise_error(ProcessesSync::BBSFetchError, error.message)
+            expect { subject.sync }.to raise_error(error)
             expect(bbs_apps_client).not_to receive(:bump_freshness)
           end
         end

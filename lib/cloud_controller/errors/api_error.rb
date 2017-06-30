@@ -38,15 +38,15 @@ module CloudController
       end
 
       def code
-        details.code
+        details.try(:code)
       end
 
       def name
-        details.name
+        details.try(:name)
       end
 
       def response_code
-        details.response_code
+        details.try(:response_code)
       end
     end
   end
