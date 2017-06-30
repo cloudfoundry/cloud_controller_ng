@@ -43,8 +43,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_metaschema(path, schema)
-      JSON::Validator.schema_reader = JSON::Schema::Reader.new(accept_uri: false, accept_file: true)
-      metaschema = JSON::Validator.validator_for_name('draft4').metaschema
+      JSON::Validator.schema_reader = JSON::Schema::Reader.new(accept_uri: false, accept_file: false)
+      file = File.read(JSON::Validator.validator_for_name('draft4').metaschema)
+
+      metaschema = JSON.parse(file)
 
       begin
         errors = JSON::Validator.fully_validate(metaschema, schema)
