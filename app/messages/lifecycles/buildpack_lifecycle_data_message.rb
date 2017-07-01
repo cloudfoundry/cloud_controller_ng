@@ -21,8 +21,7 @@ module VCAP::CloudController
 
     validates :buildpacks,
       array:     true,
-      allow_nil: true,
-      length:    { maximum: 1, message: 'currently only supports one buildpack' }
+      allow_nil: true
 
     validate :buildpacks_content
 

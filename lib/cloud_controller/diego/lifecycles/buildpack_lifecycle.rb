@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     def create_lifecycle_data_model(build)
       VCAP::CloudController::BuildpackLifecycleDataModel.create(
-        buildpack: buildpack_to_use,
+        buildpacks: Array(buildpacks_to_use),
         stack:     staging_stack,
         build:     build
       )
@@ -45,7 +45,15 @@ module VCAP::CloudController
       if staging_message.buildpack_data.buildpacks
         staging_message.buildpack_data.buildpacks.first
       else
-        @package.app.lifecycle_data.try(:buildpack)
+        @package.app.lifecycle_data.try(:buildpacks).first
+      end
+    end
+
+    def buildpacks_to_use
+      if staging_message.buildpack_data.buildpacks
+        staging_message.buildpack_data.buildpacks
+      else
+        @package.app.lifecycle_data.try(:buildpacks)
       end
     end
 

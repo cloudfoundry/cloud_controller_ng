@@ -367,7 +367,7 @@ module VCAP::CloudController
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
         expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         expect(v3_app.lifecycle_data.stack).to eq(Stack.default.name)
-        expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
+        expect(v3_app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
         expect(v3_app.desired_state).to eq(v2_app.state)
 
         expect(v3_app.guid).to eq(v2_app.guid)
@@ -806,14 +806,14 @@ module VCAP::CloudController
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
         expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         expect(v3_app.lifecycle_data.stack).to eq('stack-name')
-        expect(v3_app.lifecycle_data.buildpack).to eq('http://example.com/buildpack')
+        expect(v3_app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
       end
 
       context 'when custom buildpacks are disabled and the buildpack attribute is being changed' do
         before do
           TestConfig.override({ disable_custom_buildpacks: true })
           set_current_user(admin_user, admin: true)
-          app_obj.app.lifecycle_data.update(buildpack: Buildpack.make.name)
+          app_obj.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
         end
 
         let(:app_obj) { App.make }
@@ -1623,7 +1623,7 @@ module VCAP::CloudController
 
         it 'returns X-App-Staging-Log header with staging log url' do
           put "/v2/apps/#{app_obj.guid}", MultiJson.dump(state: 'STARTED')
-          expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(201), last_response.body
           expect(last_response.headers['X-App-Staging-Log']).to eq('streaming-log-url')
         end
       end

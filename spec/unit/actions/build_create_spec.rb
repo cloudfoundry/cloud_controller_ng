@@ -278,7 +278,7 @@ module VCAP::CloudController
 
             before do
               app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.create(
-                buildpack: 'http://example.com/repo.git',
+                buildpacks: ['http://example.com/repo.git'],
                 stack:     Stack.make.name,
               ))
             end
@@ -322,7 +322,7 @@ module VCAP::CloudController
           context 'when the custom buildpack is inherited from the app' do
             let!(:app_lifecycle_data_model) do
               BuildpackLifecycleDataModel.make(
-                buildpack: 'http://example.com/repo.git',
+                buildpacks: ['http://example.com/repo.git'],
                 app:       app
               )
             end

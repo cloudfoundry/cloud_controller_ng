@@ -34,10 +34,11 @@ module CloudController::Presenters::V2
       end
       let(:diego) { true }
       let(:buildpack) { 'https://github.com/custombuildpack' }
+      let(:buildpacks) { [buildpack] }
 
       before do
         app.app.lifecycle_data.update(
-          buildpack: buildpack
+          buildpacks: buildpacks
         )
         app.current_droplet.update(
           buildpack_receipt_detect_output:  'detected buildpack',
@@ -98,6 +99,7 @@ module CloudController::Presenters::V2
             parent_app.builds.map(&:destroy)
             parent_app.packages.map(&:destroy)
             parent_app.droplets.map(&:destroy)
+            parent_app.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.map(&:destroy)
             parent_app.destroy
           end
 

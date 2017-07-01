@@ -55,7 +55,7 @@ module VCAP::CloudController
       # because mysql will deadlock when requests happen concurrently otherwise.
       BuildpackLifecycleDataModel.create(
         stack:     @source_droplet.buildpack_lifecycle_data.stack,
-        buildpack: @source_droplet.buildpack_lifecycle_data.buildpack,
+        buildpacks: @source_droplet.buildpack_lifecycle_data.buildpacks,
         droplet:   new_droplet,
       )
       new_droplet.buildpack_lifecycle_data(true) # reload buildpack_lifecycle_data association

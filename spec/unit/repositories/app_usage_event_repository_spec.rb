@@ -109,7 +109,7 @@ module VCAP::CloudController
           let(:buildpack_url) { 'https://git.example.com/repo.git' }
 
           before do
-            app.app.lifecycle_data.update(buildpack: buildpack_url)
+            app.app.lifecycle_data.update(buildpacks: [buildpack_url])
           end
 
           it 'will create an event with the buildpack url as the name' do
@@ -134,7 +134,7 @@ module VCAP::CloudController
 
         context "when the DEA doesn't provide optional buildpack information" do
           before do
-            app.app.lifecycle_data.update(buildpack: nil)
+            app.app.lifecycle_data.update(buildpacks: nil)
           end
 
           it 'will create an event that does not contain buildpack name or guid' do
@@ -363,7 +363,7 @@ module VCAP::CloudController
           context 'when the build does NOT have an associated droplet but does have lifecycle data' do
             before do
               build.update(
-                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpack: 'http://git.url.example.com')
+                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['http://git.url.example.com'])
               )
             end
 
@@ -377,7 +377,7 @@ module VCAP::CloudController
             context 'when buildpack lifecycle info contains credentials in buildpack url' do
               before do
                 build.update(
-                  buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpack: 'http://ping:pong@example.com')
+                  buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['http://ping:pong@example.com'])
                 )
               end
 
@@ -410,7 +410,7 @@ module VCAP::CloudController
 
             before do
               build.update(
-                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpack: 'ruby_buildpack')
+                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['ruby_buildpack'])
               )
             end
 

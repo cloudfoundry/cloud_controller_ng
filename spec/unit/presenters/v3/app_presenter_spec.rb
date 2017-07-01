@@ -12,7 +12,7 @@ module VCAP::CloudController::Presenters::V3
 
     before do
       app.lifecycle_data.update(
-        buildpack: 'git://user:pass@github.com/repo',
+        buildpacks: ['git://user:pass@github.com/repo', 'limabean'],
         stack: 'the-happiest-stack',
       )
     end
@@ -46,7 +46,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to eq(links)
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
-        expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo'])
+        expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo', 'limabean'])
       end
     end
   end

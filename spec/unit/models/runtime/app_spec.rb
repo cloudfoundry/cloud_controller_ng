@@ -177,39 +177,43 @@ module VCAP::CloudController
       describe 'buildpack' do
         let(:app) { App.make }
 
-        it 'does allow nil value' do
-          app.app.lifecycle_data.update(buildpack: nil)
+        it 'allows nil value' do
+          app.app.lifecycle_data.update(buildpacks: nil)
           expect {
             app.save
           }.to_not raise_error
+          expect(app.buildpack).to eq(AutoDetectionBuildpack.new)
         end
 
-        it 'does allow a public url' do
-          app.app.lifecycle_data.update(buildpack: 'git://user@github.com/repo.git')
+        it 'allows a public url' do
+          app.app.lifecycle_data.update(buildpacks: ['git://user@github.com/repo.git'])
           expect {
             app.save
           }.to_not raise_error
+          expect(app.buildpack).to eq(CustomBuildpack.new('git://user@github.com/repo.git'))
         end
 
         it 'allows a public http url' do
-          app.app.lifecycle_data.update(buildpack: 'http://example.com/foo')
+          app.app.lifecycle_data.update(buildpacks: ['http://example.com/foo'])
           expect {
             app.save
           }.to_not raise_error
+          expect(app.buildpack).to eq(CustomBuildpack.new('http://example.com/foo'))
         end
 
         it 'allows a buildpack name' do
           admin_buildpack = Buildpack.make
-          app.app.lifecycle_data.update(buildpack: admin_buildpack.name)
+          app.app.lifecycle_data.update(buildpacks: [admin_buildpack.name])
           expect {
             app.save
           }.to_not raise_error
 
+          expect(app.legacy_buildpack).to eql(admin_buildpack)
           expect(app.buildpack).to eql(admin_buildpack)
         end
 
         it 'does not allow a non-url string' do
-          app.app.lifecycle_data.update(buildpack: 'Hello, world!')
+          app.app.lifecycle_data.update(buildpacks: ['Hello, world!'])
           expect {
             app.save
           }.to raise_error(Sequel::ValidationFailed, /is not valid public url or a known buildpack name/)
@@ -583,15 +587,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#buildpack_cache_key' do
-      let(:app) { AppFactory.make }
-      it 'compose the buildpack cache key from stack name and app guid' do
-        app.save
-        app.refresh
-        expect(app.buildpack_cache_key).to eq("#{app.guid}/#{app.stack.name}")
-      end
-    end
-
     describe '#execution_metadata' do
       let(:parent_app) { AppModel.make }
       let(:process) { App.make(app: parent_app) }
@@ -817,14 +812,14 @@ module VCAP::CloudController
       let(:app) { App.make(app: parent_app) }
       context 'when a custom buildpack is associated with the app' do
         it 'should be the custom url' do
-          app.app.lifecycle_data.update(buildpack: 'https://example.com/repo.git')
+          app.app.lifecycle_data.update(buildpacks: ['https://example.com/repo.git'])
           expect(app.custom_buildpack_url).to eq('https://example.com/repo.git')
         end
       end
 
       context 'when an admin buildpack is associated with the app' do
         it 'should be nil' do
-          app.app.lifecycle_data.update(buildpack: Buildpack.make.name)
+          app.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
           expect(app.custom_buildpack_url).to be_nil
         end
       end
@@ -1376,7 +1371,7 @@ module VCAP::CloudController
       context 'when a custom buildpack was used for staging' do
         it 'creates an AppUsageEvent that contains the custom buildpack url' do
           app = AppFactory.make(state: 'STOPPED')
-          app.app.lifecycle_data.update(buildpack: 'https://example.com/repo.git')
+          app.app.lifecycle_data.update(buildpacks: ['https://example.com/repo.git'])
           expect {
             app.update(state: 'STARTED')
           }.to change { AppUsageEvent.count }.by(1)
@@ -1391,7 +1386,7 @@ module VCAP::CloudController
           buildpack = Buildpack.make
           app       = AppFactory.make(state: 'STOPPED')
           app.current_droplet.update(
-            buildpack_receipt_buildpack:      'Admin buildpack detect string',
+            buildpack_receipt_buildpack: 'Admin buildpack detect string',
             buildpack_receipt_buildpack_guid: buildpack.guid
           )
           expect {
@@ -1452,7 +1447,7 @@ module VCAP::CloudController
       subject(:app) { AppFactory.make(app: parent_app) }
 
       it 'does not allow a docker package for a buildpack app' do
-        app.app.lifecycle_data.update(buildpack: Buildpack.make.name)
+        app.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
         PackageModel.make(:docker, app: app.app)
         expect {
           app.save
@@ -1573,6 +1568,10 @@ module VCAP::CloudController
 
             it 'does not change ports' do
               expect(app.ports).to be nil
+            end
+
+            it 'returns an auto-detect buildpack' do
+              expect(app.buildpack).to eq(AutoDetectionBuildpack.new)
             end
 
             it 'does not save ports to the database' do

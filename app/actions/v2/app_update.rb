@@ -60,7 +60,7 @@ module VCAP::CloudController
         docker_type_requested    = request_attrs.key?('docker_image') || request_attrs.key?('docker_credentials')
 
         if buildpack_type_requested
-          app.lifecycle_data.buildpack = request_attrs['buildpack'] if request_attrs.key?('buildpack')
+          app.lifecycle_data.buildpacks = [request_attrs['buildpack']] if request_attrs.key?('buildpack')
 
           if request_attrs.key?('stack_guid')
             app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)
@@ -145,7 +145,7 @@ module VCAP::CloudController
       end
 
       def validate_custom_buildpack!(process)
-        if process.buildpack.custom? && custom_buildpacks_disabled?
+        if process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
           raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
         end
       end

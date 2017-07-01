@@ -73,7 +73,7 @@ module VCAP::CloudController
           # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x
           # because mysql will deadlock when requests happen concurrently otherwise.
           BuildpackLifecycleDataModel.create(
-            buildpack: request_attrs['buildpack'],
+            buildpacks: Array(request_attrs['buildpack']),
             stack:     get_stack_name(request_attrs['stack_guid']),
             app:       app
           )
@@ -94,7 +94,7 @@ module VCAP::CloudController
       end
 
       def validate_custom_buildpack!(process)
-        if process.buildpack.custom? && custom_buildpacks_disabled?
+        if process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
           raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
         end
       end

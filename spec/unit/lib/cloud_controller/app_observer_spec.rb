@@ -16,7 +16,6 @@ module VCAP::CloudController
         started?: app_started,
         needs_staging?: app_needs_staging,
         active?: app_active,
-        buildpack_cache_key: key,
         diego: diego,
         staging?: staging?,
         current_droplet: nil,

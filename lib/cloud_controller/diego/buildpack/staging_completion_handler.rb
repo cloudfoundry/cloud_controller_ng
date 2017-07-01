@@ -49,7 +49,7 @@ module VCAP::CloudController
               buildpack_key:       buildpack_key,
               buildpack_url:       buildpack_url,
               detect_output:       lifecycle_data[:detected_buildpack],
-              requested_buildpack: droplet.buildpack_lifecycle_data.buildpack
+              requested_buildpack: droplet.buildpack_lifecycle_data.buildpacks.first
             )
             droplet.save_changes(raise_on_save_failure: true)
             build.droplet.reload

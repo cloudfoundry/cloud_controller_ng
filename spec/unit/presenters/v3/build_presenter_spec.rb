@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe BuildPresenter do
     let(:app) { VCAP::CloudController::AppModel.make }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app) }
-    let(:buildpack) { 'the-happiest-buildpack' }
+    let(:buildpacks) { ['the-happiest-buildpack', 'http://bob:secret@example.com/happy'] }
     let(:stack) { 'the-happiest-stack' }
     let(:build) do
       VCAP::CloudController::BuildModel.make(
@@ -17,7 +17,9 @@ module VCAP::CloudController::Presenters::V3
         created_by_user_email: 'this user emailed in'
       )
     end
-    let!(:lifecycle_data) { VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpack: [buildpack], stack: stack, build: build) }
+    let!(:lifecycle_data) do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpacks: buildpacks, stack: stack, build: build)
+    end
 
     describe '#to_hash' do
       let(:result) { BuildPresenter.new(build).to_hash }
@@ -33,7 +35,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:error]).to eq(nil)
 
           expect(result[:lifecycle][:type]).to eq('buildpack')
-          expect(result[:lifecycle][:data][:buildpacks]).to eq(['the-happiest-buildpack'])
+          expect(result[:lifecycle][:data][:buildpacks]).to eq(['the-happiest-buildpack', 'http://***:***@example.com/happy'])
           expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
 
           expect(result[:package][:guid]).to eq(package.guid)
@@ -51,7 +53,7 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'when buildpack contains username and password' do
-          let(:buildpack) { 'https://amelia:meow@neopets.com' }
+          let(:buildpacks) { ['https://amelia:meow@neopets.com'] }
 
           it 'obfuscates the username and password' do
             expect(result[:lifecycle][:data][:buildpacks]).to eq(['https://***:***@neopets.com'])
@@ -59,7 +61,7 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'when there is no buildpack' do
-          let(:buildpack) { nil }
+          let(:buildpacks) { nil }
 
           it 'has an empty array of buildpacks' do
             expect(result[:lifecycle][:data][:buildpacks]).to eq([])

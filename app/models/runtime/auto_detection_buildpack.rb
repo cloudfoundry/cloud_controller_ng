@@ -20,6 +20,8 @@ module VCAP::CloudController
       other.nil? || other.is_a?(AutoDetectionBuildpack)
     end
 
+    alias_method :==, :eql?
+
     def to_s
       'Auto Detection Buildpack'
     end

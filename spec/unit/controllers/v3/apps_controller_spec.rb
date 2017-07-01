@@ -10,8 +10,8 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space_1])
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and lists the apps for spaces user is allowed to read' do
@@ -29,9 +29,9 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       before do
         allow_user_global_read_access(user)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
       end
 
       it 'fetches all the apps' do
@@ -98,7 +98,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -464,8 +464,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'buildpack app' do
           before do
-            app_model.lifecycle_data.stack     = 'some-stack-name'
-            app_model.lifecycle_data.buildpack = 'some-buildpack-name'
+            app_model.lifecycle_data.stack = 'some-stack-name'
+            app_model.lifecycle_data.buildpacks = ['some-buildpack-name']
             app_model.lifecycle_data.save
           end
 
@@ -478,7 +478,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(app_model.name).to eq(new_name)
             expect(app_model.lifecycle_data.stack).to eq('some-stack-name')
-            expect(app_model.lifecycle_data.buildpack).to eq('some-buildpack-name')
+            expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name'])
           end
         end
 
@@ -529,7 +529,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           it 'sets the buildpack to the provided buildpack' do
             put :update, guid: app_model.guid, body: req_body
-            expect(app_model.reload.lifecycle_data.buildpack).to eq(buildpack_url)
+            expect(app_model.reload.lifecycle_data.buildpacks).to eq([buildpack_url])
           end
         end
 
@@ -545,14 +545,14 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           before do
-            app_model.lifecycle_data.buildpack = 'some-buildpack'
+            app_model.lifecycle_data.buildpacks = ['some-buildpack']
             app_model.lifecycle_data.save
           end
 
           it 'sets the buildpack to nil' do
-            expect(app_model.lifecycle_data.buildpack).to_not be_nil
+            expect(app_model.lifecycle_data.buildpacks).to_not be_empty
             put :update, guid: app_model.guid, body: req_body
-            expect(app_model.reload.lifecycle_data.buildpack).to be_nil
+            expect(app_model.reload.lifecycle_data.buildpacks).to be_empty
           end
         end
 
@@ -760,7 +760,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
       allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
     end
@@ -861,7 +861,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -1001,7 +1001,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -1090,7 +1090,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and the environment variables' do
@@ -1459,7 +1459,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and the droplet guid' do

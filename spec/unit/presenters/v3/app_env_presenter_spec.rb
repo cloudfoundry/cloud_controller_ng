@@ -14,7 +14,7 @@ module VCAP::CloudController::Presenters::V3
 
     before do
       VCAP::CloudController::BuildpackLifecycleDataModel.create(
-        buildpack: 'the-happiest-buildpack',
+        buildpacks: ['the-happiest-buildpack'],
         stack: 'the-happiest-stack',
         app: app
       )

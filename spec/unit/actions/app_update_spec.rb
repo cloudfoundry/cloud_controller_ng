@@ -13,7 +13,7 @@ module VCAP::CloudController
     let(:app_name) { 'original name' }
 
     before do
-      app_model.lifecycle_data.update(buildpack: buildpack, stack: Stack.default.name)
+      app_model.lifecycle_data.update(buildpacks: Array(buildpack), stack: Stack.default.name)
     end
 
     describe '#update' do
@@ -42,13 +42,13 @@ module VCAP::CloudController
 
         it 'updates the apps name' do
           expect(app_model.name).to eq('original name')
-          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+          expect(app_model.lifecycle_data.buildpacks).to eq(['http://original.com'])
 
           app_update.update(app_model, message, lifecycle)
           app_model.reload
 
           expect(app_model.name).to eq('new name')
-          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+          expect(app_model.lifecycle_data.buildpacks).to eq(['http://original.com'])
         end
       end
 
@@ -57,21 +57,21 @@ module VCAP::CloudController
           AppUpdateMessage.new({
               lifecycle: {
                 type: 'buildpack',
-                data: { buildpacks: ['http://new-buildpack.url'], stack: 'redhat' }
+                data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: 'redhat' }
               }
             })
         end
 
         it 'updates the apps lifecycle' do
           expect(app_model.name).to eq('original name')
-          expect(app_model.lifecycle_data.buildpack).to eq('http://original.com')
+          expect(app_model.lifecycle_data.buildpacks).to eq(['http://original.com'])
           expect(app_model.lifecycle_data.stack).to eq(Stack.default.name)
 
           app_update.update(app_model, message, lifecycle)
           app_model.reload
 
           expect(app_model.name).to eq('original name')
-          expect(app_model.lifecycle_data.buildpack).to eq('http://new-buildpack.url')
+          expect(app_model.lifecycle_data.buildpacks).to eq(['http://new-buildpack.url', 'ruby'])
           expect(app_model.lifecycle_data.stack).to eq('redhat')
         end
       end

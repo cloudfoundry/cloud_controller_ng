@@ -193,7 +193,7 @@ module VCAP::CloudController
     end
 
     def copy_buildpack_errors
-      bp = buildpack
+      bp = legacy_buildpack
       return if bp.valid?
 
       bp.errors.each do |err|
@@ -499,21 +499,21 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
-    def buildpack
+    def legacy_buildpack
       return AutoDetectionBuildpack.new unless app&.lifecycle_data
-      app.lifecycle_data.buildpack_model
+      app.lifecycle_data.legacy_buildpack_model
+    end
+
+    def buildpack
+      app.lifecycle_data.buildpack_models.first
     end
 
     def buildpack_specified?
-      !buildpack.is_a?(AutoDetectionBuildpack)
+      app.lifecycle_data.buildpacks.any?
     end
 
     def custom_buildpack_url
-      buildpack.url if buildpack.custom?
-    end
-
-    def buildpack_cache_key
-      Presenters::V3::CacheKeyPresenter.cache_key(guid: guid, stack_name: stack.name)
+      app.lifecycle_data.first_custom_buildpack_url
     end
 
     def after_commit

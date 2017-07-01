@@ -28,7 +28,7 @@ module VCAP::CloudController
 
         data_model = VCAP::CloudController::BuildpackLifecycleDataModel.last
 
-        expect(data_model.buildpack).to eq('cool-buildpack')
+        expect(data_model.buildpacks).to eq(['cool-buildpack'])
         expect(data_model.build).to eq(build)
       end
 

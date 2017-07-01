@@ -7,11 +7,12 @@ module VCAP::CloudController
     end
 
     def new_model
-      model_class.make.tap do |model|
+      model_factory.call.tap do |model|
         model.update(encrypted_attr => value_to_encrypt)
       end
     end
 
+    let(:model_factory) { -> { model_class.make } }
     let(:model_class) { described_class }
     let(:value_to_encrypt) { 'this-is-a-secret' }
     let!(:model) { new_model }

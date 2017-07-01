@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       it 'is a persistable hash' do
-        expect(build_model.reload.lifecycle_data.buildpack).to eq(lifecycle_data.buildpack)
+        expect(build_model.reload.lifecycle_data.buildpacks).to eq(lifecycle_data.buildpacks)
         expect(build_model.reload.lifecycle_data.stack).to eq(lifecycle_data.stack)
       end
 
@@ -60,6 +60,14 @@ module VCAP::CloudController
         build_model.save
 
         expect(build_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
+      end
+
+      context 'buildpack dependencies' do
+        it 'deletes the dependent buildpack_lifecycle_data_models when a build is deleted' do
+          expect {
+            build_model.destroy
+          }.to change { BuildpackLifecycleDataModel.count }.by(-1)
+        end
       end
     end
 

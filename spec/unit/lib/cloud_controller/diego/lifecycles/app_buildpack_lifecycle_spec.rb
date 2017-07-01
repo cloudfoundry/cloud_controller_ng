@@ -26,7 +26,7 @@ module VCAP::CloudController
 
           it 'sets buildpack to nil' do
             lifecycle_data_model = lifecycle.create_lifecycle_data_model(app)
-            expect(lifecycle_data_model.buildpack).to be_nil
+            expect(lifecycle_data_model.buildpacks).to eq []
           end
         end
 
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
           it 'uses the requested buildpack' do
             lifecycle_data_model = lifecycle.create_lifecycle_data_model(app)
-            expect(lifecycle_data_model.buildpack).to eq('custom-bp')
+            expect(lifecycle_data_model.buildpacks).to eq(['custom-bp'])
           end
         end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
         data_model = app.lifecycle_data
 
-        expect(data_model.buildpack).to eq('http://oj.com')
+        expect(data_model.buildpacks).to eq(['http://oj.com'])
         expect(data_model.stack).to eq('sweetness')
       end
     end

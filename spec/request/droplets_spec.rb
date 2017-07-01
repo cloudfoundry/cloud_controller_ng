@@ -31,7 +31,7 @@ RSpec.describe 'Droplets' do
       end
 
       before do
-        droplet_model.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+        droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
       end
 
       it 'gets a droplet' do
@@ -169,8 +169,8 @@ RSpec.describe 'Droplets' do
     let(:order_by) { '-created_at' }
 
     before do
-      droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
-      droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+      droplet1.buildpack_lifecycle_data.update(buildpacks: [buildpack.name], stack: 'stack-1')
+      droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
     it 'list all droplets with a buildpack lifecycle' do
@@ -412,8 +412,8 @@ RSpec.describe 'Droplets' do
     let(:order_by) { '-created_at' }
 
     before do
-      droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
-      droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+      droplet1.buildpack_lifecycle_data.update(buildpacks: [buildpack.name], stack: 'stack-1')
+      droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
     it 'filters by states' do
@@ -544,8 +544,8 @@ RSpec.describe 'Droplets' do
     let(:order_by) { '-created_at' }
 
     before do
-      droplet1.buildpack_lifecycle_data.update(buildpack: buildpack.name, stack: 'stack-1')
-      droplet2.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-2')
+      droplet1.buildpack_lifecycle_data.update(buildpacks: [buildpack.name], stack: 'stack-1')
+      droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
     it 'filters by states' do
@@ -659,7 +659,7 @@ RSpec.describe 'Droplets' do
       }.to_json
     end
     before do
-      og_droplet.buildpack_lifecycle_data.update(buildpack: 'http://buildpack.git.url.com', stack: 'stack-name')
+      og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
     end
 
     it 'copies a droplet' do

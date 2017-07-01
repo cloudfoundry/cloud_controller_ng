@@ -20,6 +20,7 @@ module VCAP::CloudController
           org_guid:                           app.space.organization_guid,
           space_guid:                         app.space_guid,
           space_name:                         app.space.name,
+          # TODO: record just the first buildpack for now, ask ZR about how to record multiples
           buildpack_guid:                     app.detected_buildpack_guid,
           buildpack_name:                     buildpack_name_for_app(app),
           parent_app_guid:                    app.app.guid,
@@ -79,7 +80,7 @@ module VCAP::CloudController
 
         if build.lifecycle_type == Lifecycles::BUILDPACK
           opts[:buildpack_guid] = build.droplet&.buildpack_receipt_buildpack_guid
-          opts[:buildpack_name] = CloudController::UrlSecretObfuscator.obfuscate(build.droplet&.buildpack_receipt_buildpack || build.lifecycle_data.buildpack)
+          opts[:buildpack_name] = CloudController::UrlSecretObfuscator.obfuscate(build.droplet&.buildpack_receipt_buildpack || build.lifecycle_data.buildpacks.first)
         end
         AppUsageEvent.create(opts)
       end
