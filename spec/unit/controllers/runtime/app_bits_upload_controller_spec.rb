@@ -6,7 +6,7 @@ module VCAP::CloudController
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'PUT /v2/app/:id/bits' do
-      let(:app_obj) do
+      let(:process) do
         ProcessModel.make
       end
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
       let(:headers) { headers_for(user) }
 
       def make_request
-        put "/v2/apps/#{app_obj.guid}/bits", req_body, form_headers(headers)
+        put "/v2/apps/#{process.guid}/bits", req_body, form_headers(headers)
       end
 
       context 'as an admin' do
@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
 
       context 'as a developer' do
-        let(:user) { make_developer_for_space(app_obj.space) }
+        let(:user) { make_developer_for_space(process.space) }
 
         context 'when the app_bits_upload feature flag is disabled' do
           let(:req_body) { { resources: '[]', application: valid_zip } }
@@ -46,7 +46,7 @@ module VCAP::CloudController
           before do
             FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
             make_request
-            app_obj.refresh
+            process.refresh
           end
 
           it 'returns FeatureDisabled and does not upload' do
@@ -54,11 +54,11 @@ module VCAP::CloudController
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
             expect(decoded_response['description']).to match(/app_bits_upload/)
 
-            expect(app_obj.package_hash).to be_nil
+            expect(process.package_hash).to be_nil
           end
 
           it 'does not modify the package state' do
-            expect(app_obj.package_state).not_to eq 'FAILED'
+            expect(process.package_state).not_to eq 'FAILED'
           end
         end
 
@@ -76,9 +76,9 @@ module VCAP::CloudController
               expect(last_response.status).to eq(400)
               expect(JSON.parse(last_response.body)['description']).to include('missing :resources')
 
-              app_obj.refresh
-              expect(app_obj.package_hash).to be_nil
-              expect(app_obj.package_state).to eq 'FAILED'
+              process.refresh
+              expect(process.package_hash).to be_nil
+              expect(process.package_state).to eq 'FAILED'
             end
           end
 
@@ -91,9 +91,9 @@ module VCAP::CloudController
               expect(last_response.status).to eq(400)
               expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
 
-              app_obj.refresh
-              expect(app_obj.package_hash).to be_nil
-              expect(app_obj.package_state).to eq 'FAILED'
+              process.refresh
+              expect(process.package_hash).to be_nil
+              expect(process.package_state).to eq 'FAILED'
             end
           end
 
@@ -103,7 +103,7 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(app_obj.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).to_not be_nil
             end
           end
 
@@ -116,9 +116,9 @@ module VCAP::CloudController
               expect(last_response.status).to eq(400)
               expect(JSON.parse(last_response.body)['description']).to include('missing :resources')
 
-              app_obj.refresh
-              expect(app_obj.package_hash).to be_nil
-              expect(app_obj.package_state).to eq 'FAILED'
+              process.refresh
+              expect(process.package_hash).to be_nil
+              expect(process.package_state).to eq 'FAILED'
             end
           end
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(app_obj.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).to_not be_nil
             end
           end
 
@@ -146,9 +146,9 @@ module VCAP::CloudController
               expect(last_response.status).to eq(400)
               expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
 
-              app_obj.refresh
-              expect(app_obj.package_hash).to be_nil
-              expect(app_obj.package_state).to eq 'FAILED'
+              process.refresh
+              expect(process.package_hash).to be_nil
+              expect(process.package_state).to eq 'FAILED'
             end
           end
 
@@ -160,7 +160,7 @@ module VCAP::CloudController
             it 'succeeds to upload' do
               make_request
               expect(last_response.status).to eq(201)
-              expect(app_obj.refresh.package_hash).to_not be_nil
+              expect(process.refresh.package_hash).to_not be_nil
             end
 
             context 'when the upload will finish after the auth token expires' do
@@ -173,7 +173,7 @@ module VCAP::CloudController
                   headers = headers_for(user)
 
                   Timecop.travel(Time.now.utc + 1.week + 100.seconds) do
-                    put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
+                    put "/v2/apps/#{process.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(201)
                 end
@@ -184,7 +184,7 @@ module VCAP::CloudController
                   headers = headers_for(user)
 
                   Timecop.travel(Time.now.utc + 1.week + 10000.seconds) do
-                    put "/v2/apps/#{app_obj.guid}/bits", req_body, headers
+                    put "/v2/apps/#{process.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(401)
                 end
@@ -202,9 +202,9 @@ module VCAP::CloudController
                 expect(last_response.status).to eq(400)
                 expect(JSON.parse(last_response.body)['description']).to include("'../../lol' is not safe")
 
-                app_obj.refresh
-                expect(app_obj.package_hash).to be_nil
-                expect(app_obj.package_state).to eq 'FAILED'
+                process.refresh
+                expect(process.package_hash).to be_nil
+                expect(process.package_state).to eq 'FAILED'
               end
             end
 
@@ -217,9 +217,9 @@ module VCAP::CloudController
                   expect(last_response.status).to eq(400)
                   expect(JSON.parse(last_response.body)['description']).to include("'377' with path 'lol' is invalid")
 
-                  app_obj.refresh
-                  expect(app_obj.package_hash).to be_nil
-                  expect(app_obj.package_state).to eq 'FAILED'
+                  process.refresh
+                  expect(process.package_hash).to be_nil
+                  expect(process.package_state).to eq 'FAILED'
                 end
               end
 
@@ -231,9 +231,9 @@ module VCAP::CloudController
                   expect(last_response.status).to eq(400)
                   expect(JSON.parse(last_response.body)['description']).to include("'577' with path 'lol' is invalid")
 
-                  app_obj.refresh
-                  expect(app_obj.package_hash).to be_nil
-                  expect(app_obj.package_state).to eq 'FAILED'
+                  process.refresh
+                  expect(process.package_hash).to be_nil
+                  expect(process.package_state).to eq 'FAILED'
                 end
               end
             end
@@ -242,7 +242,7 @@ module VCAP::CloudController
       end
 
       context 'as a non-developer' do
-        let(:user) { make_user_for_space(app_obj.space) }
+        let(:user) { make_user_for_space(process.space) }
         let(:req_body) do
           { resources: '[]', application: valid_zip }
         end
@@ -254,7 +254,7 @@ module VCAP::CloudController
       end
 
       context 'when running async=true' do
-        let(:user) { make_developer_for_space(app_obj.space) }
+        let(:user) { make_developer_for_space(process.space) }
         let(:req_body) do
           { resources: '[]', application: valid_zip }
         end
@@ -265,14 +265,14 @@ module VCAP::CloudController
 
         it 'creates a delayed job' do
           expect {
-            put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, headers_for(user)
+            put "/v2/apps/#{process.guid}/bits?async=true", req_body, headers_for(user)
           }.to change {
             Delayed::Job.count
           }.by(1)
 
           response_body = JSON.parse(last_response.body, symbolize_names: true)
           job = Delayed::Job.last
-          expect(job.handler).to include(app_obj.reload.latest_package.guid)
+          expect(job.handler).to include(process.reload.latest_package.guid)
           expect(job.queue).to eq('cc-api_z1-99')
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201
@@ -295,16 +295,16 @@ module VCAP::CloudController
 
             it 'fails to upload' do
               expect {
-                put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, form_headers(headers_for(user))
+                put "/v2/apps/#{process.guid}/bits?async=true", req_body, form_headers(headers_for(user))
               }.to change {
                 Delayed::Job.count
               }.by(1)
 
               execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-              app_obj.refresh
-              expect(app_obj.package_hash).to be_nil
-              expect(app_obj.package_state).to eq 'FAILED'
+              process.refresh
+              expect(process.package_hash).to be_nil
+              expect(process.package_state).to eq 'FAILED'
             end
           end
 
@@ -318,16 +318,16 @@ module VCAP::CloudController
 
               it 'fails to upload' do
                 expect {
-                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, form_headers(headers_for(user))
+                  put "/v2/apps/#{process.guid}/bits?async=true", req_body, form_headers(headers_for(user))
                 }.to change {
                   Delayed::Job.count
                 }.by(1)
 
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-                app_obj.refresh
-                expect(app_obj.package_hash).to be_nil
-                expect(app_obj.package_state).to eq 'FAILED'
+                process.refresh
+                expect(process.package_hash).to be_nil
+                expect(process.package_state).to eq 'FAILED'
               end
             end
 
@@ -336,16 +336,16 @@ module VCAP::CloudController
 
               it 'fails to upload' do
                 expect {
-                  put "/v2/apps/#{app_obj.guid}/bits?async=true", req_body, form_headers(headers_for(user))
+                  put "/v2/apps/#{process.guid}/bits?async=true", req_body, form_headers(headers_for(user))
                 }.to change {
                   Delayed::Job.count
                 }.by(1)
 
                 execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-                app_obj.refresh
-                expect(app_obj.package_hash).to be_nil
-                expect(app_obj.package_state).to eq 'FAILED'
+                process.refresh
+                expect(process.package_hash).to be_nil
+                expect(process.package_state).to eq 'FAILED'
               end
             end
           end
@@ -353,7 +353,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is a docker app' do
-        let(:app_obj) { ProcessModel.make(app: AppModel.make(:docker)) }
+        let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
         let(:req_body) { { resources: '[]', application: valid_zip } }
         let(:headers) { admin_headers }
 
