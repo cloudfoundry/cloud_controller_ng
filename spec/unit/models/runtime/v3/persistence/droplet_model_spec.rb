@@ -244,11 +244,10 @@ module VCAP::CloudController
     end
 
     describe '#buildpack_receipt_stack_name' do
-      it 'is deprecated and should be removed at some point' do
-        if Date.today >= Date.parse('2017/11/20')
-          fail "It's been six months since we stopped using #buildpack_receipt_stack_name... drop the column"
-        end
-      end
+      it_should_be_removed(
+        by: '2017/11/20',
+        explanation: "It's been six months since we stopped using #buildpack_receipt_stack_name... drop the column",
+      )
     end
   end
 end
