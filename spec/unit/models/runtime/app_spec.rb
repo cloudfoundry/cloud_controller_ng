@@ -1047,10 +1047,10 @@ module VCAP::CloudController
             # Need to get the app in a state where diego is true but ports are
             # nil. This would only occur on deployments that existed before we
             # added the default port value.
-            default_ports = VCAP::CloudController::App::DEFAULT_PORTS
-            stub_const('VCAP::CloudController::App::DEFAULT_PORTS', nil)
+            default_ports = VCAP::CloudController::ProcessModel::DEFAULT_PORTS
+            stub_const('VCAP::CloudController::ProcessModel::DEFAULT_PORTS', nil)
             app.update(diego: true)
-            stub_const('VCAP::CloudController::App::DEFAULT_PORTS', default_ports)
+            stub_const('VCAP::CloudController::ProcessModel::DEFAULT_PORTS', default_ports)
           end
 
           context 'when changing fields that do not update the version' do

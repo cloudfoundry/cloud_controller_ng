@@ -30,7 +30,7 @@ module VCAP::CloudController
 
           context 'and it is changing from STOPPED' do
             before do
-              db_app       = App.find(guid: app.guid)
+              db_app       = ProcessModel.find(guid: app.guid)
               db_app.state = stopped_state
               db_app.save(validate: false)
             end
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
           context 'and the app is already STARTED' do
             before do
-              db_app       = App.find(guid: app.guid)
+              db_app       = ProcessModel.find(guid: app.guid)
               db_app.state = started_state
               db_app.save(validate: false)
             end
@@ -58,7 +58,7 @@ module VCAP::CloudController
         end
 
         context 'and the app is new' do
-          let(:app) { App.new }
+          let(:app) { ProcessModel.new }
           before do
             app.instances = 1
             app.memory    = 100
@@ -81,7 +81,7 @@ module VCAP::CloudController
 
     describe '#currently_used_memory' do
       context 'when the app is new' do
-        let(:app) { App.new }
+        let(:app) { ProcessModel.new }
         it 'returns 0' do
           expect(subject.currently_used_memory).to eq(0)
         end

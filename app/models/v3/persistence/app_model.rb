@@ -12,13 +12,13 @@ module VCAP::CloudController
     many_to_one :space, class: 'VCAP::CloudController::Space', key: :space_guid, primary_key: :guid, without_guid_generation: true
     one_through_one :organization, join_table: Space.table_name, left_key: :guid, left_primary_key: :space_guid, right_primary_key: :id, right_key: :organization_id
 
-    one_to_many :processes, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid
+    one_to_many :processes, class: 'VCAP::CloudController::ProcessModel', key: :app_guid, primary_key: :guid
     one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
     one_to_many :builds, class: 'VCAP::CloudController::BuildModel', key: :app_guid, primary_key: :guid
 
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
-    one_to_one :web_process, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid, conditions: { type: 'web' }
+    one_to_one :web_process, class: 'VCAP::CloudController::ProcessModel', key: :app_guid, primary_key: :guid, conditions: { type: 'web' }
 
     one_to_one :buildpack_lifecycle_data,
                 class: 'VCAP::CloudController::BuildpackLifecycleDataModel',

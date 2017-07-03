@@ -89,7 +89,7 @@ module VCAP::CloudController
 
       context 'when the app has diego processes' do
         before do
-          App.make(app: app, diego: true)
+          ProcessModel.make(app: app, diego: true)
         end
 
         it 'finds a diego stager' do

@@ -24,7 +24,7 @@ class PortsPolicy
     return true if @changed_to_diego
     @app.route_mappings.each do |m|
       if m.app_port.blank?
-        return false unless @app.ports.include?(VCAP::CloudController::App::DEFAULT_HTTP_PORT)
+        return false unless @app.ports.include?(VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
       elsif !@app.ports.include?(m.app_port)
         return false
       end

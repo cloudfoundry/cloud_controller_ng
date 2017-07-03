@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-  let!(:v2_app) { VCAP::CloudController::App.make(app: service_binding.app, type: 'web') }
+  let!(:v2_app) { VCAP::CloudController::ProcessModel.make(app: service_binding.app, type: 'web') }
   let(:guid) { service_binding.guid }
   authenticated_request
 

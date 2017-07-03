@@ -864,7 +864,7 @@ module VCAP::CloudController
             it 'does not delete any of the v2 apps' do
               expect {
                 delete "/v2/spaces/#{space_guid}?recursive=true"
-              }.to_not change { App.count }
+              }.to_not change { ProcessModel.count }
             end
 
             it 'does not delete any of the v3 apps' do

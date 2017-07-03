@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:process) {
-        VCAP::CloudController::App.make(
+        VCAP::CloudController::ProcessModel.make(
           diego:                true,
           app_guid:             app_model.guid,
           instances:            3,

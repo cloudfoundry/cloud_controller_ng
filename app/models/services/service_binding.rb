@@ -8,7 +8,7 @@ module VCAP::CloudController
     many_to_one :service_instance, key: :service_instance_guid, primary_key: :guid, without_guid_generation: true
 
     one_through_one :v2_app,
-      class: 'VCAP::CloudController::App',
+      class: 'VCAP::CloudController::ProcessModel',
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :app_guid, right_key: :guid,

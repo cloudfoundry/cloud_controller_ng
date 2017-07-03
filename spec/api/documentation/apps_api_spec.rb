@@ -5,7 +5,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
   let!(:apps) { 3.times { VCAP::CloudController::AppFactory.make } }
-  let(:app_obj) { VCAP::CloudController::App.first }
+  let(:app_obj) { VCAP::CloudController::ProcessModel.first }
   let(:guid) { app_obj.guid }
 
   authenticated_request

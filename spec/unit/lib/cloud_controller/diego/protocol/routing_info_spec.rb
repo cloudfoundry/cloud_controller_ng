@@ -40,8 +40,8 @@ module VCAP::CloudController
           context 'http routes' do
             context 'with no app ports specified in route mapping' do
               before do
-                RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: App::NO_APP_PORT_SPECIFIED)
-                RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: App::NO_APP_PORT_SPECIFIED)
+                RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
               end
 
               context 'and app has no ports' do

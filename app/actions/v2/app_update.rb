@@ -108,9 +108,9 @@ module VCAP::CloudController
       def start_or_stop(app, request_attrs)
         if request_attrs.key?('state')
           case request_attrs['state']
-          when App::STARTED
+          when ProcessModel::STARTED
             AppStart.start_without_event(app)
-          when App::STOPPED
+          when ProcessModel::STOPPED
             V2::AppStop.stop(app, StagingCancel.new(@stagers))
           end
         end

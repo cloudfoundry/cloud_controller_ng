@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       describe '#send_desire_request' do
-        let(:process) { App.new }
+        let(:process) { ProcessModel.new }
         let(:default_health_check_timeout) { 99 }
         let(:process_guid) { ProcessGuid.from_process(process) }
         let(:message) { { desire: 'message' } }
@@ -124,7 +124,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stop_index_request' do
-        let(:process) { App.new }
+        let(:process) { ProcessModel.new }
         let(:process_guid) { ProcessGuid.from_process(process) }
         let(:index) { 3 }
 
@@ -155,7 +155,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stop_app_request' do
-        let(:process) { App.new }
+        let(:process) { ProcessModel.new }
         let(:process_guid) { ProcessGuid.from_process(process) }
 
         before do

@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe CacheKeyPresenter do
     context 'v2 app / v3 process' do
       it 'renders as app_guid/stack_name' do
-        app = VCAP::CloudController::App.make
+        app = VCAP::CloudController::ProcessModel.make
 
         key = CacheKeyPresenter.cache_key(guid: app.guid, stack_name: app.stack.name)
 

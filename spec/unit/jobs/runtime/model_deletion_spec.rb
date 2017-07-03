@@ -20,13 +20,13 @@ module VCAP::CloudController
 
         context 'deleting an app' do
           let!(:app) { AppFactory.make(space: space) }
-          subject(:job) { ModelDeletion.new(App, app.guid) }
+          subject(:job) { ModelDeletion.new(ProcessModel, app.guid) }
 
           it 'can delete an app' do
             expect {
               job.perform
             }.to change {
-              App.count
+              ProcessModel.count
             }.by(-1)
           end
         end

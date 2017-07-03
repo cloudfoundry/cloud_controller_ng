@@ -12,7 +12,7 @@ module VCAP::CloudController
           return nil unless process.diego?
           return process.ports unless process.ports.nil?
           return process.docker_ports if process.docker?
-          return [VCAP::CloudController::App::DEFAULT_HTTP_PORT] if process.type == 'web'
+          return [VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT] if process.type == 'web'
           []
         end
       end
