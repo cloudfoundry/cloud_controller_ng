@@ -104,6 +104,13 @@ Metrics/ParameterLists:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Migration/AddConstraintName:
+  Include:
+    - 'db/migrations/**/*'
+  Exclude:
+    # skip old migration files since we do not want to fix them after they are in the wild
+    - !ruby/regexp /db/migrations/201([0-6]|70[1-6]).+\.rb$/
+
 Performance/Casecmp:
   Enabled: false
 
