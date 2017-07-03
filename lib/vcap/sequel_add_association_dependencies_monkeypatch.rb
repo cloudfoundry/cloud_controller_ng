@@ -9,7 +9,7 @@ require 'sequel'
 # to implement the defined dependency.
 #
 # The following monkey patch provides a way to read the defined association dependencies back.
-# This is used to provide a generic implementation of soft deletion feature in the App model class.
+# This is used to provide a generic implementation of soft deletion feature in the ProcessModel model class.
 Sequel::Plugins::AssociationDependencies::ClassMethods.class_eval do
   alias_method :add_association_dependencies_original, :add_association_dependencies
 

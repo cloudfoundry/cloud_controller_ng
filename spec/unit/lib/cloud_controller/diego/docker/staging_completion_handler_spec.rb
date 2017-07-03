@@ -128,7 +128,7 @@ module VCAP::CloudController
 
             context 'when a start is requested' do
               let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { App.make(app: app, type: 'web') }
+              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
 
               before do
                 allow(runners).to receive(:runner_for_app).and_return(runner)
@@ -147,7 +147,7 @@ module VCAP::CloudController
               end
 
               it 'records a buildpack set event for all processes' do
-                App.make(app: app, type: 'other')
+                ProcessModel.make(app: app, type: 'other')
                 expect {
                   subject.staging_complete(payload, true)
                 }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.to(2).from(0)
@@ -313,7 +313,7 @@ module VCAP::CloudController
             end
 
             context 'when a start is requested' do
-              let!(:web_process) { App.make(app: app, type: 'web', state: 'STARTED') }
+              let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED') }
 
               it 'stops the web process of the app' do
                 expect {

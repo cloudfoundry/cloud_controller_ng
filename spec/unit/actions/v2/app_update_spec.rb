@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     describe 'update' do
       it 'updates the process' do
-        process = App.make
+        process = ProcessModel.make
         app     = process.app
 
         request_attrs = {
@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       it 'updates the app' do
-        process = App.make
+        process = ProcessModel.make
         app     = process.app
         stack   = Stack.make(name: 'stack-name')
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       context 'when custom buildpacks are disabled' do
-        let(:process) { App.make }
+        let(:process) { ProcessModel.make }
         let(:app) { process.app }
 
         before do
@@ -121,7 +121,7 @@ module VCAP::CloudController
 
       describe 'setting stack' do
         let(:new_stack) { Stack.make }
-        let(:process) { App.make }
+        let(:process) { ProcessModel.make }
         let(:app) { process.app }
         let(:request_attrs) { { 'stack_guid' => new_stack.guid } }
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
         end
 
         context 'when the app was never staged' do
-          let(:process) { App.make }
+          let(:process) { ProcessModel.make }
 
           it 'does not mark the app for staging' do
             expect(process.staged?).to be_falsey
@@ -188,7 +188,7 @@ module VCAP::CloudController
 
       describe 'changing lifecycle types' do
         context 'when changing from docker to buildpack' do
-          let(:process) { App.make(app: AppModel.make(:docker)) }
+          let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
           let(:app) { process.app }
 
           it 'raises an error setting buildpack' do
@@ -209,7 +209,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { App.make(app: AppModel.make(:buildpack)) }
+          let(:process) { ProcessModel.make(app: AppModel.make(:buildpack)) }
           let(:app) { process.app }
 
           it 'raises an error' do
@@ -408,7 +408,7 @@ module VCAP::CloudController
       end
 
       context 'when starting an app without a package' do
-        let(:process) { App.make(instances: 1) }
+        let(:process) { ProcessModel.make(instances: 1) }
 
         it 'raises an error' do
           expect {
@@ -432,7 +432,7 @@ module VCAP::CloudController
       describe 'starting and stopping' do
         let(:app) { process.app }
         let(:process) { AppFactory.make(instances: 1, state: state) }
-        let(:sibling_process) { App.make(instances: 1, state: state, app: app, type: 'worker') }
+        let(:sibling_process) { ProcessModel.make(instances: 1, state: state, app: app, type: 'worker') }
 
         context 'starting' do
           let(:state) { 'STOPPED' }

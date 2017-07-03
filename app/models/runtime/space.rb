@@ -22,12 +22,12 @@ module VCAP::CloudController
 
     one_to_many :app_models, primary_key: :guid, key: :space_guid
 
-    one_to_many :processes, class: 'VCAP::CloudController::App', dataset: -> { App.filter(app: app_models) }
+    one_to_many :processes, class: 'VCAP::CloudController::ProcessModel', dataset: -> { ProcessModel.filter(app: app_models) }
 
     many_through_many :apps, [
       [:spaces, :id, :guid],
       [:apps, :space_guid, :guid]
-    ], class: 'VCAP::CloudController::App', right_primary_key: :app_guid, conditions: { type: 'web' }
+    ], class: 'VCAP::CloudController::ProcessModel', right_primary_key: :app_guid, conditions: { type: 'web' }
 
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances

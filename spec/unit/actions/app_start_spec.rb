@@ -20,8 +20,8 @@ module VCAP::CloudController
         end
         let(:package) { PackageModel.make(:docker, app: app, state: PackageModel::READY_STATE) }
         let!(:droplet) { DropletModel.make(:docker, app: app, package: package, state: DropletModel::STAGED_STATE, docker_receipt_image: package.image) }
-        let!(:process1) { App.make(:process, state: 'STOPPED', app: app) }
-        let!(:process2) { App.make(:process, state: 'STOPPED', app: app) }
+        let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
+        let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
 
         before do
           app.update(droplet: droplet)
@@ -48,8 +48,8 @@ module VCAP::CloudController
             environment_variables: environment_variables)
         end
         let!(:droplet) { DropletModel.make(app: app) }
-        let!(:process1) { App.make(:process, state: 'STOPPED', app: app) }
-        let!(:process2) { App.make(:process, state: 'STOPPED', app: app) }
+        let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
+        let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
 
         before do
           app.update(droplet: droplet)

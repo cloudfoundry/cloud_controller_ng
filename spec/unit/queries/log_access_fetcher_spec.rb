@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'for a v2 app guid' do
-        let(:app_v2) { App.make }
+        let(:app_v2) { ProcessModel.make }
 
         it 'returns true' do
           expect(fetcher.app_exists?(app_v2.guid)).to eq(true)

@@ -16,11 +16,11 @@ module VCAP::CloudController
     end
 
     def diego_apps(batch_size, last_id)
-      App.select_all(App.table_name).
+      ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
-        where("#{App.table_name}.id > ?", last_id).
-        order("#{App.table_name}__id".to_sym).
+        where("#{ProcessModel.table_name}.id > ?", last_id).
+        order("#{ProcessModel.table_name}__id".to_sym).
         limit(batch_size).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all
@@ -28,31 +28,31 @@ module VCAP::CloudController
 
     def diego_apps_from_process_guids(process_guids)
       process_guids = Array(process_guids).to_set
-      App.select_all(App.table_name).
+      ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
-        where("#{App.table_name}__guid".to_sym => process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
-        order("#{App.table_name}__id".to_sym).
+        where("#{ProcessModel.table_name}__guid".to_sym => process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
+        order("#{ProcessModel.table_name}__id".to_sym).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all.
         select { |app| process_guids.include?(Diego::ProcessGuid.from_process(app)) }
     end
 
     def diego_apps_cache_data(batch_size, last_id)
-      diego_apps = App.
+      diego_apps = ProcessModel.
                    diego.
                    runnable.
-                   where("#{App.table_name}.id > ?", last_id).
-                   order("#{App.table_name}__id".to_sym).
+                   where("#{ProcessModel.table_name}.id > ?", last_id).
+                   order("#{ProcessModel.table_name}__id".to_sym).
                    limit(batch_size)
 
       diego_apps = diego_apps.buildpack_type unless FeatureFlag.enabled?(:diego_docker)
 
       diego_apps.select_map([
-        "#{App.table_name}__id".to_sym,
-        "#{App.table_name}__guid".to_sym,
-        "#{App.table_name}__version".to_sym,
-        "#{App.table_name}__updated_at".to_sym
+        "#{ProcessModel.table_name}__id".to_sym,
+        "#{ProcessModel.table_name}__guid".to_sym,
+        "#{ProcessModel.table_name}__version".to_sym,
+        "#{ProcessModel.table_name}__updated_at".to_sym
       ])
     end
 

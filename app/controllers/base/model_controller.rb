@@ -133,7 +133,7 @@ module VCAP::CloudController::RestController
       associated_controller = VCAP::CloudController.controller_from_relationship(all_relationships[name])
       associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model)
 
-      querier = associated_model == VCAP::CloudController::App ? AppQuery : Query
+      querier = associated_model == VCAP::CloudController::ProcessModel ? AppQuery : Query
       filtered_dataset =
         querier.filtered_dataset_from_query_params(
           associated_model,

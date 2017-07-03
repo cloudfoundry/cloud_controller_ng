@@ -9,9 +9,9 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      let!(:web) { App.make(type: 'web') }
-      let!(:web2) { App.make(type: 'web') }
-      let!(:worker) { App.make(type: 'worker') }
+      let!(:web) { ProcessModel.make(type: 'web') }
+      let!(:web2) { ProcessModel.make(type: 'web') }
+      let!(:worker) { ProcessModel.make(type: 'worker') }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all
@@ -52,7 +52,7 @@ module VCAP::CloudController
         end
 
         context 'app guids' do
-          let!(:desired_process) { App.make(app: desired_app) }
+          let!(:desired_process) { ProcessModel.make(app: desired_app) }
           let(:desired_app) { AppModel.make }
           let(:filters) { { app_guids: [desired_app.guid] } }
 
@@ -76,13 +76,13 @@ module VCAP::CloudController
     describe '#fetch_for_spaces' do
       let(:app1) { AppModel.make }
       let(:space1) { app1.space }
-      let!(:process_in_space1) { App.make(app: app1, type: 'a') }
-      let!(:process2_in_space1) { App.make(app: app1, type: 'b') }
+      let!(:process_in_space1) { ProcessModel.make(app: app1, type: 'a') }
+      let!(:process2_in_space1) { ProcessModel.make(app: app1, type: 'b') }
       let(:app2) { AppModel.make }
       let(:space2) { app2.space }
-      let!(:process_in_space2) { App.make(app: app2) }
+      let!(:process_in_space2) { ProcessModel.make(app: app2) }
 
-      before { App.make }
+      before { ProcessModel.make }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_for_spaces(space_guids: [])
@@ -115,9 +115,9 @@ module VCAP::CloudController
       end
 
       it 'returns the processes for the app' do
-        process1 = App.make(:process, app: app)
-        process2 = App.make(:process, app: app)
-        App.make(:process)
+        process1 = ProcessModel.make(:process, app: app)
+        process2 = ProcessModel.make(:process, app: app)
+        ProcessModel.make(:process)
 
         _app, results = fetcher.fetch_for_app
         expect(results.all).to match_array([process1, process2])

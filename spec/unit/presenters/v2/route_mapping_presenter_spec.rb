@@ -36,7 +36,7 @@ module CloudController::Presenters::V2
 
       context 'dea app' do
         before do
-          VCAP::CloudController::App.make(app: app, type: 'web', diego: false)
+          VCAP::CloudController::ProcessModel.make(app: app, type: 'web', diego: false)
         end
 
         it 'presents the app_port as nil' do
@@ -49,7 +49,7 @@ module CloudController::Presenters::V2
         let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(
           app: app,
           route: route,
-          app_port: VCAP::CloudController::App::NO_APP_PORT_SPECIFIED)
+          app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED)
         }
 
         it 'presents the app_port as nil' do

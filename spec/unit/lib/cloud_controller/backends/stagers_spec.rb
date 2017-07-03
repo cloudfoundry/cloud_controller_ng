@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#validate_app' do
       let(:app) do
-        instance_double(App,
+        instance_double(ProcessModel,
           docker?:                    docker,
           package_hash:               package_hash,
           buildpack:                  buildpack,
@@ -132,7 +132,7 @@ module VCAP::CloudController
 
       context 'when the app has diego processes' do
         before do
-          App.make(app: app, diego: true)
+          ProcessModel.make(app: app, diego: true)
         end
 
         it 'finds a diego stager' do

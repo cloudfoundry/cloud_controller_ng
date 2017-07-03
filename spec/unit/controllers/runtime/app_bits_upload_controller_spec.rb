@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe 'PUT /v2/app/:id/bits' do
       let(:app_obj) do
-        App.make
+        ProcessModel.make
       end
 
       let(:tmpdir) { Dir.mktmpdir }
@@ -353,7 +353,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is a docker app' do
-        let(:app_obj) { App.make(app: AppModel.make(:docker)) }
+        let(:app_obj) { ProcessModel.make(app: AppModel.make(:docker)) }
         let(:req_body) { { resources: '[]', application: valid_zip } }
         let(:headers) { admin_headers }
 
@@ -368,7 +368,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/apps/:guid/copy_bits' do
-      let(:dest_app) { App.make }
+      let(:dest_app) { ProcessModel.make }
       let(:src_app) { AppFactory.make }
       let(:json_payload) { { 'source_app_guid' => src_app.guid }.to_json }
 

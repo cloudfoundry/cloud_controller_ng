@@ -4,7 +4,7 @@ require 'cloud_controller/diego/process_guid'
 module VCAP::CloudController
   RSpec.describe BulkAppsController do
     def app_table_entry(index)
-      App.order_by(:id).all[index - 1]
+      ProcessModel.order_by(:id).all[index - 1]
     end
 
     let(:runners) do
@@ -136,7 +136,7 @@ module VCAP::CloudController
             expect(last_response.status).to eq(200)
             expect(decoded_response['fingerprints'].size).to eq(1)
 
-            app = App.order(:id).first
+            app = ProcessModel.order(:id).first
 
             message = decoded_response['fingerprints'][0]
             expect(message).to match_object({
@@ -155,12 +155,12 @@ module VCAP::CloudController
 
           it 'only returns staged apps' do
             get '/internal/bulk/apps', {
-              'batch_size' => App.count,
+              'batch_size' => ProcessModel.count,
               'token' => '{}',
             }
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count - 1)
+            expect(decoded_response['apps'].size).to eq(ProcessModel.count - 1)
           end
         end
 
@@ -171,12 +171,12 @@ module VCAP::CloudController
 
           it 'does not return apps in the STOPPED state' do
             get '/internal/bulk/apps', {
-              'batch_size' => App.count,
+              'batch_size' => ProcessModel.count,
               'token' => '{}',
             }
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count - 1)
+            expect(decoded_response['apps'].size).to eq(ProcessModel.count - 1)
           end
         end
 
@@ -193,12 +193,12 @@ module VCAP::CloudController
 
           it 'does return docker apps' do
             get '/internal/bulk/apps', {
-              'batch_size' => App.count,
+              'batch_size' => ProcessModel.count,
               'token' => '{}',
             }
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count)
+            expect(decoded_response['apps'].size).to eq(ProcessModel.count)
           end
         end
 
@@ -242,7 +242,7 @@ module VCAP::CloudController
 
           it 'should eventually return entire collection, batch after batch' do
             apps = []
-            total_size = App.count
+            total_size = ProcessModel.count
 
             token = '{}'
             while apps.size < total_size
@@ -344,7 +344,7 @@ module VCAP::CloudController
               it 'only returns the diego apps' do
                 diego_apps = runners.diego_apps(100, 0)
 
-                guids = App.all.map { |app| Diego::ProcessGuid.from_process(app) }
+                guids = ProcessModel.all.map { |app| Diego::ProcessGuid.from_process(app) }
                 post '/internal/bulk/apps', guids.to_json
 
                 expect(last_response.status).to eq(200)

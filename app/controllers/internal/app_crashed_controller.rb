@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       app_guid = Diego::ProcessGuid.app_guid(process_guid)
 
-      process = App.find(guid: app_guid)
+      process = ProcessModel.find(guid: app_guid)
       raise CloudController::Errors::NotFound.new_from_details('ProcessNotFound', app_guid) unless process
       raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'AppCrashed', 'not a diego app') unless process.diego?
 

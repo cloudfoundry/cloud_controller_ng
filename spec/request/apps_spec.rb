@@ -385,8 +385,8 @@ RSpec.describe 'Apps' do
       app_model.lifecycle_data.buildpack = buildpack.name
       app_model.lifecycle_data.stack     = stack.name
       app_model.lifecycle_data.save
-      app_model.add_process(VCAP::CloudController::App.make(instances: 1))
-      app_model.add_process(VCAP::CloudController::App.make(instances: 2))
+      app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
+      app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
 
       get "/v3/apps/#{app_model.guid}", nil, user_header
       expect(last_response.status).to eq(200)

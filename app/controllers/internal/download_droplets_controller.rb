@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     def download_droplet(guid, droplet_checksum)
-      app = App.find(guid: guid)
+      app = ProcessModel.find(guid: guid)
       check_app_exists(app, guid)
       raise ApiError.new_from_details('NotFound', droplet_checksum) unless app.droplet_checksum == droplet_checksum
 
