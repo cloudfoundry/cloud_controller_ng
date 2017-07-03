@@ -3,11 +3,15 @@ module RuboCop
     module Migration
       class AddConstraintName < RuboCop::Cop::Cop
         # Postgres and MySQL have different naming conventions, so if we need to remove them we cannot predict accurately what the constraint name would be.
-        MSG = 'Please name your constraint.'.freeze
+        MSG = 'Please explicitly name your index or constraint.'.freeze
+        CONSTRAINT_METHODS = %i{
+          add_unique_constraint add_constraint add_foreign_key add_index add_primary_key add_full_text_index add_spatial_index
+          unique_constraint constraint foreign_key index primary_key full_text_index spatial_index
+        }.freeze
 
         def on_block(node)
           node.each_descendant(:send) do |send_node|
-            next if method_name(send_node) != :add_unique_constraint
+            next unless CONSTRAINT_METHODS.include?(method_name(send_node))
 
             opts = send_node.children.last
             has_named_constraint = false
