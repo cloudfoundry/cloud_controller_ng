@@ -3,14 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController::Diego
   RSpec.describe StagerClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-    let(:app) { VCAP::CloudController::AppFactory.make }
-    let(:staging_guid) { app.latest_droplet.guid }
+    let(:process) { VCAP::CloudController::AppFactory.make }
+    let(:staging_guid) { process.latest_droplet.guid }
     let(:staging_url) { "#{TestConfig.config[:diego][:stager_url]}/v1/staging/#{staging_guid}" }
 
     subject(:client) { StagerClient.new(TestConfig.config) }
 
     describe 'making a staging request' do
-      let(:staging_message) { { app_id: app.guid } }
+      let(:staging_message) { { app_id: process.guid } }
 
       context 'when there is a stager url configured' do
         context 'when the stager endpoint is available' do

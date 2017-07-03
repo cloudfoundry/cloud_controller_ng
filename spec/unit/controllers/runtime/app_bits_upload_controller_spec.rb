@@ -271,22 +271,22 @@ module VCAP::CloudController
           }.by(1)
 
           response_body = JSON.parse(last_response.body, symbolize_names: true)
-          job = Delayed::Job.last
+          job           = Delayed::Job.last
           expect(job.handler).to include(process.reload.latest_package.guid)
           expect(job.queue).to eq('cc-api_z1-99')
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201
           expect(response_body).to eq({
-                                          metadata: {
-                                              guid: job.guid,
-                                              created_at: job.created_at.iso8601,
-                                              url: "/v2/jobs/#{job.guid}"
-                                          },
-                                          entity: {
-                                              guid: job.guid,
-                                              status: 'queued'
-                                          }
-                                      })
+            metadata: {
+              guid:       job.guid,
+              created_at: job.created_at.iso8601,
+              url:        "/v2/jobs/#{job.guid}"
+            },
+            entity:   {
+              guid:   job.guid,
+              status: 'queued'
+            }
+          })
         end
 
         describe 'resources' do
@@ -368,21 +368,21 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/apps/:guid/copy_bits' do
-      let(:dest_app) { ProcessModel.make }
-      let(:src_app) { AppFactory.make }
-      let(:json_payload) { { 'source_app_guid' => src_app.guid }.to_json }
+      let(:dest_process) { ProcessModel.make }
+      let(:src_process) { AppFactory.make }
+      let(:json_payload) { { 'source_app_guid' => src_process.guid }.to_json }
 
       class FakeCopier
-        def initialize(src_app, dest_app, app_event_repo, user, email)
-          @src_app        = src_app
-          @dest_app       = dest_app
+        def initialize(src_process, dest_process, app_event_repo, user, email)
+          @src_process    = src_process
+          @dest_process   = dest_process
           @app_event_repo = app_event_repo
           @user           = user
           @email          = email
         end
 
         def perform
-          FakeCopier.copies << [@src_app, @dest_app, @app_event_repo, @user, @email]
+          FakeCopier.copies << [@src_process, @dest_process, @app_event_repo, @user, @email]
         end
 
         class << self
@@ -395,7 +395,7 @@ module VCAP::CloudController
         let(:json_payload) { '{}' }
 
         it 'fails to copy application bits' do
-          post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+          post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
 
           expect(last_response.status).to eq(400)
 
@@ -407,21 +407,21 @@ module VCAP::CloudController
       context 'when a source guid is supplied' do
         it 'returns a delayed job' do
           expect {
-            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
           }.to change {
             Delayed::Job.count
           }.by(1)
 
-          job = Delayed::Job.last
+          job               = Delayed::Job.last
           expected_response = {
             'metadata' => {
-                'guid' => job.guid,
-                'created_at' => job.created_at.iso8601,
-                'url' => "/v2/jobs/#{job.guid}"
+              'guid'       => job.guid,
+              'created_at' => job.created_at.iso8601,
+              'url'        => "/v2/jobs/#{job.guid}"
             },
-            'entity' => {
-                'guid' => job.guid,
-                'status' => 'queued'
+            'entity'   => {
+              'guid'   => job.guid,
+              'status' => 'queued'
             }
           }
 
@@ -432,13 +432,13 @@ module VCAP::CloudController
 
         it 'records audit events on the source and destination apps' do
           expect {
-            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
           }.to change {
             Event.count
           }.by(2)
 
-          source_event = Event.find(actee: src_app.guid)
-          dest_event = Event.find(actee: dest_app.guid)
+          source_event = Event.find(actee: src_process.guid)
+          dest_event   = Event.find(actee: dest_process.guid)
 
           expect(source_event.type).to eq('audit.app.copy-bits')
           expect(dest_event.type).to eq('audit.app.copy-bits')
@@ -447,36 +447,36 @@ module VCAP::CloudController
         context 'validation permissions' do
           it 'allows an admin' do
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
-            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, admin_headers
+            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
 
             expect(last_response.status).to eq(201)
           end
 
           it 'disallows when not a developer of destination space' do
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
-            user = make_developer_for_space(src_app.space)
+            user = make_developer_for_space(src_process.space)
 
-            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers_for(user)
+            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers_for(user)
 
             expect(last_response.status).to eq(403)
           end
 
           it 'disallows when not a developer of source space' do
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
-            user = make_developer_for_space(dest_app.space)
+            user = make_developer_for_space(dest_process.space)
 
-            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers_for(user)
+            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers_for(user)
 
             expect(last_response.status).to eq(403)
           end
 
           it 'allows when a developer of both spaces' do
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
-            user = make_developer_for_space(dest_app.space)
-            src_app.organization.add_user(user)
-            src_app.space.add_developer(user)
+            user = make_developer_for_space(dest_process.space)
+            src_process.organization.add_user(user)
+            src_process.space.add_developer(user)
 
-            post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers_for(user)
+            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers_for(user)
             expect(last_response.status).to eq(201)
           end
         end

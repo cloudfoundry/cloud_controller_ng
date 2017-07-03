@@ -4,7 +4,7 @@ require 'cloud_controller/diego/staging_request'
 module VCAP::CloudController::Diego
   RSpec.describe StagingRequest do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-    let(:app) do
+    let(:process) do
       VCAP::CloudController::AppFactory.make(
         stack:            VCAP::CloudController::Stack.default,
         file_descriptors: 16384,
@@ -15,14 +15,14 @@ module VCAP::CloudController::Diego
 
     let(:staging_payload) do
       {
-        app_id: app.guid,
+        app_id: process.guid,
         file_descriptors: 16384,
         memory_mb: 1024,
         disk_mb: 1946,
-        environment: Environment.new(app).as_json,
+        environment: Environment.new(process).as_json,
         egress_rules: [],
         timeout: 1800,
-        log_guid: app.guid,
+        log_guid: process.guid,
         lifecycle: 'buildpack',
         lifecycle_data: {
           whatever: 'we want',
@@ -33,14 +33,14 @@ module VCAP::CloudController::Diego
 
     let(:staging_request) do
       request = StagingRequest.new
-      request.app_id = app.guid
+      request.app_id = process.guid
       request.file_descriptors = 16384
       request.memory_mb = 1024
       request.disk_mb = 1946
-      request.environment = Environment.new(app).as_json
+      request.environment = Environment.new(process).as_json
       request.egress_rules = []
       request.timeout = 1800
-      request.log_guid = app.guid
+      request.log_guid = process.guid
       request.lifecycle = 'buildpack'
       request.lifecycle_data = {
         whatever: 'we want',

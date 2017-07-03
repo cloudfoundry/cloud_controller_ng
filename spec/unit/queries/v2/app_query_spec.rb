@@ -7,17 +7,17 @@ module VCAP::RestAPI
 
     describe 'filtering by organization_guid' do
       it 'works for equals' do
-        expected_app = VCAP::CloudController::ProcessModel.make
+        expected_process = VCAP::CloudController::ProcessModel.make
         VCAP::CloudController::ProcessModel.make
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,
           VCAP::CloudController::ProcessModel.dataset,
           queryable_attributes,
-          { q: ["organization_guid:#{expected_app.organization.guid}"] }
+          { q: ["organization_guid:#{expected_process.organization.guid}"] }
         ).all
 
-        expect(results).to match_array([expected_app])
+        expect(results).to match_array([expected_process])
       end
 
       it 'works for IN' do
@@ -40,17 +40,17 @@ module VCAP::RestAPI
 
     describe 'filtering by stack_guid' do
       it 'works for equals' do
-        expected_app = VCAP::CloudController::ProcessModel.make
+        expected_process = VCAP::CloudController::ProcessModel.make
         VCAP::CloudController::ProcessModel.make
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,
           VCAP::CloudController::ProcessModel.dataset,
           queryable_attributes,
-          { q: ["stack_guid:#{VCAP::CloudController::Stack.find(name: expected_app.app.lifecycle_data.stack).guid}"] }
+          { q: ["stack_guid:#{VCAP::CloudController::Stack.find(name: expected_process.app.lifecycle_data.stack).guid}"] }
         ).all
 
-        expect(results).to match_array([expected_app])
+        expect(results).to match_array([expected_process])
       end
 
       it 'works for IN' do
@@ -76,8 +76,8 @@ module VCAP::RestAPI
 
     describe 'filtering by name' do
       it 'works for equals' do
-        expected_app = VCAP::CloudController::ProcessModel.make
-        expected_app.app.update(name: 'expected-name')
+        expected_process = VCAP::CloudController::ProcessModel.make
+        expected_process.app.update(name: 'expected-name')
         VCAP::CloudController::ProcessModel.make
 
         results = AppQuery.filtered_dataset_from_query_params(
@@ -87,7 +87,7 @@ module VCAP::RestAPI
           { q: ['name:expected-name'] }
         ).all
 
-        expect(results).to match_array([expected_app])
+        expect(results).to match_array([expected_process])
       end
 
       it 'works for IN' do

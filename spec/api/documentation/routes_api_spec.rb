@@ -114,13 +114,13 @@ EOF
     include_context 'guid_field', required: true
 
     describe 'Apps' do
-      let!(:associated_app) { VCAP::CloudController::AppFactory.make(space: space) }
-      let(:associated_app_guid) { associated_app.guid }
-      let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space) }
-      let(:app_guid) { app_obj.guid }
+      let!(:associated_process) { VCAP::CloudController::AppFactory.make(space: space) }
+      let(:associated_app_guid) { associated_process.guid }
+      let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+      let(:app_guid) { process.guid }
 
       before do
-        VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, process_type: app_obj.type, route: route)
+        VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route)
       end
 
       parameter :app_guid, 'The guid of the app'

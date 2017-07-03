@@ -19,8 +19,8 @@ module VCAP::CloudController
         end
 
         context 'deleting an app' do
-          let!(:app) { AppFactory.make(space: space) }
-          subject(:job) { ModelDeletion.new(ProcessModel, app.guid) }
+          let!(:process) { AppFactory.make(space: space) }
+          subject(:job) { ModelDeletion.new(ProcessModel, process.guid) }
 
           it 'can delete an app' do
             expect {

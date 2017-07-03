@@ -120,15 +120,15 @@ module VCAP::CloudController
         before { set_current_user_as_admin }
 
         it 'does not return events with inline-relations-depth=0' do
-          app = ProcessModel.make
-          get "/v2/apps/#{app.guid}?inline-relations-depth=0"
+          process = ProcessModel.make
+          get "/v2/apps/#{process.guid}?inline-relations-depth=0"
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
         end
 
         it 'does not return events with inline-relations-depth=1 since app_events dataset is relatively expensive to query' do
-          app = ProcessModel.make
-          get "/v2/apps/#{app.guid}?inline-relations-depth=1"
+          process = ProcessModel.make
+          get "/v2/apps/#{process.guid}?inline-relations-depth=1"
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
         end
@@ -160,8 +160,8 @@ module VCAP::CloudController
 
           post '/v2/apps', MultiJson.dump(initial_hash)
 
-          app = ProcessModel.last
-          expect(app_event_repository).to have_received(:record_app_create).with(app, app.space, user_audit_info, expected_attrs)
+          process = ProcessModel.last
+          expect(app_event_repository).to have_received(:record_app_create).with(process, process.space, user_audit_info, expected_attrs)
         end
       end
 
@@ -961,12 +961,12 @@ module VCAP::CloudController
         end
 
         it 'creates a new docker package' do
-          app              = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
-          original_package = app.latest_package
+          process          = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+          original_package = process.latest_package
 
-          expect(app.docker_image).not_to eq('repo/new-image')
+          expect(process.docker_image).not_to eq('repo/new-image')
 
-          put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'repo/new-image' })
+          put "/v2/apps/#{process.guid}", MultiJson.dump({ docker_image: 'repo/new-image' })
           expect(last_response.status).to eq(201)
 
           parsed_response = MultiJson.load(last_response.body)
@@ -975,8 +975,8 @@ module VCAP::CloudController
             'username' => nil,
             'password' => nil
           })
-          expect(app.reload.docker_image).to eq('repo/new-image')
-          expect(app.latest_package).not_to eq(original_package)
+          expect(process.reload.docker_image).to eq('repo/new-image')
+          expect(process.latest_package).not_to eq(original_package)
         end
 
         context 'when credentials are requested' do
@@ -985,12 +985,12 @@ module VCAP::CloudController
           end
 
           it 'creates a new docker package with those credentials' do
-            app              = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
-            original_package = app.latest_package
+            process          = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            original_package = process.latest_package
 
-            expect(app.docker_image).not_to eq('repo/new-image')
+            expect(process.docker_image).not_to eq('repo/new-image')
 
-            put "/v2/apps/#{app.guid}", MultiJson.dump({ docker_image: 'repo/new-image', docker_credentials: docker_credentials })
+            put "/v2/apps/#{process.guid}", MultiJson.dump({ docker_image: 'repo/new-image', docker_credentials: docker_credentials })
             expect(last_response.status).to eq(201)
 
             parsed_response = MultiJson.load(last_response.body)
@@ -999,8 +999,8 @@ module VCAP::CloudController
               'username' => 'fred',
               'password' => '***'
             })
-            expect(app.reload.docker_image).to eq('repo/new-image')
-            expect(app.latest_package).not_to eq(original_package)
+            expect(process.reload.docker_image).to eq('repo/new-image')
+            expect(process.latest_package).not_to eq(original_package)
           end
         end
       end
@@ -1606,9 +1606,10 @@ module VCAP::CloudController
 
       context 'when app will be staged', isolation: :truncation do
         let(:process) do
-          a = AppFactory.make(diego: false, state: 'STOPPED', instances: 1)
-          a.current_droplet.destroy
-          a.reload
+          AppFactory.make(diego: false, state: 'STOPPED', instances: 1).tap do |p|
+            p.current_droplet.destroy
+            p.reload
+          end
         end
         let(:stager_response) do
           double('StagingResponse', streaming_log_url: 'streaming-log-url')
@@ -1761,10 +1762,10 @@ module VCAP::CloudController
       end
 
       context 'with Docker app' do
-        let(:space) { docker_app.space }
+        let(:space) { docker_process.space }
         let(:route) { domain.add_route(host: 'app', space: space) }
         let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
-        let(:docker_app) do
+        let(:docker_process) do
           AppFactory.make(
             state:        'STARTED',
             diego:        true,
@@ -1774,7 +1775,7 @@ module VCAP::CloudController
 
         before do
           allow_any_instance_of(Diego::NsyncClient).to receive(:desire_app).and_return(nil)
-          put "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", nil
+          put "/v2/apps/#{docker_process.guid}/routes/#{pre_mapped_route.guid}", nil
         end
 
         context 'when Docker is disabled' do
@@ -1784,14 +1785,14 @@ module VCAP::CloudController
 
           context 'and a route is mapped' do
             it 'succeeds' do
-              put "/v2/apps/#{docker_app.guid}/routes/#{route.guid}", nil
+              put "/v2/apps/#{docker_process.guid}/routes/#{route.guid}", nil
               expect(last_response.status).to eq(201)
             end
           end
 
           context 'and a previously mapped route is unmapped' do
             it 'succeeds' do
-              delete "/v2/apps/#{docker_app.guid}/routes/#{pre_mapped_route.guid}", nil
+              delete "/v2/apps/#{docker_process.guid}/routes/#{pre_mapped_route.guid}", nil
               expect(last_response.status).to eq(204)
             end
           end
@@ -1805,17 +1806,17 @@ module VCAP::CloudController
       end
 
       context 'when docker is disabled' do
-        let!(:started_app) do
+        let!(:started_process) do
           AppFactory.make(state: 'STARTED', docker_image: 'docker-image')
         end
 
         before do
           FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-          set_current_user(make_developer_for_space(started_app.space))
+          set_current_user(make_developer_for_space(started_process.space))
         end
 
         it 'does not return docker disabled message' do
-          put "/v2/apps/#{started_app.guid}", MultiJson.dump(instances: 2)
+          put "/v2/apps/#{started_process.guid}", MultiJson.dump(instances: 2)
 
           expect(last_response.status).to eq(201)
         end
@@ -1828,17 +1829,17 @@ module VCAP::CloudController
       end
 
       context 'when docker is disabled' do
-        let!(:stopped_app) { AppFactory.make(:docker, state: 'STOPPED', docker_image: 'docker-image') }
-        let!(:started_app) { AppFactory.make(:docker, state: 'STARTED', docker_image: 'docker-image') }
+        let!(:stopped_process) { AppFactory.make(:docker, state: 'STOPPED', docker_image: 'docker-image') }
+        let!(:started_process) { AppFactory.make(:docker, state: 'STARTED', docker_image: 'docker-image') }
 
         before do
           FeatureFlag.find(name: 'diego_docker').update(enabled: false)
         end
 
         it 'returns docker disabled message on start' do
-          set_current_user(make_developer_for_space(stopped_app.space))
+          set_current_user(make_developer_for_space(stopped_process.space))
 
-          put "/v2/apps/#{stopped_app.guid}", MultiJson.dump(state: 'STARTED')
+          put "/v2/apps/#{stopped_process.guid}", MultiJson.dump(state: 'STARTED')
 
           expect(last_response.status).to eq(400)
           expect(last_response.body).to match /Docker support has not been enabled/
@@ -1846,9 +1847,9 @@ module VCAP::CloudController
         end
 
         it 'does not return docker disabled message on stop' do
-          set_current_user(make_developer_for_space(started_app.space))
+          set_current_user(make_developer_for_space(started_process.space))
 
-          put "/v2/apps/#{started_app.guid}", MultiJson.dump(state: 'STOPPED')
+          put "/v2/apps/#{started_process.guid}", MultiJson.dump(state: 'STOPPED')
 
           expect(last_response.status).to eq(201)
         end
@@ -1947,8 +1948,8 @@ module VCAP::CloudController
       end
 
       it 'returns duplicate app name message correctly' do
-        existing_app = ProcessModel.make(app: AppModel.make(space: space))
-        put "/v2/apps/#{process.guid}", MultiJson.dump(name: existing_app.name)
+        existing_process = ProcessModel.make(app: AppModel.make(space: space))
+        put "/v2/apps/#{process.guid}", MultiJson.dump(name: existing_process.name)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['code']).to eq(100002)

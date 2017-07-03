@@ -4,9 +4,9 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
-  let!(:apps) { 3.times { VCAP::CloudController::AppFactory.make } }
-  let(:app_obj) { VCAP::CloudController::ProcessModel.first }
-  let(:guid) { app_obj.guid }
+  let!(:processes) { 3.times { VCAP::CloudController::AppFactory.make } }
+  let(:process) { VCAP::CloudController::ProcessModel.first }
+  let(:guid) { process.guid }
 
   authenticated_request
 
@@ -181,12 +181,12 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     include_context 'guid_parameter'
 
     describe 'Service Bindings' do
-      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space) }
-      let(:associated_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: app_obj.space) }
+      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
+      let(:associated_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: process.space) }
 
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
       let(:service_binding_guid) { service_binding.guid }
-      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: associated_service_instance) }
+      let!(:associated_service_binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: associated_service_instance) }
       let(:associated_service_binding_guid) { associated_service_binding.guid }
 
       before do
@@ -215,11 +215,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
     describe 'Routes' do
       before do
-        VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: associated_route, process_type: app_obj.type)
+        VCAP::CloudController::RouteMappingModel.make(app: process.app, route: associated_route, process_type: process.type)
       end
-      let!(:route) { VCAP::CloudController::Route.make(space: app_obj.space) }
+      let!(:route) { VCAP::CloudController::Route.make(space: process.space) }
       let(:route_guid) { route.guid }
-      let(:associated_route) { VCAP::CloudController::Route.make(space: app_obj.space) }
+      let(:associated_route) { VCAP::CloudController::Route.make(space: process.space) }
       let(:associated_route_guid) { associated_route.guid }
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :app, exclude_parameters: ['organization_guid']
@@ -235,7 +235,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
   get '/v2/apps/:guid/env' do
     include_context 'guid_parameter'
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(detected_buildpack: 'buildpack-name', environment_json: { env_var: 'env_val' }) }
+    let(:process) { VCAP::CloudController::AppFactory.make(detected_buildpack: 'buildpack-name', environment_json: { env_var: 'env_val' }) }
 
     before do
       group = VCAP::CloudController::EnvironmentVariableGroup.staging
@@ -252,7 +252,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         Get the environment variables for an App using the app guid. Restricted to SpaceDeveloper role.
       EOD
 
-      client.get "/v2/apps/#{app_obj.guid}/env", {}, headers
+      client.get "/v2/apps/#{process.guid}/env", {}, headers
       expect(status).to eq(200)
 
       expect(parsed_response).to have_key('staging_env_json')
@@ -270,7 +270,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/instances' do
     include_context 'guid_parameter'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
 
     example 'Get the instance information for a STARTED App' do
       explanation <<-EOD
@@ -315,7 +315,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
       allow(instances_reporters).to receive(:all_instances_for_app).and_return(instances)
 
-      client.get "/v2/apps/#{app_obj.guid}/instances", {}, headers
+      client.get "/v2/apps/#{process.guid}/instances", {}, headers
       expect(status).to eq(200)
     end
   end
@@ -324,11 +324,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     include_context 'guid_parameter'
     parameter :index, 'The index of the App Instance to terminate'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED', instances: 2, diego: false) }
+    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED', instances: 2, diego: false) }
 
     example 'Terminate the running App Instance at the given index' do
       expect_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop_index)
-      client.delete "/v2/apps/#{app_obj.guid}/instances/0", {}, headers
+      client.delete "/v2/apps/#{process.guid}/instances/0", {}, headers
       expect(status).to eq(204)
     end
   end
@@ -336,7 +336,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/stats' do
     include_context 'guid_parameter'
 
-    let(:app_obj) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
 
     example 'Get detailed stats for a STARTED App' do
       explanation <<-EOD
@@ -371,7 +371,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
       allow(instances_reporters).to receive(:stats_for_app).and_return(stats)
 
-      client.get "/v2/apps/#{app_obj.guid}/stats", {}, headers
+      client.get "/v2/apps/#{process.guid}/stats", {}, headers
       expect(status).to eq(200)
     end
   end

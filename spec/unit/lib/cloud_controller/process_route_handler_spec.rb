@@ -18,9 +18,10 @@ module VCAP::CloudController
 
       context 'diego' do
         let!(:process) do
-          app_process = AppFactory.make(diego: true)
-          app_process.this.update(updated_at: Time.now - 1.day)
-          app_process.reload
+          AppFactory.make(diego: true).tap do |p|
+            p.this.update(updated_at: Time.now - 1.day)
+            p.reload
+          end
         end
 
         it 'updates the version' do
