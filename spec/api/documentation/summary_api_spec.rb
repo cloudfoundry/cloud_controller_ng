@@ -5,12 +5,12 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space }
-  let(:user) { make_developer_for_space(app_obj.space) }
+  let(:process) { VCAP::CloudController::AppFactory.make space: space }
+  let(:user) { make_developer_for_space(process.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
+  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: service_instance) }
 
   authenticated_request
 
@@ -46,15 +46,15 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     field :services, 'List of services that are bound to the app'
 
     example 'Get App summary' do
-      VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: route1, process_type: app_obj.type)
+      VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
       service_binding.save
-      client.get "/v2/apps/#{app_obj.guid}/summary", {}, headers
+      client.get "/v2/apps/#{process.guid}/summary", {}, headers
 
       expect(status).to eq 200
 
-      expect(parsed_response['guid']).to eq(app_obj.guid)
-      expect(parsed_response['name']).to eq(app_obj.name)
-      expect(parsed_response['memory']).to eq(app_obj.memory)
+      expect(parsed_response['guid']).to eq(process.guid)
+      expect(parsed_response['name']).to eq(process.name)
+      expect(parsed_response['memory']).to eq(process.memory)
 
       expect(parsed_response['routes'][0]['host']).to eq(route1.host)
       expect(parsed_response['routes'][0]['port']).to eq(route1.port)
@@ -66,14 +66,14 @@ end
 RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make(diego: false, space: space) }
-  let(:user) { make_developer_for_space(app_obj.space) }
+  let(:process) { VCAP::CloudController::AppFactory.make(diego: false, space: space) }
+  let(:user) { make_developer_for_space(process.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
+  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: service_instance) }
   let(:instances_reporters) { double(:instances_reporters) }
-  let(:running_instances) { { app_obj.guid => 1 } }
+  let(:running_instances) { { process.guid => 1 } }
 
   before do
     allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
@@ -90,7 +90,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     field :services, 'List of services that are associated with the space'
 
     example 'Get Space summary' do
-      VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: route1, process_type: app_obj.type)
+      VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
       service_binding.save
       client.get "/v2/spaces/#{space.guid}/summary", {}, headers
 
@@ -98,7 +98,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
       expect(parsed_response['guid']).to eq(space.guid)
       expect(parsed_response['name']).to eq(space.name)
 
-      expect(parsed_response['apps'][0]['name']).to eq(app_obj.name)
+      expect(parsed_response['apps'][0]['name']).to eq(process.name)
       expect(parsed_response['services'][0]['name']).to eq(service_instance.name)
     end
   end
@@ -146,7 +146,7 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
 
     example 'Get User summary' do
       organization = VCAP::CloudController::Organization.make
-      space = VCAP::CloudController::Space.make(organization: organization)
+      space        = VCAP::CloudController::Space.make(organization: organization)
       user.add_organization organization
       organization.add_manager user
       organization.add_billing_manager user

@@ -54,7 +54,7 @@ module VCAP::CloudController
       }.by([1, 1])
 
       droplet = DropletModel.last
-      expect(droplet.app_guid).to eq(app_obj.guid)
+      expect(droplet.app_guid).to eq(process.guid)
       expect(droplet.package_guid).to eq(package.guid)
       expect(droplet.state).to eq(DropletModel::STAGING_STATE)
       expect(droplet.build).to eq(build)
@@ -81,12 +81,12 @@ module VCAP::CloudController
       expect(event.actor_type).to eq('user')
       expect(event.actor_name).to eq('joe@joe.com')
       expect(event.actor_username).to eq('briggs')
-      expect(event.actee).to eq(app_obj.guid)
+      expect(event.actee).to eq(process.guid)
       expect(event.actee_type).to eq('app')
-      expect(event.actee_name).to eq(app_obj.name)
+      expect(event.actee_name).to eq(process.name)
       expect(event.timestamp).to be
-      expect(event.space_guid).to eq(app_obj.space_guid)
-      expect(event.organization_guid).to eq(app_obj.space.organization.guid)
+      expect(event.space_guid).to eq(process.space_guid)
+      expect(event.organization_guid).to eq(process.space.organization.guid)
       expect(event.metadata).to eq({
         'droplet_guid' => droplet.guid,
         'package_guid' => package.guid,
@@ -169,7 +169,7 @@ module VCAP::CloudController
     let(:staging_config) { original_staging_config }
 
     # explicitly unstaged app
-    let(:app_obj) do
+    let(:process) do
       AppFactory.make.tap do |app|
         app.current_droplet.destroy
         app.reload
@@ -187,7 +187,7 @@ module VCAP::CloudController
     shared_examples 'staging bad auth' do |verb, path|
       it 'should return 401 for bad credentials' do
         authorize 'hacker', 'sw0rdf1sh'
-        send(verb, "/staging/#{path}/#{app_obj.guid}")
+        send(verb, "/staging/#{path}/#{process.guid}")
         expect(last_response.status).to eq(401)
       end
     end
@@ -306,10 +306,10 @@ module VCAP::CloudController
 
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: app_obj) }
+        let(:package) { PackageModel.make(app: process) }
         let(:build) { BuildModel.make(
           package:               package,
-          app:                   app_obj,
+          app:                   process,
           created_by_user_guid:  '1234',
           created_by_user_email: 'joe@joe.com',
           created_by_user_name:  'briggs',
@@ -348,8 +348,8 @@ module VCAP::CloudController
 
       it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: app_obj) }
-        let(:build) { BuildModel.make(package: package, app: app_obj) }
+        let(:package) { PackageModel.make(app: process) }
+        let(:build) { BuildModel.make(package: package, app: process) }
         let(:droplet) { nil }
         let(:upload_req) do
           { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
@@ -376,10 +376,10 @@ module VCAP::CloudController
 
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: app_obj) }
+        let(:package) { PackageModel.make(app: process) }
         let(:build) { BuildModel.make(
           package:               package,
-          app:                   app_obj,
+          app:                   process,
           created_by_user_guid:  '1234',
           created_by_user_email: 'joe@joe.com',
           created_by_user_name:  'briggs',
@@ -419,8 +419,8 @@ module VCAP::CloudController
 
       it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: app_obj) }
-        let(:build) { BuildModel.make(package: package, app: app_obj) }
+        let(:package) { PackageModel.make(app: process) }
+        let(:build) { BuildModel.make(package: package, app: process) }
         let(:droplet) { nil }
         let(:upload_req) do
           { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }

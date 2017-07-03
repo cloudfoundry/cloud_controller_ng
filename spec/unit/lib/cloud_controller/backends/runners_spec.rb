@@ -19,22 +19,22 @@ module VCAP::CloudController
 
     describe '#runner_for_app' do
       subject(:runner) do
-        runners.runner_for_app(app)
+        runners.runner_for_app(process)
       end
 
       context 'when the app is configured to run on Diego' do
-        let(:app) { AppFactory.make(diego: true) }
+        let(:process) { AppFactory.make(diego: true) }
 
         it 'finds a diego backend' do
-          expect(runners).to receive(:diego_runner).with(app).and_call_original
+          expect(runners).to receive(:diego_runner).with(process).and_call_original
           expect(runner).to be_a(Diego::Runner)
         end
 
         context 'when the app has a docker image' do
-          let(:app) { AppFactory.make(:docker, docker_image: 'foobar') }
+          let(:process) { AppFactory.make(:docker, docker_image: 'foobar') }
 
           it 'finds a diego backend' do
-            expect(runners).to receive(:diego_runner).with(app).and_call_original
+            expect(runners).to receive(:diego_runner).with(process).and_call_original
             expect(runner).to be_a(Diego::Runner)
           end
         end
@@ -42,20 +42,20 @@ module VCAP::CloudController
     end
 
     describe '#diego_apps' do
-      let!(:diego_app1) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app2) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process1) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process2) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process3) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process4) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process5) { AppFactory.make(diego: true, state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
-        last_app = AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
+        last_process = AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
 
         apps = runners.diego_apps(100, 0)
 
         expect(apps.count).to eq(6)
 
-        expect(apps.last.to_json).to match_object(last_app.to_json)
+        expect(apps.last.to_json).to match_object(last_process.to_json)
       end
 
       it 'respects the batch_size' do
@@ -77,83 +77,83 @@ module VCAP::CloudController
       end
 
       it 'does not return unstaged apps' do
-        unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
-        unstaged_app.current_droplet.destroy
+        unstaged_process = AppFactory.make(diego: true, state: 'STARTED')
+        unstaged_process.current_droplet.destroy
 
         batch = runners.diego_apps(100, 0)
 
-        expect(batch).not_to include(unstaged_app)
+        expect(batch).not_to include(unstaged_process)
       end
 
       it "does not return apps which aren't expected to be started" do
-        stopped_app = AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_process = AppFactory.make(diego: true, state: 'STOPPED')
 
         batch = runners.diego_apps(100, 0)
 
-        expect(batch).not_to include(stopped_app)
+        expect(batch).not_to include(stopped_process)
       end
     end
 
     describe '#diego_apps_from_process_guids' do
-      let!(:diego_app1) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app2) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process1) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process2) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process3) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process4) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process5) { AppFactory.make(diego: true, state: 'STARTED') }
 
       it 'does not return unstaged apps' do
-        unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
-        unstaged_app.current_droplet.destroy
+        unstaged_process = AppFactory.make(diego: true, state: 'STARTED')
+        unstaged_process.current_droplet.destroy
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(unstaged_app))
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(unstaged_process))
 
-        expect(batch).not_to include(unstaged_app)
+        expect(batch).not_to include(unstaged_process)
       end
 
       it 'does not return apps that are stopped' do
-        stopped_app = AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_process = AppFactory.make(diego: true, state: 'STOPPED')
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_app))
+        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_process))
 
-        expect(batch).not_to include(stopped_app)
+        expect(batch).not_to include(stopped_process)
       end
 
       it 'accepts a process guid or an array of process guids' do
-        app          = ProcessModel.where(diego: true).order(:id).first
-        process_guid = Diego::ProcessGuid.from_process(app)
+        process = ProcessModel.where(diego: true).order(:id).first
+        process_guid = Diego::ProcessGuid.from_process(process)
 
-        expect(runners.diego_apps_from_process_guids(process_guid)).to eq([app])
-        expect(runners.diego_apps_from_process_guids([process_guid])).to eq([app])
+        expect(runners.diego_apps_from_process_guids(process_guid)).to eq([process])
+        expect(runners.diego_apps_from_process_guids([process_guid])).to eq([process])
       end
 
       it 'returns diego apps for each requested process guid' do
         diego_apps  = ProcessModel.where(diego: true).all
-        diego_guids = diego_apps.map { |app| Diego::ProcessGuid.from_process(app) }
+        diego_guids = diego_apps.map { |process| Diego::ProcessGuid.from_process(process) }
 
         expect(runners.diego_apps_from_process_guids(diego_guids)).to match_array(diego_apps)
       end
 
       context 'when the process guid is not found' do
         it 'does not return an app' do
-          app          = ProcessModel.where(diego: true).order(:id).first
-          process_guid = Diego::ProcessGuid.from_process(app)
+          process = ProcessModel.where(diego: true).order(:id).first
+          process_guid = Diego::ProcessGuid.from_process(process)
 
           expect {
-            app.set_new_version
-            app.save
+            process.set_new_version
+            process.save
           }.to change {
             runners.diego_apps_from_process_guids(process_guid)
-          }.from([app]).to([])
+          }.from([process]).to([])
         end
       end
     end
 
     describe '#diego_apps_cache_data' do
-      let!(:diego_app1) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app2) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app3) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app4) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_app5) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process1) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process2) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process3) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process4) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process5) { AppFactory.make(diego: true, state: 'STARTED') }
 
       it 'respects the batch_size' do
         data_count = [3, 5].map do |batch_size|
@@ -173,22 +173,22 @@ module VCAP::CloudController
       end
 
       it 'does not return unstaged apps' do
-        unstaged_app = AppFactory.make(diego: true, state: 'STARTED')
-        unstaged_app.current_droplet.destroy
+        unstaged_process = AppFactory.make(diego: true, state: 'STARTED')
+        unstaged_process.current_droplet.destroy
 
         batch   = runners.diego_apps_cache_data(100, 0)
         app_ids = batch.map { |data| data[0] }
 
-        expect(app_ids).not_to include(unstaged_app.id)
+        expect(app_ids).not_to include(unstaged_process.id)
       end
 
       it 'does not return apps that are stopped' do
-        stopped_app = AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_process = AppFactory.make(diego: true, state: 'STOPPED')
 
         batch   = runners.diego_apps_cache_data(100, 0)
         app_ids = batch.map { |data| data[0] }
 
-        expect(app_ids).not_to include(stopped_app.id)
+        expect(app_ids).not_to include(stopped_process.id)
       end
 
       it 'acquires the data in one select' do
@@ -202,7 +202,7 @@ module VCAP::CloudController
           FeatureFlag.create(name: 'diego_docker', enabled: true)
         end
 
-        let!(:docker_app) do
+        let!(:docker_process) do
           AppFactory.make(:docker, docker_image: 'some-image', state: 'STARTED')
         end
 
@@ -215,7 +215,7 @@ module VCAP::CloudController
             batch   = runners.diego_apps_cache_data(100, 0)
             app_ids = batch.map { |data| data[0] }
 
-            expect(app_ids).to include(docker_app.id)
+            expect(app_ids).to include(docker_process.id)
           end
         end
 
@@ -228,7 +228,7 @@ module VCAP::CloudController
             batch   = runners.diego_apps_cache_data(100, 0)
             app_ids = batch.map { |data| data[0] }
 
-            expect(app_ids).not_to include(docker_app.id)
+            expect(app_ids).not_to include(docker_process.id)
           end
         end
       end
@@ -301,12 +301,12 @@ module VCAP::CloudController
 
     describe '#package_state' do
       let(:parent_app) { AppModel.make }
-      subject(:app) { ProcessModel.make(app: parent_app) }
+      subject(:process) { ProcessModel.make(app: parent_app) }
 
       context 'when no package exists' do
         it 'is PENDING' do
-          expect(app.latest_package).to be_nil
-          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+          expect(process.latest_package).to be_nil
+          expect(runners.package_state(process.guid, nil, process.latest_droplet, process.latest_package)).to eq('PENDING')
         end
       end
 
@@ -316,7 +316,7 @@ module VCAP::CloudController
         end
 
         it 'is PENDING' do
-          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+          expect(runners.package_state(process.guid, nil, process.latest_droplet, process.latest_package)).to eq('PENDING')
         end
       end
 
@@ -326,7 +326,7 @@ module VCAP::CloudController
         end
 
         it 'is FAILED' do
-          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('FAILED')
+          expect(runners.package_state(process.guid, nil, process.latest_droplet, process.latest_package)).to eq('FAILED')
         end
       end
 
@@ -336,7 +336,7 @@ module VCAP::CloudController
         end
 
         it 'is PENDING' do
-          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+          expect(runners.package_state(process.guid, nil, process.latest_droplet, process.latest_package)).to eq('PENDING')
         end
       end
 
@@ -348,7 +348,7 @@ module VCAP::CloudController
         end
 
         it 'is STAGED' do
-          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('STAGED')
+          expect(runners.package_state(process.guid, process.current_droplet.guid, process.latest_droplet, process.latest_package)).to eq('STAGED')
         end
       end
 
@@ -359,7 +359,7 @@ module VCAP::CloudController
         end
 
         it 'is PENDING' do
-          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('PENDING')
+          expect(runners.package_state(process.guid, nil, process.latest_droplet, process.latest_package)).to eq('PENDING')
         end
       end
 
@@ -370,7 +370,7 @@ module VCAP::CloudController
         end
 
         it 'is FAILED' do
-          expect(runners.package_state(app.guid, nil, app.latest_droplet, app.latest_package)).to eq('FAILED')
+          expect(runners.package_state(process.guid, nil, process.latest_droplet, process.latest_package)).to eq('FAILED')
         end
       end
 
@@ -383,7 +383,7 @@ module VCAP::CloudController
         end
 
         it 'is PENDING' do
-          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('PENDING')
+          expect(runners.package_state(process.guid, process.current_droplet.guid, process.latest_droplet, process.latest_package)).to eq('PENDING')
         end
       end
 
@@ -394,7 +394,7 @@ module VCAP::CloudController
         end
 
         it 'is STAGED' do
-          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('STAGED')
+          expect(runners.package_state(process.guid, process.current_droplet.guid, process.latest_droplet, process.latest_package)).to eq('STAGED')
         end
       end
 
@@ -406,7 +406,7 @@ module VCAP::CloudController
         end
 
         it 'is STAGED' do
-          expect(runners.package_state(app.guid, app.current_droplet.guid, app.latest_droplet, app.latest_package)).to eq('STAGED')
+          expect(runners.package_state(process.guid, process.current_droplet.guid, process.latest_droplet, process.latest_package)).to eq('STAGED')
         end
       end
     end

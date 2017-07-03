@@ -132,17 +132,17 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      app   = find_guid_and_validate_access(:delete, guid)
-      space = app.space
+      process = find_guid_and_validate_access(:delete, guid)
+      space   = process.space
 
-      if !recursive_delete? && app.service_bindings.present?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', app.class.table_name)
+      if !recursive_delete? && process.service_bindings.present?
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_bindings', process.class.table_name)
       end
 
-      AppDelete.new(UserAuditInfo.from_context(SecurityContext)).delete_without_event([app.app])
+      AppDelete.new(UserAuditInfo.from_context(SecurityContext)).delete_without_event([process.app])
 
       @app_event_repository.record_app_delete_request(
-        app,
+        process,
         space,
         UserAuditInfo.from_context(SecurityContext),
         recursive_delete?)
@@ -153,10 +153,10 @@ module VCAP::CloudController
     get '/v2/apps/:guid/droplet/download', :download_droplet
 
     def download_droplet(guid)
-      app = find_guid_and_validate_access(:read, guid)
-      blob_dispatcher.send_or_redirect(guid: app.current_droplet.try(:blobstore_key))
+      process = find_guid_and_validate_access(:read, guid)
+      blob_dispatcher.send_or_redirect(guid: process.current_droplet.try(:blobstore_key))
     rescue CloudController::Errors::BlobNotFound
-      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{app.guid}")
+      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{process.guid}")
     end
 
     put '/v2/apps/:guid/droplet/upload', :upload_droplet

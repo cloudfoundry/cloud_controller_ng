@@ -9,7 +9,6 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-    let(:app) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
     before { set_current_user(user, scopes: scopes) }

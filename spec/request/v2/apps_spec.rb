@@ -252,8 +252,8 @@ RSpec.describe 'Apps' do
 
     describe 'filtering' do
       it 'filters by name' do
-        app = VCAP::CloudController::AppFactory.make
-        app.app.update(name: 'filter-name')
+        process = VCAP::CloudController::AppFactory.make
+        process.app.update(name: 'filter-name')
 
         get '/v2/apps?q=name:filter-name', nil, admin_headers
         parsed_response = MultiJson.load(last_response.body)
@@ -296,14 +296,14 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by stack_guid' do
-        search_app = VCAP::CloudController::AppFactory.make
+        search_process = VCAP::CloudController::AppFactory.make
 
-        get "/v2/apps?q=stack_guid:#{search_app.stack.guid}", nil, admin_headers
+        get "/v2/apps?q=stack_guid:#{search_process.stack.guid}", nil, admin_headers
         parsed_response = MultiJson.load(last_response.body)
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['total_results']).to eq(1)
-        expect(parsed_response['resources'][0]['entity']['stack_guid']).to eq(search_app.stack.guid)
+        expect(parsed_response['resources'][0]['entity']['stack_guid']).to eq(search_process.stack.guid)
       end
     end
   end
@@ -311,9 +311,9 @@ RSpec.describe 'Apps' do
   describe 'GET /v2/apps/:guid' do
     let!(:process) do
       VCAP::CloudController::AppFactory.make(
-        space:                   space,
-        name:                    'app-name',
-        command:                 'app-command'
+        space:   space,
+        name:    'app-name',
+        command: 'app-command'
       )
     end
 
@@ -387,10 +387,10 @@ RSpec.describe 'Apps' do
     it 'creates an app' do
       stack       = VCAP::CloudController::Stack.make
       post_params = MultiJson.dump({
-        name:                    'maria',
-        space_guid:              space.guid,
-        stack_guid:              stack.guid,
-        environment_json:        { 'KEY' => 'val' },
+        name:             'maria',
+        space_guid:       space.guid,
+        stack_guid:       stack.guid,
+        environment_json: { 'KEY' => 'val' },
       })
 
       post '/v2/apps', post_params, headers_for(user)
@@ -453,11 +453,11 @@ RSpec.describe 'Apps' do
     describe 'docker apps' do
       it 'creates the app' do
         post_params = MultiJson.dump({
-          name:                    'maria',
-          space_guid:              space.guid,
-          docker_image:            'cloudfoundry/diego-docker-app:latest',
-          docker_credentials:      { 'username' => 'bob', 'password' => 'password' },
-          environment_json:        { 'KEY' => 'val' },
+          name:               'maria',
+          space_guid:         space.guid,
+          docker_image:       'cloudfoundry/diego-docker-app:latest',
+          docker_credentials: { 'username' => 'bob', 'password' => 'password' },
+          environment_json:   { 'KEY' => 'val' },
         })
 
         post '/v2/apps', post_params, headers_for(user)
@@ -522,10 +522,10 @@ RSpec.describe 'Apps' do
   describe 'PUT /v2/apps/:guid' do
     let!(:process) {
       VCAP::CloudController::AppFactory.make(
-        space:                   space,
-        name:                    'mario',
-        environment_json:        { 'RAILS_ENV' => 'staging' },
-        command:                 'hello_world',
+        space:            space,
+        name:             'mario',
+        environment_json: { 'RAILS_ENV' => 'staging' },
+        command:          'hello_world',
       )
     }
 
@@ -600,8 +600,8 @@ RSpec.describe 'Apps' do
       let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
       let!(:process) {
         VCAP::CloudController::AppFactory.make(
-          app:                     app_model,
-          docker_image:            'cloudfoundry/diego-docker-app:latest'
+          app:          app_model,
+          docker_image: 'cloudfoundry/diego-docker-app:latest'
         )
       }
 
@@ -680,9 +680,9 @@ RSpec.describe 'Apps' do
       context 'when updating docker data' do
         let(:update_params) do
           MultiJson.dump({
-            name:             'maria',
-            environment_json: { 'RAILS_ENV' => 'production' },
-            state:            'STARTED',
+            name:               'maria',
+            environment_json:   { 'RAILS_ENV' => 'production' },
+            state:              'STARTED',
             docker_image:       'cloudfoundry/diego-docker-app:even-more-latest',
             docker_credentials: {
               'username' => 'somedude',
@@ -1093,7 +1093,7 @@ RSpec.describe 'Apps' do
             'package_updated_at'         => iso8601,
             'detected_start_command'     => '',
             'enable_ssh'                 => true,
-            'ports' => [8080]
+            'ports'                      => [8080]
           }
         }
       )

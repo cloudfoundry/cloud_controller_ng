@@ -18,7 +18,7 @@ module CloudController::Presenters::V2
 
       let(:space) { VCAP::CloudController::Space.make }
       let(:stack) { VCAP::CloudController::Stack.make }
-      let(:app) do
+      let(:process) do
         VCAP::CloudController::AppFactory.make(
           name:             'utako',
           space:            space,
@@ -38,14 +38,14 @@ module CloudController::Presenters::V2
 
       before do
         VCAP::CloudController::Buildpack.make(name: 'schmuby')
-        app.app.lifecycle_data.update(
+        process.app.lifecycle_data.update(
           buildpacks: buildpacks
         )
-        app.current_droplet.update(
+        process.current_droplet.update(
           buildpack_receipt_detect_output:  'detected buildpack',
           buildpack_receipt_buildpack_guid: 'i am a buildpack guid',
         )
-        VCAP::CloudController::DropletModel.make(app: app.app, package: app.latest_package, error_description: 'because')
+        VCAP::CloudController::DropletModel.make(app: process.app, package: process.latest_package, error_description: 'because')
       end
 
       it 'returns the app entity and associated urls' do
@@ -62,11 +62,11 @@ module CloudController::Presenters::V2
           'instances'                  => 1,
           'disk_quota'                 => 1024,
           'state'                      => 'STOPPED',
-          'version'                    => app.version,
+          'version'                    => process.version,
           'command'                    => 'start',
           'console'                    => anything,
           'debug'                      => anything,
-          'staging_task_id'            => app.latest_build.guid,
+          'staging_task_id'            => process.latest_build.guid,
           'package_state'              => 'PENDING',
           'health_check_type'          => 'port',
           'health_check_timeout'       => nil,
@@ -86,17 +86,17 @@ module CloudController::Presenters::V2
           'relationship_key'           => 'relationship_value'
         }
 
-        actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+        actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
         expect(actual_entity_hash).to be_a_response_like(expected_entity_hash)
-        expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+        expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
       end
 
       describe 'nil associated objects' do
         context 'when an associated object is not present' do
           before do
-            parent_app = app.app
-            app.destroy
+            parent_app = process.app
+            process.destroy
             parent_app.builds.map(&:destroy)
             parent_app.packages.map(&:destroy)
             parent_app.droplets.map(&:destroy)
@@ -105,7 +105,7 @@ module CloudController::Presenters::V2
           end
 
           it 'returns nil' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
             expect(actual_entity_hash).to be_nil
           end
         end
@@ -114,16 +114,16 @@ module CloudController::Presenters::V2
       describe 'buildpacks' do
         context 'with a custom buildpack' do
           it 'displays the correct url' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['buildpack']).to eq 'https://github.com/custombuildpack'
-            expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+            expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
 
           it 'calls out to the UrlSecretObfuscator' do
             allow(CloudController::UrlSecretObfuscator).to receive(:obfuscate)
 
-            app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(CloudController::UrlSecretObfuscator).to have_received(:obfuscate).exactly :once
           end
@@ -133,10 +133,10 @@ module CloudController::Presenters::V2
           let(:buildpack) { 'schmuby' }
 
           it 'displays the correct url' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['buildpack']).to eq 'schmuby'
-            expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+            expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
         end
       end
@@ -144,33 +144,33 @@ module CloudController::Presenters::V2
       describe 'docker' do
         context 'with no credentials' do
           before do
-            VCAP::CloudController::PackageModel.make(:docker, app: app.app, docker_image: 'someimage')
-            app.reload
+            VCAP::CloudController::PackageModel.make(:docker, app: process.app, docker_image: 'someimage')
+            process.reload
           end
 
           it 'displays the docker_image' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_image']).to eq('someimage')
             expect(actual_entity_hash['docker_credentials']['username']).to eq(nil)
             expect(actual_entity_hash['docker_credentials']['password']).to eq(nil)
-            expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+            expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
         end
 
         context 'with credentials' do
           before do
-            VCAP::CloudController::PackageModel.make(:docker, app: app.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
-            app.reload
+            VCAP::CloudController::PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
+            process.reload
           end
 
           it 'displays the docker image and username and redacts the password' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['docker_image']).to eq('someimage')
             expect(actual_entity_hash['docker_credentials']['username']).to eq('user')
             expect(actual_entity_hash['docker_credentials']['password']).to eq('***')
-            expect(relations_presenter).to have_received(:to_hash).with(controller, app, opts, depth, parents, orphans)
+            expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
         end
       end
@@ -181,7 +181,7 @@ module CloudController::Presenters::V2
         end
 
         it 'delegates to OpenProcessPorts' do
-          actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+          actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
           expect(actual_entity_hash['ports']).to eq('expected-ports')
         end
@@ -192,7 +192,7 @@ module CloudController::Presenters::V2
           before { set_current_user_as_admin }
 
           it 'displays environment_json' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
@@ -202,27 +202,27 @@ module CloudController::Presenters::V2
           before { set_current_user_as_admin_read_only }
 
           it 'displays environment_json' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
 
         context 'when the user is a space developer' do
-          before { allow(app.space).to receive(:has_developer?).and_return(true) }
+          before { allow(process.space).to receive(:has_developer?).and_return(true) }
 
           it 'displays the environment json' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['environment_json']).to eq({ 'UNICORNS' => 'RAINBOWS' })
           end
         end
 
         context 'when the user is any other role' do
-          before { allow(app.space).to receive(:has_developer?).and_return(false) }
+          before { allow(process.space).to receive(:has_developer?).and_return(false) }
 
           it 'redacts the environment json' do
-            actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)
+            actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
 
             expect(actual_entity_hash['environment_json']).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })
           end

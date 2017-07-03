@@ -195,10 +195,10 @@ module VCAP::CloudController
         let(:process) { AppFactory.make(space: service_instance.space) }
         let(:process2) { AppFactory.make(space: service_instance.space) }
         let!(:service_binding) {
-          ServiceBinding.make(app_guid: process.guid, service_instance_guid: service_instance.guid)
+          ServiceBinding.make(app_guid: process.app.guid, service_instance_guid: service_instance.guid)
         }
         let!(:service_binding2) {
-          ServiceBinding.make(app_guid: process2.guid, service_instance_guid: service_instance.guid)
+          ServiceBinding.make(app_guid: process2.app.guid, service_instance_guid: service_instance.guid)
         }
 
         context 'and syslog_drain_url changes' do

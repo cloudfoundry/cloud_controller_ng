@@ -5,36 +5,36 @@ RSpec.describe 'max memory policies' do
   let(:error_name) { :random_memory_error }
 
   describe AppMaxMemoryPolicy do
-    let(:app) { VCAP::CloudController::AppFactory.make(memory: 100, state: 'STARTED') }
+    let(:process) { VCAP::CloudController::AppFactory.make(memory: 100, state: 'STARTED') }
 
-    subject(:validator) { AppMaxMemoryPolicy.new(app, org_or_space, error_name) }
+    subject(:validator) { AppMaxMemoryPolicy.new(process, org_or_space, error_name) }
 
     context 'when performing a scaling operation' do
       before do
-        app.memory = 150
+        process.memory = 150
       end
 
       it 'registers error when quota is exceeded' do
         allow(org_or_space).to receive(:has_remaining_memory).with(50).and_return(false)
-        expect(validator).to validate_with_error(app, :memory, error_name)
+        expect(validator).to validate_with_error(process, :memory, error_name)
       end
 
       it 'does not register error when quota is not exceeded' do
         allow(org_or_space).to receive(:has_remaining_memory).with(50).and_return(true)
-        expect(validator).to validate_without_error(app)
+        expect(validator).to validate_without_error(process)
       end
 
       it 'adds the given error to the model' do
         allow(org_or_space).to receive(:has_remaining_memory).with(50).and_return(false)
         validator.validate
-        expect(app.errors.on(:memory)).to include(error_name)
+        expect(process.errors.on(:memory)).to include(error_name)
       end
     end
 
     context 'when not performing a scaling operation' do
       it 'does not register error' do
-        app.state = 'STOPPED'
-        expect(validator).to validate_without_error(app)
+        process.state = 'STOPPED'
+        expect(validator).to validate_without_error(process)
       end
     end
   end

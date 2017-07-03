@@ -135,28 +135,28 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/apps/:id/instances/:index' do
-      let(:app_obj) { AppFactory.make(state: 'STARTED', instances: 2) }
+      let(:process) { AppFactory.make(state: 'STARTED', instances: 2) }
 
       before { set_current_user(user) }
 
       context 'as a developer or space manager' do
-        let(:user) { make_developer_for_space(app_obj.space) }
+        let(:user) { make_developer_for_space(process.space) }
 
         it 'stops the instance at the given index' do
           allow(index_stopper).to receive(:stop_index)
 
-          delete "/v2/apps/#{app_obj.guid}/instances/1"
+          delete "/v2/apps/#{process.guid}/instances/1"
 
           expect(last_response.status).to eq(204)
-          expect(index_stopper).to have_received(:stop_index).with(app_obj, 1)
+          expect(index_stopper).to have_received(:stop_index).with(process, 1)
         end
       end
 
       context 'as a non-developer' do
-        let(:user) { make_user_for_space(app_obj.space) }
+        let(:user) { make_user_for_space(process.space) }
 
         it 'returns 403' do
-          delete "/v2/apps/#{app_obj.guid}/instances/1"
+          delete "/v2/apps/#{process.guid}/instances/1"
           expect(last_response.status).to eq(403)
         end
       end

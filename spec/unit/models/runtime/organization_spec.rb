@@ -27,9 +27,9 @@ module VCAP::CloudController
       end
 
       it 'has associated apps' do
-        app = ProcessModel.make
-        organization = app.space.organization
-        expect(organization.apps).to include(app.reload)
+        process = ProcessModel.make
+        organization = process.space.organization
+        expect(organization.apps).to include(process.reload)
       end
 
       it 'does not associate non-web v2 apps' do
@@ -455,9 +455,9 @@ module VCAP::CloudController
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        app = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
-        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
-        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
+        process = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
+        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
 
         expect(org.has_remaining_memory(200)).to eq(true)
         expect(org.has_remaining_memory(201)).to eq(false)
@@ -467,9 +467,9 @@ module VCAP::CloudController
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        app = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
-        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
-        TaskModel.make(app: app.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
+        process = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
+        TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
 
         expect(org.has_remaining_memory(250)).to eq(true)
         expect(org.has_remaining_memory(251)).to eq(false)

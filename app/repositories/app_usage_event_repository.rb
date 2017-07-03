@@ -5,31 +5,27 @@ module VCAP::CloudController
         AppUsageEvent.find(guid: guid)
       end
 
-      def create_from_app(app, state_name=nil)
+      def create_from_app(process, state_name=nil)
         AppUsageEvent.create(
-          state:                              state_name || app.state,
-          previous_state:                     app.initial_value(:state),
-          package_state:                      app.package_state,
+          state:                              state_name || process.state,
+          previous_state:                     process.initial_value(:state),
+          package_state:                      process.package_state,
           previous_package_state:             'UNKNOWN',
-          instance_count:                     app.instances,
-          previous_instance_count:            app.initial_value(:instances),
-          memory_in_mb_per_instance:          app.memory,
-          previous_memory_in_mb_per_instance: app.initial_value(:memory),
-          app_guid:                           app.guid,
-          app_name:                           app.name,
-          org_guid:                           app.space.organization_guid,
-          space_guid:                         app.space_guid,
-          space_name:                         app.space.name,
-          buildpack_guid:                     app.detected_buildpack_guid,
-          buildpack_name:                     buildpack_name_for_app(app),
-          parent_app_guid:                    app.app.guid,
-          parent_app_name:                    app.app.name,
-          process_type:                       app.type
+          instance_count:                     process.instances,
+          previous_instance_count:            process.initial_value(:instances),
+          memory_in_mb_per_instance:          process.memory,
+          previous_memory_in_mb_per_instance: process.initial_value(:memory),
+          app_guid:                           process.guid,
+          app_name:                           process.name,
+          org_guid:                           process.space.organization_guid,
+          space_guid:                         process.space_guid,
+          space_name:                         process.space.name,
+          buildpack_guid:                     process.detected_buildpack_guid,
+          buildpack_name:                     buildpack_name_for_app(process),
+          parent_app_guid:                    process.app.guid,
+          parent_app_name:                    process.app.name,
+          process_type:                       process.type
         )
-      end
-
-      def buildpack_name_for_app(app)
-        CloudController::UrlSecretObfuscator.obfuscate(app.custom_buildpack_url || app.detected_buildpack_name)
       end
 
       def create_from_task(task, state)
@@ -149,6 +145,12 @@ module VCAP::CloudController
       def delete_events_older_than(cutoff_age_in_days)
         old_app_usage_events = AppUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
         old_app_usage_events.delete
+      end
+
+      private
+
+      def buildpack_name_for_app(app)
+        CloudController::UrlSecretObfuscator.obfuscate(app.custom_buildpack_url || app.detected_buildpack_name)
       end
     end
   end

@@ -24,18 +24,18 @@ module VCAP::CloudController
 
       describe '#create_from_app' do
         let(:parent_app) { AppModel.make(name: 'parent-app') }
-        let(:app) { AppFactory.make(app: parent_app, type: 'other') }
+        let(:process) { AppFactory.make(app: parent_app, type: 'other') }
 
         it 'will create an event which matches the app' do
-          event = repository.create_from_app(app)
-          expect(event).to match_app(app)
+          event = repository.create_from_app(process)
+          expect(event).to match_app(process)
           expect(event.parent_app_name).to eq('parent-app')
           expect(event.parent_app_guid).to eq(parent_app.guid)
           expect(event.process_type).to eq('other')
         end
 
         it 'will create an event with default previous attributes' do
-          event = repository.create_from_app(app)
+          event = repository.create_from_app(process)
 
           default_instances = ProcessModel.db_schema[:instances][:default].to_i
           default_memory    = VCAP::CloudController::Config.config[:default_app_memory]
@@ -49,57 +49,57 @@ module VCAP::CloudController
           let(:custom_state) { 'CUSTOM' }
 
           it 'will populate the event with the custom state' do
-            event = repository.create_from_app(app, custom_state)
+            event = repository.create_from_app(process, custom_state)
             expect(event.state).to eq(custom_state)
 
-            event.state = app.state
-            expect(event).to match_app(app)
+            event.state = process.state
+            expect(event).to match_app(process)
           end
         end
 
         context 'when the app is created' do
           context 'when the package is pending' do
             before do
-              app.current_droplet.destroy
-              app.reload
+              process.current_droplet.destroy
+              process.reload
             end
 
             it 'will create an event with pending package state' do
-              event = repository.create_from_app(app)
-              expect(event).to match_app(app)
+              event = repository.create_from_app(process)
+              expect(event).to match_app(process)
             end
           end
 
           context 'when the package is staged' do
             it 'will create an event with staged package state' do
-              event = repository.create_from_app(app)
-              expect(event).to match_app(app)
+              event = repository.create_from_app(process)
+              expect(event).to match_app(process)
             end
           end
 
           context 'when the package is failed' do
             before do
-              app.current_droplet.update(state: DropletModel::FAILED_STATE)
-              app.reload
+              process.current_droplet.update(state: DropletModel::FAILED_STATE)
+              process.reload
             end
             it 'will create an event with failed package state' do
-              event = repository.create_from_app(app)
-              expect(event).to match_app(app)
+              event = repository.create_from_app(process)
+              expect(event).to match_app(process)
             end
           end
         end
 
         context 'when an admin buildpack is associated with the app' do
           before do
-            app.current_droplet.update(
+            process.current_droplet.update(
               buildpack_receipt_buildpack_guid: 'buildpack-guid',
               buildpack_receipt_buildpack:      'buildpack-name'
             )
           end
 
           it 'will create an event that contains the detected buildpack guid and name' do
-            event = repository.create_from_app(app)
-            expect(event).to match_app(app)
+            event = repository.create_from_app(process)
+            expect(event).to match_app(process)
             expect(event.buildpack_guid).to eq('buildpack-guid')
             expect(event.buildpack_name).to eq('buildpack-name')
           end
@@ -109,11 +109,11 @@ module VCAP::CloudController
           let(:buildpack_url) { 'https://git.example.com/repo.git' }
 
           before do
-            app.app.lifecycle_data.update(buildpacks: [buildpack_url])
+            process.app.lifecycle_data.update(buildpacks: [buildpack_url])
           end
 
           it 'will create an event with the buildpack url as the name' do
-            event = repository.create_from_app(app)
+            event = repository.create_from_app(process)
             expect(event.buildpack_name).to eq('https://git.example.com/repo.git')
           end
 
@@ -121,24 +121,24 @@ module VCAP::CloudController
             let(:buildpack_url) { 'https://super:secret@git.example.com/repo.git' }
 
             it 'redacts them' do
-              event = repository.create_from_app(app)
+              event = repository.create_from_app(process)
               expect(event.buildpack_name).to eq('https://***:***@git.example.com/repo.git')
             end
           end
 
           it 'will create an event without a buildpack guid' do
-            event = repository.create_from_app(app)
+            event = repository.create_from_app(process)
             expect(event.buildpack_guid).to be_nil
           end
         end
 
         context "when the DEA doesn't provide optional buildpack information" do
           before do
-            app.app.lifecycle_data.update(buildpacks: nil)
+            process.app.lifecycle_data.update(buildpacks: nil)
           end
 
           it 'will create an event that does not contain buildpack name or guid' do
-            event = repository.create_from_app(app)
+            event = repository.create_from_app(process)
             expect(event.buildpack_guid).to be_nil
             expect(event.buildpack_name).to be_nil
           end
@@ -146,12 +146,12 @@ module VCAP::CloudController
 
         context 'fails to create the event' do
           before do
-            app.state = nil
+            process.state = nil
           end
 
           it 'will raise an error' do
             expect {
-              repository.create_from_app(app)
+              repository.create_from_app(process)
             }.to raise_error(Sequel::NotNullConstraintViolation)
           end
         end
@@ -160,22 +160,22 @@ module VCAP::CloudController
           let(:old_state) { 'STARTED' }
           let(:old_instances) { 4 }
           let(:old_memory) { 256 }
-          let(:app) { AppFactory.make(state: old_state, instances: old_instances, memory: old_memory) }
+          let(:process) { AppFactory.make(state: old_state, instances: old_instances, memory: old_memory) }
 
           it 'always sets previous_package_state to UNKNOWN' do
-            event = repository.create_from_app(app)
+            event = repository.create_from_app(process)
             expect(event.previous_package_state).to eq('UNKNOWN')
           end
 
           context 'when the same attribute values are set' do
             before do
-              app.state     = old_state
-              app.instances = old_instances
-              app.memory    = old_memory
+              process.state     = old_state
+              process.instances = old_instances
+              process.memory    = old_memory
             end
 
             it 'creates event with previous attributes' do
-              event = repository.create_from_app(app)
+              event = repository.create_from_app(process)
 
               expect(event.previous_state).to eq(old_state)
               expect(event.previous_instance_count).to eq(old_instances)
@@ -189,13 +189,13 @@ module VCAP::CloudController
             let(:new_memory) { 1024 }
 
             before do
-              app.state     = new_state
-              app.instances = new_instances
-              app.memory    = new_memory
+              process.state     = new_state
+              process.instances = new_instances
+              process.memory    = new_memory
             end
 
             it 'stores new values' do
-              event = repository.create_from_app(app)
+              event = repository.create_from_app(process)
 
               expect(event.state).to eq(new_state)
               expect(event.instance_count).to eq(new_instances)
@@ -203,7 +203,7 @@ module VCAP::CloudController
             end
 
             it 'stores previous values' do
-              event = repository.create_from_app(app)
+              event = repository.create_from_app(process)
 
               expect(event.previous_state).to eq(old_state)
               expect(event.previous_instance_count).to eq(old_instances)
@@ -509,7 +509,7 @@ module VCAP::CloudController
       end
 
       describe '#purge_and_reseed_started_apps!' do
-        let(:app) { AppFactory.make }
+        let(:process) { AppFactory.make }
 
         before do
           # Truncate in mysql causes an implicit commit.
@@ -521,7 +521,7 @@ module VCAP::CloudController
         end
 
         it 'will purge all existing events' do
-          3.times { repository.create_from_app(app) }
+          3.times { repository.create_from_app(process) }
 
           expect {
             repository.purge_and_reseed_started_apps!
@@ -530,16 +530,16 @@ module VCAP::CloudController
 
         context 'when there are started apps' do
           before do
-            app.state = 'STARTED'
-            app.save
+            process.state = 'STARTED'
+            process.save
             AppFactory.make(state: 'STOPPED')
           end
 
           it 'creates new events for the started apps' do
-            app.state = 'STOPPED'
-            repository.create_from_app(app)
-            app.state = 'STARTED'
-            repository.create_from_app(app)
+            process.state = 'STOPPED'
+            repository.create_from_app(process)
+            process.state = 'STARTED'
+            repository.create_from_app(process)
 
             started_app_count = ProcessModel.where(state: 'STARTED').count
 
@@ -548,23 +548,23 @@ module VCAP::CloudController
               repository.purge_and_reseed_started_apps!
             }.to change { AppUsageEvent.count }.to(started_app_count)
 
-            expect(AppUsageEvent.last).to match_app(app)
+            expect(AppUsageEvent.last).to match_app(process)
           end
 
           context 'with associated buildpack information' do
             before do
-              app.current_droplet.update(
+              process.current_droplet.update(
                 buildpack_receipt_buildpack:      'detected-name',
                 buildpack_receipt_buildpack_guid: 'detected-guid',
               )
-              app.reload
+              process.reload
             end
 
             it 'should preserve the buildpack info in the new event' do
               repository.purge_and_reseed_started_apps!
               event = AppUsageEvent.last
 
-              expect(event).to match_app(app)
+              expect(event).to match_app(process)
               expect(event.buildpack_name).to eq('detected-name')
               expect(event.buildpack_guid).to eq('detected-guid')
             end
@@ -574,13 +574,13 @@ module VCAP::CloudController
             context 'when the latest_droplet is STAGED' do
               context 'and there is no current_droplet' do
                 before do
-                  app.app.update(droplet: nil)
-                  app.reload
+                  process.app.update(droplet: nil)
+                  process.reload
                 end
 
                 it 'is PENDING' do
                   repository.purge_and_reseed_started_apps!
-                  expect(AppUsageEvent.last).to match_app(app)
+                  expect(AppUsageEvent.last).to match_app(process)
                   expect(AppUsageEvent.last.package_state).to eq('PENDING')
                   expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
                 end
@@ -589,7 +589,7 @@ module VCAP::CloudController
               context 'and it is the current_droplet' do
                 it 'is STAGED' do
                   repository.purge_and_reseed_started_apps!
-                  expect(AppUsageEvent.last).to match_app(app)
+                  expect(AppUsageEvent.last).to match_app(process)
                   expect(AppUsageEvent.last.package_state).to eq('STAGED')
                   expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
                 end
@@ -598,13 +598,13 @@ module VCAP::CloudController
 
             context 'when the latest_droplet is FAILED' do
               before do
-                DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::FAILED_STATE)
-                app.reload
+                DropletModel.make(app: process.app, package: process.latest_package, state: DropletModel::FAILED_STATE)
+                process.reload
               end
 
               it 'is FAILED' do
                 repository.purge_and_reseed_started_apps!
-                expect(AppUsageEvent.last).to match_app(app)
+                expect(AppUsageEvent.last).to match_app(process)
                 expect(AppUsageEvent.last.package_state).to eq('FAILED')
                 expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
               end
@@ -612,13 +612,13 @@ module VCAP::CloudController
 
             context 'when the latest_droplet is not STAGED or FAILED' do
               before do
-                DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::STAGING_STATE)
-                app.reload
+                DropletModel.make(app: process.app, package: process.latest_package, state: DropletModel::STAGING_STATE)
+                process.reload
               end
 
               it 'is PENDING' do
                 repository.purge_and_reseed_started_apps!
-                expect(AppUsageEvent.last).to match_app(app)
+                expect(AppUsageEvent.last).to match_app(process)
                 expect(AppUsageEvent.last.package_state).to eq('PENDING')
                 expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
               end
@@ -626,14 +626,14 @@ module VCAP::CloudController
 
             context 'when there is no current_droplet' do
               before do
-                app.current_droplet.destroy
-                app.reload
+                process.current_droplet.destroy
+                process.reload
               end
 
               context 'and there is a package' do
                 it 'is PENDING' do
                   repository.purge_and_reseed_started_apps!
-                  expect(AppUsageEvent.last).to match_app(app)
+                  expect(AppUsageEvent.last).to match_app(process)
                   expect(AppUsageEvent.last.package_state).to eq('PENDING')
                   expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
                 end
@@ -641,13 +641,13 @@ module VCAP::CloudController
 
               context 'and the package is FAILED' do
                 before do
-                  app.latest_package.update(state: PackageModel::FAILED_STATE)
-                  app.reload
+                  process.latest_package.update(state: PackageModel::FAILED_STATE)
+                  process.reload
                 end
 
                 it 'is FAILED' do
                   repository.purge_and_reseed_started_apps!
-                  expect(AppUsageEvent.last).to match_app(app)
+                  expect(AppUsageEvent.last).to match_app(process)
                   expect(AppUsageEvent.last.package_state).to eq('FAILED')
                   expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
                 end
@@ -656,13 +656,13 @@ module VCAP::CloudController
 
             context 'when a new package has been added to a previously staged app' do
               before do
-                PackageModel.make(app: app.app)
-                app.reload
+                PackageModel.make(app: process.app)
+                process.reload
               end
 
               it 'is PENDING' do
                 repository.purge_and_reseed_started_apps!
-                expect(AppUsageEvent.last).to match_app(app)
+                expect(AppUsageEvent.last).to match_app(process)
                 expect(AppUsageEvent.last.package_state).to eq('PENDING')
                 expect(AppUsageEvent.last.previous_package_state).to eq('UNKNOWN')
               end
@@ -686,8 +686,8 @@ module VCAP::CloudController
         end
 
         it 'will delete events created before the specified cutoff time' do
-          app = ProcessModel.make
-          repository.create_from_app(app)
+          process = ProcessModel.make
+          repository.create_from_app(process)
 
           expect {
             repository.delete_events_older_than(cutoff_age_in_days)
@@ -695,7 +695,7 @@ module VCAP::CloudController
             AppUsageEvent.count
           }.to(1)
 
-          expect(AppUsageEvent.last).to match_app(app)
+          expect(AppUsageEvent.last).to match_app(process)
         end
       end
     end

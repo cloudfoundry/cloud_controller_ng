@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       describe '#running' do
-        let(:app) { AppFactory.make }
+        let(:process) { AppFactory.make }
         let(:sg_default_rules_1) { [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }] }
         let(:sg_default_rules_2) { [{ 'protocol' => 'tcp', 'ports' => '9090-9095', 'destination' => '198.41.191.48/1', 'log' => true }] }
         let(:sg_for_space_rules) { [{ 'protocol' => 'udp', 'ports' => '1010,2020', 'destination' => '198.41.191.49/1' }] }
@@ -54,11 +54,11 @@ module VCAP::CloudController
         before do
           SecurityGroup.make(rules: sg_default_rules_1, running_default: true)
           SecurityGroup.make(rules: sg_default_rules_2, running_default: true)
-          app.space.add_security_group(SecurityGroup.make(rules: sg_for_space_rules))
+          process.space.add_security_group(SecurityGroup.make(rules: sg_for_space_rules))
         end
 
         it 'should provide the egress rules in the start message' do
-          expect(egress_rules.running(app)).to match_array([
+          expect(egress_rules.running(process)).to match_array([
             { 'protocol' => 'udp', 'ports' => [8080], 'destinations' => ['198.41.191.47/1'] },
             { 'protocol' => 'tcp', 'port_range' => { 'start' => 9090, 'end' => 9095 }, 'destinations' => ['198.41.191.48/1'], 'log' => true },
             { 'protocol' => 'udp', 'ports' => [1010, 2020], 'destinations' => ['198.41.191.49/1'] },
@@ -66,7 +66,7 @@ module VCAP::CloudController
         end
 
         it 'orders the rules with logged rules last' do
-          logged = egress_rules.running(app).drop_while { |rule| !rule['log'] }
+          logged = egress_rules.running(process).drop_while { |rule| !rule['log'] }
           expect(logged).to have(1).items
         end
       end

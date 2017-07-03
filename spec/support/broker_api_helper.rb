@@ -206,8 +206,8 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def create_app
-    application = VCAP::CloudController::AppFactory.make(space: @space)
-    @app_guid = application.guid
+    process = VCAP::CloudController::AppFactory.make(space: @space)
+    @app_guid = process.guid
   end
 
   def bind_service(opts={})
