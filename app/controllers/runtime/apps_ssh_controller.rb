@@ -18,7 +18,8 @@ module VCAP::CloudController
       @app_event_repository = dependencies.fetch(:app_event_repository)
     end
 
-    model_class_name :App
+    model_class_name :ProcessModel
+    self.not_found_exception_name = 'AppNotFound'
 
     get '/internal/apps/:guid/ssh_access/:index', :ssh_access_with_index
     def ssh_access_with_index(guid, index)

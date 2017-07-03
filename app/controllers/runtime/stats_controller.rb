@@ -5,9 +5,11 @@ module VCAP::CloudController
     end
 
     path_base 'apps'
-    model_class_name :App
+    model_class_name :ProcessModel
+    self.not_found_exception_name = 'AppNotFound'
 
     get "#{path_guid}/stats", :stats
+
     def stats(guid, opts={})
       app = find_guid_and_validate_access(:read, guid)
 

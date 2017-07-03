@@ -16,6 +16,7 @@ module VCAP::CloudController
   end
 
   def self.controller_from_name(name)
+    return VCAP::CloudController::AppsController if name == 'ProcessModel'
     VCAP::CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
   end
 

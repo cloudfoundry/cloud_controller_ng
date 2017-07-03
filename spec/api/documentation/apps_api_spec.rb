@@ -118,8 +118,8 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
   describe 'Standard endpoints' do
     standard_model_delete_without_async :app
-    standard_model_list :app, VCAP::CloudController::AppsController, response_fields: true
-    standard_model_get :app, nested_associations: [:stack, :space], response_fields: true
+    standard_model_list 'ProcessModel', VCAP::CloudController::AppsController, path: :app, response_fields: true
+    standard_model_get 'ProcessModel', path: :app, nested_associations: [:stack, :space], response_fields: true
 
     before do
       allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
@@ -142,7 +142,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         client.post '/v2/apps', MultiJson.dump(required_fields.merge(space_guid: space_guid, diego: true, ports: ports), pretty: true), headers
         expect(status).to eq(201)
 
-        standard_entity_response parsed_response, :app
+        standard_entity_response parsed_response, 'ProcessModel'
 
         app_guid = parsed_response['metadata']['guid']
         audited_event VCAP::CloudController::Event.find(type: 'audit.app.create', actee: app_guid)
@@ -155,7 +155,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         client.post '/v2/apps', MultiJson.dump(data, pretty: true), headers
         expect(status).to eq(201)
 
-        standard_entity_response parsed_response, :app
+        standard_entity_response parsed_response, 'ProcessModel'
         expect(parsed_response['entity']['docker_image']).to eq('cloudfoundry/diego-docker-app')
         expect(parsed_response['entity']['diego']).to be_truthy
 
@@ -172,7 +172,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
         client.put "/v2/apps/#{guid}", MultiJson.dump(new_attributes, pretty: true), headers
         expect(status).to eq(201)
-        standard_entity_response parsed_response, :app, expected_values: { name: 'new_name' }
+        standard_entity_response parsed_response, 'ProcessModel', expected_values: { name: 'new_name' }
       end
     end
   end
@@ -227,7 +227,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       context 'has route guid param' do
         parameter :route_guid, 'The guid of the route'
 
-        nested_model_associate :route, :app
+        nested_model_associate :route, 'ProcessModel', path: :app
         nested_model_remove :route, :app
       end
     end

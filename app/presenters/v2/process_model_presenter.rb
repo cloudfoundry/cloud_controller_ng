@@ -1,10 +1,9 @@
 module CloudController
   module Presenters
     module V2
-      class AppPresenter < BasePresenter
+      class ProcessModelPresenter < BasePresenter
         extend PresenterProvider
 
-        present_for_class 'VCAP::CloudController::App'
         present_for_class 'VCAP::CloudController::ProcessModel'
 
         REDACTED_MESSAGE = '***'.freeze

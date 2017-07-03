@@ -7,39 +7,42 @@ require 'actions/v2/route_mapping_create'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
+    model_class_name :ProcessModel
+    self.not_found_exception_name = 'AppNotFound'
+
     def self.dependencies
       [:app_event_repository, :droplet_blobstore, :stagers, :upload_handler]
     end
 
     define_attributes do
-      attribute :enable_ssh,              Message::Boolean, default: nil
-      attribute :buildpack,               String,           default: nil
-      attribute :command,                 String,           default: nil
-      attribute :console,                 Message::Boolean, default: false
-      attribute :diego,                   Message::Boolean, default: nil
-      attribute :docker_image,            String,           default: nil
-      attribute :docker_credentials,      Hash,             default: {}
-      attribute :debug,                   String,           default: nil
-      attribute :disk_quota,              Integer,          default: nil
-      attribute :environment_json,        Hash,             default: {}, redact_in: [:create, :update]
-      attribute :health_check_http_endpoint, String,        default: nil
-      attribute :health_check_type,       String,           default: 'port'
-      attribute :health_check_timeout,    Integer,          default: nil
-      attribute :instances,               Integer,          default: 1
-      attribute :memory,                  Integer,          default: nil
-      attribute :name,                    String
-      attribute :production,              Message::Boolean, default: false
-      attribute :state,                   String,           default: 'STOPPED'
-      attribute :detected_start_command,  String,           exclude_in: [:create, :update]
-      attribute :ports,                   [Integer],        default: nil
+      attribute :enable_ssh, Message::Boolean, default: nil
+      attribute :buildpack, String, default: nil
+      attribute :command, String, default: nil
+      attribute :console, Message::Boolean, default: false
+      attribute :diego, Message::Boolean, default: nil
+      attribute :docker_image, String, default: nil
+      attribute :docker_credentials, Hash, default: {}
+      attribute :debug, String, default: nil
+      attribute :disk_quota, Integer, default: nil
+      attribute :environment_json, Hash, default: {}, redact_in: [:create, :update]
+      attribute :health_check_http_endpoint, String, default: nil
+      attribute :health_check_type, String, default: 'port'
+      attribute :health_check_timeout, Integer, default: nil
+      attribute :instances, Integer, default: 1
+      attribute :memory, Integer, default: nil
+      attribute :name, String
+      attribute :production, Message::Boolean, default: false
+      attribute :state, String, default: 'STOPPED'
+      attribute :detected_start_command, String, exclude_in: [:create, :update]
+      attribute :ports, [Integer], default: nil
 
       to_one :space
       to_one :stack, optional_in: :create
 
-      to_many :routes,              exclude_in: [:create, :update], route_for: :get
-      to_many :events,              exclude_in: [:create, :update], link_only: true
-      to_many :service_bindings,    exclude_in: [:create, :update], route_for: [:get]
-      to_many :route_mappings,      exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
+      to_many :routes, exclude_in: [:create, :update], route_for: :get
+      to_many :events, exclude_in: [:create, :update], link_only: true
+      to_many :service_bindings, exclude_in: [:create, :update], route_for: [:get]
+      to_many :route_mappings, exclude_in: [:create, :update], link_only: true, route_for: :get, association_controller: :RouteMappingsController
     end
 
     query_parameters :name, :space_guid, :organization_guid, :diego, :stack_guid
@@ -67,14 +70,14 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors  = e.errors.on([:space_guid, :name])
-      memory_errors          = e.errors.on(:memory)
-      instance_number_errors = e.errors.on(:instances)
+      space_and_name_errors     = e.errors.on([:space_guid, :name])
+      memory_errors             = e.errors.on(:memory)
+      instance_number_errors    = e.errors.on(:instances)
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
-      state_errors           = e.errors.on(:state)
-      docker_errors          = e.errors.on(:docker)
-      diego_to_dea_errors    = e.errors.on(:diego_to_dea)
-      docker_to_dea_errors   = e.errors.on(:docker_to_dea)
+      state_errors              = e.errors.on(:state)
+      docker_errors             = e.errors.on(:docker)
+      diego_to_dea_errors       = e.errors.on(:diego_to_dea)
+      docker_to_dea_errors      = e.errors.on(:docker_to_dea)
 
       if space_and_name_errors
         CloudController::Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
@@ -124,7 +127,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      app = find_guid_and_validate_access(:delete, guid)
+      app   = find_guid_and_validate_access(:delete, guid)
       space = app.space
 
       if !recursive_delete? && app.service_bindings.present?
@@ -143,6 +146,7 @@ module VCAP::CloudController
     end
 
     get '/v2/apps/:guid/droplet/download', :download_droplet
+
     def download_droplet(guid)
       app = find_guid_and_validate_access(:read, guid)
       blob_dispatcher.send_or_redirect(guid: app.current_droplet.try(:blobstore_key))
@@ -151,8 +155,9 @@ module VCAP::CloudController
     end
 
     put '/v2/apps/:guid/droplet/upload', :upload_droplet
+
     def upload_droplet(guid)
-      process = find_guid_and_validate_access(:update, guid)
+      process      = find_guid_and_validate_access(:update, guid)
       droplet_path = @upload_handler.uploaded_file(params, 'droplet')
 
       unless droplet_path
@@ -192,7 +197,7 @@ module VCAP::CloudController
     def before_update(app)
       verify_enable_ssh(app.space)
       updated_diego_flag = request_attrs['diego']
-      ports = request_attrs['ports']
+      ports              = request_attrs['ports']
       ignore_empty_ports! if ports == []
       if should_warn_about_changed_ports?(app.diego, updated_diego_flag, ports)
         add_warning('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT.')
@@ -210,15 +215,15 @@ module VCAP::CloudController
     end
 
     def verify_enable_ssh(space)
-      app_enable_ssh = request_attrs['enable_ssh']
+      app_enable_ssh   = request_attrs['enable_ssh']
       global_allow_ssh = VCAP::CloudController::Config.config[:allow_app_ssh_access]
-      ssh_allowed = global_allow_ssh && (space.allow_ssh || roles.admin?)
+      ssh_allowed      = global_allow_ssh && (space.allow_ssh || roles.admin?)
 
       if app_enable_ssh && !ssh_allowed
         raise CloudController::Errors::ApiError.new_from_details(
           'InvalidRequest',
           'enable_ssh must be false due to global allow_ssh setting',
-          )
+        )
       end
     end
 
@@ -274,6 +279,7 @@ module VCAP::CloudController
     end
 
     put '/v2/apps/:app_guid/routes/:route_guid', :add_route
+
     def add_route(app_guid, route_guid)
       logger.debug 'cc.association.add', guid: app_guid, association: 'routes', other_guid: route_guid
       @request_attrs = { 'route' => route_guid, verb: 'add', relation: 'routes', related_guid: route_guid }
@@ -305,6 +311,7 @@ module VCAP::CloudController
     end
 
     delete '/v2/apps/:app_guid/routes/:route_guid', :remove_route
+
     def remove_route(app_guid, route_guid)
       logger.debug 'cc.association.remove', guid: app_guid, association: 'routes', other_guid: route_guid
       @request_attrs = { 'route' => route_guid, verb: 'remove', relation: 'routes', related_guid: route_guid }
@@ -326,6 +333,7 @@ module VCAP::CloudController
     end
 
     delete '/v2/apps/:app_guid/service_bindings/:service_binding_guid', :remove_service_binding
+
     def remove_service_binding(app_guid, service_binding_guid)
       logger.debug 'cc.association.remove', guid: app_guid, association: 'service_bindings', other_guid: service_binding_guid
       @request_attrs = { 'service_binding' => service_binding_guid, verb: 'remove', relation: 'service_bindings', related_guid: service_binding_guid }
@@ -346,16 +354,17 @@ module VCAP::CloudController
     end
 
     get '/v2/apps/:guid/permissions', :permissions
+
     def permissions(guid)
       find_guid_and_validate_access(:read_permissions, guid, ProcessModel)
 
       [HTTP::OK, {}, JSON.generate({
         read_sensitive_data: true,
-        read_basic_data: true
+        read_basic_data:     true
       })]
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        app = find_guid(guid, ProcessModel)
+        app        = find_guid(guid, ProcessModel)
         membership = VCAP::CloudController::Membership.new(current_user)
 
         basic_access = [
@@ -368,7 +377,7 @@ module VCAP::CloudController
 
         [HTTP::OK, {}, JSON.generate({
           read_sensitive_data: false,
-          read_basic_data: true
+          read_basic_data:     true
         })]
       else
         raise e
