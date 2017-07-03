@@ -10,6 +10,11 @@ module VCAP::CloudController
     model_class_name :ProcessModel
     self.not_found_exception_name = 'AppNotFound'
 
+    VCAP::CloudController.set_controller_for_model_name(
+      model_name: 'ProcessModel',
+      controller: self
+    )
+
     def self.dependencies
       [:app_event_repository, :droplet_blobstore, :stagers, :upload_handler]
     end
