@@ -125,7 +125,7 @@ EOF
 
       parameter :app_guid, 'The guid of the app'
 
-      standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :route
+      standard_model_list 'ProcessModel', VCAP::CloudController::AppsController, path: 'app', outer_model: :route
       nested_model_associate :app, :route
       nested_model_remove :app, :route
     end

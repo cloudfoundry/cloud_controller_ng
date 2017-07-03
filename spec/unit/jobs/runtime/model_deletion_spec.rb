@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'jobs/runtime/model_deletion'
-require 'models/runtime/app'
+require 'models/runtime/process_model'
 require 'models/runtime/space'
 
 module VCAP::CloudController

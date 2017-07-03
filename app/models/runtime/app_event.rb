@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class AppEvent < Sequel::Model
-    many_to_one :app
+    many_to_one :app, class: 'VCAP::CloudController::ProcessModel'
 
     export_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp
     import_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp

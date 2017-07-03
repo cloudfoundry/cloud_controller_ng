@@ -44,7 +44,7 @@ module LegacyApiDsl
 
   def expected_attributes_for_model(model)
     return model.fields.keys if model.respond_to? :fields
-    "VCAP::CloudController::#{model.to_s.classify}".constantize.export_attrs
+    model_class_from_name(model).export_attrs
   end
 
   def parsed_response
@@ -88,8 +88,12 @@ module LegacyApiDsl
 
   private
 
+  def model_class_from_name(model)
+    "VCAP::CloudController::#{model.to_s.classify}".constantize
+  end
+
   def model_has_updated_at?(model)
-    "VCAP::CloudController::#{model.to_s.classify}".constantize.columns.include?(:updated_at)
+    model_class_from_name(model).columns.include?(:updated_at)
   end
 
   def add_deprecation_warning
@@ -132,12 +136,13 @@ module LegacyApiDsl
     end
 
     def nested_model_associate(model, outer_model, opts={})
+      outer_model_path = opts[:path] || outer_model
       experimental = if opts[:experimental]
                        ' (experimental)'
                      else
                        ''
                      end
-      path = "#{api_version}/#{outer_model.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:#{model}_guid"
+      path = "#{api_version}/#{outer_model_path.to_s.pluralize}/:guid/#{model.to_s.pluralize}/:#{model}_guid"
 
       put path do
         example_request "Associate #{model.to_s.titleize} with the #{outer_model.to_s.titleize}#{experimental}" do

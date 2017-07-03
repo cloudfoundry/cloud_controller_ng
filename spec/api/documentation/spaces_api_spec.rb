@@ -304,7 +304,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         VCAP::CloudController::AppFactory.make(space: space)
       end
 
-      standard_model_list :app, VCAP::CloudController::AppsController, outer_model: :space
+      standard_model_list 'ProcessModel', VCAP::CloudController::AppsController, path: :app, outer_model: :space
     end
 
     describe 'Domains' do
