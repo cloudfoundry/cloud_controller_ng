@@ -56,10 +56,10 @@ module VCAP::CloudController
 
     def read_env(guid)
       FeatureFlag.raise_unless_enabled!(:env_var_visibility)
-      app = find_guid_and_validate_access(:read_env, guid, ProcessModel)
+      process = find_guid_and_validate_access(:read_env, guid, ProcessModel)
       FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
-      vcap_application = VCAP::VarsBuilder.new(app).to_hash
+      vcap_application = VCAP::VarsBuilder.new(process).to_hash
 
       [
         HTTP::OK,
@@ -67,8 +67,8 @@ module VCAP::CloudController
         MultiJson.dump({
           staging_env_json:     EnvironmentVariableGroup.staging.environment_json,
           running_env_json:     EnvironmentVariableGroup.running.environment_json,
-          environment_json:     app.environment_json,
-          system_env_json:      SystemEnvPresenter.new(app.service_bindings).system_env,
+          environment_json:     process.environment_json,
+          system_env_json:      SystemEnvPresenter.new(process.service_bindings).system_env,
           application_env_json: { 'VCAP_APPLICATION' => vcap_application },
         }, pretty: true)
       ]
@@ -289,16 +289,16 @@ module VCAP::CloudController
       logger.debug 'cc.association.add', guid: app_guid, association: 'routes', other_guid: route_guid
       @request_attrs = { 'route' => route_guid, verb: 'add', relation: 'routes', related_guid: route_guid }
 
-      app = find_guid(app_guid, ProcessModel)
-      validate_access(:read_related_object_for_update, app, request_attrs)
+      process = find_guid(app_guid, ProcessModel)
+      validate_access(:read_related_object_for_update, process, request_attrs)
 
-      before_update(app)
+      before_update(process)
 
       route = Route.find(guid: request_attrs['route'])
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
 
       begin
-        V2::RouteMappingCreate.new(user_audit_info, route, app, request_attrs).add
+        V2::RouteMappingCreate.new(user_audit_info, route, process, request_attrs).add
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError
@@ -310,9 +310,9 @@ module VCAP::CloudController
           'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space.')
       end
 
-      after_update(app)
+      after_update(process)
 
-      [HTTP::CREATED, object_renderer.render_json(self.class, app, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, process, @opts)]
     end
 
     delete '/v2/apps/:app_guid/routes/:route_guid', :remove_route
@@ -369,7 +369,7 @@ module VCAP::CloudController
       })]
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        app        = find_guid(guid, ProcessModel)
+        process    = find_guid(guid, ProcessModel)
         membership = VCAP::CloudController::Membership.new(current_user)
 
         basic_access = [
@@ -378,7 +378,7 @@ module VCAP::CloudController
           VCAP::CloudController::Membership::ORG_MANAGER,
         ]
 
-        raise e unless membership.has_any_roles?(basic_access, app.space.guid, app.organization.guid)
+        raise e unless membership.has_any_roles?(basic_access, process.space.guid, process.organization.guid)
 
         [HTTP::OK, {}, JSON.generate({
           read_sensitive_data: false,
