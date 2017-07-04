@@ -587,12 +587,12 @@ module VCAP::CloudController
 
     def create_app_usage_buildpack_event
       return unless staged? && started?
-      app_usage_event_repository.create_from_app(self, 'BUILDPACK_SET')
+      app_usage_event_repository.create_from_process(self, 'BUILDPACK_SET')
     end
 
     def create_app_usage_event
       return unless app_usage_changed?
-      app_usage_event_repository.create_from_app(self)
+      app_usage_event_repository.create_from_process(self)
     end
 
     def app_usage_changed?
