@@ -2,23 +2,27 @@ class FakeServiceBrokerV2Client
   attr_accessor :credentials
   attr_accessor :syslog_drain_url
   attr_accessor :volume_mounts
+  attr_accessor :service_name
+  attr_accessor :plan_name
 
   def initialize(_attrs)
     @credentials = { 'username' => 'cool_user' }
     @syslog_drain_url = 'syslog://drain.example.com'
     @volume_mounts = []
+    @service_name = 'service_name'
+    @plan_name = 'fake_plan_name'
   end
 
   def catalog
     {
       'services' => [{
         'id'          => 'service_id',
-        'name'        => 'service_name',
+        'name'        => service_name,
         'description' => 'some description',
         'bindable'    => true,
         'plans'       => [{
           'id'          => 'fake_plan_id',
-          'name'        => 'fake_plan_name',
+          'name'        => plan_name,
           'description' => 'fake_plan_description'
         }]
       }]
