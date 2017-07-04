@@ -5,7 +5,7 @@ module VCAP::CloudController
         AppUsageEvent.find(guid: guid)
       end
 
-      def create_from_app(process, state_name=nil)
+      def create_from_process(process, state_name=nil)
         AppUsageEvent.create(
           state:                              state_name || process.state,
           previous_state:                     process.initial_value(:state),
