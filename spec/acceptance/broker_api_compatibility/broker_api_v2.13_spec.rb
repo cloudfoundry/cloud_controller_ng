@@ -4,7 +4,7 @@ RSpec.describe 'Service Broker API integration' do
   describe 'v2.13' do
     include VCAP::CloudController::BrokerApiHelper
 
-    let(:create_instance_schema) { {} }
+    let(:create_instance_schema) { { 'type': 'object' } }
     let(:schemas) {
       {
         'service_instance' => {

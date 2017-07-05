@@ -3,13 +3,11 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe CatalogSchemas do
     describe 'initializing' do
-      let(:create_instance_schema) { { '$schema': 'http://json-schema.org/draft-04/schema#' } }
+      let(:path) { 'service_instance.create.parameters' }
+      let(:create_instance_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } }
       let(:attrs) { { 'service_instance' => { 'create' => { 'parameters' => create_instance_schema } } } }
-      subject { CatalogSchemas.new(attrs) }
 
-      its(:create_instance) { should eq create_instance_schema }
-      its(:errors) { should be_empty }
-      its(:valid?) { should be true }
+      subject { CatalogSchemas.new(attrs) }
 
       context 'when attrs have nil value' do
         {
@@ -73,7 +71,6 @@ module VCAP::Services::ServiceBrokers::V2
           }
         }
 
-        path = 'service_instance.create.parameters'
         its(:create_instance) { should be_nil }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') { should eq "Schemas #{path} must be a hash, but has value \"https://example.com/hax0r\"" }
@@ -82,7 +79,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the schema does not conform to JSON Schema Draft 04' do
         let(:create_instance_schema) { { 'properties': true } }
-        path = 'service_instance.create.parameters'
+
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
@@ -92,6 +89,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the schema does not conform to JSON Schema Draft 04 with multiple problems' do
         let(:create_instance_schema) { { 'type': 'foo', 'properties': true } }
+
         its(:valid?) { should be false }
         its('errors.messages') { should have(2).items }
         its('errors.messages.first') { should match 'properties' }
@@ -100,7 +98,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the schema has an external schema' do
         let(:create_instance_schema) { { '$schema': 'http://example.com/schema' } }
-        path = 'service_instance.create.parameters'
+
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
@@ -110,7 +108,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the schema has an external uri reference' do
         let(:create_instance_schema) { { '$ref': 'http://example.com/ref' } }
-        path = 'service_instance.create.parameters'
+
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
@@ -120,7 +118,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the schema has an external file reference' do
         let(:create_instance_schema) { { '$ref': 'path/to/schema.json' } }
-        path = 'service_instance.create.parameters'
+
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
@@ -131,18 +129,19 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the schema has an internal reference' do
         let(:create_instance_schema) {
           {
+            'type' => 'object',
             'properties': {
               'foo': { 'type': 'integer' },
               'bar': { '$ref': '#/properties/foo' }
             }
           }
         }
+
         its(:valid?) { should be true }
         its(:errors) { should be_empty }
       end
 
       context 'when the schema has an unknown parse error' do
-        path = 'service_instance.create.parameters'
         before do
           allow(JSON::Validator).to receive(:validate!) { raise 'some unknown error' }
         end
@@ -154,16 +153,21 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the schema has multiple valid constraints ' do
         let(:create_instance_schema) {
-          { '$schema': 'http://json-schema.org/draft-04/schema#',
-            'properties': {
-              'foo': {
-                'type': 'string'
-              }
-            },
-            'required': ['foo']
+          { :'$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            :properties => { 'foo': { 'type': 'string' } },
+            :required => ['foo']
           }
         }
         its(:valid?) { should be true }
+      end
+
+      context 'when the schema does not have a type field' do
+        let(:create_instance_schema) { { '$schema': 'http://json-schema.org/draft-04/schema#' } }
+
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') { should match "Schema #{path} is not valid\.+ must have field \"type\", with value \"object\"" }
       end
     end
   end

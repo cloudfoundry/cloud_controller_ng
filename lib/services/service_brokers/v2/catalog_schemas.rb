@@ -4,9 +4,9 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogSchemas
     attr_reader :errors, :create_instance
 
-    def initialize(attrs)
+    def initialize(schema)
       @errors = VCAP::Services::ValidationErrors.new
-      validate_and_populate_create_instance(attrs)
+      validate_and_populate_create_instance(schema)
     end
 
     def valid?
@@ -15,31 +15,36 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def validate_and_populate_create_instance(attrs)
-      return unless attrs
-      unless attrs.is_a? Hash
-        errors.add("Schemas must be a hash, but has value #{attrs.inspect}")
+    def validate_and_populate_create_instance(schema)
+      return unless schema
+      unless schema.is_a? Hash
+        errors.add("Schemas must be a hash, but has value #{schema.inspect}")
         return
       end
 
       path = []
       ['service_instance', 'create', 'parameters'].each do |key|
         path += [key]
-        attrs = attrs[key]
-        return nil unless attrs
+        schema = schema[key]
+        return nil unless schema
 
-        unless attrs.is_a? Hash
-          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{attrs.inspect}")
+        unless schema.is_a? Hash
+          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{schema.inspect}")
           return nil
         end
       end
 
       create_instance_path = path.join('.')
-      validate_metaschema(create_instance_path, attrs)
+      validate_metaschema(create_instance_path, schema)
       return unless errors.empty?
-      validate_no_external_references(create_instance_path, attrs)
+      validate_no_external_references(create_instance_path, schema)
+      return unless errors.empty?
+      validate_schema_type(create_instance_path, schema)
+      @create_instance = schema
+    end
 
-      @create_instance = attrs
+    def validate_schema_type(path, schema)
+      add_schema_error_msg(path, 'must have field "type", with value "object"') if schema['type'] != 'object'
     end
 
     def validate_metaschema(path, schema)
