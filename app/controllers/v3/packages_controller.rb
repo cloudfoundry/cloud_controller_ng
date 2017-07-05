@@ -86,9 +86,13 @@ class PackagesController < ApplicationController
     package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
     unauthorized! unless can_write?(package.space.guid)
 
-    PackageDelete.new(user_audit_info).delete(package)
+    delete_action = PackageDelete.new(user_audit_info)
+    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
 
-    head :no_content
+    job = enqueue_deletion_job(deletion_job, package.guid)
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
   def create
@@ -100,6 +104,20 @@ class PackagesController < ApplicationController
   end
 
   private
+
+  def enqueue_deletion_job(deletion_job, resource_guid)
+    JobModel.db.transaction do
+      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
+
+      JobModel.create(
+        delayed_job_guid: enqueued_job.guid,
+        operation:        'package.delete',
+        state:            JobModel::PROCESSING_STATE,
+        resource_guid:    resource_guid,
+        resource_type:    VCAP::CloudController::JobModel::RESOURCE_TYPE[:PACKAGE]
+      )
+    end
+  end
 
   def create_fresh
     message = PackageCreateMessage.create_from_http_request(params[:body])

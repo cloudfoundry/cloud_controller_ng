@@ -731,11 +731,15 @@ RSpec.describe 'Packages' do
       space.add_developer user
     end
 
-    it 'deletes a package' do
-      expect {
-        delete "/v3/packages/#{guid}", {}, user_header
-      }.to change { VCAP::CloudController::PackageModel.count }.by(-1)
-      expect(last_response.status).to eq(204)
+    it 'deletes a package asynchronously' do
+      delete "/v3/packages/#{guid}", {}, user_header
+
+      expect(last_response.status).to eq(202)
+      expect(last_response.body).to eq('')
+      expect(last_response.header['Location']).to match(%r(jobs/[a-fA-F0-9-]+))
+      execute_all_jobs(expected_successes: 2, expected_failures: 0)
+      get "/v3/packages/#{guid}", {}, user_header
+      expect(last_response.status).to eq(404)
 
       expected_metadata = { package_guid: guid }.to_json
 

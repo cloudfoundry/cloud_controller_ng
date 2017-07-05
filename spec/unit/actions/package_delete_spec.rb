@@ -42,6 +42,10 @@ module VCAP::CloudController
 
           package_delete.delete(package)
         end
+
+        it 'returns an empty error list' do
+          expect(package_delete.delete(package)).to be_empty
+        end
       end
 
       context 'when passed a set of packages' do

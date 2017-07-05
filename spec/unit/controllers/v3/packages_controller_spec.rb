@@ -314,18 +314,13 @@ RSpec.describe PackagesController, type: :controller do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { package.space }
+    let(:package_delete_stub) { instance_double(VCAP::CloudController::PackageDelete) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-    end
-
-    it 'returns a 204 NO CONTENT and deletes the package' do
-      delete :destroy, guid: package.guid
-
-      expect(response.status).to eq 204
-      expect(response.body).to be_empty
-      expect(package.exists?).to be_falsey
+      allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
+      allow(VCAP::CloudController::PackageDelete).to receive(:new).and_return(package_delete_stub)
     end
 
     context 'when the package does not exist' do
@@ -377,6 +372,40 @@ RSpec.describe PackagesController, type: :controller do
           expect(response.body).to include('NotAuthorized')
         end
       end
+    end
+
+    it 'successfully deletes the package in a background job' do
+      delete :destroy, guid: package.guid
+
+      package_delete_jobs = Delayed::Job.where("handler like '%PackageDelete%'")
+      expect(package_delete_jobs.count).to eq 1
+      package_delete_jobs.first
+
+      expect(VCAP::CloudController::PackageModel.find(guid: package.guid)).not_to be_nil
+      expect(VCAP::CloudController::Jobs::DeleteActionJob).to have_received(:new).with(
+        VCAP::CloudController::PackageModel,
+        package.guid,
+        package_delete_stub,
+      )
+    end
+
+    it 'creates a job to track the deletion and returns it in the location header' do
+      expect {
+        delete :destroy, guid: package.guid
+      }.to change {
+        VCAP::CloudController::JobModel.count
+      }.by(1)
+
+      job = VCAP::CloudController::JobModel.last
+      enqueued_job = Delayed::Job.last
+      expect(job.delayed_job_guid).to eq(enqueued_job.guid)
+      expect(job.operation).to eq('package.delete')
+      expect(job.state).to eq('PROCESSING')
+      expect(job.resource_guid).to eq(package.guid)
+      expect(job.resource_type).to eq('package')
+
+      expect(response.status).to eq(202)
+      expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
   end
 
