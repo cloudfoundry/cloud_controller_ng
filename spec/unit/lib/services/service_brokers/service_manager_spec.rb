@@ -33,7 +33,17 @@ module VCAP::Services::ServiceBrokers
       }
     end
     let(:plan_schemas_hash) do
-      { 'schemas' => { 'service_instance' => { 'create' => { 'parameters' => { '$schema': 'example.com/schema' } } } } }
+      {
+          'schemas' => {
+              'service_instance' => {
+                  'create' => {
+                      'parameters' => {
+                          '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
+                      }
+                  }
+              }
+          }
+      }
     end
 
     let(:catalog_hash) do
@@ -161,7 +171,7 @@ module VCAP::Services::ServiceBrokers
           'public' => service_plan.public,
           'active' => service_plan.active,
           'bindable' => true,
-          'create_instance_schema' => '{"$schema":"example.com/schema"}',
+          'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
         })
       end
 
@@ -196,7 +206,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
-          expect(plan.create_instance_schema).to eq('{"$schema":"example.com/schema"}')
+          expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
 
           expect(plan.free).to be false
         end
@@ -336,7 +346,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.description).to eq(plan_description)
             expect(plan.free).to be false
             expect(plan.bindable).to be true
-            expect(plan.create_instance_schema).to eq('{"$schema":"example.com/schema"}')
+            expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           end
 
           it 'creates service audit events for each service plan updated' do
@@ -361,7 +371,7 @@ module VCAP::Services::ServiceBrokers
               'extra' => '{"cost":"0.0"}',
               'bindable' => true,
               'free' => false,
-              'create_instance_schema' => '{"$schema":"example.com/schema"}',
+              'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
             })
           end
 
