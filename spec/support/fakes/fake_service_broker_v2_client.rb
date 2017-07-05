@@ -4,6 +4,7 @@ class FakeServiceBrokerV2Client
   attr_accessor :volume_mounts
   attr_accessor :service_name
   attr_accessor :plan_name
+  attr_accessor :plan_schemas
 
   def initialize(_attrs)
     @credentials = { 'username' => 'cool_user' }
@@ -11,6 +12,7 @@ class FakeServiceBrokerV2Client
     @volume_mounts = []
     @service_name = 'service_name'
     @plan_name = 'fake_plan_name'
+    @plan_schemas = nil
   end
 
   def catalog
@@ -23,7 +25,8 @@ class FakeServiceBrokerV2Client
         'plans'       => [{
           'id'          => 'fake_plan_id',
           'name'        => plan_name,
-          'description' => 'fake_plan_description'
+          'description' => 'fake_plan_description',
+          'schemas'     => plan_schemas
         }]
       }]
     }

@@ -160,6 +160,27 @@ module VCAP::Services::ServiceBrokers::V2
           }
         }
         its(:valid?) { should be true }
+        its(:errors) { should be_empty }
+      end
+
+      context 'when the schema is too large' do
+        path = 'service_instance.create.parameters'
+        big_string = 'x' * 65 * 1024
+        let(:create_instance_schema) {
+          {
+            'type' => 'object',
+            'foo' => big_string
+          }
+        }
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') { should match "Schema #{path} is larger than 64KB" }
+
+        it 'does not perform any further validation' do
+          expect_any_instance_of(CatalogSchemas).to_not receive(:validate_metaschema)
+          expect_any_instance_of(CatalogSchemas).to_not receive(:validate_no_external_references)
+          CatalogSchemas.new(attrs)
+        end
       end
 
       context 'when the schema does not have a type field' do
