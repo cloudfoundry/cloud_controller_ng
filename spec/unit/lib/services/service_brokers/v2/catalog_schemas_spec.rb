@@ -157,29 +157,62 @@ module VCAP::Services::ServiceBrokers::V2
             'type' => 'object',
             :properties => { 'foo': { 'type': 'string' } },
             :required => ['foo']
-          }
+        }
         }
         its(:valid?) { should be true }
         its(:errors) { should be_empty }
       end
 
-      context 'when the schema is too large' do
-        path = 'service_instance.create.parameters'
-        big_string = 'x' * 65 * 1024
-        let(:create_instance_schema) {
+      describe 'schema sizes' do
+        def create_schema_of_size(bytes)
+          surrounding_bytes = 26
           {
             'type' => 'object',
-            'foo' => big_string
+            'foo' => 'x' * (bytes - surrounding_bytes)
           }
-        }
-        its(:valid?) { should be false }
-        its('errors.messages') { should have(1).items }
-        its('errors.messages.first') { should match "Schema #{path} is larger than 64KB" }
+        end
 
-        it 'does not perform any further validation' do
-          expect_any_instance_of(CatalogSchemas).to_not receive(:validate_metaschema)
-          expect_any_instance_of(CatalogSchemas).to_not receive(:validate_no_external_references)
-          CatalogSchemas.new(attrs)
+        context 'that are valid' do
+          {
+            'well below the limit': 1,
+            'just below the limit': 63,
+            'on the limit': 64,
+          }.each do |desc, size_in_kb|
+            context "when the schema is #{desc}" do
+              let(:create_instance_schema) { create_schema_of_size(size_in_kb * 1024) }
+
+              its(:valid?) { should be true }
+              its(:errors) { should be_empty }
+
+              it 'does perform further validation' do
+                expect_any_instance_of(CatalogSchemas).to receive(:validate_metaschema)
+                expect_any_instance_of(CatalogSchemas).to receive(:validate_no_external_references)
+                subject
+              end
+            end
+          end
+        end
+
+        context 'that are invalid' do
+          {
+            'just above the limit': 65,
+            'well above the limit': 10 * 1024,
+          }.each do |desc, size_in_kb|
+            context "when the schema is #{desc}" do
+              path = 'service_instance.create.parameters'
+              let(:create_instance_schema) { create_schema_of_size(size_in_kb * 1024) }
+
+              its(:valid?) { should be false }
+              its('errors.messages') { should have(1).items }
+              its('errors.messages.first') { should match "Schema #{path} is larger than 64KB" }
+
+              it 'does not perform further validation' do
+                expect_any_instance_of(CatalogSchemas).to_not receive(:validate_metaschema)
+                expect_any_instance_of(CatalogSchemas).to_not receive(:validate_no_external_references)
+                subject
+              end
+            end
+          end
         end
       end
 
