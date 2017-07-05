@@ -16,6 +16,8 @@ module VCAP::CloudController
           package,
           @user_audit_info)
       end
+
+      []
     end
   end
 end

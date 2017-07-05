@@ -4,7 +4,7 @@ module VCAP::CloudController
     COMPLETE_STATE   = 'COMPLETE'.freeze
     FAILED_STATE     = 'FAILED'.freeze
 
-    RESOURCE_TYPE = { APP: 'app' }.freeze
+    RESOURCE_TYPE = { APP: 'app', PACKAGE: 'package' }.freeze
 
     def complete?
       state != VCAP::CloudController::JobModel::COMPLETE_STATE
