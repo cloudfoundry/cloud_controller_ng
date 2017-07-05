@@ -1,6 +1,7 @@
 require 'json-schema'
 
 module VCAP::Services::ServiceBrokers::V2
+  MAX_SCHEMA_SIZE = 65_536
   class CatalogSchemas
     attr_reader :errors, :create_instance
 
@@ -44,13 +45,19 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_schema(path, schema)
-      validate_schema_size(path, schema)
-      return unless errors.empty?
-      validate_metaschema(path, schema)
-      return unless errors.empty?
-      validate_no_external_references(path, schema)
-      return unless errors.empty?
-      validate_schema_type(path, schema)
+      schema_validations.each do |validation|
+        break if errors.present?
+        send(validation, path, schema)
+      end
+    end
+
+    def schema_validations
+      [
+        :validate_schema_size,
+        :validate_metaschema,
+        :validate_no_external_references,
+        :validate_schema_type
+      ]
     end
 
     def validate_schema_type(path, schema)
@@ -58,9 +65,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_schema_size(path, schema)
-      if schema.to_json.length > 65_536
-        errors.add("Schema #{path} is larger than 64KB")
-      end
+      errors.add("Schema #{path} is larger than 64KB") if schema.to_json.length > MAX_SCHEMA_SIZE
     end
 
     def validate_metaschema(path, schema)
