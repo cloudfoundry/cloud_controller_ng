@@ -55,7 +55,7 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
   summary = []
   failure_message do |actual|
     begin
-      diffs = HashDiff.diff(expected, actual)
+      diffs = HashDiff.best_diff(expected, actual)
       if diffs
         diffs.each do |comparator, key, expected_value, actual_value|
           case comparator

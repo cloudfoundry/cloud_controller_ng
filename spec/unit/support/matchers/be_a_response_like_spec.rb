@@ -90,8 +90,8 @@ RSpec.describe 'be_a_response_like matcher' do
   it 'fails on deeply nested value mismatches' do
     expect {
       expect({ 'a' => [{ 'a' => { 'a' => [{ 'a' => 1 }, { 'b' => 2 }] } }] }).to be_a_response_like({ 'a' => [{ 'a' => { 'a' => [{ 'a' => 1 }, { 'b' => 1 }] } }] })
-    }.to raise_expectation_not_met_with_key_change(expected: '- a[0]: {"a"=>{"a"=>[{"a"=>1}, {"b"=>1}]}}',
-                                                   actual:   '+ a[0]: {"a"=>{"a"=>[{"a"=>1}, {"b"=>2}]}}')
+    }.to raise_expectation_not_met_with_key_change(expected: '- a[0].a.a[1]: {"b"=>1}',
+                                                   actual:   '+ a[0].a.a[1]: {"b"=>2}')
   end
 
   def raise_expectation_not_met_with_summary(ptn)
