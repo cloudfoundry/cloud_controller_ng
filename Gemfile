@@ -58,6 +58,7 @@ end
 group :test do
   gem 'codeclimate-test-reporter', require: false
   gem 'fakefs', require: 'fakefs/safe'
+  gem 'hashdiff'
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
   gem 'rack-test'
