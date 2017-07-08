@@ -20,6 +20,10 @@ RSpec.describe 'be_a_response_like matcher' do
       }.to raise_expectation_not_met_with_summary_parts('! a:', '- /\d+/', '+ 1')
     end
 
+    it 'passes when matching an iso8601 timestamp' do
+      expect({ 'a' => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}).to be_a_response_like({ 'a' => iso8601 })
+    end
+
     it 'does not interpret strings as regex' do
       expect {
         expect({ 'a' => '[thing]' }).to be_a_response_like({ 'a' => '[th]' })

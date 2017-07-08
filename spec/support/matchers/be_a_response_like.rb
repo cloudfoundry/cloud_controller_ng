@@ -64,7 +64,7 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
           when '+'
             summary << "+ #{key}: #{truncate(expected_value, 80)}"
           when '~'
-            next if actual_value.is_a?(String) && expected_value.is_a?(Regexp) && expected_value.match(expected_value.to_s) rescue false
+            next if expected_value.is_a?(Regexp) && expected_value.match(actual_value) rescue false
             summary << "! #{key}:"
             if expected_value.is_a?(Regexp)
               expected_value = expected_value.inspect
