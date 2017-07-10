@@ -1,4 +1,4 @@
-require 'presenters/system_env_presenter'
+require 'presenters/system_environment/system_env_presenter'
 
 module VCAP::CloudController
   module Diego

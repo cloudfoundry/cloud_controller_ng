@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'presenters/message_bus/service_instance_presenter'
+require 'presenters/system_environment/service_instance_presenter'
 
 RSpec.describe ServiceInstancePresenter do
   describe '#to_hash' do

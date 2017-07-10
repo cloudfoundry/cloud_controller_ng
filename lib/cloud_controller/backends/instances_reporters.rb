@@ -4,25 +4,25 @@ require 'cloud_controller/diego/instances_reporter'
 module VCAP::CloudController
   class InstancesReporters
     def number_of_starting_and_running_instances_for_process(app)
-      reporter_for_app(app).number_of_starting_and_running_instances_for_process(app)
+      reporter_for_app.number_of_starting_and_running_instances_for_process(app)
     rescue CloudController::Errors::InstancesUnavailable => e
       raise CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     def all_instances_for_app(app)
-      reporter_for_app(app).all_instances_for_app(app)
+      reporter_for_app.all_instances_for_app(app)
     rescue CloudController::Errors::InstancesUnavailable => e
       raise CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     def crashed_instances_for_app(app)
-      reporter_for_app(app).crashed_instances_for_app(app)
+      reporter_for_app.crashed_instances_for_app(app)
     rescue CloudController::Errors::InstancesUnavailable => e
       raise CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', e.to_s)
     end
 
     def stats_for_app(app)
-      reporter_for_app(app).stats_for_app(app)
+      reporter_for_app.stats_for_app(app)
     rescue CloudController::Errors::NoRunningInstances
       raise CloudController::Errors::ApiError.new_from_details('AppStoppedStatsError', 'There are zero running instances.')
     rescue CloudController::Errors::InstancesUnavailable
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
     private
 
-    def reporter_for_app(_)
+    def reporter_for_app
       diego_reporter
     end
 

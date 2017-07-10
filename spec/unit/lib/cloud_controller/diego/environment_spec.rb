@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'presenters/system_env_presenter'
+require 'presenters/system_environment/system_env_presenter'
 require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController::Diego

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'presenters/message_bus/service_binding_presenter'
+require 'presenters/system_environment/service_binding_presenter'
 
 RSpec.describe ServiceBindingPresenter do
   context 'for a managed service instance' do

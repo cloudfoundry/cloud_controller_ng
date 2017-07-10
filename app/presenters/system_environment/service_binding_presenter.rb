@@ -1,4 +1,4 @@
-require 'presenters/message_bus/service_instance_presenter'
+require 'presenters/system_environment/service_instance_presenter'
 
 class ServiceBindingPresenter
   WHITELISTED_VOLUME_FIELDS = ['container_dir', 'mode', 'device_type'].freeze
