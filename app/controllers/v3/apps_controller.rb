@@ -94,11 +94,7 @@ class AppsV3Controller < ApplicationController
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    operation = 'app.delete'
-    resource_type = VCAP::CloudController::PollableJobModel::RESOURCE_TYPE[:APP]
-    resource_guid = app.guid
-
-    job = enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
+    job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
@@ -219,20 +215,6 @@ class AppsV3Controller < ApplicationController
   end
 
   private
-
-  def enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
-    PollableJobModel.db.transaction do
-      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
-
-      PollableJobModel.create(
-        delayed_job_guid: enqueued_job.guid,
-        operation:        operation,
-        state:            PollableJobModel::PROCESSING_STATE,
-        resource_guid:    resource_guid,
-        resource_type:    resource_type,
-      )
-    end
-  end
 
   def droplet_not_found!
     resource_not_found!(:droplet)

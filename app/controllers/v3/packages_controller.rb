@@ -88,8 +88,7 @@ class PackagesController < ApplicationController
 
     delete_action = PackageDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
-
-    job = enqueue_deletion_job(deletion_job, package.guid)
+    job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
@@ -104,20 +103,6 @@ class PackagesController < ApplicationController
   end
 
   private
-
-  def enqueue_deletion_job(deletion_job, resource_guid)
-    PollableJobModel.db.transaction do
-      enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
-
-      PollableJobModel.create(
-        delayed_job_guid: enqueued_job.guid,
-        operation:        'package.delete',
-        state:            PollableJobModel::PROCESSING_STATE,
-        resource_guid:    resource_guid,
-        resource_type:    VCAP::CloudController::PollableJobModel::RESOURCE_TYPE[:PACKAGE]
-      )
-    end
-  end
 
   def create_fresh
     message = PackageCreateMessage.create_from_http_request(params[:body])
