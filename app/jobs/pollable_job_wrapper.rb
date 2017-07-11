@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Jobs
-    class PollableJob < WrappingJob
+    class PollableJobWrapper < WrappingJob
       # use custom hook as Job does not have the guid field populated during the normal `enqueue` hook
       def after_enqueue(job)
         PollableJobModel.create(

@@ -108,7 +108,7 @@ module VCAP::CloudController::Jobs
           expect(enqueued_job).to be_a LoggingContextJob
           expect(enqueued_job.handler).to be_a TimeoutJob
           expect(enqueued_job.handler.timeout).to eq(global_timeout)
-          expect(enqueued_job.handler.handler).to be_a PollableJob
+          expect(enqueued_job.handler.handler).to be_a PollableJobWrapper
           expect(enqueued_job.handler.handler.handler).to be wrapped_job
           original_enqueue.call(enqueued_job, opts)
         end

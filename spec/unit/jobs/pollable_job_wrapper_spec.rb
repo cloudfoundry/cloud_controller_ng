@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'jobs/pollable_job'
+require 'jobs/pollable_job_wrapper'
 
 module VCAP::CloudController::Jobs
-  RSpec.describe PollableJob do
+  RSpec.describe PollableJobWrapper do
     let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil) }
-    let(:pollable_job) { PollableJob.new(job) }
+    let(:pollable_job) { PollableJobWrapper.new(job) }
 
     describe '#perform' do
       it 'runs the provided job' do
