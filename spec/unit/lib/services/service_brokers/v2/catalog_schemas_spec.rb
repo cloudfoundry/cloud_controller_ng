@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe CatalogSchemas do
     describe 'initializing' do
-      let(:create_instance_schema) { { '$schema': 'example.com/schema' } }
+      let(:create_instance_schema) { { '$schema': 'http://json-schema.org/draft-04/schema#' } }
       let(:attrs) { { 'service_instance' => { 'create' => { 'parameters' => create_instance_schema } } } }
       subject { CatalogSchemas.new(attrs) }
 
@@ -60,6 +60,71 @@ module VCAP::Services::ServiceBrokers::V2
             its(:valid?) { should be false }
           end
         end
+      end
+
+      context 'when the schema has an external schema' do
+        let(:create_instance_schema) { { '$schema': 'http://example.com/schema' } }
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') {
+          should match 'Schema not valid\. Custom meta schemas are not supported.+http://example.com/schema'
+        }
+      end
+
+      context 'when the schema has an external uri reference' do
+        let(:create_instance_schema) { { '$ref': 'http://example.com/ref' } }
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') {
+          should match 'Schema not valid\. No external references are allowed.+http://example.com/ref'
+        }
+      end
+
+      context 'when the schema has an external file reference' do
+        let(:create_instance_schema) { { '$ref': 'path/to/schema.json' } }
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') {
+          should match 'Schema not valid\. No external references are allowed.+path/to/schema.json'
+        }
+      end
+
+      context 'when the schema has an internal reference' do
+        let(:create_instance_schema) {
+          {
+            'properties': {
+              'foo': { 'type': 'integer' },
+              'bar': { '$ref': '#/properties/foo' }
+            }
+          }
+        }
+        its(:valid?) { should be true }
+        its(:errors) { should be_empty }
+      end
+
+      context 'when the schema has an unknown parse error' do
+        let(:create_instance_schema) { { '$ref': 'http://example.com/ref' } }
+        before do
+          allow(JSON::Validator).to receive(:validate!) { raise 'some unknown error' }
+        end
+
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') { should match 'Schema not valid\.+ some unknown error' }
+      end
+
+      context 'when the schema has multiple valid constraints ' do
+        let(:create_instance_schema) {
+          { '$schema': 'http://json-schema.org/draft-04/schema#',
+            'properties': {
+              'foo': {
+                'type': 'string'
+              }
+            },
+            'required': ['foo']
+          }
+        }
+        its(:valid?) { should be true }
       end
     end
   end
