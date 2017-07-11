@@ -123,7 +123,14 @@ RSpec.describe 'Service Broker' do
                 {
                   id: 'plan-1',
                   name: 'small',
-                  description: 'A small shared database with 100mb storage quota and 10 connections'
+                  description: 'A small shared database with 100mb storage quota and 10 connections',
+                  schemas: {
+                    service_instance: {
+                      create: {
+                        parameters: { properties: true }
+                      }
+                    }
+                  }
                 }, {
                   id: 'plan-2',
                   name: 'large',
@@ -196,6 +203,9 @@ RSpec.describe 'Service Broker' do
           "Service dashboard_client id must be unique\n" \
           "Service service-1\n" \
           "  Service id must be a string, but has value 12345\n" \
+          "  Plan small\n" \
+          "    Schemas\n" \
+          "      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04\n" \
           "Service service-2\n" \
           "  Plan ids must be unique within a service. Service service-2 already has a plan with id 'plan-b'\n" \
           "  Plan large\n" \

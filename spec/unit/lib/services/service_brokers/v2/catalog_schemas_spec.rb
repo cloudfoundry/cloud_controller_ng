@@ -62,12 +62,21 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the schema does not conform to JSON Schema Draft 04' do
+        let(:create_instance_schema) { { 'properties': true } }
+        its(:valid?) { should be false }
+        its('errors.messages') { should have(1).items }
+        its('errors.messages.first') {
+          should match 'Schema service_instance.create.parameters is not valid\. Must conform to JSON Schema Draft 04'
+        }
+      end
+
       context 'when the schema has an external schema' do
         let(:create_instance_schema) { { '$schema': 'http://example.com/schema' } }
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
-          should match 'Schema not valid\. Custom meta schemas are not supported.+http://example.com/schema'
+          should match 'Schema service_instance.create.parameters is not valid\. Custom meta schemas are not supported.+http://example.com/schema'
         }
       end
 
@@ -76,7 +85,7 @@ module VCAP::Services::ServiceBrokers::V2
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
-          should match 'Schema not valid\. No external references are allowed.+http://example.com/ref'
+          should match 'Schema service_instance.create.parameters is not valid\. No external references are allowed.+http://example.com/ref'
         }
       end
 
@@ -85,7 +94,7 @@ module VCAP::Services::ServiceBrokers::V2
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
         its('errors.messages.first') {
-          should match 'Schema not valid\. No external references are allowed.+path/to/schema.json'
+          should match 'Schema service_instance.create.parameters is not valid\. No external references are allowed.+path/to/schema.json'
         }
       end
 
@@ -103,14 +112,13 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema has an unknown parse error' do
-        let(:create_instance_schema) { { '$ref': 'http://example.com/ref' } }
         before do
           allow(JSON::Validator).to receive(:validate!) { raise 'some unknown error' }
         end
 
         its(:valid?) { should be false }
         its('errors.messages') { should have(1).items }
-        its('errors.messages.first') { should match 'Schema not valid\.+ some unknown error' }
+        its('errors.messages.first') { should match 'Schema service_instance.create.parameters is not valid\.+ some unknown error' }
       end
 
       context 'when the schema has multiple valid constraints ' do
