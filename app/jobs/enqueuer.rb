@@ -12,12 +12,13 @@ module VCAP::CloudController
       end
 
       def enqueue
-        job = @opts.delete(:pollable) ? PollableJob.new(@job) : @job
-        request_id = ::VCAP::Request.current_id
-        Delayed::Job.enqueue(
-          LoggingContextJob.new(TimeoutJob.new(job, job_timeout), request_id),
-          @opts
-        )
+        enqueue_job(@job)
+      end
+
+      def enqueue_pollable
+        job = PollableJob.new(@job)
+        delayed_job = enqueue_job(job)
+        PollableJobModel.find_by_delayed_job(delayed_job)
       end
 
       def run_inline
@@ -27,6 +28,14 @@ module VCAP::CloudController
       end
 
       private
+
+      def enqueue_job(job)
+        request_id = ::VCAP::Request.current_id
+        Delayed::Job.enqueue(
+          LoggingContextJob.new(TimeoutJob.new(job, job_timeout), request_id),
+          @opts
+        )
+      end
 
       def load_delayed_job_plugins
         @loaded_plugins ||= Delayed::Worker.new

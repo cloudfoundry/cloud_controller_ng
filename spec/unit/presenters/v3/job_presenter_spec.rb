@@ -12,12 +12,12 @@ module VCAP::CloudController::Presenters::V3
           resource_guid: 'guid',
         )
       end
-      let(:result) {JobPresenter.new(job).to_hash}
+      let(:result) { JobPresenter.new(job).to_hash }
 
       describe '#to_hash' do
         it 'presents the job as json' do
           links = {
-            self: {href: "#{link_prefix}/v3/jobs/#{job.guid}"}
+            self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
           }
 
           expect(result[:operation]).to eq("#{resource_type}.delete")
@@ -32,8 +32,8 @@ module VCAP::CloudController::Presenters::V3
 
           it 'shows the resource link when the jobs resource_type is defined' do
             links = {
-              self: {href: "#{link_prefix}/v3/jobs/#{job.guid}"},
-              "#{resource_type}": {href: "#{link_prefix}/v3/#{resource_type}s/guid"}
+              self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" },
+              "#{resource_type}": { href: "#{link_prefix}/v3/#{resource_type}s/guid" }
             }
 
             expect(result[:links]).to eq(links)
@@ -43,7 +43,7 @@ module VCAP::CloudController::Presenters::V3
             job.update(resource_type: nil)
             result = JobPresenter.new(job).to_hash
             links = {
-              self: {href: "#{link_prefix}/v3/jobs/#{job.guid}"}
+              self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
             }
 
             expect(result[:links]).to eq(links)
@@ -53,7 +53,7 @@ module VCAP::CloudController::Presenters::V3
         context 'when the job has completed' do
           it 'should not show the resource link' do
             links = {
-              self: {href: "#{link_prefix}/v3/jobs/#{job.guid}"}
+              self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
             }
 
             expect(result[:links]).to eq(links)
