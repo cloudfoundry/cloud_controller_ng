@@ -15,36 +15,52 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def validate_and_populate_create_instance(schema)
-      return unless schema
-      unless schema.is_a? Hash
-        errors.add("Schemas must be a hash, but has value #{schema.inspect}")
+    def validate_and_populate_create_instance(schemas)
+      return unless schemas
+      unless schemas.is_a? Hash
+        errors.add("Schemas must be a hash, but has value #{schemas.inspect}")
         return
       end
 
       path = []
       ['service_instance', 'create', 'parameters'].each do |key|
         path += [key]
-        schema = schema[key]
-        return nil unless schema
+        schemas = schemas[key]
+        return nil unless schemas
 
-        unless schema.is_a? Hash
-          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{schema.inspect}")
+        unless schemas.is_a? Hash
+          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{schemas.inspect}")
           return nil
         end
       end
 
+      create_instance_schema = schemas
       create_instance_path = path.join('.')
-      validate_metaschema(create_instance_path, schema)
+
+      validate_schema(create_instance_path, create_instance_schema)
       return unless errors.empty?
-      validate_no_external_references(create_instance_path, schema)
+
+      @create_instance = create_instance_schema
+    end
+
+    def validate_schema(path, schema)
+      validate_schema_size(path, schema)
       return unless errors.empty?
-      validate_schema_type(create_instance_path, schema)
-      @create_instance = schema
+      validate_metaschema(path, schema)
+      return unless errors.empty?
+      validate_no_external_references(path, schema)
+      return unless errors.empty?
+      validate_schema_type(path, schema)
     end
 
     def validate_schema_type(path, schema)
       add_schema_error_msg(path, 'must have field "type", with value "object"') if schema['type'] != 'object'
+    end
+
+    def validate_schema_size(path, schema)
+      if schema.to_json.length > 65_536
+        errors.add("Schema #{path} is larger than 64KB")
+      end
     end
 
     def validate_metaschema(path, schema)
