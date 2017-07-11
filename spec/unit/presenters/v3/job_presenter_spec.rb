@@ -38,16 +38,6 @@ module VCAP::CloudController::Presenters::V3
 
             expect(result[:links]).to eq(links)
           end
-
-          it 'does not show the resource link when the jobs resource_type is undefined' do
-            job.update(resource_type: nil)
-            result = JobPresenter.new(job).to_hash
-            links = {
-              self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
-            }
-
-            expect(result[:links]).to eq(links)
-          end
         end
 
         context 'when the job has completed' do

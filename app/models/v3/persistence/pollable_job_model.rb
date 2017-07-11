@@ -10,6 +10,10 @@ module VCAP::CloudController
       state == VCAP::CloudController::PollableJobModel::COMPLETE_STATE
     end
 
+    def resource_exists?
+      !complete?
+    end
+
     def self.find_by_delayed_job(delayed_job)
       pollable_job = PollableJobModel.find(delayed_job_guid: delayed_job.guid)
 
