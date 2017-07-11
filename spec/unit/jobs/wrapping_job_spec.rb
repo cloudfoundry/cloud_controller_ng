@@ -121,6 +121,42 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe '#resource_type' do
+        context 'when the job does have resource_type' do
+          it 'returns type from job' do
+            handler = double(:job, resource_type: 'some-type')
+            job     = WrappingJob.new(handler)
+            expect(job.resource_type).to eq('some-type')
+          end
+        end
+
+        context 'when the wrapped job does not have the resource_type defined' do
+          it 'returns nil' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect(job.resource_type).to be_nil
+          end
+        end
+      end
+
+      describe '#resource_guid' do
+        context 'when the job does have resource_guid' do
+          it 'returns type from job' do
+            handler = double(:job, resource_guid: 'some-guid')
+            job     = WrappingJob.new(handler)
+            expect(job.resource_guid).to eq('some-guid')
+          end
+        end
+
+        context 'when the wrapped job does not have the resource_guid defined' do
+          it 'returns nil' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect(job.resource_guid).to be_nil
+          end
+        end
+      end
     end
   end
 end

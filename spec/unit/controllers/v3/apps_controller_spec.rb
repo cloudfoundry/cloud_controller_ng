@@ -835,10 +835,10 @@ RSpec.describe AppsV3Controller, type: :controller do
       expect {
         delete :destroy, guid: app_model.guid
       }.to change {
-        VCAP::CloudController::JobModel.count
+        VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
-      job = VCAP::CloudController::JobModel.last
+      job = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
       expect(job.delayed_job_guid).to eq(enqueued_job.guid)
       expect(job.operation).to eq('app.delete')

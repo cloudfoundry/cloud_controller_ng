@@ -36,7 +36,6 @@ namespace :jobs do
       Delayed::Worker.destroy_failed_jobs = false
       Delayed::Worker.max_attempts = 3
       Delayed::Worker.logger = logger
-      Delayed::Worker.plugins << DeserializationRetry
       worker = Delayed::Worker.new(@queue_options)
       worker.name = @queue_options[:worker_name]
       worker.start

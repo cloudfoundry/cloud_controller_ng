@@ -215,12 +215,44 @@ RSpec.describe DropletsController, type: :controller do
       CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
 
-    it 'returns a 204 NO CONTENT' do
+    it 'returns a 202 ACCEPTED and the job link in header' do
       delete :destroy, guid: droplet.guid
 
-      expect(response.status).to eq(204)
+      expect(response.status).to eq(202)
       expect(response.body).to be_empty
-      expect(droplet.exists?).to be_falsey
+      expect(response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+    end
+
+    it 'creates a job to track the deletion and returns it in the location header' do
+      expect {
+        delete :destroy, guid: droplet.guid
+      }.to change {
+        VCAP::CloudController::PollableJobModel.count
+      }.by(1)
+
+      job = VCAP::CloudController::PollableJobModel.last
+      enqueued_job = Delayed::Job.last
+      expect(job.delayed_job_guid).to eq(enqueued_job.guid)
+      expect(job.operation).to eq('droplet.delete')
+      expect(job.state).to eq('PROCESSING')
+      expect(job.resource_guid).to eq(droplet.guid)
+      expect(job.resource_type).to eq('droplet')
+
+      expect(response.status).to eq(202)
+      expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
+    end
+
+    it 'updates the job state when the job succeeds' do
+      delete :destroy, guid: droplet.guid
+
+      job = VCAP::CloudController::PollableJobModel.find(resource_guid: droplet.guid)
+      expect(job).to_not be_nil, "Expected to find job with droplet guid '#{droplet.guid}' but did not"
+      expect(job.state).to eq('PROCESSING')
+
+      # one job to delete the model, which spawns another to delete the blob
+      execute_all_jobs(expected_successes: 2, expected_failures: 0)
+
+      expect(job.reload.state).to eq('COMPLETE')
     end
 
     context 'when the droplet does not exist' do

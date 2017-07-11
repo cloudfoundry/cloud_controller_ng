@@ -106,15 +106,15 @@ class PackagesController < ApplicationController
   private
 
   def enqueue_deletion_job(deletion_job, resource_guid)
-    JobModel.db.transaction do
+    PollableJobModel.db.transaction do
       enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
 
-      JobModel.create(
+      PollableJobModel.create(
         delayed_job_guid: enqueued_job.guid,
         operation:        'package.delete',
-        state:            JobModel::PROCESSING_STATE,
+        state:            PollableJobModel::PROCESSING_STATE,
         resource_guid:    resource_guid,
-        resource_type:    VCAP::CloudController::JobModel::RESOURCE_TYPE[:PACKAGE]
+        resource_type:    VCAP::CloudController::PollableJobModel::RESOURCE_TYPE[:PACKAGE]
       )
     end
   end

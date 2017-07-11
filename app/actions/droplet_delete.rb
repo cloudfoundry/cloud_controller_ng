@@ -25,6 +25,8 @@ module VCAP::CloudController
 
         droplet.destroy
       end
+
+      []
     end
 
     private

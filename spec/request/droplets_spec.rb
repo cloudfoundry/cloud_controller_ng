@@ -358,12 +358,15 @@ RSpec.describe 'Droplets' do
       stub_request(:delete, /#{TestConfig.config[:diego][:stager_url]}/).to_return(status: 202)
     end
 
-    it 'deletes a droplet' do
-      expect {
-        delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
-      }.to change { VCAP::CloudController::DropletModel.count }.by(-1)
-      expect(last_response.status).to eq(204)
-      expect(VCAP::CloudController::DropletModel.find(guid: droplet.guid)).to be_nil
+    it 'deletes a droplet asynchronously' do
+      delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
+
+      expect(last_response.status).to eq(202)
+      expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+      execute_all_jobs(expected_successes: 2, expected_failures: 0)
+      get "/v3/droplets/#{droplet.guid}", {}, developer_headers
+      expect(last_response.status).to eq(404)
     end
   end
 

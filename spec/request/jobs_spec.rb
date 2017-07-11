@@ -7,8 +7,8 @@ RSpec.describe 'Jobs' do
   describe 'GET /v3/jobs/:guid' do
     it 'returns a json representation of the job with the requested guid' do
       operation = 'app.delete'
-      job       = VCAP::CloudController::JobModel.make(
-        state:     VCAP::CloudController::JobModel::COMPLETE_STATE,
+      job       = VCAP::CloudController::PollableJobModel.make(
+        state:     VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
         operation: operation,
       )
       job_guid = job.guid

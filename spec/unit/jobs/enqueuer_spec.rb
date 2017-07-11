@@ -32,6 +32,23 @@ module VCAP::CloudController::Jobs
         Enqueuer.new(wrapped_job, opts).enqueue
       end
 
+      context 'when the pollable opt is true' do
+        before do
+          opts[:pollable] = true
+        end
+
+        it 'enqueues as a PollableJob' do
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(enqueued_job).to be_a LoggingContextJob
+            expect(enqueued_job.handler).to be_a TimeoutJob
+            expect(enqueued_job.handler.timeout).to eq(global_timeout)
+            expect(enqueued_job.handler.handler).to be_a PollableJob
+            expect(enqueued_job.handler.handler.handler).to be wrapped_job
+          end
+          Enqueuer.new(wrapped_job, opts).enqueue
+        end
+      end
+
       it "populates LoggingContextJob's ID with the one from the thread-local Request" do
         expect(Delayed::Job).to receive(:enqueue) do |logging_context_job, opts|
           expect(logging_context_job.request_id).to eq request_id
@@ -103,7 +120,7 @@ module VCAP::CloudController::Jobs
           expect(Delayed::Worker.delay_jobs).to be(true)
           expect {
             Enqueuer.new(wrapped_job, opts).run_inline
-          }.to raise_error /Boom!/
+          }.to raise_error(/Boom!/)
           expect(Delayed::Worker.delay_jobs).to be(true)
         end
       end

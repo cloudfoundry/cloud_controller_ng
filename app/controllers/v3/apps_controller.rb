@@ -95,7 +95,7 @@ class AppsV3Controller < ApplicationController
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
     operation = 'app.delete'
-    resource_type = VCAP::CloudController::JobModel::RESOURCE_TYPE[:APP]
+    resource_type = VCAP::CloudController::PollableJobModel::RESOURCE_TYPE[:APP]
     resource_guid = app.guid
 
     job = enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
@@ -221,13 +221,13 @@ class AppsV3Controller < ApplicationController
   private
 
   def enqueue_deletion_job(deletion_job, operation, resource_guid, resource_type)
-    JobModel.db.transaction do
+    PollableJobModel.db.transaction do
       enqueued_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue
 
-      JobModel.create(
+      PollableJobModel.create(
         delayed_job_guid: enqueued_job.guid,
         operation:        operation,
-        state:            JobModel::PROCESSING_STATE,
+        state:            PollableJobModel::PROCESSING_STATE,
         resource_guid:    resource_guid,
         resource_type:    resource_type,
       )

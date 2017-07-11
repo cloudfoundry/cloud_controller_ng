@@ -8,12 +8,14 @@ module VCAP::CloudController
         @job = job
         @opts = opts
         @timeout_calculator = JobTimeoutCalculator.new(VCAP::CloudController::Config.config)
+        load_delayed_job_plugins
       end
 
       def enqueue
+        job = @opts.delete(:pollable) ? PollableJob.new(@job) : @job
         request_id = ::VCAP::Request.current_id
         Delayed::Job.enqueue(
-          LoggingContextJob.new(TimeoutJob.new(@job, job_timeout), request_id),
+          LoggingContextJob.new(TimeoutJob.new(job, job_timeout), request_id),
           @opts
         )
       end
@@ -25,6 +27,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def load_delayed_job_plugins
+        @loaded_plugins ||= Delayed::Worker.new
+      end
 
       def job_timeout
         @timeout_calculator.calculate(@job.try(:job_name_in_configuration))

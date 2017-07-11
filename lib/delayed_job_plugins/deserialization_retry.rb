@@ -37,3 +37,4 @@ class DeserializationRetry < Delayed::Plugin
     end
   end
 end
+Delayed::Worker.plugins << DeserializationRetry

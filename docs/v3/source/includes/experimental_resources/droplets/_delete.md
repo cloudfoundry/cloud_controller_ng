@@ -15,7 +15,8 @@ Example Response
 ```
 
 ```http
-HTTP/1.1 204 No Content
+HTTP/1.1 202 Accepted
+Location: https://api.example.org/v3/jobs/[guid]
 ```
 
 #### Definition

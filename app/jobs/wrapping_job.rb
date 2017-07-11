@@ -11,6 +11,10 @@ module VCAP::CloudController
         handler.perform
       end
 
+      def after_enqueue(job)
+        handler.after_enqueue(job) if handler.respond_to?(:after_enqueue)
+      end
+
       def before(job)
         handler.before(job) if handler.respond_to?(:before)
       end
@@ -41,6 +45,14 @@ module VCAP::CloudController
 
       def wrapped_handler
         handler.respond_to?(:wrapped_handler) ? handler.wrapped_handler : handler
+      end
+
+      def resource_type
+        handler.respond_to?(:resource_type) ? handler.resource_type : nil
+      end
+
+      def resource_guid
+        handler.respond_to?(:resource_guid) ? handler.resource_guid : nil
       end
     end
   end

@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe V3::JobsController, type: :controller do
   describe '#show' do
-    let!(:job) { VCAP::CloudController::JobModel.make }
+    let!(:job) { VCAP::CloudController::PollableJobModel.make }
     let(:user) { VCAP::CloudController::User.make }
 
     before do

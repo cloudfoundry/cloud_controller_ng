@@ -79,8 +79,6 @@ RSpec.configure do |rspec_config|
   rspec_config.example_status_persistence_file_path = 'spec/examples.txt'
   rspec_config.expose_current_running_example_as :example # Can be removed when we upgrade to rspec 3
 
-  Delayed::Worker.plugins << DeserializationRetry
-
   rspec_config.before :suite do
     VCAP::CloudController::SpecBootstrap.seed
   end
