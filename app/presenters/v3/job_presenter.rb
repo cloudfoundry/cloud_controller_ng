@@ -12,9 +12,14 @@ module VCAP::CloudController
 
         def to_hash
           {
-            operation: job.operation,
-            state:     job.state,
-            links:     build_links
+            guid:       job.guid,
+            created_at: job.created_at,
+            updated_at: job.updated_at,
+
+            operation:  job.operation,
+            state:      job.state,
+
+            links:      build_links
           }
         end
 

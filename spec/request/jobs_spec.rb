@@ -16,9 +16,12 @@ RSpec.describe 'Jobs' do
       get "/v3/jobs/#{job_guid}", nil, user_headers
 
       expected_response = {
-        'operation' => operation,
-        'state'     => 'COMPLETE',
-        'links'     => {
+        'guid'       => job_guid,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'operation'  => operation,
+        'state'      => 'COMPLETE',
+        'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/jobs/#{job_guid}" }
         }
       }
