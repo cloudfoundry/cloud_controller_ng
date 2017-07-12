@@ -1,3 +1,5 @@
+require 'jobs/wrapping_job'
+
 module VCAP::CloudController
   module Jobs
     class TimeoutJob < WrappingJob

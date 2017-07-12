@@ -1,3 +1,4 @@
+require 'jobs/wrapping_job'
 require 'presenters/error_presenter'
 
 module VCAP::CloudController
