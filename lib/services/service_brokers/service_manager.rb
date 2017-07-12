@@ -65,7 +65,8 @@ module VCAP::Services::ServiceBrokers
           bindable:    catalog_plan.bindable,
           active:      true,
           extra:       catalog_plan.metadata.try(:to_json),
-          create_instance_schema: catalog_plan.schemas.create_instance.try(:to_json)
+          create_instance_schema: catalog_plan.schemas.create_instance.try(:to_json),
+          update_instance_schema: catalog_plan.schemas.update_instance.try(:to_json)
         })
         @services_event_repository.with_service_plan_event(plan) do
           plan.save(changed: true)

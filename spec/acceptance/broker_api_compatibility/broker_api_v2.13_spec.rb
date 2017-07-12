@@ -5,12 +5,14 @@ RSpec.describe 'Service Broker API integration' do
     include VCAP::CloudController::BrokerApiHelper
 
     let(:create_instance_schema) { { 'type': 'object' } }
+    let(:update_instance_schema) { {} }
     let(:schemas) {
       {
         'service_instance' => {
           'create' => {
             'parameters' => create_instance_schema
-          }
+          },
+          'update' => {}
         }
       }
     }
@@ -23,7 +25,7 @@ RSpec.describe 'Service Broker API integration' do
       @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
     end
 
-    context 'when a broker catalog defines plan schemas' do
+    context 'when a broker catalog defines a create plan schema' do
       let(:create_instance_schema) {
         {
           '$schema' => 'http://json-schema.org/draft-04/schema#',
@@ -37,7 +39,10 @@ RSpec.describe 'Service Broker API integration' do
             json_headers(admin_headers))
 
         parsed_body = MultiJson.load(last_response.body)
-        expect(parsed_body['entity']['schemas']).to eq schemas
+        expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => {
+            'create' => { 'parameters' => {'$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object'} },
+            'update' => { 'parameters' => {} }
+        } })
       end
     end
 
@@ -48,7 +53,7 @@ RSpec.describe 'Service Broker API integration' do
             json_headers(admin_headers))
 
         parsed_body = MultiJson.load(last_response.body)
-        expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => { 'create' => { 'parameters' => {} } } })
+        expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => { 'create' => { 'parameters' => {} }, 'update' => { 'parameters' => {} } } })
       end
     end
 

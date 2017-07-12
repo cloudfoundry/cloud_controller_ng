@@ -12,6 +12,7 @@ module CloudController
           schemas = present_schemas(plan)
           entity.merge!(schemas)
           entity.delete('create_instance_schema')
+          entity.delete('update_instance_schema')
 
           entity
         end
@@ -20,11 +21,16 @@ module CloudController
 
         def present_schemas(plan)
           create_instance_schema = parse_schema(plan.create_instance_schema)
+          update_instance_schema = parse_schema(plan.update_instance_schema)
           {
             'schemas' => {
               'service_instance' => {
                 'create' => {
                   'parameters' => create_instance_schema
+                },
+                'update' => {
+                    'parameters' => update_instance_schema
+
                 }
               }
             }
