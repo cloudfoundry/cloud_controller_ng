@@ -27,6 +27,7 @@ require 'jobs/runtime/model_deletion'
 require 'jobs/runtime/orphaned_blobs_cleanup'
 require 'jobs/runtime/pending_build_cleanup'
 require 'jobs/runtime/pending_droplet_cleanup'
+require 'jobs/runtime/pollable_job_cleanup'
 require 'jobs/runtime/prune_completed_tasks'
 
 require 'jobs/services/legacy_jobs/service_instance_deletion'
