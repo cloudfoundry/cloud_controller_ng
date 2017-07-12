@@ -1,39 +1,63 @@
-require 'cloud_controller/blobstore/local_app_bits'
 require 'cloud_controller/blobstore/fingerprints_collection'
 require 'shellwords'
+require 'cloud_controller/app_packager'
 
 module CloudController
   module Packager
     class LocalBitsPacker
-      def send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-        fingerprints_collection = CloudController::Blobstore::FingerprintsCollection.new(cached_files_fingerprints)
+      def send_package_to_blobstore(blobstore_key, uploaded_package_zip, cached_files_fingerprints)
+        matched_resources = CloudController::Blobstore::FingerprintsCollection.new(cached_files_fingerprints)
 
-        CloudController::Blobstore::LocalAppBits.from_compressed_bits(uploaded_files_path, tmp_dir) do |local_app_bits|
-          validate_size!(fingerprints_collection, local_app_bits)
+        Dir.mktmpdir('local_bits_packer', tmp_dir) do |root_path|
+          app_package_zip = File.join(root_path, 'copied_app_package.zip')
+          app_packager = AppPackager.new(app_package_zip)
 
-          global_app_bits_cache.cp_r_to_blobstore(local_app_bits.uncompressed_path)
-
-          fingerprints_collection.each do |local_destination, file_sha, mode|
-            global_app_bits_cache.download_from_blobstore(file_sha, File.join(local_app_bits.uncompressed_path, local_destination), mode: mode)
+          if package_zip_exists?(uploaded_package_zip)
+            FileUtils.chmod('u+w', uploaded_package_zip)
+            FileUtils.cp(uploaded_package_zip, app_package_zip)
+            populate_resource_cache(app_packager, root_path)
           end
 
-          rezipped_package = local_app_bits.create_package
-          package_blobstore.cp_to_blobstore(rezipped_package.path, blobstore_key)
+          append_matched_resources(app_packager, matched_resources, root_path)
+
+          app_packager.fix_subdir_permissions
+          validate_size!(app_packager)
+
+          package_blobstore.cp_to_blobstore(app_package_zip, blobstore_key)
 
           {
-            sha1:   Digester.new.digest_path(rezipped_package),
-            sha256: Digester.new(algorithm: Digest::SHA256).digest_path(rezipped_package),
+            sha1:   Digester.new.digest_path(app_package_zip),
+            sha256: Digester.new(algorithm: Digest::SHA256).digest_path(app_package_zip),
           }
         end
       end
 
       private
 
-      def validate_size!(fingerprints_in_app_cache, local_app_bits)
+      def package_zip_exists?(package_zip)
+        package_zip && File.exist?(package_zip)
+      end
+
+      def populate_resource_cache(app_packager, root_path)
+        app_contents_path = File.join(root_path, 'application_contents')
+        FileUtils.mkdir(app_contents_path)
+        app_packager.unzip(app_contents_path)
+        global_app_bits_cache.cp_r_to_blobstore(app_contents_path)
+      end
+
+      def append_matched_resources(app_packager, matched_resources, root_path)
+        cached_resources_dir = File.join(root_path, 'cached_resources_dir')
+        FileUtils.mkdir(cached_resources_dir)
+        matched_resources.each do |local_destination, file_sha, mode|
+          global_app_bits_cache.download_from_blobstore(file_sha, File.join(cached_resources_dir, local_destination), mode: mode)
+        end
+        app_packager.append_dir_contents(cached_resources_dir)
+      end
+
+      def validate_size!(app_packager)
         return unless max_package_size
 
-        total_size = local_app_bits.storage_size + fingerprints_in_app_cache.storage_size
-        if total_size > max_package_size
+        if app_packager.size > max_package_size
           raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', "Package may not be larger than #{max_package_size} bytes")
         end
       end

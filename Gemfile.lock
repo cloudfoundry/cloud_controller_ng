@@ -340,6 +340,7 @@ GEM
     ruby-progressbar (1.8.1)
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
+    rubyzip (1.2.1)
     safe_yaml (1.0.4)
     sequel (4.41.0)
     sexp_processor (4.7.0)
@@ -465,6 +466,7 @@ DEPENDENCIES
   rspec_api_documentation!
   rubocop
   ruby-debug-ide (>= 0.6.1.beta4)
+  rubyzip
   sequel
   sinatra (~> 1.4)
   sinatra-contrib

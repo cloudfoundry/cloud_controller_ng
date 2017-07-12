@@ -89,7 +89,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(JSON.parse(last_response.body)['description']).to include('Could not zip the package')
+              expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
 
               app_obj.refresh
               expect(app_obj.package_hash).to be_nil
@@ -144,7 +144,7 @@ module VCAP::CloudController
               make_request
 
               expect(last_response.status).to eq(400)
-              expect(JSON.parse(last_response.body)['description']).to include('Unzipping had errors')
+              expect(JSON.parse(last_response.body)['description']).to include('Invalid zip')
 
               app_obj.refresh
               expect(app_obj.package_hash).to be_nil

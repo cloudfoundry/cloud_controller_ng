@@ -5,7 +5,8 @@ module CloudController::Packager
   RSpec.describe LocalBitsPacker do
     subject(:packer) { described_class.new }
 
-    let(:uploaded_files_path) { File.expand_path('../../../../fixtures/good.zip', File.dirname(__FILE__)) }
+    let(:uploaded_files_path) { File.join(local_tmp_dir, 'good.zip') }
+    let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
     let(:blobstore_dir) { Dir.mktmpdir }
     let(:local_tmp_dir) { Dir.mktmpdir }
     let(:global_app_bits_cache) do
@@ -23,11 +24,23 @@ module CloudController::Packager
       )
     end
 
+    let(:fingerprints) do
+      path = File.join(local_tmp_dir, 'content')
+      sha  = 'some_fake_sha'
+      File.open(path, 'w') { |f| f.write 'content' }
+      global_app_bits_cache.cp_to_blobstore(path, sha)
+
+      [{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }]
+    end
+
     before do
       allow(packer).to receive(:tmp_dir).and_return(local_tmp_dir)
       allow(packer).to receive(:package_blobstore).and_return(package_blobstore)
       allow(packer).to receive(:global_app_bits_cache).and_return(global_app_bits_cache)
       allow(packer).to receive(:max_package_size).and_return(max_package_size)
+
+      FileUtils.cp(input_zip, local_tmp_dir)
+      FileUtils.chmod(0400, uploaded_files_path) rescue nil
 
       Fog.unmock!
     end
@@ -63,47 +76,75 @@ module CloudController::Packager
         })
       end
 
-      context 'when the zip file uploaded is invalid' do
-        let(:uploaded_files_path) { File.expand_path('../../../fixtures/bad.zip', File.dirname(__FILE__)) }
+      context 'when the package zip file path is nil' do
+        let(:uploaded_files_path) { nil }
+
+        context 'and there are NO cached files' do
+          let(:cached_files_fingerprints) { [] }
+
+          it 'raises an error' do
+            expect {
+              packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            }.to raise_error(CloudController::Errors::ApiError, /Invalid zip/)
+          end
+        end
+
+        context 'and there are cached files' do
+          let(:cached_files_fingerprints) { fingerprints }
+
+          it 'packs a zip with the cached files' do
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            expect(package_blobstore.exists?(blobstore_key)).to be true
+          end
+        end
+      end
+
+      context 'when the package zip file is missing ' do
+        let(:uploaded_files_path) { File.join(local_tmp_dir, 'file_that_does_not_exist.zip') }
+
+        context 'and there are NO cached files' do
+          let(:cached_files_fingerprints) { [] }
+
+          it 'raises an error' do
+            expect {
+              packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            }.to raise_error(CloudController::Errors::ApiError, /Invalid zip/)
+          end
+        end
+
+        context 'and there are cached files' do
+          let(:cached_files_fingerprints) { fingerprints }
+
+          it 'packs a zip with the cached files' do
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+            expect(package_blobstore.exists?(blobstore_key)).to be true
+          end
+        end
+      end
+
+      context 'when the zip file is invalid' do
+        let(:input_zip) { File.join(Paths::FIXTURES, 'bad.zip') }
+        let(:uploaded_files_path) { File.join(local_tmp_dir, 'bad.zip') }
 
         it 'raises an informative error' do
-          expect { packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints) }.to raise_error(CloudController::Errors::ApiError, /invalid/)
+          expect {
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+          }.to raise_error(CloudController::Errors::ApiError, /invalid/)
         end
       end
 
       context 'when the app bits are too large' do
-        let(:max_package_size) { 10 }
+        let(:max_package_size) { 1 }
 
         it 'raises an exception' do
           expect {
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
           }.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
         end
-
-        context 'because the cached files make the package too large' do
-          let(:max_package_size) { 10_000 }
-
-          before do
-            allow_any_instance_of(CloudController::Blobstore::FingerprintsCollection).to receive(:storage_size).and_return(10_000)
-          end
-
-          it 'raises an exception' do
-            expect {
-              packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-            }.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
-          end
-        end
       end
 
       describe 'bit caching' do
-        let(:cached_files_fingerprints) do
-          path = File.join(local_tmp_dir, 'content')
-          sha  = 'some_fake_sha'
-          File.open(path, 'w') { |f| f.write 'content' }
-          global_app_bits_cache.cp_to_blobstore(path, sha)
-
-          [{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha }]
-        end
+        let(:cached_files_fingerprints) { fingerprints }
 
         it 'uploads the new app bits to the app bit cache' do
           packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
@@ -149,12 +190,7 @@ module CloudController::Packager
 
           context 'when specific file permissions are requested' do
             let(:cached_files_fingerprints) do
-              path = File.join(local_tmp_dir, 'content')
-              sha  = 'some_fake_sha'
-              File.open(path, 'w') { |f| f.write 'content' }
-              global_app_bits_cache.cp_to_blobstore(path, sha)
-
-              [{ 'fn' => 'path/to/content.txt', 'size' => 123, 'sha1' => sha, 'mode' => mode }]
+              fingerprints.tap { |prints| prints[0]['mode'] = mode }
             end
 
             let(:mode) { '0653' }

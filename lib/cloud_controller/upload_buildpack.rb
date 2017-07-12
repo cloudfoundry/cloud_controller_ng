@@ -1,3 +1,5 @@
+require 'vcap/digester'
+
 module VCAP::CloudController
   class UploadBuildpack
     attr_reader :buildpack_blobstore
