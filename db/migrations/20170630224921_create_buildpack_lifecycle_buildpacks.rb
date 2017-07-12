@@ -4,7 +4,7 @@ Sequel.migration do
       VCAP::Migration.common(self, :buildpack_lifecycle_buildpacks)
 
       String :admin_buildpack_name
-      String :encrypted_buildpack_url
+      String :encrypted_buildpack_url, size: 16_000
       String :encrypted_buildpack_url_salt
       String :buildpack_lifecycle_data_guid
 
