@@ -409,6 +409,7 @@ module VCAP::CloudController
             end
 
             before do
+              Buildpack.make(name: 'ruby_buildpack')
               build.update(
                 buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['ruby_buildpack'])
               )

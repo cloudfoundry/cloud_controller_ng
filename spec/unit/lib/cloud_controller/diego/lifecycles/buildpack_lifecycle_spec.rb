@@ -18,6 +18,9 @@ module VCAP::CloudController
           buildpacks: ['cool-buildpack'],
         }
       end
+      before do
+        Buildpack.make(name: 'cool-buildpack')
+      end
 
       it 'can create a BuildpackLifecycleDataModel' do
         build = BuildModel.make

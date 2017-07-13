@@ -454,6 +454,10 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'lifecycle data' do
       let(:new_name) { 'potato' }
+      before do
+        VCAP::CloudController::Buildpack.make(name: 'some-buildpack-name')
+        VCAP::CloudController::Buildpack.make(name: 'some-buildpack')
+      end
 
       context 'when the space developer does not request lifecycle' do
         let(:req_body) do

@@ -400,7 +400,7 @@ module VCAP::CloudController
   end
 
   BuildpackLifecycleBuildpackModel.blueprint do
-    admin_buildpack_name { 'ruby' }
+    admin_buildpack_name { Buildpack.make(name: 'ruby').name }
     buildpack_url { nil }
   end
 

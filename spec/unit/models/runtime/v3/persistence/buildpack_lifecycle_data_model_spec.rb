@@ -4,7 +4,6 @@ module VCAP::CloudController
   RSpec.describe BuildpackLifecycleDataModel do
     subject(:lifecycle_data) { BuildpackLifecycleDataModel.new }
 
-    # TODO: timebomb?
     it_behaves_like 'a model with an encrypted attribute' do
       let(:value_to_encrypt) { 'https://acme-buildpack.com' }
       let(:encrypted_attr) { :buildpack_url }
@@ -21,6 +20,13 @@ module VCAP::CloudController
     end
 
     describe '#buildpacks' do
+      before do
+        Buildpack.make(name: 'another-buildpack')
+        Buildpack.make(name: 'new-buildpack')
+        Buildpack.make(name: 'ruby')
+        Buildpack.make(name: 'some-buildpack')
+      end
+
       context 'when passed in nil' do
         it 'does not persist any buildpacks' do
           lifecycle_data.buildpacks = nil
@@ -236,7 +242,7 @@ module VCAP::CloudController
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: nil) }
 
         it 'is AutoDetectionBuildpack' do
-          expect(lifecycle_data.legacy_buildpack_model).to be_an(AutoDetectionBuildpack)
+          expect(lifecycle_data.send(:legacy_buildpack_model)).to be_an(AutoDetectionBuildpack)
         end
       end
 
@@ -244,7 +250,7 @@ module VCAP::CloudController
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: [admin_buildpack.name]) }
 
         it 'is the matching admin buildpack' do
-          expect(lifecycle_data.legacy_buildpack_model).to eq(admin_buildpack)
+          expect(lifecycle_data.send(:legacy_buildpack_model)).to eq(admin_buildpack)
         end
       end
 
@@ -253,7 +259,9 @@ module VCAP::CloudController
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new(buildpacks: [custom_buildpack_url]) }
 
         it 'is a custom buildpack for the URL' do
-          legacy_buildpack_model = lifecycle_data.legacy_buildpack_model
+          # Temporary: legacy-buildpacks will be removed when the rolling-deploy support for
+          # singular => multiple buildpacks ends.
+          legacy_buildpack_model = lifecycle_data.send(:legacy_buildpack_model)
           expect(legacy_buildpack_model).to be_a(CustomBuildpack)
           expect(legacy_buildpack_model.url).to eq(custom_buildpack_url)
         end
@@ -341,6 +349,7 @@ module VCAP::CloudController
       let(:stack) { 'cflinuxfs2' }
 
       before do
+        Buildpack.make(name: 'ruby')
         lifecycle_data.stack = stack
         lifecycle_data.buildpacks = buildpacks
         lifecycle_data.save
@@ -375,6 +384,35 @@ module VCAP::CloudController
       end
     end
 
+    describe '#valid?' do
+      it 'cannot be associated with both an app and a build' do
+        build = BuildModel.make
+        app = AppModel.make
+        lifecycle_data.build = build
+        lifecycle_data.app = app
+        expect(lifecycle_data.valid?).to be(false)
+        expect(lifecycle_data.errors.full_messages.first).to include('Must be associated with an app OR a build+droplet, but not both')
+      end
+
+      it 'cannot be associated with both an app and a droplet' do
+        droplet = DropletModel.make
+        app = AppModel.make
+        lifecycle_data.droplet = droplet
+        lifecycle_data.app = app
+        expect(lifecycle_data.valid?).to be(false)
+        expect(lifecycle_data.errors.full_messages.first).to include('Must be associated with an app OR a build+droplet, but not both')
+      end
+
+      it 'cannot contain invalid buildpacks' do
+        app = AppModel.make
+        lifecycle_data.app = app
+        lifecycle_data.buildpacks = [nil, nil]
+        expect(lifecycle_data.valid?).to be(false)
+        expect(lifecycle_data.errors.full_messages.size).to eq(2)
+        expect(lifecycle_data.errors.full_messages.first).to include('Must specify either a buildpack_url or an admin_buildpack_name')
+      end
+    end
+
     describe 'associations' do
       it 'can be associated with a droplet' do
         droplet = DropletModel.make
@@ -395,24 +433,6 @@ module VCAP::CloudController
         lifecycle_data.build = build
         lifecycle_data.save
         expect(lifecycle_data.reload.build).to eq(build)
-      end
-
-      it 'cannot be associated with both an app and a build' do
-        build = BuildModel.make
-        app = AppModel.make
-        lifecycle_data.build = build
-        lifecycle_data.app = app
-        expect(lifecycle_data.valid?).to be(false)
-        expect(lifecycle_data.errors.full_messages.first).to include('Must be associated with an app OR a build+droplet, but not both')
-      end
-
-      it 'cannot be associated with both an app and a droplet' do
-        droplet = DropletModel.make
-        app = AppModel.make
-        lifecycle_data.droplet = droplet
-        lifecycle_data.app = app
-        expect(lifecycle_data.valid?).to be(false)
-        expect(lifecycle_data.errors.full_messages.first).to include('Must be associated with an app OR a build+droplet, but not both')
       end
     end
   end

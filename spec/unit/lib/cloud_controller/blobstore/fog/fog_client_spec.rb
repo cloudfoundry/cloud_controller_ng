@@ -720,7 +720,7 @@ module CloudController
         end
 
         describe 'from a CDN' do
-          let(:port) { 9875 } # TODO: Can we find a free port?
+          let(:port) { 9875 }
           let(:uri) { "http://localhost:#{port}" }
           let(:cdn) { Cdn.make(uri) }
 

@@ -193,11 +193,13 @@ module VCAP::CloudController
     end
 
     def copy_buildpack_errors
-      bp = legacy_buildpack
-      return if bp.valid?
+      return unless app&.lifecycle_data
+      return if app.lifecycle_data.valid?
 
-      bp.errors.each do |err|
-        errors.add(:buildpack, err)
+      app.lifecycle_data.errors.each do |_, errs|
+        errs.each do |err|
+          errors.add(:buildpack, err)
+        end
       end
     end
 
@@ -499,11 +501,7 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
-    def legacy_buildpack
-      return AutoDetectionBuildpack.new unless app&.lifecycle_data
-      app.lifecycle_data.legacy_buildpack_model
-    end
-
+    # TODO: change this to buildpacks
     def buildpack
       app.lifecycle_data.buildpack_models.first
     end
@@ -512,6 +510,7 @@ module VCAP::CloudController
       app.lifecycle_data.buildpacks.any?
     end
 
+    # TODO: remove this?
     def custom_buildpack_url
       app.lifecycle_data.first_custom_buildpack_url
     end

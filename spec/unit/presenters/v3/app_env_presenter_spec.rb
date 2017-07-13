@@ -11,10 +11,12 @@ module VCAP::CloudController::Presenters::V3
         desired_state: 'STOPPED',
       )
     end
+    let(:buildpack_name) { 'the-happiest-buildpack' }
 
     before do
+      VCAP::CloudController::Buildpack.make(name: buildpack_name)
       VCAP::CloudController::BuildpackLifecycleDataModel.create(
-        buildpacks: ['the-happiest-buildpack'],
+        buildpacks: [buildpack_name],
         stack: 'the-happiest-stack',
         app: app
       )

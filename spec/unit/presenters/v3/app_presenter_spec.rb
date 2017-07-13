@@ -11,6 +11,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     before do
+      VCAP::CloudController::Buildpack.make(name: 'limabean')
       app.lifecycle_data.update(
         buildpacks: ['git://user:pass@github.com/repo', 'limabean'],
         stack: 'the-happiest-stack',

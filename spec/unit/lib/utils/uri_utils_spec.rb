@@ -27,6 +27,30 @@ RSpec.describe UriUtils do
     end
   end
 
+  describe '.is_buildpack_uri?' do
+    it 'is false if the object is not a string' do
+      expect(UriUtils.is_buildpack_uri?(1)).to be false
+      expect(UriUtils.is_buildpack_uri?({})).to be false
+      expect(UriUtils.is_buildpack_uri?([])).to be false
+      expect(UriUtils.is_buildpack_uri?(nil)).to be false
+      expect(UriUtils.is_buildpack_uri?(-> {})).to be false
+      expect(UriUtils.is_buildpack_uri?(:'www.example.com/path/to/thing')).to be false
+      expect(UriUtils.is_buildpack_uri?(1.to_c)).to be false
+    end
+
+    it 'is true if it is a git url' do
+      expect(UriUtils.is_buildpack_uri?('git://user@example.com:repo.git')).to be true
+    end
+
+    it 'is true if it is an ssh git url' do
+      expect(UriUtils.is_buildpack_uri?('ssh://git@example.com:repo.git')).to be true
+    end
+
+    it 'is true if it is a uri' do
+      expect(UriUtils.is_buildpack_uri?('http://www.example.com/foobar?baz=bar')).to be true
+    end
+  end
+
   describe '.is_uri_path?' do
     it 'is false if the object is not a string' do
       expect(UriUtils.is_uri_path?(1)).to be false

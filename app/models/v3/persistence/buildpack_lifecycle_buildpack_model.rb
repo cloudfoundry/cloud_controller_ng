@@ -1,3 +1,5 @@
+require 'utils/uri_utils'
+
 module VCAP::CloudController
   class BuildpackLifecycleBuildpackModel < Sequel::Model(:buildpack_lifecycle_buildpacks)
     encrypt :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
@@ -18,7 +20,13 @@ module VCAP::CloudController
 
     def validate
       if buildpack_url.present? == admin_buildpack_name.present?
-        errors.add(:base, 'Invalid buildpack-lifecycle-buildpack')
+        errors.add(:buildpack_lifecycle_buildpack, 'Must specify either a buildpack_url or an admin_buildpack_name')
+      elsif admin_buildpack_name.present?
+        if Buildpack.find(name: admin_buildpack_name).nil?
+          errors.add(:buildpack_lifecycle_buildpack, "Specified unknown buildpack name: \"#{admin_buildpack_name}\"")
+        end
+      elsif !UriUtils.is_buildpack_uri?(buildpack_url)
+        errors.add(:buildpack_lifecycle_buildpack, "Specified invalid buildpack URL: \"#{buildpack_url}\"")
       end
     end
   end

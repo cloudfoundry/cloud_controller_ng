@@ -4,6 +4,10 @@ module VCAP::CloudController
   RSpec.describe BuildpackLifecycleBuildpackModel do
     subject(:buildpack) { BuildpackLifecycleBuildpackModel.new }
 
+    before do
+      Buildpack.make(name: 'ruby')
+    end
+
     it_behaves_like 'a model with an encrypted attribute' do
       let(:model_factory) { -> { BuildpackLifecycleBuildpackModel.make(:custom_buildpack) } }
       let(:value_to_encrypt) { 'https://acme-buildpack.com' }
@@ -17,13 +21,25 @@ module VCAP::CloudController
         buildpack.admin_buildpack_name = 'ruby'
         expect(buildpack.valid?).to be_truthy
       end
+      it 'expects an unknown admin buildpack to be invalid' do
+        buildpack.admin_buildpack_name = 'rust'
+        expect(buildpack.valid?).to be_falsey
+        expect(buildpack.errors.full_messages.first).to include('Specified unknown buildpack name: "rust"')
+      end
       it 'expects unset buildpack buildpacks to be invalid' do
         expect(buildpack.valid?).to be_falsey
+        expect(buildpack.errors.full_messages.first).to include('Must specify either a buildpack_url or an admin_buildpack_name')
       end
       it 'expects doubly set buildpack buildpacks to be invalid' do
         buildpack.admin_buildpack_name = 'ruby'
         buildpack.buildpack_url = 'http://foo.org/ruby'
         expect(buildpack.valid?).to be_falsey
+        expect(buildpack.errors.full_messages.first).to include('Must specify either a buildpack_url or an admin_buildpack_name')
+      end
+      it 'expects a non-URI custom buildpack name to be invalid' do
+        buildpack.buildpack_url = 'not a valid URL'
+        expect(buildpack.valid?).to be_falsey
+        expect(buildpack.errors.full_messages.first).to include('Specified invalid buildpack URL: "not a valid URL"')
       end
     end
 

@@ -37,6 +37,7 @@ module CloudController::Presenters::V2
       let(:buildpacks) { [buildpack] }
 
       before do
+        VCAP::CloudController::Buildpack.make(name: 'schmuby')
         app.app.lifecycle_data.update(
           buildpacks: buildpacks
         )
@@ -130,8 +131,6 @@ module CloudController::Presenters::V2
 
         context 'with an admin buildpack' do
           let(:buildpack) { 'schmuby' }
-
-          before { VCAP::CloudController::Buildpack.make(name: 'schmuby') }
 
           it 'displays the correct url' do
             actual_entity_hash = app_presenter.entity_hash(controller, app, opts, depth, parents, orphans)

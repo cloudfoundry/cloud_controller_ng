@@ -4,7 +4,8 @@ require 'cloud_controller/diego/failure_reason_sanitizer'
 
 module VCAP::CloudController
   RSpec.describe StagingCompletionController do
-    let(:buildpack) { Buildpack.make }
+    let(:buildpack_name) { 'the-pleasant-buildpack' }
+    let!(:buildpack) { Buildpack.make(name: buildpack_name) }
     let(:buildpack_key) { buildpack.key }
     let(:detected_buildpack) { 'detected_buildpack' }
     let(:execution_metadata) { 'execution_metadata' }
@@ -219,7 +220,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let!(:droplet) { DropletModel.make }
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack], stack: 'cflinuxfs2', build: build) }
+      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs2', build: build) }
       let(:staging_guid) { build.guid }
 
       before do

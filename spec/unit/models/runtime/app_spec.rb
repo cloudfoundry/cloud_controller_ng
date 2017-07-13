@@ -208,15 +208,14 @@ module VCAP::CloudController
             app.save
           }.to_not raise_error
 
-          expect(app.legacy_buildpack).to eql(admin_buildpack)
           expect(app.buildpack).to eql(admin_buildpack)
         end
 
         it 'does not allow a non-url string' do
-          app.app.lifecycle_data.update(buildpacks: ['Hello, world!'])
+          app.app.lifecycle_data.buildpacks = ['Hello, world!']
           expect {
             app.save
-          }.to raise_error(Sequel::ValidationFailed, /is not valid public url or a known buildpack name/)
+          }.to raise_error(Sequel::ValidationFailed, /Specified unknown buildpack name: "Hello, world!"/)
         end
       end
 

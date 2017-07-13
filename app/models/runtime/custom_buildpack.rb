@@ -10,18 +10,6 @@ module VCAP::CloudController
       MultiJson.dump(url)
     end
 
-    def valid?
-      @errors = []
-      unless UriUtils.is_uri?(url)
-        @errors << "#{url} is not valid public url or a known buildpack name"
-      end
-      @errors.empty?
-    end
-
-    def errors
-      @errors || []
-    end
-
     def staging_message
       {
         buildpack: url,

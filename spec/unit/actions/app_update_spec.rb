@@ -11,6 +11,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
+    let!(:ruby_buildpack) { Buildpack.make(name: 'ruby') }
 
     before do
       app_model.lifecycle_data.update(buildpacks: Array(buildpack), stack: Stack.default.name)

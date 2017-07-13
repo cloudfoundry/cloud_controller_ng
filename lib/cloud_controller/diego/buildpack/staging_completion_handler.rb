@@ -36,7 +36,7 @@ module VCAP::CloudController
           buildpack_key  = nil
           buildpack_url  = nil
 
-          if UriUtils.is_uri?(lifecycle_data[:buildpack_key])
+          if UriUtils.is_buildpack_uri?(lifecycle_data[:buildpack_key])
             buildpack_url = lifecycle_data[:buildpack_key]
           else
             buildpack_key = lifecycle_data[:buildpack_key]

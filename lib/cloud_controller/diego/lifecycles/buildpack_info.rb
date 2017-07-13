@@ -7,7 +7,7 @@ module VCAP::CloudController
     def initialize(buildpack_name_or_url, buildpack_record)
       @buildpack        = buildpack_name_or_url
       @buildpack_record = buildpack_record
-      @buildpack_url    = buildpack_name_or_url if UriUtils.is_uri?(buildpack_name_or_url)
+      @buildpack_url    = buildpack_name_or_url if UriUtils.is_buildpack_uri?(buildpack_name_or_url)
     end
 
     def buildpack_exists_in_db?

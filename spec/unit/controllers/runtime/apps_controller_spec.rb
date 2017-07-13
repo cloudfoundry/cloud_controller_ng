@@ -427,7 +427,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow a private git url' do
-            post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'git@example.com:foo.git'))
+            post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'https://username:password@github.com/johndoe/my-buildpack.git'))
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to include('custom buildpacks are disabled')

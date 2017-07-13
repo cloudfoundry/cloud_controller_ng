@@ -5,7 +5,8 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe BuildPresenter do
     let(:app) { VCAP::CloudController::AppModel.make }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app) }
-    let(:buildpacks) { ['the-happiest-buildpack', 'http://bob:secret@example.com/happy'] }
+    let!(:happy_buildpack) { VCAP::CloudController::Buildpack.make(name: 'the-happiest-buildpack') }
+    let(:buildpacks) { [happy_buildpack.name, 'http://bob:secret@example.com/happy'] }
     let(:stack) { 'the-happiest-stack' }
     let(:build) do
       VCAP::CloudController::BuildModel.make(

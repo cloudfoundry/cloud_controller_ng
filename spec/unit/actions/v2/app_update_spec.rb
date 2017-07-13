@@ -103,7 +103,7 @@ module VCAP::CloudController
         end
 
         it 'does not allow a private git url' do
-          request_attrs = { 'buildpack' => 'git@example.com:foo.git' }
+          request_attrs = { 'buildpack' => 'git://github.com/johndoe/my-buildpack.git' }
 
           expect {
             app_update.update(app, process, request_attrs)
@@ -111,7 +111,7 @@ module VCAP::CloudController
         end
 
         it 'does not allow a private git url with ssh schema' do
-          request_attrs = { 'buildpack' => 'ssh://git@example.com:foo.git' }
+          request_attrs = { 'buildpack' => 'ssh://git@example.com/foo.git' }
 
           expect {
             app_update.update(app, process, request_attrs)

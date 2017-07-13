@@ -28,7 +28,8 @@ module VCAP::CloudController
     one_to_many :buildpack_lifecycle_buildpacks,
       class: '::VCAP::CloudController::BuildpackLifecycleBuildpackModel',
       key: :buildpack_lifecycle_data_guid,
-      primary_key: :guid
+      primary_key: :guid,
+      order: :id
     plugin :nested_attributes
     nested_attributes :buildpack_lifecycle_buildpacks, destroy: true
     add_association_dependencies buildpack_lifecycle_buildpacks: :destroy
@@ -61,7 +62,7 @@ module VCAP::CloudController
       new_buildpacks ||= []
       first_buildpack = new_buildpacks.first
       # During the rolling-deploy transition period, update both old and new columns
-      if UriUtils.is_uri?(first_buildpack)
+      if UriUtils.is_buildpack_uri?(first_buildpack)
         self.legacy_buildpack_url = first_buildpack
       else
         self.legacy_admin_buildpack_name = first_buildpack
@@ -73,19 +74,11 @@ module VCAP::CloudController
       self.buildpack_lifecycle_buildpacks_attributes = buildpacks_to_add + buildpacks_to_remove
     end
 
-    def legacy_buildpack_model
-      return AutoDetectionBuildpack.new if legacy_buildpack.nil?
-
-      known_buildpack = Buildpack.find(name: legacy_buildpack)
-      return known_buildpack if known_buildpack
-
-      CustomBuildpack.new(legacy_buildpack)
-    end
-
     def using_custom_buildpack?
       buildpack_lifecycle_buildpacks.any?(&:custom?) || legacy_buildpack_model.custom?
     end
 
+    # TODO: remove this?
     def first_custom_buildpack_url
       buildpack_lifecycle_buildpacks.find(&:custom?)&.buildpack_url || legacy_buildpack_url
     end
@@ -97,7 +90,7 @@ module VCAP::CloudController
       }
     end
 
-    def validate # validate children?
+    def validate
       if app && (build || droplet)
         errors.add(:lifecycle_data, 'Must be associated with an app OR a build+droplet, but not both')
       end
@@ -106,7 +99,7 @@ module VCAP::CloudController
     private
 
     def attributes_from_name(name)
-      if UriUtils.is_uri?(name)
+      if UriUtils.is_buildpack_uri?(name)
         { buildpack_url: name, admin_buildpack_name: nil }
       else
         { buildpack_url: nil, admin_buildpack_name: name }
@@ -116,6 +109,15 @@ module VCAP::CloudController
     def legacy_buildpack
       return self.legacy_admin_buildpack_name if self.legacy_admin_buildpack_name.present?
       self.buildpack_url
+    end
+
+    def legacy_buildpack_model
+      return AutoDetectionBuildpack.new if legacy_buildpack.nil?
+
+      known_buildpack = Buildpack.find(name: legacy_buildpack)
+      return known_buildpack if known_buildpack
+
+      CustomBuildpack.new(legacy_buildpack)
     end
   end
 end
