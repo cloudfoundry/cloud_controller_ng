@@ -40,7 +40,7 @@ RSpec.describe 'Service Broker API integration' do
 
         parsed_body = MultiJson.load(last_response.body)
         expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => {
-            'create' => { 'parameters' => {'$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object'} },
+            'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } },
             'update' => { 'parameters' => {} }
         } })
       end

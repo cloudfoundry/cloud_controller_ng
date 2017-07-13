@@ -3,7 +3,6 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe CatalogSchemas do
     describe 'initializing catalog schemas' do
-
       subject { CatalogSchemas.new(attrs) }
 
       context 'when catalog has a create schema' do
@@ -242,7 +241,7 @@ module VCAP::Services::ServiceBrokers::V2
             context "for property #{name}" do
               let(:attrs) { test }
 
-              its(:update_instance) { should eq ({}) }
+              its(:update_instance) { should eq({}) }
               its(:errors) { should be_empty }
               its(:valid?) { should be true }
             end
@@ -258,7 +257,7 @@ module VCAP::Services::ServiceBrokers::V2
             context "for property #{name}" do
               let(:attrs) { test }
 
-              its(:update_instance) { should eq ({}) }
+              its(:update_instance) { should eq({}) }
               its(:errors) { should be_empty }
               its(:valid?) { should be true }
             end

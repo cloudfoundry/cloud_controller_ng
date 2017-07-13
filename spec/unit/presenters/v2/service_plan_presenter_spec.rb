@@ -73,7 +73,7 @@ module CloudController::Presenters::V2
         let(:create_instance_schema) { schema.to_json }
         it 'returns the service plan entity with the schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
-           { 'schemas' => { 'service_instance' => { 'create' => { 'parameters' => schema }, 'update' => { 'parameters' => {} } } } }
+            { 'schemas' => { 'service_instance' => { 'create' => { 'parameters' => schema }, 'update' => { 'parameters' => {} } } } }
           )
         end
       end
@@ -92,7 +92,7 @@ module CloudController::Presenters::V2
         let(:update_instance_schema) { schema.to_json }
         it 'returns the service plan entity with the schema in the correct format' do
           expect(subject.entity_hash(controller, service_plan, opts, depth, parents, orphans)).to include(
-            { 'schemas' => { 'service_instance' => { 'create' => { 'parameters' =>  {} }, 'update' => { 'parameters' => schema } } } }
+            { 'schemas' => { 'service_instance' => { 'create' => { 'parameters' => {} }, 'update' => { 'parameters' => schema } } } }
           )
         end
       end
