@@ -5,7 +5,7 @@ require 'zip'
 require 'zip/filesystem'
 
 class AppPackager
-  DIRECTORY_DELETE_BATCH_SIZE = 10
+  DIRECTORY_DELETE_BATCH_SIZE = 100
 
   attr_reader :path
 

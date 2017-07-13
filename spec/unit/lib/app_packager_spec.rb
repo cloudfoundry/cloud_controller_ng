@@ -187,6 +187,9 @@ RSpec.describe AppPackager do
 
       it 'batches the directory deletes so it does not exceed the max command length' do
         allow(Open3).to receive(:capture3).and_call_original
+        batch_size = 10
+        stub_const('AppPackager::DIRECTORY_DELETE_BATCH_SIZE', batch_size)
+
         app_packager.fix_subdir_permissions
 
         output = `zipinfo #{input_zip}`
@@ -196,7 +199,7 @@ RSpec.describe AppPackager do
           expect(output).to include("folder_#{i}/empty_file")
         end
 
-        number_of_batches = (21.0 / AppPackager::DIRECTORY_DELETE_BATCH_SIZE).ceil
+        number_of_batches = (21.0 / batch_size).ceil
         expect(number_of_batches).to eq(3)
         expect(Open3).to have_received(:capture3).exactly(number_of_batches).times
       end
