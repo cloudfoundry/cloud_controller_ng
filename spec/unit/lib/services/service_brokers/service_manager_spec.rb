@@ -43,7 +43,7 @@ module VCAP::Services::ServiceBrokers
                   },
                   'update' => {
                       'parameters' => {
-                          'key' => 'value'
+                          'type' => 'object'
                       }
                   }
               }
@@ -177,7 +177,7 @@ module VCAP::Services::ServiceBrokers
           'active' => service_plan.active,
           'bindable' => true,
           'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-          'update_instance_schema' => '{"key":"value"}'
+          'update_instance_schema' => '{"type":"object"}'
         })
       end
 
@@ -213,7 +213,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
-          expect(plan.update_instance_schema).to eq('{"key":"value"}')
+          expect(plan.update_instance_schema).to eq('{"type":"object"}')
 
           expect(plan.free).to be false
         end
@@ -359,7 +359,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.free).to be false
             expect(plan.bindable).to be true
             expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
-            expect(plan.update_instance_schema).to eq('{"key":"value"}')
+            expect(plan.update_instance_schema).to eq('{"type":"object"}')
           end
 
           it 'creates service audit events for each service plan updated' do
@@ -385,7 +385,7 @@ module VCAP::Services::ServiceBrokers
               'bindable' => true,
               'free' => false,
               'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-              'update_instance_schema' => '{"key":"value"}'
+              'update_instance_schema' => '{"type":"object"}'
             })
           end
 

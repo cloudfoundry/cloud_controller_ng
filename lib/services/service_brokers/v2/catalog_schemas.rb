@@ -8,7 +8,7 @@ module VCAP::Services::ServiceBrokers::V2
     def initialize(schema)
       @errors = VCAP::Services::ValidationErrors.new
       validate_and_populate_create_instance(schema)
-      populate_update_instance(schema)
+      validate_and_populate_update_instance(schema)
     end
 
     def valid?
@@ -17,7 +17,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def populate_update_instance(schema)
+    def validate_and_populate_update_instance(schema)
       return unless schema
       unless schema.is_a? Hash
         return
@@ -34,6 +34,11 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       update_instance_schema = schema
+      update_instance_path = path.join('.')
+
+      validate_schema_type(update_instance_path, update_instance_schema)
+      return unless errors.empty?
+
       @update_instance = update_instance_schema
     end
 

@@ -5,7 +5,7 @@ RSpec.describe 'Service Broker API integration' do
     include VCAP::CloudController::BrokerApiHelper
 
     let(:create_instance_schema) { { 'type': 'object' } }
-    let(:update_instance_schema) { {} }
+    let(:update_instance_schema) { { 'type': 'object' } }
     let(:schemas) {
       {
         'service_instance' => {
@@ -43,7 +43,7 @@ RSpec.describe 'Service Broker API integration' do
         parsed_body = MultiJson.load(last_response.body)
         expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => {
             'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } },
-            'update' => { 'parameters' => {} }
+            'update' => { 'parameters' => { 'type' => 'object' } }
         } })
       end
     end

@@ -299,6 +299,14 @@ module VCAP::Services::ServiceBrokers::V2
           its(:valid?) { should be true }
           its(:errors) { should be_empty }
         end
+
+        context 'when the schema does not have a type field' do
+          let(:update_instance_schema) { { '$schema': 'http://json-schema.org/draft-04/schema#' } }
+
+          its(:valid?) { should be false }
+          its('errors.messages') { should have(1).items }
+          its('errors.messages.first') { should match "Schema #{path} is not valid\.+ must have field \"type\", with value \"object\"" }
+        end
       end
     end
   end
