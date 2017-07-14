@@ -42,7 +42,9 @@ module VCAP::Services::ServiceBrokers
                       }
                   },
                   'update' => {
-                      'parameters' => {}
+                      'parameters' => {
+                          'key' => 'value'
+                      }
                   }
               }
           }
@@ -175,7 +177,7 @@ module VCAP::Services::ServiceBrokers
           'active' => service_plan.active,
           'bindable' => true,
           'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-          'update_instance_schema' => '{}'
+          'update_instance_schema' => '{"key":"value"}'
         })
       end
 
@@ -211,7 +213,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
-          expect(plan.update_instance_schema).to eq('{}')
+          expect(plan.update_instance_schema).to eq('{"key":"value"}')
 
           expect(plan.free).to be false
         end
@@ -250,7 +252,7 @@ module VCAP::Services::ServiceBrokers
           service_manager.sync_services_and_plans(catalog)
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.create_instance_schema).to be_nil
-          expect(plan.update_instance_schema).to eq('{}')
+          expect(plan.update_instance_schema).to be_nil
         end
       end
 
@@ -261,7 +263,7 @@ module VCAP::Services::ServiceBrokers
           service_manager.sync_services_and_plans(catalog)
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.create_instance_schema).to be_nil
-          expect(plan.update_instance_schema).to eq('{}')
+          expect(plan.update_instance_schema).to be_nil
         end
       end
 
@@ -272,7 +274,7 @@ module VCAP::Services::ServiceBrokers
           service_manager.sync_services_and_plans(catalog)
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.create_instance_schema).to be_nil
-          expect(plan.update_instance_schema).to eq('{}')
+          expect(plan.update_instance_schema).to be_nil
         end
       end
 
@@ -357,7 +359,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.free).to be false
             expect(plan.bindable).to be true
             expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
-            expect(plan.update_instance_schema).to eq('{}')
+            expect(plan.update_instance_schema).to eq('{"key":"value"}')
           end
 
           it 'creates service audit events for each service plan updated' do
@@ -383,7 +385,7 @@ module VCAP::Services::ServiceBrokers
               'bindable' => true,
               'free' => false,
               'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-              'update_instance_schema' => '{}'
+              'update_instance_schema' => '{"key":"value"}'
             })
           end
 

@@ -12,7 +12,9 @@ RSpec.describe 'Service Broker API integration' do
           'create' => {
             'parameters' => create_instance_schema
           },
-          'update' => {}
+          'update' => {
+              'parameters' => update_instance_schema
+          }
         }
       }
     }
@@ -42,6 +44,27 @@ RSpec.describe 'Service Broker API integration' do
         expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => {
             'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } },
             'update' => { 'parameters' => {} }
+        } })
+      end
+    end
+
+    context 'when a broker catalog defines an update plan schema' do
+      let(:update_instance_schema) {
+        {
+          'key' => 'value',
+          'type' => 'object'
+        }
+      }
+
+      it 'responds with the schema for a service plan entry' do
+        get("/v2/service_plans/#{@plan_guid}",
+            {}.to_json,
+            json_headers(admin_headers))
+
+        parsed_body = MultiJson.load(last_response.body)
+        expect(parsed_body['entity']['schemas']).to eq({ 'service_instance' => {
+            'create' => { 'parameters' => { 'type' => 'object' } },
+            'update' => { 'parameters' => { 'key' => 'value', 'type' => 'object' } }
         } })
       end
     end

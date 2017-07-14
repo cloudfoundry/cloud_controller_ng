@@ -154,11 +154,23 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when the schema has multiple valid constraints ' do
           let(:create_instance_schema) {
-            { :'$schema' => 'http://json-schema.org/draft-04/schema#',
+            {
+              :'$schema' => 'http://json-schema.org/draft-04/schema#',
               'type' => 'object',
               :properties => { 'foo': { 'type': 'string' } },
               :required => ['foo']
             }
+          }
+
+          its(:create_instance) {
+            should eq(
+              {
+                :'$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object',
+                :properties => { foo: { type: 'string' } },
+                :required => ['foo']
+              }
+            )
           }
           its(:valid?) { should be true }
           its(:errors) { should be_empty }
@@ -241,7 +253,7 @@ module VCAP::Services::ServiceBrokers::V2
             context "for property #{name}" do
               let(:attrs) { test }
 
-              its(:update_instance) { should eq({}) }
+              its(:update_instance) { should be_nil }
               its(:errors) { should be_empty }
               its(:valid?) { should be true }
             end
@@ -257,11 +269,35 @@ module VCAP::Services::ServiceBrokers::V2
             context "for property #{name}" do
               let(:attrs) { test }
 
-              its(:update_instance) { should eq({}) }
+              its(:update_instance) { should be_nil }
               its(:errors) { should be_empty }
               its(:valid?) { should be true }
             end
           end
+        end
+
+        context 'when the schema has multiple valid constraints ' do
+          let(:update_instance_schema) {
+            {
+              :'$schema' => 'http://json-schema.org/draft-04/schema#',
+              'type' => 'object',
+              :properties => { 'foo': { 'type': 'string' } },
+              :required => ['foo']
+            }
+          }
+
+          its(:update_instance) {
+            should eq(
+              {
+                :'$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object',
+                :properties => { foo: { type: 'string' } },
+                :required => ['foo']
+              }
+            )
+          }
+          its(:valid?) { should be true }
+          its(:errors) { should be_empty }
         end
       end
     end

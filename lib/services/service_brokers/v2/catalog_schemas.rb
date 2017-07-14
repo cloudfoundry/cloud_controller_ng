@@ -8,7 +8,7 @@ module VCAP::Services::ServiceBrokers::V2
     def initialize(schema)
       @errors = VCAP::Services::ValidationErrors.new
       validate_and_populate_create_instance(schema)
-      @update_instance = {}
+      populate_update_instance(schema)
     end
 
     def valid?
@@ -17,26 +17,46 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def validate_and_populate_create_instance(schemas)
-      return unless schemas
-      unless schemas.is_a? Hash
-        errors.add("Schemas must be a hash, but has value #{schemas.inspect}")
+    def populate_update_instance(schema)
+      return unless schema
+      unless schema.is_a? Hash
+        return
+      end
+
+      path = []
+      ['service_instance', 'update', 'parameters'].each do |key|
+        path += [key]
+        schema = schema[key]
+        return nil unless schema
+        unless schema.is_a? Hash
+          return nil
+        end
+      end
+
+      update_instance_schema = schema
+      @update_instance = update_instance_schema
+    end
+
+    def validate_and_populate_create_instance(schema)
+      return unless schema
+      unless schema.is_a? Hash
+        errors.add("Schemas must be a hash, but has value #{schema.inspect}")
         return
       end
 
       path = []
       ['service_instance', 'create', 'parameters'].each do |key|
         path += [key]
-        schemas = schemas[key]
-        return nil unless schemas
+        schema = schema[key]
+        return nil unless schema
 
-        unless schemas.is_a? Hash
-          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{schemas.inspect}")
+        unless schema.is_a? Hash
+          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{schema.inspect}")
           return nil
         end
       end
 
-      create_instance_schema = schemas
+      create_instance_schema = schema
       create_instance_path = path.join('.')
 
       validate_schema(create_instance_path, create_instance_schema)
