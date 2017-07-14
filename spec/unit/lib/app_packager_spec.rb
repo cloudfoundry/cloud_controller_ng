@@ -180,6 +180,17 @@ RSpec.describe AppPackager do
       end
     end
 
+    context 'when the zip has directories with special characters' do
+      let(:input_zip) { File.join(@tmpdir, 'special_character_names.zip') }
+
+      before { FileUtils.cp(File.join(Paths::FIXTURES, 'app_packager_zips', 'special_character_names.zip'), input_zip) }
+
+      it 'successfully removes and re-adds them' do
+        app_packager.fix_subdir_permissions
+        expect(`zipinfo #{input_zip}`).to match %r(special_character_names/&&hello::\?\?/)
+      end
+    end
+
     context 'when there are many directories' do
       let(:input_zip) { File.join(@tmpdir, 'many_dirs.zip') }
 

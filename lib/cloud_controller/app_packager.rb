@@ -77,7 +77,7 @@ class AppPackager
 
   def remove_dir(zip_path, directory_slice)
     stdout, error, status = Open3.capture3(
-      %(zip -d "#{Shellwords.escape(zip_path)}" #{directory_slice.join(' ')}),
+      %(zip -d "#{Shellwords.escape(zip_path)}" ) + directory_slice.map { |d| Shellwords.escape(d) }.join(' ')
     )
 
     unless status.success?
