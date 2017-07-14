@@ -8,8 +8,8 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
     describe '#delete' do
-      let!(:space) { Space.make }
-      let!(:space_2) { Space.make }
+      let!(:space) { Space.make(name: 'space-1') }
+      let!(:space_2) { Space.make(name: 'space-2') }
       let!(:app) { AppModel.make(space_guid: space.guid) }
 
       let(:space_dataset) { Space.dataset }
@@ -46,8 +46,8 @@ module VCAP::CloudController
           end
 
           context 'when deletion of service instances fail' do
-            let!(:space_3) { Space.make }
-            let!(:space_4) { Space.make }
+            let!(:space_3) { Space.make(name: 'space-3') }
+            let!(:space_4) { Space.make(name: 'space-4') }
 
             let!(:service_instance_1) { ManagedServiceInstance.make(space: space_3) } # deletion fail
             let!(:service_instance_2) { ManagedServiceInstance.make(space: space_3) } # deletion fail
@@ -88,16 +88,17 @@ module VCAP::CloudController
               instance_2_url = remove_basic_auth(deprovision_url(service_instance_2))
               instance_4_url = remove_basic_auth(deprovision_url(service_instance_4))
 
-              expect(results.first.message).
+              results_messages = results.map(&:message).join(' ')
+              expect(results_messages).
                 to include("Deletion of space #{space_3.name} failed because one or more resources within could not be deleted.")
-              expect(results.first.message).
+              expect(results_messages).
                 to include("\tService instance #{service_instance_1.name}: The service broker returned an invalid response for the request to #{instance_1_url}")
-              expect(results.first.message).
+              expect(results_messages).
                 to include("\tService instance #{service_instance_2.name}: The service broker returned an invalid response for the request to #{instance_2_url}")
 
-              expect(results.second.message).
+              expect(results_messages).
                 to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
-              expect(results.second.message).
+              expect(results_messages).
                 to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response for the request to #{instance_4_url}")
             end
           end

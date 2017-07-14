@@ -42,6 +42,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the user requests multiple buildpacks' do
+          let(:lifecycle_request_data) { { buildpacks: ['custom-bp', 'http://buildpack.com', 'http://other.com'] } }
+          before do
+            Buildpack.make(name: 'custom-bp')
+          end
+
+          it 'uses all of the buildpacks' do
+            lifecycle_data_model = lifecycle.create_lifecycle_data_model(app)
+            expect(lifecycle_data_model.buildpacks).to eq(['custom-bp', 'http://buildpack.com', 'http://other.com'])
+          end
+        end
+
         context 'when the user requests a stack' do
           let(:lifecycle_request_data) { { stack: 'custom-stack' } }
 
@@ -73,14 +85,15 @@ module VCAP::CloudController
 
     describe '#update_lifecycle_data_model' do
       let(:app) { AppModel.make(:buildpack) }
-      let(:lifecycle_request_data) { { buildpacks: ['http://oj.com'], stack: 'sweetness' } }
+      let!(:ruby_buildpack) { Buildpack.make(name: 'ruby_buildpack') }
+      let(:lifecycle_request_data) { { buildpacks: ['http://oj.com', 'ruby_buildpack'], stack: 'sweetness' } }
 
       it 'updates the BuildpackLifecycleDataModel' do
         lifecycle.update_lifecycle_data_model(app)
 
         data_model = app.lifecycle_data
 
-        expect(data_model.buildpacks).to eq(['http://oj.com'])
+        expect(data_model.buildpacks).to eq(['http://oj.com', 'ruby_buildpack'])
         expect(data_model.stack).to eq('sweetness')
       end
     end

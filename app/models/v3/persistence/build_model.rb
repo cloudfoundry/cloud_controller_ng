@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
-    add_association_dependencies buildpack_lifecycle_data: :delete
+    add_association_dependencies buildpack_lifecycle_data: :destroy
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data

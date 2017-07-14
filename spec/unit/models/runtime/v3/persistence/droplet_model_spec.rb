@@ -88,7 +88,12 @@ module VCAP::CloudController
 
     describe '#lifecycle_data' do
       let(:droplet_model) { DropletModel.make }
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
+      let!(:lifecycle_data) do
+        BuildpackLifecycleDataModel.make(
+          droplet: droplet_model,
+          buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
+        )
+      end
 
       before do
         droplet_model.buildpack_lifecycle_data = lifecycle_data
@@ -109,6 +114,15 @@ module VCAP::CloudController
         droplet_model.save
 
         expect(droplet_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
+      end
+
+      context 'buildpack dependencies' do
+        it 'deletes the dependent buildpack_lifecycle_data_models when a build is deleted' do
+          expect {
+            droplet_model.destroy
+          }.to change { BuildpackLifecycleDataModel.count }.by(-1).
+            and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
+        end
       end
     end
 

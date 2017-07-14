@@ -33,6 +33,22 @@ module VCAP::CloudController
       end
     end
 
+    describe '#destroy' do
+      context 'when the app has buildpack_lifecycle_data' do
+        subject(:lifecycle_data) do
+          BuildpackLifecycleDataModel.create(buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net'])
+        end
+
+        it 'destroys the buildpack_lifecycle_data and associated buildpack_lifecycle_buildpacks' do
+          app_model.update(buildpack_lifecycle_data: lifecycle_data)
+          expect {
+            app_model.destroy
+          }.to change { BuildpackLifecycleDataModel.count }.by(-1).
+            and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
+        end
+      end
+    end
+
     describe 'validations' do
       it { is_expected.to strip_whitespace :name }
 

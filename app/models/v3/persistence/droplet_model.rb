@@ -31,7 +31,7 @@ module VCAP::CloudController
       key:         :droplet_guid,
       primary_key: :guid
 
-    add_association_dependencies buildpack_lifecycle_data: :delete
+    add_association_dependencies buildpack_lifecycle_data: :destroy
 
     encrypt :docker_receipt_password, salt: :docker_receipt_password_salt, column: :encrypted_docker_receipt_password
     serializes_via_json :process_types

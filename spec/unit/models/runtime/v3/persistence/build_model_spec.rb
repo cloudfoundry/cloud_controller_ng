@@ -6,7 +6,12 @@ module VCAP::CloudController
   RSpec.describe BuildModel do
     let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
     let(:build_model) { BuildModel.make(package: package) }
-    let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(build: build_model) }
+    let!(:lifecycle_data) do
+      BuildpackLifecycleDataModel.make(
+        build: build_model,
+        buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
+      )
+    end
 
     before do
       build_model.buildpack_lifecycle_data = lifecycle_data
@@ -66,7 +71,8 @@ module VCAP::CloudController
         it 'deletes the dependent buildpack_lifecycle_data_models when a build is deleted' do
           expect {
             build_model.destroy
-          }.to change { BuildpackLifecycleDataModel.count }.by(-1)
+          }.to change { BuildpackLifecycleDataModel.count }.by(-1).
+            and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
         end
       end
     end
@@ -225,7 +231,7 @@ module VCAP::CloudController
         expect(event.previous_package_state).to eq(PackageModel::READY_STATE)
 
         expect(event.buildpack_guid).to eq(nil)
-        expect(event.buildpack_name).to eq(nil)
+        expect(event.buildpack_name).to eq('http://some-buildpack.com')
       end
     end
   end

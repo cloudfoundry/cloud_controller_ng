@@ -469,7 +469,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'buildpack app' do
           before do
             app_model.lifecycle_data.stack = 'some-stack-name'
-            app_model.lifecycle_data.buildpacks = ['some-buildpack-name']
+            app_model.lifecycle_data.buildpacks = ['some-buildpack-name', 'http://buildpack.com']
             app_model.lifecycle_data.save
           end
 
@@ -482,7 +482,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(app_model.name).to eq(new_name)
             expect(app_model.lifecycle_data.stack).to eq('some-stack-name')
-            expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name'])
+            expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name', 'http://buildpack.com'])
           end
         end
 

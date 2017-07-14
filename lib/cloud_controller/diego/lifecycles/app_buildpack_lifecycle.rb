@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     def create_lifecycle_data_model(app)
       BuildpackLifecycleDataModel.create(
-        buildpacks: Array(buildpack),
+        buildpacks: buildpacks,
         stack:     stack,
         app:       app
       )
@@ -50,7 +50,7 @@ module VCAP::CloudController
     end
 
     def buildpacks
-      message.buildpack_data.buildpacks if message.buildpack_data.requested?(:buildpacks)
+      message.buildpack_data.requested?(:buildpacks) ? message.buildpack_data.buildpacks : []
     end
 
     def stack
