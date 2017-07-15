@@ -42,9 +42,7 @@ class AppPackager
   end
 
   def fix_subdir_permissions
-    dirs_from_zip = get_dirs_from_zip(@path)
-    remove_dirs_from_zip(@path, dirs_from_zip)
-    add_dirs_to_zip(@path, dirs_from_zip)
+    remove_dirs_from_zip(@path, get_dirs_from_zip(@path))
   rescue Zip::Error
     invalid_zip!
   end
@@ -61,12 +59,8 @@ class AppPackager
 
   def get_dirs_from_zip(zip_path)
     Zip::File.open(zip_path) do |in_zip|
-      in_zip.select { |entry| is_dir?(entry) }
+      in_zip.select(&:directory?)
     end
-  end
-
-  def is_dir?(entry)
-    entry.name[-1] == '/'
   end
 
   def remove_dirs_from_zip(zip_path, dirs_from_zip)
@@ -75,20 +69,15 @@ class AppPackager
     end
   end
 
-  def remove_dir(zip_path, directory_slice)
+  def remove_dir(zip_path, directories)
+    directory_arg_list    = directories.map { |dir| Shellwords.escape(dir) }.join(' ')
     stdout, error, status = Open3.capture3(
-      %(zip -d "#{Shellwords.escape(zip_path)}" ) + directory_slice.map { |d| Shellwords.escape(d) }.join(' ')
+      %(zip -d #{Shellwords.escape(zip_path)}) + ' ' + directory_arg_list
     )
 
     unless status.success?
       raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid',
         "Could not remove the directories\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
-    end
-  end
-
-  def add_dirs_to_zip(zip_path, dirs_to_fix)
-    Zip::File.open(zip_path) do |in_zip|
-      dirs_to_fix.each { |dir| in_zip.mkdir(dir) }
     end
   end
 

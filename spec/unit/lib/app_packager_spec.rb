@@ -171,12 +171,14 @@ RSpec.describe AppPackager do
 
       before { FileUtils.cp(File.join(Paths::FIXTURES, 'app_packager_zips', 'bad_directory_permissions.zip'), input_zip) }
 
-      it 'adds the directory and execute bits' do
-        expect(`zipinfo #{input_zip}`).to match %r(-rw--.*fat.*META-INF/)
-
+      it 'deletes all directories from the archive' do
         app_packager.fix_subdir_permissions
 
-        expect(`zipinfo #{input_zip}`).to match %r(drwxr-xr-x.*unx.*META-INF/)
+        has_dirs = Zip::File.open(input_zip) do |in_zip|
+          in_zip.any?(&:directory?)
+        end
+
+        expect(has_dirs).to be_falsey
       end
     end
 
