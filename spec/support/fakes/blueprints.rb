@@ -269,14 +269,14 @@ module VCAP::CloudController
 
   # if you want to create an app with droplet, use AppFactory.make
   # This is because the lack of factory hooks in Machinist.
-  App.blueprint do
+  ProcessModel.blueprint do
     instances { 1 }
     type { 'web' }
     diego { true }
     app { AppModel.make }
   end
 
-  App.blueprint(:process) do
+  ProcessModel.blueprint(:process) do
     app { AppModel.make }
     diego { true }
     instances { 1 }
@@ -284,7 +284,7 @@ module VCAP::CloudController
     metadata { {} }
   end
 
-  App.blueprint(:diego_runnable) do
+  ProcessModel.blueprint(:diego_runnable) do
     app { AppModel.make(droplet: DropletModel.make) }
     diego { true }
     instances { 1 }
@@ -293,7 +293,7 @@ module VCAP::CloudController
     state { 'STARTED' }
   end
 
-  App.blueprint(:docker) do
+  ProcessModel.blueprint(:docker) do
     app { AppModel.make(:docker) }
     diego { true }
     instances { 1 }

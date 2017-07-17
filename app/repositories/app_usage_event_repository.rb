@@ -5,31 +5,27 @@ module VCAP::CloudController
         AppUsageEvent.find(guid: guid)
       end
 
-      def create_from_app(app, state_name=nil)
+      def create_from_process(process, state_name=nil)
         AppUsageEvent.create(
-          state:                              state_name || app.state,
-          previous_state:                     app.initial_value(:state),
-          package_state:                      app.package_state,
+          state:                              state_name || process.state,
+          previous_state:                     process.initial_value(:state),
+          package_state:                      process.package_state,
           previous_package_state:             'UNKNOWN',
-          instance_count:                     app.instances,
-          previous_instance_count:            app.initial_value(:instances),
-          memory_in_mb_per_instance:          app.memory,
-          previous_memory_in_mb_per_instance: app.initial_value(:memory),
-          app_guid:                           app.guid,
-          app_name:                           app.name,
-          org_guid:                           app.space.organization_guid,
-          space_guid:                         app.space_guid,
-          space_name:                         app.space.name,
-          buildpack_guid:                     app.detected_buildpack_guid,
-          buildpack_name:                     buildpack_name_for_app(app),
-          parent_app_guid:                    app.app.guid,
-          parent_app_name:                    app.app.name,
-          process_type:                       app.type
+          instance_count:                     process.instances,
+          previous_instance_count:            process.initial_value(:instances),
+          memory_in_mb_per_instance:          process.memory,
+          previous_memory_in_mb_per_instance: process.initial_value(:memory),
+          app_guid:                           process.guid,
+          app_name:                           process.name,
+          org_guid:                           process.space.organization_guid,
+          space_guid:                         process.space_guid,
+          space_name:                         process.space.name,
+          buildpack_guid:                     process.detected_buildpack_guid,
+          buildpack_name:                     buildpack_name_for_app(process),
+          parent_app_guid:                    process.app.guid,
+          parent_app_name:                    process.app.name,
+          process_type:                       process.type
         )
-      end
-
-      def buildpack_name_for_app(app)
-        CloudController::UrlSecretObfuscator.obfuscate(app.custom_buildpack_url || app.detected_buildpack_name)
       end
 
       def create_from_task(task, state)
@@ -89,10 +85,10 @@ module VCAP::CloudController
 
         column_map = {
           app_name:                           :parent_app__name,
-          guid:                               "#{App.table_name}__guid".to_sym,
-          app_guid:                           "#{App.table_name}__guid".to_sym,
-          state:                              "#{App.table_name}__state".to_sym,
-          previous_state:                     "#{App.table_name}__state".to_sym,
+          guid:                               "#{ProcessModel.table_name}__guid".to_sym,
+          app_guid:                           "#{ProcessModel.table_name}__guid".to_sym,
+          state:                              "#{ProcessModel.table_name}__state".to_sym,
+          previous_state:                     "#{ProcessModel.table_name}__state".to_sym,
           package_state:                      Sequel.case(
             [
               [{ latest_droplet__state: DropletModel::FAILED_STATE }, 'FAILED'],
@@ -102,10 +98,10 @@ module VCAP::CloudController
             'PENDING'
           ),
           previous_package_state:             'UNKNOWN',
-          instance_count:                     "#{App.table_name}__instances".to_sym,
-          previous_instance_count:            "#{App.table_name}__instances".to_sym,
-          memory_in_mb_per_instance:          "#{App.table_name}__memory".to_sym,
-          previous_memory_in_mb_per_instance: "#{App.table_name}__memory".to_sym,
+          instance_count:                     "#{ProcessModel.table_name}__instances".to_sym,
+          previous_instance_count:            "#{ProcessModel.table_name}__instances".to_sym,
+          memory_in_mb_per_instance:          "#{ProcessModel.table_name}__memory".to_sym,
+          previous_memory_in_mb_per_instance: "#{ProcessModel.table_name}__memory".to_sym,
           buildpack_guid:                     :current_droplet__buildpack_receipt_buildpack_guid,
           buildpack_name:                     :current_droplet__buildpack_receipt_buildpack,
           space_guid:                         "#{Space.table_name}__guid".to_sym,
@@ -118,7 +114,7 @@ module VCAP::CloudController
         latest_droplet_query = DropletModel.select(:package_guid).select_append { max(id).as(:id) }.group(:package_guid)
 
         usage_query =
-          App.
+          ProcessModel.
           join(AppModel, { guid: :app_guid }, table_alias: :parent_app).
           join(Space, guid: :space_guid).
           join(Organization, id: :organization_id).
@@ -140,8 +136,8 @@ module VCAP::CloudController
               table_alias: :latest_droplet
             ).
           select(*column_map.values).
-          where("#{App.table_name}__state".to_sym => 'STARTED').
-          order("#{App.table_name}__id".to_sym)
+          where("#{ProcessModel.table_name}__state".to_sym => 'STARTED').
+          order("#{ProcessModel.table_name}__id".to_sym)
 
         AppUsageEvent.insert(column_map.keys, usage_query)
       end
@@ -149,6 +145,12 @@ module VCAP::CloudController
       def delete_events_older_than(cutoff_age_in_days)
         old_app_usage_events = AppUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
         old_app_usage_events.delete
+      end
+
+      private
+
+      def buildpack_name_for_app(app)
+        CloudController::UrlSecretObfuscator.obfuscate(app.custom_buildpack_url || app.detected_buildpack_name)
       end
     end
   end

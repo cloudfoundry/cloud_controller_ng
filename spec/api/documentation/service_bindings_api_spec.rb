@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-  let!(:v2_app) { VCAP::CloudController::App.make(app: service_binding.app, type: 'web') }
+  let!(:v2_app) { VCAP::CloudController::ProcessModel.make(app: service_binding.app, type: 'web') }
   let(:guid) { service_binding.guid }
   authenticated_request
 
@@ -37,8 +37,8 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
     example 'Create a Service Binding' do
       space = VCAP::CloudController::Space.make
       service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
-      app_guid = VCAP::CloudController::AppFactory.make(space: space).guid
-      request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: app_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
+      process_guid = VCAP::CloudController::AppFactory.make(space: space).guid
+      request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: process_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)
 
       client.post '/v2/service_bindings', request_json, headers
       expect(status).to eq 201

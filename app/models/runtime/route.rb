@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
 
-    many_to_many :apps, class: 'VCAP::CloudController::App',
+    many_to_many :apps, class: 'VCAP::CloudController::ProcessModel',
                         join_table:              RouteMappingModel.table_name,
                         left_primary_key:        :guid, left_key: :route_guid,
                         right_primary_key:       [:app_guid, :type], right_key: [:app_guid, :process_type],

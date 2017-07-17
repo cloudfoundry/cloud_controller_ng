@@ -4,7 +4,7 @@ require 'cloud_controller/diego/process_guid'
 module VCAP::CloudController
   RSpec.describe BulkAppsController do
     def app_table_entry(index)
-      App.order_by(:id).all[index - 1]
+      ProcessModel.order_by(:id).all[index - 1]
     end
 
     let(:runners) do
@@ -16,10 +16,10 @@ module VCAP::CloudController
         to receive(:perma_droplet_download_url).
         and_return('http://blobsto.re/droplet')
 
-      @internal_user = 'internal_user'
+      @internal_user     = 'internal_user'
       @internal_password = 'internal_password'
 
-      5.times { |i| AppFactory.make(diego: true, state: 'STARTED') }
+      5.times { AppFactory.make(diego: true, state: 'STARTED') }
     end
 
     describe 'GET', '/internal/bulk/apps' do
@@ -57,7 +57,7 @@ module VCAP::CloudController
         it 'returns a populated token for the initial request (which has an empty bulk token)' do
           get '/internal/bulk/apps', {
             'batch_size' => 3,
-            'token' => '{}',
+            'token'      => '{}',
           }
 
           expect(last_response.status).to eq(200)
@@ -67,7 +67,7 @@ module VCAP::CloudController
         it 'returns apps in the response body' do
           get '/internal/bulk/apps', {
             'batch_size' => 20,
-            'token' => { id: app_table_entry(2).id }.to_json,
+            'token'      => { id: app_table_entry(2).id }.to_json,
           }
 
           expect(last_response.status).to eq(200)
@@ -76,50 +76,50 @@ module VCAP::CloudController
 
         context 'when a format parameter is not specified' do
           before do
-            app = AppFactory.make(diego: true,
-                                  state: 'STARTED',
-                                  disk_quota: 1_024,
-                                  environment_json: {
+            process = AppFactory.make(diego: true,
+                                      state:                         'STARTED',
+                                      disk_quota:                    1_024,
+                                      environment_json:              {
                 'env-key-3' => 'env-value-3',
                 'env-key-4' => 'env-value-4',
               },
-                                  file_descriptors: 16_384,
-                                  instances: 4,
-                                  memory: 1_024,
-                                  guid: 'app-guid-6',
-                                  command: 'start-command-6',
-                                  stack: Stack.make(name: 'stack-6'),
+                                      file_descriptors:              16_384,
+                                      instances:                     4,
+                                      memory:                        1_024,
+                                      guid:                          'app-guid-6',
+                                      command:                       'start-command-6',
+                                      stack:                         Stack.make(name: 'stack-6'),
             )
 
             route1 = Route.make(
-              space: app.space,
-              host: 'arsenio',
+              space: process.space,
+              host:   'arsenio',
               domain: SharedDomain.make(name: 'lo-mein.com'),
             )
             route2 = Route.make(
-              space: app.space,
-              host: 'conan',
+              space: process.space,
+              host:   'conan',
               domain: SharedDomain.make(name: 'doe-mane.com'),
             )
 
-            RouteMappingModel.make(app: app.app, route: route1, process_type: app.type)
-            RouteMappingModel.make(app: app.app, route: route2, process_type: app.type)
+            RouteMappingModel.make(app: process.app, route: route1, process_type: process.type)
+            RouteMappingModel.make(app: process.app, route: route2, process_type: process.type)
 
-            app.version = 'app-version-6'
-            app.save
+            process.version = 'app-version-6'
+            process.save
           end
 
           it 'uses the desire app message format' do
             get '/internal/bulk/apps', {
               'batch_size' => 100,
-              'token' => { id: 0 }.to_json,
+              'token'      => { id: 0 }.to_json,
             }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['apps'].size).to eq(6)
 
             last_response_app = decoded_response['apps'].last
-            last_app = app_table_entry(6)
+            last_app          = app_table_entry(6)
 
             expect(last_response_app).to eq(runners.runner_for_app(last_app).desire_app_message.as_json)
           end
@@ -129,38 +129,38 @@ module VCAP::CloudController
           it 'uses the cache data format' do
             get '/internal/bulk/apps', {
               'batch_size' => 1,
-              'format' => 'fingerprint',
-              'token' => { id: 0 }.to_json,
+              'format'     => 'fingerprint',
+              'token'      => { id: 0 }.to_json,
             }
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['fingerprints'].size).to eq(1)
 
-            app = App.order(:id).first
+            process = ProcessModel.order(:id).first
 
             message = decoded_response['fingerprints'][0]
             expect(message).to match_object({
-              'process_guid' => Diego::ProcessGuid.from_process(app),
-              'etag' => app.updated_at.to_f.to_s
+              'process_guid' => Diego::ProcessGuid.from_process(process),
+              'etag'         => process.updated_at.to_f.to_s
             })
           end
         end
 
         context 'when there are unstaged apps' do
           before do
-            app = AppFactory.make(diego: true, state: 'STARTED')
-            app.current_droplet.destroy
-            app.reload
+            process = AppFactory.make(diego: true, state: 'STARTED')
+            process.current_droplet.destroy
+            process.reload
           end
 
           it 'only returns staged apps' do
             get '/internal/bulk/apps', {
-              'batch_size' => App.count,
-              'token' => '{}',
+              'batch_size' => ProcessModel.count,
+              'token'      => '{}',
             }
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count - 1)
+            expect(decoded_response['apps'].size).to eq(ProcessModel.count - 1)
           end
         end
 
@@ -171,34 +171,35 @@ module VCAP::CloudController
 
           it 'does not return apps in the STOPPED state' do
             get '/internal/bulk/apps', {
-              'batch_size' => App.count,
-              'token' => '{}',
+              'batch_size' => ProcessModel.count,
+              'token'      => '{}',
             }
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count - 1)
+            expect(decoded_response['apps'].size).to eq(ProcessModel.count - 1)
           end
         end
 
         context 'when docker is enabled' do
           let(:space) { Space.make }
-          let(:docker_app) do
-            AppFactory.make(diego: true, docker_image: 'some-image', state: 'STARTED')
-          end
 
           before do
             FeatureFlag.create(name: 'diego_docker', enabled: true)
             TestConfig.override(diego: { staging: 'optional', running: 'optional' })
           end
 
+          let!(:docker_process) do
+            AppFactory.make(diego: true, docker_image: 'some-image', state: 'STARTED')
+          end
+
           it 'does return docker apps' do
             get '/internal/bulk/apps', {
-              'batch_size' => App.count,
-              'token' => '{}',
+              'batch_size' => ProcessModel.count,
+              'token'      => '{}',
             }
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['apps'].size).to eq(App.count)
+            expect(decoded_response['apps'].size).to eq(ProcessModel.count)
           end
         end
 
@@ -207,7 +208,7 @@ module VCAP::CloudController
             [3, 5].each { |size|
               get '/internal/bulk/apps', {
                 'batch_size' => size,
-                'token' => { id: 0 }.to_json,
+                'token'      => { id: 0 }.to_json,
               }
 
               expect(last_response.status).to eq(200)
@@ -218,7 +219,7 @@ module VCAP::CloudController
           it 'returns non-intersecting apps when token is supplied' do
             get '/internal/bulk/apps', {
               'batch_size' => 2,
-              'token' => { id: 0 }.to_json,
+              'token'      => { id: 0 }.to_json,
             }
 
             expect(last_response.status).to eq(200)
@@ -228,7 +229,7 @@ module VCAP::CloudController
 
             get '/internal/bulk/apps', {
               'batch_size' => 2,
-              'token' => MultiJson.dump(decoded_response['token']),
+              'token'      => MultiJson.dump(decoded_response['token']),
             }
 
             expect(last_response.status).to eq(200)
@@ -241,14 +242,14 @@ module VCAP::CloudController
           end
 
           it 'should eventually return entire collection, batch after batch' do
-            apps = []
-            total_size = App.count
+            apps       = []
+            total_size = ProcessModel.count
 
             token = '{}'
             while apps.size < total_size
               get '/internal/bulk/apps', {
                 'batch_size' => 2,
-                'token' => MultiJson.dump(token),
+                'token'      => MultiJson.dump(token),
               }
 
               expect(last_response.status).to eq(200)
@@ -259,7 +260,7 @@ module VCAP::CloudController
             expect(apps.size).to eq(total_size)
             get '/internal/bulk/apps', {
               'batch_size' => 2,
-              'token' => MultiJson.dump(token),
+              'token'      => MultiJson.dump(token),
             }
 
             expect(last_response.status).to eq(200)
@@ -344,7 +345,7 @@ module VCAP::CloudController
               it 'only returns the diego apps' do
                 diego_apps = runners.diego_apps(100, 0)
 
-                guids = App.all.map { |app| Diego::ProcessGuid.from_process(app) }
+                guids = ProcessModel.all.map { |app| Diego::ProcessGuid.from_process(app) }
                 post '/internal/bulk/apps', guids.to_json
 
                 expect(last_response.status).to eq(200)

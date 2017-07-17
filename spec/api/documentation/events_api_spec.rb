@@ -123,7 +123,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
   get '/v2/events' do
     standard_list_parameters VCAP::CloudController::EventsController
 
-    let(:test_app) { VCAP::CloudController::App.make }
+    let(:test_app) { VCAP::CloudController::ProcessModel.make }
     let(:test_v3app) { VCAP::CloudController::AppModel.make }
     let(:test_assignee) { VCAP::CloudController::User.make }
     let(:test_user) { VCAP::CloudController::User.make }
@@ -141,11 +141,11 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
 
     let(:app_request) do
       {
-        'name'                    => 'new',
-        'instances'               => 1,
-        'memory'                  => 84,
-        'state'                   => 'STOPPED',
-        'environment_json'        => { 'super' => 'secret' },
+        'name'             => 'new',
+        'instances'        => 1,
+        'memory'           => 84,
+        'state'            => 'STOPPED',
+        'environment_json' => { 'super' => 'secret' },
       }
     end
     let(:space_request) do
@@ -170,8 +170,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       }
     end
     let(:expected_app_request) do
-      expected_request                            = app_request
-      expected_request['environment_json']        = 'PRIVATE DATA HIDDEN'
+      expected_request                     = app_request
+      expected_request['environment_json'] = 'PRIVATE DATA HIDDEN'
       expected_request
     end
 
@@ -213,7 +213,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actee_type: 'organization',
         actee_name: test_organization.name,
         space_guid: '',
-        metadata: { 'request' => {} }
+        metadata:   { 'request' => {} }
       }
     end
 
@@ -229,7 +229,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actee_type: 'organization',
         actee_name: test_organization.name,
         space_guid: '',
-        metadata: { 'request' => {} }
+        metadata:   { 'request' => {} }
       }
     end
 
@@ -245,7 +245,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actee_type: 'organization',
         actee_name: test_organization.name,
         space_guid: '',
-        metadata: { 'request' => {} }
+        metadata:   { 'request' => {} }
       }
     end
 
@@ -1115,8 +1115,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Binding Create Events' do
       space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-      app             = VCAP::CloudController::AppFactory.make(space: space)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app.app)
+      process         = VCAP::CloudController::AppFactory.make(space: space)
+      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
 
       service_event_repository.record_service_binding_event(:create, service_binding)
 
@@ -1133,7 +1133,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         metadata:   {
           'request' => {
             'service_instance_guid' => instance.guid,
-            'app_guid'              => app.guid,
+            'app_guid'              => process.guid,
           }
         }
       }
@@ -1142,8 +1142,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Binding Delete Events' do
       space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-      app             = VCAP::CloudController::AppFactory.make(space: space)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: app.app)
+      process         = VCAP::CloudController::AppFactory.make(space: space)
+      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
 
       service_event_repository.record_service_binding_event(:delete, service_binding)
 

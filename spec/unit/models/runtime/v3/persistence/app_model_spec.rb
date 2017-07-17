@@ -184,7 +184,7 @@ module VCAP::CloudController
 
     describe '#database_uri' do
       let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
-      let(:app) { App.make(app: parent_app) }
+      let(:app) { ProcessModel.make(app: parent_app) }
 
       context 'when there are database-like services' do
         before do

@@ -19,7 +19,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space) }
+  let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
 
   authenticated_request
 
@@ -96,7 +96,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         --AaB03x
       eos
 
-      client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers
+      client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|
         req[:request_body] = request_body_example
         req[:curl] = nil
@@ -115,8 +115,8 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       eos
 
-      no_doc { client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers }
-      client.get "/v2/apps/#{app_obj.guid}/download", {}, headers
+      no_doc { client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers }
+      client.get "/v2/apps/#{process.guid}/download", {}, headers
       expect(response_headers['Location']).to include('cc-packages.s3.amazonaws.com')
       expect(status).to eq(302)
     end
@@ -129,11 +129,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     end
 
     before do
-      droplet_file = Tempfile.new(app_obj.guid)
+      droplet_file = Tempfile.new(process.guid)
       droplet_file.write('droplet contents')
       droplet_file.close
 
-      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, app_obj.current_droplet.guid).perform
+      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.current_droplet.guid).perform
     end
 
     example 'Downloads the staged droplet for an App' do
@@ -143,16 +143,16 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
       eos
 
-      client.get "/v2/apps/#{app_obj.guid}/droplet/download", {}, headers
+      client.get "/v2/apps/#{process.guid}/droplet/download", {}, headers
       expect(status).to eq(302)
       expect(response_headers['Location']).to include('cc-droplets.s3.amazonaws.com')
     end
   end
 
   post '/v2/apps/:guid/copy_bits' do
-    let(:src_app) { VCAP::CloudController::AppFactory.make }
-    let(:dest_app) { VCAP::CloudController::AppFactory.make }
-    let(:json_payload) { { source_app_guid: src_app.guid }.to_json }
+    let(:src_process) { VCAP::CloudController::AppFactory.make }
+    let(:dest_process) { VCAP::CloudController::AppFactory.make }
+    let(:json_payload) { { source_app_guid: src_process.guid }.to_json }
 
     field :source_app_guid, 'The guid for the source app', required: true
 
@@ -168,8 +168,8 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       blobstore = double(:blobstore, cp_file_between_keys: nil)
       stub_const('CloudController::Blobstore::Client', double(:blobstore_client, new: blobstore))
 
-      dest_app.update(package_updated_at: dest_app.package_updated_at - 1)
-      client.post "/v2/apps/#{dest_app.guid}/copy_bits", json_payload, headers
+      dest_process.update(package_updated_at: dest_process.package_updated_at - 1)
+      client.post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers
 
       expect(status).to eq(201)
     end

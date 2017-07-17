@@ -133,7 +133,7 @@ module VCAP::CloudController::RestController
       associated_controller = VCAP::CloudController.controller_from_relationship(all_relationships[name])
       associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model)
 
-      querier = associated_model == VCAP::CloudController::App ? AppQuery : Query
+      querier = associated_model == VCAP::CloudController::ProcessModel ? AppQuery : Query
       filtered_dataset =
         querier.filtered_dataset_from_query_params(
           associated_model,
@@ -356,11 +356,18 @@ module VCAP::CloudController::RestController
         class_basename.sub(/Controller$/, '').singularize
       end
 
-      # Model class name associated with this rest/api endpoint.
+      # Set the exception that is raised when the associated model can't be found
+      #
+      # @return [String] The class name of the exception model to raise
+      def not_found_exception_name=(exception_name)
+        @not_found_exception_name = exception_name
+      end
+
+      # Return the name of the exception that is raised when the associated model can't be found
       #
       # @return [String] The class name of the model associated with
       def not_found_exception_name(model_class)
-        "#{model_class.name.demodulize}NotFound"
+        @not_found_exception_name || "#{model_class.name.demodulize}NotFound"
       end
 
       # Lookup the not-found exception for this rest/api endpoint.

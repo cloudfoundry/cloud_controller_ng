@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe AppAccess, type: :access do
-    subject(:access) { AppAccess.new(Security::AccessContext.new) }
+  RSpec.describe ProcessModelAccess, type: :access do
+    subject(:access) { ProcessModelAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }

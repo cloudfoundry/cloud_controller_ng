@@ -5,12 +5,14 @@ module VCAP::CloudController
     end
 
     path_base 'apps'
-    model_class_name :App
+    model_class_name :ProcessModel
+    self.not_found_exception_name = 'AppNotFound'
 
     get "#{path_guid}/download", :download
+
     def download(guid)
-      app = find_guid_and_validate_access(:read, guid)
-      blob_dispatcher.send_or_redirect(guid: app.latest_package.guid)
+      process = find_guid_and_validate_access(:read, guid)
+      blob_dispatcher.send_or_redirect(guid: process.latest_package.guid)
     rescue CloudController::Errors::BlobNotFound
       Loggregator.emit_error(guid, "Could not find package for #{guid}")
       logger.error "could not find package for #{guid}"

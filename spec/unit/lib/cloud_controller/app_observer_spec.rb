@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:app_active) { true }
     let(:diego) { false }
     let(:app) do
-      instance_double(App,
+      instance_double(ProcessModel,
         package_hash: package_hash,
         guid: 'app-guid',
         previous_changes: previous_changes,

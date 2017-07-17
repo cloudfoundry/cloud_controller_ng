@@ -3,9 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppBitsDownloadController do
     describe 'GET /v2/app/:id/download' do
-      let(:app_obj) { AppFactory.make }
-      let(:user) { make_user_for_space(app_obj.space) }
-      let(:developer) { make_developer_for_space(app_obj.space) }
+      let(:process) { AppFactory.make }
+      let(:user) { make_user_for_space(process.space) }
+      let(:developer) { make_developer_for_space(process.space) }
 
       context 'dev app download' do
         before do
@@ -13,7 +13,7 @@ module VCAP::CloudController
         end
 
         it 'should return 404 for an app without a package' do
-          get "/v2/apps/#{app_obj.guid}/download"
+          get "/v2/apps/#{process.guid}/download"
           expect(last_response.status).to eq(404)
         end
 
@@ -26,7 +26,7 @@ module VCAP::CloudController
           end
 
           it 'should return 302' do
-            get "/v2/apps/#{app_obj.guid}/download"
+            get "/v2/apps/#{process.guid}/download"
             expect(last_response.status).to eq(302)
           end
         end
@@ -43,7 +43,7 @@ module VCAP::CloudController
         end
 
         it 'should return 403' do
-          get "/v2/apps/#{app_obj.guid}/download"
+          get "/v2/apps/#{process.guid}/download"
           expect(last_response.status).to eq(403)
         end
       end

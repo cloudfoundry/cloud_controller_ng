@@ -18,9 +18,7 @@ module VCAP::Services
 
       context 'when binding to an app' do
         let(:binding) do
-          VCAP::CloudController::ServiceBinding.make(
-            service_instance: instance
-          )
+          VCAP::CloudController::ServiceBinding.make(service_instance: instance)
         end
 
         it 'sets relevant attributes of the instance' do

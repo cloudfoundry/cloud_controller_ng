@@ -9,16 +9,16 @@ module VCAP::CloudController
     describe 'Associations' do
       it 'has apps' do
         stack = Stack.make
-        app1 = AppFactory.make(stack: stack)
-        app2 = AppFactory.make(stack: stack)
-        expect(stack.apps).to match_array([app1, app2])
+        process1 = AppFactory.make(stack: stack)
+        process2 = AppFactory.make(stack: stack)
+        expect(stack.apps).to match_array([process1, process2])
       end
 
       it 'does not associate non-web v2 apps' do
         stack = Stack.make
-        app1 = AppFactory.make(type: 'web', stack: stack)
+        process1 = AppFactory.make(type: 'web', stack: stack)
         AppFactory.make(type: 'other', stack: stack)
-        expect(stack.apps).to match_array([app1])
+        expect(stack.apps).to match_array([process1])
       end
     end
 

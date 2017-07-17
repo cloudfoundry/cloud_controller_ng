@@ -28,7 +28,7 @@ module VCAP::CloudController
         app:          app,
         route:        route,
         process_type: message.process_type,
-        app_port:     VCAP::CloudController::App::DEFAULT_HTTP_PORT
+        app_port:     VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
       )
 
       route_handler = ProcessRouteHandler.new(process)

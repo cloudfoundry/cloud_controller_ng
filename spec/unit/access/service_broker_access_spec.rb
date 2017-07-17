@@ -6,7 +6,6 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:app) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:object) { VCAP::CloudController::ServiceBroker.make }
     let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
 

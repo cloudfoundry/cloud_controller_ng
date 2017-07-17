@@ -4,10 +4,10 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::StatsController do
     describe 'GET /v2/apps/:id/stats' do
       before :each do
-        @app = AppFactory.make
-        @user = make_user_for_space(@app.space)
-        @developer = make_developer_for_space(@app.space)
-        @auditor = make_auditor_for_space(@app.space)
+        @process   = AppFactory.make
+        @user      = make_user_for_space(@process.space)
+        @developer = make_developer_for_space(@process.space)
+        @auditor   = make_auditor_for_space(@process.space)
       end
 
       context 'when the client can see stats' do
@@ -18,9 +18,9 @@ module VCAP::CloudController
               stats: {},
             },
             1 => {
-              state: 'DOWN',
+              state:   'DOWN',
               details: 'start-me',
-              since: 1,
+              since:   1,
             }
           }
         end
@@ -35,11 +35,11 @@ module VCAP::CloudController
           it 'should return the stats' do
             set_current_user(@developer)
 
-            @app.state = 'STARTED'
-            @app.instances = 1
-            @app.save
+            @process.state     = 'STARTED'
+            @process.instances = 1
+            @process.save
 
-            @app.refresh
+            @process.refresh
 
             expected = {
               '0' => {
@@ -47,18 +47,18 @@ module VCAP::CloudController
                 'stats' => {},
               },
               '1' => {
-                'state' => 'DOWN',
+                'state'   => 'DOWN',
                 'details' => 'start-me',
-                'since' => 1,
+                'since'   => 1,
               }
             }
 
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == @app.guid })
+              satisfy { |requested_app| requested_app.guid == @process.guid })
           end
         end
 
@@ -66,11 +66,11 @@ module VCAP::CloudController
           it 'should return the stats' do
             set_current_user(@auditor)
 
-            @app.state = 'STARTED'
-            @app.instances = 1
-            @app.save
+            @process.state     = 'STARTED'
+            @process.instances = 1
+            @process.save
 
-            @app.refresh
+            @process.refresh
 
             expected = {
               '0' => {
@@ -78,18 +78,18 @@ module VCAP::CloudController
                 'stats' => {},
               },
               '1' => {
-                'state' => 'DOWN',
+                'state'   => 'DOWN',
                 'details' => 'start-me',
-                'since' => 1,
+                'since'   => 1,
               }
             }
 
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == @app.guid })
+              satisfy { |requested_app| requested_app.guid == @process.guid })
           end
         end
 
@@ -102,9 +102,9 @@ module VCAP::CloudController
           end
 
           it 'does not re-raise as a StatsError' do
-            @app.update(state: 'STARTED')
+            @process.update(state: 'STARTED')
 
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(500)
             expect(last_response.body).to match('Server error')
@@ -118,9 +118,9 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            @app.update(state: 'STARTED')
+            @process.update(state: 'STARTED')
 
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(400)
             expect(MultiJson.load(last_response.body)['code']).to eq(200001)
@@ -130,14 +130,14 @@ module VCAP::CloudController
         context 'when the app is stopped' do
           before do
             set_current_user(@developer)
-            @app.update(state: 'STOPPED')
+            @process.update(state: 'STOPPED')
           end
 
           it 'raises an error' do
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to match("Could not fetch stats for stopped app: #{@app.name}")
+            expect(last_response.body).to match("Could not fetch stats for stopped app: #{@process.name}")
           end
         end
 
@@ -147,19 +147,19 @@ module VCAP::CloudController
               '0' => {
                 state: 'RUNNING',
                 stats: {
-                  name: 'foo',
-                  uris: 'some-uris',
-                  host: 'my-host',
-                  port: 1234,
-                  net_info: { 'foo' => 'bar' },
-                  uptime: 1,
-                  mem_quota: 1,
+                  name:       'foo',
+                  uris:       'some-uris',
+                  host:       'my-host',
+                  port:       1234,
+                  net_info:   { 'foo' => 'bar' },
+                  uptime:     1,
+                  mem_quota:  1,
                   disk_quota: 2,
-                  fds_quota: 3,
-                  usage: {
+                  fds_quota:  3,
+                  usage:      {
                     time: 4,
-                    cpu: 5,
-                    mem: 6,
+                    cpu:  5,
+                    mem:  6,
                     disk: 7,
                   }
                 }
@@ -172,22 +172,22 @@ module VCAP::CloudController
               let(:stats) do
                 {
                   '0' => {
-                    state: 'RUNNING',
+                    state:             'RUNNING',
                     isolation_segment: 'isolation-segment-name',
-                    stats: {
-                      name: 'foo',
-                      uris: 'some-uris',
-                      host: 'my-host',
-                      port: 1234,
-                      net_info: { 'foo' => 'bar' },
-                      uptime: 1,
-                      mem_quota: 1,
+                    stats:             {
+                      name:       'foo',
+                      uris:       'some-uris',
+                      host:       'my-host',
+                      port:       1234,
+                      net_info:   { 'foo' => 'bar' },
+                      uptime:     1,
+                      mem_quota:  1,
                       disk_quota: 2,
-                      fds_quota: 3,
-                      usage: {
+                      fds_quota:  3,
+                      usage:      {
                         time: 4,
-                        cpu: 5,
-                        mem: 6,
+                        cpu:  5,
+                        mem:  6,
                         disk: 7,
                       }
                     }
@@ -198,13 +198,13 @@ module VCAP::CloudController
               it 'should include the isolation segment name for the app' do
                 set_current_user(@developer)
 
-                @app.state = 'STARTED'
-                @app.instances = 1
-                @app.save
+                @process.state     = 'STARTED'
+                @process.instances = 1
+                @process.save
 
-                @app.refresh
+                @process.refresh
 
-                get "/v2/apps/#{@app.guid}/stats"
+                get "/v2/apps/#{@process.guid}/stats"
 
                 expect(last_response.status).to eq(200)
                 expect(MultiJson.load(last_response.body)['0']['isolation_segment']).to eq('isolation-segment-name')
@@ -215,40 +215,40 @@ module VCAP::CloudController
           it 'should return the stats without the net_info field' do
             set_current_user(@developer)
 
-            @app.state = 'STARTED'
-            @app.instances = 1
-            @app.save
+            @process.state     = 'STARTED'
+            @process.instances = 1
+            @process.save
 
-            @app.refresh
+            @process.refresh
 
             expected = {
-               '0' => {
+              '0' => {
                 'state' => 'RUNNING',
                 'stats' => {
-                  'name' => 'foo',
-                  'uris' => 'some-uris',
-                  'host' => 'my-host',
-                  'port' => 1234,
-                  'uptime' => 1,
-                  'mem_quota' => 1,
+                  'name'       => 'foo',
+                  'uris'       => 'some-uris',
+                  'host'       => 'my-host',
+                  'port'       => 1234,
+                  'uptime'     => 1,
+                  'mem_quota'  => 1,
                   'disk_quota' => 2,
-                  'fds_quota' => 3,
-                  'usage' => {
+                  'fds_quota'  => 3,
+                  'usage'      => {
                     'time' => 4,
-                    'cpu' => 5,
-                    'mem' => 6,
+                    'cpu'  => 5,
+                    'mem'  => 6,
                     'disk' => 7,
                   }
                 }
               }
             }
 
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(200)
             expect(MultiJson.load(last_response.body)).to eq(expected)
             expect(instances_reporters).to have_received(:stats_for_app).with(
-              satisfy { |requested_app| requested_app.guid == @app.guid })
+              satisfy { |requested_app| requested_app.guid == @process.guid })
           end
         end
       end
@@ -258,7 +258,7 @@ module VCAP::CloudController
           it 'should return 403' do
             set_current_user(@user)
 
-            get "/v2/apps/#{@app.guid}/stats"
+            get "/v2/apps/#{@process.guid}/stats"
 
             expect(last_response.status).to eq(403)
           end

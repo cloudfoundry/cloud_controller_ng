@@ -5,12 +5,14 @@ module VCAP::CloudController
     end
 
     path_base 'apps'
-    model_class_name :App
+    model_class_name :ProcessModel
+    self.not_found_exception_name = 'AppNotFound'
 
     get "#{path_guid}/crashes", :crashes
+
     def crashes(guid)
-      app = find_guid_and_validate_access(:read, guid)
-      crashed_instances = instances_reporters.crashed_instances_for_app(app)
+      process           = find_guid_and_validate_access(:read, guid)
+      crashed_instances = instances_reporters.crashed_instances_for_app(process)
       MultiJson.dump(crashed_instances)
     end
 

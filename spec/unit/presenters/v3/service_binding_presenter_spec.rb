@@ -7,12 +7,14 @@ module VCAP::CloudController::Presenters::V3
     let(:credentials) { { 'very-secret' => 'password' }.to_json }
     let(:volume_mounts) { [{ 'container_dir' => '/a/reasonable/path', 'device' => { 'very-secret' => 'password' } }] }
     let(:censored_volume_mounts) { [{ 'container_dir' => '/a/reasonable/path' }] }
-    let(:service_binding) { VCAP::CloudController::ServiceBinding.make(
-      created_at: Time.at(1),
-      credentials: credentials,
-      syslog_drain_url: 'syslog:/syslog.com',
-      volume_mounts: volume_mounts)
-    }
+    let(:service_binding) do
+      VCAP::CloudController::ServiceBinding.make(
+        created_at:       Time.at(1),
+        credentials:      credentials,
+        syslog_drain_url: 'syslog:/syslog.com',
+        volume_mounts:    volume_mounts,
+      )
+    end
 
     describe '#to_hash' do
       let(:result) { presenter.to_hash }

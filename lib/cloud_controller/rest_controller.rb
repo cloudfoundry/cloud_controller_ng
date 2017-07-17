@@ -16,11 +16,21 @@ module VCAP::CloudController
   end
 
   def self.controller_from_name(name)
-    VCAP::CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
+    controller_from_name_mapping.fetch(name) do
+      VCAP::CloudController.const_get("#{name.to_s.pluralize.camelize}Controller")
+    end
   end
 
   def self.controller_from_relationship(relationship)
     return nil unless relationship.try(:association_controller).present?
     VCAP::CloudController.const_get(relationship.association_controller)
+  end
+
+  def self.controller_from_name_mapping
+    @controller_from_name ||= {}
+  end
+
+  def self.set_controller_for_model_name(model_name:, controller:)
+    controller_from_name_mapping[model_name] = controller
   end
 end

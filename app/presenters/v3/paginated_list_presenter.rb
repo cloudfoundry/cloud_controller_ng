@@ -15,7 +15,7 @@ module VCAP::CloudController
     module V3
       class PaginatedListPresenter
         PRESENTERS = {
-          'App'                   => VCAP::CloudController::Presenters::V3::ProcessPresenter,
+          'ProcessModel'          => VCAP::CloudController::Presenters::V3::ProcessPresenter,
           'AppModel'              => VCAP::CloudController::Presenters::V3::AppPresenter,
           'DropletModel'          => VCAP::CloudController::Presenters::V3::DropletPresenter,
           'IsolationSegmentModel' => VCAP::CloudController::Presenters::V3::IsolationSegmentPresenter,

@@ -104,7 +104,7 @@ RSpec.describe 'Service Broker API integration' do
 
       it 'does not require app_guid to be sent with provision' do
         service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-        expect(VCAP::CloudController::App.find(guid: @app_guid)).to be_nil
+        expect(VCAP::CloudController::ProcessModel.find(guid: @app_guid)).to be_nil
         create_service_key
 
         expect(

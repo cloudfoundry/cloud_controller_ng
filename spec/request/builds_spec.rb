@@ -46,7 +46,7 @@ RSpec.describe 'Builds' do
                VCAP::CloudController::Stack.make(name: create_request[:lifecycle][:data][:stack]))
       # putting stack in the App.make call leads to an "App doesn't have a primary key" error
       # message from sequel.
-      process = VCAP::CloudController::App.make(app: app_model, memory: 1024, disk_quota: 1536)
+      process = VCAP::CloudController::ProcessModel.make(app: app_model, memory: 1024, disk_quota: 1536)
       process.stack = stack
       process.save
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_download_url).and_return('some-string')

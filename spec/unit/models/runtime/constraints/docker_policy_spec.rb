@@ -1,17 +1,17 @@
 require 'spec_helper'
 
 RSpec.describe DockerPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make(:docker, docker_image: 'some-image:latest') }
+  let(:process) { VCAP::CloudController::AppFactory.make(:docker, docker_image: 'some-image:latest') }
 
-  subject(:validator) { DockerPolicy.new(app) }
+  subject(:validator) { DockerPolicy.new(process) }
 
   context 'when a buildpack is specified' do
     before do
-      allow(app).to receive(:buildpack_specified?).and_return(true)
+      allow(process).to receive(:buildpack_specified?).and_return(true)
     end
 
     it 'registers an appropriate error' do
-      expect(validator).to validate_with_error(app, :docker_image, DockerPolicy::BUILDPACK_DETECTED_ERROR_MSG)
+      expect(validator).to validate_with_error(process, :docker_image, DockerPolicy::BUILDPACK_DETECTED_ERROR_MSG)
     end
   end
 
@@ -22,21 +22,21 @@ RSpec.describe DockerPolicy do
 
     context 'when app is being started' do
       before do
-        allow(app).to receive(:being_started?).and_return(true)
+        allow(process).to receive(:being_started?).and_return(true)
       end
 
       it 'registers an appropriate error' do
-        expect(validator).to validate_with_error(app, :docker, :docker_disabled)
+        expect(validator).to validate_with_error(process, :docker, :docker_disabled)
       end
     end
 
     context 'when app is being stopped' do
       before do
-        allow(app).to receive(:being_started?).and_return(false)
+        allow(process).to receive(:being_started?).and_return(false)
       end
 
       it 'does not register an error' do
-        expect(validator).to validate_without_error(app)
+        expect(validator).to validate_without_error(process)
       end
     end
   end
@@ -47,7 +47,7 @@ RSpec.describe DockerPolicy do
     end
 
     it 'does not register an error' do
-      expect(validator).to validate_without_error(app)
+      expect(validator).to validate_without_error(process)
     end
   end
 end

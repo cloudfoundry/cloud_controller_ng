@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe TpsInstancesReporter do
       subject(:instances_reporter) { described_class.new(tps_client) }
-      let(:app) { AppFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
+      let(:process) { AppFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }
       let(:desired_instances) { 3 }
       let(:now) { Time.now.utc }
@@ -58,9 +58,9 @@ module VCAP::CloudController
 
       describe '#all_instances_for_app' do
         it 'should return all instances reporting for the specified app within range of app.instances' do
-          result = instances_reporter.all_instances_for_app(app)
+          result = instances_reporter.all_instances_for_app(process)
 
-          expect(tps_client).to have_received(:lrp_instances).with(app)
+          expect(tps_client).to have_received(:lrp_instances).with(process)
           expect(result).to eq(
             {
               0 => { state: 'RUNNING', details: 'some-details', uptime: 1, since: 101 },
@@ -70,12 +70,12 @@ module VCAP::CloudController
         end
 
         it 'returns DOWN instances for instances that tps does not report within range of app.instances' do
-          app.instances = 7
+          process.instances = 7
 
-          result = instances_reporter.all_instances_for_app(app)
+          result = instances_reporter.all_instances_for_app(process)
 
-          expect(tps_client).to have_received(:lrp_instances).with(app)
-          expect(result.length).to eq(app.instances)
+          expect(tps_client).to have_received(:lrp_instances).with(process)
+          expect(result.length).to eq(process.instances)
           expect(result[5][:state]).to eq('DOWN')
           expect(result[6][:state]).to eq('DOWN')
         end
@@ -86,7 +86,7 @@ module VCAP::CloudController
           end
 
           it 'raises an InstancesUnavailable exception' do
-            expect { instances_reporter.all_instances_for_app(app) }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
+            expect { instances_reporter.all_instances_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
           end
 
           context 'when its an InstancesUnavailable' do
@@ -96,7 +96,7 @@ module VCAP::CloudController
             end
 
             it 're-raises' do
-              expect { instances_reporter.all_instances_for_app(app) }.to raise_error(error)
+              expect { instances_reporter.all_instances_for_app(process) }.to raise_error(error)
             end
           end
         end
@@ -105,11 +105,11 @@ module VCAP::CloudController
       describe '#number_of_starting_and_running_instances_for_process' do
         context 'when the app is not started' do
           before do
-            app.state = 'STOPPED'
+            process.state = 'STOPPED'
           end
 
           it 'returns 0' do
-            result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+            result = instances_reporter.number_of_starting_and_running_instances_for_process(process)
 
             expect(tps_client).not_to have_received(:lrp_instances)
             expect(result).to eq(0)
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
         context 'when the app is started' do
           before do
-            app.state = 'STARTED'
+            process.state = 'STARTED'
           end
 
           let(:desired_instances) { 3 }
@@ -132,9 +132,9 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(process)
 
-              expect(tps_client).to have_received(:lrp_instances).with(app)
+              expect(tps_client).to have_received(:lrp_instances).with(process)
               expect(result).to eq(2)
             end
           end
@@ -150,9 +150,9 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(process)
 
-              expect(tps_client).to have_received(:lrp_instances).with(app)
+              expect(tps_client).to have_received(:lrp_instances).with(process)
               expect(result).to eq(3)
             end
           end
@@ -168,9 +168,9 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(process)
 
-              expect(tps_client).to have_received(:lrp_instances).with(app)
+              expect(tps_client).to have_received(:lrp_instances).with(process)
               expect(result).to eq(3)
             end
           end
@@ -186,9 +186,9 @@ module VCAP::CloudController
             }
 
             it 'returns the number of desired indices that have an instance in the running/starting state ' do
-              result = instances_reporter.number_of_starting_and_running_instances_for_process(app)
+              result = instances_reporter.number_of_starting_and_running_instances_for_process(process)
 
-              expect(tps_client).to have_received(:lrp_instances).with(app)
+              expect(tps_client).to have_received(:lrp_instances).with(process)
               expect(result).to eq(2)
             end
           end
@@ -199,7 +199,7 @@ module VCAP::CloudController
             end
 
             it 'returns -1 indicating not fresh' do
-              expect(instances_reporter.number_of_starting_and_running_instances_for_process(app)).to eq(-1)
+              expect(instances_reporter.number_of_starting_and_running_instances_for_process(process)).to eq(-1)
             end
 
             context 'when its an InstancesUnavailable' do
@@ -209,7 +209,7 @@ module VCAP::CloudController
               end
 
               it 'returns -1 indicating not fresh' do
-                expect(instances_reporter.number_of_starting_and_running_instances_for_process(app)).to eq(-1)
+                expect(instances_reporter.number_of_starting_and_running_instances_for_process(process)).to eq(-1)
               end
             end
           end
@@ -217,11 +217,11 @@ module VCAP::CloudController
       end
 
       describe '#number_of_starting_and_running_instances_for_processes' do
-        let(:app1) { AppFactory.make(state: 'STARTED', instances: 2) }
-        let(:app2) { AppFactory.make(state: 'STARTED', instances: 5) }
+        let(:process1) { AppFactory.make(state: 'STARTED', instances: 2) }
+        let(:process2) { AppFactory.make(state: 'STARTED', instances: 5) }
         let(:instance_map) do
           {
-            app1.guid => [
+            process1.guid => [
               {
                 state: 'RUNNING',
                 index: 0
@@ -239,7 +239,7 @@ module VCAP::CloudController
                 index: 1
               },
             ],
-            app2.guid => [
+            process2.guid => [
               {
                 state: 'RUNNING',
                 index: 0
@@ -265,8 +265,8 @@ module VCAP::CloudController
         end
 
         it 'returns a hash of app => instance count' do
-          result = instances_reporter.number_of_starting_and_running_instances_for_processes([app1, app2])
-          expect(result).to eq({ app1.guid => 2, app2.guid => 3 })
+          result = instances_reporter.number_of_starting_and_running_instances_for_processes([process1, process2])
+          expect(result).to eq({ process1.guid => 2, process2.guid => 3 })
         end
 
         context 'when diego is unavailable' do
@@ -275,7 +275,7 @@ module VCAP::CloudController
           end
 
           it 'returns -1 indicating not fresh' do
-            expect(instances_reporter.number_of_starting_and_running_instances_for_processes([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+            expect(instances_reporter.number_of_starting_and_running_instances_for_processes([process1, process2])).to eq({ process1.guid => -1, process2.guid => -1 })
           end
 
           context 'when its an InstancesUnavailable' do
@@ -285,7 +285,7 @@ module VCAP::CloudController
             end
 
             it 'returns -1 indicating not fresh' do
-              expect(instances_reporter.number_of_starting_and_running_instances_for_processes([app1, app2])).to eq({ app1.guid => -1, app2.guid => -1 })
+              expect(instances_reporter.number_of_starting_and_running_instances_for_processes([process1, process2])).to eq({ process1.guid => -1, process2.guid => -1 })
             end
           end
         end
@@ -293,9 +293,9 @@ module VCAP::CloudController
 
       describe '#crashed_instances_for_app' do
         it 'returns an array of crashed instances' do
-          result = instances_reporter.crashed_instances_for_app(app)
+          result = instances_reporter.crashed_instances_for_app(process)
 
-          expect(tps_client).to have_received(:lrp_instances).with(app)
+          expect(tps_client).to have_received(:lrp_instances).with(process)
           expect(result).to eq([
             { 'instance' => 'instance-C', 'uptime' => 3, 'since' => 303 },
           ])
@@ -308,7 +308,7 @@ module VCAP::CloudController
 
           it 'raises an InstancesUnavailable exception' do
             expect {
-              instances_reporter.crashed_instances_for_app(app)
+              instances_reporter.crashed_instances_for_app(process)
             }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
           end
 
@@ -319,7 +319,7 @@ module VCAP::CloudController
             end
 
             it 're-raises' do
-              expect { instances_reporter.crashed_instances_for_app(app) }.to raise_error(error)
+              expect { instances_reporter.crashed_instances_for_app(process) }.to raise_error(error)
             end
           end
         end
@@ -327,22 +327,22 @@ module VCAP::CloudController
 
       describe '#stats_for_app' do
         it 'returns the stats reported for the application' do
-          result = instances_reporter.stats_for_app(app)
+          result = instances_reporter.stats_for_app(process)
 
           expect(result).to eq(
             {
               0 => {
                 state:  'RUNNING',
                 stats:  {
-                  name:  app.name,
-                  uris:  app.uris,
+                  name:  process.name,
+                  uris:  process.uris,
                   host:  'myhost',
                   port:  8080,
                   net_info:  { foo: 'ports-A' },
                   uptime:  instances_to_return[0][:uptime],
-                  mem_quota:   app[:memory] * 1024 * 1024,
-                  disk_quota:  app[:disk_quota] * 1024 * 1024,
-                  fds_quota:  app.file_descriptors,
+                  mem_quota:   process[:memory] * 1024 * 1024,
+                  disk_quota:  process[:disk_quota] * 1024 * 1024,
+                  fds_quota:  process.file_descriptors,
                   usage:  {
                     time:  usage_time,
                     cpu:   80,
@@ -355,15 +355,15 @@ module VCAP::CloudController
               1 => {
                 state:  'CRASHED',
                 stats:  {
-                  name:  app.name,
-                  uris:  app.uris,
+                  name:  process.name,
+                  uris:  process.uris,
                   host:  'myhost1',
                   port:  8081,
                   net_info:  { foo: 'ports-C' },
                   uptime:  instances_to_return[2][:uptime],
-                  mem_quota:   app[:memory] * 1024 * 1024,
-                  disk_quota:  app[:disk_quota] * 1024 * 1024,
-                  fds_quota:  app.file_descriptors,
+                  mem_quota:   process[:memory] * 1024 * 1024,
+                  disk_quota:  process[:disk_quota] * 1024 * 1024,
+                  fds_quota:  process.file_descriptors,
                   usage:  {
                     time:  usage_time,
                     cpu:   70,
@@ -375,15 +375,15 @@ module VCAP::CloudController
               2 => {
                 state:  'STARTING',
                 stats:  {
-                  name:  app.name,
-                  uris:  app.uris,
+                  name:  process.name,
+                  uris:  process.uris,
                   host:  'myhost2',
                   port:  8082,
                   net_info:  { foo: 'ports-E' },
                   uptime:  instances_to_return[4][:uptime],
-                  mem_quota:   app[:memory] * 1024 * 1024,
-                  disk_quota:  app[:disk_quota] * 1024 * 1024,
-                  fds_quota:  app.file_descriptors,
+                  mem_quota:   process[:memory] * 1024 * 1024,
+                  disk_quota:  process[:disk_quota] * 1024 * 1024,
+                  fds_quota:  process.file_descriptors,
                   usage:  {
                     time:  usage_time,
                     cpu:   80,
@@ -396,12 +396,12 @@ module VCAP::CloudController
         end
 
         it 'returns DOWN instances for instances that tps does not report within range of app.instances' do
-          app.instances = 7
+          process.instances = 7
 
-          result = instances_reporter.stats_for_app(app)
+          result = instances_reporter.stats_for_app(process)
 
-          expect(tps_client).to have_received(:lrp_instances_stats).with(app)
-          expect(result.length).to eq(app.instances)
+          expect(tps_client).to have_received(:lrp_instances_stats).with(process)
+          expect(result.length).to eq(process.instances)
           expect(result[5][:state]).to eq('DOWN')
           expect(result[6][:state]).to eq('DOWN')
         end
@@ -413,18 +413,18 @@ module VCAP::CloudController
 
           it 'creates zero usage for the instance' do
             allow(Time).to receive(:now).and_return(now)
-            result = instances_reporter.stats_for_app(app)
+            result = instances_reporter.stats_for_app(process)
 
             expect(result[0][:stats]).to eq({
-              name: app.name,
-              uris: app.uris,
+              name: process.name,
+              uris: process.uris,
               host: 'myhost',
               port: 8080,
               net_info: { foo: 'ports-A' },
               uptime: instances_to_return[0][:uptime],
-              mem_quota:  app[:memory] * 1024 * 1024,
-              disk_quota: app[:disk_quota] * 1024 * 1024,
-              fds_quota: app.file_descriptors,
+              mem_quota:  process[:memory] * 1024 * 1024,
+              disk_quota: process[:disk_quota] * 1024 * 1024,
+              fds_quota: process.file_descriptors,
               usage: {
                 time: usage_time,
                 cpu:  0,
@@ -442,7 +442,7 @@ module VCAP::CloudController
 
           it 'raises an InstancesUnavailable exception' do
             expect {
-              instances_reporter.stats_for_app(app)
+              instances_reporter.stats_for_app(process)
             }.to raise_error(CloudController::Errors::InstancesUnavailable, /oh no/)
           end
 
@@ -453,7 +453,7 @@ module VCAP::CloudController
             end
 
             it 're-raises' do
-              expect { instances_reporter.stats_for_app(app) }.to raise_error(error)
+              expect { instances_reporter.stats_for_app(process) }.to raise_error(error)
             end
           end
         end

@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe HealthCheckPolicy do
-  let(:app) { VCAP::CloudController::AppFactory.make }
+  let(:process) { VCAP::CloudController::AppFactory.make }
 
-  subject(:validator) { HealthCheckPolicy.new(app, health_check_timeout) }
+  subject(:validator) { HealthCheckPolicy.new(process, health_check_timeout) }
   let(:max_health_check_timeout) { 512 }
 
   describe 'health_check_timeout' do
@@ -16,7 +16,7 @@ RSpec.describe HealthCheckPolicy do
 
       it 'registers error' do
         error_msg = "Maximum exceeded: max #{max_health_check_timeout}s"
-        expect(validator).to validate_with_error(app, :health_check_timeout, error_msg)
+        expect(validator).to validate_with_error(process, :health_check_timeout, error_msg)
       end
     end
 
@@ -24,7 +24,7 @@ RSpec.describe HealthCheckPolicy do
       let(:health_check_timeout) { -10 }
 
       it 'registers error' do
-        expect(validator).to validate_with_error(app, :health_check_timeout, :less_than_zero)
+        expect(validator).to validate_with_error(process, :health_check_timeout, :less_than_zero)
       end
     end
 
@@ -32,7 +32,7 @@ RSpec.describe HealthCheckPolicy do
       let(:health_check_timeout) { 10 }
 
       it 'does not register error' do
-        expect(validator).to validate_without_error(app)
+        expect(validator).to validate_without_error(process)
       end
     end
   end

@@ -13,7 +13,7 @@ module VCAP
             let(:app) { AppModel.make }
             let(:package) { PackageModel.make(:docker, app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
-            let(:process) { App.make(app: app) }
+            let(:process) { ProcessModel.make(app: app) }
 
             before do
               app.update(droplet_guid: droplet.guid)
@@ -65,7 +65,7 @@ module VCAP
                                 docker_receipt_password: 'dockerpassword',
                                )
             end
-            let(:process) { App.make(app: app, diego: true, command: 'go go go', metadata: {}) }
+            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', metadata: {}) }
 
             before do
               app.update(droplet_guid: droplet.guid)

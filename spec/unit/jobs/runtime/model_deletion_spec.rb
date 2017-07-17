@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'jobs/runtime/model_deletion'
-require 'models/runtime/app'
+require 'models/runtime/process_model'
 require 'models/runtime/space'
 
 module VCAP::CloudController
@@ -19,14 +19,14 @@ module VCAP::CloudController
         end
 
         context 'deleting an app' do
-          let!(:app) { AppFactory.make(space: space) }
-          subject(:job) { ModelDeletion.new(App, app.guid) }
+          let!(:process) { AppFactory.make(space: space) }
+          subject(:job) { ModelDeletion.new(ProcessModel, process.guid) }
 
           it 'can delete an app' do
             expect {
               job.perform
             }.to change {
-              App.count
+              ProcessModel.count
             }.by(-1)
           end
         end

@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class AppEvent < Sequel::Model
-    many_to_one :app
+    many_to_one :app, class: 'VCAP::CloudController::ProcessModel'
 
     export_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp
     import_attributes :app_guid, :instance_guid, :instance_index, :exit_status, :exit_description, :timestamp
@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      { app: App.user_visible(user) }
+      { app: ProcessModel.user_visible(user) }
     end
   end
 end

@@ -10,8 +10,8 @@ module VCAP::CloudController
     let(:route) { Route.make(space: space) }
     let(:route_in_different_space) { Route.make }
 
-    let(:process) { App.make(app_guid: app.guid, type: 'web') }
-    let!(:another_process) { App.make(app_guid: app.guid, type: 'worker') }
+    let(:process) { ProcessModel.make(app_guid: app.guid, type: 'web') }
+    let!(:another_process) { ProcessModel.make(app_guid: app.guid, type: 'worker') }
 
     let(:message) do
       RouteMappingsCreateMessage.new(

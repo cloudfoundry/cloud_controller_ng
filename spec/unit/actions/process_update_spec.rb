@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
     let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check }) }
     let!(:process) do
-      App.make(
+      ProcessModel.make(
         :process,
         command:              'initial command',
         health_check_type:    'port',
@@ -55,7 +55,7 @@ module VCAP::CloudController
 
       context 'when the old healthcheck is http and the new healtcheck is not' do
         let!(:process) do
-          App.make(
+          ProcessModel.make(
             :process,
             command:              'initial command',
             health_check_type:    'http',

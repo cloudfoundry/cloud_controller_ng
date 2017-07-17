@@ -15,6 +15,7 @@ module VCAP::CloudController
     attr_reader :blobstore
 
     get '/internal/v2/droplets/:guid/:droplet_checksum/download', :download_droplet_http
+
     def download_droplet_http(guid, droplet_checksum)
       if @droplet_url_generator.mtls
         url = @droplet_url_generator.perma_droplet_download_url(guid, droplet_checksum)
@@ -25,6 +26,7 @@ module VCAP::CloudController
     end
 
     get '/internal/v4/droplets/:guid/:droplet_checksum/download', :download_droplet_mtls
+
     def download_droplet_mtls(guid, droplet_checksum)
       download_droplet(guid, droplet_checksum)
     end
@@ -45,20 +47,20 @@ module VCAP::CloudController
     end
 
     def download_droplet(guid, droplet_checksum)
-      app = App.find(guid: guid)
-      check_app_exists(app, guid)
-      raise ApiError.new_from_details('NotFound', droplet_checksum) unless app.droplet_checksum == droplet_checksum
+      process = ProcessModel.find(guid: guid)
+      check_app_exists(process, guid)
+      raise ApiError.new_from_details('NotFound', droplet_checksum) unless process.droplet_checksum == droplet_checksum
 
       blob_name = 'droplet'
-      droplet   = app.current_droplet
+      droplet   = process.current_droplet
 
       if @blobstore.local?
         blob = @blobstore.blob(droplet.blobstore_key)
-        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && blob
+        @missing_blob_handler.handle_missing_blob!(process.guid, blob_name) unless droplet && blob
         @blob_sender.send_blob(blob, self)
       else
         url = @blobstore_url_generator.droplet_download_url(droplet)
-        @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
+        @missing_blob_handler.handle_missing_blob!(process.guid, blob_name) unless url
         redirect url
       end
     end

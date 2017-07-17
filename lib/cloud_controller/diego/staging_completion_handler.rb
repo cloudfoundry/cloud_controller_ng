@@ -119,7 +119,7 @@ module VCAP::CloudController
 
           app.processes.each do |p|
             p.lock!
-            Repositories::AppUsageEventRepository.new.create_from_app(p, 'BUILDPACK_SET')
+            Repositories::AppUsageEventRepository.new.create_from_process(p, 'BUILDPACK_SET')
           end
         end
 

@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe 'PackageStateCalculator' do
     describe '#calculate' do
       let(:parent_app) { AppModel.make }
-      let(:app) { App.make(app: parent_app) }
+      let(:app) { ProcessModel.make(app: parent_app) }
       subject(:calculator) { PackageStateCalculator.new(app) }
 
       context 'when no package or droplet exists' do

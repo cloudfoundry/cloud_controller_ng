@@ -26,7 +26,7 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
       route   = Route.where(guid: request_attrs['route_guid']).eager(:space).all.first
-      process = App.where(guid: request_attrs['app_guid']).eager(app: :space).all.first
+      process = ProcessModel.where(guid: request_attrs['app_guid']).eager(app: :space).all.first
 
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid']) unless route
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
@@ -81,11 +81,11 @@ module VCAP::CloudController
       dataset.where("#{RouteMappingModel.table_name}__process_type".to_sym => 'web')
     end
 
-    def get_app_port(app_guid, app_port)
+    def get_app_port(process_guid, app_port)
       if app_port.blank?
-        app = App.find(guid: app_guid)
-        if !app.nil?
-          return app.ports[0] unless app.ports.blank?
+        process = ProcessModel.find(guid: process_guid)
+        if !process.nil?
+          return process.ports[0] unless process.ports.blank?
         end
       end
 
@@ -93,13 +93,13 @@ module VCAP::CloudController
     end
 
     def route_mapping_taken_message(request_attrs)
-      app_guid = request_attrs['app_guid']
-      route_guid = request_attrs['route_guid']
-      app_port = get_app_port(app_guid, request_attrs['app_port'])
+      process_guid = request_attrs['app_guid']
+      route_guid   = request_attrs['route_guid']
+      app_port     = get_app_port(process_guid, request_attrs['app_port'])
 
-      error_message =  "Route #{route_guid} is mapped to "
+      error_message = "Route #{route_guid} is mapped to "
       error_message += "port #{app_port} of " unless app_port.blank?
-      error_message += "app #{app_guid}"
+      error_message += "app #{process_guid}"
 
       error_message
     end

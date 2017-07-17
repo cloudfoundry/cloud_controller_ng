@@ -12,10 +12,10 @@ module VCAP::CloudController
         service_binding = ServiceBinding.make
         app = service_binding.app
 
-        App.make(app: app, type: 'non-web')
+        ProcessModel.make(app: app, type: 'non-web')
         expect(service_binding.reload.v2_app).to be_nil
 
-        web_process = App.make(app: app, type: 'web')
+        web_process = ProcessModel.make(app: app, type: 'web')
         expect(service_binding.reload.v2_app.guid).to eq(web_process.guid)
       end
     end
@@ -120,7 +120,7 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:app) { VCAP::CloudController::App.make }
+      let(:app) { VCAP::CloudController::ProcessModel.make }
       subject(:service_binding) {  VCAP::CloudController::ServiceBinding.new(app: app) }
 
       context 'when in a suspended organization' do
