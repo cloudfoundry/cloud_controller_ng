@@ -20,13 +20,13 @@ module VCAP::CloudController
 
     def validate
       if buildpack_url.present? == admin_buildpack_name.present?
-        errors.add(:buildpack_lifecycle_buildpack, 'Must specify either a buildpack_url or an admin_buildpack_name')
+        errors.add(:base, Sequel.lit('Must specify either a buildpack_url or an admin_buildpack_name'))
       elsif admin_buildpack_name.present?
         if Buildpack.find(name: admin_buildpack_name).nil?
-          errors.add(:buildpack_lifecycle_buildpack, "Specified unknown buildpack name: \"#{admin_buildpack_name}\"")
+          errors.add(:admin_buildpack_name, Sequel.lit("Specified unknown buildpack name: \"#{admin_buildpack_name}\""))
         end
       elsif !UriUtils.is_buildpack_uri?(buildpack_url)
-        errors.add(:buildpack_lifecycle_buildpack, "Specified invalid buildpack URL: \"#{buildpack_url}\"")
+        errors.add(:buildpack_url, Sequel.lit("Specified invalid buildpack URL: \"#{buildpack_url}\""))
       end
     end
   end
