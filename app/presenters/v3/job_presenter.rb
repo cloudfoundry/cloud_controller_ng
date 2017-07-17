@@ -19,7 +19,9 @@ module VCAP::CloudController
             operation:  job.operation,
             state:      job.state,
 
-            links:      build_links
+            links:      build_links,
+
+            errors:     build_errors,
           }
         end
 
@@ -43,6 +45,13 @@ module VCAP::CloudController
           end
 
           links
+        end
+
+        def build_errors
+          return [] if job.cf_api_error.nil? || job.state == VCAP::CloudController::PollableJobModel::COMPLETE_STATE
+          parsed_last_error = YAML.safe_load(job.cf_api_error)
+
+          parsed_last_error['errors'].map(&:deep_symbolize_keys)
         end
       end
     end

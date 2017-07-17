@@ -27,6 +27,7 @@ module VCAP::CloudController::Jobs
         expect(job_record.operation).to eq('droplet.delete')
         expect(job_record.resource_guid).to eq('fake')
         expect(job_record.resource_type).to eq('droplet')
+        expect(job_record.cf_api_error).to be_nil
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
@@ -35,17 +36,25 @@ module VCAP::CloudController::Jobs
 
       context 'when the job fails' do
         before do
-          allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:perform).and_raise
+          allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).
+            to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError.new('some-error'))
         end
 
         context 'when there is an associated job model' do
-          it 'marks the job model failed' do
+          it 'marks the job model failed and records errors' do
             enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
             job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
-            expect(job_model.reload.state).to eq('FAILED')
+            job_model.reload
+            expect(job_model.state).to eq('FAILED')
+            expect(job_model.cf_api_error).to_not be_nil
+
+            api_error = YAML.safe_load(job_model.cf_api_error)['errors'].first
+            expect(api_error['title']).to eql('CF-BlobstoreError')
+            expect(api_error['code']).to eql(150007)
+            expect(api_error['detail']).to eql('Failed to perform blobstore operation after three retries.')
           end
         end
 

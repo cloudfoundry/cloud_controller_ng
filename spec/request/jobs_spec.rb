@@ -21,6 +21,7 @@ RSpec.describe 'Jobs' do
         'updated_at' => iso8601,
         'operation'  => operation,
         'state'      => 'COMPLETE',
+        'errors'     => [],
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/jobs/#{job_guid}" }
         }
