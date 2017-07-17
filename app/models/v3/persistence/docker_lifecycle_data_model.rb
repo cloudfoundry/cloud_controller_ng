@@ -16,7 +16,6 @@ module VCAP::CloudController
       false
     end
 
-    # TODO: remove this?
     def first_custom_buildpack_url
       nil
     end

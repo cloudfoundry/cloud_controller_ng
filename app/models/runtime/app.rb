@@ -510,7 +510,6 @@ module VCAP::CloudController
       app.lifecycle_data.buildpacks.any?
     end
 
-    # TODO: remove this?
     def custom_buildpack_url
       app.lifecycle_data.first_custom_buildpack_url
     end

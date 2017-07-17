@@ -62,9 +62,6 @@ module CloudController
             CloudController::UrlSecretObfuscator.obfuscate(buildpack.url)
           elsif buildpack.class == VCAP::CloudController::Buildpack
             buildpack.name
-          elsif buildpack.class == String
-            # TODO: Is this necessary?
-            buildpack
           end
         end
 

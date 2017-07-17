@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class Buildpack < Sequel::Model
-    # Class for Admin Buildpacks
     plugin :list
 
     export_attributes :name, :position, :enabled, :locked, :filename

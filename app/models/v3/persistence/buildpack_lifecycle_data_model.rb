@@ -68,7 +68,6 @@ module VCAP::CloudController
         self.legacy_admin_buildpack_name = first_buildpack
       end
 
-      # http://sequel.jeremyevans.net/rdoc-plugins/classes/Sequel/Plugins/NestedAttributes.html
       buildpacks_to_remove = self.buildpack_lifecycle_buildpacks.map { |bp| { id: bp.id, _delete: true } }
       buildpacks_to_add = new_buildpacks.map { |buildpack_url| attributes_from_name(buildpack_url) }
       self.buildpack_lifecycle_buildpacks_attributes = buildpacks_to_add + buildpacks_to_remove
@@ -78,7 +77,6 @@ module VCAP::CloudController
       buildpack_lifecycle_buildpacks.any?(&:custom?) || legacy_buildpack_model.custom?
     end
 
-    # TODO: remove this?
     def first_custom_buildpack_url
       buildpack_lifecycle_buildpacks.find(&:custom?)&.buildpack_url || legacy_buildpack_url
     end
