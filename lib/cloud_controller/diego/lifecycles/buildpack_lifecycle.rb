@@ -53,7 +53,7 @@ module VCAP::CloudController
       if staging_message.buildpack_data.buildpacks
         staging_message.buildpack_data.buildpacks
       else
-        @package.app.lifecycle_data.try(:buildpacks)
+        @package.app.lifecycle_data.buildpacks
       end
     end
 
