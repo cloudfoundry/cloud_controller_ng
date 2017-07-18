@@ -65,7 +65,7 @@ RSpec.describe 'Apps' do
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/route_mappings" },
-            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/start", 'method' => 'PUT' },
+            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/start", 'method' => 'POST' },
             'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
           }
         }
@@ -127,7 +127,7 @@ RSpec.describe 'Apps' do
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/route_mappings" },
-            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/start", 'method' => 'PUT' },
+            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/start", 'method' => 'POST' },
             'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
           }
         }
@@ -211,7 +211,7 @@ RSpec.describe 'Apps' do
                 'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
                 'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
                 'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/route_mappings" },
-                'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/start", 'method' => 'PUT' },
+                'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
                 'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
               }
             },
@@ -235,7 +235,7 @@ RSpec.describe 'Apps' do
                 'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
                 'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
                 'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/route_mappings" },
-                'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/start", 'method' => 'PUT' },
+                'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/start", 'method' => 'POST' },
                 'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
               }
             }
@@ -416,7 +416,7 @@ RSpec.describe 'Apps' do
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
-            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
             'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
           }
         }
@@ -593,7 +593,7 @@ RSpec.describe 'Apps' do
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
-            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
             'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
           }
         }
@@ -637,7 +637,7 @@ RSpec.describe 'Apps' do
       app_model.droplet = droplet
       app_model.save
 
-      put "/v3/apps/#{app_model.guid}/start", nil, user_header
+      post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -664,7 +664,7 @@ RSpec.describe 'Apps' do
           'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
           'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
           'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
-          'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+          'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
           'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
         }
       })
@@ -731,7 +731,7 @@ RSpec.describe 'Apps' do
             'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
             'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
-            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/start", 'method' => 'PUT' },
+            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
             'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
           }
         }

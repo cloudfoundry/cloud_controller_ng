@@ -5,8 +5,8 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps/[guid]/start" \
-  -X PUT \
+curl "https://api.example.org/v3/apps/[guid]/actions/start" \
+  -X POST \
   -H "Authorization: bearer [token]"
 ```
 
@@ -22,7 +22,7 @@ Content-Type: application/json
 ```
 
 #### Definition
-`PUT /v3/apps/:guid/start`
+`POST /v3/apps/:guid/actions/start`
 
 #### Permitted Roles
  |
