@@ -34,7 +34,7 @@ module VCAP::CloudController::Presenters::V3
           droplets: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets" },
           tasks: { href: "#{link_prefix}/v3/apps/#{app.guid}/tasks" },
           start: { href: "#{link_prefix}/v3/apps/#{app.guid}/start", method: 'PUT' },
-          stop: { href: "#{link_prefix}/v3/apps/#{app.guid}/stop", method: 'PUT' },
+          stop: { href: "#{link_prefix}/v3/apps/#{app.guid}/actions/stop", method: 'POST' },
           environment_variables: { href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables" },
         }
 

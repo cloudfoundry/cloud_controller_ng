@@ -39,7 +39,7 @@ module VCAP::CloudController
             droplets:              { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/droplets") },
             tasks:                 { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/tasks") },
             start:                 { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/start"), method: 'PUT' },
-            stop:                  { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/stop"), method: 'PUT' },
+            stop:                  { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/actions/stop"), method: 'POST' },
           }
 
           links.delete_if { |_, v| v.nil? }
