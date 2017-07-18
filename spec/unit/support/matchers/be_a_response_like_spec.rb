@@ -21,7 +21,7 @@ RSpec.describe 'be_a_response_like matcher' do
     end
 
     it 'passes when matching an iso8601 timestamp' do
-      expect({ 'a' => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")}).to be_a_response_like({ 'a' => iso8601 })
+      expect({ 'a' => Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ') }).to be_a_response_like({ 'a' => iso8601 })
     end
 
     it 'does not interpret strings as regex' do

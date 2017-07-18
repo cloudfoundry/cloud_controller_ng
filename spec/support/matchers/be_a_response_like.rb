@@ -84,12 +84,12 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
       result << "Summary:\n#{summary.map { |s| '      ' + s }.join("\n")}\n"
     end
     if !!@problem_keys
-      result << "" if result.size > 0
+      result << '' if result.size > 0
       result << "Bad keys: #{@problem_keys}"
     end
     if exception
-      result << "" if result.size > 0
-      result << "Exception:"
+      result << '' if result.size > 0
+      result << 'Exception:'
       result << exception
     end
     result.join("\n")
