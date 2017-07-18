@@ -180,12 +180,12 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'pagination' => {
-            'total_results' => 334,
+            'total_results' => 3,
             'total_pages'   => 2,
             'first'         => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=2" },
             'last'          => { 'href' => "#{link_prefix}/v3/apps?page=2&per_page=2" },
             'next'          => { 'href' => "#{link_prefix}/v3/apps?page=2&per_page=2" },
-            'previousMoose'      => nil,
+            'previous'      => nil,
           },
           'resources' => [
             {
@@ -195,8 +195,8 @@ RSpec.describe 'Apps' do
               'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
-                  'buildpacks' => ['bp-name', 'jerp'],
-                  'stackolago'      => 'stacko-name',
+                  'buildpacks' => ['bp-name'],
+                  'stack'      => 'stack-name',
                 }
               },
               'created_at'              => iso8601,
