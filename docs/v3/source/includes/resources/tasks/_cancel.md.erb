@@ -5,8 +5,8 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/tasks/[guid]/cancel" \
-  -X PUT \
+curl "https://api.example.org/v3/tasks/[guid]/actions/cancel" \
+  -X POST \
   -H "Authorization: bearer [token]"
 ```
 
@@ -30,7 +30,8 @@ Cancel requests are idempotent and will be processed according to the state of t
 Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
 
 #### Definition
-`PUT /v3/tasks/:task_guid/cancel`
+`POST /v3/tasks/:task_guid/actions/cancel` <br>
+`PUT /v3/tasks/:task_guid/cancel` _(Deprecated)_
 
 #### Allowed Roles
  |

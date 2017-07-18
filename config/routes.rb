@@ -103,6 +103,7 @@ Rails.application.routes.draw do
   get '/tasks', to: 'tasks#index'
   get '/tasks/:task_guid', to: 'tasks#show'
   put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
+  post '/tasks/:task_guid/actions/cancel', to: 'tasks#cancel'
 
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
