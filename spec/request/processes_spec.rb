@@ -64,7 +64,7 @@ RSpec.describe 'Processes' do
             'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}" },
-              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/scale", 'method' => 'PUT' },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/stats" },
@@ -88,7 +88,7 @@ RSpec.describe 'Processes' do
             'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}" },
-              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/scale", 'method' => 'PUT' },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/stats" },
@@ -299,7 +299,7 @@ RSpec.describe 'Processes' do
         'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
@@ -466,7 +466,7 @@ RSpec.describe 'Processes' do
         'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
@@ -511,7 +511,7 @@ RSpec.describe 'Processes' do
     end
   end
 
-  describe 'PUT /v3/processes/:guid/scale' do
+  describe 'POST /v3/processes/:guid/actions/scale' do
     it 'scales the process' do
       process = VCAP::CloudController::ProcessModel.make(
         :process,
@@ -529,7 +529,7 @@ RSpec.describe 'Processes' do
         disk_in_mb:   20,
       }
 
-      put "/v3/processes/#{process.guid}/scale", scale_request.to_json, developer_headers
+      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
 
       expected_response = {
         'guid'         => process.guid,
@@ -549,7 +549,7 @@ RSpec.describe 'Processes' do
         'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
@@ -684,7 +684,7 @@ RSpec.describe 'Processes' do
             'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}" },
-              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/scale", 'method' => 'PUT' },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/stats" },
@@ -708,7 +708,7 @@ RSpec.describe 'Processes' do
             'updated_at'   => iso8601,
             'links'        => {
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}" },
-              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/scale", 'method' => 'PUT' },
+              'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/stats" },
@@ -804,7 +804,7 @@ RSpec.describe 'Processes' do
         'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
@@ -879,7 +879,7 @@ RSpec.describe 'Processes' do
         'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
@@ -1019,7 +1019,7 @@ RSpec.describe 'Processes' do
     end
   end
 
-  describe 'PUT /v3/apps/:guid/processes/:type/scale' do
+  describe 'POST /v3/apps/:guid/processes/:type/actions/scale' do
     it 'scales the process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(
         :process,
@@ -1037,7 +1037,7 @@ RSpec.describe 'Processes' do
         disk_in_mb:   20,
       }
 
-      put "/v3/apps/#{app_model.guid}/processes/web/scale", scale_request.to_json, developer_headers
+      post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
 
       expected_response = {
         'guid'         => process.guid,
@@ -1057,7 +1057,7 @@ RSpec.describe 'Processes' do
         'updated_at'   => iso8601,
         'links'        => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
-          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/scale", 'method' => 'PUT' },
+          'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },

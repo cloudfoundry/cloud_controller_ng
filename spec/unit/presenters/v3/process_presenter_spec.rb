@@ -29,7 +29,7 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the process as a hash' do
         links = {
           self: { href: "#{link_prefix}/v3/processes/#{process.guid}" },
-          scale: { href: "#{link_prefix}/v3/processes/#{process.guid}/scale", method: 'PUT' },
+          scale: { href: "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", method: 'POST' },
           app: { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
           space: { href: "#{link_prefix}/v2/spaces/#{process.space_guid}" },
           stats: { href: "#{link_prefix}/v3/processes/#{process.guid}/stats" },

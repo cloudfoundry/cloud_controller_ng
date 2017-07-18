@@ -5,8 +5,8 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/processes/[guid]/scale" \
-  -X PUT \
+curl "https://api.example.org/v3/processes/[guid]/actions/scale" \
+  -X POST \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
@@ -28,8 +28,8 @@ Content-Type: application/json
 ```
 
 #### Definition
-`PUT /v3/processes/:guid/scale` <br>
-`PUT /v3/apps/:guid/processes/:type/scale`
+`POST /v3/processes/:guid/actions/scale` <br>
+`POST /v3/apps/:guid/processes/:type/actions/scale`
 
 #### Optional Parameters
 

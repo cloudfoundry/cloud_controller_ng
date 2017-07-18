@@ -36,7 +36,7 @@ module VCAP::CloudController
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
           {
             self:  { href: url_builder.build_url(path: "/v3/processes/#{process.guid}") },
-            scale: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/scale"), method: 'PUT', },
+            scale: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/actions/scale"), method: 'POST', },
             app:   { href: url_builder.build_url(path: "/v3/apps/#{process.app_guid}") },
             space: { href: url_builder.build_url(path: "/v2/spaces/#{process.space_guid}") },
             stats: { href: url_builder.build_url(path: "/v3/processes/#{process.guid}/stats") }
