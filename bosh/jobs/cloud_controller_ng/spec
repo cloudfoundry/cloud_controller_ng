@@ -6,6 +6,7 @@ description: "The Cloud Controller provides primary Cloud Foundry API that is by
 templates:
   nginx_ctl.erb: bin/nginx_ctl
   nginx.conf.erb: config/nginx.conf
+  public_upload.conf.erb: config/public_upload.conf
   drain.rb: bin/drain
   restart_drain.rb: bin/restart_drain
   mime.types: config/mime.types
