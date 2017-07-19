@@ -1702,8 +1702,8 @@ in the response based on the user&rsquo;s role.</p>
           <h3 id="cancel-a-task">Cancel a task</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]/cancel"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]/actions/cancel"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -1750,7 +1750,8 @@ in the response based on the user&rsquo;s role.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PUT /v3/tasks/:task_guid/cancel</code></p>
+<p><code class="prettyprint">POST /v3/tasks/:task_guid/actions/cancel</code> <br>
+<code class="prettyprint">PUT /v3/tasks/:task_guid/cancel</code> <em>(Deprecated)</em></p>
 
 <h4 id="allowed-roles">Allowed Roles</h4>
 
@@ -2166,12 +2167,12 @@ information for your packages, droplets, processes, tasks, and more.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -2296,12 +2297,12 @@ information for your packages, droplets, processes, tasks, and more.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -2406,12 +2407,12 @@ information for your packages, droplets, processes, tasks, and more.</p>
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -2856,8 +2857,8 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
           <h3 id="start-an-app">Start an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/start"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/start"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -2907,12 +2908,12 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -2921,7 +2922,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PUT /v3/apps/:guid/start</code></p>
+<p><code class="prettyprint">POST /v3/apps/:guid/actions/start</code></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
@@ -2941,8 +2942,8 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
           <h3 id="stop-an-app">Stop an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/stop"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/stop"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -2992,12 +2993,12 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -3006,7 +3007,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PUT /v3/apps/:guid/stop</code></p>
+<p><code class="prettyprint">POST /v3/apps/:guid/actions/stop</code></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
@@ -3125,12 +3126,12 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/tasks"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/start"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/start"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/stop"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/actions/stop"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -3176,12 +3177,12 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/tasks"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/start"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/start"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"stop"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/stop"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/02b4ec9b-94c7-4468-9c23-4e906191a0f8/actions/stop"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -5917,8 +5918,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
@@ -6080,8 +6081,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
@@ -6140,8 +6141,8 @@ the request in that case. Clients may need to follow the redirect without includ
           <h3 id="scale-a-process">Scale a process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/scale"</span> <span class="se">\</span>
-  -X PUT <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/actions/scale"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
@@ -6176,8 +6177,8 @@ the request in that case. Clients may need to follow the redirect without includ
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
@@ -6195,8 +6196,8 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PUT /v3/processes/:guid/scale</code> <br>
-<code class="prettyprint">PUT /v3/apps/:guid/processes/:type/scale</code></p>
+<p><code class="prettyprint">POST /v3/processes/:guid/actions/scale</code> <br>
+<code class="prettyprint">POST /v3/apps/:guid/processes/:type/actions/scale</code></p>
 
 <h4 id="optional-parameters">Optional Parameters</h4>
 
@@ -6324,8 +6325,8 @@ the request in that case. Clients may need to follow the redirect without includ
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
@@ -6360,8 +6361,8 @@ the request in that case. Clients may need to follow the redirect without includ
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/actions/scale"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
@@ -6485,8 +6486,8 @@ the request in that case. Clients may need to follow the redirect without includ
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/actions/scale"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
@@ -6521,8 +6522,8 @@ the request in that case. Clients may need to follow the redirect without includ
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PUT"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/actions/scale"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
