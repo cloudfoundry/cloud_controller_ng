@@ -226,15 +226,6 @@ module VCAP::CloudController
         it 'can be deleted when associated' do
           expect { space.destroy }.not_to raise_error
         end
-
-        context 'when there are multiple spaces' do
-          let!(:another_space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
-          let!(:yet_another_space) { Space.make(security_group_guids: [associated_sg.guid, another_default_sg.guid]) }
-
-          it 'only returns the groups for the given space' do
-            expect(space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
-          end
-        end
       end
 
       describe 'staging_security_groups' do
