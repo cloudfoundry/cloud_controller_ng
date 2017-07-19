@@ -4,15 +4,15 @@ require 'fetchers/buildpack_lifecycle_fetcher'
 
 module VCAP::CloudController
   class BuildpackLifecycle
-    attr_reader :staging_message, :buildpack_info
+    attr_reader :staging_message, :buildpack_infos
 
     def initialize(package, staging_message)
       @staging_message = staging_message
       @package         = package
 
-      db_result       = BuildpackLifecycleFetcher.new.fetch(buildpack_to_use, staging_stack)
-      @buildpack_info = BuildpackInfo.new(buildpack_to_use, db_result[:buildpack])
-      @validator      = BuildpackLifecycleDataValidator.new({ buildpack_info: buildpack_info, stack: db_result[:stack] })
+      db_result = BuildpackLifecycleFetcher.fetch(buildpacks_to_use, staging_stack)
+      @buildpack_infos = db_result[:buildpack_infos]
+      @validator = BuildpackLifecycleDataValidator.new({ buildpack_infos: buildpack_infos, stack: db_result[:stack] })
     end
 
     delegate :valid?, :errors, to: :validator
@@ -40,14 +40,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def buildpack_to_use
-      if staging_message.buildpack_data.buildpacks
-        staging_message.buildpack_data.buildpacks.first
-      else
-        @package.app.lifecycle_data.try(:buildpacks).first
-      end
-    end
 
     def buildpacks_to_use
       if staging_message.buildpack_data.buildpacks

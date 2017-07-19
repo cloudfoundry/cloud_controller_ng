@@ -128,7 +128,7 @@ module VCAP::CloudController
         end
 
         def skip_detect?
-          lifecycle_data[:buildpacks].count == 1 && !!lifecycle_data[:buildpacks].first[:skip_detect]
+          lifecycle_data[:buildpacks].any? { |buildpack| buildpack[:skip_detect] }
         end
 
         def lifecycle_bundle_key

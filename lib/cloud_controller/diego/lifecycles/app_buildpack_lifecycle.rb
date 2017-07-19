@@ -7,9 +7,11 @@ module VCAP::CloudController
     def initialize(message)
       @message = message
 
-      db_result      = BuildpackLifecycleFetcher.new.fetch(buildpack, stack)
-      buildpack_info = BuildpackInfo.new(buildpack, db_result[:buildpack])
-      @validator     = BuildpackLifecycleDataValidator.new({ buildpack_info: buildpack_info, stack: db_result[:stack] })
+      db_result       = BuildpackLifecycleFetcher.fetch(buildpacks, stack)
+      @validator      = BuildpackLifecycleDataValidator.new({
+        buildpack_infos: db_result[:buildpack_infos],
+        stack: db_result[:stack],
+      })
     end
 
     delegate :valid?, :errors, to: :validator
@@ -43,14 +45,8 @@ module VCAP::CloudController
 
     attr_reader :message, :validator
 
-    def buildpack
-      if message.buildpack_data.requested?(:buildpacks)
-        message.buildpack_data.buildpacks.try(:first)
-      end
-    end
-
     def buildpacks
-      message.buildpack_data.requested?(:buildpacks) ? message.buildpack_data.buildpacks : []
+      message.buildpack_data.requested?(:buildpacks) ? (message.buildpack_data.buildpacks || []) : []
     end
 
     def stack

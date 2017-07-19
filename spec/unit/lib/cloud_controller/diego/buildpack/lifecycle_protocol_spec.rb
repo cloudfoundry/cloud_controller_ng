@@ -30,10 +30,10 @@ module VCAP
               Diego::StagingDetails.new.tap do |details|
                 details.staging_guid = droplet.guid
                 details.package      = package
-                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
               end
             end
-            let(:buildpack_info) { BuildpackInfo.new('http://some-buildpack.url', nil) }
+            let(:buildpack_infos) { [BuildpackInfo.new('http://some-buildpack.url', nil)] }
 
             before do
               app.update(droplet_guid: droplet.guid)
@@ -50,7 +50,7 @@ module VCAP
             let(:package) { PackageModel.make(app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:buildpack) { nil }
-            let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
+            let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
 
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
@@ -59,18 +59,20 @@ module VCAP
                 details.environment_variables = { 'nightshade_fruit' => 'potato' }
                 details.staging_memory_in_mb  = 42
                 details.staging_disk_in_mb    = 51
-                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
+                details.lifecycle             = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
               end
             end
 
             context 'when auto-detecting' do
-              it 'sends buildpacks without skip_detect' do
+              let(:buildpack_infos) { [] }
+
+              it 'sends buildpacks setting skip_detect to false' do
                 lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)
 
                 expect(lifecycle_data[:buildpacks]).to have(1).items
                 bp = lifecycle_data[:buildpacks][0]
                 expect(bp).to include(name: 'ruby')
-                expect(bp).to_not include(:skip_detect)
+                expect(bp).to include(skip_detect: false)
               end
             end
 
@@ -99,6 +101,8 @@ module VCAP
             end
 
             context 'when the generated message has invalid data' do
+              let(:buildpack_infos) { [] }
+
               context 'when the package is missing a download uri (probably due to blobstore outages)' do
                 before do
                   allow(blobstore_url_generator).to receive(:package_download_url).and_return(nil)
@@ -140,7 +144,7 @@ module VCAP
             let(:staging_details) do
               Diego::StagingDetails.new.tap do |details|
                 details.droplet   = droplet
-                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: buildpack_info)
+                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
               end
             end
 
@@ -203,7 +207,7 @@ module VCAP
             let(:droplet) { DropletModel.make }
             let(:staging_details) do
               StagingDetails.new.tap do |details|
-                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_info: 'some buildpack info')
+                details.lifecycle    = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: 'some buildpack info')
                 details.package      = package
                 details.staging_guid = droplet.guid
               end

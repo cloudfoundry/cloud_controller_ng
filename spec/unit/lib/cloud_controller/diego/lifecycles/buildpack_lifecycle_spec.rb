@@ -113,15 +113,17 @@ module VCAP::CloudController
       end
     end
 
-    it 'provides staging environment variables' do
-      staging_message.buildpack_data.stack = 'cool-stack'
+    describe '#staging_environment_variables' do
+      it 'provides staging environment variables' do
+        staging_message.buildpack_data.stack = 'cool-stack'
 
-      expect(buildpack_lifecycle.staging_environment_variables).to eq({
-        'CF_STACK' => 'cool-stack'
-      })
+        expect(buildpack_lifecycle.staging_environment_variables).to eq({
+          'CF_STACK' => 'cool-stack'
+        })
+      end
     end
 
-    describe 'the staging stack' do
+    describe '#staging_stack' do
       context 'when the user specifies a stack' do
         before do
           staging_message.buildpack_data.stack = 'cool-stack'
@@ -151,18 +153,41 @@ module VCAP::CloudController
       end
     end
 
-    describe 'buildpack info' do
-      it 'is provided' do
-        expect(buildpack_lifecycle.buildpack_info).to be_a(BuildpackInfo)
+    describe '#buildpack_infos' do
+      let(:stubbed_data) { { stack: Stack.default.name, buildpack_infos: [instance_double(BuildpackInfo)] } }
+      let(:request_data) do
+        {
+          buildpacks: ['cool-buildpack', 'rad-buildpack'],
+        }
+      end
+
+      before do
+        allow(BuildpackLifecycleFetcher).to receive(:fetch).and_return(stubbed_data)
+      end
+
+      it 'returns the expected value' do
+        expect(buildpack_lifecycle.buildpack_infos).to eq(stubbed_data[:buildpack_infos])
+
+        expect(BuildpackLifecycleFetcher).to have_received(:fetch).with(['cool-buildpack', 'rad-buildpack'], Stack.default.name)
       end
     end
 
     describe 'validation' do
       let(:validator) { instance_double(BuildpackLifecycleDataValidator) }
+      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: 'bar' } }
+
       before do
         allow(validator).to receive(:valid?)
         allow(validator).to receive(:errors)
+
+        allow(BuildpackLifecycleFetcher).to receive(:fetch).and_return(stubbed_fetcher_data)
         allow(BuildpackLifecycleDataValidator).to receive(:new).and_return(validator)
+      end
+
+      it 'constructs the validator correctly' do
+        buildpack_lifecycle.valid?
+
+        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo')
       end
 
       it 'delegates #valid? to a BuildpackLifecycleDataValidator' do

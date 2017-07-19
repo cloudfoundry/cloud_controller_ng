@@ -116,7 +116,7 @@ module VCAP::CloudController
           let(:buildpacks) do
             [
               { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false },
-              { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true },
+              { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: false },
             ]
           end
 
@@ -178,10 +178,11 @@ module VCAP::CloudController
             end
           end
 
-          context 'when there is a specific buildpack requested' do
+          context 'when any specified buildpack has "skip_detect" set to true' do
             let(:buildpacks) {
               [
-                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: true },
+                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false },
+                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true },
               ]
             }
 
@@ -211,8 +212,8 @@ module VCAP::CloudController
           context 'when there are buildpacks' do
             let(:buildpacks) do
               [
-                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false, sha256: 'checksum' },
-                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true, sha256: 'checksum' },
+                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' },
               ]
             end
 
@@ -241,8 +242,8 @@ module VCAP::CloudController
             context 'and some do not include checksums' do
               let(:buildpacks) do
                 [
-                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false, sha256: 'checksum' },
-                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', skip_detect: true, sha256: nil },
+                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil },
                 ]
               end
 
@@ -271,8 +272,8 @@ module VCAP::CloudController
           context 'when there are custom buildpacks' do
             let(:buildpacks) do
               [
-                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', skip_detect: false, sha256: 'checksum' },
-                { name: 'custom', key: 'custom-key', url: 'custom-url', skip_detect: true },
+                { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                { name: 'custom', key: 'custom-key', url: 'custom-url' },
               ]
             end
 

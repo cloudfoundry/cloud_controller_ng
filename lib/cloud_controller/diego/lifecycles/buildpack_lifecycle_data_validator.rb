@@ -4,19 +4,18 @@ module VCAP::CloudController
   class BuildpackLifecycleDataValidator
     include ActiveModel::Model
 
-    attr_accessor :buildpack_info, :stack
+    attr_accessor :buildpack_infos, :stack
 
-    validate :buildpack_is_a_uri_or_nil, unless: :buildpack_exists_in_db?
+    validate :buildpacks_are_uri_or_nil
     validate :stack_exists_in_db
 
-    def buildpack_is_a_uri_or_nil
-      return if buildpack_info.buildpack.nil?
-      return if buildpack_info.buildpack_url
-      errors.add(:buildpack, 'must be an existing admin buildpack or a valid git URI')
-    end
-
-    def buildpack_exists_in_db?
-      !buildpack_info.buildpack_record.nil?
+    def buildpacks_are_uri_or_nil
+      buildpack_infos.each do |buildpack_info|
+        next if buildpack_info.buildpack_record.present?
+        next if buildpack_info.buildpack.nil?
+        next if buildpack_info.buildpack_url
+        errors.add(:buildpack, %("#{buildpack_info.buildpack}" must be an existing admin buildpack or a valid git URI))
+      end
     end
 
     def stack_exists_in_db

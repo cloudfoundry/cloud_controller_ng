@@ -100,10 +100,20 @@ module VCAP::CloudController
 
     describe 'validation' do
       let(:validator) { instance_double(BuildpackLifecycleDataValidator) }
+      let(:stubbed_fetcher_data) { { stack: 'foo', buildpack_infos: 'bar' } }
+
       before do
         allow(validator).to receive(:valid?)
         allow(validator).to receive(:errors)
+
+        allow(BuildpackLifecycleFetcher).to receive(:fetch).and_return(stubbed_fetcher_data)
         allow(BuildpackLifecycleDataValidator).to receive(:new).and_return(validator)
+      end
+
+      it 'constructs the validator correctly' do
+        lifecycle.valid?
+
+        expect(BuildpackLifecycleDataValidator).to have_received(:new).with(buildpack_infos: 'bar', stack: 'foo')
       end
 
       it 'delegates #valid? to a BuildpackLifecycleDataValidator' do

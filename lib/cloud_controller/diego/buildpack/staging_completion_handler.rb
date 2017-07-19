@@ -16,7 +16,7 @@ module VCAP::CloudController
                 execution_metadata: String,
                 lifecycle_type:     Lifecycles::BUILDPACK,
                 lifecycle_metadata: {
-                  buildpack_key:      String,
+                  optional(:buildpack_key) =>      String,
                   detected_buildpack: String,
                 },
                 process_types:      dict(Symbol, String)
