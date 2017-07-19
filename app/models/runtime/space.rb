@@ -38,8 +38,10 @@ module VCAP::CloudController
                 dataset: -> { TaskModel.filter(app: app_models) }
     many_to_many :security_groups,
     dataset: -> {
-      SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
-        where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true))
+      SecurityGroup.where(running_default: true).union(
+        SecurityGroup.join(:security_groups_spaces, security_group_id: :id).where(security_groups_spaces__space_id: id).select_all(:security_groups),
+        alias: :security_groups,
+      )
     },
     eager_loader: ->(spaces_map) {
       space_ids = spaces_map[:id_map].keys
