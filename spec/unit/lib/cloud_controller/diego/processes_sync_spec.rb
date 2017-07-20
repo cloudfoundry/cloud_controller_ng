@@ -102,6 +102,29 @@ module VCAP::CloudController
               end
             end
 
+            context 'when the app has been deleted' do
+              let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'the requested resource could not be found') }
+              let(:logger) { double(:logger, info: nil, error: nil) }
+              let(:workpool) { double(:workpool, submit: nil, exceptions: nil, drain: nil) }
+
+              before do
+                allow(Steno).to receive(:logger).and_return(logger)
+                allow(WorkPool).to receive(:new).and_return(workpool)
+                allow(workpool).to receive(:submit)
+                allow(workpool).to receive(:exceptions).and_return([error])
+              end
+
+              it 'bumps freshness, ignoring the error' do
+                subject.sync
+                expect(workpool).to have_received(:submit)
+                expect(bbs_apps_client).to have_received(:bump_freshness)
+                expect(logger).to_not have_received(:error)
+                expect(logger).to have_received(:info).with(
+                  'ignore-deleted-resource', error: error.name, error_message: error.message
+                )
+              end
+            end
+
             context 'any other error' do
               let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
 

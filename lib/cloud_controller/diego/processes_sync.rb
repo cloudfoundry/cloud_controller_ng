@@ -52,22 +52,7 @@ module VCAP::CloudController
 
         @workpool.drain
 
-        first_exception = nil
-        invalid_lrps = 0
-        @workpool.exceptions.each do |e|
-          error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
-          if error_name == 'RunnerInvalidRequest'
-            logger.info('synced-invalid-desired-lrps', error: error_name, error_message: e.message)
-            invalid_lrps += 1
-          elsif error_name == 'RunnerError' && e.message['the requested resource already exists']
-            logger.info('ignore-existing-resource', error: error_name, error_message: e.message)
-          else
-            logger.error('error-updating-lrp-state', error: error_name, error_message: e.message)
-            first_exception ||= e
-          end
-        end
-        @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
-        raise first_exception if first_exception
+        process_exceptions(@workpool.exceptions)
       rescue CloudController::Errors::ApiError => e
         logger.info('sync-failed', error: e.name, error_message: e.message)
         bump_freshness = false
@@ -86,6 +71,27 @@ module VCAP::CloudController
       private
 
       attr_reader :config
+
+      def process_exceptions(exceptions)
+        first_exception = nil
+        invalid_lrps = 0
+        exceptions.each do |e|
+          error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
+          if error_name == 'RunnerInvalidRequest'
+            logger.info('synced-invalid-desired-lrps', error: error_name, error_message: e.message)
+            invalid_lrps += 1
+          elsif error_name == 'RunnerError' && e.message['the requested resource already exists']
+            logger.info('ignore-existing-resource', error: error_name, error_message: e.message)
+          elsif error_name == 'RunnerError' && e.message['the requested resource could not be found']
+            logger.info('ignore-deleted-resource', error: error_name, error_message: e.message)
+          else
+            logger.error('error-updating-lrp-state', error: error_name, error_message: e.message)
+            first_exception ||= e
+          end
+        end
+        @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
+        raise first_exception if first_exception
+      end
 
       def for_processes
         last_id = 0
