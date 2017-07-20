@@ -48,6 +48,22 @@ module VCAP::CloudController
         })
       end
 
+      context 'when the app does not have any existing environment variables' do
+        let(:existing_environment_variables) do
+          nil
+        end
+        it 'patches the apps environment_variables' do
+          expect(app_model.environment_variables).to eq(existing_environment_variables)
+
+          app_update.patch(app_model, message)
+          app_model.reload
+
+          expect(app_model.environment_variables).to eq({
+            'override' => 'new-value',
+          })
+        end
+      end
+
       context 'when a requested environment variable has a nil value' do
         let(:request_environment_variables) { { override: nil } }
 
