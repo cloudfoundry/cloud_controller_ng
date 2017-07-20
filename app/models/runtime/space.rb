@@ -39,7 +39,7 @@ module VCAP::CloudController
     many_to_many :security_groups,
     dataset: -> {
       SecurityGroup.left_join(:security_groups_spaces, security_group_id: :id).
-        where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true))
+        where(Sequel.or(security_groups_spaces__space_id: id, security_groups__running_default: true)).distinct(:id)
     },
     eager_loader: ->(spaces_map) {
       space_ids = spaces_map[:id_map].keys
@@ -66,7 +66,7 @@ module VCAP::CloudController
     right_key: :staging_security_group_id,
     dataset: -> {
       SecurityGroup.left_join(:staging_security_groups_spaces, staging_security_group_id: :id).
-        where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true))
+        where(Sequel.or(staging_security_groups_spaces__staging_space_id: id, security_groups__staging_default: true)).distinct(:id)
     },
     eager_loader: ->(spaces_map) {
       space_ids = spaces_map[:id_map].keys

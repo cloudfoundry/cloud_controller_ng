@@ -226,6 +226,19 @@ module VCAP::CloudController
         it 'can be deleted when associated' do
           expect { space.destroy }.not_to raise_error
         end
+
+        context 'when there are multiple spaces' do
+          let!(:another_space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
+          let!(:yet_another_space) { Space.make(security_group_guids: [associated_sg.guid, another_default_sg.guid]) }
+
+          it 'returns booleans for the running_default property' do
+            expect(space.security_groups.first.running_default).to be_in [true, false]
+          end
+
+          it 'only returns the groups for the given space and the global defaults' do
+            expect(space.security_groups).to eq [associated_sg, default_sg, another_default_sg]
+          end
+        end
       end
 
       describe 'staging_security_groups' do
@@ -241,11 +254,24 @@ module VCAP::CloudController
 
         it 'works when eager loading' do
           eager_space = Space.eager(:staging_security_groups).all.first
-          expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+          expect(eager_space.staging_security_groups).to eq [associated_sg, default_sg, another_default_sg]
         end
 
         it 'can be deleted when associated' do
           expect { space.destroy }.not_to raise_error
+        end
+
+        context 'when there are multiple spaces' do
+          let!(:another_space) { Space.make(staging_security_group_guids: [associated_sg.guid, default_sg.guid]) }
+          let!(:yet_another_space) { Space.make(staging_security_group_guids: [associated_sg.guid, another_default_sg.guid]) }
+
+          it 'returns booleans for the staging_default property' do
+            expect(space.staging_security_groups.first.staging_default).to be_in [true, false]
+          end
+
+          it 'only returns the groups for the given space and the global defaults' do
+            expect(space.staging_security_groups).to eq [associated_sg, default_sg, another_default_sg]
+          end
         end
       end
 
