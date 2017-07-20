@@ -5,10 +5,17 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogSchemas
     attr_reader :errors, :create_instance, :update_instance
 
-    def initialize(schema)
+    def initialize(schemas)
       @errors = VCAP::Services::ValidationErrors.new
-      validate_and_populate_create_instance(schema)
-      validate_and_populate_update_instance(schema)
+      @schemas = schemas
+
+      return unless validate_structure([])
+
+      service_instance_path = ['service_instance']
+      return unless validate_structure(service_instance_path)
+
+      @create_instance = validate_and_populate_create(service_instance_path)
+      @update_instance = validate_and_populate_update(service_instance_path)
     end
 
     def valid?
@@ -17,57 +24,50 @@ module VCAP::Services::ServiceBrokers::V2
 
     private
 
-    def validate_and_populate_update_instance(schema)
-      return unless schema
+    attr_reader :schemas
+
+    def validate_structure(path)
+      schema = path.reduce(@schemas) { |current, key|
+        return false unless current.key?(key)
+        current.fetch(key)
+      }
+      return false unless schema
+
       unless schema.is_a? Hash
-        return
+        add_schema_type_error_msg(path, schema)
+        return false
       end
-
-      path = []
-      ['service_instance', 'update', 'parameters'].each do |key|
-        path += [key]
-        schema = schema[key]
-        return nil unless schema
-        unless schema.is_a? Hash
-          return nil
-        end
-      end
-
-      update_instance_schema = schema
-      update_instance_path = path.join('.')
-
-      validate_schema_type(update_instance_path, update_instance_schema)
-      return unless errors.empty?
-
-      @update_instance = update_instance_schema
+      true
     end
 
-    def validate_and_populate_create_instance(schema)
-      return unless schema
-      unless schema.is_a? Hash
-        errors.add("Schemas must be a hash, but has value #{schema.inspect}")
-        return
-      end
+    def validate_and_populate_create(path)
+      create_path = path + ['create']
+      return unless validate_structure(create_path)
 
-      path = []
-      ['service_instance', 'create', 'parameters'].each do |key|
-        path += [key]
-        schema = schema[key]
-        return nil unless schema
+      create_parameter_path = create_path + ['parameters']
+      return unless validate_structure(create_parameter_path)
 
-        unless schema.is_a? Hash
-          errors.add("Schemas #{path.join('.')} must be a hash, but has value #{schema.inspect}")
-          return nil
-        end
-      end
+      create_parameters = @schemas['service_instance']['create']['parameters']
 
-      create_instance_schema = schema
-      create_instance_path = path.join('.')
+      validate_schema(create_parameter_path, create_parameters)
 
-      validate_schema(create_instance_path, create_instance_schema)
       return unless errors.empty?
 
-      @create_instance = create_instance_schema
+      create_parameters
+    end
+
+    def validate_and_populate_update(path)
+      update_path = path + ['update']
+      return unless validate_structure(update_path)
+
+      update_parameter_path = update_path + ['parameters']
+      return unless validate_structure(update_parameter_path)
+
+      update_parameters = @schemas['service_instance']['update']['parameters']
+      validate_schema(update_parameter_path, update_parameters)
+      return unless errors.empty?
+
+      update_parameters
     end
 
     def validate_schema(path, schema)
@@ -91,7 +91,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_schema_size(path, schema)
-      errors.add("Schema #{path} is larger than 64KB") if schema.to_json.length > MAX_SCHEMA_SIZE
+      add_schema_error_msg(path, 'Must not be larger than 64KB') if schema.to_json.length > MAX_SCHEMA_SIZE
     end
 
     def validate_metaschema(path, schema)
@@ -129,7 +129,13 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def add_schema_error_msg(path, err)
-      errors.add("Schema #{path} is not valid. #{err}")
+      path = path.empty? ? '' : " #{path.join('.')}"
+      errors.add("Schema#{path} is not valid. #{err}")
+    end
+
+    def add_schema_type_error_msg(path, value)
+      path = path.empty? ? '' : " #{path.join('.')}"
+      errors.add("Schemas#{path} must be a hash, but has value #{value.inspect}")
     end
   end
 end
