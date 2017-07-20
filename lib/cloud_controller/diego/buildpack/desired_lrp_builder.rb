@@ -30,10 +30,16 @@ module VCAP::CloudController
         end
 
         def root_fs
-          "preloaded:#{@stack}"
+          if @config[:diego][:temporary_oci_buildpack_mode] == 'oci-phase-1'
+            "preloaded+droplet:#{@stack}?droplet=#{URI.encode(@droplet_uri)}"
+          else
+            "preloaded:#{@stack}"
+          end
         end
 
         def setup
+          return nil if @config[:diego][:temporary_oci_buildpack_mode] == 'oci-phase-1'
+
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
               from: @droplet_uri,
