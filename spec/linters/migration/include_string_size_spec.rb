@@ -7,27 +7,80 @@ require 'linters/migration/include_string_size'
 RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
   include CopHelper
 
-  RSpec.shared_examples 'a cop that validates inclusion of string size' do |method_name|
-    it 'registers an offense if string column is added without a specified size' do
-      inspect_source(cop, [
-        'create_table :jobs do',
-        "#{method_name} :my_table, :my_column, String",
-        'end'
-      ])
+  let(:string_size_message) do
+    'Please specify an explicit size for String columns. `size: 255` is a good size for small strings, `size: 16_000` is the maximum for UTF8 strings.'
+  end
+  let(:string_text_message) do
+    'Please use `size: 16_000` (max UTF8 size) instead of `text: true`.'
+  end
 
-      expect(cop.offenses.size).to eq(1)
-      expect(cop.messages).to eq(['Please explicitly set your string size.'])
+  RSpec.shared_examples 'a cop that validates inclusion of string size' do |method_name|
+    context 'with an explicit table name' do
+      it 'registers an offense if string column is added without a specified size', focus: true do
+        inspect_source(cop, ['change do', "#{method_name} :carly, :my_column, String", 'end'])
+
+        expect(cop.offenses.size).to eq(1)
+        expect(cop.messages).to eq([string_size_message])
+      end
+
+      it 'does not register an offense if string has a size' do
+        inspect_source(cop, ['change do', "#{method_name} :rae, :my_column, String, size: 1", 'end'])
+
+        expect(cop.offenses.size).to eq(0)
+        expect(cop.messages).to be_empty
+      end
+
+      it 'does not register an offense if string has a size' do
+        inspect_source(cop, ['change do', "#{method_name} :jepsen, :my_column, Integer", 'end'])
+
+        expect(cop.offenses.size).to eq(0)
+        expect(cop.messages).to be_empty
+      end
+
+      it 'registers an offense if string column is added without a specified size' do
+        inspect_source(cop, [
+          'change do',
+          "#{method_name} :call, :my_column, String, text: true, size: 1",
+          'end'])
+
+        expect(cop.offenses.size).to eq(1)
+        expect(cop.messages).to eq([string_text_message])
+      end
     end
 
-    it 'does not register an offense if string has a size' do
-      inspect_source(cop, [
-        'create_table :jobs do',
-        "#{method_name} :my_table, :my_column, String, size: 1",
-        'end'
-      ])
+    context 'with an implicit table name' do
+      it 'registers an offense if string column is added without a specified size' do
+        inspect_source(cop, [
+          'create_table :jobs do',
+          "#{method_name} :my_column, String",
+          'end'
+        ])
 
-      expect(cop.offenses.size).to eq(0)
-      expect(cop.messages).to be_empty
+        expect(cop.offenses.size).to eq(1)
+        expect(cop.messages).to eq([string_size_message])
+      end
+
+      it 'does not register an offense if string has a size' do
+        inspect_source(cop, [
+          'create_table :jobs do',
+          "#{method_name} :my_column, String, size: 1",
+          'end'
+        ])
+
+        expect(cop.offenses.size).to eq(0)
+        expect(cop.messages).to be_empty
+      end
+
+      it 'does not register an offense if string has a size' do
+        inspect_source(cop, [
+          'create_table :jobs do',
+          "#{method_name} :other_column, Integer",
+          'end'
+        ])
+
+        expect(cop.offenses.size).to eq(0)
+        expect(cop.messages).to be_empty
+      end
     end
   end
 
@@ -50,13 +103,24 @@ RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
       ])
 
       expect(cop.offenses.size).to eq(1)
-      expect(cop.messages).to eq(['Please explicitly set your string size.'])
+      expect(cop.messages).to eq([string_size_message])
     end
 
     it 'does not register an offense if string has a size' do
       inspect_source(cop, [
         'create_table :jobs do',
         'String :my_column, size: 1',
+        'end'
+      ])
+
+      expect(cop.offenses.size).to eq(0)
+      expect(cop.messages).to be_empty
+    end
+
+    it 'does not register an offense for non-string declarations' do
+      inspect_source(cop, [
+        'create_table :jobs do',
+        'Integer :my_column',
         'end'
       ])
 
