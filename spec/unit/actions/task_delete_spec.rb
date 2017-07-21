@@ -51,9 +51,20 @@ module VCAP::CloudController
           task_delete.delete(task_dataset)
 
           event = Event.order(:id).last
+          expect(event).not_to be_nil
           expect(event.type).to eq('audit.app.task.cancel')
           expect(event.metadata['task_guid']).to eq(task1.guid)
           expect(event.actee).to eq(task1.app.guid)
+        end
+
+        it 'creates a task stopped usage event' do
+          task_delete.delete(task_dataset)
+
+          event = AppUsageEvent.order(:id).last
+          expect(event).not_to be_nil
+          expect(event.state).to eq('TASK_STOPPED')
+          expect(event.task_guid).to eq(task1.guid)
+          expect(event.parent_app_guid).to eq(task1.app.guid)
         end
       end
     end
