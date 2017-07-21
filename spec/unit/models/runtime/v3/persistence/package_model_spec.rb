@@ -13,6 +13,14 @@ module VCAP::CloudController
 
         expect(package.errors.full_messages).to include('type cannot have docker data if type is bits')
       end
+
+      it 'can have a password with length 16k characters' do
+        package = PackageModel.new(type: 'docker', docker_password: 'a' * 16000)
+        package2 = PackageModel.new(type: 'docker', docker_password: 'a' * 16001)
+        expect(package).to be_valid
+        expect(package2).to_not be_valid
+        expect(package2.errors.full_messages).to include('docker_password can be up to 16,000 characters')
+      end
     end
 
     describe 'checksum_info' do
