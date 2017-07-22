@@ -32,9 +32,6 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
           expect(result[:links][:download][:method]).to eq('GET')
-
-          expect(result[:links][:stage][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/droplets")
-          expect(result[:links][:stage][:method]).to eq('POST')
         end
       end
 
@@ -53,11 +50,6 @@ module VCAP::CloudController::Presenters::V3
           expect(data[:image]).to eq('registry/image:latest')
           expect(data[:username]).to eq('jarjarbinks')
           expect(data[:password]).to eq('***')
-        end
-
-        it 'includes links to stage' do
-          expect(result[:links][:stage][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/droplets")
-          expect(result[:links][:stage][:method]).to eq('POST')
         end
 
         it 'does not include upload or download links' do

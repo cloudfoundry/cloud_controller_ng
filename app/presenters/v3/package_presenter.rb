@@ -61,7 +61,6 @@ module VCAP::CloudController
             self:     { href: url_builder.build_url(path: "/v3/packages/#{package.guid}") },
             upload:   upload_link,
             download: download_link,
-            stage:    { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/droplets"), method: 'POST' },
             app:      { href: url_builder.build_url(path: "/v3/apps/#{package.app_guid}") },
           }
 

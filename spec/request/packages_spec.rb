@@ -44,7 +44,6 @@ RSpec.describe 'Packages' do
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
-            'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
           }
         }
 
@@ -111,7 +110,6 @@ RSpec.describe 'Packages' do
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
             'app'  => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
-            'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
           }
         }
 
@@ -185,7 +183,6 @@ RSpec.describe 'Packages' do
               'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/upload", 'method' => 'POST' },
               'download' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/download", 'method' => 'GET' },
-              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package2.guid}/droplets", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
             }
           },
@@ -203,7 +200,6 @@ RSpec.describe 'Packages' do
               'self'   => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/upload", 'method' => 'POST' },
               'download' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/download", 'method' => 'GET' },
-              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{package.guid}/droplets", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{guid}" },
             }
           },
@@ -340,7 +336,6 @@ RSpec.describe 'Packages' do
               'self'   => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}" },
               'upload' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/upload", 'method' => 'POST' },
               'download' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/download", 'method' => 'GET' },
-              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{bits_package.guid}/droplets", 'method' => 'POST' },
               'app' => { 'href' => "#{link_prefix}/v3/apps/#{bits_package.app_guid}" },
             }
           },
@@ -358,7 +353,6 @@ RSpec.describe 'Packages' do
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}" },
               'app'  => { 'href' => "#{link_prefix}/v3/apps/#{docker_package.app_guid}" },
-              'stage' => { 'href' => "#{link_prefix}/v3/packages/#{docker_package.guid}/droplets", 'method' => 'POST' },
             }
           }
         ]
@@ -575,7 +569,6 @@ RSpec.describe 'Packages' do
           'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
           'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
-          'stage' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/droplets", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
       }
@@ -631,7 +624,6 @@ RSpec.describe 'Packages' do
           'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
           'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
           'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
-          'stage' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/droplets", 'method' => 'POST' },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
         }
       }
