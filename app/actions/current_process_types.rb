@@ -1,4 +1,3 @@
-require 'cloud_controller/procfile'
 require 'actions/process_create'
 
 module VCAP::CloudController

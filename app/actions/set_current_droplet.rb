@@ -1,5 +1,3 @@
-require 'cloud_controller/procfile'
-
 module VCAP::CloudController
   class SetCurrentDroplet
     class InvalidApp < StandardError; end
