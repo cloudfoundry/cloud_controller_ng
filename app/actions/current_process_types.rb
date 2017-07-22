@@ -24,8 +24,6 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :user_guid, :user_email
-
     def evaluate_processes(app, process_types)
       types = []
       process_types.each do |(type, command)|
