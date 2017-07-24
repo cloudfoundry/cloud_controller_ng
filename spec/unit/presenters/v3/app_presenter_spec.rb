@@ -26,7 +26,7 @@ module VCAP::CloudController::Presenters::V3
 
         links = {
           self: { href: "#{link_prefix}/v3/apps/#{app.guid}" },
-          space: { href: "#{link_prefix}/v2/spaces/#{app.space_guid}" },
+          space: { href: "#{link_prefix}/v3/spaces/#{app.space_guid}" },
           processes: { href: "#{link_prefix}/v3/apps/#{app.guid}/processes" },
           route_mappings: { href: "#{link_prefix}/v3/apps/#{app.guid}/route_mappings" },
           packages: { href: "#{link_prefix}/v3/apps/#{app.guid}/packages" },

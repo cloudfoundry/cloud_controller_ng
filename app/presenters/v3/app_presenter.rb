@@ -31,7 +31,7 @@ module VCAP::CloudController
           links = {
             self:                  { href: url_builder.build_url(path: "/v3/apps/#{app.guid}") },
             environment_variables: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/environment_variables") },
-            space:                 { href: url_builder.build_url(path: "/v2/spaces/#{app.space_guid}") },
+            space:                 { href: url_builder.build_url(path: "/v3/spaces/#{app.space_guid}") },
             processes:             { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/processes") },
             route_mappings:        { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/route_mappings") },
             packages:              { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/packages") },
