@@ -66,7 +66,6 @@ RSpec.describe 'Processes' do
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{web_process.guid}/stats" },
             },
           },
@@ -90,7 +89,6 @@ RSpec.describe 'Processes' do
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{worker_process.guid}/stats" },
             },
           }
@@ -301,7 +299,6 @@ RSpec.describe 'Processes' do
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
@@ -468,7 +465,6 @@ RSpec.describe 'Processes' do
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
@@ -551,7 +547,6 @@ RSpec.describe 'Processes' do
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
@@ -686,7 +681,6 @@ RSpec.describe 'Processes' do
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/stats" },
             },
           },
@@ -710,7 +704,6 @@ RSpec.describe 'Processes' do
               'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}" },
               'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/actions/scale", 'method' => 'POST' },
               'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-              'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
               'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process2.guid}/stats" },
             },
           }
@@ -806,7 +799,6 @@ RSpec.describe 'Processes' do
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
@@ -881,7 +873,6 @@ RSpec.describe 'Processes' do
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
@@ -1059,7 +1050,6 @@ RSpec.describe 'Processes' do
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          'space' => { 'href' => "#{link_prefix}/v2/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
       }
