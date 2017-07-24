@@ -8,7 +8,7 @@ module VCAP::CloudController
         let(:opts) do
           {
             stack: 'potato-stack',
-            droplet_uri: 'droplet-uri',
+            droplet_uri: 'http://droplet-uri.com:1234?token=&@home--->',
             droplet_hash: 'droplet-hash',
             process_guid: 'p-guid',
             ports: ports,
@@ -26,10 +26,12 @@ module VCAP::CloudController
                 'buildpack/potato-stack': '/path/to/lifecycle.tgz',
               },
               use_privileged_containers_for_running: use_privileged_containers_for_running,
+              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
             }
           }
         end
         let(:use_privileged_containers_for_running) { false }
+        let(:temporary_oci_buildpack_mode) { '' }
 
         describe '#start_command' do
           it 'returns the passed in start command' do
@@ -40,6 +42,14 @@ module VCAP::CloudController
         describe '#root_fs' do
           it 'returns a constructed root_fs' do
             expect(builder.root_fs).to eq('preloaded:potato-stack')
+          end
+
+          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+            it 'returns a constructed root_fs + droplet URI' do
+              expect(builder.root_fs).to eq('preloaded+droplet:potato-stack?droplet=http://droplet-uri.com:1234?token=&@home---%3E')
+            end
           end
         end
 
@@ -70,7 +80,7 @@ module VCAP::CloudController
                       download_action: ::Diego::Bbs::Models::DownloadAction.new(
                         to: '.',
                         user: 'vcap',
-                        from: 'droplet-uri',
+                        from: 'http://droplet-uri.com:1234?token=&@home--->',
                         cache_key: 'droplets-p-guid',
                         checksum_algorithm: 'checksum-algorithm',
                         checksum_value: 'checksum-value',
@@ -80,6 +90,14 @@ module VCAP::CloudController
                 )
               )
             )
+          end
+
+          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+            it 'returns nil' do
+              expect(builder.setup).to be_nil
+            end
           end
         end
 
