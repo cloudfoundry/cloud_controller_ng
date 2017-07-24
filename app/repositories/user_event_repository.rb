@@ -1,5 +1,3 @@
-require 'pry'
-
 module VCAP::CloudController
   module Repositories
     class UserEventRepository
