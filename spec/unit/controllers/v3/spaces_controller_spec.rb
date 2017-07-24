@@ -149,7 +149,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         org1.add_user(user)
         org1_space.add_manager(user)
         org1_space.add_auditor(user)
-        org2_space.add_developer(user)
+        org1_space.add_developer(user)
       end
 
       it 'returns the space' do
