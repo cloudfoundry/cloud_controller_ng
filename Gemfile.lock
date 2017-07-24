@@ -197,6 +197,7 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
+    hashdiff (0.3.4)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
     http_parser.rb (0.6.0)
@@ -436,6 +437,7 @@ DEPENDENCIES
   fog-local
   fog-openstack
   google-api-client (~> 0.8.6)
+  hashdiff
   httpclient
   i18n
   loggregator_emitter (~> 5.0)
