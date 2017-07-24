@@ -3,8 +3,17 @@ require 'messages/spaces/spaces_list_message'
 require 'messages/spaces/space_update_isolation_segment_message'
 require 'actions/space_update_isolation_segment'
 require 'fetchers/space_list_fetcher'
+require 'fetchers/space_fetcher'
 
 class SpacesV3Controller < ApplicationController
+  def show
+    space = SpaceFetcher.new.fetch(params[:guid])
+
+    space_not_found! unless space && can_read?(space.guid, space.organization.guid)
+
+    render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
+  end
+
   def index
     message = SpacesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?

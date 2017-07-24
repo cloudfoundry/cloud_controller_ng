@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: space.created_at,
         updated_at: space.updated_at,
         name: space.name,
-        links: {},
+        links: build_links,
       }
     end
 
@@ -14,6 +14,14 @@ module VCAP::CloudController::Presenters::V3
 
     def space
       @resource
+    end
+
+    def build_links
+      url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
+      {
+        self: { href: url_builder.build_url(path: "/v3/spaces/#{space.guid}") },
+      }
     end
   end
 end

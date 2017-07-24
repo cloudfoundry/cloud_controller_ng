@@ -1,0 +1,39 @@
+### Get a space
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]" \
+   }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :space, '/v3/spaces/:guid' %>
+```
+
+This endpoint retrieves the specified space object
+
+#### Definition
+`GET /v3/spaces/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Admin	|
+Space Developer	|
+Read-Only Admin	|
+Global Auditor	|
+Space Manager	|
+Space Auditor	|
+Org Manager	|

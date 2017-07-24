@@ -16,7 +16,29 @@ RSpec.describe 'Spaces' do
     space3.add_developer(user)
   end
 
-  describe 'GET /v3/space' do
+  describe 'GET /v3/spaces/:guid' do
+    it 'returns the requested space' do
+      get "/v3/spaces/#{space1.guid}", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+            'guid' => space1.guid,
+            'name' => 'Catan',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+              }
+            }
+        }
+      )
+    end
+  end
+
+  describe 'GET /v3/spaces' do
     it 'returns a paginated list of orgs the user has access to' do
       get '/v3/spaces?per_page=2', nil, user_header
       expect(last_response.status).to eq(200)
@@ -44,14 +66,22 @@ RSpec.describe 'Spaces' do
               'name' => 'Catan',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {}
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+                }
+              }
             },
             {
               'guid' => space2.guid,
               'name' => 'Ticket to Ride',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {}
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{space2.guid}"
+                }
+              }
             }
           ]
         }

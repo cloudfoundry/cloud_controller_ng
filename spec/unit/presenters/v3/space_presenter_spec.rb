@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(space.created_at)
         expect(result[:updated_at]).to eq(space.updated_at)
         expect(result[:name]).to eq(space.name)
-        expect(result[:links]).to eq({})
+        expect(result[:links][:self][:href]).to match(%r{/v3/spaces/#{space.guid}$})
       end
     end
   end

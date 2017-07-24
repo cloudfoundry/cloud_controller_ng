@@ -38,7 +38,7 @@ module UserHelpers
       org.add_user(current_user)
     end
 
-    case role
+    case role.to_s
     when 'admin'
       set_current_user_as_admin(user: current_user, scopes: scopes)
     when 'admin_read_only'
