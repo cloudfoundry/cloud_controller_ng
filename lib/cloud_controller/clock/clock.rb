@@ -6,6 +6,10 @@ module VCAP::CloudController
     FREQUENT_FUDGE_FACTOR = 1.second.freeze
     DAILY_FUDGE_FACTOR    = 1.minute.freeze
 
+    HIGH_PRIORITY   = 0
+    MEDIUM_PRIORITY = 1
+    LOW_PRIORITY    = 100
+
     def schedule_daily_job(name:, at:, priority:)
       job_opts = {
         name:     name,
