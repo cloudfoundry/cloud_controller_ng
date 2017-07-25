@@ -58,6 +58,30 @@ module VCAP::Services::ServiceBrokers::V2
             }
           end
 
+          context 'when schema has multiple invalid types' do
+            let(:create_instance_schema) {
+              {
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object',
+                'properties' => {
+                  'test' => { 'type' => 'notatype' },
+                  'b2' => { 'type' => 'alsonotatype' }
+                }
+              }
+            }
+
+            its(:valid?) { should be false }
+            its('errors.messages') { should have(2).items }
+            its('errors.messages.first') {
+              should eq "Schema #{path} is not valid. Must conform to JSON Schema Draft 04: " \
+                          "The property '#/properties/test/type' of type string did not match one or more of the required schemas in schema http://json-schema.org/draft-04/schema#"
+            }
+            its('errors.messages.last') {
+              should eq "Schema #{path} is not valid. Must conform to JSON Schema Draft 04: " \
+                          "The property '#/properties/b2/type' of type string did not match one or more of the required schemas in schema http://json-schema.org/draft-04/schema#"
+            }
+          end
+
           context 'when attrs have nil value' do
             {
                 'Schemas service_instance.create': { 'service_instance' => { 'create' => nil } },
