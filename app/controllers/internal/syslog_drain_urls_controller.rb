@@ -4,7 +4,9 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     get '/internal/v4/syslog_drain_urls', :list
+
     def list
+      prepare_aggregate_function
       guid_to_drain_maps = AppModel.
                            join(ServiceBinding, app_guid: :guid).
                            join(Space, guid: :apps__space_guid).
@@ -30,11 +32,11 @@ module VCAP::CloudController
                            all
 
       next_page_token = nil
-      drain_urls      = {}
+      drain_urls = {}
 
       guid_to_drain_maps.each do |guid_and_drains|
         drain_urls[guid_and_drains[:guid]] = {
-          drains:   guid_and_drains[:syslog_drain_urls].split(','),
+          drains: guid_and_drains[:syslog_drain_urls].split(','),
           hostname: hostname_from_app_name(guid_and_drains[:organization_name], guid_and_drains[:space_name], guid_and_drains[:name])
         }
       end
@@ -59,6 +61,12 @@ module VCAP::CloudController
         Sequel.function(:group_concat, column)
       else
         raise 'Unknown database type'
+      end
+    end
+
+    def prepare_aggregate_function
+      if AppModel.db.database_type == :mysql
+        AppModel.db.run('SET SESSION group_concat_max_len = 1000000000')
       end
     end
 

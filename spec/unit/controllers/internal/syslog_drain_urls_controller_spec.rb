@@ -160,6 +160,24 @@ module VCAP::CloudController
         end
       end
 
+      context 'when there are many service bindings on a single app' do
+        before do
+          50.times do |i|
+            ServiceBinding.make(
+              app: app_obj,
+              syslog_drain_url: "syslog://example.com/#{i}",
+              service_instance: UserProvidedServiceInstance.make(space: app_obj.space),
+            )
+          end
+        end
+
+        it 'includes all of the syslog_drain_urls for that app' do
+          get '/internal/v4/syslog_drain_urls', '{}'
+          expect(last_response).to be_successful
+          expect(decoded_results[app_obj.guid]['drains'].length).to eq(52)
+        end
+      end
+
       def decoded_results
         decoded_response.fetch('results')
       end
