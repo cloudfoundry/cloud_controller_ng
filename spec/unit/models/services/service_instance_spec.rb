@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#create' do
+    describe 'validations' do
       context 'when the name is longer than 50 characters' do
         let(:very_long_name) { 's' * 51 }
         it 'refuses to create this service instance' do
@@ -63,19 +63,12 @@ module VCAP::CloudController
         end
       end
 
-      describe 'when is_gateway_service is false' do
-        it 'returns a UserProvidedServiceInstance' do
-          service_instance_attrs[:is_gateway_service] = false
-          service_instance = described_class.create(service_instance_attrs)
-          expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::UserProvidedServiceInstance)
-        end
-      end
+      context 'when the syslog_drain_url is longer than 10,000 characters' do
+        let(:overly_long_url) { "syslog://example.com/#{'s' * 10000}" }
 
-      describe 'when is_gateway_service is true' do
-        it 'returns a ManagedServiceInstance' do
-          service_instance_attrs[:is_gateway_service] = true
-          service_instance = described_class.create(service_instance_attrs)
-          expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
+        it 'refuses to create this service instance' do
+          service_instance_attrs[:syslog_drain_url] = overly_long_url
+          expect { service_instance }.to raise_error Sequel::ValidationFailed, /syslog_drain_url max_length/
         end
       end
 
@@ -131,6 +124,24 @@ module VCAP::CloudController
               UserProvidedServiceInstance.create(service_instance_attrs)
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
           end
+        end
+      end
+    end
+
+    describe '#create' do
+      describe 'when is_gateway_service is false' do
+        it 'returns a UserProvidedServiceInstance' do
+          service_instance_attrs[:is_gateway_service] = false
+          service_instance = described_class.create(service_instance_attrs)
+          expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::UserProvidedServiceInstance)
+        end
+      end
+
+      describe 'when is_gateway_service is true' do
+        it 'returns a ManagedServiceInstance' do
+          service_instance_attrs[:is_gateway_service] = true
+          service_instance = described_class.create(service_instance_attrs)
+          expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
         end
       end
     end

@@ -36,6 +36,17 @@ module VCAP::CloudController
         expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
       end
 
+      context 'when the syslog_drain_url is longer than 10,000 characters' do
+        let(:overly_long_url) { "syslog://example.com/#{'s' * 10000}" }
+
+        it 'refuses to save this service binding' do
+          binding = ServiceBinding.make
+          binding.syslog_drain_url = overly_long_url
+
+          expect { binding.save }.to raise_error Sequel::ValidationFailed, /syslog_drain_url max_length/
+        end
+      end
+
       describe 'changing the binding after creation' do
         subject(:binding) { ServiceBinding.make }
 
@@ -121,7 +132,7 @@ module VCAP::CloudController
 
     describe '#in_suspended_org?' do
       let(:app) { VCAP::CloudController::App.make }
-      subject(:service_binding) {  VCAP::CloudController::ServiceBinding.new(app: app) }
+      subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app) }
 
       context 'when in a suspended organization' do
         before { allow(app).to receive(:in_suspended_org?).and_return(true) }

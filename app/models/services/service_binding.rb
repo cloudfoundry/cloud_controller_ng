@@ -36,6 +36,7 @@ module VCAP::CloudController
       validate_cannot_change_binding
 
       validates_max_length 65_535, :volume_mounts if volume_mounts.present?
+      validates_max_length 10_000, :syslog_drain_url, allow_nil: true
 
       errors.add(:app, :invalid_relation) unless app.is_a?(AppModel)
     end

@@ -82,6 +82,7 @@ module VCAP::CloudController
                                                      ServiceInstance.where(arr.zip(vals))
                                                    end)
       validates_max_length 50, :name
+      validates_max_length 10_000, :syslog_drain_url, allow_nil: true
     end
 
     # Make sure all derived classes use the base access class
