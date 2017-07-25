@@ -101,14 +101,14 @@ module VCAP::Services::ServiceBrokers::V2
       metaschema = JSON.parse(file)
 
       begin
-        errors = JSON::Validator.fully_validate(metaschema, schema)
+        errors = JSON::Validator.fully_validate(metaschema, schema, errors_as_objects: true)
       rescue => e
         add_schema_error_msg(path, e)
         return nil
       end
 
       errors.each do |error|
-        add_schema_error_msg(path, "Must conform to JSON Schema Draft 04: #{error}")
+        add_schema_error_msg(path, "Must conform to JSON Schema Draft 04: #{error[:message]}")
       end
     end
 
