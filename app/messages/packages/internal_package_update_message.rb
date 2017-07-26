@@ -14,16 +14,15 @@ module VCAP::CloudController
 
     validate :requested_state
     validates :error, length: { in: 1..500, message: 'must be between 1 and 500 characters', allow_nil: true }
-    validates :checksums, presence: { message: 'required when setting state to READY' }, if: :requested_ready?
     validate :checksums_data, if: :requested_checksum?
 
     def sha1
-      sha1_hash = checksums.find { |checksum| checksum[:type] == Checksum::SHA1 }
+      sha1_hash = checksums&.find { |checksum| checksum[:type] == Checksum::SHA1 }
       HashUtils.dig(sha1_hash, :value)
     end
 
     def sha256
-      sha256_hash = checksums.find { |checksum| checksum[:type] == Checksum::SHA256 }
+      sha256_hash = checksums&.find { |checksum| checksum[:type] == Checksum::SHA256 }
       HashUtils.dig(sha256_hash, :value)
     end
 
