@@ -12,6 +12,7 @@ gem 'eventmachine', '~> 1.0.9'
 gem 'google-api-client', '~> 0.8.6' # required for fog-google
 gem 'httpclient'
 gem 'i18n'
+gem 'json-schema'
 gem 'loggregator_emitter', '~> 5.0'
 gem 'membrane', '~> 1.0'
 gem 'mime-types', '~> 2.6.2'
