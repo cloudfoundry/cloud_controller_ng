@@ -182,7 +182,7 @@ module VCAP::CloudController
           expect {
             process.save
           }.to_not raise_error
-          expect(app.buildpack).to eq(AutoDetectionBuildpack.new)
+          expect(process.buildpack).to eq(AutoDetectionBuildpack.new)
         end
 
         it 'allows a public url' do
@@ -190,7 +190,7 @@ module VCAP::CloudController
           expect {
             process.save
           }.to_not raise_error
-          expect(app.buildpack).to eq(CustomBuildpack.new('git://user@github.com/repo.git'))
+          expect(process.buildpack).to eq(CustomBuildpack.new('git://user@github.com/repo.git'))
         end
 
         it 'allows a public http url' do
@@ -198,7 +198,7 @@ module VCAP::CloudController
           expect {
             process.save
           }.to_not raise_error
-          expect(app.buildpack).to eq(CustomBuildpack.new('http://example.com/foo'))
+          expect(process.buildpack).to eq(CustomBuildpack.new('http://example.com/foo'))
         end
 
         it 'allows a buildpack name' do
@@ -1582,7 +1582,7 @@ module VCAP::CloudController
             end
 
             it 'returns an auto-detect buildpack' do
-              expect(app.buildpack).to eq(AutoDetectionBuildpack.new)
+              expect(process.buildpack).to eq(AutoDetectionBuildpack.new)
             end
 
             it 'does not save ports to the database' do
