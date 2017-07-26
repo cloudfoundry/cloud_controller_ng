@@ -159,7 +159,7 @@ module VCAP::Services::ServiceBrokers::V2
             its(:valid?) { should be false }
             its('errors.messages') { should have(1).items }
             its('errors.messages.first') {
-              should eq "Schema #{path} is not valid. Custom meta schemas are not supported: Schema not found: http://example.com/schema"
+              should eq "Schema #{path} is not valid. Custom meta schemas are not supported."
             }
           end
 
@@ -396,7 +396,7 @@ module VCAP::Services::ServiceBrokers::V2
             its(:valid?) { should be false }
             its('errors.messages') { should have(1).items }
             its('errors.messages.first') {
-              should eq "Schema #{path} is not valid. Custom meta schemas are not supported: Schema not found: http://example.com/schema"
+              should eq "Schema #{path} is not valid. Custom meta schemas are not supported."
             }
           end
 

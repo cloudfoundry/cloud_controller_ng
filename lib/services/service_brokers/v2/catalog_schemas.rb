@@ -117,8 +117,8 @@ module VCAP::Services::ServiceBrokers::V2
 
       begin
         JSON::Validator.validate!(schema, {})
-      rescue JSON::Schema::SchemaError => e
-        add_schema_error_msg(path, "Custom meta schemas are not supported: #{e}")
+      rescue JSON::Schema::SchemaError
+        add_schema_error_msg(path, 'Custom meta schemas are not supported.')
       rescue JSON::Schema::ReadRefused => e
         add_schema_error_msg(path, "No external references are allowed: #{e}")
       rescue JSON::Schema::ValidationError
