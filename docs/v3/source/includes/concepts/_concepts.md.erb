@@ -393,3 +393,33 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `docker`
 **data** | _object_ | Data is not used by the docker lifecycle. Valid value is `{}`.
+
+## Procfiles
+
+```
+Example Ruby Procfile
+```
+
+```yaml
+web: bundle exec rackup config.ru -p $PORT
+rake: bundle exec rake
+worker: bundle exec rake workers:start
+```
+
+A Procfile enables you to declare required runtime processes, called process types, for your app.
+Processes defined by Procfiles are merged with the processes provided by buildpacks, with the Procfile taking precedence.
+Procfiles must be named `Procfile` exactly, and placed in the root directory of your application.
+
+In a Procfile, you declare one process type per line and use the syntax `PROCESS_TYPE: COMMAND`.
+
+- `PROCESS_TYPE` defines the type of the process.
+- `COMMAND` is the command line to launch the process.
+
+One reason to use a Procfile is specify a start command for buildpacks where a default start command is not provided. Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command.
+Another reason to use a Procfile is to configure a production server or workers for web apps.
+
+#### Web process
+`web` is a [special process type](#web-process-type) that is required for all applications.
+The `web` `PROCESS_TYPE` must be specified by either the buildpack or the Procfile.
+
+

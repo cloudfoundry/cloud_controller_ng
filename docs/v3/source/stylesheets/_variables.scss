@@ -25,7 +25,7 @@ under the License.
 
 // CODE TAB LANGUAGES
 ////////////////////
-$lexed-languages: ("json", "http", "shell", "ruby", "golang");   // used to style code blocks written in a language differently from plaintext code blocks
+$lexed-languages: ("json", "http", "shell", "ruby", "golang", "yaml");   // used to style code blocks written in a language differently from plaintext code blocks
                                                                   // drawn from the Rouge lexer: http://rouge.jayferd.us/demo
                                                                   // only languages used in our docs are listed thus far
 

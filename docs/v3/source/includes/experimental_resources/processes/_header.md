@@ -1,6 +1,10 @@
 ## Processes
 
 Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.
+Processes for an app are defined by the buildpack used to stage the app and can be customized by including a [Procfile](#procfiles) in the application source.
 
-To configure processes for an app, a Procfile should be provided in the application source.
-
+#### Web process type
+* By default, a newly created app will come with one instance of the `web` process and all other process types are scaled to zero
+* Scale the `web` process to zero if it is not required for your app
+* Unless otherwise specified, all routes will be mapped to the `web` process by default
+* Web starts at 1, other processes start at 0 instances (scale down web to 0 if you do not want to run a web process).
