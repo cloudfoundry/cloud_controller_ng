@@ -1,16 +1,16 @@
 module VCAP::CloudController
   class PackageStateCalculator
-    def initialize(app)
-      @latest_build = app.latest_build
-      @latest_droplet = app.latest_droplet
-      @current_droplet = app.current_droplet
-      @latest_package = app.latest_package
+    def initialize(process)
+      @latest_build = process.latest_build
+      @latest_droplet = process.latest_droplet
+      @current_droplet = process.current_droplet
+      @latest_package = process.latest_package
     end
 
     def calculate
-      if app_has_package || app_has_droplet
+      if process_has_package || process_has_droplet
         return 'FAILED' if package_failed_upload || last_build_failed || last_droplet_failed
-        return 'STAGED' if (app_has_droplet || app_has_build) &&
+        return 'STAGED' if (process_has_droplet || process_has_build) &&
           build_completed &&
           latest_droplet_is_current
       end
@@ -35,21 +35,21 @@ module VCAP::CloudController
       @latest_droplet == @current_droplet && !newer_package_than_droplet
     end
 
-    def app_has_package
+    def process_has_package
       @latest_package.present?
     end
 
-    def app_has_droplet
+    def process_has_droplet
       @latest_droplet.present?
     end
 
-    def app_has_build
+    def process_has_build
       @latest_build.present?
     end
 
     def newer_package_than_droplet
-      !app_has_droplet ||
-        app_has_package &&
+      !process_has_droplet ||
+        process_has_package &&
         @current_droplet.try(:package) != @latest_package &&
         @latest_package.created_at >= @latest_droplet.created_at
     end

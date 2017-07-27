@@ -5,15 +5,15 @@ module VCAP::CloudController
         @stagers = stagers
       end
 
-      def stage(app)
-        @stagers.validate_app(app)
+      def stage(process)
+        @stagers.validate_process(process)
 
         message = BuildCreateMessage.new({
-          staging_memory_in_mb: app.memory,
-          staging_disk_in_mb:   app.disk_quota
+          staging_memory_in_mb: process.memory,
+          staging_disk_in_mb:   process.disk_quota
         })
 
-        lifecycle = LifecycleProvider.provide(app.latest_package, message)
+        lifecycle = LifecycleProvider.provide(process.latest_package, message)
 
         # we use non quota validating calculators in v2 b/c app instances are stopped in order for staging to occur
         # so the quota validation that runs when an app is started is sufficient, we do not need to run extra validations
@@ -21,12 +21,12 @@ module VCAP::CloudController
         build_creator = BuildCreate.new(memory_limit_calculator: NonQuotaValidatingStagingMemoryCalculator.new)
 
         build_creator.create_and_stage_without_event(
-          package:             app.latest_package,
+          package:             process.latest_package,
           lifecycle:           lifecycle,
           start_after_staging: true
         )
 
-        app.last_stager_response = build_creator.staging_response
+        process.last_stager_response = build_creator.staging_response
       rescue Diego::Runner::CannotCommunicateWithDiegoError => e
         logger.error("failed communicating with diego backend: #{e.message}")
       rescue BuildCreate::SpaceQuotaExceeded => e

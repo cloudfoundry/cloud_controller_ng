@@ -9,7 +9,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stage: nil) }
 
   before do
-    allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_app)
+    allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
     allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_app).and_return(stager)
     VCAP::CloudController::Buildpack.make
   end

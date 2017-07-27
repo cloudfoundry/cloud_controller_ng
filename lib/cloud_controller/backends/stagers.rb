@@ -12,16 +12,16 @@ module VCAP::CloudController
       @config = config
     end
 
-    def validate_app(app)
-      if app.docker? && FeatureFlag.disabled?(:diego_docker)
+    def validate_process(process)
+      if process.docker? && FeatureFlag.disabled?(:diego_docker)
         raise CloudController::Errors::ApiError.new_from_details('DockerDisabled')
       end
 
-      if app.package_hash.blank?
+      if process.package_hash.blank?
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
       end
 
-      if Buildpack.count == 0 && using_admin_buildpack?(app.app.lifecycle_data.buildpacks)
+      if Buildpack.count == 0 && using_admin_buildpack?(process.app.lifecycle_data.buildpacks)
         raise CloudController::Errors::ApiError.new_from_details('NoBuildpacksFound')
       end
     end

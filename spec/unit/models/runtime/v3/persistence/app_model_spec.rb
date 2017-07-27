@@ -200,7 +200,7 @@ module VCAP::CloudController
 
     describe '#database_uri' do
       let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
-      let(:app) { ProcessModel.make(app: parent_app) }
+      let(:process) { ProcessModel.make(app: parent_app) }
 
       context 'when there are database-like services' do
         before do
@@ -214,7 +214,7 @@ module VCAP::CloudController
         end
 
         it 'returns database uri' do
-          expect(app.reload.database_uri).to eq('mysql2://foo.com')
+          expect(process.reload.database_uri).to eq('mysql2://foo.com')
         end
       end
 
@@ -230,13 +230,13 @@ module VCAP::CloudController
         end
 
         it 'returns nil' do
-          expect(app.reload.database_uri).to be_nil
+          expect(process.reload.database_uri).to be_nil
         end
       end
 
       context 'when there are no services' do
         it 'returns nil' do
-          expect(app.reload.database_uri).to be_nil
+          expect(process.reload.database_uri).to be_nil
         end
       end
 
@@ -248,7 +248,7 @@ module VCAP::CloudController
         end
 
         it 'returns nil' do
-          expect(app.reload.database_uri).to be_nil
+          expect(process.reload.database_uri).to be_nil
         end
       end
     end

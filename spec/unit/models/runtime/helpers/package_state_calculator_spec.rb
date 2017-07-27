@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe 'PackageStateCalculator' do
     describe '#calculate' do
       let(:parent_app) { AppModel.make }
-      let(:app) { ProcessModel.make(app: parent_app) }
-      subject(:calculator) { PackageStateCalculator.new(app) }
+      let(:process) { ProcessModel.make(app: parent_app) }
+      subject(:calculator) { PackageStateCalculator.new(process) }
 
       context 'when no package or droplet exists' do
         it 'is PENDING' do
-          expect(app.latest_package).to be_nil
+          expect(process.latest_package).to be_nil
           expect(calculator.calculate).to eq('PENDING')
         end
       end

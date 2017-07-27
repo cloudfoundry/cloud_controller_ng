@@ -9,18 +9,18 @@ module VCAP::CloudController
       let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }
       let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['admin-buildpack']) }
       let(:app_model) { AppModel.make }
-      let(:app) { AppFactory.make(:buildpack, app: app_model) }
+      let(:process_model) { AppFactory.make(:buildpack, app: app_model) }
 
       before do
         app_model.update(buildpack_lifecycle_data: buildpack_lifecycle_data)
       end
 
       context 'when the app package hash is blank' do
-        before { PackageModel.make(package_hash: nil, app: app) }
+        before { PackageModel.make(package_hash: nil, app: process_model) }
 
         it 'raises' do
           expect {
-            subject.validate_app(app)
+            subject.validate_process(process_model)
           }.to raise_error(CloudController::Errors::ApiError, /app package is invalid/)
         end
       end
@@ -38,7 +38,7 @@ module VCAP::CloudController
 
           it 'raises' do
             expect {
-              subject.validate_app(app)
+              subject.validate_process(process_model)
             }.to raise_error(CloudController::Errors::ApiError, /Docker support has not been enabled/)
           end
         end
@@ -49,7 +49,7 @@ module VCAP::CloudController
           end
 
           it 'does not raise' do
-            expect { subject.validate_app(app) }.not_to raise_error
+            expect { subject.validate_process(process_model) }.not_to raise_error
           end
         end
       end
@@ -64,7 +64,7 @@ module VCAP::CloudController
 
           it 'raises an error' do
             expect {
-              subject.validate_app(app)
+              subject.validate_process(process_model)
             }.to raise_error(CloudController::Errors::ApiError, /There are no buildpacks available/)
           end
         end
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
           it 'does not raise' do
             expect {
-              subject.validate_app(app)
+              subject.validate_process(process_model)
             }.not_to raise_error
           end
         end

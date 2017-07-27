@@ -57,7 +57,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow changing app after it has been set' do
-            binding.app = AppFactory.make(space: binding.app.space)
+            binding.app = AppModel.make
             expect { binding.save }.to raise_error Sequel::ValidationFailed, /app/
           end
         end
@@ -131,18 +131,18 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:app) { VCAP::CloudController::ProcessModel.make }
-      subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app) }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
+      subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app_model) }
 
       context 'when in a suspended organization' do
-        before { allow(app).to receive(:in_suspended_org?).and_return(true) }
+        before { allow(app_model).to receive(:in_suspended_org?).and_return(true) }
         it 'is true' do
           expect(service_binding).to be_in_suspended_org
         end
       end
 
       context 'when in an unsuspended organization' do
-        before { allow(app).to receive(:in_suspended_org?).and_return(false) }
+        before { allow(app_model).to receive(:in_suspended_org?).and_return(false) }
         it 'is false' do
           expect(service_binding).not_to be_in_suspended_org
         end

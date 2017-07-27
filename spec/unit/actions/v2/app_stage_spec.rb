@@ -4,7 +4,7 @@ require 'actions/v2/app_stage'
 module VCAP::CloudController
   module V2
     RSpec.describe AppStage do
-      let(:stagers) { instance_double(Stagers, validate_app: nil) }
+      let(:stagers) { instance_double(Stagers, validate_process: nil) }
 
       subject(:action) { described_class.new(stagers: stagers) }
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
         it 'validates the app before staging' do
           process = AppFactory.make
-          allow(stagers).to receive(:validate_app).with(process).and_raise(StandardError.new)
+          allow(stagers).to receive(:validate_process).with(process).and_raise(StandardError.new)
 
           expect {
             action.stage(process)

@@ -31,12 +31,12 @@ module VCAP::CloudController
     describe 'querying by stack guid' do
       let(:stack1) { Stack.make }
       let(:stack2) { Stack.make }
-      let(:app1) { ProcessModel.make }
-      let(:app2) { ProcessModel.make }
+      let(:process1) { ProcessModel.make }
+      let(:process2) { ProcessModel.make }
 
       before do
-        app1.app.lifecycle_data.update(stack: stack1.name)
-        app2.app.lifecycle_data.update(stack: stack2.name)
+        process1.app.lifecycle_data.update(stack: stack1.name)
+        process2.app.lifecycle_data.update(stack: stack2.name)
       end
 
       it 'filters apps by stack guid' do
@@ -44,7 +44,7 @@ module VCAP::CloudController
         get "/v2/apps?q=stack_guid:#{stack1.guid}"
         expect(last_response.status).to eq(200)
         expect(decoded_response['resources'].length).to eq(1)
-        expect(decoded_response['resources'][0]['entity']['name']).to eq(app1.name)
+        expect(decoded_response['resources'][0]['entity']['name']).to eq(process1.name)
       end
     end
 

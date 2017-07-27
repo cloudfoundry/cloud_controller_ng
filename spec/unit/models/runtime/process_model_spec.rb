@@ -1184,11 +1184,11 @@ module VCAP::CloudController
       describe 'default enable_ssh' do
         context 'when enable_ssh is set explicitly' do
           it 'does not overwrite it with the default' do
-            app1 = ProcessModel.make(enable_ssh: true)
-            expect(app1.enable_ssh).to eq(true)
+            process1 = ProcessModel.make(enable_ssh: true)
+            expect(process1.enable_ssh).to eq(true)
 
-            app2 = ProcessModel.make(enable_ssh: false)
-            expect(app2.enable_ssh).to eq(false)
+            process2 = ProcessModel.make(enable_ssh: false)
+            expect(process2.enable_ssh).to eq(false)
           end
         end
 

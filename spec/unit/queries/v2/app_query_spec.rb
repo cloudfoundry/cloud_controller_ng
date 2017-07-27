@@ -21,11 +21,11 @@ module VCAP::RestAPI
       end
 
       it 'works for IN' do
-        expected_app1 = VCAP::CloudController::ProcessModel.make
-        expected_app2 = VCAP::CloudController::ProcessModel.make
+        expected_process1 = VCAP::CloudController::ProcessModel.make
+        expected_process2 = VCAP::CloudController::ProcessModel.make
         VCAP::CloudController::ProcessModel.make
 
-        org_guids = [expected_app1.organization.guid, expected_app2.organization.guid].join(',')
+        org_guids = [expected_process1.organization.guid, expected_process2.organization.guid].join(',')
 
         results = AppQuery.filtered_dataset_from_query_params(
           VCAP::CloudController::ProcessModel,
@@ -34,7 +34,7 @@ module VCAP::RestAPI
           { q: ["organization_guid IN #{org_guids}"] }
         ).all
 
-        expect(results).to match_array([expected_app1, expected_app2])
+        expect(results).to match_array([expected_process1, expected_process2])
       end
     end
 
@@ -54,13 +54,13 @@ module VCAP::RestAPI
       end
 
       it 'works for IN' do
-        expected_app1 = VCAP::CloudController::ProcessModel.make
-        expected_app2 = VCAP::CloudController::ProcessModel.make
+        expected_process1 = VCAP::CloudController::ProcessModel.make
+        expected_process2 = VCAP::CloudController::ProcessModel.make
         VCAP::CloudController::ProcessModel.make
 
         stack_guids = [
-          VCAP::CloudController::Stack.find(name: expected_app1.app.lifecycle_data.stack).guid,
-          VCAP::CloudController::Stack.find(name: expected_app2.app.lifecycle_data.stack).guid
+          VCAP::CloudController::Stack.find(name: expected_process1.app.lifecycle_data.stack).guid,
+          VCAP::CloudController::Stack.find(name: expected_process2.app.lifecycle_data.stack).guid
         ].join(',')
 
         results = AppQuery.filtered_dataset_from_query_params(
@@ -70,7 +70,7 @@ module VCAP::RestAPI
           { q: ["stack_guid IN #{stack_guids}"] }
         ).all
 
-        expect(results).to match_array([expected_app1, expected_app2])
+        expect(results).to match_array([expected_process1, expected_process2])
       end
     end
 
@@ -91,10 +91,10 @@ module VCAP::RestAPI
       end
 
       it 'works for IN' do
-        expected_app1 = VCAP::CloudController::ProcessModel.make
-        expected_app1.app.update(name: 'expected-name1')
-        expected_app2 = VCAP::CloudController::ProcessModel.make
-        expected_app2.app.update(name: 'expected-name2')
+        expected_process1 = VCAP::CloudController::ProcessModel.make
+        expected_process1.app.update(name: 'expected-name1')
+        expected_process2 = VCAP::CloudController::ProcessModel.make
+        expected_process2.app.update(name: 'expected-name2')
         VCAP::CloudController::ProcessModel.make
 
         results = AppQuery.filtered_dataset_from_query_params(
@@ -104,7 +104,7 @@ module VCAP::RestAPI
           { q: ['name IN expected-name1,expected-name2'] }
         ).all
 
-        expect(results).to match_array([expected_app1, expected_app2])
+        expect(results).to match_array([expected_process1, expected_process2])
       end
     end
   end
