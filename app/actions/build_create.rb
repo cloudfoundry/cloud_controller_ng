@@ -55,7 +55,7 @@ module VCAP::CloudController
         staging_details.staging_guid = build.guid
         lifecycle.create_lifecycle_data_model(build)
 
-        raise BuildError.new('Custom buildpacks are disabled') if using_disabled_custom_buildpack?(build)
+        raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(build)
 
         Repositories::AppUsageEventRepository.new.create_from_build(build, 'STAGING_STARTED')
         app = package.app

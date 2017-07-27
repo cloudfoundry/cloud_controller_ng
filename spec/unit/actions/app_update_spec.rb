@@ -120,13 +120,13 @@ module VCAP::CloudController
         end
 
         before do
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(true)
+          TestConfig.override(disable_custom_buildpacks: true)
         end
 
         it 'raises an InvalidApp error' do
           expect {
             app_update.update(app_model, message, lifecycle)
-          }.to raise_error(AppUpdate::InvalidApp, 'Custom buildpacks are disabled')
+          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does not modify the app' do

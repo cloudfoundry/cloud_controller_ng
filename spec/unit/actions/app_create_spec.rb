@@ -59,14 +59,12 @@ module VCAP::CloudController
         let(:buildpack_identifier) { 'https://github.com/buildpacks/my-special-buildpack' }
 
         context 'when custom buildpacks are disabled' do
-          before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(true)
-          end
+          before { TestConfig.override(disable_custom_buildpacks: true) }
 
           it 'raises an error' do
             expect {
               app_create.create(message, lifecycle)
-            }.to raise_error(AppCreate::InvalidApp)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
           end
 
           it 'does not create an app' do
@@ -77,9 +75,7 @@ module VCAP::CloudController
         end
 
         context 'when custom buildpacks are enabled' do
-          before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(false)
-          end
+          before { TestConfig.override(disable_custom_buildpacks: false) }
 
           it 'allows apps with custom buildpacks' do
             expect {

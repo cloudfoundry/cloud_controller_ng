@@ -95,7 +95,7 @@ module VCAP::CloudController
 
       def validate_custom_buildpack!(process)
         if process.app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
-          raise CloudController::Errors::ApiError.new_from_details('AppInvalid', 'custom buildpacks are disabled')
+          raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
         end
       end
 

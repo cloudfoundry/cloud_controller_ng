@@ -64,9 +64,7 @@ module VCAP::CloudController
       end
 
       context 'when custom buildpacks are disabled' do
-        before do
-          TestConfig.override({ disable_custom_buildpacks: true })
-        end
+        before { TestConfig.override(disable_custom_buildpacks: true) }
 
         let(:request_attrs) do
           {
@@ -79,12 +77,12 @@ module VCAP::CloudController
 
         it 'does NOT allow a public git url' do
           request_attrs['buildpack'] = 'http://example.com/buildpack'
-          expect { app_create.create(request_attrs) }.to raise_error(/custom buildpacks are disabled/)
+          expect { app_create.create(request_attrs) }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does NOT allow a public http url' do
           request_attrs['buildpack'] = 'http://example.com/foo'
-          expect { app_create.create(request_attrs) }.to raise_error(/custom buildpacks are disabled/)
+          expect { app_create.create(request_attrs) }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does allow a buildpack name' do
@@ -95,12 +93,12 @@ module VCAP::CloudController
 
         it 'does not allow a private git url' do
           request_attrs['buildpack'] = 'git@example.com:foo.git'
-          expect { app_create.create(request_attrs) }.to raise_error(/custom buildpacks are disabled/)
+          expect { app_create.create(request_attrs) }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does not allow a private git url with ssh schema' do
           request_attrs['buildpack'] = 'ssh://git@example.com:foo.git'
-          expect { app_create.create(request_attrs) }.to raise_error(/custom buildpacks are disabled/)
+          expect { app_create.create(request_attrs) }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
       end
 

@@ -20,7 +20,7 @@ module VCAP::CloudController
 
         lifecycle.update_lifecycle_data_model(app)
 
-        raise InvalidApp.new('Custom buildpacks are disabled') if using_disabled_custom_buildpack?(app)
+        raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
 
         Repositories::AppEventRepository.new.record_app_update(
           app,

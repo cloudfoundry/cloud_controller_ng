@@ -409,14 +409,14 @@ module VCAP::CloudController
             post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'http://example.com/buildpack'))
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to include('custom buildpacks are disabled')
+            expect(last_response.body).to include('Custom buildpacks are disabled')
           end
 
           it 'does NOT allow a public http url' do
             post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'http://example.com/foo'))
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to include('custom buildpacks are disabled')
+            expect(last_response.body).to include('Custom buildpacks are disabled')
           end
 
           it 'does allow a buildpack name' do
@@ -430,14 +430,14 @@ module VCAP::CloudController
             post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'https://username:password@github.com/johndoe/my-buildpack.git'))
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to include('custom buildpacks are disabled')
+            expect(last_response.body).to include('Custom buildpacks are disabled')
           end
 
           it 'does not allow a private git url with ssh schema' do
             post '/v2/apps', MultiJson.dump(request.merge(buildpack: 'ssh://git@example.com:foo.git'))
 
             expect(last_response.status).to eq(400)
-            expect(last_response.body).to include('custom buildpacks are disabled')
+            expect(last_response.body).to include('Custom buildpacks are disabled')
           end
         end
       end
@@ -822,14 +822,14 @@ module VCAP::CloudController
           put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ buildpack: 'http://example.com/buildpack' })
 
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to include('custom buildpacks are disabled')
+          expect(last_response.body).to include('Custom buildpacks are disabled')
         end
 
         it 'does NOT allow a public http url' do
           put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ buildpack: 'http://example.com/foo' })
 
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to include('custom buildpacks are disabled')
+          expect(last_response.body).to include('Custom buildpacks are disabled')
         end
 
         it 'does allow a buildpack name' do
@@ -843,14 +843,14 @@ module VCAP::CloudController
           put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ buildpack: 'git@example.com:foo.git' })
 
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to include('custom buildpacks are disabled')
+          expect(last_response.body).to include('Custom buildpacks are disabled')
         end
 
         it 'does not allow a private git url with ssh schema' do
           put "/v2/apps/#{app_obj.guid}", MultiJson.dump({ buildpack: 'ssh://git@example.com:foo.git' })
 
           expect(last_response.status).to eq(400)
-          expect(last_response.body).to include('custom buildpacks are disabled')
+          expect(last_response.body).to include('Custom buildpacks are disabled')
         end
       end
 

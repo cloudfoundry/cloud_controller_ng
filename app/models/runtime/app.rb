@@ -501,7 +501,6 @@ module VCAP::CloudController
       routes.map(&:uri)
     end
 
-    # TODO: change this to buildpacks
     def buildpack
       app.lifecycle_data.buildpack_models.first
     end

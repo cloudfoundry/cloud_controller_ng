@@ -267,9 +267,7 @@ module VCAP::CloudController
         let!(:app) { AppModel.make(space: space) }
 
         context 'when custom buildpacks are disabled' do
-          before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:disable_custom_buildpacks).and_return(true)
-          end
+          before { TestConfig.override(disable_custom_buildpacks: true) }
 
           context 'when the custom buildpack is inherited from the app' do
             let(:request) do
@@ -286,7 +284,7 @@ module VCAP::CloudController
             it 'raises an exception' do
               expect {
                 action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to raise_error(BuildCreate::BuildError, /Custom buildpacks are disabled/)
+              }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
             end
 
             it 'does not create any DB records' do
@@ -307,7 +305,7 @@ module VCAP::CloudController
             it 'raises an exception' do
               expect {
                 action.create_and_stage(package: package, lifecycle: lifecycle)
-              }.to raise_error(BuildCreate::BuildError, /Custom buildpacks are disabled/)
+              }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
             end
 
             it 'does not create any DB records' do

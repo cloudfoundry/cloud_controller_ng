@@ -21,10 +21,6 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
       end
 
-      if app.buildpack.custom? && !app.custom_buildpacks_enabled?
-        raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled')
-      end
-
       if Buildpack.count == 0 && app.buildpack.custom? == false
         raise CloudController::Errors::ApiError.new_from_details('NoBuildpacksFound')
       end

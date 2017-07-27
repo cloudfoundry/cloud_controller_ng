@@ -31,49 +31,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a custom buildpack is specified' do
-        let(:buildpack) do
-          instance_double(CustomBuildpack, custom?: true)
-        end
-
-        before do
-          allow(app).to receive(:buildpack_specified?).and_return(true)
-        end
-
-        context 'and custom buildpacks are disabled' do
-          let(:custom_buildpacks_enabled?) do
-            false
-          end
-
-          it 'raises' do
-            expect {
-              subject.validate_app(app)
-            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
-          end
-        end
-      end
-
-      context 'when an admin buildpack is specified' do
-        let(:buildpack) { instance_double(Buildpack, custom?: false) }
-
-        before do
-          allow(app).to receive(:buildpack_specified?).and_return(true)
-          allow(Buildpack).to receive(:count).and_return(1)
-        end
-
-        context 'and custom buildpacks are disabled' do
-          let(:custom_buildpacks_enabled?) do
-            false
-          end
-
-          it 'does not raise' do
-            expect {
-              subject.validate_app(app)
-            }.to_not raise_error
-          end
-        end
-      end
-
       context 'with a docker app' do
         let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: true) }
         let(:docker) { true }

@@ -73,16 +73,14 @@ module VCAP::CloudController
         let(:process) { App.make }
         let(:app) { process.app }
 
-        before do
-          TestConfig.override({ disable_custom_buildpacks: true })
-        end
+        before { TestConfig.override(disable_custom_buildpacks: true) }
 
         it 'does NOT allow a public git url' do
           request_attrs = { 'buildpack' => 'http://example.com/buildpack' }
 
           expect {
             app_update.update(app, process, request_attrs)
-          }.to raise_error(/custom buildpacks are disabled/)
+          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does NOT allow a public http url' do
@@ -90,7 +88,7 @@ module VCAP::CloudController
 
           expect {
             app_update.update(app, process, request_attrs)
-          }.to raise_error(/custom buildpacks are disabled/)
+          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does allow a buildpack name' do
@@ -107,7 +105,7 @@ module VCAP::CloudController
 
           expect {
             app_update.update(app, process, request_attrs)
-          }.to raise_error(/custom buildpacks are disabled/)
+          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
 
         it 'does not allow a private git url with ssh schema' do
@@ -115,7 +113,7 @@ module VCAP::CloudController
 
           expect {
             app_update.update(app, process, request_attrs)
-          }.to raise_error(/custom buildpacks are disabled/)
+          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
         end
       end
 
