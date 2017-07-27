@@ -1,27 +1,33 @@
 module VCAP::CloudController
   module Repositories
     class ServiceBindingEventRepository
-      def self.record_create(service_binding, user_audit_info, request)
-        attrs         = request.dup.stringify_keys
-        attrs['data'] = 'PRIVATE DATA HIDDEN' if attrs.key?('data')
-
-        record_event(
-          type:            'audit.service_binding.create',
-          service_binding: service_binding,
-          user_audit_info: user_audit_info,
-          metadata:        { request: attrs }
-        )
-      end
-
-      def self.record_delete(service_binding, user_audit_info)
-        record_event(
-          type:            'audit.service_binding.delete',
-          service_binding: service_binding,
-          user_audit_info: user_audit_info
-        )
-      end
-
       class << self
+        def record_create(service_binding, user_audit_info, request)
+          attrs         = request.dup.stringify_keys
+          attrs['data'] = 'PRIVATE DATA HIDDEN' if attrs.key?('data')
+
+          record_event(
+            type:            'audit.service_binding.create',
+            service_binding: service_binding,
+            user_audit_info: user_audit_info,
+            metadata:        { request: attrs }
+          )
+        end
+
+        def record_delete(service_binding, user_audit_info)
+          record_event(
+            type: 'audit.service_binding.delete',
+            service_binding: service_binding,
+            user_audit_info: user_audit_info,
+            metadata: {
+              request: {
+                app_guid: service_binding.app_guid,
+                service_instance_guid: service_binding.service_instance_guid,
+              }
+            }
+          )
+        end
+
         private
 
         def record_event(type:, service_binding:, user_audit_info:, metadata: {})

@@ -211,9 +211,9 @@ module VCAP::CloudController
 
       before do
         allow(Repositories::ServiceUsageEventRepository).to receive(:new).and_return(event_repository)
-        allow(event_repository).to receive(:record_service_binding_event)
         allow(event_repository).to receive(:deleted_event_from_service_instance)
         allow(event_repository).to receive(:record_service_instance_event)
+        allow(event_repository).to receive(:user_audit_info).and_return(instance_double(UserAuditInfo).as_null_object)
       end
 
       it 'destroys all models that depend on it' do

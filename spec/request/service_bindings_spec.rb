@@ -192,20 +192,21 @@ RSpec.describe 'v3 service bindings' do
         expect(service_binding.exists?).to be_falsey
 
         event = VCAP::CloudController::Event.last
-        expect(event.values).to match(
-          hash_including({
-                           type: 'audit.service_binding.delete',
-                           actee: service_binding.guid,
-                           actee_type: 'service_binding',
-                           actee_name: '',
-                           actor: user.guid,
-                           actor_type: 'user',
-                           actor_username: user_name,
-                           space_guid: space.guid,
-                           organization_guid: space.organization.guid,
-                           metadata: '{}'
-                         })
-                                )
+        expect(event.type).to eq('audit.service_binding.delete')
+        expect(event.actee).to eq(service_binding.guid)
+        expect(event.actee_type).to eq('service_binding')
+        expect(event.actee_name).to eq('')
+        expect(event.actor).to eq(user.guid)
+        expect(event.actor_type).to eq('user')
+        expect(event.actor_username).to eq(user_name)
+        expect(event.space_guid).to eq(space.guid)
+        expect(event.organization_guid).to eq(space.organization.guid)
+        expect(event.metadata).to eq(
+          'request' => {
+            'app_guid' => service_binding.app_guid,
+            'service_instance_guid' => service_binding.service_instance_guid,
+          }
+        )
       end
     end
 
@@ -219,20 +220,21 @@ RSpec.describe 'v3 service bindings' do
         expect(service_binding.exists?).to be_falsey
 
         event = VCAP::CloudController::Event.last
-        expect(event.values).to match(
-          hash_including({
-                           type: 'audit.service_binding.delete',
-                           actee: service_binding.guid,
-                           actee_type: 'service_binding',
-                           actee_name: '',
-                           actor: user.guid,
-                           actor_type: 'user',
-                           actor_username: user_name,
-                           space_guid: space.guid,
-                           organization_guid: space.organization.guid,
-                           metadata: '{}'
-                         })
-                                )
+        expect(event.type).to eq('audit.service_binding.delete')
+        expect(event.actee).to eq(service_binding.guid)
+        expect(event.actee_type).to eq('service_binding')
+        expect(event.actee_name).to eq('')
+        expect(event.actor).to eq(user.guid)
+        expect(event.actor_type).to eq('user')
+        expect(event.actor_username).to eq(user_name)
+        expect(event.space_guid).to eq(space.guid)
+        expect(event.organization_guid).to eq(space.organization.guid)
+        expect(event.metadata).to eq(
+          'request' => {
+            'app_guid' => service_binding.app_guid,
+            'service_instance_guid' => service_binding.service_instance_guid,
+          }
+        )
       end
     end
   end

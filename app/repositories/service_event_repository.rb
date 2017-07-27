@@ -104,23 +104,6 @@ module VCAP::CloudController
         create_event("audit.user_provided_service_instance.#{type}", user_actor, actee, metadata, space_data)
       end
 
-      def record_service_binding_event(type, service_binding, params=nil)
-        metadata = { request: {} }
-
-        unless type == :delete
-          metadata[:request][:service_instance_guid] = service_binding.service_instance.guid
-          metadata[:request][:app_guid]              = service_binding.app.guid
-        end
-
-        actee = {
-          actee:      service_binding.guid,
-          actee_type: 'service_binding',
-          actee_name: '',
-        }
-        space_data = { space: service_binding.space }
-        create_event("audit.service_binding.#{type}", user_actor, actee, metadata, space_data)
-      end
-
       def record_service_key_event(type, service_key, params=nil)
         metadata = { request: {} }
 

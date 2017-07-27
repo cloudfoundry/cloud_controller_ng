@@ -1,3 +1,5 @@
+require 'actions/service_binding_delete'
+
 module VCAP::CloudController
   class ServiceInstancePurger
     def initialize(event_repository)
@@ -14,7 +16,7 @@ module VCAP::CloudController
 
         service_instance.service_bindings.each do |binding|
           binding.destroy
-          @event_repository.record_service_binding_event('delete', binding, nil)
+          Repositories::ServiceBindingEventRepository.record_delete(binding, @event_repository.user_audit_info)
         end
 
         service_instance.service_keys.each do |key|

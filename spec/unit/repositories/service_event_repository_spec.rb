@@ -490,39 +490,6 @@ module VCAP::CloudController
         end
       end
 
-      describe '#record_service_binding_event' do
-        let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
-        it 'records an event' do
-          repository.record_service_binding_event(:create, service_binding)
-          event = Event.first(type: 'audit.service_binding.create')
-          metadata = {
-            'request' => {
-              'service_instance_guid' => service_binding.service_instance.guid,
-              'app_guid' => service_binding.app.guid
-            }
-          }
-
-          expect(event.actor).to eq user.guid
-          expect(event.actor_type).to eq 'user'
-          expect(event.actor_name).to eq email
-          expect(event.actor_username).to eq user_name
-          expect(event.actee).to eq service_binding.guid
-          expect(event.actee_type).to eq 'service_binding'
-          expect(event.actee_name).to eq ''
-          expect(event.space_guid).to eq service_binding.space.guid
-          expect(event.metadata).to eq(metadata)
-        end
-
-        context 'when the action is :delete' do
-          it 'contains empty metadata' do
-            repository.record_service_binding_event(:delete, service_binding)
-            event = Event.first(type: 'audit.service_binding.delete')
-
-            expect(event.metadata).to eq({ 'request' => {} })
-          end
-        end
-      end
-
       describe '#record_service_key_event' do
         let(:service_key) { VCAP::CloudController::ServiceKey.make }
 
@@ -629,12 +596,6 @@ module VCAP::CloudController
         specify 'record_user_provided_service_instance_event logs an error but does not propagate errors' do
           service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
           repository.record_user_provided_service_instance_event(:create, service_instance, {})
-          expect(logger).to have_received(:error)
-        end
-
-        specify 'record_service_binding_event logs an error but does not propagate errors' do
-          service_binding = VCAP::CloudController::ServiceBinding.make
-          repository.record_service_binding_event(:create, service_binding, {})
           expect(logger).to have_received(:error)
         end
 

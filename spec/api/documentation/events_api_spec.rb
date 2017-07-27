@@ -1118,9 +1118,35 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
       process         = VCAP::CloudController::AppFactory.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
 
-      service_event_repository.record_service_binding_event(:create, service_binding)
+      VCAP::CloudController::Repositories::ServiceBindingEventRepository.record_create(service_binding, user_audit_info, { foo: 'bar' })
 
       client.get '/v2/events?q=type:audit.service_binding.create', {}, headers
+      expect(status).to eq(200)
+      standard_entity_response parsed_response['resources'][0], :event, expected_values: {
+        actor_type: 'user',
+        actor:      test_user.guid,
+        actor_name: test_user_email,
+        actee_type: 'service_binding',
+        actee:      service_binding.guid,
+        actee_name: '',
+        space_guid: instance.space_guid,
+        metadata:   {
+          'request' => {
+            'foo' => 'bar',
+          }
+        }
+      }
+    end
+
+    example 'List Service Binding Delete Events' do
+      space           = VCAP::CloudController::Space.make
+      instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
+      process         = VCAP::CloudController::AppFactory.make(space: space)
+      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
+
+      VCAP::CloudController::Repositories::ServiceBindingEventRepository.record_delete(service_binding, user_audit_info)
+
+      client.get '/v2/events?q=type:audit.service_binding.delete', {}, headers
       expect(status).to eq(200)
       standard_entity_response parsed_response['resources'][0], :event, expected_values: {
         actor_type: 'user',
@@ -1135,30 +1161,6 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
             'service_instance_guid' => instance.guid,
             'app_guid'              => process.guid,
           }
-        }
-      }
-    end
-
-    example 'List Service Binding Delete Events' do
-      space           = VCAP::CloudController::Space.make
-      instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-      process         = VCAP::CloudController::AppFactory.make(space: space)
-      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
-
-      service_event_repository.record_service_binding_event(:delete, service_binding)
-
-      client.get '/v2/events?q=type:audit.service_binding.delete', {}, headers
-      expect(status).to eq(200)
-      standard_entity_response parsed_response['resources'][0], :event, expected_values: {
-        actor_type: 'user',
-        actor:      test_user.guid,
-        actor_name: test_user_email,
-        actee_type: 'service_binding',
-        actee:      service_binding.guid,
-        actee_name: '',
-        space_guid: instance.space_guid,
-        metadata:   {
-          'request' => {}
         }
       }
     end

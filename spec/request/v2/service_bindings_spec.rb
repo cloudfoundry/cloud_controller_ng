@@ -362,7 +362,14 @@ RSpec.describe 'ServiceBindings' do
       expect(event.type).to eq('audit.service_binding.delete')
       expect(event.actee).to eq(service_binding.guid)
       expect(event.actee_type).to eq('service_binding')
-      expect(event.metadata).to match({})
+      expect(event.metadata).to match(
+        {
+          'request' => {
+            'app_guid' => service_binding.app_guid,
+            'service_instance_guid' => service_binding.service_instance_guid,
+          }
+        }
+      )
     end
   end
 end
