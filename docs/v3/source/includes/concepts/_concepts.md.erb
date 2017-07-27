@@ -5,6 +5,10 @@ The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to prese
 
 Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the [UAA API Documentation](http://docs.cloudfoundry.org/api/uaa/index.html)
 
+<aside class="notice">
+Use the cf cli to obtain a bearer token: cf oauth-token
+</aside>
+
 ## Authorization
 
 Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the [V2 API](http://apidocs.cloudfoundry.org/).
