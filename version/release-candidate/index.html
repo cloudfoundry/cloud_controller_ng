@@ -758,6 +758,33 @@ and the docker image is executed inside of it.</p>
 </tr>
 </tbody></table>
 
+<h2 id="procfiles">Procfiles</h2>
+<pre class="highlight plaintext"><code>Example Ruby Procfile
+</code></pre>
+<pre class="highlight yaml"><code><span class="s">web</span><span class="pi">:</span> <span class="s">bundle exec rackup config.ru -p $PORT</span>
+<span class="s">rake</span><span class="pi">:</span> <span class="s">bundle exec rake</span>
+<span class="s">worker</span><span class="pi">:</span> <span class="s">bundle exec rake workers:start</span>
+</code></pre>
+
+<p>A Procfile enables you to declare required runtime processes, called process types, for your app.
+Processes defined by Procfiles are merged with the processes provided by buildpacks, with the Procfile taking precedence.
+Procfiles must be named <code class="prettyprint">Procfile</code> exactly, and placed in the root directory of your application.</p>
+
+<p>In a Procfile, you declare one process type per line and use the syntax <code class="prettyprint">PROCESS_TYPE: COMMAND</code>.</p>
+
+<ul>
+<li><code class="prettyprint">PROCESS_TYPE</code> defines the type of the process.</li>
+<li><code class="prettyprint">COMMAND</code> is the command line to launch the process.</li>
+</ul>
+
+<p>One reason to use a Procfile is specify a start command for buildpacks where a default start command is not provided. Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command.
+Another reason to use a Procfile is to configure a production server or workers for web apps.</p>
+
+<h4 id="web-process">Web process</h4>
+
+<p><code class="prettyprint">web</code> is a <a href="#web-process-type">special process type</a> that is required for all applications.
+The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE</code> must be specified by either the buildpack or the Procfile.</p>
+
           <h1 id="workflows">Workflows</h1>
 
 <p>Many users will think of interactions with Cloud Foundry in terms of a single operation like <code class="prettyprint">cf push</code> in order to upload an application to the platform, have it compiled, and schedule it to be run.
@@ -5699,9 +5726,17 @@ the request in that case. Clients may need to follow the redirect without includ
 
           <h2 id="processes">Processes</h2>
 
-<p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.</p>
+<p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.
+Processes for an app are defined by the buildpack used to stage the app and can be customized by including a <a href="#procfiles">Procfile</a> in the application source.</p>
 
-<p>To configure processes for an app, a Procfile should be provided in the application source.</p>
+<h4 id="web-process-type">Web process type</h4>
+
+<ul>
+<li>By default, a newly created app will come with one instance of the <code class="prettyprint">web</code> process and all other process types are scaled to zero</li>
+<li>Scale the <code class="prettyprint">web</code> process to zero if it is not required for your app</li>
+<li>Unless otherwise specified, all routes will be mapped to the <code class="prettyprint">web</code> process by default</li>
+<li>Web starts at 1, other processes start at 0 instances (scale down web to 0 if you do not want to run a web process).</li>
+</ul>
 
           <h3 id="the-process-object">The process object</h3>
 
