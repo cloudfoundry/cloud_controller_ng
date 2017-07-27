@@ -10,12 +10,13 @@ module VCAP::CloudController
 
         def to_hash
           result = {
+            var: {},
             links: build_links
           }
 
           if !app.environment_variables.nil?
             app.environment_variables.each do |key, value|
-              result[key.to_sym] = value
+              result[:var][key.to_sym] = value
             end
           end
 

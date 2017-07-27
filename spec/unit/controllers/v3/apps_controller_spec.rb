@@ -1232,8 +1232,10 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     let(:expected_success_response) do
       {
-        'meep'  => 'moop',
-        'beep'  => 'boop',
+        'var' => {
+          'meep'  => 'moop',
+          'beep'  => 'boop'
+        },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
           'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
@@ -1345,6 +1347,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200)
         expect(parsed_body).to eq({
           'links' => expected_success_response['links'],
+          'var' => {},
         })
       end
     end
@@ -1358,10 +1361,12 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     let(:expected_success_response) do
       {
-        'override' => 'new-value',
-        'preserve' => 'value-to-keep',
-        'new-key'  => 'another-new-value',
-        'links'    => {
+        'var' => {
+          'override' => 'new-value',
+          'preserve' => 'value-to-keep',
+          'new-key'  => 'another-new-value'
+        },
+        'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
           'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
@@ -1370,8 +1375,10 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     let(:request_body) do
       {
-        'override' => 'new-value',
-        'new-key'  => 'another-new-value',
+        'var' => {
+          'override' => 'new-value',
+          'new-key'  => 'another-new-value'
+        }
       }
     end
 
@@ -1431,7 +1438,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'when given an invalid request' do
       let(:request_body) do
         {
-          'PORT' => 8080,
+          'var' => {
+            'PORT' => 8080
+          }
         }
       end
 

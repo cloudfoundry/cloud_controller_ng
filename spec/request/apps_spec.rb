@@ -1059,8 +1059,10 @@ RSpec.describe 'Apps' do
       )
 
       update_request = {
-        override: 'new-value',
-        new_key:  'brand-new-value'
+        var: {
+          override: 'new-value',
+          new_key:  'brand-new-value'
+        }
       }
 
       patch "/v3/apps/#{app_model.guid}/environment_variables", update_request.to_json, user_header
@@ -1069,10 +1071,12 @@ RSpec.describe 'Apps' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
-          'override' => 'new-value',
-          'new_key'  => 'brand-new-value',
-          'preserve' => 'keep',
-          'links'    => {
+          'var' => {
+            'override' => 'new-value',
+            'new_key'  => 'brand-new-value',
+            'preserve' => 'keep'
+          },
+          'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
             'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           }
@@ -1091,7 +1095,9 @@ RSpec.describe 'Apps' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
-          'meep'  => 'moop',
+          'var' => {
+            'meep' => 'moop'
+          },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
             'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },

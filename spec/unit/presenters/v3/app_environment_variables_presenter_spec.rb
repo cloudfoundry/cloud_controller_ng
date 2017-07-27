@@ -16,7 +16,9 @@ module VCAP::CloudController::Presenters::V3
 
       it 'presents the app environment variables as json' do
         expect(result).to eq({
-          CUSTOM_ENV_VAR: 'hello',
+          var: {
+            CUSTOM_ENV_VAR: 'hello'
+          },
           links: {
             self: {
               href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables",

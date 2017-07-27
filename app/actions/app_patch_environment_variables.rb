@@ -12,8 +12,8 @@ module VCAP::CloudController
       app.db.transaction do
         app.lock!
 
-        if message.requested?(:environment_variables)
-          new_values                     = message.environment_variables
+        if message.requested?(:var)
+          new_values                     = message.var
           app.environment_variables      = existing_environment_variables_for(app).merge(new_values).reject { |_, v| v.nil? }
           app.save
         end
