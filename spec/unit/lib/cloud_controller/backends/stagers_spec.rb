@@ -6,23 +6,17 @@ module VCAP::CloudController
     let(:config) { TestConfig.config }
 
     describe '#validate_app' do
-      let(:app) do
-        instance_double(App,
-          docker?:                    docker,
-          package_hash:               package_hash,
-          buildpack:                  buildpack,
-          custom_buildpacks_enabled?: custom_buildpacks_enabled?,
-          buildpack_specified?:       false,
-        )
+      let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }
+      let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['admin-buildpack']) }
+      let(:app_model) { AppModel.make }
+      let(:app) { AppFactory.make(:buildpack, app: app_model) }
+
+      before do
+        app_model.update(buildpack_lifecycle_data: buildpack_lifecycle_data)
       end
 
-      let(:package_hash) { 'fake-package-hash' }
-      let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
-      let(:docker) { false }
-      let(:custom_buildpacks_enabled?) { true }
-
       context 'when the app package hash is blank' do
-        let(:package_hash) { '' }
+        before { PackageModel.make(package_hash: nil, app: app) }
 
         it 'raises' do
           expect {
@@ -32,8 +26,10 @@ module VCAP::CloudController
       end
 
       context 'with a docker app' do
-        let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: true) }
-        let(:docker) { true }
+        let(:app_model) { AppModel.make(:docker) }
+        let(:app) { AppFactory.make(app: app_model, docker_image: 'docker/image') }
+
+        before { app_model.update(buildpack_lifecycle_data: nil) }
 
         context 'and Docker disabled' do
           before do
@@ -61,17 +57,21 @@ module VCAP::CloudController
       context 'when there are no buildpacks installed on the system' do
         before { Buildpack.dataset.delete }
 
-        context 'and a custom buildpack is NOT specified' do
-          it 'raises NoBuildpacksFound' do
+        context 'and an admin buildpack is specified' do
+          let(:buildpack_lifecycle_data) do
+            BuildpackLifecycleDataModel.make(buildpacks: %w(https://buildpacks.gov admin-buildpack))
+          end
+
+          it 'raises an error' do
             expect {
               subject.validate_app(app)
             }.to raise_error(CloudController::Errors::ApiError, /There are no buildpacks available/)
           end
         end
 
-        context 'and a custom buildpack is specified' do
-          let(:buildpack) do
-            instance_double(CustomBuildpack, custom?: true)
+        context 'and custom buildpacks are specified' do
+          let(:buildpack_lifecycle_data) do
+            BuildpackLifecycleDataModel.make(buildpacks: %w(https://buildpacks.gov http://custom-buildpack.example.com))
           end
 
           it 'does not raise' do

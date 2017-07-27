@@ -21,7 +21,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'The app package hash is empty')
       end
 
-      if Buildpack.count == 0 && app.buildpack.custom? == false
+      if Buildpack.count == 0 && using_admin_buildpack?(app.app.lifecycle_data.buildpacks)
         raise CloudController::Errors::ApiError.new_from_details('NoBuildpacksFound')
       end
     end
@@ -31,6 +31,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def using_admin_buildpack?(buildpacks)
+      !buildpacks.all? { |buildpack_name| UriUtils.is_buildpack_uri?(buildpack_name) }
+    end
 
     def dependency_locator
       CloudController::DependencyLocator.instance
