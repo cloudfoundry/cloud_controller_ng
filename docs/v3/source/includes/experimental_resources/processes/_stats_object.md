@@ -4,7 +4,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Process type. A unique identifier for processes belonging to an app.
 **index** | _integer_ | The zero-based index of running instances.
-**state** | _string_ | The state of the instance. Valid values are `RUNNING`, `CRASHED`, `STARTING`.
+**state** | _string_ | The state of the instance. Valid values are `RUNNING`, `CRASHED`, `STARTING`, `DOWN`.
 **usage.time** | _datetime_ | The time when the usage was requested.
 **usage.cpu** | _number_ | The current cpu usage of the instance.
 **usage.mem** | _integer_ | The current memory usage of the instance.
