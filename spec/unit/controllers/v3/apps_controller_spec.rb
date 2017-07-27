@@ -432,7 +432,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     it 'returns a 200 OK and the app' do
-      put :update, guid: app_model.guid, body: req_body
+      patch :update, guid: app_model.guid, body: req_body
 
       expect(response.status).to eq 200
       expect(parsed_body['guid']).to eq(app_model.guid)
@@ -444,7 +444,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the app is invalid' do
         it 'returns an UnprocessableEntity error' do
-          put :update, guid: app_model.guid, body: req_body
+          patch :update, guid: app_model.guid, body: req_body
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -474,7 +474,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'uses the existing lifecycle on app' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
             expect(response.status).to eq 200
 
             app_model.reload
@@ -490,7 +490,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
 
           it 'uses the existing lifecycle on app' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
             expect(response.status).to eq 200
 
             app_model.reload
@@ -511,7 +511,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'returns an UnprocessableEntity error' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -532,7 +532,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'sets the buildpack to the provided buildpack' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
             expect(app_model.reload.lifecycle_data.buildpacks).to eq([buildpack_url])
           end
         end
@@ -555,7 +555,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           it 'sets the buildpack to nil' do
             expect(app_model.lifecycle_data.buildpacks).to_not be_empty
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
             expect(app_model.reload.lifecycle_data.buildpacks).to be_empty
           end
         end
@@ -577,7 +577,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             before(:each) { VCAP::CloudController::Stack.create(name: 'redhat') }
 
             it 'sets the stack to the user provided stack' do
-              put :update, guid: app_model.guid, body: req_body
+              patch :update, guid: app_model.guid, body: req_body
               expect(app_model.lifecycle_data.stack).to eq('redhat')
             end
           end
@@ -596,7 +596,7 @@ RSpec.describe AppsV3Controller, type: :controller do
             end
 
             it 'returns an UnprocessableEntity error' do
-              put :update, guid: app_model.guid, body: req_body
+              patch :update, guid: app_model.guid, body: req_body
 
               expect(response.body).to include 'UnprocessableEntity'
               expect(response.status).to eq(422)
@@ -623,7 +623,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           it 'does not modify the lifecycle data' do
             expect(app_model.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
             expect(app_model.reload.lifecycle_data.stack).to eq VCAP::CloudController::Stack.default.name
           end
         end
@@ -637,7 +637,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'raises an error' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -654,7 +654,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'raises an error' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -675,7 +675,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'raises an error' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -695,7 +695,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'does not fail' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
             expect(response).to have_status_code(200)
           end
         end
@@ -709,7 +709,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
 
           it 'raises an error' do
-            put :update, guid: app_model.guid, body: req_body
+            patch :update, guid: app_model.guid, body: req_body
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -731,7 +731,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound error' do
-          put :update, guid: app_model.guid, body: req_body
+          patch :update, guid: app_model.guid, body: req_body
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -745,7 +745,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'raises ApiError NotAuthorized' do
-          put :update, guid: app_model.guid, body: req_body
+          patch :update, guid: app_model.guid, body: req_body
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'

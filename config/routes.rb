@@ -5,7 +5,6 @@ Rails.application.routes.draw do
   get '/apps', to: 'apps_v3#index'
   post '/apps', to: 'apps_v3#create'
   get '/apps/:guid', to: 'apps_v3#show'
-  put '/apps/:guid', to: 'apps_v3#update'
   patch '/apps/:guid', to: 'apps_v3#update'
   delete '/apps/:guid', to: 'apps_v3#destroy'
   post '/apps/:guid/actions/start', to: 'apps_v3#start'
