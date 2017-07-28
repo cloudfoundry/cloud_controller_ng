@@ -31,7 +31,7 @@ module VCAP::CloudController
 
         def root_fs
           if @config[:diego][:temporary_oci_buildpack_mode] == 'oci-phase-1'
-            "preloaded+droplet:#{@stack}?droplet=#{URI.encode(@droplet_uri)}"
+            "preloaded+layer:#{@stack}?layer=#{URI.encode(@droplet_uri)}"
           else
             "preloaded:#{@stack}"
           end

@@ -47,8 +47,8 @@ module VCAP::CloudController
           context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
             let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
 
-            it 'returns a constructed root_fs + droplet URI' do
-              expect(builder.root_fs).to eq('preloaded+droplet:potato-stack?droplet=http://droplet-uri.com:1234?token=&@home---%3E')
+            it 'returns a constructed root_fs + layer URI' do
+              expect(builder.root_fs).to eq('preloaded+layer:potato-stack?layer=http://droplet-uri.com:1234?token=&@home---%3E')
             end
           end
         end
