@@ -8,40 +8,41 @@ module VCAP::Services::ServiceBrokers::V2
     def initialize(schemas)
       @errors = VCAP::Services::ValidationErrors.new
       @schemas = schemas
+      return unless schemas
 
-      return unless validate_structure([])
-
+      return unless validate_structure(@schemas, [])
       service_instance_path = ['service_instance']
-      return unless validate_structure(service_instance_path)
+      return unless validate_structure(@schemas, service_instance_path)
 
-      create_instance_hash = validate_and_populate_create(service_instance_path)
-      update_instance_hash = validate_and_populate_update(service_instance_path)
+      create_schema = get_method('create', @schemas)
+      @create_instance = Schema.new(create_schema) if create_schema
 
-      if create_instance_hash
-        @create_instance = Schema.new(create_instance_hash, 'service_instance.create.parameters')
-        if !create_instance.validate
-          create_instance.errors.messages.each { |key, value| value.each { |error| errors.add(error) } }
-        end
-      end
-
-      if update_instance_hash
-        @update_instance = Schema.new(update_instance_hash, 'service_instance.update.parameters')
-        if !update_instance.validate
-          update_instance.errors.messages.each { |key, value| value.each { |error| errors.add(error) } }
-        end
-      end
+      update_schema = get_method('update', @schemas)
+      @update_instance = Schema.new(update_schema) if update_schema
     end
 
     def valid?
+      return false unless errors.empty?
+
+      if create_instance && !create_instance.validate
+        add_schema_validation_errors(create_instance.errors, 'service_instance.create.parameters')
+      end
+
+      if update_instance && !update_instance.validate
+        add_schema_validation_errors(update_instance.errors, 'service_instance.update.parameters')
+      end
+
       errors.empty?
     end
 
     private
 
-    attr_reader :schemas
-
-    def validate_structure(path)
-      schema = path.reduce(@schemas) { |current, key|
+    def validate_structure(schemas, path)
+      unless schemas.is_a? Hash
+        add_schema_type_error_msg(path, schemas)
+        return false
+      end
+      schema = path.reduce(schemas) { |current, key|
         return false unless current.key?(key)
         current.fetch(key)
       }
@@ -51,27 +52,26 @@ module VCAP::Services::ServiceBrokers::V2
         add_schema_type_error_msg(path, schema)
         return false
       end
+
       true
     end
 
-    def validate_and_populate_create(path)
-      create_path = path + ['create']
-      return unless validate_structure(create_path)
+    def get_method(method, schema)
+      path = ['service_instance', method]
+      return unless validate_structure(schema, path)
 
-      create_parameter_path = create_path + ['parameters']
-      return unless validate_structure(create_parameter_path)
+      path = ['service_instance', method, 'parameters']
+      return unless validate_structure(schema, path)
 
-      @schemas['service_instance']['create']['parameters']
+      schema['service_instance'][method]['parameters']
     end
 
-    def validate_and_populate_update(path)
-      update_path = path + ['update']
-      return unless validate_structure(update_path)
-
-      update_parameter_path = update_path + ['parameters']
-      return unless validate_structure(update_parameter_path)
-
-      @schemas['service_instance']['update']['parameters']
+    def add_schema_validation_errors(schema_errors, path)
+      schema_errors.messages.each do |_, error_list|
+        error_list.each do |error_msg|
+          errors.add("Schema #{path} is not valid. #{error_msg}")
+        end
+      end
     end
 
     def add_schema_type_error_msg(path, value)
@@ -83,17 +83,18 @@ module VCAP::Services::ServiceBrokers::V2
   class Schema
     include ActiveModel::Validations
 
-    validate :validate_schema_size, :validate_metaschema, :validate_no_external_references, :validate_schema_type
+    validates :to_json, length: { maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB' }
+    validate :validate_metaschema, :validate_no_external_references, :validate_schema_type
 
-    def initialize(schema, path)
+    def initialize(schema)
       @schema = schema
-      @path = path
     end
 
-    def validate_schema_size
-      return unless errors.blank?
-      add_schema_error_msg('Must not be larger than 64KB') if @schema.to_json.length > MAX_SCHEMA_SIZE
+    def to_json
+      @schema.to_json
     end
+
+    private
 
     def validate_metaschema
       return unless errors.blank?
@@ -137,15 +138,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def add_schema_error_msg(err)
-      errors.add(:base, "Schema #{@path} is not valid. #{err}")
-    end
-
-    def add_schema_type_error_msg(value)
-      errors.add(:base, "Schemas #{@path} must be a hash, but has value #{value.inspect}")
-    end
-
-    def to_json
-      @schema.to_json
+      errors.add(:base, err.to_s)
     end
   end
 end

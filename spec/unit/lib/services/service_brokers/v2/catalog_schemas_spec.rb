@@ -3,7 +3,11 @@ require 'spec_helper'
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe CatalogSchemas do
     describe 'initializing catalog schemas' do
-      subject { CatalogSchemas.new(attrs) }
+      subject do
+        catalog_schema = CatalogSchemas.new(attrs)
+        catalog_schema.valid?
+        catalog_schema
+      end
 
       context 'service instance' do
         context 'when catalog has schemas' do
