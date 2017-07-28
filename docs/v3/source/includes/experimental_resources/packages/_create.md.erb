@@ -1,7 +1,42 @@
 ### Create a package
 
 ```
-Example Request
+Example Request (buildpack app)
+```
+
+```shell
+curl "https://api.example.org/v3/packages" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "type": "bits",
+    "relationships": {
+      "app": {
+        "data": {
+          "guid": [guid]
+        }
+      }
+    },
+    "data": {
+      "buildpacks": ["go-buildpack"]
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_bits_package %>
+```
+
+```
+Example Request (docker app)
 ```
 
 ```shell
