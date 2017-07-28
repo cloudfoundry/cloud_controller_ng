@@ -6,6 +6,10 @@ module VCAP::CloudController
     let(:space_one) { Space.make(organization: organization_one) }
     let(:user_email) { Sham.email }
 
+    def decoded_guids
+      decoded_response['resources'].map { |r| r['metadata']['guid'] }
+    end
+
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
       it { expect(described_class).to be_queryable_by(:organization_guid) }
@@ -357,6 +361,33 @@ module VCAP::CloudController
           end
         end
 
+        describe 'enumerating services bound to a service-broker' do
+          let(:manager) { User.make(guid: 'manager-guid') }
+          let(:org) { Organization.make(guid: 'organization', manager_guids: [manager.guid], user_guids: org_user_guids) }
+          let(:space) { Space.make(
+            organization: org,
+            guid: 'space-guid',
+            manager_guids: space_manager_guids)
+          }
+          let(:org_user_guids) { [manager.guid] }
+          let(:space_manager_guids) { [manager.guid] }
+          let(:query) do
+            { service_broker_guid: @broker.guid }
+          end
+          let(:broker) { ServiceBroker.make(space: space, guid: 'service-broker-guid') }
+          let(:service) { Service.make(service_broker: broker, active: true, guid: 'service-guid') }
+          let!(:service_plan) { ServicePlan.make(service: service, public: false) }
+
+          before do
+            set_current_user_as_admin(user: manager)
+          end
+          it "returns the space's service" do
+            get "/v2/spaces/#{space.guid}/services?q=service_broker_guid:#{broker.guid}"
+            expect(last_response.status).to eq(200), last_response.body
+            expect(decoded_guids).to include(service.guid)
+          end
+        end
+
         describe 'Org Level' do
           describe 'OrgManager' do
             it_behaves_like(
@@ -483,10 +514,6 @@ module VCAP::CloudController
         user.add_organization(organization_two)
         space_two.add_developer(user)
         set_current_user(user)
-      end
-
-      def decoded_guids
-        decoded_response['resources'].map { |r| r['metadata']['guid'] }
       end
 
       context 'when there is a private service broker in a space' do
