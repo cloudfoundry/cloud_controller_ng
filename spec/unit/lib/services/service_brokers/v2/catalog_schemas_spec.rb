@@ -225,16 +225,17 @@ module VCAP::Services::ServiceBrokers::V2
               }
             }
 
-            its(:create_instance) {
+            its('create_instance.to_json') {
               should eq(
                 {
                     :'$schema' => 'http://json-schema.org/draft-04/schema#',
                     'type' => 'object',
                     :properties => { foo: { type: 'string' } },
                     :required => ['foo']
-                }
-                     )
+                }.to_json
+              )
             }
+
             its(:valid?) { should be true }
             its(:errors) { should be_empty }
           end
@@ -251,12 +252,6 @@ module VCAP::Services::ServiceBrokers::V2
 
                   its(:valid?) { should be true }
                   its(:errors) { should be_empty }
-
-                  it 'does perform further validation' do
-                    expect_any_instance_of(CatalogSchemas).to receive(:validate_metaschema)
-                    expect_any_instance_of(CatalogSchemas).to receive(:validate_no_external_references)
-                    subject
-                  end
                 end
               end
             end
@@ -273,12 +268,6 @@ module VCAP::Services::ServiceBrokers::V2
                   its(:valid?) { should be false }
                   its('errors.messages') { should have(1).items }
                   its('errors.messages.first') { should eq "Schema #{path} is not valid. Must not be larger than 64KB" }
-
-                  it 'does not perform further validation' do
-                    expect_any_instance_of(CatalogSchemas).to_not receive(:validate_metaschema)
-                    expect_any_instance_of(CatalogSchemas).to_not receive(:validate_no_external_references)
-                    subject
-                  end
                 end
               end
             end
@@ -462,14 +451,14 @@ module VCAP::Services::ServiceBrokers::V2
               }
             }
 
-            its(:update_instance) {
+            its('update_instance.to_json') {
               should eq(
                 {
                     :'$schema' => 'http://json-schema.org/draft-04/schema#',
                     'type' => 'object',
                     :properties => { foo: { type: 'string' } },
                     :required => ['foo']
-                }
+                }.to_json
                      )
             }
             its(:valid?) { should be true }
@@ -488,12 +477,6 @@ module VCAP::Services::ServiceBrokers::V2
 
                   its(:valid?) { should be true }
                   its(:errors) { should be_empty }
-
-                  it 'does perform further validation' do
-                    expect_any_instance_of(CatalogSchemas).to receive(:validate_metaschema)
-                    expect_any_instance_of(CatalogSchemas).to receive(:validate_no_external_references)
-                    subject
-                  end
                 end
               end
             end
@@ -510,12 +493,6 @@ module VCAP::Services::ServiceBrokers::V2
                   its(:valid?) { should be false }
                   its('errors.messages') { should have(1).items }
                   its('errors.messages.first') { should eq "Schema #{path} is not valid. Must not be larger than 64KB" }
-
-                  it 'does not perform further validation' do
-                    expect_any_instance_of(CatalogSchemas).to_not receive(:validate_metaschema)
-                    expect_any_instance_of(CatalogSchemas).to_not receive(:validate_no_external_references)
-                    subject
-                  end
                 end
               end
             end

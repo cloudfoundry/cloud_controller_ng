@@ -300,6 +300,206 @@ RSpec.describe 'Service Broker' do
         expect(VCAP::CloudController::ServiceDashboardClient.count).to eq(0)
       end
     end
+
+    context 'when a service instance schema' do
+      ['create', 'update'].each do |service_instance_type|
+        context 'is not present' do
+          {
+              "#{service_instance_type} is nil": { 'service_instance' => { service_instance_type => nil } },
+              "#{service_instance_type} is nil": { 'service_instance' => { service_instance_type => { 'parameters' => nil } } },
+              "#{service_instance_type} is empty object": { 'service_instance' => { service_instance_type => {} } },
+          }.each do |desc, schema|
+            context "#{desc} #{schema}" do
+              before do
+                stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+              end
+              it 'responds with invalid' do
+                post('/v2/service_brokers', {
+                    name: 'some-guid',
+                    broker_url: 'http://broker-url',
+                    auth_username: 'username',
+                    auth_password: 'password'
+                }.to_json, admin_headers)
+
+                expect(last_response.status).to eql(201)
+              end
+            end
+          end
+        end
+
+        context 'has an invalid type' do
+          {
+              "service_instance.#{service_instance_type}": { 'service_instance' => { service_instance_type => true } },
+              "service_instance.#{service_instance_type}.parameters": { 'service_instance' => { service_instance_type => { 'parameters' => true } } },
+          }.each do |path, schema|
+
+            context "operator receives an error about #{path} #{schema}" do
+              before do
+                stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+              end
+              it 'responds with invalid' do
+                post('/v2/service_brokers', {
+                    name: 'some-guid',
+                    broker_url: 'http://broker-url',
+                    auth_username: 'username',
+                    auth_password: 'password'
+                }.to_json, admin_headers)
+
+                expect(last_response.status).to eql(502)
+                expect(decoded_response['code']).to eql(270012)
+                expect(decoded_response['description']).to eql("Service broker catalog is invalid: \n" \
+              "Service MySQL\n" \
+              "  Plan small\n" \
+              "    Schemas\n" \
+              "      Schemas #{path} must be a hash, but has value true\n")
+              end
+            end
+          end
+        end
+
+        context 'does not conform to JSON Schema Draft 04' do
+          let(:path) { "service_instance.#{service_instance_type}.parameters" }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'properties': true } } } } }
+
+          before do
+            stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+          end
+
+          it 'responds with invalid' do
+            post('/v2/service_brokers', {
+                name: 'some-guid',
+                broker_url: 'http://broker-url',
+                auth_username: 'username',
+                auth_password: 'password'
+            }.to_json, admin_headers)
+
+            expect(last_response.status).to eql(502)
+            expect(decoded_response['code']).to eql(270012)
+            expect(decoded_response['description']).to eql("Service broker catalog is invalid: \n" \
+          "Service MySQL\n" \
+          "  Plan small\n" \
+          "    Schemas\n" \
+          "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/properties' " \
+                      "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n")
+          end
+        end
+
+        context 'does not conform to JSON Schema Draft 04 with multiple problems' do
+          let(:path) { "service_instance.#{service_instance_type}.parameters" }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'type': 'foo', 'properties': true } } } } }
+
+          before do
+            stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+          end
+          it 'responds with invalid' do
+            post('/v2/service_brokers', {
+                name: 'some-guid',
+                broker_url: 'http://broker-url',
+                auth_username: 'username',
+                auth_password: 'password'
+            }.to_json, admin_headers)
+
+            expect(last_response.status).to eql(502)
+            expect(decoded_response['code']).to eql(270012)
+            expect(decoded_response['description']).to eql("Service broker catalog is invalid: \n" \
+          "Service MySQL\n" \
+          "  Plan small\n" \
+          "    Schemas\n" \
+          "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/properties' " \
+                      "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n"\
+          "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/type' " \
+                      "of type string did not match one or more of the required schemas in schema http://json-schema.org/draft-04/schema#\n")
+          end
+        end
+
+        context 'has an external schema' do
+          let(:path) { "service_instance.#{service_instance_type}.parameters" }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { '$schema': 'http://example.com/schema' } } } } }
+
+          before do
+            stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+          end
+
+          it 'responds with invalid' do
+            post('/v2/service_brokers', {
+                name: 'some-guid',
+                broker_url: 'http://broker-url',
+                auth_username: 'username',
+                auth_password: 'password'
+            }.to_json, admin_headers)
+
+            expect(last_response.status).to eql(502)
+            expect(decoded_response['code']).to eql(270012)
+            expect(decoded_response['description']).to eql("Service broker catalog is invalid: \n" \
+          "Service MySQL\n" \
+          "  Plan small\n" \
+          "    Schemas\n" \
+          "      Schema #{path} is not valid. Custom meta schemas are not supported.\n"
+                                                       )
+          end
+        end
+
+        context 'has an external uri reference' do
+          let(:path) { "service_instance.#{service_instance_type}.parameters" }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { '$ref': 'http://example.com/ref' } } } } }
+
+          before do
+            stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+          end
+          it 'responds with invalid' do
+            post('/v2/service_brokers', {
+                name: 'some-guid',
+                broker_url: 'http://broker-url',
+                auth_username: 'username',
+                auth_password: 'password'
+            }.to_json, admin_headers)
+
+            expect(last_response.status).to eql(502)
+            expect(decoded_response['code']).to eql(270012)
+            expect(decoded_response['description']).to eql("Service broker catalog is invalid: \n" \
+          "Service MySQL\n" \
+          "  Plan small\n" \
+          "    Schemas\n" \
+          "      Schema #{path} is not valid. No external references are allowed: Read of URI at http://example.com/ref refused\n"
+                                                       )
+          end
+        end
+      end
+    end
+
+    context 'when multiple schemas have validation issues' do
+      let(:schema) {
+        {
+          'service_instance' => {
+            'create' => { 'parameters' => { '$ref': 'http://example.com/ref' } },
+            'update' => { 'parameters' => { '$ref': 'http://example.com/ref' } }
+          }
+        }
+      }
+
+      before do
+        stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+      end
+
+      it 'reports all issues' do
+        post('/v2/service_brokers', {
+            name: 'some-guid',
+            broker_url: 'http://broker-url',
+            auth_username: 'username',
+            auth_password: 'password'
+        }.to_json, admin_headers)
+
+        expect(last_response.status).to eql(502)
+        expect(decoded_response['code']).to eql(270012)
+        expect(decoded_response['description']).to eql("Service broker catalog is invalid: \n" \
+          "Service MySQL\n" \
+          "  Plan small\n" \
+          "    Schemas\n" \
+          "      Schema service_instance.create.parameters is not valid. No external references are allowed: Read of URI at http://example.com/ref refused\n" \
+          "      Schema service_instance.update.parameters is not valid. No external references are allowed: Read of URI at http://example.com/ref refused\n"
+                                                   )
+      end
+    end
   end
 
   describe 'updating a service broker' do
