@@ -158,6 +158,10 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 
 <p>Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the <a href="http://docs.cloudfoundry.org/api/uaa/index.html">UAA API Documentation</a></p>
 
+<aside class="notice">
+Use the cf cli to obtain a bearer token: cf oauth-token
+</aside>
+
 <h2 id="authorization">Authorization</h2>
 
 <p>Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the <a href="http://apidocs.cloudfoundry.org/">V2 API</a>.</p>
@@ -299,11 +303,13 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 </tr>
 </tbody></table>
 
-<h2 id="resources">Resources</h2>
+<h2 id="api-resource">API Resource</h2>
 
 <p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
 
 <p>A resource consists of several required resource fields and other attributes specific to the resource.</p>
+
+<p>See <a href="#resources">Resources</a> and <a href="#experimental-resources">Experimental Resources</a> for specific resources.</p>
 
 <h3 id="required-fields">Required fields</h3>
 <pre class="highlight plaintext"><code>Example Person Resource
@@ -354,7 +360,7 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 
 <h3 id="links">Links</h3>
 
-<p>Links provide URLs to relationships and actions for a resource. Links are represented as a JSON object and will always contain at least a <code class="prettyprint">self</code> link.</p>
+<p>Links provide URLs to <a href="#relationships">relationships</a> and actions for a resource. Links are represented as a JSON object and will always contain at least a <code class="prettyprint">self</code> link.</p>
 
 <p>Each link is keyed by its type and will include a <code class="prettyprint">href</code> for the URL and an optional <code class="prettyprint">method</code> for links that cannot be followed using <code class="prettyprint">GET</code>.</p>
 
@@ -381,8 +387,7 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 
 <h2 id="relationships">Relationships</h2>
 
-<p>Relationships allow users to create, read, update, and delete associations between resources. Relationships are managed
-through a relationship sub resource.</p>
+<p>Relationships represent associations between resources. Relationships can be used to create, read, update, and delete associations through the relationship sub resource.</p>
 
 <p>Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.</p>
 
@@ -674,7 +679,7 @@ Requests for multiple resources can use <code class="prettyprint">page</code>, <
 
 <h2 id="lifecycles">Lifecycles</h2>
 
-<p>Lifecycles inform the platform of how to build droplets and run apps. For example the the
+<p>Lifecycles inform the platform of how to build droplets and run apps. For example the
 <code class="prettyprint">buildpack</code> lifecycle will use a droplet and a rootfs to run the app, while a <code class="prettyprint">docker</code> lifecycle will
 pull a docker image from a registry to run an app.</p>
 
@@ -5847,7 +5852,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <tr>
 <td><strong>state</strong></td>
 <td><em>string</em></td>
-<td>The state of the instance. Valid values are <code class="prettyprint">RUNNING</code>, <code class="prettyprint">CRASHED</code>, <code class="prettyprint">STARTING</code>.</td>
+<td>The state of the instance. Valid values are <code class="prettyprint">RUNNING</code>, <code class="prettyprint">CRASHED</code>, <code class="prettyprint">STARTING</code>, <code class="prettyprint">DOWN</code>.</td>
 </tr>
 <tr>
 <td><strong>usage.time</strong></td>
