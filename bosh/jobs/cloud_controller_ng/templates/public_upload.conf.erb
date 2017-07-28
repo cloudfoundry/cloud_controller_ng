@@ -5,7 +5,7 @@ upload_pass   @cc_uploads;
 client_max_body_size <%= p("cc.app_bits_max_body_size") %>; #already enforced upstream/but doesn't hurt.
 
 # Store files to this directory
-upload_store /var/vcap/data/cloud_controller_ng/tmp/uploads;
+upload_store <%= p("cc.directories.tmpdir") %>/uploads;
 
 # No limit for output body forwarded to CC
 upload_max_output_body_len 0;

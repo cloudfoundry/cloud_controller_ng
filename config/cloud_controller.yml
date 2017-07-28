@@ -250,3 +250,6 @@ diego:
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
   pid_limit: 2048
+
+directories:
+  tmpdir: /tmp

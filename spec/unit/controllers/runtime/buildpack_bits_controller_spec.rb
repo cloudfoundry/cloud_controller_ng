@@ -46,8 +46,9 @@ module VCAP::CloudController
 
       before { CloudController::DependencyLocator.instance.register(:upload_handler, UploadHandler.new(TestConfig.config)) }
 
-      context '/v2/buildpacks/:guid/bits' do
+      context 'PUT /v2/buildpacks/:guid/bits' do
         before do
+          TestConfig.override(directories: { tmpdir: File.dirname(valid_zip.path) })
           @cache = Delayed::Worker.delay_jobs
           Delayed::Worker.delay_jobs = false
         end
@@ -190,7 +191,7 @@ module VCAP::CloudController
         end
       end
 
-      context '/v2/buildpacks/:guid/download' do
+      context 'GET /v2/buildpacks/:guid/download' do
         let(:staging_user) { 'user' }
         let(:staging_password) { 'password' }
         let(:staging_config) do
@@ -202,6 +203,7 @@ module VCAP::CloudController
                 password: staging_password,
               },
             },
+            directories: { tmpdir: File.dirname(valid_zip.path) },
           }
         end
 

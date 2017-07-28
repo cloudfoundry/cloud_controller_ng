@@ -6,8 +6,12 @@ module VCAP::CloudController
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'PUT /v2/app/:id/bits' do
-      let(:process) do
-        ProcessModel.make
+      before do
+        TestConfig.override(
+          config_override.merge(
+            directories: { tmpdir: File.dirname(valid_zip.path) }
+          )
+        )
       end
 
       let(:tmpdir) { Dir.mktmpdir }
@@ -20,7 +24,9 @@ module VCAP::CloudController
         Rack::Test::UploadedFile.new(zip_file)
       end
 
+      let(:config_override) { {} }
       let(:headers) { headers_for(user) }
+      let(:process) { ProcessModel.make }
 
       def make_request
         put "/v2/apps/#{process.guid}/bits", req_body, form_headers(headers)
@@ -164,8 +170,8 @@ module VCAP::CloudController
             end
 
             context 'when the upload will finish after the auth token expires' do
-              before do
-                TestConfig.override(app_bits_upload_grace_period_in_seconds: 200)
+              let(:config_override) do
+                { app_bits_upload_grace_period_in_seconds: 200 }
               end
 
               context 'but the upload will finish inside the grace period' do
@@ -258,9 +264,8 @@ module VCAP::CloudController
         let(:req_body) do
           { resources: '[]', application: valid_zip }
         end
-
-        before do
-          TestConfig.override(index: 99, name: 'api_z1')
+        let(:config_override) do
+          { index: 99, name: 'api_z1' }
         end
 
         it 'creates a delayed job' do
@@ -271,19 +276,19 @@ module VCAP::CloudController
           }.by(1)
 
           response_body = JSON.parse(last_response.body, symbolize_names: true)
-          job           = Delayed::Job.last
+          job = Delayed::Job.last
           expect(job.handler).to include(process.reload.latest_package.guid)
           expect(job.queue).to eq('cc-api_z1-99')
           expect(job.guid).not_to be_nil
           expect(last_response.status).to eq 201
           expect(response_body).to eq({
             metadata: {
-              guid:       job.guid,
+              guid: job.guid,
               created_at: job.created_at.iso8601,
-              url:        "/v2/jobs/#{job.guid}"
+              url: "/v2/jobs/#{job.guid}"
             },
-            entity:   {
-              guid:   job.guid,
+            entity: {
+              guid: job.guid,
               status: 'queued'
             }
           })
@@ -374,11 +379,11 @@ module VCAP::CloudController
 
       class FakeCopier
         def initialize(src_process, dest_process, app_event_repo, user, email)
-          @src_process    = src_process
-          @dest_process   = dest_process
+          @src_process = src_process
+          @dest_process = dest_process
           @app_event_repo = app_event_repo
-          @user           = user
-          @email          = email
+          @user = user
+          @email = email
         end
 
         def perform
@@ -412,15 +417,15 @@ module VCAP::CloudController
             Delayed::Job.count
           }.by(1)
 
-          job               = Delayed::Job.last
+          job = Delayed::Job.last
           expected_response = {
             'metadata' => {
-              'guid'       => job.guid,
+              'guid' => job.guid,
               'created_at' => job.created_at.iso8601,
-              'url'        => "/v2/jobs/#{job.guid}"
+              'url' => "/v2/jobs/#{job.guid}"
             },
-            'entity'   => {
-              'guid'   => job.guid,
+            'entity' => {
+              'guid' => job.guid,
               'status' => 'queued'
             }
           }
@@ -438,7 +443,7 @@ module VCAP::CloudController
           }.by(2)
 
           source_event = Event.find(actee: src_process.guid)
-          dest_event   = Event.find(actee: dest_process.guid)
+          dest_event = Event.find(actee: dest_process.guid)
 
           expect(source_event.type).to eq('audit.app.copy-bits')
           expect(dest_event.type).to eq('audit.app.copy-bits')

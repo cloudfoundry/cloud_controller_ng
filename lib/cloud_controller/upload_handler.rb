@@ -1,6 +1,11 @@
 class UploadHandler
   attr_reader :config
 
+  class MissingFilePathError < StandardError
+  end
+  class InvalidFilePathError < StandardError
+  end
+
   def initialize(config)
     @config = config
   end
@@ -10,11 +15,18 @@ class UploadHandler
   end
 
   def uploaded_file(params, resource_name)
-    if (nginx_file = nginx_uploaded_file(params, resource_name))
-      nginx_file
-    else
-      rack_temporary_file(params, resource_name)
+    if HashUtils.dig(params, '<ngx_upload_module_dummy>')
+      raise MissingFilePathError.new('File field missing path information')
     end
+
+    file_path = nginx_uploaded_file(params, resource_name) || rack_temporary_file(params, resource_name)
+    return unless file_path
+
+    absolute_path = File.expand_path(file_path)
+    tmp_dir = config[:directories][:tmpdir]
+    raise InvalidFilePathError.new('Invalid file path') unless absolute_path.start_with?(tmp_dir)
+
+    absolute_path
   end
 
   private

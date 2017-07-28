@@ -25,8 +25,8 @@ function setup_nginx_directories {
   mkdir -p "/var/vcap/sys/log/nginx_cc"
   chown -R vcap:vcap "/var/vcap/sys/log/nginx_cc"
 
-  mkdir -p "/var/vcap/data/cloud_controller_ng/tmp/uploads"
-  chown vcap:vcap "/var/vcap/data/cloud_controller_ng/tmp/uploads"
+  mkdir -p "<%= p("cc.directories.tmpdir") %>/uploads"
+  chown vcap:vcap "<%= p("cc.directories.tmpdir") %>/uploads"
 
   mkdir -p "/var/vcap/data/cloud_controller_ng/tmp/staged_droplet_uploads"
   chown vcap:vcap "/var/vcap/data/cloud_controller_ng/tmp/staged_droplet_uploads"

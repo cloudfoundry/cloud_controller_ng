@@ -104,6 +104,10 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
   put '/v2/buildpacks/:guid/bits' do
     include_context 'guid_parameter'
 
+    before do
+      TestConfig.override(directories: { tmpdir: File.dirname(valid_zip.path) })
+    end
+
     let(:tmpdir) { Dir.mktmpdir }
     let(:user) { make_user }
     let(:filename) { 'file.zip' }

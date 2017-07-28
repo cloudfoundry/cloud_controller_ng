@@ -40,6 +40,10 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     ]
   }
 
+  before do
+    TestConfig.override(directories: { tmpdir: File.dirname(valid_zip.path) })
+  end
+
   put '/v2/apps/:guid/bits' do
     async_description = <<-eos
       If true, a new asynchronous job is submitted to persist the bits and the job id is included in the response.
