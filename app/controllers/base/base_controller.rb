@@ -17,7 +17,7 @@ module VCAP::CloudController::RestController
     include Routes
     extend Forwardable
 
-    def_delegators :@sinatra, :redirect
+    def_delegators :@sinatra, :redirect, :request
 
     # Create a new rest api endpoint.
     #

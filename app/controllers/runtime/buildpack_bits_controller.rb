@@ -17,8 +17,8 @@ module VCAP::CloudController
       buildpack = find_guid_and_validate_access(:upload, guid)
       raise CloudController::Errors::ApiError.new_from_details('BuildpackLocked') if buildpack.locked?
 
-      uploaded_file = upload_handler.uploaded_file(params, 'buildpack')
-      uploaded_filename = upload_handler.uploaded_filename(params, 'buildpack')
+      uploaded_file = upload_handler.uploaded_file(request.POST, 'buildpack')
+      uploaded_filename = upload_handler.uploaded_filename(request.POST, 'buildpack')
 
       logger.info "Uploading bits for #{buildpack.name}, file: uploaded_filename"
 

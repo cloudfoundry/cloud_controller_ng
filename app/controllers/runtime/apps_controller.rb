@@ -163,7 +163,7 @@ module VCAP::CloudController
 
     def upload_droplet(guid)
       process      = find_guid_and_validate_access(:update, guid)
-      droplet_path = @upload_handler.uploaded_file(params, 'droplet')
+      droplet_path = @upload_handler.uploaded_file(request.POST, 'droplet')
 
       unless droplet_path
         missing_resources_message = 'missing :droplet_path'

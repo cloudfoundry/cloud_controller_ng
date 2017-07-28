@@ -42,8 +42,8 @@ module VCAP::CloudController
 
       upload_handler = CloudController::DependencyLocator.instance.upload_handler
       upload_message = PackageUploadMessage.new({
-        bits_path:        upload_handler.uploaded_file(params, 'application'),
-        bits_name:        upload_handler.uploaded_filename(params, 'application'),
+        bits_path:        upload_handler.uploaded_file(request.POST, 'application'),
+        bits_name:        upload_handler.uploaded_filename(request.POST, 'application'),
         cached_resources: json_param('resources')
       })
       uploader = PackageUpload.new
