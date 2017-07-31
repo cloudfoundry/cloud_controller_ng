@@ -44,8 +44,8 @@ RSpec.describe UploadHandler do
         end
       end
 
-      context 'when the path is a relative path' do
-        let(:params) { { "#{key}_path" => 'some/relative/file' } }
+      context 'when the path is relative' do
+        let(:params) { { "#{key}_path" => '../relative/file' } }
 
         it 'raises an error' do
           expect {
@@ -83,6 +83,14 @@ RSpec.describe UploadHandler do
       end
     end
 
+    context 'when the file path is relative' do
+      let(:params) { { key => { 'tempfile' => 'path' } } }
+
+      it 'expands it within the tmp dir' do
+        expect(uploader.uploaded_file(params, key)).to eq("#{tmpdir}/path")
+      end
+    end
+
     context 'when the file exists but is not inside any of the temp directories' do
       context 'when the path is an absolute path' do
         let(:params) { { key => { 'tempfile' => "#{tmpdir}/../path" } } }
@@ -94,7 +102,7 @@ RSpec.describe UploadHandler do
       end
 
       context 'when the path is a relative path' do
-        let(:params) { { key => { 'tempfile' => 'some/relative/file' } } }
+        let(:params) { { key => { 'tempfile' => '../relative/file' } } }
 
         it 'raises an error' do
           expect {

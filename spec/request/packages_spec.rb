@@ -594,6 +594,7 @@ RSpec.describe 'Packages' do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
+      TestConfig.override(directories: { tmpdir: tmpdir })
     end
 
     let(:packages_params) do
@@ -674,6 +675,7 @@ RSpec.describe 'Packages' do
     end
 
     before do
+      TestConfig.override(directories: { tmpdir: File.dirname(temp_file) })
       space.organization.add_user(user)
       space.add_developer(user)
       post "/v3/packages/#{guid}/upload", upload_body.to_json, user_header

@@ -22,9 +22,10 @@ class UploadHandler
     file_path = nginx_uploaded_file(params, resource_name) || rack_temporary_file(params, resource_name)
     return unless file_path
 
-    absolute_path = File.expand_path(file_path)
-    tmp_dir = config[:directories][:tmpdir]
-    raise InvalidFilePathError.new('Invalid file path') unless absolute_path.start_with?(tmp_dir)
+    absolute_path = File.expand_path(file_path, tmpdir)
+    unless VCAP::CloudController::FilePathChecker.safe_path?(file_path, tmpdir)
+      raise InvalidFilePathError.new('Invalid file path')
+    end
 
     absolute_path
   end
@@ -41,5 +42,9 @@ class UploadHandler
 
     tempfile = resource_params[:tempfile] || resource_params['tempfile']
     tempfile.respond_to?(:path) ? tempfile.path : tempfile
+  end
+
+  def tmpdir
+    config[:directories][:tmpdir]
   end
 end
