@@ -562,25 +562,48 @@ module VCAP::CloudController
         it 'should be visible to SpaceManagers ' do
           set_current_user(manager)
           get "v2/spaces/#{space_one.guid}/services"
+          expect(last_response.status).to eq(200)
           expect(decoded_guids).to include(@service.guid)
         end
 
-        it 'should be visible to SpaceManagers' do
+        it 'should not be visible to SpaceManagers for another space' do
           set_current_user(outside_manager)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response).not_to be_ok
+          expect(last_response.status).to eq(403)
         end
 
         it 'should be visible to SpaceAuditor' do
           set_current_user(auditor)
           get "v2/spaces/#{space_one.guid}/services"
+          expect(last_response.status).to eq(200)
           expect(decoded_guids).to include(@service.guid)
         end
 
-        it 'should be visible to SpaceManagers' do
+        it 'should not be visible to SpaceAuditors for another space' do
           set_current_user(outside_auditor)
           get "v2/spaces/#{space_one.guid}/services"
-          expect(last_response).not_to be_ok
+          expect(last_response.status).to eq(403)
+        end
+
+        it 'should be visible to users with admin access' do
+          set_current_user_as_admin(user: outside_developer)
+          get "v2/spaces/#{space_one.guid}/services"
+          expect(last_response.status).to eq(200)
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should be visible to users with admin read access' do
+          set_current_user_as_admin_read_only(user: outside_developer)
+          get "v2/spaces/#{space_one.guid}/services"
+          expect(last_response.status).to eq(200)
+          expect(decoded_guids).to include(@service.guid)
+        end
+
+        it 'should be visible to users with global auditor access' do
+          set_current_user_as_global_auditor(user: outside_developer)
+          get "v2/spaces/#{space_one.guid}/services"
+          expect(last_response.status).to eq(200)
+          expect(decoded_guids).to include(@service.guid)
         end
       end
 
