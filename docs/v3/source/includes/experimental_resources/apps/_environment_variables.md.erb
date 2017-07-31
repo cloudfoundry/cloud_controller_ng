@@ -19,7 +19,9 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-  "RAILS_ENV": "production",
+  "var": {
+    "RAILS_ENV": "production"
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/apps/[guid]/environment_variables"

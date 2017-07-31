@@ -9,7 +9,9 @@ curl "https://api.example.org/v3/apps/[guid]/environment_variables" \
   -X PATCH \
   -H "Authorization: bearer [token]"
   -d '{
-     "DEBUG": "false"
+     "var": {
+       "DEBUG": "false"
+     }
    }'
 ```
 
@@ -22,8 +24,10 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-  "RAILS_ENV": "production",
-  "DEBUG": "false",
+  "var": {
+    "RAILS_ENV": "production",
+    "DEBUG": "false"
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/apps/[guid]/environment_variables"
