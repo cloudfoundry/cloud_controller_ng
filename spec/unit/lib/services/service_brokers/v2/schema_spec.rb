@@ -46,7 +46,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema does not conform to JSON Schema Draft 04' do
-        let(:raw_schema) { { 'properties': true } }
+        let(:raw_schema) { { 'type' => 'object', 'properties': true } }
 
         its(:validate) { should be false }
         its('errors.full_messages') { should have(1).items }
@@ -57,7 +57,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema does not conform to JSON Schema Draft 04 with multiple problems' do
-        let(:raw_schema) { { 'type': 'foo', 'properties': true } }
+        let(:raw_schema) { { 'type' => 'object', 'properties': true, 'anyOf': true } }
 
         its(:validate) { should be false }
         its('errors.full_messages') { should have(2).items }
@@ -67,12 +67,12 @@ module VCAP::Services::ServiceBrokers::V2
         }
         its('errors.full_messages.second') {
           should eq 'Must conform to JSON Schema Draft 04: ' \
-                          'The property \'#/type\' of type string did not match one or more of the required schemas in schema http://json-schema.org/draft-04/schema#'
+                          'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
         }
       end
 
       context 'when the schema has an external schema' do
-        let(:raw_schema) { { '$schema': 'http://example.com/schema' } }
+        let(:raw_schema) { { 'type' => 'object', '$schema': 'http://example.com/schema' } }
 
         its(:validate) { should be false }
         its('errors.full_messages') { should have(1).items }
@@ -82,7 +82,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema has an external uri reference' do
-        let(:raw_schema) { { '$ref': 'http://example.com/ref' } }
+        let(:raw_schema) { { 'type' => 'object', '$ref': 'http://example.com/ref' } }
 
         its(:validate) { should be false }
         its('errors.full_messages') { should have(1).items }
@@ -92,7 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the schema has an external file reference' do
-        let(:raw_schema) { { '$ref': 'path/to/schema.json' } }
+        let(:raw_schema) { { 'type' => 'object', '$ref': 'path/to/schema.json' } }
 
         its(:validate) { should be false }
         its('errors.full_messages') { should have(1).items }
@@ -188,6 +188,66 @@ module VCAP::Services::ServiceBrokers::V2
         its(:validate) { should be false }
         its('errors.full_messages') { should have(1).items }
         its('errors.full_messages.first') { should eq 'some unknown error' }
+      end
+
+      describe 'validation ordering' do
+        context 'when an invalid schema fails multiple validations' do
+          context 'schema size and schema type' do
+            let(:raw_schema) do
+              schema = create_schema_of_size(64 * 1024)
+              schema['type'] = 'notobject'
+              schema
+            end
+
+            its(:validate) { should be false }
+            its('errors.full_messages') { should have(1).items }
+            its('errors.full_messages.first') { should match 'Must not be larger than 64KB' }
+          end
+
+          context 'schema size and external reference' do
+            let(:raw_schema) do
+              schema = create_schema_of_size(64 * 1024)
+              schema['$ref'] = 'http://example.com/ref'
+              schema
+            end
+
+            its(:validate) { should be false }
+            its('errors.full_messages') { should have(1).items }
+            its('errors.full_messages.first') { should match 'Must not be larger than 64KB' }
+          end
+
+          context 'schema size and does not conform to Json Schema Draft 4' do
+            let(:raw_schema) do
+              schema = create_schema_of_size(64 * 1024)
+              schema['properties'] = true
+              schema
+            end
+
+            its(:validate) { should be false }
+            its('errors.full_messages') { should have(1).items }
+            its('errors.full_messages.first') { should match 'Must not be larger than 64KB' }
+          end
+
+          context 'schema type and does not conform to JSON Schema Draft 4' do
+            let(:raw_schema) { { 'type' => 'notobject', 'properties' => true } }
+
+            its(:validate) { should be false }
+            its('errors.full_messages') { should have(1).items }
+            its('errors.full_messages.first') { should match 'must have field "type", with value "object"' }
+          end
+
+          context 'does not conform to JSON Schema Draft 4 and external references' do
+            let(:raw_schema) { { 'type' => 'object', 'properties' => true, '$ref' => 'http://example.com/ref' } }
+
+            its(:validate) { should be false }
+            its('errors.full_messages') { should have(1).items }
+            its('errors.full_messages.first') {
+              should match 'Must conform to JSON Schema Draft 04: ' \
+                  'The property \'#/properties\' of type boolean did not match the following type: ' \
+                  'object in schema http://json-schema.org/draft-04/schema#'
+            }
+          end
+        end
       end
 
       def create_schema_of_size(bytes)

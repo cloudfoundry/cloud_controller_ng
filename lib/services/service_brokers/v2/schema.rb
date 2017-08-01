@@ -8,7 +8,7 @@ module VCAP::Services::ServiceBrokers::V2
     MAX_SCHEMA_SIZE = 65_536
 
     validates :to_json, length: { maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB' }
-    validate :validate_metaschema, :validate_no_external_references, :validate_schema_type
+    validate :validate_schema_type, :validate_metaschema, :validate_no_external_references
 
     def initialize(schema)
       @schema = schema
@@ -19,6 +19,11 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def validate_schema_type
+      return unless errors.blank?
+      add_schema_error_msg('must have field "type", with value "object"') if @schema['type'] != 'object'
+    end
 
     def validate_metaschema
       return unless errors.blank?
@@ -54,11 +59,6 @@ module VCAP::Services::ServiceBrokers::V2
       rescue => e
         add_schema_error_msg(e)
       end
-    end
-
-    def validate_schema_type
-      return unless errors.blank?
-      add_schema_error_msg('must have field "type", with value "object"') if @schema['type'] != 'object'
     end
 
     def add_schema_error_msg(err)

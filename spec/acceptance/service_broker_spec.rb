@@ -127,7 +127,7 @@ RSpec.describe 'Service Broker' do
                   schemas: {
                     service_instance: {
                       create: {
-                        parameters: { properties: true }
+                        parameters: { type: 'object', properties: true }
                       }
                     }
                   }
@@ -359,7 +359,7 @@ RSpec.describe 'Service Broker' do
 
         context 'does not conform to JSON Schema Draft 04' do
           let(:path) { "service_instance.#{service_instance_type}.parameters" }
-          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'properties': true } } } } }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'type': 'object', 'properties': true } } } } }
 
           before do
             stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -386,7 +386,7 @@ RSpec.describe 'Service Broker' do
 
         context 'does not conform to JSON Schema Draft 04 with multiple problems' do
           let(:path) { "service_instance.#{service_instance_type}.parameters" }
-          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'type': 'foo', 'properties': true } } } } }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'type': 'object', 'properties': true, 'anyOf': true } } } } }
 
           before do
             stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -407,14 +407,14 @@ RSpec.describe 'Service Broker' do
           "    Schemas\n" \
           "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/properties' " \
                       "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n"\
-          "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/type' " \
-                      "of type string did not match one or more of the required schemas in schema http://json-schema.org/draft-04/schema#\n")
+          "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/anyOf' " \
+                      "of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#\n")
           end
         end
 
         context 'has an external schema' do
           let(:path) { "service_instance.#{service_instance_type}.parameters" }
-          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { '$schema': 'http://example.com/schema' } } } } }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { '$schema': 'http://example.com/schema', 'type': 'object' } } } } }
 
           before do
             stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -441,7 +441,7 @@ RSpec.describe 'Service Broker' do
 
         context 'has an external uri reference' do
           let(:path) { "service_instance.#{service_instance_type}.parameters" }
-          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { '$ref': 'http://example.com/ref' } } } } }
+          let(:schema) { { 'service_instance' => { service_instance_type => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/ref' } } } } }
 
           before do
             stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -471,8 +471,8 @@ RSpec.describe 'Service Broker' do
       let(:schema) {
         {
           'service_instance' => {
-            'create' => { 'parameters' => { '$ref': 'http://example.com/ref' } },
-            'update' => { 'parameters' => { '$ref': 'http://example.com/ref' } }
+            'create' => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/ref' } },
+            'update' => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/ref' } }
           }
         }
       }
