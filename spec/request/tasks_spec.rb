@@ -81,6 +81,10 @@ RSpec.describe 'Tasks' do
               'app' => {
                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               },
+              'cancel' => {
+                'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
+                'method' => 'POST',
+              },
               'droplet' => {
                 'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
               }
@@ -105,6 +109,10 @@ RSpec.describe 'Tasks' do
               },
               'app' => {
                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              },
+              'cancel' => {
+                'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
+                'method' => 'POST',
               },
               'droplet' => {
                 'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -202,6 +210,10 @@ RSpec.describe 'Tasks' do
           },
           'app' => {
             'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          },
+          'cancel' => {
+            'href' => "#{link_prefix}/v3/tasks/#{task_guid}/actions/cancel",
+            'method' => 'POST',
           },
           'droplet' => {
             'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -361,6 +373,10 @@ RSpec.describe 'Tasks' do
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
                 },
+                'cancel' => {
+                  'href' => "#{link_prefix}/v3/tasks/#{task1.guid}/actions/cancel",
+                  'method' => 'POST',
+                },
                 'droplet' => {
                   'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
                 }
@@ -386,6 +402,10 @@ RSpec.describe 'Tasks' do
                 },
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+                },
+                'cancel' => {
+                  'href' => "#{link_prefix}/v3/tasks/#{task2.guid}/actions/cancel",
+                  'method' => 'POST',
                 },
                 'droplet' => {
                   'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
@@ -534,6 +554,10 @@ RSpec.describe 'Tasks' do
           },
           'app' => {
             'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          },
+          'cancel' => {
+            'href' => "#{link_prefix}/v3/tasks/#{guid}/actions/cancel",
+            'method' => 'POST',
           },
           'droplet' => {
             'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}"

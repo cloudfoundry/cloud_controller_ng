@@ -33,6 +33,7 @@ module VCAP::CloudController
           {
             self:    { href: url_builder.build_url(path: "/v3/tasks/#{task.guid}") },
             app:     { href: url_builder.build_url(path: "/v3/apps/#{task.app.guid}") },
+            cancel:  { href: url_builder.build_url(path: "/v3/tasks/#{task.guid}/actions/cancel"), method: 'POST' },
             droplet: { href: url_builder.build_url(path: "/v3/droplets/#{task.droplet_guid}") },
           }
         end

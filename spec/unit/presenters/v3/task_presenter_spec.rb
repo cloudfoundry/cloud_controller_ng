@@ -23,6 +23,7 @@ module VCAP::CloudController::Presenters::V3
         links = {
           self:    { href: "#{link_prefix}/v3/tasks/#{task.guid}" },
           app:     { href: "#{link_prefix}/v3/apps/#{task.app.guid}" },
+          cancel:  { href: "#{link_prefix}/v3/tasks/#{task.guid}/actions/cancel", method: 'POST' },
           droplet: { href: "#{link_prefix}/v3/droplets/#{task.droplet.guid}" },
         }
 
