@@ -29,8 +29,12 @@ module VCAP::CloudController
             }
           },
 
-          network_policy: {
+          network_policy_v0: {
             href: api_url_builder.build_url(path: '/networking/v0/external'),
+          },
+
+          network_policy_v1: {
+            href: api_url_builder.build_url(path: '/networking/v1/external'),
           },
 
           uaa: {
