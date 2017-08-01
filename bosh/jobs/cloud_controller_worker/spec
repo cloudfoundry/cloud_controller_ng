@@ -8,7 +8,7 @@ templates:
   cloud_controller_worker_ctl.erb: bin/cloud_controller_worker_ctl
   setup_local_blobstore.sh.erb: bin/setup_local_blobstore.sh
   newrelic.yml.erb: config/newrelic.yml
-  drain.sh: bin/drain
+  drain.sh.erb: bin/drain
   stacks.yml.erb: config/stacks.yml
   ruby_version.sh.erb: bin/ruby_version.sh
   console.erb: bin/console
