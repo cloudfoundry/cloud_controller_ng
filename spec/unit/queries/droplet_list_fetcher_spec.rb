@@ -218,6 +218,32 @@ module VCAP::CloudController
           expect(results.all).to match_array([failed_droplet])
         end
       end
+
+      describe 'filtering by current droplet' do
+        let(:filters) { { current: true, app_guid: app.guid } }
+
+        context 'when there is a current droplet for the app' do
+          before do
+            app.update(droplet: staged_droplet)
+          end
+
+          it 'returns the current droplet' do
+            _app, results = fetcher.fetch_for_app
+            expect(results.all).to match_array([staged_droplet])
+          end
+        end
+
+        context 'when there is no current droplet for the app' do
+          before do
+            app.update(droplet: nil)
+          end
+
+          it 'returns an empty list' do
+            _app, results = fetcher.fetch_for_app
+            expect(results.all).to match_array([])
+          end
+        end
+      end
     end
 
     describe '#fetch_for_package' do

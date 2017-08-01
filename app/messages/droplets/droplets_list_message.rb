@@ -5,6 +5,7 @@ module VCAP::CloudController
     ALLOWED_KEYS = [
       :app_guid,
       :app_guids,
+      :current,
       :guids,
       :order_by,
       :organization_guids,
@@ -22,7 +23,9 @@ module VCAP::CloudController
     validates :states, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
+    validates :current, inclusion: { in: [true] }, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
+    validate :not_app_nested_request, unless: -> { app_guid.present? }
 
     def initialize(params={})
       super(params.symbolize_keys)
@@ -41,6 +44,12 @@ module VCAP::CloudController
     end
 
     private
+
+    def not_app_nested_request
+      invalid_attributes = []
+      invalid_attributes << :current if current
+      errors.add(:base, "Unknown query parameter(s): '#{invalid_attributes.join("', '")}'") if invalid_attributes.present?
+    end
 
     def app_nested_request
       invalid_attributes = []

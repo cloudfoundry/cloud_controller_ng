@@ -416,6 +416,55 @@ RSpec.describe 'Droplets' do
       droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
+    describe 'current query parameter' do
+      context 'when there is a current droplet' do
+        before do
+          app_model.update(droplet: droplet2)
+        end
+
+        it 'returns only the current droplet' do
+          get "/v3/apps/#{app_model.guid}/droplets?current=true", nil, developer_headers
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['pagination']).to be_a_response_like(
+            {
+              'total_results' => 1,
+              'total_pages'   => 1,
+              'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'next'          => nil,
+              'previous'      => nil,
+            })
+
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([droplet2.guid])
+        end
+      end
+
+      context 'when there is no current droplet' do
+        before do
+          app_model.update(droplet: nil)
+        end
+
+        it 'returns an empty list' do
+          get "/v3/apps/#{app_model.guid}/droplets?current=true", nil, developer_headers
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['pagination']).to be_a_response_like(
+            {
+              'total_results' => 0,
+              'total_pages'   => 1,
+              'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'next'          => nil,
+              'previous'      => nil,
+            })
+
+          expect(parsed_response['resources']).to match_array([])
+        end
+      end
+    end
+
     it 'filters by states' do
       get "/v3/apps/#{app_model.guid}/droplets?states=STAGED", nil, developer_headers
 

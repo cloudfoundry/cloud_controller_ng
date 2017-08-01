@@ -15,7 +15,8 @@ module VCAP::CloudController
           'order_by'  => 'created_at',
           'guids'     => 'guid1,guid2',
           'space_guids' => 'guid3,guid4',
-          'organization_guids' => 'guid3,guid4'
+          'organization_guids' => 'guid3,guid4',
+          'current' => true,
         }
       end
 
@@ -33,6 +34,7 @@ module VCAP::CloudController
         expect(message.guids).to match_array(['guid1', 'guid2'])
         expect(message.space_guids).to match_array(['guid3', 'guid4'])
         expect(message.organization_guids).to match_array(['guid3', 'guid4'])
+        expect(message.current).to eq(true)
       end
 
       it 'converts requested keys to symbols' do
@@ -47,6 +49,7 @@ module VCAP::CloudController
         expect(message.requested?(:order_by)).to be true
         expect(message.requested?(:space_guids)).to be true
         expect(message.requested?(:organization_guids)).to be true
+        expect(message.requested?(:current)).to be true
       end
     end
 
@@ -78,7 +81,7 @@ module VCAP::CloudController
       end
 
       describe 'validations' do
-        describe 'validating app nested query' do
+        context 'when the query is nested under an app' do
           context 'when the app_guid is present' do
             context 'when the request contains organization_guids' do
               it 'is invalid' do
@@ -102,6 +105,23 @@ module VCAP::CloudController
                 expect(message).to_not be_valid
                 expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
               end
+            end
+
+            context 'when the request contains the current field' do
+              it 'is valid' do
+                message = DropletsListMessage.new({ app_guid: 'blah', current: true })
+                expect(message).to be_valid
+              end
+            end
+          end
+        end
+
+        context 'when the query is not nested under an app' do
+          context 'when the request contains current field' do
+            it 'is invalid' do
+              message = DropletsListMessage.new({ current: true })
+              expect(message).to_not be_valid
+              expect(message.errors[:base]).to include("Unknown query parameter(s): 'current'")
             end
           end
         end
@@ -128,6 +148,12 @@ module VCAP::CloudController
           message = DropletsListMessage.new states: 'not array at all'
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
+        end
+
+        it 'validates current is true' do
+          message = DropletsListMessage.new(current: false)
+          expect(message).to be_invalid
+          expect(message.errors[:current].length).to eq(1)
         end
       end
     end

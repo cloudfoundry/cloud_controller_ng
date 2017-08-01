@@ -6,30 +6,37 @@ module VCAP::CloudController
 
     def fetch_all
       dataset = DropletModel.dataset
-      filter(dataset)
+      filter(nil, dataset)
     end
 
     def fetch_for_spaces(space_guids:)
       @space_guids = space_guids
       dataset = DropletModel.dataset
-      filter(dataset)
+      filter(nil, dataset)
     end
 
     def fetch_for_app
       app = AppModel.where(guid: @message.app_guid).eager(:space, space: :organization).all.first
       return nil unless app
-      [app, filter(app.droplets_dataset)]
+      [app, filter(app, app.droplets_dataset)]
     end
 
     def fetch_for_package
       package = PackageModel.where(guid: @message.package_guid).eager(:space, space: :organization).all.first
       return nil unless package
-      [package, filter(package.droplets_dataset)]
+      [package, filter(nil, package.droplets_dataset)]
     end
 
     private
 
-    def filter(dataset)
+    def filter(app, dataset)
+      if @message.requested?(:current) && app
+        dataset = dataset.extension(:null_dataset)
+        return dataset.nullify unless app.droplet
+
+        dataset = dataset.where(guid: app.droplet.guid)
+      end
+
       if @message.requested?(:app_guids)
         dataset = dataset.where(app_guid: @message.app_guids)
       end
