@@ -12,8 +12,7 @@ module VCAP::CloudController
     end
 
     validates_with NoAdditionalKeysValidator, RelationshipValidator, DataValidator
-    validates :service_instance_guid, string: true
-    validates :app_guid, string: true
+
     validates :data, hash: true, allow_nil: true
     validates :type, string: true, presence: true
     validates_inclusion_of :type, in: ALLOWED_TYPES, message: 'type must be app'

@@ -70,6 +70,28 @@ module VCAP::CloudController
             expect(message.errors_on(:relationships)).to_not be_empty
           end
         end
+
+        context 'when the relationships field is nil' do
+          let(:relationships) { nil }
+
+          it 'is not valid' do
+            message = PackageCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to_not be_empty
+          end
+        end
+
+        context 'when the relationships field is non-hash, non-nil garbage' do
+          let(:relationships) { 'gorniplatz' }
+
+          it 'is not valid' do
+            message = PackageCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to_not be_empty
+          end
+        end
       end
 
       context 'bits' do

@@ -273,8 +273,8 @@ module VCAP::CloudController::Validators
 
       it 'returns early when base class relationships is not a hash' do
         message = RelationshipMessage.new({ relationships: 'not a hash' })
-        expect(message).to be_valid
-        expect(message.errors_on(:relationships)).to be_empty
+        expect(message).not_to be_valid
+        expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
       end
     end
 

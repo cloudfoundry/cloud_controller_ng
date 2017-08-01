@@ -20,7 +20,6 @@ module VCAP::CloudController
 
     validates :name, string: true
     validates :environment_variables, hash: true, allow_nil: true
-    validates :relationships, hash: true, allow_nil: false
 
     validates :lifecycle_type,
       string: true,

@@ -93,7 +93,10 @@ module VCAP::CloudController::Validators
 
   class RelationshipValidator < ActiveModel::Validator
     def validate(record)
-      return if !record.relationships.is_a?(Hash)
+      if !record.relationships.is_a?(Hash)
+        record.errors[:relationships].concat ["'relationships' is not a hash"]
+        return
+      end
 
       rel = record.relationships_message
 

@@ -76,7 +76,7 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:service_instance_guid)).to include('must be a string')
+            expect(message.errors_on(:relationships)).to include('Service instance guid must be a string')
           end
         end
 
@@ -128,6 +128,36 @@ module VCAP::CloudController
             expect(message.errors_on(:relationships)).to include(/Service instance must be structured like this: \"service_instance: {\"data\": {\"guid\": \"valid-guid"}}\"/)
           end
         end
+
+        context 'when the relationship hash is missing' do
+          let(:symbolized_body) do
+            valid_body.tap do |hash|
+              hash.delete(:relationships)
+            end
+          end
+
+          it 'is not valid' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include(/'relationships' is not a hash/)
+          end
+        end
+
+        context 'when relationships is not a hash' do
+          let(:symbolized_body) do
+            valid_body.tap do |hash|
+              hash[:relationships] = 'not a hash'
+            end
+          end
+
+          it 'is not valid' do
+            message = ServiceBindingCreateMessage.new(symbolized_body)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include(/'relationships' is not a hash/)
+          end
+        end
       end
 
       context 'app_guid' do
@@ -146,7 +176,7 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:app_guid)).to include('must be a string')
+            expect(message.errors_on(:relationships)).to include('App guid must be a string')
           end
         end
 
