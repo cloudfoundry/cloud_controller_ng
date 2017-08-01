@@ -92,9 +92,9 @@ GEM
       steno
     builder (3.2.3)
     byebug (9.0.6)
-    cf-uaa-lib (3.7.0)
-      httpclient (~> 2.8.2.4)
-      multi_json
+    cf-uaa-lib (3.11.0)
+      httpclient (~> 2.8, >= 2.8.2.4)
+      multi_json (~> 1.12.0, >= 1.12.1)
     clockwork (2.0.0)
       activesupport
       tzinfo
@@ -425,7 +425,7 @@ DEPENDENCIES
   awesome_print
   bits_service_client
   byebug
-  cf-uaa-lib (~> 3.7.0)
+  cf-uaa-lib (~> 3.11.0)
   clockwork
   cloudfront-signer
   codeclimate-test-reporter

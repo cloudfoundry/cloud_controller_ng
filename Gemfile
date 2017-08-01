@@ -44,7 +44,7 @@ gem 'fog-local'
 gem 'fog-openstack'
 
 gem 'bits_service_client'
-gem 'cf-uaa-lib', '~> 3.7.0'
+gem 'cf-uaa-lib', '~> 3.11.0'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 group :db do
