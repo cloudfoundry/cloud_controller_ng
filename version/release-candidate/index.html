@@ -772,7 +772,6 @@ and the docker image is executed inside of it.</p>
 </code></pre>
 
 <p>A Procfile enables you to declare required runtime processes, called process types, for your app.
-Processes defined by Procfiles are merged with the processes provided by buildpacks, with the Procfile taking precedence.
 Procfiles must be named <code class="prettyprint">Procfile</code> exactly, and placed in the root directory of your application.</p>
 
 <p>In a Procfile, you declare one process type per line and use the syntax <code class="prettyprint">PROCESS_TYPE: COMMAND</code>.</p>
@@ -782,8 +781,15 @@ Procfiles must be named <code class="prettyprint">Procfile</code> exactly, and p
 <li><code class="prettyprint">COMMAND</code> is the command line to launch the process.</li>
 </ul>
 
-<p>One reason to use a Procfile is specify a start command for buildpacks where a default start command is not provided. Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command.
-Another reason to use a Procfile is to configure a production server or workers for web apps.</p>
+<h4 id="procfile-use-cases">Procfile use cases</h4>
+
+<p>Many buildpacks provide their own process types and commands by default; however, there are special cases where specifying a custom <code class="prettyprint">COMMAND</code> is necessary.
+Commands can be overwritten by providing a Procfile with the same process type.</p>
+
+<p>For example, a buildpack may provide a <code class="prettyprint">worker</code> process type that runs the <code class="prettyprint">rake default:start</code> command.
+If a Procfile is provided that also contains a <code class="prettyprint">worker</code> process type, but a different command such as <code class="prettyprint">rake custom:start</code>, the <code class="prettyprint">rake custom:start</code> command will be used.</p>
+
+<p>Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command. For these cases, a Procfile should be used to specify any necessary commands for the app.</p>
 
 <h4 id="web-process">Web process</h4>
 
@@ -2587,7 +2593,9 @@ It will include environment variables for Environment Variable Groups and Servic
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
 <span class="p">{</span><span class="w">
-  </span><span class="nt">"RAILS_ENV"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"var"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"RAILS_ENV"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span><span class="w">
@@ -2631,7 +2639,9 @@ For the entire list of environment variables that will be available to the app a
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
   -d <span class="s1">'{
-     "DEBUG": "false"
+     "var": {
+       "DEBUG": "false"
+     }
    }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -2640,8 +2650,10 @@ For the entire list of environment variables that will be available to the app a
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
 <span class="p">{</span><span class="w">
-  </span><span class="nt">"RAILS_ENV"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"DEBUG"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"var"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"RAILS_ENV"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"DEBUG"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span><span class="w">
@@ -5797,7 +5809,6 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <li>By default, a newly created app will come with one instance of the <code class="prettyprint">web</code> process and all other process types are scaled to zero</li>
 <li>Scale the <code class="prettyprint">web</code> process to zero if it is not required for your app</li>
 <li>Unless otherwise specified, all routes will be mapped to the <code class="prettyprint">web</code> process by default</li>
-<li>Web starts at 1, other processes start at 0 instances (scale down web to 0 if you do not want to run a web process).</li>
 </ul>
 
           <h3 id="the-process-object">The process object</h3>
