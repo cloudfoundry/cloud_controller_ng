@@ -44,11 +44,18 @@ module VCAP::CloudController
         expect(hash['links']['uaa']['href']).to eq(TestConfig.config[:uaa][:url])
       end
 
-      it 'returns a link to network-policy API' do
+      it 'returns a link to network-policy v0 API' do
         get '/'
         hash = MultiJson.load(last_response.body)
         expected_uri = "#{link_prefix}/networking/v0/external"
-        expect(hash['links']['network_policy']['href']).to eq(expected_uri)
+        expect(hash['links']['network_policy_v0']['href']).to eq(expected_uri)
+      end
+
+      it 'returns a link to network-policy v1 API' do
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expected_uri = "#{link_prefix}/networking/v1/external"
+        expect(hash['links']['network_policy_v1']['href']).to eq(expected_uri)
       end
 
       it 'returns a link to the logging API' do
