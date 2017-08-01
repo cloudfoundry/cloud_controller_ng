@@ -109,7 +109,7 @@ module VCAP::CloudController
 
             context 'when the request contains the current field' do
               it 'is valid' do
-                message = DropletsListMessage.new({ app_guid: 'blah', current: true })
+                message = DropletsListMessage.new({ app_guid: 'blah', current: 'true' })
                 expect(message).to be_valid
               end
             end
@@ -119,7 +119,7 @@ module VCAP::CloudController
         context 'when the query is not nested under an app' do
           context 'when the request contains current field' do
             it 'is invalid' do
-              message = DropletsListMessage.new({ current: true })
+              message = DropletsListMessage.new({ current: 'true' })
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'current'")
             end
@@ -151,7 +151,7 @@ module VCAP::CloudController
         end
 
         it 'validates current is true' do
-          message = DropletsListMessage.new(current: false)
+          message = DropletsListMessage.new(current: 'false')
           expect(message).to be_invalid
           expect(message.errors[:current].length).to eq(1)
         end

@@ -220,7 +220,7 @@ module VCAP::CloudController
       end
 
       describe 'filtering by current droplet' do
-        let(:filters) { { current: true, app_guid: app.guid } }
+        let(:filters) { { current: 'true', app_guid: app.guid } }
 
         context 'when there is a current droplet for the app' do
           before do
