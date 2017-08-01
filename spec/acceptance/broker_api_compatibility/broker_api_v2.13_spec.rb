@@ -8,14 +8,14 @@ RSpec.describe 'Service Broker API integration' do
     let(:update_instance_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } }
     let(:schemas) {
       {
-          'service_instance' => {
-              'create' => {
-                  'parameters' => create_instance_schema
-              },
-              'update' => {
-                  'parameters' => update_instance_schema
-              }
+        'service_instance' => {
+          'create' => {
+            'parameters' => create_instance_schema
+          },
+          'update' => {
+            'parameters' => update_instance_schema
           }
+        }
       }
     }
 
@@ -31,8 +31,8 @@ RSpec.describe 'Service Broker API integration' do
       context 'with a create plan schema' do
         let(:create_instance_schema) {
           {
-              '$schema' => 'http://json-schema.org/draft-04/schema#',
-              'type' => 'object'
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object'
           }
         }
 
@@ -43,22 +43,23 @@ RSpec.describe 'Service Broker API integration' do
 
           parsed_body = MultiJson.load(last_response.body)
           create_schema = parsed_body['entity']['schemas']['service_instance']['create']
-          expect(create_schema).to eq({
-                                          'parameters' =>
-                                              {
-                                                  '$schema' => 'http://json-schema.org/draft-04/schema#',
-                                                  'type' => 'object'
-                                              }
-                                      }
-                                   )
+          expect(create_schema).to eq(
+            {
+              'parameters' =>
+              {
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object'
+              }
+            }
+          )
         end
       end
 
       context 'with an update plan schema' do
         let(:update_instance_schema) {
           {
-              '$schema' => 'http://json-schema.org/draft-04/schema#',
-              'type' => 'object'
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object'
           }
         }
 
@@ -69,14 +70,15 @@ RSpec.describe 'Service Broker API integration' do
 
           parsed_body = MultiJson.load(last_response.body)
           update_schema = parsed_body['entity']['schemas']['service_instance']['update']
-          expect(update_schema).to eq({
-                                          'parameters' =>
-                                              {
-                                                  '$schema' => 'http://json-schema.org/draft-04/schema#',
-                                                  'type' => 'object'
-                                              }
-                                      }
-                                   )
+          expect(update_schema).to eq(
+            {
+              'parameters' =>
+              {
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object'
+              }
+            }
+          )
         end
       end
 

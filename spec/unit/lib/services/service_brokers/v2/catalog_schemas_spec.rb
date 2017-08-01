@@ -4,14 +4,14 @@ module VCAP::Services::ServiceBrokers::V2
   RSpec.describe CatalogSchemas do
     describe 'validating catalog schemas' do
       subject do
-        catalog_schema = CatalogSchemas.new(attrs)
+        catalog_schema = CatalogSchemas.new(schemas)
         catalog_schema.valid?
         catalog_schema
       end
 
       context 'service instance' do
         context 'when catalog has schemas' do
-          let(:attrs) { { 'service_instance' => {} } }
+          let(:schemas) { { 'service_instance' => {} } }
 
           context 'when schemas is not set' do
             {
@@ -21,7 +21,7 @@ module VCAP::Services::ServiceBrokers::V2
                 'Schemas service_instance is empty': { 'service_instance' => {} },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:update_instance) { should be_nil }
                 its(:errors) { should be_empty }
@@ -36,7 +36,7 @@ module VCAP::Services::ServiceBrokers::V2
                 'Schemas service_instance': { 'service_instance' => true }
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its('errors.messages') { should have(1).items }
                 its('errors.messages.first') { should eq "#{name} must be a hash, but has value true" }
@@ -48,7 +48,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when catalog has a create schema' do
           context 'and the schema structure is valid' do
-            let(:attrs) { { 'service_instance' => { 'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } } } } }
+            let(:schemas) { { 'service_instance' => { 'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } } } } }
 
             its(:create_instance) { should be_a(Schema) }
           end
@@ -59,7 +59,7 @@ module VCAP::Services::ServiceBrokers::V2
                 'Schemas service_instance.create.parameters': { 'service_instance' => { 'create' => { 'parameters' => nil } } },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:create_instance) { should be_nil }
                 its(:errors) { should be_empty }
@@ -69,7 +69,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'when the create instance schema is not valid' do
-            let(:attrs) {
+            let(:schemas) {
               {
                   'service_instance' => {
                       'create' => {
@@ -85,12 +85,12 @@ module VCAP::Services::ServiceBrokers::V2
             its(:valid?) { should be false }
           end
 
-          context 'when attrs have a missing key' do
+          context 'when schemas have a missing key' do
             {
                 'Schemas service_instance.create': { 'service_instance' => { 'create' => {} } },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:create_instance) { should be_nil }
                 its(:errors) { should be_empty }
@@ -99,13 +99,13 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
 
-          context 'when attrs have an invalid type' do
+          context 'when schemas have an invalid type' do
             {
                 'Schemas service_instance.create': { 'service_instance' => { 'create' => true } },
                 'Schemas service_instance.create.parameters': { 'service_instance' => { 'create' => { 'parameters' => true } } },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:create_instance) { should be_nil }
                 its('errors.messages') { should have(1).items }
@@ -115,9 +115,9 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
 
-          context 'when attrs has a potentially dangerous uri' do
+          context 'when schemas has a potentially dangerous uri' do
             let(:path) { 'service_instance.create.parameters' }
-            let(:attrs) {
+            let(:schemas) {
               {
                   'service_instance' => {
                       'create' => {
@@ -136,7 +136,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         context 'when catalog has an update schema' do
           context 'and the schema structure is valid' do
-            let(:attrs) {
+            let(:schemas) {
               {
                   'service_instance' => {
                       'update' => {
@@ -149,13 +149,13 @@ module VCAP::Services::ServiceBrokers::V2
             its(:update_instance) { should be_a(Schema) }
           end
 
-          context 'when attrs have nil value' do
+          context 'when schemas have nil value' do
             {
                 'Schemas service_instance.update': { 'service_instance' => { 'update' => nil } },
                 'Schemas service_instance.update.parameters': { 'service_instance' => { 'update' => { 'parameters' => nil } } },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:update_instance) { should be_nil }
                 its(:errors) { should be_empty }
@@ -165,7 +165,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'when the update instance schema is not valid' do
-            let(:attrs) {
+            let(:schemas) {
               {
                   'service_instance' => {
                       'update' => {
@@ -181,12 +181,12 @@ module VCAP::Services::ServiceBrokers::V2
             its(:valid?) { should be false }
           end
 
-          context 'when attrs have a missing key' do
+          context 'when schemas have a missing key' do
             {
                 'Schemas service_instance.update': { 'service_instance' => { 'update' => {} } },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:update_instance) { should be_nil }
                 its(:errors) { should be_empty }
@@ -195,13 +195,13 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
 
-          context 'when attrs have an invalid type' do
+          context 'when schemas have an invalid type' do
             {
                 'Schemas service_instance.update': { 'service_instance' => { 'update' => true } },
                 'Schemas service_instance.update.parameters': { 'service_instance' => { 'update' => { 'parameters' => true } } },
             }.each do |name, test|
               context "for property #{name}" do
-                let(:attrs) { test }
+                let(:schemas) { test }
 
                 its(:update_instance) { should be_nil }
                 its('errors.messages') { should have(1).items }
@@ -213,9 +213,9 @@ module VCAP::Services::ServiceBrokers::V2
 
           # TODO: Look into schema path is not valid error tests
 
-          context 'when attrs has a potentially dangerous uri' do
+          context 'when schemas has a potentially dangerous uri' do
             let(:path) { 'service_instance.update.parameters' }
-            let(:attrs) {
+            let(:schemas) {
               {
                   'service_instance' => {
                       'update' => {

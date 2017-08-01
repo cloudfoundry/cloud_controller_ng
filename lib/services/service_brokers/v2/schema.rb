@@ -3,7 +3,6 @@ require 'json-schema'
 module VCAP::Services::ServiceBrokers::V2
   class Schema
     include ActiveModel::Validations
-    attr_reader :schema
 
     MAX_SCHEMA_SIZE = 65_536
 

@@ -4,17 +4,16 @@ module VCAP::Services::ServiceBrokers::V2
 
     def initialize(schemas)
       @errors = VCAP::Services::ValidationErrors.new
-      @schemas = schemas
       return unless schemas
 
-      return unless validate_structure(@schemas, [])
+      return unless validate_structure(schemas, [])
       service_instance_path = ['service_instance']
-      return unless validate_structure(@schemas, service_instance_path)
+      return unless validate_structure(schemas, service_instance_path)
 
-      create_schema = get_method('create', @schemas)
+      create_schema = get_method('create', schemas)
       @create_instance = Schema.new(create_schema) if create_schema
 
-      update_schema = get_method('update', @schemas)
+      update_schema = get_method('update', schemas)
       @update_instance = Schema.new(update_schema) if update_schema
     end
 

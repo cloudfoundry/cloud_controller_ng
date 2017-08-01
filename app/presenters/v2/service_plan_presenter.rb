@@ -30,7 +30,6 @@ module CloudController
                 },
                 'update' => {
                     'parameters' => update_instance_schema
-
                 }
               }
             }

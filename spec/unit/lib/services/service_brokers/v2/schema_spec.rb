@@ -8,6 +8,7 @@ module VCAP::Services::ServiceBrokers::V2
         schema.validate
         schema
       end
+
       let(:raw_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } }
 
       context 'when attrs have an invalid value as type' do
