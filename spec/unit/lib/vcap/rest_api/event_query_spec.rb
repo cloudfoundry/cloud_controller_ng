@@ -26,9 +26,9 @@ module VCAP::RestAPI
         # mysql does typecasting of strings to ints, so start values at 0
         # so that the query using string tests don't find the 0 values.
         a = EventAuthor.create(num_val: i + 1,
-                          str_val:      "str #{i}",
-                          published:    (i == 0),
-                          published_at: (i == 0) ? nil : Time.at(0).utc + i)
+                               str_val:      "str #{i}",
+                               published:    (i == 0),
+                               published_at: (i == 0) ? nil : Time.at(0).utc + i)
         2.times do |j|
           a.add_event_book(EventBook.create(num_val: j + 1, str_val: "str #{i} #{j}"))
         end
@@ -36,7 +36,6 @@ module VCAP::RestAPI
     end
 
     describe '#filtered_dataset_from_query_params' do
-
       context 'when the model has a guid but foreign key associations are ignored' do
         let!(:magazine1) { EventMagazine.create(guid: SecureRandom.uuid) }
         let!(:magazine2) { EventMagazine.create(guid: SecureRandom.uuid) }
