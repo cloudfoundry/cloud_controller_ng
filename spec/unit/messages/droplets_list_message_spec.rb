@@ -154,6 +154,7 @@ module VCAP::CloudController
           message = DropletsListMessage.new(current: 'false')
           expect(message).to be_invalid
           expect(message.errors[:current].length).to eq(1)
+          expect(message.errors[:current]).to include("only accepts the value 'true'")
         end
       end
     end
