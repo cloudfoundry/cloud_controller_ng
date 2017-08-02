@@ -112,6 +112,13 @@ module VCAP::CloudController
                 message = DropletsListMessage.new({ app_guid: 'blah', current: 'true' })
                 expect(message).to be_valid
               end
+
+              it 'validates current must be true' do
+                message = DropletsListMessage.new({ app_guid: 'blah', current: 'false' })
+                expect(message).to be_invalid
+                expect(message.errors[:current].length).to eq(1)
+                expect(message.errors[:current]).to include("only accepts the value 'true'")
+              end
             end
           end
         end
@@ -148,13 +155,6 @@ module VCAP::CloudController
           message = DropletsListMessage.new states: 'not array at all'
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
-        end
-
-        it 'validates current is true' do
-          message = DropletsListMessage.new(current: 'false')
-          expect(message).to be_invalid
-          expect(message.errors[:current].length).to eq(1)
-          expect(message.errors[:current]).to include("only accepts the value 'true'")
         end
       end
     end
