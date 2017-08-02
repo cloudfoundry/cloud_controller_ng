@@ -24,6 +24,33 @@ includes:
   - concepts/concepts
   - workflows/workflows
   - resources/header
+  - resources/apps/header
+  - resources/apps/object
+  - resources/apps/create
+  - resources/apps/get
+  - resources/apps/update
+  - resources/apps/env
+  - resources/apps/environment_variables
+  - resources/apps/update_environment_variables
+  - resources/apps/current_droplet
+  - resources/apps/get_current_droplet_relationship
+  - resources/apps/get_current_droplet
+  - resources/apps/start
+  - resources/apps/stop
+  - resources/apps/delete
+  - resources/apps/list
+  - resources/builds/header
+  - resources/builds/object
+  - resources/builds/create
+  - resources/builds/get
+  - resources/droplets/header
+  - resources/droplets/object
+  - resources/droplets/copy
+  - resources/droplets/get
+  - resources/droplets/delete
+  - resources/droplets/list
+  - resources/droplets/app/list
+  - resources/droplets/package/list
   - resources/isolation_segments/header
   - resources/isolation_segments/object
   - resources/isolation_segments/create
@@ -35,6 +62,43 @@ includes:
   - resources/isolation_segments/unassign
   - resources/isolation_segments/list_organizations
   - resources/isolation_segments/list_spaces
+  - resources/jobs/header
+  - resources/jobs/object
+  - resources/jobs/get
+  - resources/organizations/header
+  - resources/organizations/object
+  - resources/organizations/list
+  - resources/organizations/list_for_isolation_segment
+  - resources/organizations/assign_default_isolation_segment
+  - resources/organizations/get_default_isolation_segment
+  - resources/packages/header
+  - resources/packages/object
+  - resources/packages/create
+  - resources/packages/get
+  - resources/packages/stage
+  - resources/packages/upload_bits
+  - resources/packages/download_bits
+  - resources/packages/copy_bits
+  - resources/packages/delete
+  - resources/packages/list
+  - resources/packages/app/list
+  - resources/processes/header
+  - resources/processes/object
+  - resources/processes/health_check_object
+  - resources/processes/stats_object
+  - resources/processes/get
+  - resources/processes/stats
+  - resources/processes/update
+  - resources/processes/scale
+  - resources/processes/terminate_instance
+  - resources/processes/list
+  - resources/processes/list_for_app
+  - resources/spaces/header
+  - resources/spaces/object
+  - resources/spaces/list
+  - resources/spaces/get_a_space
+  - resources/spaces/assign_isolation_segment
+  - resources/spaces/get_assigned_isolation_segment
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
@@ -43,64 +107,6 @@ includes:
   - resources/tasks/list
   - resources/tasks/app/list
   - experimental_resources/header
-  - experimental_resources/apps/header
-  - experimental_resources/apps/object
-  - experimental_resources/apps/create
-  - experimental_resources/apps/get
-  - experimental_resources/apps/update
-  - experimental_resources/apps/env
-  - experimental_resources/apps/environment_variables
-  - experimental_resources/apps/update_environment_variables
-  - experimental_resources/apps/current_droplet
-  - experimental_resources/apps/get_current_droplet_relationship
-  - experimental_resources/apps/get_current_droplet
-  - experimental_resources/apps/start
-  - experimental_resources/apps/stop
-  - experimental_resources/apps/delete
-  - experimental_resources/apps/list
-  - experimental_resources/builds/header
-  - experimental_resources/builds/object
-  - experimental_resources/builds/create
-  - experimental_resources/builds/get
-  - experimental_resources/droplets/header
-  - experimental_resources/droplets/object
-  - experimental_resources/droplets/copy
-  - experimental_resources/droplets/get
-  - experimental_resources/droplets/delete
-  - experimental_resources/droplets/list
-  - experimental_resources/droplets/app/list
-  - experimental_resources/droplets/package/list
-  - experimental_resources/jobs/header
-  - experimental_resources/jobs/object
-  - experimental_resources/jobs/get
-  - experimental_resources/organizations/header
-  - experimental_resources/organizations/object
-  - experimental_resources/organizations/list
-  - experimental_resources/organizations/list_for_isolation_segment
-  - experimental_resources/organizations/assign_default_isolation_segment
-  - experimental_resources/organizations/get_default_isolation_segment
-  - experimental_resources/packages/header
-  - experimental_resources/packages/object
-  - experimental_resources/packages/create
-  - experimental_resources/packages/get
-  - experimental_resources/packages/stage
-  - experimental_resources/packages/upload_bits
-  - experimental_resources/packages/download_bits
-  - experimental_resources/packages/copy_bits
-  - experimental_resources/packages/delete
-  - experimental_resources/packages/list
-  - experimental_resources/packages/app/list
-  - experimental_resources/processes/header
-  - experimental_resources/processes/object
-  - experimental_resources/processes/health_check_object
-  - experimental_resources/processes/stats_object
-  - experimental_resources/processes/get
-  - experimental_resources/processes/stats
-  - experimental_resources/processes/update
-  - experimental_resources/processes/scale
-  - experimental_resources/processes/terminate_instance
-  - experimental_resources/processes/list
-  - experimental_resources/processes/list_for_app
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create
@@ -114,11 +120,5 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
-  - experimental_resources/spaces/header
-  - experimental_resources/spaces/object
-  - experimental_resources/spaces/list
-  - experimental_resources/spaces/get_a_space
-  - experimental_resources/spaces/assign_isolation_segment
-  - experimental_resources/spaces/get_assigned_isolation_segment
 search: true
 ---

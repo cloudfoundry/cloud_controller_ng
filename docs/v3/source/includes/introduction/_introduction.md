@@ -5,9 +5,9 @@
 Welcome to the Cloud Foundry V3 API docs! Version 3 will add support for several
 key features:
 
-* **GA** - Running one-off tasks on Cloud Foundry
-* **Experimental** - Applications consisting of several processes via a Procfile
-* **Experimental** - Direct access to application packages and droplets
+* Running one-off tasks on Cloud Foundry
+* Applications consisting of several processes via a Procfile
+* Direct access to application packages and droplets
 
 ## Getting help
 The CAPI team can most easily be reached from our [slack channel](https://cloudfoundry.slack.com/messages/capi/) for
