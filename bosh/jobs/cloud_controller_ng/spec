@@ -7,7 +7,8 @@ templates:
   nginx_ctl.erb: bin/nginx_ctl
   nginx.conf.erb: config/nginx.conf
   public_upload.conf.erb: config/public_upload.conf
-  drain.rb: bin/drain
+  cc-drain.rb: bin/cc-drain
+  drain.sh.erb: bin/drain
   restart_drain.rb: bin/restart_drain
   mime.types: config/mime.types
   cloud_controller_api.yml.erb: config/cloud_controller_ng.yml

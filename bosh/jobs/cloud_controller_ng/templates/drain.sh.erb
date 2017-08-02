@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+RUN_DIR="/var/vcap/sys/run/cloud_controller_ng"
+JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
+
+source /var/vcap/packages/capi_utils/pid_utils.sh
+
+for i in {1..<%=p("cc.jobs.local.number_of_workers")%>}; do
+  pidfile="${RUN_DIR}/cloud_controller_worker_${i}.pid"
+
+  if [ -f "${pidfile}" ]; then
+    kill_and_wait "$pidfile" 30 &> /dev/null
+  fi
+done
+
+exec "${JOB_DIR}/bin/cc-drain"
