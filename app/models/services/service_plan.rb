@@ -6,11 +6,11 @@ module VCAP::CloudController
 
     add_association_dependencies service_plan_visibilities: :destroy
 
-    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active, :create_instance_schema
+    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active, :create_instance_schema, :update_instance_schema
 
     export_attributes_from_methods bindable: :bindable?
 
-    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :create_instance_schema
+    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :create_instance_schema, :update_instance_schema
 
     strip_attributes :name
 

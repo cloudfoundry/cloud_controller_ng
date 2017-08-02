@@ -11,7 +11,7 @@ RSpec.resource 'Service Plans', type: [:api, :legacy_api] do
     field :guid, 'The guid of the service plan', required: false
     field :public, 'A boolean describing that the plan is visible to the all users', required: false, default: true
 
-    expected_attributes = VCAP::CloudController::ServicePlan.new.export_attrs - [:create_instance_schema] + [:schemas]
+    expected_attributes = VCAP::CloudController::ServicePlan.new.export_attrs - [:create_instance_schema] - [:update_instance_schema] + [:schemas]
 
     standard_model_list(:service_plans, VCAP::CloudController::ServicePlansController, export_attributes: expected_attributes)
     standard_model_get(:service_plans, export_attributes: expected_attributes)
