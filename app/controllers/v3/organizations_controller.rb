@@ -9,6 +9,13 @@ require 'controllers/v3/mixins/sub_resource'
 class OrganizationsV3Controller < ApplicationController
   include SubResource
 
+  def show
+    org = fetch_org(params[:guid])
+    org_not_found! unless org && can_read_from_org?(org.guid)
+
+    render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
+  end
+
   def index
     message = OrgsListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?

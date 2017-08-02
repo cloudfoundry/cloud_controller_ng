@@ -42,14 +42,22 @@ RSpec.describe 'Organizations' do
               'name' => 'Apocalypse World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {}
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}"
+                 }
+              }
             },
             {
               'guid' => organization2.guid,
               'name' => 'Dungeon World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {}
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
+                }
+              },
             }
           ]
         }
@@ -90,14 +98,22 @@ RSpec.describe 'Organizations' do
               'name' => 'Dungeon World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {}
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
+                }
+              },
             },
             {
               'guid' => organization3.guid,
               'name' => 'The Sprawl',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {}
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{organization3.guid}"
+                }
+              },
             }
           ]
         }

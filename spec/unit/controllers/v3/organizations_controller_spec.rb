@@ -1,6 +1,51 @@
 require 'rails_helper'
 
 RSpec.describe OrganizationsV3Controller, type: :controller do
+  describe '#show' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    let!(:org) { VCAP::CloudController::Organization.make(name: 'Eric\'s Farm') }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'Cat', organization: org) }
+
+    describe 'permissions by role' do
+      before do
+        set_current_user(user)
+      end
+
+      role_to_expected_http_response = {
+        'admin'               => 200,
+        'space_developer'     => 200,
+        'admin_read_only'     => 200,
+        'global_auditor'      => 200,
+        'space_manager'       => 200,
+        'space_auditor'       => 200,
+        'org_manager'         => 200,
+        'org_auditor'         => 200,
+        'org_billing_manager' => 200,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            get :show, guid: org.guid
+
+            expect(response.status).to eq(expected_return_value),
+              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+            if expected_return_value == 200
+              expect(parsed_body['guid']).to eq(org.guid)
+              expect(parsed_body['name']).to eq('Eric\'s Farm')
+              expect(parsed_body['created_at']).to match(iso8601)
+              expect(parsed_body['updated_at']).to match(iso8601)
+              expect(parsed_body['links']['self']['href']).to match(%r{/v3/organizations/#{org.guid}$})
+            end
+          end
+        end
+      end
+    end
+  end
+
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 

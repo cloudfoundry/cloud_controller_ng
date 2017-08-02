@@ -1,11 +1,11 @@
-### Get a space
+### Get an organization
 
 ```
 Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/spaces/[guid]" \
+curl "https://api.example.org/v3/organizations/[guid]" \
   -X GET \
   -H "Authorization: bearer [token]" \
    }'
@@ -19,13 +19,13 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :space, '/v3/spaces/:guid' %>
+<%= yield_content :organization, '/v3/organizations/:guid' %>
 ```
 
-This endpoint retrieves the specified space object.
+This endpoint retrieves the specified organization object.
 
 #### Definition
-`GET /v3/spaces/:guid`
+`GET /v3/organizations/:guid`
 
 #### Permitted Roles
  |
@@ -36,4 +36,6 @@ Read-Only Admin	|
 Global Auditor	|
 Space Manager	|
 Space Auditor	|
+Org Auditor	|
+Org Billing Manager	|
 Org Manager	|
