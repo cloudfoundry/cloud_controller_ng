@@ -189,6 +189,39 @@ class FakeModelTables
 
       foreign_key :magazine_id, :magazines
     end
+
+    db.create_table :event_authors do
+      primary_key :id
+
+      Integer :num_val
+      String :str_val
+      Integer :protected
+      Boolean :published
+      DateTime :published_at
+    end
+
+    db.create_table :event_books do
+      primary_key :id
+
+      Integer :num_val
+      String :str_val
+
+      foreign_key :event_author_id, :event_authors
+    end
+
+    db.create_table :event_magazines do
+      primary_key :id
+
+      String :guid
+    end
+
+    db.create_table :event_subscribers do
+      primary_key :id
+
+      String :guid
+
+      foreign_key :event_magazine_id, :event_magazines
+    end
   end
 
   private
