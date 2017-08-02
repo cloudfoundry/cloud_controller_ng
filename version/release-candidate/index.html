@@ -2661,7 +2661,8 @@ For the entire list of environment variables that will be available to the app a
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -d <span class="s1">'{
      "var": {
        "DEBUG": "false"
@@ -5060,7 +5061,7 @@ Only isolation segments that are entitled to the organization are eligible to be
     "relationships": {
       "app": {
         "data": {
-          "guid": [guid]
+          "guid": "[guid]"
         }
       }
     }
@@ -5114,7 +5115,7 @@ Only isolation segments that are entitled to the organization are eligible to be
     "relationships": {
       "app": {
         "data": {
-          "guid": [guid]
+          "guid": "[guid]"
         }
       }
     },
