@@ -12,7 +12,11 @@ Sequel.migration do
 
       cloned_event_hash = started_event.clone
       cloned_event_hash.delete(:id)
-      cloned_event_hash.merge!(guid: SecureRandom.uuid, state: 'TASK_STOPPED', created_at: Sequel.function(:NOW))
+      cloned_event_hash.merge!(
+        guid: SecureRandom.uuid,
+        state: 'TASK_STOPPED',
+        created_at: started_event[:created_at] + 1.second
+      )
 
       self[:app_usage_events].insert(cloned_event_hash)
     end
