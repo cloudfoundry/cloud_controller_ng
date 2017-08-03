@@ -103,6 +103,7 @@
           
 
 
+
           
 
 
@@ -4025,6 +4026,75 @@ Global Auditor |</p>
 </tr>
 </tbody></table>
 
+          <h3 id="get-an-organization">Get an organization</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+   <span class="o">}</span><span class="s1">'
+</span></code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"24637893-3b77-489d-bb79-8466f0d88b52"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org1"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>This endpoint retrieves the specified organization object.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/organizations/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Read-Only Admin</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-organizations-for-isolation-segment">List organizations for isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -6224,7 +6294,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 </span></code></pre>
 
-<p>This endpoint retrieves the specified space object</p>
+<p>This endpoint retrieves the specified space object.</p>
 
 <h4 id="definition">Definition</h4>
 
