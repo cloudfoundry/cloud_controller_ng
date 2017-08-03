@@ -44,6 +44,17 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         end
       end
     end
+
+    describe 'user with no roles' do
+      before do
+        set_current_user(user)
+      end
+
+      it 'returns an error' do
+        get :show, guid: org.guid
+        expect(response.status).to eq(404), "Got #{response.status}"
+      end
+    end
   end
 
   describe '#index' do

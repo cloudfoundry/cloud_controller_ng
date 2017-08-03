@@ -7,8 +7,7 @@ Example Request
 ```shell
 curl "https://api.example.org/v3/organizations/[guid]" \
   -X GET \
-  -H "Authorization: bearer [token]" \
-   }'
+  -H "Authorization: bearer [token]"
 ```
 
 ```
@@ -30,12 +29,12 @@ This endpoint retrieves the specified organization object.
 #### Permitted Roles
  |
 --- | ---
-Admin	|
 Space Developer	|
-Read-Only Admin	|
-Global Auditor	|
 Space Manager	|
 Space Auditor	|
-Org Auditor	|
-Org Billing Manager	|
 Org Manager	|
+Org Billing Manager	|
+Org Auditor	|
+Admin	|
+Admin Read-Only	|
+Global Auditor	|
