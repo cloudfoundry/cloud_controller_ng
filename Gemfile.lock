@@ -240,7 +240,7 @@ GEM
     multi_json (1.12.1)
     multipart-post (2.0.0)
     mustache (0.99.8)
-    mysql2 (0.4.5)
+    mysql2 (0.4.8)
     nats (0.5.0)
       daemons (~> 1.1, >= 1.2.2)
       eventmachine (~> 1.0, >= 1.0.7)
@@ -448,7 +448,7 @@ DEPENDENCIES
   membrane (~> 1.0)
   mime-types (~> 2.6.2)
   multi_json
-  mysql2 (= 0.4.5)
+  mysql2 (= 0.4.8)
   net-ssh
   netaddr
   newrelic_rpm (>= 3.12)
