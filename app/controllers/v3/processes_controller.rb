@@ -35,15 +35,7 @@ class ProcessesController < ApplicationController
   end
 
   def show
-    if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
-      process_not_found! unless process
-    else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
-    end
-
+    process, space = find_process_and_space
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(process, show_secrets: can_see_secrets?(space))
   end
 
@@ -51,35 +43,18 @@ class ProcessesController < ApplicationController
     message = ProcessUpdateMessage.create_from_http_request(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    if app_nested?
-      app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).first
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
-      unauthorized! unless can_write?(app.space.guid)
-      process = app.processes_dataset.where(type: params[:type]).first
-      process_not_found! unless process
-    else
-      guid    = params[:process_guid]
-      process = ProcessModel.where(guid: guid).eager(:space, :organization).first
-      process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
-      unauthorized! unless can_write?(process.space.guid)
-    end
+    process, space = find_process_and_space
+    unauthorized! unless can_write?(space.guid)
 
     ProcessUpdate.new(user_audit_info).update(process, message)
+
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(process)
   rescue ProcessUpdate::InvalidProcess => e
     unprocessable!(e.message)
   end
 
   def terminate
-    if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
-      process_not_found! unless process
-    else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
-    end
-
+    process, space = find_process_and_space
     unauthorized! unless can_write?(space.guid)
 
     ProcessTerminate.new(user_audit_info, process, params[:index].to_i).terminate
@@ -95,15 +70,7 @@ class ProcessesController < ApplicationController
     message = ProcessScaleMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?
 
-    if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(space.guid, org.guid)
-      process_not_found! unless process
-    else
-      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless process && can_read?(space.guid, org.guid)
-    end
-
+    process, space = find_process_and_space
     unauthorized! unless can_write?(space.guid)
 
     ProcessScale.new(user_audit_info, process, message).scale
@@ -114,21 +81,25 @@ class ProcessesController < ApplicationController
   end
 
   def stats
+    process, _space = find_process_and_space
+    process_stats   = instances_reporters.stats_for_app(process)
+
+    render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(process.type, process_stats)
+  end
+
+  private
+
+  def find_process_and_space
     if app_nested?
-      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
       app_not_found! unless app && can_read?(space.guid, org.guid)
       process_not_found! unless process
     else
       process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
       process_not_found! unless process && can_read?(space.guid, org.guid)
     end
-
-    process_stats = instances_reporters.stats_for_app(process)
-
-    render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(process.type, process_stats)
+    [process, space]
   end
-
-  private
 
   def process_not_found!
     resource_not_found!(:process)
