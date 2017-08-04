@@ -5,6 +5,7 @@ require 'repositories/app_usage_event_repository'
 require 'presenters/v3/cache_key_presenter'
 require 'utils/uri_utils'
 require 'models/runtime/helpers/package_state_calculator.rb'
+require 'models/helpers/process_types'
 
 require_relative 'buildpack'
 
@@ -542,6 +543,10 @@ module VCAP::CloudController
         end
       end
       exposed_ports
+    end
+
+    def web?
+      type == ProcessTypes::WEB
     end
 
     private

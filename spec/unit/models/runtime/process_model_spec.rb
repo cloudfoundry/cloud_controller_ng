@@ -1026,6 +1026,20 @@ module VCAP::CloudController
       end
     end
 
+    describe 'web?' do
+      context 'when the process type is web' do
+        it 'returns true' do
+          expect(ProcessModel.make(type: 'web').web?).to be true
+        end
+      end
+
+      context 'when the process type is NOT web' do
+        it 'returns false' do
+          expect(ProcessModel.make(type: 'Bieber').web?).to be false
+        end
+      end
+    end
+
     describe 'version' do
       subject(:process) { AppFactory.make }
 

@@ -1,3 +1,5 @@
+require 'models/helpers/process_types'
+
 module VCAP::CloudController
   class Organization < Sequel::Model
     ORG_NAME_REGEX    = /\A[[:alnum:][:punct:][:print:]]+\Z/
@@ -30,7 +32,7 @@ module VCAP::CloudController
 
     one_to_many :apps,
       class:   'VCAP::CloudController::ProcessModel',
-      dataset: -> { ProcessModel.filter(space: spaces, type: 'web') }
+      dataset: -> { ProcessModel.filter(space: spaces, type: ProcessTypes::WEB) }
 
     one_to_many :processes,
       dataset: -> { ProcessModel.filter(space: spaces) }

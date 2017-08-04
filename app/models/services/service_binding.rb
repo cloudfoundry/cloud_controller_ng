@@ -1,3 +1,5 @@
+require 'models/helpers/process_types'
+
 module VCAP::CloudController
   class ServiceBinding < Sequel::Model
     include Serializer
@@ -12,7 +14,7 @@ module VCAP::CloudController
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :app_guid, right_key: :guid,
-      conditions: { type: 'web' }
+      conditions: { type: ProcessTypes::WEB }
 
     encrypt :credentials, salt: :salt
     serializes_via_json :credentials

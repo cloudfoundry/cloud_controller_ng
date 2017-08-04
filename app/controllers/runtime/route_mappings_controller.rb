@@ -1,4 +1,5 @@
 require 'actions/v2/route_mapping_create'
+require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class RouteMappingsController < RestController::ModelController
@@ -13,11 +14,11 @@ module VCAP::CloudController
     query_parameters :app_guid, :route_guid
 
     def read(guid)
-      obj = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
-      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless obj && obj.process_type == 'web'
+      route_mapping = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
+      raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping && route_mapping.process_type == ProcessTypes::WEB
 
-      validate_access(:read, obj)
-      object_renderer.render_json(self.class, obj, @opts)
+      validate_access(:read, route_mapping)
+      object_renderer.render_json(self.class, route_mapping, @opts)
     end
 
     def create
@@ -78,7 +79,7 @@ module VCAP::CloudController
     private
 
     def filter_dataset(dataset)
-      dataset.where("#{RouteMappingModel.table_name}__process_type".to_sym => 'web')
+      dataset.where("#{RouteMappingModel.table_name}__process_type".to_sym => ProcessTypes::WEB)
     end
 
     def get_app_port(process_guid, app_port)

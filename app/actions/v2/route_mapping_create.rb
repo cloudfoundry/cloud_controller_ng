@@ -91,13 +91,13 @@ module VCAP::CloudController
       end
 
       def validate_non_web_port!
-        return if process.type == 'web'
+        return if process.web?
         raise InvalidRouteMapping.new(NO_PORT_REQUESTED) if requested_port.nil?
         raise_unavailable_port! unless available_ports.present? && available_ports.include?(requested_port.to_i)
       end
 
       def validate_web_port!
-        return unless process.type == 'web'
+        return unless process.web?
         return if requested_port.nil?
         return if process.docker?
 

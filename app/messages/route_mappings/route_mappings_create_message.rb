@@ -1,9 +1,9 @@
 require 'messages/base_message'
+require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class RouteMappingsCreateMessage < BaseMessage
     ALLOWED_KEYS = [:relationships].freeze
-    DEFAULT_PROCESS_TYPE = 'web'.freeze
 
     attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalKeysValidator
@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def process_type
-      HashUtils.dig(process, :type) || DEFAULT_PROCESS_TYPE
+      HashUtils.dig(process, :type) || ProcessTypes::WEB
     end
 
     def route

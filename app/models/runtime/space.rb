@@ -1,3 +1,5 @@
+require 'models/helpers/process_types'
+
 module VCAP::CloudController
   class Space < Sequel::Model
     class InvalidDeveloperRelation < CloudController::Errors::InvalidRelation; end
@@ -27,7 +29,7 @@ module VCAP::CloudController
     many_through_many :apps, [
       [:spaces, :id, :guid],
       [:apps, :space_guid, :guid]
-    ], class: 'VCAP::CloudController::ProcessModel', right_primary_key: :app_guid, conditions: { type: 'web' }
+    ], class: 'VCAP::CloudController::ProcessModel', right_primary_key: :app_guid, conditions: { type: ProcessTypes::WEB }
 
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances

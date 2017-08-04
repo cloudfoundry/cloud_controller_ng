@@ -1,4 +1,5 @@
 require 'repositories/process_event_repository'
+require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class ProcessCreate
@@ -9,11 +10,11 @@ module VCAP::CloudController
     def create(app, message)
       attrs = message.merge({
         diego:             true,
-        instances:         message[:type] == 'web' ? 1 : 0,
-        health_check_type: message[:type] == 'web' ? 'port' : 'process',
+        instances:         message[:type] == ProcessTypes::WEB ? 1 : 0,
+        health_check_type: message[:type] == ProcessTypes::WEB ? 'port' : 'process',
         metadata:          {},
       })
-      attrs[:guid] = app.guid if message[:type] == 'web'
+      attrs[:guid] = app.guid if message[:type] == ProcessTypes::WEB
 
       process = nil
       app.class.db.transaction do

@@ -1,3 +1,5 @@
+require 'models/helpers/process_types'
+
 module VCAP::CloudController
   class Stack < Sequel::Model
     class MissingConfigFileError < StandardError
@@ -10,7 +12,7 @@ module VCAP::CloudController
       join_table:        BuildpackLifecycleDataModel.table_name,
       left_primary_key:  :name, left_key: :stack,
       right_primary_key: :app_guid, right_key: :app_guid,
-      conditions:        { type: 'web' }
+      conditions:        { type: ProcessTypes::WEB }
 
     plugin :serialization
 

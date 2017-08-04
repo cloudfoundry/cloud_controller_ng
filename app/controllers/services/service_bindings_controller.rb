@@ -1,5 +1,6 @@
 require 'services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
+require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController
@@ -92,7 +93,7 @@ module VCAP::CloudController
     private
 
     def filter_dataset(dataset)
-      dataset.select_all(ServiceBinding.table_name).join(ProcessModel, app_guid: :app_guid, type: 'web')
+      dataset.select_all(ServiceBinding.table_name).join(ProcessModel, app_guid: :app_guid, type: ProcessTypes::WEB)
     end
 
     def volume_services_enabled?

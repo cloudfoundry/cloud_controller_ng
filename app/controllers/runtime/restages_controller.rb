@@ -51,7 +51,7 @@ module VCAP::CloudController
     private
 
     def validate_process!(process)
-      if process.type != 'web'
+      unless process.web?
         raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process.guid)
       end
 

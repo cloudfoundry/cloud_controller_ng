@@ -4,6 +4,7 @@ require 'actions/v2/app_stage'
 require 'actions/v2/app_create'
 require 'actions/v2/app_update'
 require 'actions/v2/route_mapping_create'
+require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
@@ -183,10 +184,10 @@ module VCAP::CloudController
     end
 
     def read(guid)
-      obj = find_guid(guid)
-      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', guid) if obj.type != 'web'
-      validate_access(:read, obj)
-      object_renderer.render_json(self.class, obj, @opts)
+      process = find_guid(guid)
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', guid) unless process.web?
+      validate_access(:read, process)
+      object_renderer.render_json(self.class, process, @opts)
     end
 
     private
@@ -394,7 +395,7 @@ module VCAP::CloudController
     end
 
     def filter_dataset(dataset)
-      dataset.where(type: 'web')
+      dataset.where(type: ProcessTypes::WEB)
     end
 
     define_messages
