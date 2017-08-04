@@ -56,7 +56,8 @@ module VCAP::CloudController
                                          :bindable,
                                          :active,
                                          :create_instance_schema,
-                                         :update_instance_schema
+                                         :update_instance_schema,
+                                         :create_binding_schema
       end
 
       it 'imports these attributes' do
@@ -69,7 +70,8 @@ module VCAP::CloudController
                                          :public,
                                          :bindable,
                                          :create_instance_schema,
-                                         :update_instance_schema
+                                         :update_instance_schema,
+                                         :create_binding_schema
       end
     end
 

@@ -6,6 +6,7 @@ RSpec.describe 'Service Broker API integration' do
 
     let(:create_instance_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } }
     let(:update_instance_schema) { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } }
+    let(:create_binding_schema)  { { '$schema' => 'http://json-schema.org/draft-04/schema#', 'type' => 'object' } }
     let(:schemas) {
       {
         'service_instance' => {
@@ -14,6 +15,11 @@ RSpec.describe 'Service Broker API integration' do
           },
           'update' => {
             'parameters' => update_instance_schema
+          }
+        },
+        'service_binding' => {
+          'create' => {
+            'parameters' => create_binding_schema
           }
         }
       }
@@ -28,7 +34,7 @@ RSpec.describe 'Service Broker API integration' do
     end
 
     context 'when a broker catalog defines a service instance' do
-      context 'with a create plan schema' do
+      context 'with a valid create schema' do
         let(:create_instance_schema) {
           {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
@@ -55,7 +61,7 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
 
-      context 'with an update plan schema' do
+      context 'with a valid update schema' do
         let(:update_instance_schema) {
           {
             '$schema' => 'http://json-schema.org/draft-04/schema#',
@@ -82,7 +88,7 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
 
-      context 'with an invalid create plan schema' do
+      context 'with an invalid create schema' do
         before do
           update_broker(default_catalog(plan_schemas: { 'service_instance' => { 'create' => true } }))
         end
@@ -95,7 +101,7 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
 
-      context 'with an invalid update plan schema' do
+      context 'with an invalid update schema' do
         before do
           update_broker(default_catalog(plan_schemas: { 'service_instance' => { 'update' => true } }))
         end
@@ -106,6 +112,77 @@ RSpec.describe 'Service Broker API integration' do
           expect(parsed_body['code']).to eq(270012)
           expect(parsed_body['description']).to include('Schemas service_instance.update must be a hash, but has value true')
         end
+      end
+    end
+
+    context 'when a broker catalog defines a service binding' do
+      context 'with a valid create schema' do
+        let(:create_binding_schema) {
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object'
+          }
+        }
+
+        it 'responds with the schema for a service plan entry' do
+          get("/v2/service_plans/#{@plan_guid}",
+              {}.to_json,
+              json_headers(admin_headers))
+
+          parsed_body = MultiJson.load(last_response.body)
+          create_schema = parsed_body['entity']['schemas']['service_binding']['create']
+          expect(create_schema).to eq(
+            {
+              'parameters' =>
+              {
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object'
+              }
+            }
+          )
+        end
+      end
+
+      context 'with an invalid create schema' do
+        before do
+          update_broker(default_catalog(plan_schemas: { 'service_binding' => { 'create' => true } }))
+        end
+
+        it 'returns an error' do
+          parsed_body = MultiJson.load(last_response.body)
+
+          expect(parsed_body['code']).to eq(270012)
+          expect(parsed_body['description']).to include('Schemas service_binding.create must be a hash, but has value true')
+        end
+      end
+    end
+
+    context 'when the broker catalog defines a plan without plan schemas' do
+      it 'responds with an empty schema' do
+        get("/v2/service_plans/#{@large_plan_guid}",
+            {}.to_json,
+            json_headers(admin_headers)
+           )
+
+        parsed_body = MultiJson.load(last_response.body)
+        expect(parsed_body['entity']['schemas']).
+          to eq(
+            {
+              'service_instance' => {
+                'create' => {
+                  'parameters' => {}
+                },
+                'update' => {
+                  'parameters' => {}
+                }
+              },
+              'service_binding' => {
+                'create' => {
+                  'parameters' => {}
+                }
+              }
+            }
+        )
       end
     end
   end
