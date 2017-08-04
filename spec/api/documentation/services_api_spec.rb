@@ -72,7 +72,7 @@ RSpec.resource 'Services', type: [:api, :legacy_api] do
         VCAP::CloudController::ServicePlan.make(service: service)
       end
 
-      expected_attributes = VCAP::CloudController::ServicePlan.new.export_attrs - [:create_instance_schema] - [:update_instance_schema] + [:schemas]
+      expected_attributes = VCAP::CloudController::ServicePlan.new.export_attrs - [:create_instance_schema] - [:update_instance_schema] - [:create_binding_schema] + [:schemas]
       standard_model_list :service_plan, VCAP::CloudController::ServicePlansController, { outer_model: :service, export_attributes: expected_attributes }
     end
   end

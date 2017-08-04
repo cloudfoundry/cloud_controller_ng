@@ -181,7 +181,17 @@ module VCAP::CloudController
         schemas = decoded_response.fetch('entity')['schemas']
 
         expect(schemas).to_not be_nil
-        expect(schemas).to eq({ 'service_instance' => { 'create' => { 'parameters' => {} }, 'update' => { 'parameters' => {} } } })
+        expect(schemas).to eq(
+          {
+            'service_instance' => {
+              'create' => { 'parameters' => {} },
+              'update' => { 'parameters' => {} }
+            },
+            'service_binding' => {
+              'create' => { 'parameters' => {} }
+            }
+          }
+                           )
       end
 
       context 'when the plan does not set bindable' do

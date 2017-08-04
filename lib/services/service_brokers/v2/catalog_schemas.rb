@@ -1,20 +1,33 @@
 module VCAP::Services::ServiceBrokers::V2
   class CatalogSchemas
-    attr_reader :errors, :create_instance, :update_instance
+    attr_reader :errors, :create_instance, :update_instance, :create_binding
 
     def initialize(schemas)
       @errors = VCAP::Services::ValidationErrors.new
       return unless schemas
-
       return unless validate_structure(schemas, [])
-      service_instance_path = ['service_instance']
-      return unless validate_structure(schemas, service_instance_path)
 
-      create_schema = get_method('create', schemas)
-      @create_instance = Schema.new(create_schema) if create_schema
+      setup_instance_schemas(schemas)
+      setup_binding_schemas(schemas)
+    end
 
-      update_schema = get_method('update', schemas)
-      @update_instance = Schema.new(update_schema) if update_schema
+    def setup_instance_schemas(schemas)
+      path = ['service_instance']
+      if validate_structure(schemas, path)
+        create_schema = get_method_params(path + ['create'], schemas)
+        @create_instance = Schema.new(create_schema) if create_schema
+
+        update_schema = get_method_params(path + ['update'], schemas)
+        @update_instance = Schema.new(update_schema) if update_schema
+      end
+    end
+
+    def setup_binding_schemas(schemas)
+      path = ['service_binding']
+      if validate_structure(schemas, path)
+        binding_schema = get_method_params(path + ['create'], schemas)
+        @create_binding = Schema.new(binding_schema) if binding_schema
+      end
     end
 
     def valid?
@@ -26,6 +39,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       if update_instance && !update_instance.validate
         add_schema_validation_errors(update_instance.errors, 'service_instance.update.parameters')
+      end
+
+      if create_binding && !create_binding.validate
+        add_schema_validation_errors(create_binding.errors, 'service_binding.create.parameters')
       end
 
       errors.empty?
@@ -52,14 +69,18 @@ module VCAP::Services::ServiceBrokers::V2
       true
     end
 
-    def get_method(method, schema)
-      path = ['service_instance', method]
+    def get_method_params(path, schema)
       return unless validate_structure(schema, path)
 
-      path = ['service_instance', method, 'parameters']
+      path << 'parameters'
       return unless validate_structure(schema, path)
 
-      schema['service_instance'][method]['parameters']
+      schema.dig(*path)
+    end
+
+    def add_schema_type_error_msg(path, value)
+      path = path.empty? ? '' : " #{path.join('.')}"
+      errors.add("Schemas#{path} must be a hash, but has value #{value.inspect}")
     end
 
     def add_schema_validation_errors(schema_errors, path)
@@ -68,11 +89,6 @@ module VCAP::Services::ServiceBrokers::V2
           errors.add("Schema #{path} is not valid. #{error_msg}")
         end
       end
-    end
-
-    def add_schema_type_error_msg(path, value)
-      path = path.empty? ? '' : " #{path.join('.')}"
-      errors.add("Schemas#{path} must be a hash, but has value #{value.inspect}")
     end
   end
 end
