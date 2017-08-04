@@ -4031,9 +4031,8 @@ Global Auditor |</p>
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-   <span class="o">}</span><span class="s1">'
-</span></code></pre>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -4067,16 +4066,7 @@ Global Auditor |</p>
 </tr>
 </thead><tbody>
 <tr>
-<td>Admin</td>
-</tr>
-<tr>
 <td>Space Developer</td>
-</tr>
-<tr>
-<td>Read-Only Admin</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
 </tr>
 <tr>
 <td>Space Manager</td>
@@ -4085,13 +4075,22 @@ Global Auditor |</p>
 <td>Space Auditor</td>
 </tr>
 <tr>
-<td>Org Auditor</td>
+<td>Org Manager</td>
 </tr>
 <tr>
 <td>Org Billing Manager</td>
 </tr>
 <tr>
-<td>Org Manager</td>
+<td>Org Auditor</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -6272,9 +6271,8 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-   <span class="o">}</span><span class="s1">'
-</span></code></pre>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
