@@ -615,21 +615,27 @@ module VCAP::CloudController
 
             context 'when the error is InstancesUnavailable' do
               let(:error) { CloudController::Errors::InstancesUnavailable.new('ruh roh') }
+              let(:mock_logger) { double(:logger, error: nil, debug: nil) }
+              before { allow(instances_reporter).to receive(:logger).and_return(mock_logger) }
 
-              it 'reraises the exception' do
+              it 'reraises the exception and logs the error' do
                 expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /ruh roh/)
+                expect(mock_logger).to have_received(:error).with('stats_for_app.error', { error: 'ruh roh' }).once
               end
             end
           end
 
           context 'when an error is raised communicating with traffic controller' do
             let(:error) { StandardError.new('tomato') }
+            let(:mock_logger) { double(:logger, error: nil, debug: nil) }
             before do
               allow(traffic_controller_client).to receive(:container_metrics).with(auth_token: 'my-token', app_guid: process.guid).and_raise(error)
+              allow(instances_reporter).to receive(:logger).and_return(mock_logger)
             end
 
-            it 'raises an InstancesUnavailable exception' do
+            it 'raises an InstancesUnavailable exception and logs the error' do
               expect { instances_reporter.stats_for_app(process) }.to raise_error(CloudController::Errors::InstancesUnavailable, /tomato/)
+              expect(mock_logger).to have_received(:error).with('stats_for_app.error', { error: 'tomato' }).once
             end
 
             context 'when the error is InstancesUnavailable' do

@@ -178,18 +178,6 @@ module VCAP::CloudController
             }.to raise_error(CloudController::Errors::ApiError, /Stats server temporarily unavailable/i)
           end
         end
-
-        context 'when the reporter throws an NoRunningInstances' do
-          before do
-            allow(tps_instances_reporter).to receive(:stats_for_app).and_raise(CloudController::Errors::NoRunningInstances.new('custom error'))
-          end
-
-          it 're-raises as an ApiError' do
-            expect {
-              instances_reporters.stats_for_app(diego_process)
-            }.to raise_error(CloudController::Errors::ApiError, /There are zero running instances/i)
-          end
-        end
       end
 
       context 'when the app is a Diego app and uses the local instances reporter' do
@@ -210,18 +198,6 @@ module VCAP::CloudController
             expect {
               instances_reporters.stats_for_app(diego_process)
             }.to raise_error(CloudController::Errors::ApiError, /Stats server temporarily unavailable/i)
-          end
-        end
-
-        context 'when the reporter throws an NoRunningInstances' do
-          before do
-            allow(diego_instances_reporter).to receive(:stats_for_app).and_raise(CloudController::Errors::NoRunningInstances.new('custom error'))
-          end
-
-          it 're-raises as an ApiError' do
-            expect {
-              instances_reporters.stats_for_app(diego_process)
-            }.to raise_error(CloudController::Errors::ApiError, /There are zero running instances/i)
           end
         end
       end
