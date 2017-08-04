@@ -58,6 +58,24 @@ module VCAP::Services::ServiceBrokers
           plan.public = false
         end
 
+        create_instance = nil
+        begin
+          create_instance = catalog_plan.schemas.service_instance.create.schema.try(:to_json)
+        rescue
+        end
+
+        update_instance = nil
+        begin
+          update_instance = catalog_plan.schemas.service_instance.create.schema.try(:to_json)
+        rescue
+        end
+
+        create_binding = nil
+        begin
+          create_binding = catalog_plan.schemas.service_instance.create.schema.try(:to_json)
+        rescue
+        end
+
         plan.set({
           name:        catalog_plan.name,
           description: catalog_plan.description,
@@ -65,9 +83,9 @@ module VCAP::Services::ServiceBrokers
           bindable:    catalog_plan.bindable,
           active:      true,
           extra:       catalog_plan.metadata.try(:to_json),
-          create_instance_schema: catalog_plan.schemas.create_instance.try(:to_json),
-          update_instance_schema: catalog_plan.schemas.update_instance.try(:to_json),
-          create_binding_schema: catalog_plan.schemas.create_binding.try(:to_json)
+          create_instance_schema: create_instance,
+          update_instance_schema: update_instance,
+          create_binding_schema: create_binding,
         })
         @services_event_repository.with_service_plan_event(plan) do
           plan.save(changed: true)

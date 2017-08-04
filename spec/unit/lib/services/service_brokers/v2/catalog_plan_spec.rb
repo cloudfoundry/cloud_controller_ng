@@ -35,6 +35,15 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan.free).to be true
       end
+
+      it 'defaults schemas to an empty hash' do
+        attrs = build_valid_plan_attrs
+        attrs.delete('schemas')
+
+        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+
+        expect(plan.schemas).to be {}
+      end
     end
 
     describe 'validations' do

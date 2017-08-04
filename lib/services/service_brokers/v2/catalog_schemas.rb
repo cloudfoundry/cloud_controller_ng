@@ -1,4 +1,185 @@
 module VCAP::Services::ServiceBrokers::V2
+  class Schemas
+    include CatalogValidationHelper
+
+    attr_reader :errors, :schemas, :service_instance, :service_binding
+
+    def initialize(schemas)
+      @errors = VCAP::Services::ValidationErrors.new
+      @schemas = schemas
+
+      @service_instance_data = schemas['service_instance']
+      @service_binding_data = schemas['service_binding']
+
+      build_instance
+      build_binding
+    end
+
+    def build_instance
+      return unless @service_instance_data
+      @service_instance = ServiceInstanceSchema.new(@service_instance_data) if @service_instance_data.is_a?(Hash)
+    end
+
+    def build_binding
+      return unless @service_binding_data
+      @service_binding = ServiceBindingSchema.new(@service_binding_data) if @service_binding_data.is_a?(Hash)
+    end
+
+    def valid?
+      return @valid if defined? @valid
+      if @service_instance_data
+        validate_hash!(:service_instance, @service_instance_data)
+        errors.add_nested(service_instance, service_instance.errors) if service_instance && !service_instance.valid?
+      end
+
+      if @service_binding_data
+        validate_hash!(:service_binding, @service_binding_data)
+        errors.add_nested(service_binding, service_binding.errors) if service_binding && !service_binding.valid?
+      end
+      @valid = errors.empty?
+    end
+
+    private
+
+    def human_readable_attr_name(name)
+      {
+        service_instance: 'Service instance schema',
+        service_binding: 'Service binding schema',
+      }.fetch(name) { raise NotImplementedError }
+    end
+  end
+
+  class ServiceInstanceSchema
+    include CatalogValidationHelper
+
+    attr_reader :errors, :instance, :create, :update
+
+    def initialize(instance)
+      @errors = VCAP::Services::ValidationErrors.new
+      @instance = instance
+
+      @create_data = instance['create']
+      @update_data = instance['update']
+
+      build_create
+      build_update
+    end
+
+    def build_create
+      return unless @create_data
+      @create = ParametersSchema.new(@create_data) if @create_data.is_a?(Hash)
+    end
+
+    def build_update
+      return unless @update_data
+      @update = ParametersSchema.new(@update_data) if @update_data.is_a?(Hash)
+    end
+
+    def valid?
+      return @valid if defined? @valid
+      if @create_data
+        validate_hash!(:create, @create_data)
+        errors.add_nested(create, create.errors) if create && !create.valid?
+      end
+
+      if @update_data
+        validate_hash!(:update, @update_data)
+        errors.add_nested(update, update.errors) if update && !update.valid?
+      end
+      @valid = errors.empty?
+    end
+
+    private
+
+    def human_readable_attr_name(name)
+      {
+        create: 'Instance create schema',
+        update: 'Instance update schema',
+      }.fetch(name) { raise NotImplementedError }
+    end
+  end
+
+  class ServiceBindingSchema
+    include CatalogValidationHelper
+
+    attr_reader :errors, :instance, :create
+
+    def initialize(instance)
+      @errors = VCAP::Services::ValidationErrors.new
+      @instance = instance
+      @create_data = instance['create']
+
+      build_create
+    end
+
+    def build_create
+      return unless @create_data
+      @create = ParametersSchema.new(@create_data) if @create_data.is_a?(Hash)
+    end
+
+    def valid?
+      return @valid if defined? @valid
+      if @create_data
+        validate_hash!(:create, @create_data)
+        errors.add_nested(create, create.errors) if create && !create.valid?
+      end
+      @valid = errors.empty?
+    end
+
+    private
+
+    def human_readable_attr_name(name)
+      {
+        create: 'Binding create schema',
+      }.fetch(name) { raise NotImplementedError }
+    end
+  end
+
+  class ParametersSchema
+    include CatalogValidationHelper
+
+    attr_reader :errors, :parameters, :schema
+
+    def initialize(parameters)
+      @errors = VCAP::Services::ValidationErrors.new
+      @parameters = parameters
+      @parameters_data = parameters['parameters']
+
+      build_schema
+    end
+
+    def build_schema
+      return unless @parameters_data
+      @schema = Schema.new(@parameters_data) if @parameters_data.is_a?(Hash)
+    end
+
+    def valid?
+      return @valid if defined? @valid
+
+      if @parameters_data
+        validate_hash!(:schema, @parameters_data)
+        add_schema_validation_errors(schema.errors) if schema && !schema.valid?
+      end
+      @valid = errors.empty?
+    end
+
+    private
+
+    def add_schema_validation_errors(schema_errors)
+      schema_errors.messages.each do |_, error_list|
+        error_list.each do |error_msg|
+          errors.add("Schema is not valid. #{error_msg}")
+        end
+      end
+    end
+
+    def human_readable_attr_name(name)
+      {
+        schema: 'Binding create schema',
+      }.fetch(name) { raise NotImplementedError }
+    end
+  end
+
   class CatalogSchemas
     attr_reader :errors, :create_instance, :update_instance, :create_binding
 

@@ -12,7 +12,7 @@ module VCAP::Services::ServiceBrokers::V2
       @errors             = VCAP::Services::ValidationErrors.new
       @free               = attrs['free'].nil? ? true : attrs['free']
       @bindable           = attrs['bindable']
-      @schemas            = CatalogSchemas.new(attrs['schemas'])
+      @schemas            = attrs['schemas'].nil? ? nil : Schemas.new(attrs['schemas'])
     end
 
     def cc_plan
@@ -40,7 +40,9 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_schemas!
-      errors.add_nested(schemas, schemas.errors) unless schemas.valid?
+      if @schema.nil?
+        errors.add_nested(schemas, schemas.errors) unless schemas.valid?
+      end
     end
 
     def human_readable_attr_name(name)
