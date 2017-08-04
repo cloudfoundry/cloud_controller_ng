@@ -996,15 +996,6 @@ module VCAP::CloudController
           expect(process).not_to be_needs_staging
         end
       end
-
-      context 'when the app has no instances' do
-        before do
-          process.state     = 'STARTED'
-          process.instances = 0
-        end
-
-        it { is_expected.not_to be_needs_staging }
-      end
     end
 
     describe 'started?' do

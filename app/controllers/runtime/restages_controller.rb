@@ -22,23 +22,16 @@ module VCAP::CloudController
     def restage(guid)
       process = find_guid_and_validate_access(:read_for_update, guid)
 
+      validate_process!(process)
+
       model.db.transaction do
         process.app.lock!
         process.lock!
-
-        if process.pending?
-          raise CloudController::Errors::ApiError.new_from_details('NotStaged')
-        end
-
-        if process.latest_package.nil?
-          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
-        end
 
         V2::AppStop.stop(process.app, StagingCancel.new(@stagers))
         process.app.update(droplet_guid: nil)
         AppStart.start_without_event(process.app)
       end
-
       V2::AppStage.new(stagers: @stagers).stage(process)
 
       @app_event_repository.record_app_restage(process, UserAuditInfo.from_context(SecurityContext))
@@ -53,6 +46,26 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
     rescue AppStop::InvalidApp => e
       raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
+    end
+
+    private
+
+    def validate_process!(process)
+      if process.type != 'web'
+        raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process.guid)
+      end
+
+      if process.instances < 1
+        raise CloudController::Errors::ApiError.new_from_details('StagingError', 'App must have at least 1 instance to stage.')
+      end
+
+      if process.pending?
+        raise CloudController::Errors::ApiError.new_from_details('NotStaged')
+      end
+
+      if process.latest_package.nil?
+        raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+      end
     end
   end
 end

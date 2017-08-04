@@ -75,6 +75,54 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the process does not exist' do
+          subject(:restage_request) { post '/v2/apps/blub-blub-blub/restage', {} }
+
+          it '404s' do
+            restage_request
+
+            expect(last_response.status).to eq(404)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['code']).to eq(100004)
+            expect(parsed_response['description']).to eq('The app could not be found: blub-blub-blub')
+          end
+        end
+
+        context 'when the web process has 0 instances' do
+          let!(:process) { AppFactory.make(type: 'web', instances: 0) }
+
+          before do
+            process.reload
+          end
+
+          it 'errors because web must have > 0 instances' do
+            restage_request
+
+            expect(last_response.status).to eq(400)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['code']).to eq(170001)
+            expect(parsed_response['description']).to eq('Staging error: App must have at least 1 instance to stage.')
+          end
+        end
+
+        context 'when calling with a non-web process guid' do
+          let!(:web_process) { AppFactory.make(type: 'web', instances: 1) }
+          let!(:process) { AppFactory.make(type: 'foobar', instances: 1) }
+
+          before do
+            process.reload
+          end
+
+          it '404s because restage only works for web processes' do
+            restage_request
+
+            expect(last_response.status).to eq(404)
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['code']).to eq(100004)
+            expect(parsed_response['description']).to match(/The app could not be found:/)
+          end
+        end
+
         context 'with a Docker app' do
           let!(:process) { AppFactory.make(docker_image: 'some-image') }
 
