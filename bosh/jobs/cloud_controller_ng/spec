@@ -9,6 +9,7 @@ templates:
   cc-drain.rb: bin/cc-drain
   cloud_controller_api.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_api_ctl.erb: bin/cloud_controller_ng_ctl
+  cloud_controller_api_health_check.erb: bin/cloud_controller_ng_health_check
   cloud_controller_api_worker_ctl.erb: bin/cloud_controller_worker_ctl
   console.erb: bin/console
   dea_ca.crt.erb: config/certs/dea_ca.crt
