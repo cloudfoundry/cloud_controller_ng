@@ -4,40 +4,41 @@ name: cloud_controller_ng
 description: "The Cloud Controller provides primary Cloud Foundry API that is by the CF CLI. The Cloud Controller uses a database to keep tables for organizations, spaces, apps, services, service instances, user roles, and more. Typically multiple instances of Cloud Controller are load balanced."
 
 templates:
-  nginx_ctl.erb: bin/nginx_ctl
-  nginx.conf.erb: config/nginx.conf
-  public_upload.conf.erb: config/public_upload.conf
+  blobstore_waiter.sh.erb: bin/blobstore_waiter.sh
+  buildpacks_ca_cert.pem.erb: config/certs/buildpacks_ca_cert.pem
   cc-drain.rb: bin/cc-drain
-  drain.sh.erb: bin/drain
-  restart_drain.rb: bin/restart_drain
-  mime.types: config/mime.types
   cloud_controller_api.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_api_ctl.erb: bin/cloud_controller_ng_ctl
   cloud_controller_api_worker_ctl.erb: bin/cloud_controller_worker_ctl
-  setup_local_blobstore.sh.erb: bin/setup_local_blobstore.sh
-  stacks.yml.erb: config/stacks.yml
-  newrelic.yml.erb: config/newrelic.yml
-  nginx_newrelic_plugin_ctl.erb: bin/nginx_newrelic_plugin_ctl
-  newrelic_plugin.yml.erb: config/newrelic_plugin.yml
-  ruby_version.sh.erb: bin/ruby_version.sh
   console.erb: bin/console
-  dns_health_check.erb: bin/dns_health_check
-  blobstore_waiter.sh.erb: bin/blobstore_waiter.sh
-  buildpacks_ca_cert.pem.erb: config/certs/buildpacks_ca_cert.pem
-  droplets_ca_cert.pem.erb: config/certs/droplets_ca_cert.pem
-  packages_ca_cert.pem.erb: config/certs/packages_ca_cert.pem
-  resource_pool_ca_cert.pem.erb: config/certs/resource_pool_ca_cert.pem
   dea_ca.crt.erb: config/certs/dea_ca.crt
   dea_client.crt.erb: config/certs/dea_client.crt
   dea_client.key.erb: config/certs/dea_client.key
-  mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt
+  dns_health_check.erb: bin/dns_health_check
+  drain.sh.erb: bin/drain
+  droplets_ca_cert.pem.erb: config/certs/droplets_ca_cert.pem
+  migrate_db.sh.erb: bin/migrate_db
+  mime.types: config/mime.types
   mutual_tls.crt.erb: config/certs/mutual_tls.crt
   mutual_tls.key.erb: config/certs/mutual_tls.key
-  pre-start.sh.erb: bin/pre-start
+  mutual_tls_ca.crt.erb: config/certs/mutual_tls_ca.crt
+  newrelic.yml.erb: config/newrelic.yml
+  newrelic_plugin.yml.erb: config/newrelic_plugin.yml
+  nginx.conf.erb: config/nginx.conf
+  nginx_ctl.erb: bin/nginx_ctl
+  nginx_newrelic_plugin_ctl.erb: bin/nginx_newrelic_plugin_ctl
+  packages_ca_cert.pem.erb: config/certs/packages_ca_cert.pem
   post-start.sh.erb: bin/post-start
-  migrate_db.sh.erb: bin/migrate_db
+  pre-start.sh.erb: bin/pre-start
+  public_upload.conf.erb: config/public_upload.conf
+  resource_pool_ca_cert.pem.erb: config/certs/resource_pool_ca_cert.pem
+  restart_drain.rb: bin/restart_drain
+  ruby_version.sh.erb: bin/ruby_version.sh
   seed_db.sh.erb: bin/seed_db
+  setup_local_blobstore.sh.erb: bin/setup_local_blobstore.sh
+  stacks.yml.erb: config/stacks.yml
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
+
 
 packages:
   - capi_utils
