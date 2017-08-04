@@ -22,8 +22,6 @@ engines:
     enabled: true
   markdownlint:
     enabled: true
-  reek:
-    enabled: true
   rubocop:
     enabled: true
   scss-lint:
