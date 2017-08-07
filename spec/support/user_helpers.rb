@@ -29,7 +29,7 @@ module UserHelpers
   end
 
   # rubocop:disable all
-  def set_current_user_as_role(role:, org:, space:, user: nil, scopes: nil)
+  def set_current_user_as_role(role:, org: nil, space: nil, user: nil, scopes: nil)
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
     set_current_user(current_user, scopes: scopes)

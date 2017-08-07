@@ -57,6 +57,95 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     end
   end
 
+  describe '#create' do
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      set_current_user(user)
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'           => 201,
+        'admin_read_only' => 403,
+        'global_auditor'  => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, user: user)
+
+            post :create, body: { name: 'my-sweet-org' }
+
+            expect(response.status).to eq(expected_return_value),
+              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+            if expected_return_value == 200
+              expect(parsed_body['guid']).to eq(org.guid)
+              expect(parsed_body['name']).to eq('Eric\'s Farm')
+              expect(parsed_body['created_at']).to match(iso8601)
+              expect(parsed_body['updated_at']).to match(iso8601)
+              expect(parsed_body['links']['self']['href']).to match(%r{/v3/organizations/#{org.guid}$})
+            end
+          end
+        end
+      end
+    end
+
+    describe 'user with no roles' do
+      it 'returns an error' do
+        post :create, body: { name: 'bloop' }
+        expect(response.status).to eq(403), "Got #{response.status}"
+      end
+    end
+
+    context 'when "user_org_creation" feature flag is enabled' do
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+      end
+
+      it 'lets ALL users create orgs' do
+        post :create, body: { name: 'anarchy-reigns' }
+        expect(response.status).to eq(201), "Got #{response.status}"
+      end
+    end
+
+    context 'when the user is admin' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      context 'when the org name is NOT unique' do
+        let(:name) { 'Olsen' }
+
+        before do
+          VCAP::CloudController::Organization.make(name: name)
+        end
+
+        it 'displays an informative error' do
+          post :create, body: { name: name }
+          expect(response.status).to eq(422)
+          expect(parsed_body['errors'][0]['detail']).to eq('Name must be unique')
+        end
+      end
+
+      context 'when there is another validation exception' do
+        before do
+          errors = Sequel::Model::Errors.new
+          errors.add(:blork, 'is busted')
+          expect(VCAP::CloudController::Organization).to receive(:create).
+            and_raise(Sequel::ValidationFailed.new(errors))
+        end
+
+        it 'responds with 422' do
+          post :create, body: { name: 'George' }
+          expect(response.status).to eq(422)
+          expect(parsed_body['errors'][0]['detail']).to eq('blork is busted')
+        end
+      end
+    end
+  end
+
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
@@ -185,7 +274,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params
 
           parsed_response = parsed_body
-          response_guids = parsed_response['resources'].map { |r| r['guid'] }
+          response_guids  = parsed_response['resources'].map { |r| r['guid'] }
           expect(parsed_response['pagination']['total_results']).to eq(2)
           expect(response_guids.length).to eq(per_page)
         end

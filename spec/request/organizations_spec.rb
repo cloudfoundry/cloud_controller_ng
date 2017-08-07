@@ -3,15 +3,46 @@ require 'spec_helper'
 RSpec.describe 'Organizations' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
-  let!(:organization1)            { VCAP::CloudController::Organization.make name: 'Apocalypse World' }
-  let!(:organization2)            { VCAP::CloudController::Organization.make name: 'Dungeon World' }
-  let!(:organization3)            { VCAP::CloudController::Organization.make name: 'The Sprawl' }
+  let(:admin_header) { admin_headers_for(user) }
+  let!(:organization1) { VCAP::CloudController::Organization.make name: 'Apocalypse World' }
+  let!(:organization2) { VCAP::CloudController::Organization.make name: 'Dungeon World' }
+  let!(:organization3) { VCAP::CloudController::Organization.make name: 'The Sprawl' }
   let!(:unaccesable_organization) { VCAP::CloudController::Organization.make name: 'D&D' }
 
   before do
     organization1.add_user(user)
     organization2.add_user(user)
     organization3.add_user(user)
+  end
+
+  describe 'POST /v3/organizations' do
+    it 'creates a new organization with the given name' do
+      request_body = {
+        name: 'org1'
+      }.to_json
+
+      expect {
+        post '/v3/organizations', request_body, admin_header
+      }.to change {
+        VCAP::CloudController::Organization.count
+      }.by 1
+
+      created_org = VCAP::CloudController::Organization.last
+
+      expect(last_response.status).to eq(201)
+
+      expect(parsed_response).to be_a_response_like(
+        {
+          'guid'       => created_org.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'name'       => 'org1',
+          'links'      => {
+            'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" }
+          }
+        }
+      )
+    end
   end
 
   describe 'GET /v3/organizations' do
@@ -24,8 +55,8 @@ RSpec.describe 'Organizations' do
         {
           'pagination' => {
             'total_results' => 3,
-            'total_pages' => 2,
-            'first' => {
+            'total_pages'   => 2,
+            'first'         => {
               'href' => "#{link_prefix}/v3/organizations?page=1&per_page=2"
             },
             'last' => {
@@ -38,22 +69,22 @@ RSpec.describe 'Organizations' do
           },
           'resources' => [
             {
-              'guid' => organization1.guid,
-              'name' => 'Apocalypse World',
+              'guid'       => organization1.guid,
+              'name'       => 'Apocalypse World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {
+              'links'      => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}"
-                 }
+                }
               }
             },
             {
-              'guid' => organization2.guid,
-              'name' => 'Dungeon World',
+              'guid'       => organization2.guid,
+              'name'       => 'Dungeon World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {
+              'links'      => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                 }
@@ -82,34 +113,34 @@ RSpec.describe 'Organizations' do
         {
           'pagination' => {
             'total_results' => 2,
-            'total_pages' => 1,
-            'first' => {
+            'total_pages'   => 1,
+            'first'         => {
               'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment1.guid}/organizations?page=1&per_page=2"
             },
             'last' => {
               'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment1.guid}/organizations?page=1&per_page=2"
             },
-            'next' => nil,
-            'previous' => nil
+            'next'          => nil,
+            'previous'      => nil
           },
           'resources' => [
             {
-              'guid' => organization2.guid,
-              'name' => 'Dungeon World',
+              'guid'       => organization2.guid,
+              'name'       => 'Dungeon World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {
+              'links'      => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                 }
               },
             },
             {
-              'guid' => organization3.guid,
-              'name' => 'The Sprawl',
+              'guid'       => organization3.guid,
+              'name'       => 'The Sprawl',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links' => {
+              'links'      => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization3.guid}"
                 }
@@ -140,7 +171,7 @@ RSpec.describe 'Organizations' do
           'guid' => isolation_segment.guid
         },
         'links' => {
-          'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+          'self'    => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
           'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
         }
       }
@@ -177,7 +208,7 @@ RSpec.describe 'Organizations' do
           'guid' => isolation_segment.guid
         },
         'links' => {
-          'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+          'self'    => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
           'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
         }
       }

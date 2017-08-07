@@ -98,6 +98,10 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::Permissions.new(current_user).can_read_from_org?(org_guid)
   end
 
+  def can_write_globally?
+    VCAP::CloudController::Permissions.new(current_user).can_write_globally?
+  end
+
   def can_read_globally?
     VCAP::CloudController::Permissions.new(current_user).can_read_globally?
   end

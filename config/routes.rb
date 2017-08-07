@@ -75,6 +75,7 @@ Rails.application.routes.draw do
   get '/jobs/:guid', to: 'v3/jobs#show'
 
   # organizations
+  post '/organizations', to: 'organizations_v3#create'
   get '/organizations/:guid', to: 'organizations_v3#show'
   get '/organizations', to: 'organizations_v3#index'
   get '/isolation_segments/:isolation_segment_guid/organizations', to: 'organizations_v3#index'

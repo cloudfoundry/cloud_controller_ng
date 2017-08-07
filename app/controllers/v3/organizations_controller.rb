@@ -33,6 +33,19 @@ class OrganizationsV3Controller < ApplicationController
     )
   end
 
+  def create
+    unauthorized! unless can_write_globally? || user_org_creation_enabled?
+
+    org = Organization.create(name: params[:body][:name])
+
+    render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
+  rescue Sequel::ValidationFailed => e
+    if e.errors.on(:name)&.include?(:unique)
+      unprocessable!('Name must be unique')
+    end
+    unprocessable!(e.message)
+  end
+
   def show_default_isolation_segment
     org = fetch_org(params[:guid])
     org_not_found! unless org && can_read_from_org?(org.guid)
@@ -70,6 +83,10 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   private
+
+  def user_org_creation_enabled?
+    VCAP::CloudController::FeatureFlag.enabled?(:user_org_creation)
+  end
 
   def org_not_found!
     resource_not_found!(:organization)
