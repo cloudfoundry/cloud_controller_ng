@@ -13,7 +13,7 @@ module VCAP::CloudController
     validates :droplet_guid, guid: true, allow_nil: true
 
     def self.create_from_http_request(body)
-      TaskCreateMessage.new(body.deep_symbolize_keys)
+      new(body.deep_symbolize_keys)
     end
 
     private

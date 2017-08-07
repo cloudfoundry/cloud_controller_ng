@@ -15,7 +15,7 @@ module VCAP::CloudController
     validates :process_type, string: true, allow_nil: true
 
     def self.create_from_http_request(body)
-      RouteMappingsCreateMessage.new(body.deep_symbolize_keys)
+      new(body.deep_symbolize_keys)
     end
 
     def app

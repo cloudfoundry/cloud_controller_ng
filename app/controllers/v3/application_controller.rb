@@ -94,6 +94,10 @@ class ApplicationController < ActionController::Base
     VCAP::CloudController::Permissions.new(current_user).can_read_from_space?(space_guid, org_guid)
   end
 
+  def can_write_to_org?(org_guid)
+    VCAP::CloudController::Permissions.new(current_user).can_write_to_org?(org_guid)
+  end
+
   def can_read_from_org?(org_guid)
     VCAP::CloudController::Permissions.new(current_user).can_read_from_org?(org_guid)
   end

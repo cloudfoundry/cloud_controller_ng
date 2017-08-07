@@ -54,8 +54,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:org1_space) { VCAP::CloudController::Space.make(name: 'Alpaca', organization: org1) }
     let!(:org1_other_space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org1) }
     let!(:org2_space) { VCAP::CloudController::Space.make(name: 'Horse', organization: org2) }
-    names_in_associated_org = %w/Alpaca Lamb/
-    names_in_associated_space = %w/Alpaca/
+    names_in_associated_org    = %w/Alpaca Lamb/
+    names_in_associated_space  = %w/Alpaca/
     names_in_nonassociated_org = %w/Horse/
 
     describe 'permissions by role' do
@@ -214,6 +214,87 @@ RSpec.describe SpacesV3Controller, type: :controller do
             ])
           end
         end
+      end
+    end
+  end
+
+  describe '#create' do
+    let(:user) { VCAP::CloudController::User.make }
+    let(:org) { VCAP::CloudController::Organization.make }
+
+    let(:name) { 'space1' }
+    let(:org_guid) { org.guid }
+    let(:req_body) do
+      {
+        'name':          name,
+        'relationships': {
+          'organization': {
+            'data': { 'guid': org_guid }
+          }
+        }
+      }
+    end
+
+    before do
+      set_current_user_as_admin(user: user)
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'               => 201,
+        'org_manager'         => 201,
+        'admin_read_only'     => 403,
+        'org_auditor'         => 403,
+        'org_billing_manager' => 403,
+        'org_user'            => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, user: user)
+
+            post :create, body: req_body
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+    end
+
+    context 'when the organization does not exist' do
+      let(:org_guid) { 'deception' }
+
+      it 'returns a 422' do
+        post :create, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Invalid organization. Ensure the organization exists and you have access to it.'
+      end
+    end
+
+    context 'when the user has requested an invalid field' do
+      it 'returns a 422 and a helpful error' do
+        req_body[:invalid] = 'field'
+
+        post :create, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include "Unknown field(s): 'invalid'"
+      end
+    end
+
+    context 'when there is a validation failure' do
+      let(:name) { nil }
+
+      it 'returns a 422 and a helpful error' do
+        post :create, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include "Name can't be blank"
       end
     end
   end

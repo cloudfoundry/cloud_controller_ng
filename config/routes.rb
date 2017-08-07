@@ -96,6 +96,7 @@ Rails.application.routes.draw do
   delete '/service_bindings/:guid', to: 'service_bindings#destroy'
 
   # spaces
+  post '/spaces', to: 'spaces_v3#create'
   get '/spaces', to: 'spaces_v3#index'
   get '/spaces/:guid', to: 'spaces_v3#show'
   get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'

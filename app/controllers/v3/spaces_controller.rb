@@ -1,7 +1,9 @@
 require 'presenters/v3/paginated_list_presenter'
-require 'messages/spaces/spaces_list_message'
+require 'messages/spaces/space_create_message'
 require 'messages/spaces/space_update_isolation_segment_message'
+require 'messages/spaces/spaces_list_message'
 require 'actions/space_update_isolation_segment'
+require 'actions/space_create'
 require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
 
@@ -12,6 +14,19 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space && can_read?(space.guid, space.organization.guid)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
+  end
+
+  def create
+    message = SpaceCreateMessage.create_from_http_request(params[:body])
+
+    unauthorized! unless can_write_to_org?(message.organization_guid)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    org = fetch_organization(message.organization_guid)
+    space = SpaceCreate.new.create(org, message)
+    render status: 201, json: Presenters::V3::SpacePresenter.new(space)
+  rescue SpaceCreate::Error => e
+    unprocessable!(e.message)
   end
 
   def index
@@ -66,6 +81,10 @@ class SpacesV3Controller < ApplicationController
   end
 
   private
+
+  def fetch_organization(guid)
+    Organization.where(guid: guid).first
+  end
 
   def fetch_space(guid)
     Space.where(guid: guid).first
