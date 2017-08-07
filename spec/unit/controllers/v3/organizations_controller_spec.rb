@@ -115,6 +115,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         set_current_user_as_admin(user: user)
       end
 
+      context 'when the org name is missing' do
+        it 'displays an informative error' do
+          post :create, body: { name: '' }
+          expect(response.status).to eq(422)
+          expect(parsed_body['errors'][0]['detail']).to include("Name can't be blank")
+        end
+      end
+
       context 'when the org name is NOT unique' do
         let(:name) { 'Olsen' }
 

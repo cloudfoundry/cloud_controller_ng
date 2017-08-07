@@ -1,4 +1,5 @@
 require 'presenters/v3/paginated_list_presenter'
+require 'messages/orgs/organization_create_message'
 require 'messages/orgs/orgs_list_message'
 require 'presenters/v3/to_one_relationship_presenter'
 require 'messages/orgs/orgs_default_iso_seg_update_message'
@@ -36,7 +37,10 @@ class OrganizationsV3Controller < ApplicationController
   def create
     unauthorized! unless can_write_globally? || user_org_creation_enabled?
 
-    org = Organization.create(name: params[:body][:name])
+    message = VCAP::CloudController::OrganizationCreateMessage.create_from_http_request(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    org = Organization.create(name: message.name)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue Sequel::ValidationFailed => e

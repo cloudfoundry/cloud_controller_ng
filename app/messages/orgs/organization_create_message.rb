@@ -11,7 +11,7 @@ module VCAP::CloudController
     validates :name,
       string: true,
       length: { maximum: 255 },
-      format: { with: Organization::ORG_NAME_REGEX, message: 'must not contain escaped characters' },
+      format: { with: ->(_) { Organization::ORG_NAME_REGEX }, message: 'must not contain escaped characters' },
       allow_nil: true
 
     def self.create_from_http_request(body)
