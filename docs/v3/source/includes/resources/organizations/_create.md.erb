@@ -1,0 +1,40 @@
+### Create an organization
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{ "name": "my-organization" }'
+
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :organization %>
+```
+
+#### Definition
+`POST /v3/organizations`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Organization name |
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+
+If the `user_org_creation` feature flag is enabled, any user with the `cloud_controller.write` scope will be able to create organizations.
