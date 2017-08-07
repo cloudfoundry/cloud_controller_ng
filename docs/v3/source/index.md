@@ -97,6 +97,7 @@ includes:
   - resources/processes/list_for_app
   - resources/spaces/header
   - resources/spaces/object
+  - resources/spaces/create
   - resources/spaces/list
   - resources/spaces/get_a_space
   - resources/spaces/assign_isolation_segment

@@ -1,0 +1,49 @@
+### Create a space
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/spaces" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "name": "my-space",
+    "relationships": {
+      "organization": {
+        "data": {
+          "guid": "[org-guid]"
+        }
+      }
+    }
+  }'
+
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :space %>
+```
+
+#### Definition
+`POST /v3/spaces`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Space name |
+**organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization.
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+OrgManager |
