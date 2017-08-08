@@ -92,7 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
                 it 'should not be valid' do
                   expect(schema.validate).to be false
                   expect(schema.errors.full_messages.length).to eq 1
-                  expect(schema.errors.full_messages.first).to eq 'Custom meta schemas are not supported.'
+                  expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported.'
                 end
               end
 
@@ -180,7 +180,7 @@ module VCAP::Services::ServiceBrokers::V2
               context 'schema type and does not conform to JSON Schema Draft 4' do
                 let(:raw_schema) { { 'type' => 'notobject', 'properties' => true } }
 
-                it 'returns one error' do
+                it 'only returns type error' do
                   expect(schema.validate).to be false
                   expect(schema.errors.full_messages.length).to eq 1
                   expect(schema.errors.full_messages.first).to match 'must have field "type", with value "object"'

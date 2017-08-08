@@ -440,7 +440,7 @@ RSpec.describe 'Service Broker' do
                 "Service MySQL\n" \
                 "  Plan small\n" \
                 "    Schemas\n" \
-                "      Schema #{path} is not valid. Custom meta schemas are not supported.\n"
+                "      Schema #{path} is not valid. Custom meta schemas are not supported. Must be http://json-schema.org/draft-04/schema#\n"
               )
             end
           end
