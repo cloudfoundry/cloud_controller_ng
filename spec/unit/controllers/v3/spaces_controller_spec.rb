@@ -385,6 +385,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
   describe '#create' do
     let(:user) { VCAP::CloudController::User.make }
+    let(:user_without_role) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
 
     let(:name) { 'space1' }
@@ -431,6 +432,17 @@ RSpec.describe SpacesV3Controller, type: :controller do
       let(:org_guid) { 'deception' }
 
       it 'returns a 422' do
+        post :create, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Invalid organization. Ensure the organization exists and you have access to it.'
+      end
+    end
+
+    context 'when the user does not have read permission on the org' do
+      it 'returns a 422' do
+        set_current_user(user_without_role)
         post :create, body: req_body
 
         expect(response.status).to eq 422

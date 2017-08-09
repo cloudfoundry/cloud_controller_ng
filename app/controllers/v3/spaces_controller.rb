@@ -19,6 +19,7 @@ class SpacesV3Controller < ApplicationController
   def create
     message = SpaceCreateMessage.create_from_http_request(params[:body])
 
+    unprocessable!('Invalid organization. Ensure the organization exists and you have access to it.') unless can_read_from_org?(message.organization_guid)
     unauthorized! unless can_write_to_org?(message.organization_guid)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
