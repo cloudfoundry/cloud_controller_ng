@@ -4408,7 +4408,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td><strong>data</strong></td>
 <td><em>object</em></td>
-<td>Data for package type. Can be empty for bits packages.</td>
+<td>Data for package type.</td>
 </tr>
 <tr>
 <td><strong>state</strong></td>
@@ -4454,9 +4454,19 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><code class="prettyprint">bits</code></td>
 </tr>
 <tr>
-<td><strong>data</strong></td>
-<td><em>object</em></td>
-<td>Unused. <code class="prettyprint">{}</code></td>
+<td><strong>data.error</strong></td>
+<td><em>string</em></td>
+<td>If an error occurs this field will contain the error message.</td>
+</tr>
+<tr>
+<td><strong>data.checksum.type</strong></td>
+<td><em>string</em></td>
+<td>The checksum type, for example: <code class="prettyprint">sha256</code>.</td>
+</tr>
+<tr>
+<td><strong>data.checksum.value</strong></td>
+<td><em>string</em></td>
+<td>The checksum value. This will be populated after bits are uploaded.</td>
 </tr>
 <tr>
 <td><strong>state</strong></td>
@@ -5956,7 +5966,6 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
       </span><span class="nt">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
       </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"process"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -6117,7 +6126,6 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
       </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span><span class="p">,</span><span class="w">
       </span><span class="nt">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"ports"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
       </span><span class="nt">"health_check"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"process"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
