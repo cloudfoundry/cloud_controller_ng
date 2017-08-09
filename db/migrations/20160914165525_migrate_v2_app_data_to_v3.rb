@@ -392,7 +392,10 @@ Sequel.migration do
       ####
 
       # Remove duplicate apps_routes to prepare for adding a uniqueness constraint
-      dup_groups = self[:apps_routes].group_by(:app_guid, :route_guid, :app_port, :process_type).having { count.function.* > 1 }
+      dup_groups = self[:apps_routes].
+                   select(:app_guid, :route_guid, :app_port, :process_type).
+                   group_by(:app_guid, :route_guid, :app_port, :process_type).
+                   having { count.function.* > 1 }
 
       dup_groups.each do |group|
         sorted_ids = self[:apps_routes].
