@@ -39,6 +39,7 @@ templates:
   setup_local_blobstore.sh.erb: bin/setup_local_blobstore.sh
   stacks.yml.erb: config/stacks.yml
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
+  db_ca.crt.erb: config/certs/db_ca.crt
 
 
 packages:
@@ -471,6 +472,12 @@ properties:
   ccdb.pool_timeout:
     default: 10
     description: "The timeout for Sequel pooled connections"
+  ccdb.ca_cert:
+    default: ~
+    description: "The ca cert to use when communicating with the database over SSL"
+  ccdb.ssl_verify_hostname:
+    default: false
+    description: "Verify that the database SSL certificate matches the host to which the connection is attempted"
 
   uaa.cc.token_secret:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."

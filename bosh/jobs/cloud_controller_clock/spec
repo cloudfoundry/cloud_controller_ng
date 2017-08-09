@@ -16,7 +16,7 @@ templates:
   mutual_tls.crt.erb: config/certs/mutual_tls.crt
   mutual_tls.key.erb: config/certs/mutual_tls.key
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
-
+  db_ca.crt.erb: config/certs/db_ca.crt
 
 packages:
   - capi_utils
@@ -389,6 +389,12 @@ properties:
   ccdb.pool_timeout:
     default: 10
     description: "The timeout for Sequel pooled connections"
+  ccdb.ca_cert:
+    default: ~
+    description: "The ca cert to use when communicating with the database over SSL"
+  ccdb.ssl_verify_hostname:
+    default: false
+    description: "Verify that the database SSL certificate matches the host to which the connection is attempted"
 
   uaa.cc.token_secret:
     description: "Symmetric secret used to decode uaa tokens. Used for testing."
