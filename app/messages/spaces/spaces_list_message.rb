@@ -2,7 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class SpacesListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :names, :organization_guids].freeze
+    ALLOWED_KEYS = [:page, :per_page, :order_by, :names, :organization_guids].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -20,6 +20,10 @@ module VCAP::CloudController
       to_array! opts, 'names'
       to_array! opts, 'organization_guids'
       new(opts.symbolize_keys)
+    end
+
+    def valid_order_by_values
+      super << :name
     end
 
     private

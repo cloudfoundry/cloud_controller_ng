@@ -93,7 +93,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       context 'when pagination options are specified' do
         let(:page) { 2 }
         let(:per_page) { 1 }
-        let(:params) { { 'page' => page, 'per_page' => per_page } }
+        let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'created_at' } }
 
         it 'paginates the response' do
           get :index, params
@@ -102,6 +102,19 @@ RSpec.describe SpacesV3Controller, type: :controller do
           expect(parsed_response['pagination']['total_results']).to eq(3)
           expect(parsed_response['resources'].length).to eq(per_page)
           expect(parsed_response['resources'][0]['name']).to eq('Lamb')
+        end
+
+        context 'when an order_by parameter is present' do
+          let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'created_at' } }
+
+          it 'paginates the response' do
+            get :index, params
+
+            parsed_response = parsed_body
+            expect(parsed_response['pagination']['total_results']).to eq(3)
+            expect(parsed_response['resources'].length).to eq(per_page)
+            expect(parsed_response['resources'][0]['name']).to eq('Lamb')
+          end
         end
       end
 
@@ -213,6 +226,158 @@ RSpec.describe SpacesV3Controller, type: :controller do
               'Alpaca',
             ])
           end
+        end
+      end
+    end
+
+    describe 'order_by' do
+      let!(:org1_space) do
+        VCAP::CloudController::Space.make(
+          name: 'Alpaca',
+          organization: org1,
+          created_at: Time.new(2017, 1, 3)
+        )
+      end
+      let!(:org1_other_space) do
+        VCAP::CloudController::Space.make(
+          name: 'Lamb',
+          organization: org1,
+          created_at: Time.new(2017, 1, 2)
+        )
+      end
+      let!(:org1_third_space) do
+        VCAP::CloudController::Space.make(
+          name: 'Dog',
+          organization: org1,
+          created_at: Time.new(2017, 1, 4)
+        )
+      end
+      let!(:org2_space) do
+        VCAP::CloudController::Space.make(
+          name: 'Horse',
+          organization: org2,
+          created_at: Time.new(2017, 1, 1)
+        )
+      end
+
+      before do
+        allow_user_global_read_access(user)
+      end
+
+      context 'when name is specified' do
+        it 'returns the spaces ordered by name in ascending order' do
+          get :index, { order_by: 'name' }
+
+          expect(response.status).to eq(200)
+
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
+            'Alpaca', 'Dog', 'Horse', 'Lamb'
+          ])
+        end
+
+        it 'includes the name parameter in pagination links' do
+          get :index, { order_by: 'name', per_page: 1, page: 2 }
+
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=4&per_page=1")
+
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=3&per_page=1")
+        end
+      end
+
+      context 'when -name is specified' do
+        it 'returns the spaces ordered by name in descending order' do
+          get :index, { order_by: '-name' }
+
+          expect(response.status).to eq(200)
+
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
+            'Lamb', 'Horse', 'Dog', 'Alpaca'
+          ])
+        end
+
+        it 'includes the -name parameter in pagination links' do
+          get :index, { order_by: '-name', per_page: 1, page: 2 }
+
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-name&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-name&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-name&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-name&page=3&per_page=1")
+        end
+      end
+
+      context 'when created_at is specified' do
+        it 'returns the spaces ordered by created_at in ascending order' do
+          get :index, { order_by: 'created_at' }
+
+          expect(response.status).to eq(200)
+
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
+            'Horse', 'Lamb', 'Alpaca', 'Dog'
+          ])
+        end
+
+        it 'includes the created_at parameter in pagination links' do
+          get :index, { order_by: 'created_at', per_page: 1, page: 2 }
+
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=3&per_page=1")
+        end
+      end
+
+      context 'when -created_at is specified' do
+        it 'returns the spaces ordered by created_at in descending order' do
+          get :index, { order_by: '-created_at' }
+
+          expect(response.status).to eq(200)
+
+          expect(parsed_body['resources'].map { |s| s['name'] }).to eq([
+            'Dog', 'Alpaca', 'Lamb', 'Horse'
+          ])
+        end
+
+        it 'includes the created_at parameter in pagination links' do
+          get :index, { order_by: '-created_at', per_page: 1, page: 2 }
+
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-created_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-created_at&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-created_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-created_at&page=3&per_page=1")
+        end
+      end
+
+      context 'when updated_at is specified' do
+        it 'includes the updated_at parameter in pagination links' do
+          get :index, { order_by: 'updated_at', per_page: 1, page: 2 }
+
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=3&per_page=1")
+        end
+      end
+
+      context 'when -updated_at is specified' do
+        it 'includes the updated_at parameter in pagination links' do
+          get :index, { order_by: '-updated_at', per_page: 1, page: 2 }
+
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-updated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-updated_at&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-updated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-updated_at&page=3&per_page=1")
+        end
+      end
+
+      context 'when a non-supported value is specified' do
+        it 'returns the spaces ordered by updated_at in descending order' do
+          get :index, { order_by: 'organization_guid' }
+
+          expect(response.status).to eq(400)
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
         end
       end
     end

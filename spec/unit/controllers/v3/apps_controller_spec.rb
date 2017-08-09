@@ -63,7 +63,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq 400
           expect(response.body).to include 'BadQueryParameter'
-          expect(response.body).to include("Order by can only be 'created_at' or 'updated_at'")
+          expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
         end
       end
 
