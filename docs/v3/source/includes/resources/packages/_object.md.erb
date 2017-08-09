@@ -3,7 +3,7 @@
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Package type. Valid values are `bits`, `docker`.
-**data** | _object_ | Data for package type. Can be empty for bits packages.
+**data** | _object_ | Data for package type.
 **state** | _string_ | State of the package. Valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `READY`, `FAILED`, `COPYING`, `EXPIRED`.
 **guid** | _uuid_ | Unique identifier for the package.
 **created_at** | _datetime_ | The time with zone when the object was created.
@@ -17,7 +17,9 @@ A bits package is used to upload source code for an app to. The bits package wil
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `bits`
-**data** | _object_ | Unused. `{}`
+**data.error** | _string_ | If an error occurs this field will contain the error message.
+**data.checksum.type** | _string_ | The checksum type, for example: `sha256`.
+**data.checksum.value** | _string_ | The checksum value. This will be populated after bits are uploaded.
 **state** | _string_ | State of the package. Valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `READY`, `FAILED`, `COPYING`, `EXPIRED`.
 **guid** | _uuid_ | Unique identifier for the package.
 **created_at** | _datetime_ | The time with zone when the object was created.
