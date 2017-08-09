@@ -6239,6 +6239,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "name": "my-space",
     "relationships": {
