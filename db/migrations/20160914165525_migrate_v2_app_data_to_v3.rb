@@ -391,21 +391,6 @@ Sequel.migration do
       ## Migrate service bindings
       ####
 
-      # Remove duplicate apps_routes to prepare for adding a uniqueness constraint
-      dup_groups = self[:apps_routes].group_by(:app_guid, :route_guid, :app_port, :process_type).having { count.function.* > 1 }
-
-      dup_groups.each do |group|
-        sorted_ids = self[:apps_routes].
-                     select(:id).
-                     where(app_guid: group[:app_guid], route_guid: group[:route_guid], app_port: group[:app_port], process_type: group[:process_type]).
-                     map(&:values).
-                     flatten.
-                     sort
-        sorted_ids.shift
-        ids_to_remove = sorted_ids
-        self[:apps_routes].where(id: ids_to_remove).delete
-      end
-
       run <<-SQL
         UPDATE service_bindings SET
           app_guid = (SELECT processes.guid FROM processes WHERE processes.id=service_bindings.app_id),
