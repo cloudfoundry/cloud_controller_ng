@@ -18,12 +18,14 @@ class SpacesV3Controller < ApplicationController
 
   def create
     message = SpaceCreateMessage.create_from_http_request(params[:body])
+    missing_org = 'Invalid organization. Ensure the organization exists and you have access to it.'
 
-    unprocessable!('Invalid organization. Ensure the organization exists and you have access to it.') unless can_read_from_org?(message.organization_guid)
+    unprocessable!(missing_org) unless can_read_from_org?(message.organization_guid)
     unauthorized! unless can_write_to_org?(message.organization_guid)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = fetch_organization(message.organization_guid)
+    unprocessable!(missing_org) unless org
     space = SpaceCreate.new.create(org, message)
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e

@@ -56,7 +56,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to_not be_empty
+            expect(message.errors_on(:relationships)).to include('App guid must be a string')
           end
         end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to_not be_empty
+            expect(message.errors_on(:relationships)).to include("Unknown field(s): 'potato'")
           end
         end
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to_not be_empty
+            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
           end
         end
 
@@ -89,7 +89,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to_not be_empty
+            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
           end
         end
       end

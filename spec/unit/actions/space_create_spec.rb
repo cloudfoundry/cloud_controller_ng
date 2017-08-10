@@ -12,14 +12,6 @@ RSpec.describe SpaceCreate do
       expect(space.name).to eq('my-space')
     end
 
-    it 'raises an error if the organization does NOT exist' do
-      message = VCAP::CloudController::SpaceCreateMessage.new(name: 'my-space')
-      org     = nil
-      expect {
-        SpaceCreate.new.create(org, message)
-      }.to raise_error(SpaceCreate::Error, 'Invalid organization. Ensure the organization exists and you have access to it.')
-    end
-
     context 'when a model validation fails' do
       it 'raises an error' do
         errors = Sequel::Model::Errors.new
@@ -47,14 +39,6 @@ RSpec.describe SpaceCreate do
           }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
         end
       end
-    end
-
-    it 'raises an error if the organization does NOT exist' do
-      message = VCAP::CloudController::SpaceCreateMessage.new(name: 'my-space')
-      org     = nil
-      expect {
-        SpaceCreate.new.create(org, message)
-      }.to raise_error(SpaceCreate::Error, 'Invalid organization. Ensure the organization exists and you have access to it.')
     end
   end
 end

@@ -98,27 +98,62 @@ module VCAP::CloudController
         end
       end
 
-      describe 'organization guid' do
-        it 'must be present' do
-          body = {}
-          message = SpaceCreateMessage.create_from_http_request(body)
-          expect(message).to_not be_valid
-          expect(message.errors.full_messages).to include("Organization guid can't be blank")
+      context 'relationships' do
+        let(:params) { { relationships: relationships, name: 'name' } }
+
+        context 'when guid is nil' do
+          let(:relationships) { { organization: { data: { guid: nil } } } }
+
+          it 'is not valid' do
+            message = SpaceCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include('Organization guid must be a string')
+          end
         end
 
-        it 'must be a guid' do
-          body = {
-            'relationships' => {
-              'organization' => {
-                'data' => {
-                  'guid' => 1
-                }
-              }
-            }
-          }
-          message = SpaceCreateMessage.create_from_http_request(body)
-          expect(message).to_not be_valid
-          expect(message.errors.full_messages).to include('Organization guid must be a string')
+        context 'when guid is not a string' do
+          let(:relationships) { { organization: { data: { guid: 1 } } } }
+
+          it 'is not valid' do
+            message = SpaceCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include('Organization guid must be a string')
+          end
+        end
+
+        context 'when there are unexpected keys' do
+          let(:relationships) { { organization: { guid: 'some-guid' }, potato: 'fried' } }
+
+          it 'is not valid' do
+            message = SpaceCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include("Unknown field(s): 'potato'")
+          end
+        end
+
+        context 'when the relationships field is nil' do
+          let(:relationships) { nil }
+
+          it 'is not valid' do
+            message = SpaceCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+          end
+        end
+
+        context 'when the relationships field is non-hash, non-nil garbage' do
+          let(:relationships) { 'gorniplatz' }
+
+          it 'is not valid' do
+            message = SpaceCreateMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+          end
         end
       end
     end
