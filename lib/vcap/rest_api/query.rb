@@ -105,12 +105,56 @@ module VCAP::RestAPI
       return clean_up_foreign_key(key, values, foreign_key_association) if foreign_key_association
 
       col_type = column_type(key)
-      values = values.collect { |value| cast_query_value(col_type, key, value) }.compact
 
-      if values.empty?
-        { key => nil }
+      if col_type == :datetime
+        return query_datetime_values(key, values, comparison)
       else
-        Sequel.lit("#{key} #{comparison} ?", values)
+        values = values.collect { |value| cast_query_value(col_type, key, value) }.compact
+        if values.empty?
+          { key => nil }
+        else
+          Sequel.lit("#{key} #{comparison} ?", values)
+        end
+      end
+    end
+
+    def query_datetime_values(key, values, comparison)
+      # This filter assumes that datetimes might be stored with sub-second precision,
+      # but the user will only see the times truncated at the second. Chances are that
+      # queries are based on an object's timestamp rather than an arbitrary time value,
+      # so we accept any value in that second range. These queries will pick up other
+      # objects in the same full-second range as well, as shown in this diagram:
+      #
+      #                 <        |
+      #                                   <=              |
+      #                          |         =              |
+      #                          |         >=
+      #                                                   |         >
+      # ---------------------------------------------------------------------------------------
+      #                          |                       A* |
+      #                          |                       A* |
+      # ---------------------------------------------------------------------------------------
+      #                          A                       A* A+1
+      #
+      values = values.map { |value| value.empty? ? nil : Time.parse(value).utc }.compact
+      if values.empty?
+        return { key => nil }
+      end
+      value = values.first
+      if ['<', '>='].include?(comparison)
+        Sequel.lit("#{key} #{comparison} ?", value)
+      elsif ['<=', '>'].include?(comparison)
+        Sequel.lit("#{key} #{comparison} ?", Time.at(value + 0.99999).utc)
+      elsif comparison == '='
+        lower_bound = value
+        upper_bound = Time.at(value + 0.99999).utc
+        Sequel.lit("#{key} BETWEEN ? AND ?", lower_bound, upper_bound)
+      elsif comparison == ' IN '
+        part1 = (["(#{key} BETWEEN ? AND ?)"] * values.size).join(' OR ')
+        args = values.map { |val| [val, Time.at(val + 0.99999).utc] }.flatten
+        Sequel.lit(part1, *args)
+      else
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', comparison)
       end
     end
 
@@ -120,8 +164,6 @@ module VCAP::RestAPI
         clean_up_integer(value)
       when :boolean
         clean_up_boolean(key, value)
-      when :datetime
-        clean_up_datetime(value)
       else
         value
       end
@@ -153,10 +195,6 @@ module VCAP::RestAPI
     # Mysql does not support using 't'/'f' for querying.
     def clean_up_boolean(_, q_val)
       q_val == 't' || q_val == 'true'
-    end
-
-    def clean_up_datetime(q_val)
-      q_val.empty? ? nil : Time.parse(q_val).utc
     end
 
     def clean_up_integer(q_val)

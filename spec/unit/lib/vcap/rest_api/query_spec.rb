@@ -28,13 +28,14 @@ module VCAP::RestAPI
         a = Author.create(num_val: i + 1,
                           str_val: "str #{i}",
                           published: (i == 0),
-                          published_at: (i == 0) ? nil : Time.at(0).utc + i)
+                          published_at: (i == 0) ? nil : Time.at(0).utc + i + 0.5)
         2.times do |j|
           a.add_book(Book.create(num_val: j + 1, str_val: "str #{i} #{j}"))
         end
       end
 
-      @owner_nil_num = Author.create(str_val: 'no num', published: false, published_at: Time.at(0).utc + @num_authors)
+      @owner_nil_num = Author.create(str_val: 'no num', published: false,
+                                     published_at: Time.at(0).utc + @num_authors)
       @queryable_attributes = Set.new(%w(num_val str_val author_id book_id published published_at))
     end
 
@@ -165,11 +166,12 @@ module VCAP::RestAPI
           ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
           @queryable_attributes, q: q)
 
-          expected = Author.all.select do |a|
-            a.published_at && a.published_at > query_value
-          end
-
-          expect(ds.all).to match_array(expected)
+          expect(ds.all).to match_array([
+            Author[num_val: 6],
+            Author[num_val: 7],
+            Author[num_val: 8],
+            Author[num_val: 9],
+            Author[str_val: 'no num']])
         end
 
         it 'returns correct results for a greater-than-or-equal-to comparison query' do
@@ -194,6 +196,20 @@ module VCAP::RestAPI
           expected = Author.all.select do |a|
             a.published_at && a.published_at < query_value
           end
+
+          expect(ds.all).to match_array(expected)
+        end
+
+        it 'returns correct results for an IN comparison query' do
+          author2 = Author[num_val: 2]
+          author5 = Author[num_val: 5]
+          query_value_1 = author2.published_at
+          query_value_2 = author5.published_at
+          q = "published_at IN #{query_value_1},#{query_value_2}"
+          ds = Query.filtered_dataset_from_query_params(Author, Author.dataset,
+            @queryable_attributes, q: q)
+
+          expected = [author2, author5]
 
           expect(ds.all).to match_array(expected)
         end
