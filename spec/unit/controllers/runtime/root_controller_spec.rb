@@ -66,6 +66,29 @@ module VCAP::CloudController
         hash = MultiJson.load(last_response.body)
         expect(hash['links']['logging']['href']).to eq(expected_uri)
       end
+
+      it 'returns a link for app_ssh with metadata' do
+        expected_ssh_endpoint = 'ssh://ssh.example.org:2222'
+        expected_host_key_fingerprint = 'the-host-key-fingerprint'
+        expected_ssh_oauth_client = 'ssh-proxy'
+        TestConfig.override(
+          info: {
+            app_ssh_endpoint: expected_ssh_endpoint,
+            app_ssh_host_key_fingerprint: expected_host_key_fingerprint,
+            app_ssh_oauth_client: expected_ssh_oauth_client
+          }
+        )
+
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['links']['app_ssh']).to eq(
+          'href' => expected_ssh_endpoint,
+          'meta' => {
+            'host_key_fingerprint' => expected_host_key_fingerprint,
+            'oauth_client' => expected_ssh_oauth_client,
+          }
+        )
+      end
     end
   end
 end
