@@ -19,7 +19,7 @@ module VCAP::CloudController
       ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
-        where("#{ProcessModel.table_name}.id > ?", last_id).
+        where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
         order("#{ProcessModel.table_name}__id".to_sym).
         limit(batch_size).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
@@ -42,7 +42,7 @@ module VCAP::CloudController
       diego_apps = ProcessModel.
                    diego.
                    runnable.
-                   where("#{ProcessModel.table_name}.id > ?", last_id).
+                   where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
                    order("#{ProcessModel.table_name}__id".to_sym).
                    limit(batch_size)
 

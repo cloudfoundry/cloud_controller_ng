@@ -115,12 +115,12 @@ module VCAP::CloudController
 
         usage_query =
           ProcessModel.
-          join(AppModel, { guid: :app_guid }, table_alias: :parent_app).
-          join(Space, guid: :space_guid).
-          join(Organization, id: :organization_id).
-          left_join(DropletModel, { guid: :parent_app__droplet_guid }, table_alias: :current_droplet).
+          join(AppModel.table_name, { guid: :app_guid }, table_alias: :parent_app).
+          join(Space.table_name, guid: :space_guid).
+          join(Organization.table_name, id: :organization_id).
+          left_join(DropletModel.table_name, { guid: :parent_app__droplet_guid }, table_alias: :current_droplet).
           left_join(
-            PackageModel,
+            PackageModel.table_name,
               {
                 guid: PackageModel.select(:guid).join(latest_package_query, { app_guid: :app_guid, id: :id }, table_alias: :b),
                 latest_package__app_guid: :parent_app__guid
@@ -128,7 +128,7 @@ module VCAP::CloudController
               table_alias: :latest_package
             ).
           left_join(
-            DropletModel,
+            DropletModel.table_name,
               {
                 guid: DropletModel.select(:guid).join(latest_droplet_query, { package_guid: :package_guid, id: :id }, table_alias: :b),
                 latest_droplet__package_guid: :latest_package__guid
@@ -143,7 +143,7 @@ module VCAP::CloudController
       end
 
       def delete_events_older_than(cutoff_age_in_days)
-        old_app_usage_events = AppUsageEvent.dataset.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i)
+        old_app_usage_events = AppUsageEvent.dataset.where(Sequel.lit("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i))
         old_app_usage_events.delete
       end
 

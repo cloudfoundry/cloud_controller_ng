@@ -1,10 +1,7 @@
-class Service < Sequel::Model
-end
-
 Sequel.migration do
   up do
-    Service.filter(provider: nil).all.each do |service|
-      if Service.filter(label: service.label, provider: '').first
+    self[:services].filter(provider: nil).all.each do |service|
+      if self[:services].filter(label: service.label, provider: '').first
         service.update(label: "#{service.label}-#{service.id}", provider: '')
       else
         service.update(provider: '')
@@ -23,7 +20,7 @@ Sequel.migration do
       set_column_default :provider, nil
     end
 
-    Service.filter(provider: '').all.each do |service|
+    self[:services].filter(provider: '').all.each do |service|
       service.update(provider: nil)
     end
   end

@@ -110,7 +110,7 @@ module VCAP::RestAPI
       if values.empty?
         { key => nil }
       else
-        ["#{key} #{comparison} ?", values]
+        Sequel.lit("#{key} #{comparison} ?", values)
       end
     end
 

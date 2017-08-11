@@ -44,7 +44,7 @@ module VCAP::CloudController
         route_service_url: raw_attributes[:route_service_url]
       }
 
-      route_binding.set_all(attributes_to_update)
+      route_binding.set(attributes_to_update)
 
       save_route_binding(route_binding)
 

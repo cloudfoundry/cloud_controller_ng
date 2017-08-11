@@ -24,7 +24,7 @@ module VCAP::Services
         it 'sets relevant attributes of the instance' do
           attributes = client.bind(binding, unsupported_arbitrary_parameters)
           # save to the database to ensure attributes match tables
-          binding.set_all(attributes)
+          binding.set(attributes)
           binding.save
 
           expect(binding.credentials).to eq(instance.credentials)
@@ -36,7 +36,7 @@ module VCAP::Services
           it 'sets relevant attributes of the instance' do
             attributes = client.bind(binding, unsupported_arbitrary_parameters)
             # save to the database to ensure attributes match tables
-            binding.set_all(attributes)
+            binding.set(attributes)
             binding.save
 
             expect(binding.credentials).to eq(instance.credentials)
@@ -57,7 +57,7 @@ module VCAP::Services
         it 'sets relevant attributes of the instance' do
           attributes = client.bind(binding, unsupported_arbitrary_parameters)
           # save to the database to ensure attributes match tables
-          binding.set_all(attributes)
+          binding.set(attributes)
           binding.save
 
           expect(binding.route_service_url).to eq(instance.route_service_url)

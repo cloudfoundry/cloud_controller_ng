@@ -455,7 +455,7 @@ module VCAP::CloudController
                     elsif comparison == ' IN '
                       space_ids.where(organizations__guid: value.split(','))
                     else
-                      space_ids.where("organizations.guid #{comparison} ?", value)
+                      space_ids.where(Sequel.lit("organizations.guid #{comparison} ?", value))
                     end
       end
 
@@ -463,7 +463,7 @@ module VCAP::CloudController
     end
 
     def projected_service_instance(service_instance)
-      service_instance.clone.set_all(request_attrs.select { |k, _v| ServiceInstanceUpdate::KEYS_TO_UPDATE_CC.include? k })
+      service_instance.clone.set(request_attrs.select { |k, _v| ServiceInstanceUpdate::KEYS_TO_UPDATE_CC.include? k })
     end
   end
 end

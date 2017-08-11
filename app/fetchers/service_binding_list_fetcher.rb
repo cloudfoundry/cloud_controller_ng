@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     def fetch(space_guids:)
       dataset = ServiceBinding.select_all(ServiceBinding.table_name).
-                join(ServiceInstance, guid: :service_instance_guid).
-                join(Space, id: :space_id, guid: space_guids)
+                join(ServiceInstance.table_name, guid: :service_instance_guid).
+                join(Space.table_name, id: :space_id, guid: space_guids)
       filter(dataset)
     end
 

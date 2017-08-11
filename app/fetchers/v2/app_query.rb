@@ -10,7 +10,7 @@ module VCAP::RestAPI
           else
             filter.filter(cond)
           end
-        elsif cond[0].starts_with?('name')
+        elsif cond.str.starts_with?('name')
           name_filter(filter, cond)
         else
           filter.filter(cond)

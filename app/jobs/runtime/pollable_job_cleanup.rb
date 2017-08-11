@@ -5,7 +5,7 @@ module VCAP::CloudController
         CUTOFF_AGE_IN_DAYS = 90
 
         def perform
-          old_orphaned_blobs = PollableJobModel.where("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", CUTOFF_AGE_IN_DAYS)
+          old_orphaned_blobs = PollableJobModel.where(Sequel.lit("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", CUTOFF_AGE_IN_DAYS))
           logger = Steno.logger('cc.background.expired-orphaned-blob-cleanup')
           logger.info("Cleaning up #{old_orphaned_blobs.count} OrphanedBlob rows")
           old_orphaned_blobs.delete

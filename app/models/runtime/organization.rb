@@ -54,8 +54,8 @@ module VCAP::CloudController
         VCAP::CloudController::Domain.dataset.where(owning_organization_id: self.id).
           or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => self.id))
       },
-      before_add:    proc { |org, private_domain| private_domain.addable_to_organization?(org) },
-      before_remove: proc { |org, private_domain| !private_domain.owned_by?(org) },
+      before_add:    proc { |org, private_domain| org.cancel_action unless private_domain.addable_to_organization?(org) },
+      before_remove: proc { |org, private_domain| org.cancel_action if private_domain.owned_by?(org) },
       after_remove:  proc { |org, private_domain| private_domain.routes_dataset.filter(space: org.spaces_dataset).destroy }
     )
 
@@ -95,7 +95,7 @@ module VCAP::CloudController
       }
 
     one_to_many :space_quota_definitions,
-      before_add: proc { |org, quota| quota.organization.id == org.id }
+      before_add: proc { |org, quota| org.cancel_action if quota.organization.id != org.id }
 
     add_association_dependencies(
       owned_private_domains:     :destroy,

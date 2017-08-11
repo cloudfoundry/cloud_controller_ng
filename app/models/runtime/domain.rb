@@ -12,7 +12,8 @@ module VCAP::CloudController
     MAXIMUM_FQDN_DOMAIN_LENGTH = 253
     MAXIMUM_DOMAIN_LABEL_LENGTH = 63
 
-    dataset.row_proc = proc do |row|
+    def self.call(row)
+      return super unless equal?(Domain)
       if row[:owning_organization_id]
         PrivateDomain.call(row)
       else
@@ -158,7 +159,7 @@ module VCAP::CloudController
     end
 
     def validate_add_shared_organization(organization)
-      !shared? && !owned_by?(organization)
+      organization.cancel_action if shared? || owned_by?(organization)
     end
   end
 end

@@ -151,7 +151,7 @@ module VCAP::CloudController
       # instead of doing self.service_instance_operation = x
       # because mysql will deadlock when requests happen concurrently otherwise.
       ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
-      self.service_instance_operation(true) # reload service_instance_operation association
+      self.service_instance_operation(reload: true)
     end
 
     def update_service_instance(attributes_to_update)
@@ -183,7 +183,7 @@ module VCAP::CloudController
     private
 
     def update_attributes(instance_attrs)
-      set_all(instance_attrs)
+      set(instance_attrs)
       save_changes
     end
 

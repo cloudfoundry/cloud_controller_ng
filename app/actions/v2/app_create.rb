@@ -77,7 +77,7 @@ module VCAP::CloudController
             stack:     get_stack_name(request_attrs['stack_guid']),
             app:       app
           )
-          app.buildpack_lifecycle_data(true) # reload buildpack_lifecycle_data association
+          app.buildpack_lifecycle_data(reload: true)
         end
       end
 

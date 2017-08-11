@@ -12,7 +12,7 @@ module VCAP::CloudController
     end
 
     def update_attributes(attrs)
-      self.set_all attrs
+      self.set attrs
       self.save
     end
   end

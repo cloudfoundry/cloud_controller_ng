@@ -68,7 +68,7 @@ module Sequel::Plugins::VcapSerialization
       # Cannot use update(update_opts) because it does not
       # update updated_at timestamp when no changes are being made.
       # Arguably this should avoid updating updated_at if nothing changed.
-      set_all(update_opts)
+      set(update_opts)
       save
     end
   end
@@ -99,7 +99,7 @@ module Sequel::Plugins::VcapSerialization
     # @return [Sequel::Model] The created model.
     def create_from_hash(hash, opts={})
       create_opts = update_or_create_options(hash, opts)
-      create { |instance| instance.set_all(create_opts) }
+      create { |instance| instance.set(create_opts) }
     end
 
     # Set the default order during a to_json on the model class.

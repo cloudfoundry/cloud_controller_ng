@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       binding_result = request_binding_from_broker(service_instance, binding, message.parameters)
 
-      binding.set_all(binding_result)
+      binding.set(binding_result)
 
       begin
         binding.save

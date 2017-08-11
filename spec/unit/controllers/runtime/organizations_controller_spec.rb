@@ -1398,7 +1398,7 @@ module VCAP::CloudController
             expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
             expect(Route.find(guid: route_guid)).not_to be_nil
 
-            org_delete_jobs = Delayed::Job.where("handler like '%OrganizationDelete%'")
+            org_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%OrganizationDelete%'"))
             expect(org_delete_jobs.count).to eq 1
             job = org_delete_jobs.first
 
@@ -1486,7 +1486,7 @@ module VCAP::CloudController
 
         it 'fails' do
           delete "/v2/organizations/#{organization.guid}/private_domains/#{private_domain.guid}"
-          expect(last_response.status).to eq(400)
+          expect(last_response.status).to eq(400), last_response.body
         end
       end
 

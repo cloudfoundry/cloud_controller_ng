@@ -45,7 +45,7 @@ module VCAP::CloudController
           'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
           'diego', 'enable_ssh', 'ports', 'route_guids')
 
-        process.set_all(mass_assign)
+        process.set(mass_assign)
       end
 
       def update_app(app, request_attrs)

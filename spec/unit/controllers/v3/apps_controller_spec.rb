@@ -823,7 +823,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     it 'successfully deletes the app in a background job' do
       delete :destroy, guid: app_model.guid
 
-      app_delete_jobs = Delayed::Job.where("handler like '%AppDelete%'")
+      app_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppDelete%'"))
       expect(app_delete_jobs.count).to eq 1
       app_delete_jobs.first
 

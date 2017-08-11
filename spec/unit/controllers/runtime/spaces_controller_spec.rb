@@ -802,7 +802,7 @@ module VCAP::CloudController
           expect(ServiceInstance.find(guid: service_instance_guid)).not_to be_nil
           expect(Route.find(guid: route_guid)).not_to be_nil
 
-          space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
+          space_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceDelete%'"))
           expect(space_delete_jobs.count).to eq 1
           job = space_delete_jobs.first
 
@@ -972,7 +972,7 @@ module VCAP::CloudController
 
                 Delayed::Worker.new.work_off
 
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
+                space_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceDelete%'"))
                 expect(space_delete_jobs.count).to eq 1
                 expect(space_delete_jobs.first.last_error).not_to be_nil
 
@@ -1026,7 +1026,7 @@ module VCAP::CloudController
 
                 Delayed::Worker.new.work_off
 
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
+                space_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceDelete%'"))
                 expect(space_delete_jobs.count).to eq 1
                 expect(space_delete_jobs.first.last_error).not_to be_nil
 
@@ -1043,7 +1043,7 @@ module VCAP::CloudController
 
                 Delayed::Worker.new.work_off
 
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
+                space_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceDelete%'"))
                 expect(space_delete_jobs.count).to eq 1
                 expect(space_delete_jobs.first.last_error).not_to be_nil
 
@@ -1056,7 +1056,7 @@ module VCAP::CloudController
 
                 Delayed::Worker.new.work_off
 
-                space_delete_jobs = Delayed::Job.where("handler like '%SpaceDelete%'")
+                space_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceDelete%'"))
                 expect(space_delete_jobs.count).to eq 1
                 expect(space_delete_jobs.first.last_error).not_to be_nil
 

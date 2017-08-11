@@ -11,9 +11,9 @@ module VCAP::CloudController
     get '/v2/syslog_drain_urls', :list
     def list
       guid_to_drain_maps = AppModel.
-                           join(ServiceBinding, app_guid: :guid).
-                           where('syslog_drain_url IS NOT NULL').
-                           where("syslog_drain_url != ''").
+                           join(ServiceBinding.table_name, app_guid: :guid).
+                           where(Sequel.lit('syslog_drain_url IS NOT NULL')).
+                           where(Sequel.lit("syslog_drain_url != ''")).
                            group("#{AppModel.table_name}__guid".to_sym).
                            select(
                              "#{AppModel.table_name}__guid".to_sym,

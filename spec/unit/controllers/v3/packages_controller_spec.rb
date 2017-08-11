@@ -377,7 +377,7 @@ RSpec.describe PackagesController, type: :controller do
     it 'successfully deletes the package in a background job' do
       delete :destroy, guid: package.guid
 
-      package_delete_jobs = Delayed::Job.where("handler like '%PackageDelete%'")
+      package_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%PackageDelete%'"))
       expect(package_delete_jobs.count).to eq 1
       package_delete_jobs.first
 

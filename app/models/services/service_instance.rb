@@ -19,6 +19,7 @@ module VCAP::CloudController
            key_map: lambda { |klazz|
              klazz == VCAP::CloudController::ManagedServiceInstance
            }
+    plugin :columns_updated
 
     one_to_one :service_instance_operation
 
@@ -182,7 +183,7 @@ module VCAP::CloudController
     end
 
     def update_service_bindings
-      if @columns_updated.key?(:syslog_drain_url)
+      if columns_updated.key?(:syslog_drain_url)
         service_bindings_dataset.update(syslog_drain_url: syslog_drain_url)
       end
     end

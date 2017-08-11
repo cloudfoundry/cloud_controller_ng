@@ -84,7 +84,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def deactivate_services(catalog)
-      services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where('unique_id NOT in ?', catalog.services.map(&:broker_provided_id))
+      services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where(Sequel.lit('unique_id NOT in ?', catalog.services.map(&:broker_provided_id)))
       services_in_db_not_in_catalog.each do |service|
         service.update(active: false)
       end
@@ -117,7 +117,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def delete_services(catalog)
-      services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where('unique_id NOT in ?', catalog.services.map(&:broker_provided_id))
+      services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where(Sequel.lit('unique_id NOT in ?', catalog.services.map(&:broker_provided_id)))
       services_in_db_not_in_catalog.each do |service|
         if service.service_plans.count < 1
           service.destroy

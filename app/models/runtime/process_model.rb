@@ -350,11 +350,7 @@ module VCAP::CloudController
     def after_destroy
       super
       create_app_usage_event
-    end
-
-    def after_destroy_commit
-      super
-      AppObserver.deleted(self)
+      db.after_commit { AppObserver.deleted(self) }
     end
 
     def metadata_with_command
@@ -514,10 +510,10 @@ module VCAP::CloudController
       app.lifecycle_data.first_custom_buildpack_url
     end
 
-    def after_commit
+    def after_save
       super
 
-      AppObserver.updated(self)
+      db.after_commit { AppObserver.updated(self) }
     end
 
     def to_hash(opts={})

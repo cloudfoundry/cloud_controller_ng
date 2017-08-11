@@ -52,19 +52,21 @@ module VCAP::CloudController
       validate_private_broker_plan_not_public
     end
 
-    def_dataset_method(:organization_visible) do |organization|
-      filter(Sequel.|(
-        { public: true },
-        { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization) }
-      ).&(active: true))
-    end
+    dataset_module do
+      def organization_visible(organization)
+        filter(Sequel.|(
+          { public: true },
+          { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(organization) }
+        ).&(active: true))
+      end
 
-    def_dataset_method(:space_visible) do |space|
-      filter(Sequel.|(
-        { public: true },
-        { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(space.organization) },
-        { id: ServicePlan.plan_ids_from_private_brokers_by_space(space) }
-      ).&(active: true))
+      def space_visible(space)
+        filter(Sequel.|(
+          { public: true },
+          { id: ServicePlanVisibility.visible_private_plan_ids_for_organization(space.organization) },
+          { id: ServicePlan.plan_ids_from_private_brokers_by_space(space) }
+        ).&(active: true))
+      end
     end
 
     def self.user_visible(user, admin_override=false, op=nil)

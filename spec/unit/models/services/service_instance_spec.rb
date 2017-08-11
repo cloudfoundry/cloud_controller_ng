@@ -83,7 +83,7 @@ module VCAP::CloudController
 
           it 'raises an exception when renaming the service' do
             expect {
-              service_instance_foo.set_all(name: 'bar')
+              service_instance_foo.set(name: 'bar')
               service_instance_foo.save_changes
             }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
           end
@@ -167,7 +167,7 @@ module VCAP::CloudController
 
         it 'creates an UPDATE service usage event' do
           expect {
-            service_instance.set_all(service_plan: service_plan)
+            service_instance.set(service_plan: service_plan)
             service_instance.save_changes
           }.to change { ServiceUsageEvent.count }.by 1
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
         let(:new_name) { 'some-new-name' }
         it 'creates an UPDATE service usage event' do
           expect {
-            service_instance.set_all(name: new_name)
+            service_instance.set(name: new_name)
             service_instance.save_changes
           }.to change { ServiceUsageEvent.count }.by 1
 
