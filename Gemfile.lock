@@ -345,7 +345,7 @@ GEM
       sexp_processor (~> 4.1)
     rubyzip (1.2.1)
     safe_yaml (1.0.4)
-    sequel (4.41.0)
+    sequel (4.49.0)
     sexp_processor (4.7.0)
     signet (0.7.3)
       addressable (~> 2.3)
@@ -486,4 +486,4 @@ DEPENDENCIES
   yajl-ruby
 
 BUNDLED WITH
-   1.15.1
+   1.15.3

@@ -23,6 +23,16 @@ module VCAP::CloudController
         connection_options[key] = opts[key] if opts[key]
       end
 
+      if opts[:ca_cert_path]
+        if opts[:database].start_with?('mysql')
+          connection_options[:sslca] = opts[:ca_cert_path]
+          connection_options[:sslmode] = opts[:ssl_verify_hostname] ? :verify_identity : :verify_ca
+        elsif opts[:database].start_with?('postgres')
+          connection_options[:sslrootcert] = opts[:ca_cert_path]
+          connection_options[:sslmode] = opts[:ssl_verify_hostname] ? 'verify-full' : 'verify-ca'
+        end
+      end
+
       if opts[:database].index('mysql') == 0
         connection_options[:charset] = 'utf8'
       end
