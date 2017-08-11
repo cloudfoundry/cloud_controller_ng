@@ -312,6 +312,18 @@ module VCAP::CloudController
             sequence_id: 9
           )
         end
+
+        let(:expected_network) do
+          ::Diego::Bbs::Models::Network.new(
+            properties: [
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
+            ]
+          )
+        end
+
         let(:config) do
           {
             external_port: external_port,
@@ -416,6 +428,7 @@ module VCAP::CloudController
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
             expect(result.root_fs).to eq('preloaded:potato-stack')
             expect(result.completion_callback_url).to eq(expected_callback_url)
+            expect(result.network). to eq(expected_network)
             expect(result.privileged).to be(false)
             expect(result.volume_mounts).to eq([])
             expect(result.egress_rules).to eq([
@@ -564,6 +577,7 @@ module VCAP::CloudController
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
             expect(result.volume_mounts).to eq([])
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
+            expect(result.network).to eq(expected_network)
 
             expect(result.root_fs).to eq('docker://potato-stack')
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)

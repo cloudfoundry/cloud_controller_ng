@@ -28,14 +28,14 @@ module VCAP::CloudController
         end
 
         let(:lifecycle_type) { nil }
-        let(:app_model) { AppModel.make(lifecycle_type, guid: 'banana-guid', droplet: DropletModel.make(state: 'STAGED')) }
+        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
             app:                  app_model,
             state:                'STARTED',
             diego:                true,
-            guid:                 'banana-guid',
+            guid:                 'process-guid',
             type:                 'web',
             health_check_timeout: 12,
             instances:            21,
@@ -62,10 +62,10 @@ module VCAP::CloudController
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: [
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: process.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: process.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: process.space.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: process.organization.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app_model.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app_model.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app_model.space.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app_model.organization.guid),
             ]
           )
         end
@@ -953,7 +953,7 @@ module VCAP::CloudController
 
       describe '#build_app_lrp_update' do
         let(:config) { {} }
-        let(:app_model) { AppModel.make(:buildpack, guid: 'banana-guid', droplet: DropletModel.make(state: 'STAGED')) }
+        let(:app_model) { AppModel.make(:buildpack, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
         let(:process) do
           process = ProcessModel.make(:process, instances: 7, app: app_model)
           process.this.update(updated_at: Time.at(2))

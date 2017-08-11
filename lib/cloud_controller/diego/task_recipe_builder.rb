@@ -29,6 +29,7 @@ module VCAP::CloudController
           log_source:                       TASK_LOG_SOURCE,
           max_pids:                         config[:diego][:pid_limit],
           memory_mb:                        task.memory_in_mb,
+          network:                          generate_network(task),
           privileged:                       config[:diego][:use_privileged_containers_for_running],
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
           volume_mounts:                    generate_volume_mounts(app_volume_mounts),
@@ -89,6 +90,10 @@ module VCAP::CloudController
 
       def cpu_weight(task)
         TaskCpuWeightCalculator.new(memory_in_mb: task.memory_in_mb).calculate
+      end
+
+      def generate_network(task)
+        Protocol::ContainerNetworkInfo.new(task.app).to_bbs_network
       end
 
       def find_staging_isolation_segment(staging_details)

@@ -273,17 +273,7 @@ module VCAP::CloudController
       end
 
       def generate_network
-        network = ::Diego::Bbs::Models::Network.new(properties: [])
-        net_info = Protocol::ContainerNetworkInfo.new(process).to_h
-
-        net_info['properties'].each do |key, value|
-          network.properties << ::Diego::Bbs::Models::Network::PropertiesEntry.new(
-            key:   key,
-            value: value,
-          )
-        end
-
-        network
+        Protocol::ContainerNetworkInfo.new(process.app).to_bbs_network
       end
 
       def file_descriptor_limit
