@@ -190,6 +190,20 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           ])
         end
       end
+
+      describe 'order_by' do
+        it 'returns orgs sorted alphabetically by name' do
+          get :index, order_by: 'name'
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['resources'].map { |r| r['name'] }).to eql([
+            'Beaver',
+            'Capybara',
+            'Marmot',
+            'Rat',
+          ])
+        end
+      end
     end
 
     describe 'query params errors' do

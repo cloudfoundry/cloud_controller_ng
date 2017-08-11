@@ -8,7 +8,8 @@ module VCAP::CloudController
         {
           'names' => 'Case,Molly',
           'page' => 1,
-          'per_page' => 5
+          'per_page' => 5,
+          'order_by' => 'name',
         }
       end
 
@@ -20,6 +21,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.names).to eq(['Case', 'Molly'])
+        expect(message).to be_valid
       end
 
       it 'converts requested keys to symbols' do
@@ -28,6 +30,7 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
+        expect(message.requested?(:order_by)).to be_truthy
       end
     end
 
@@ -37,6 +40,7 @@ module VCAP::CloudController
           names: ['Case', 'Molly'],
           page: 1,
           per_page: 5,
+          order_by: 'name',
         }
       end
 
@@ -74,6 +78,12 @@ module VCAP::CloudController
           message = OrgsListMessage.new names: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:names].length).to eq 1
+        end
+
+        it 'validates that order_by value is in the supported list' do
+          message = OrgsListMessage.new order_by: 'invalid'
+          expect(message).to be_invalid
+          expect(message.errors[:order_by].length).to eq 1
         end
       end
     end
