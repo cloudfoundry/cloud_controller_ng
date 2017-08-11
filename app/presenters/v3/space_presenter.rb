@@ -20,7 +20,12 @@ module VCAP::CloudController::Presenters::V3
       url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
       {
-        self: { href: url_builder.build_url(path: "/v3/spaces/#{space.guid}") },
+        self: {
+          href: url_builder.build_url(path: "/v3/spaces/#{space.guid}")
+        },
+        organization: {
+          href: url_builder.build_url(path: "/v3/organizations/#{space.organization_guid}")
+        },
       }
     end
   end

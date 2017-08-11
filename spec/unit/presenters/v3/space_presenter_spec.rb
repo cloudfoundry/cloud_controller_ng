@@ -14,6 +14,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:updated_at]).to eq(space.updated_at)
         expect(result[:name]).to eq(space.name)
         expect(result[:links][:self][:href]).to match(%r{/v3/spaces/#{space.guid}$})
+        expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}")
+        expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{space.organization_guid}")
       end
     end
   end

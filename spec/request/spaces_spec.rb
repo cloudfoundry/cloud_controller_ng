@@ -45,7 +45,8 @@ RSpec.describe 'Spaces' do
           'updated_at' => iso8601,
           'name'       => 'space1',
           'links'      => {
-            'self' => { 'href' => "#{link_prefix}/v3/spaces/#{created_space.guid}" }
+            'self' => { 'href' => "#{link_prefix}/v3/spaces/#{created_space.guid}" },
+            'organization' => { 'href' => "#{link_prefix}/v3/organizations/#{created_space.organization_guid}" },
           }
         }
       )
@@ -67,6 +68,9 @@ RSpec.describe 'Spaces' do
             'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+              },
+              'organization' => {
+                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
               }
             }
         }
@@ -105,6 +109,9 @@ RSpec.describe 'Spaces' do
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+                },
+                'organization' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
                 }
               }
             },
@@ -116,6 +123,9 @@ RSpec.describe 'Spaces' do
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/spaces/#{space2.guid}"
+                },
+                'organization' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{space2.organization_guid}"
                 }
               }
             }
