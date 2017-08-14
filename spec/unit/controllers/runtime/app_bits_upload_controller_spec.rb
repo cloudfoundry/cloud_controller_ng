@@ -169,6 +169,12 @@ module VCAP::CloudController
               expect(process.refresh.package_hash).to_not be_nil
             end
 
+            it 'records audit events' do
+              expect { make_request }.to change { Event.count }.by(1)
+              event = Event.find(type: 'audit.app.upload-bits')
+              expect(event.actee).to eq(process.app.guid)
+            end
+
             context 'when the upload will finish after the auth token expires' do
               let(:config_override) do
                 { app_bits_upload_grace_period_in_seconds: 200 }

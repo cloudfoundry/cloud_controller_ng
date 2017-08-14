@@ -54,11 +54,13 @@ module VCAP::CloudController
           package: package,
           config:  config,
         )
-        [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
+        result = [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]
       else
         uploader.upload_sync_without_event(upload_message, package)
-        [HTTP::CREATED, '{}']
+        result = [HTTP::CREATED, '{}']
       end
+      record_upload_bits(package)
+      result
     end
 
     post "#{path_guid}/copy_bits", :copy_app_bits
@@ -82,6 +84,12 @@ module VCAP::CloudController
     end
 
     private
+
+    def record_upload_bits(package)
+      Repositories::PackageEventRepository.record_app_upload_bits(
+        package,
+        UserAuditInfo.from_context(SecurityContext))
+    end
 
     def json_param(name)
       raw = params[name]

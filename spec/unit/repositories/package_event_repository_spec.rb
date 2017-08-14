@@ -118,6 +118,27 @@ module VCAP::CloudController
         end
       end
 
+      describe 'record_app_upload_bits' do
+        it 'creates a new bit upload event' do
+          event = PackageEventRepository.record_app_upload_bits(package, user_audit_info)
+          event.reload
+
+          expect(event.type).to eq('audit.app.upload-bits')
+          expect(event.actor).to eq(user_guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq('potato')
+          expect(event.space_guid).to eq(app.space.guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+
+          package_guid = event.metadata.fetch('package_guid')
+          expect(package_guid).to eq(package.guid)
+        end
+      end
+
       describe 'record_app_package_delete' do
         it 'creates a new package delete event' do
           event = PackageEventRepository.record_app_package_delete(package, user_audit_info)

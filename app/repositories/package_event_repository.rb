@@ -36,6 +36,14 @@ module VCAP::CloudController
         create_event(package, type, user_audit_info, metadata)
       end
 
+      def self.record_app_upload_bits(package, user_audit_info)
+        Loggregator.emit(package.app.guid, "Uploading bits for app with guid #{package.app.guid}")
+        metadata = { package_guid: package.guid }
+        type     = 'audit.app.upload-bits'
+
+        create_event(package, type, user_audit_info, metadata)
+      end
+
       def self.record_app_package_delete(package, user_audit_info)
         Loggregator.emit(package.app.guid, "Deleting app package for app with guid #{package.app.guid}")
         metadata = { package_guid: package.guid }
