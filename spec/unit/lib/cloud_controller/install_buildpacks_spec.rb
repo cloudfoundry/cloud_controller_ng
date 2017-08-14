@@ -4,10 +4,10 @@ module VCAP::CloudController
   RSpec.describe InstallBuildpacks do
     describe 'installs buildpacks' do
       let(:installer) { InstallBuildpacks.new(TestConfig.config) }
-      let(:job) { double(Jobs::Runtime::BuildpackInstaller) }
-      let(:job2) { double(Jobs::Runtime::BuildpackInstaller) }
-      let(:job3) { double(Jobs::Runtime::BuildpackInstaller) }
-      let(:enqueuer) { double(Jobs::Enqueuer) }
+      let(:job) { instance_double(Jobs::Runtime::BuildpackInstaller) }
+      let(:job2) { instance_double(Jobs::Runtime::BuildpackInstaller) }
+      let(:job3) { instance_double(Jobs::Runtime::BuildpackInstaller) }
+      let(:enqueuer) { instance_double(Jobs::Enqueuer) }
       let(:install_buildpack_config) do
         {
           install_buildpacks: [
@@ -52,10 +52,13 @@ module VCAP::CloudController
             expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack1', 'abuildpack.zip', {}).and_return(job)
             allow(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack2', 'otherbp.zip', {}).and_return(job2)
             allow(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack3', 'otherbp2.zip', {}).and_return(job3)
+            allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
           end
 
           it 'tries to install the first buildpack in-process (canary)' do
             expect(job).to receive(:perform).exactly(1).times
+
+            expect(enqueuer).to receive(:enqueue).twice
             expect(job2).not_to receive(:perform)
             expect(job3).not_to receive(:perform)
 
@@ -63,7 +66,7 @@ module VCAP::CloudController
           end
 
           context 'when the canary successfully installs' do
-            it 'enequeues the rest of the buildpack install jobs' do
+            it 'enqueues the rest of the buildpack install jobs' do
               allow(job).to receive(:perform)
 
               expect(Jobs::Enqueuer).to receive(:new).with(job2, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)

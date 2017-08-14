@@ -93,7 +93,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       context 'when pagination options are specified' do
         let(:page) { 2 }
         let(:per_page) { 1 }
-        let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'created_at' } }
+        let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'name' } }
 
         it 'paginates the response' do
           get :index, params
@@ -101,20 +101,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           parsed_response = parsed_body
           expect(parsed_response['pagination']['total_results']).to eq(3)
           expect(parsed_response['resources'].length).to eq(per_page)
-          expect(parsed_response['resources'][0]['name']).to eq('Lamb')
-        end
-
-        context 'when an order_by parameter is present' do
-          let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'created_at' } }
-
-          it 'paginates the response' do
-            get :index, params
-
-            parsed_response = parsed_body
-            expect(parsed_response['pagination']['total_results']).to eq(3)
-            expect(parsed_response['resources'].length).to eq(per_page)
-            expect(parsed_response['resources'][0]['name']).to eq('Lamb')
-          end
+          expect(parsed_response['resources'][0]['name']).to eq('Horse')
         end
       end
 
