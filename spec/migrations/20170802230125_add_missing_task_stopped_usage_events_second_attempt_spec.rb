@@ -39,7 +39,7 @@ RSpec.describe 'Backfill missing task stopped usage events', isolation: :truncat
     end
   end
 
-  context 'when there is only a stop event' do
+  context 'when there is only a stop event (because start event rotated out)' do
     before do
       VCAP::CloudController::AppUsageEvent.make(state: 'TASK_STOPPED', task_guid: 'my-task-guid3')
     end

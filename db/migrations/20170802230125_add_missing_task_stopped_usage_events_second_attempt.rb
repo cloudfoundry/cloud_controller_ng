@@ -1,13 +1,16 @@
 Sequel.migration do
   change do
     events_to_backfill = self[:app_usage_events].
-                         select(:task_guid).
-                         exclude(task_guid: self[:tasks].select(:guid)).
-                         group_by(:task_guid).
-                         having { count.function.* < 2 }
+                         select_all.
+                         join(
+                           self[:app_usage_events].
+                           select { Sequel.as(max.function(:id), :id) }.
+                           exclude(task_guid: self[:tasks].select(:guid)).
+                           group_by(:task_guid).
+                           having { count.function.* < 2 },
+                         id: :id)
 
     events_to_backfill.each do |started_event|
-      started_event = self[:app_usage_events].where(task_guid: started_event[:task_guid]).first
       next unless started_event[:state] == 'TASK_STARTED'
 
       cloned_event_hash = started_event.clone
