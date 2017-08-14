@@ -98,8 +98,6 @@ properties:
     default: 14400 # 4 hours
   cc.jobs.app_bits_packer.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
-  cc.jobs.app_events_cleanup.timeout_in_seconds:
-    description: "The longest this job can take before it is cancelled"
   cc.jobs.app_usage_events_cleanup.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
   cc.jobs.blobstore_delete.timeout_in_seconds:

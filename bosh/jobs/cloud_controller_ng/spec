@@ -149,8 +149,6 @@ properties:
     default: 14400 # 4 hours
   cc.jobs.app_bits_packer.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
-  cc.jobs.app_events_cleanup.timeout_in_seconds:
-    description: "The longest this job can take before it is cancelled"
   cc.jobs.app_usage_events_cleanup.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
   cc.jobs.blobstore_delete.timeout_in_seconds:
@@ -162,9 +160,6 @@ properties:
   cc.jobs.droplet_upload.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
 
-  cc.app_events.cutoff_age_in_days:
-    description: "How old an app event should stay in cloud controller database before being cleaned up"
-    default: 31
   cc.app_usage_events.cutoff_age_in_days:
     description: "How old an app usage event should stay in cloud controller database before being cleaned up"
     default: 31

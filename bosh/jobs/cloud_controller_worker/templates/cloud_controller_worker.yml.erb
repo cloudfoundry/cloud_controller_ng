@@ -54,10 +54,6 @@ jobs:
   app_bits_packer:
     timeout_in_seconds: <%= timeout %>
   <% end %>
-  <% if_p("cc.jobs.app_events_cleanup.timeout_in_seconds") do |timeout| %>
-  app_events_cleanup:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
   <% if_p("cc.jobs.app_usage_events_cleanup.timeout_in_seconds") do |timeout| %>
   app_usage_events_cleanup:
     timeout_in_seconds: <%= timeout %>
@@ -82,9 +78,6 @@ jobs:
   droplet_upload:
     timeout_in_seconds: <%= timeout %>
   <% end %>
-
-app_events:
-  cutoff_age_in_days: <%= p("cc.app_events.cutoff_age_in_days") %>
 
 app_usage_events:
   cutoff_age_in_days: <%= p("cc.app_usage_events.cutoff_age_in_days") %>

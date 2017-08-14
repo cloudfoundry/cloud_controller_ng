@@ -30,9 +30,6 @@ module VCAP::CloudController
         :system_domain => String,
         :system_domain_organization => enum(String, NilClass),
         :app_domains => Array,
-        :app_events => {
-          cutoff_age_in_days: Integer
-        },
         :app_usage_events => {
           cutoff_age_in_days: Integer
         },

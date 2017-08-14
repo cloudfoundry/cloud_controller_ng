@@ -168,26 +168,6 @@
   http_code: 404
   message: "The app space could not be found: %s"
 
-50001:
-  name: ServiceAuthTokenInvalid
-  http_code: 400
-  message: "The service auth token is invalid: %s"
-
-50002:
-  name: ServiceAuthTokenLabelTaken
-  http_code: 400
-  message: "The service auth token label is taken: %s"
-
-50003:
-  name: ServiceAuthTokenNotFound
-  http_code: 404
-  message: "The service auth token could not be found: %s"
-
-50004:
-  name: MissingServiceAuthToken
-  http_code: 500
-  message: "Missing service auth token: %s"
-
 60001:
   name: ServiceInstanceNameEmpty
   http_code: 400
@@ -742,11 +722,6 @@
   name: InstancesUnavailable
   http_code: 503
   message: "Instances information unavailable: %s"
-
-230001:
-  name: BillingEventQueryInvalid
-  http_code: 400
-  message: "Billing event query start_date and/or end_date are missing or invalid"
 
 230002:
   name: EventNotFound

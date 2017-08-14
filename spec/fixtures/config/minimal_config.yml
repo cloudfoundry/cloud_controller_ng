@@ -21,9 +21,6 @@ app_domains:
   - name: customer-app-domain2.com
     router_group_name: default-tcp
 
-app_events:
-  cutoff_age_in_days: 31
-
 app_usage_events:
   cutoff_age_in_days: 31
 

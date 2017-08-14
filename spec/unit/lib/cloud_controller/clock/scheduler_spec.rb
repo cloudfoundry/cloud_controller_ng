@@ -13,7 +13,6 @@ module VCAP::CloudController
             global: { timeout_in_seconds: global_timeout },
           },
           app_usage_events: { cutoff_age_in_days: 1, },
-          app_events: { cutoff_age_in_days: 2, },
           audit_events: { cutoff_age_in_days: 3, },
           failed_jobs: { cutoff_age_in_days: 4, },
           service_usage_events: { cutoff_age_in_days: 5, },
@@ -60,12 +59,6 @@ module VCAP::CloudController
           expect(args).to eql(name: 'app_usage_events', at: '18:00', priority: 0)
           expect(Jobs::Runtime::AppUsageEventsCleanup).to receive(:new).with(1).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::AppUsageEventsCleanup)
-        end
-
-        expect(clock).to receive(:schedule_daily_job) do |args, &block|
-          expect(args).to eql(name: 'app_events', at: '19:00', priority: 0)
-          expect(Jobs::Runtime::AppEventsCleanup).to receive(:new).with(2).and_call_original
-          expect(block.call).to be_instance_of(Jobs::Runtime::AppEventsCleanup)
         end
 
         expect(clock).to receive(:schedule_daily_job) do |args, &block|
