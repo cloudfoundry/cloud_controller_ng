@@ -468,7 +468,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'buildpack app' do
           before do
-            app_model.lifecycle_data.stack = 'some-stack-name'
+            app_model.lifecycle_data.stack      = 'some-stack-name'
             app_model.lifecycle_data.buildpacks = ['some-buildpack-name', 'http://buildpack.com']
             app_model.lifecycle_data.save
           end
@@ -842,7 +842,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
-      job = VCAP::CloudController::PollableJobModel.last
+      job          = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
       expect(job.delayed_job_guid).to eq(enqueued_job.guid)
       expect(job.operation).to eq('app.delete')
@@ -1233,8 +1233,8 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:expected_success_response) do
       {
         'var' => {
-          'meep'  => 'moop',
-          'beep'  => 'boop'
+          'meep' => 'moop',
+          'beep' => 'boop'
         },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
@@ -1347,7 +1347,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200)
         expect(parsed_body).to eq({
           'links' => expected_success_response['links'],
-          'var' => {},
+          'var'   => {},
         })
       end
     end
@@ -1787,6 +1787,42 @@ RSpec.describe AppsV3Controller, type: :controller do
           get :current_droplet_relationship, guid: app_model.guid
 
           expect(response.status).to eq(200)
+        end
+      end
+    end
+  end
+
+  describe '#features' do
+    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'               => 200,
+        'admin_read_only'     => 200,
+        'global_auditor' => 200,
+        'space_developer'     => 200,
+        'space_manager'       => 200,
+        'space_auditor'       => 200,
+        'org_manager'         => 200,
+        'org_auditor'         => 404,
+        'org_billing_manager' => 404,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            get :features, guid: app_model.guid
+
+            expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+            if expected_return_value == 200
+              expect(parsed_body).to eq({ 'features' => [], 'pagination' => {} }), "failed to match parsed_body for role #{role}: got #{parsed_body}"
+            end
+          end
         end
       end
     end

@@ -214,6 +214,12 @@ class AppsV3Controller < ApplicationController
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
   end
 
+  def features
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    render status: :ok, json: { pagination: {}, features: [] }
+  end
+
   private
 
   def droplet_not_found!

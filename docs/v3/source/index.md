@@ -110,6 +110,8 @@ includes:
   - resources/tasks/list
   - resources/tasks/app/list
   - experimental_resources/header
+  - experimental_resources/app_features/header
+  - experimental_resources/app_features/list
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create

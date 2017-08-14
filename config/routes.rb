@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
   get '/apps/:guid/droplets/current', to: 'apps_v3#current_droplet'
+  get '/apps/:guid/features', to: 'apps_v3#features'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'

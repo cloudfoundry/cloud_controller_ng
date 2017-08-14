@@ -1,0 +1,28 @@
+### List app features
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/features" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_app_features, '/v3/apps/:guid/features`' %>
+```
+
+This endpoint retrieves the list of features for the specified app.
+
+#### Definition
+`GET /v3/apps/:guid/features`
+
