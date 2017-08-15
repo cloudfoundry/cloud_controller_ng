@@ -88,6 +88,7 @@
 
 
 
+
           
 
           
@@ -7278,6 +7279,33 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tbody></table>
 
           <h1 id="experimental-resources">Experimental Resources</h1>
+
+          <h2 id="app-features">App Features</h2>
+
+          <h3 id="list-app-features">List app features</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/features"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"features"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>This endpoint retrieves the list of features for the specified app.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/apps/:guid/features</code></p>
 
           <h2 id="route-mappings">Route Mappings</h2>
 
