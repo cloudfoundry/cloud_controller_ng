@@ -1,0 +1,14 @@
+---
+executable: /var/vcap/jobs/cloud_controller_ng/bin/local_worker
+limits:
+  memory: <%= p("cc.thresholds.api.restart_if_above_mb") %>M
+env:
+  - BUNDLE_GEMFILE=/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/Gemfile
+  - CLOUD_CONTROLLER_NG_CONFIG=/var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml
+  - C_INCLUDE_PATH=/var/vcap/packages/libpq/include
+  - LANG=en_US.UTF-8
+  - LIBRARY_PATH=/var/vcap/packages/libpq/lib
+  - NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key %>
+  - NEW_RELIC_DISPATCHER=delayed_job
+  - NRCONFIG=/var/vcap/jobs/cloud_controller_ng/config/newrelic.yml
+  - NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>_background

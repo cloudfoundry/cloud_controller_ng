@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+<% if p("bpm.enabled") %>
+    INDEX=${BPM_ID}
+<% else %>
+    INDEX=$2
+<% end %>
+
+source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh
+source /var/vcap/jobs/cloud_controller_ng/bin/blobstore_waiter.sh
+
+wait_for_blobstore
+
+cd /var/vcap/packages/cloud_controller_ng/cloud_controller_ng
+bundle exec rake "jobs:local[cc_api_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]"

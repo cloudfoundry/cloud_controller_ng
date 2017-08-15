@@ -4,10 +4,17 @@ name: cloud_controller_ng
 description: "The Cloud Controller provides primary Cloud Foundry API that is by the CF CLI. The Cloud Controller uses a database to keep tables for organizations, spaces, apps, services, service instances, user roles, and more. Typically multiple instances of Cloud Controller are load balanced."
 
 templates:
+  bin/cloud_controller_ng.erb: bin/cloud_controller_ng
+  bin/local_worker.erb: bin/local_worker
+  bpm/cloud_controller_ng.yml.erb: config/bpm/cloud_controller_ng.yml
+  bpm/local_worker.yml.erb: config/bpm/local_worker.yml
+  bpm/nginx.yml.erb: config/bpm/nginx.yml
+  bpm/nginx_newrelic_plugin.yml.erb: config/bpm/nginx_newrelic_plugin.yml
+
+  cloud_controller_ng.yml.erb: config/cloud_controller_ng.yml
   blobstore_waiter.sh.erb: bin/blobstore_waiter.sh
   buildpacks_ca_cert.pem.erb: config/certs/buildpacks_ca_cert.pem
   cc-drain.rb: bin/cc-drain
-  cloud_controller_api.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_api_ctl.erb: bin/cloud_controller_ng_ctl
   cloud_controller_api_health_check.erb: bin/cloud_controller_ng_health_check
   cloud_controller_api_worker_ctl.erb: bin/cloud_controller_worker_ctl
@@ -67,6 +74,10 @@ consumes:
   optional: true
 
 properties:
+  bpm.enabled:
+    description: "Enable Bosh Process Manager"
+    default: false
+
   ssl.skip_cert_verify:
     description: "specifies that the job is allowed to skip ssl cert verification"
     default: false

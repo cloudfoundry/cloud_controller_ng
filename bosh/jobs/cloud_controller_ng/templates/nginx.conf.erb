@@ -1,8 +1,15 @@
 # deployment cloudcontroller nginx.conf
+<% if p("bpm.enabled") %>
+daemon off;
 
-error_log <%= p("cc.nginx_error_log_destination") %> <%= p("cc.nginx_error_log_level") %>;
-error_log syslog:server=127.0.0.1,severity=error,tag=vcap_nginx_error <%= p("cc.nginx_error_log_level") %>;
+pid       /var/vcap/data/cloud_controller_ng/nginx.pid;
+error_log /var/vcap/sys/log/cloud_controller_ng/nginx-error.log <%= p("cc.nginx_error_log_level") %>;
+<% else %>
 pid       /var/vcap/sys/run/nginx_cc/nginx.pid;
+error_log <%= p("cc.nginx_error_log_destination") %> <%= p("cc.nginx_error_log_level") %>;
+<% end %>
+error_log syslog:server=127.0.0.1,severity=error,tag=vcap_nginx_error <%= p("cc.nginx_error_log_level") %>;
+
 worker_processes auto;
 
 events {
@@ -17,7 +24,11 @@ http {
 
   log_format main  '<%= p("cc.nginx_access_log_format").chomp %>';
 
+  <% if p("bpm.enabled") %>
+  access_log  /var/vcap/sys/log/cloud_controller_ng/nginx-access.log main;
+  <% else %>
   access_log  <%= p("cc.nginx_access_log_destination") %>  main;
+  <% end %>
   access_log  syslog:server=127.0.0.1,severity=info,tag=vcap_nginx_access main;
 
   sendfile             on;  #enable use of sendfile()
@@ -39,14 +50,18 @@ http {
 
   client_max_body_size <%= p("cc.client_max_body_size") %>; #already enforced upstream/but doesn't hurt.
 
-  client_body_temp_path /var/vcap/data/nginx_cc/tmp/client_body_temp;
-  proxy_temp_path       /var/vcap/data/nginx_cc/tmp/proxy_temp;
-  fastcgi_temp_path     /var/vcap/data/nginx_cc/tmp/fastcgi_temp;
-  uwsgi_temp_path       /var/vcap/data/nginx_cc/tmp/uwsgi_temp;
-  scgi_temp_path        /var/vcap/data/nginx_cc/tmp/scgi_temp;
+  client_body_temp_path /var/vcap/data/cloud_controller_ng/tmp/client_body_temp;
+  proxy_temp_path       /var/vcap/data/cloud_controller_ng/tmp/proxy_temp;
+  fastcgi_temp_path     /var/vcap/data/cloud_controller_ng/tmp/fastcgi_temp;
+  uwsgi_temp_path       /var/vcap/data/cloud_controller_ng/tmp/uwsgi_temp;
+  scgi_temp_path        /var/vcap/data/cloud_controller_ng/tmp/scgi_temp;
 
   upstream cloud_controller {
+    <% if p("bpm.enabled") %>
+    server unix:/var/vcap/data/cloud_controller_ng/cloud_controller.sock;
+    <% else %>
     server unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock;
+    <% end %>
   }
 
   # This block ensures the endpoints it serves are handled by mutual TLS.
@@ -137,7 +152,11 @@ http {
 
     # proxy and log all CC traffic
     location / {
+      <% if p("bpm.enabled") %>
+      access_log  /var/vcap/sys/log/cloud_controller_ng/nginx-access.log main;
+      <% else %>
       access_log                  <%= p("cc.nginx_access_log_destination") %>  main;
+      <% end %>
       access_log                  syslog:server=127.0.0.1,severity=info,tag=vcap_nginx_access main;
       proxy_buffering             off;
       proxy_set_header            Host $host;
@@ -266,7 +285,11 @@ http {
 
     location /nginx_status {
       stub_status on;
+      <% if p("bpm.enabled") %>
+      access_log  /var/vcap/sys/log/cloud_controller_ng/nginx_status.access.log main;
+      <% else %>
       access_log  /var/vcap/sys/log/nginx_cc/nginx_status.access.log main;
+      <% end %>
       allow 127.0.0.1;
       deny all;
     }

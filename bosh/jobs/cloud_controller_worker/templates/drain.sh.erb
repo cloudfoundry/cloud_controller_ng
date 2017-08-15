@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+<% if p("bpm.enabled") %>
+
+for i in {1..<%=p("cc.jobs.generic.number_of_workers")%>}; do
+  /var/vcap/packages/bpm/bin/bpm stop cloud_controller_worker -p "worker_${i}" 1>&2
+done
+
+echo 0 # tell bosh not wait for anything
+exit 0
+
+<% else %>
+
 RUN_DIR="/var/vcap/sys/run/cloud_controller_worker"
 source /var/vcap/packages/capi_utils/pid_utils.sh
 
@@ -13,3 +24,5 @@ done
 
 echo 0 # tell bosh not wait for anything
 exit 0
+
+<% end %>

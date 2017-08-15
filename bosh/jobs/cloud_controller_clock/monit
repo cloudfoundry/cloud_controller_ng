@@ -1,3 +1,10 @@
+<% if p("bpm.enabled") %>
+check process cloud_controller_clock
+  with pidfile /var/vcap/sys/run/bpm/cloud_controller_clock/cloud_controller_clock.pid
+  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_clock"
+  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_clock"
+  group vcap
+<% else %>
 check process cloud_controller_clock
   with pidfile /var/vcap/sys/run/cloud_controller_clock/cloud_controller_clock.pid
   start program "/var/vcap/jobs/cloud_controller_clock/bin/cloud_controller_clock_ctl start"
@@ -8,3 +15,4 @@ check process cloud_controller_clock
   if totalmem > <%= p("cc.thresholds.api.alert_if_above_mb") %> Mb for 3 cycles then alert
   if totalmem > <%= p("cc.thresholds.api.restart_if_consistently_above_mb") %> Mb for 15 cycles then restart
   if totalmem > <%= p("cc.thresholds.api.restart_if_above_mb") %> Mb for 3 cycles then restart
+<% end %>

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh
+source /var/vcap/jobs/cloud_controller_ng/bin/blobstore_waiter.sh
+
+wait_for_blobstore
+
+cd /var/vcap/packages/cloud_controller_ng/cloud_controller_ng
+
+<% if spec.bootstrap && !p('cc.run_prestart_migrations') %>
+echo 'Running migrations and seeds'
+/var/vcap/jobs/cloud_controller_ng/bin/migrate_db
+/var/vcap/jobs/cloud_controller_ng/bin/seed_db
+echo 'Finished migrations and seeds'
+<% end %>
+
+/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/bin/cloud_controller \
+  -c /var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml

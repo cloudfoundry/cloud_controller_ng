@@ -31,7 +31,11 @@ external_port: <%= p("cc.external_port") %>
 tls_port: <%= p("cc.tls_port") %>
 internal_service_hostname: <%= p("cc.internal_service_hostname") %>
 
+<% if p("bpm.enabled") %>
+pid_filename: /var/vcap/data/cloud_controller_ng/cloud_controller_ng.pid
+<% else %>
 pid_filename: /var/vcap/sys/run/cloud_controller_ng/cloud_controller_ng.pid
+<% end %>
 newrelic_enabled: <%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
 development_mode: <%= p("cc.development_mode") %>
 
@@ -120,7 +124,11 @@ internal_api:
 
 nginx:
   use_nginx: true
+  <% if p("bpm.enabled") %>
+  instance_socket: "/var/vcap/data/cloud_controller_ng/cloud_controller.sock"
+  <% else %>
   instance_socket: "/var/vcap/sys/run/cloud_controller_ng/cloud_controller.sock"
+  <% end %>
 
 index: <%= spec.index %>
 name: <%= name %>

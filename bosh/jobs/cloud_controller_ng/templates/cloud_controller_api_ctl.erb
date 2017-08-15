@@ -2,18 +2,12 @@
 
 export RAILS_ENV=production
 
-export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
-source $CC_JOB_DIR/bin/ruby_version.sh
-
-CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
-
 RUN_DIR=/var/vcap/sys/run/cloud_controller_ng
 LOG_DIR=/var/vcap/sys/log/cloud_controller_ng
 PIDFILE=$RUN_DIR/cloud_controller_ng.pid
 
-export CONFIG_DIR=$CC_JOB_DIR/config
-export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
-export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+export CLOUD_CONTROLLER_NG_CONFIG=/var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml
+export BUNDLE_GEMFILE=/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/Gemfile
 export HOME=/home/vcap # rake needs it to be set to run tasks
 export TMPDIR=/var/vcap/data/cloud_controller_ng/tmp
 
@@ -37,7 +31,7 @@ export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
 export LANG=en_US.UTF-8
 
 export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
-export NRCONFIG=$CONFIG_DIR/newrelic.yml
+export NRCONFIG=/var/vcap/jobs/cloud_controller_ng/config/newrelic.yml
 export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
 # Setting ENV['DYNO'] so NewRelic properly names our Hostnames.
 # If this isn't done, all activity will be grouped under 'dynamic hostname'
@@ -47,7 +41,6 @@ export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
 
 source /var/vcap/packages/capi_utils/syslog_utils.sh
 source /var/vcap/packages/capi_utils/pid_utils.sh
-source $CC_JOB_DIR/bin/blobstore_waiter.sh
 
 tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
 
@@ -60,23 +53,12 @@ case $1 in
   start)
     setup_environment
 
-    pid_guard "$PIDFILE" "Cloud controller ng"
-
-    wait_for_blobstore
-
     ulimit -c unlimited
 
-    cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
+    pid_guard "$PIDFILE" "Cloud controller ng"
 
-    <% if spec.bootstrap && !p('cc.run_prestart_migrations') %>
-    echo 'Running migrations and seeds'
-    $CC_JOB_DIR/bin/migrate_db
-    $CC_JOB_DIR/bin/seed_db
-    echo 'Finished migrations and seeds'
-    <% end %>
+    exec /var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_ng
 
-    exec "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \
-      -c "$CLOUD_CONTROLLER_NG_CONFIG"
     ;;
 
   stop)

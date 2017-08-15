@@ -4,11 +4,14 @@ name: cloud_controller_clock
 description: "The Cloud Controller clock periodically schedules Cloud Controller clean up tasks for app usage events, audit events, failed jobs, and more. Only single instance of this job is necessary."
 
 templates:
-  cloud_controller_clock.yml.erb: config/cloud_controller_ng.yml
+  bpm/cloud_controller_clock.yml.erb: config/bpm/cloud_controller_clock.yml
+  bin/cloud_controller_clock.erb: bin/cloud_controller_clock
+
+  cloud_controller_ng.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_clock_ctl.erb: bin/cloud_controller_clock_ctl
   newrelic.yml.erb: config/newrelic.yml
   stacks.yml.erb: config/stacks.yml
-  drain.sh: bin/drain
+  drain.sh.erb: bin/drain
   ruby_version.sh.erb: bin/ruby_version.sh
   console.erb: bin/console
   pre-start.sh.erb: bin/pre-start
@@ -33,6 +36,10 @@ consumes:
   optional: true
 
 properties:
+  bpm.enabled:
+    description: "Enable Bosh Process Manager"
+    default: false
+
   ssl.skip_cert_verify:
     description: "specifies that the job is allowed to skip ssl cert verification"
     default: false
