@@ -1820,7 +1820,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             if expected_return_value == 200
-              expect(parsed_body).to eq({ 'features' => [], 'pagination' => {} }), "failed to match parsed_body for role #{role}: got #{parsed_body}"
+              expect(parsed_body).to eq({ 'resources' => [], 'pagination' => {} }), "failed to match parsed_body for role #{role}: got #{parsed_body}"
             end
           end
         end

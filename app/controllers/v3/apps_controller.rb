@@ -217,7 +217,7 @@ class AppsV3Controller < ApplicationController
   def features
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    render status: :ok, json: { pagination: {}, features: [] }
+    render status: :ok, json: { pagination: {}, resources: [] }
   end
 
   private
