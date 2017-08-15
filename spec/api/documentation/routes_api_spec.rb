@@ -114,9 +114,9 @@ EOF
     include_context 'guid_field', required: true
 
     describe 'Apps' do
-      let!(:associated_process) { VCAP::CloudController::AppFactory.make(space: space) }
+      let!(:associated_process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
       let(:associated_app_guid) { associated_process.guid }
-      let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
       let(:app_guid) { process.guid }
 
       before do

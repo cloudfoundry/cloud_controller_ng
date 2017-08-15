@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe TpsInstancesReporter do
       subject(:instances_reporter) { described_class.new(tps_client) }
-      let(:process) { AppFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
+      let(:process) { ProcessModelFactory.make(instances: desired_instances, memory: 128, disk_quota: 2048) }
       let(:tps_client) { double(:tps_client) }
       let(:desired_instances) { 3 }
       let(:now) { Time.now.utc }
@@ -217,8 +217,8 @@ module VCAP::CloudController
       end
 
       describe '#number_of_starting_and_running_instances_for_processes' do
-        let(:process1) { AppFactory.make(state: 'STARTED', instances: 2) }
-        let(:process2) { AppFactory.make(state: 'STARTED', instances: 5) }
+        let(:process1) { ProcessModelFactory.make(state: 'STARTED', instances: 2) }
+        let(:process2) { ProcessModelFactory.make(state: 'STARTED', instances: 5) }
         let(:instance_map) do
           {
             process1.guid => [

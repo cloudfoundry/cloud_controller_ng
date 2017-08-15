@@ -1766,7 +1766,7 @@ module VCAP::CloudController
       let(:user) { set_current_user(User.make) }
       let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
-      let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+      let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
       describe 'permissions' do
         {

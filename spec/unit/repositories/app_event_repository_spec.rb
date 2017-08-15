@@ -24,7 +24,7 @@ module VCAP::CloudController
           }
         end
 
-        let(:process) { AppFactory.make(instances: 2, memory: 99, space: space) }
+        let(:process) { ProcessModelFactory.make(instances: 2, memory: 99, space: space) }
         let(:space) { Space.make }
 
         it 'records the expected fields on the event and logs the event' do
@@ -72,7 +72,7 @@ module VCAP::CloudController
           }
         end
 
-        let(:process) { AppFactory.make(request_attrs) }
+        let(:process) { ProcessModelFactory.make(request_attrs) }
 
         it 'records the event fields and metadata' do
           event = app_event_repository.record_app_create(process, process.space, user_audit_info, request_attrs)
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
       describe '#record_app_delete' do
         let(:space) { Space.make }
-        let(:process) { AppFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space: space) }
 
         it 'creates a new audit.app.delete-request event' do
           event = app_event_repository.record_app_delete_request(process, space, user_audit_info, false)
@@ -156,7 +156,7 @@ module VCAP::CloudController
       end
 
       describe '#create_app_exit_event' do
-        let(:exiting_process) { AppFactory.make }
+        let(:exiting_process) { ProcessModelFactory.make }
         let(:droplet_exited_payload) {
           {
             'instance' => 'abc',
@@ -193,7 +193,7 @@ module VCAP::CloudController
       end
 
       describe '#record_map_route' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
         let(:route) { Route.make }
 
         it 'creates a new app.map_route audit event' do
@@ -237,7 +237,7 @@ module VCAP::CloudController
       end
 
       describe '#record_unmap_route' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
         let(:route) { Route.make }
 
         it 'creates a new app.unmap_route audit event' do
@@ -281,7 +281,7 @@ module VCAP::CloudController
       end
 
       describe '#record_restage' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
 
         it 'creates a new app.restage event' do
           event = app_event_repository.record_app_restage(process, user_audit_info)
@@ -296,8 +296,8 @@ module VCAP::CloudController
       end
 
       describe '#record_src_copy_bits' do
-        let(:src_process) { AppFactory.make }
-        let(:dest_process) { AppFactory.make }
+        let(:src_process) { ProcessModelFactory.make }
+        let(:dest_process) { ProcessModelFactory.make }
 
         it 'creates a new app.copy_bits event for the source app' do
           event = app_event_repository.record_src_copy_bits(dest_process, src_process, user_audit_info)
@@ -314,8 +314,8 @@ module VCAP::CloudController
       end
 
       describe '#record_dest_copy_bits' do
-        let(:src_process) { AppFactory.make }
-        let(:dest_process) { AppFactory.make }
+        let(:src_process) { ProcessModelFactory.make }
+        let(:dest_process) { ProcessModelFactory.make }
 
         it 'creates a new app.copy_bits event for the destination app' do
           event = app_event_repository.record_dest_copy_bits(dest_process, src_process, user_audit_info)
@@ -332,7 +332,7 @@ module VCAP::CloudController
       end
 
       describe '#record_app_ssh_unauthorized' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
         let(:instance_index) { 3 }
 
         it 'creates a new app.ssh-unauthorized event for the app' do
@@ -350,7 +350,7 @@ module VCAP::CloudController
       end
 
       describe '#record_app_ssh_authorized' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
         let(:instance_index) { 3 }
 
         it 'creates a new app.ssh-authorized event for the app' do
@@ -372,7 +372,7 @@ module VCAP::CloudController
 
         context 'v2' do
           let(:attrs) { { 'buildpack' => buildpack } }
-          let(:process) { AppFactory.make(instances: 2, memory: 99, space: space) }
+          let(:process) { ProcessModelFactory.make(instances: 2, memory: 99, space: space) }
 
           context 'when the buildpack is not nil' do
             let(:buildpack) { 'schmython' }

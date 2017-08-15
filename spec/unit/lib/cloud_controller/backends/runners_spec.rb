@@ -23,7 +23,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is configured to run on Diego' do
-        let(:process) { AppFactory.make(diego: true) }
+        let(:process) { ProcessModelFactory.make(diego: true) }
 
         it 'finds a diego backend' do
           expect(runners).to receive(:diego_runner).with(process).and_call_original
@@ -31,7 +31,7 @@ module VCAP::CloudController
         end
 
         context 'when the app has a docker image' do
-          let(:process) { AppFactory.make(:docker, docker_image: 'foobar') }
+          let(:process) { ProcessModelFactory.make(:docker, docker_image: 'foobar') }
 
           it 'finds a diego backend' do
             expect(runners).to receive(:diego_runner).with(process).and_call_original
@@ -42,14 +42,14 @@ module VCAP::CloudController
     end
 
     describe '#diego_apps' do
-      let!(:diego_process1) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process2) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process3) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process4) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process5) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process1) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process2) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process3) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process4) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process5) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
 
       it 'returns apps that have the desired data' do
-        last_process = AppFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
+        last_process = ProcessModelFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
 
         apps = runners.diego_apps(100, 0)
 
@@ -77,7 +77,7 @@ module VCAP::CloudController
       end
 
       it 'does not return unstaged apps' do
-        unstaged_process = AppFactory.make(diego: true, state: 'STARTED')
+        unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
         unstaged_process.current_droplet.destroy
 
         batch = runners.diego_apps(100, 0)
@@ -86,7 +86,7 @@ module VCAP::CloudController
       end
 
       it "does not return apps which aren't expected to be started" do
-        stopped_process = AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
         batch = runners.diego_apps(100, 0)
 
@@ -95,14 +95,14 @@ module VCAP::CloudController
     end
 
     describe '#diego_apps_from_process_guids' do
-      let!(:diego_process1) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process2) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process3) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process4) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process5) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process1) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process2) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process3) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process4) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process5) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
 
       it 'does not return unstaged apps' do
-        unstaged_process = AppFactory.make(diego: true, state: 'STARTED')
+        unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
         unstaged_process.current_droplet.destroy
 
         batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(unstaged_process))
@@ -111,7 +111,7 @@ module VCAP::CloudController
       end
 
       it 'does not return apps that are stopped' do
-        stopped_process = AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
         batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_process))
 
@@ -149,11 +149,11 @@ module VCAP::CloudController
     end
 
     describe '#diego_apps_cache_data' do
-      let!(:diego_process1) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process2) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process3) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process4) { AppFactory.make(diego: true, state: 'STARTED') }
-      let!(:diego_process5) { AppFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process1) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process2) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process3) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process4) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
+      let!(:diego_process5) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
 
       it 'respects the batch_size' do
         data_count = [3, 5].map do |batch_size|
@@ -173,7 +173,7 @@ module VCAP::CloudController
       end
 
       it 'does not return unstaged apps' do
-        unstaged_process = AppFactory.make(diego: true, state: 'STARTED')
+        unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
         unstaged_process.current_droplet.destroy
 
         batch   = runners.diego_apps_cache_data(100, 0)
@@ -183,7 +183,7 @@ module VCAP::CloudController
       end
 
       it 'does not return apps that are stopped' do
-        stopped_process = AppFactory.make(diego: true, state: 'STOPPED')
+        stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
         batch   = runners.diego_apps_cache_data(100, 0)
         app_ids = batch.map { |data| data[0] }
@@ -203,7 +203,7 @@ module VCAP::CloudController
         end
 
         let!(:docker_process) do
-          AppFactory.make(:docker, docker_image: 'some-image', state: 'STARTED')
+          ProcessModelFactory.make(:docker, docker_image: 'some-image', state: 'STARTED')
         end
 
         context 'when docker is enabled' do

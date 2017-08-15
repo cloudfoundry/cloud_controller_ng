@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe ProcessTerminate do
     subject(:process_terminate) { ProcessTerminate.new(user_audit_info, process, index) }
     let(:app) { AppModel.make }
-    let!(:process) { AppFactory.make(app: app) }
+    let!(:process) { ProcessModelFactory.make(app: app) }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
     let(:index) { 0 }
 

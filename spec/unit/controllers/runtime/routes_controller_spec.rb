@@ -352,7 +352,7 @@ module VCAP::CloudController
         let(:space) { Space.make(organization: organization) }
         let(:route) { Route.make(domain: http_domain, space: space) }
         let!(:docker_process) do
-          AppFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
+          ProcessModelFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
         end
 
         context 'and Docker disabled' do
@@ -1110,7 +1110,7 @@ module VCAP::CloudController
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
-      let(:process) { AppFactory.make(space: route.space) }
+      let(:process) { ProcessModelFactory.make(space: route.space) }
       let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: process.app, process_type: process.type) }
 
       before { set_current_user_as_admin }
@@ -1323,7 +1323,7 @@ module VCAP::CloudController
 
     describe 'PUT /v2/routes/:guid/apps/:app_guid' do
       let(:route) { Route.make }
-      let(:process) { AppFactory.make(space: route.space) }
+      let(:process) { ProcessModelFactory.make(space: route.space) }
       let(:developer) { make_developer_for_space(route.space) }
 
       before do
@@ -1401,7 +1401,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is in a different space' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
 
         it 'raises an error' do
           expect(route.reload.apps).to be_empty
@@ -1417,7 +1417,7 @@ module VCAP::CloudController
       context 'when a route with a routing service is mapped to a non-diego app' do
         let(:route_binding) { RouteBinding.make }
         let(:route) { route_binding.route }
-        let(:process) { AppFactory.make(space: route.space, diego: false) }
+        let(:process) { ProcessModelFactory.make(space: route.space, diego: false) }
 
         it 'fails to add the route' do
           put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
@@ -1427,7 +1427,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is diego' do
-        let(:process) { AppFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
+        let(:process) { ProcessModelFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
 
         it 'uses the first port for the app as the app_port' do
           put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
@@ -1474,7 +1474,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/routes/:guid/apps/:app_guid' do
       let(:route) { Route.make }
-      let(:process) { AppFactory.make(space: route.space) }
+      let(:process) { ProcessModelFactory.make(space: route.space) }
       let(:developer) { make_developer_for_space(route.space) }
       let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
 

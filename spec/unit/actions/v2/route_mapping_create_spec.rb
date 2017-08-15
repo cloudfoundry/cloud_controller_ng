@@ -51,7 +51,7 @@ module VCAP::CloudController
             let(:request_attrs) { {} }
 
             context 'when the process has ports' do
-              let(:process) { AppFactory.make(space: route.space, diego: true, ports: [1234, 5678]) }
+              let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: [1234, 5678]) }
 
               it 'requests the first port from the process port list' do
                 route_mapping = route_mapping_create.add
@@ -60,7 +60,7 @@ module VCAP::CloudController
             end
 
             context 'when the process has no ports' do
-              let(:process) { AppFactory.make(space: route.space, diego: true, ports: nil) }
+              let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: nil) }
 
               it 'uses the default port' do
                 route_mapping = route_mapping_create.add
@@ -70,7 +70,7 @@ module VCAP::CloudController
           end
 
           context 'docker' do
-            let(:process) { AppFactory.make(diego: true, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
+            let(:process) { ProcessModelFactory.make(diego: true, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
             let(:app) { process.app }
 
             context 'when app_port is requested' do
@@ -276,7 +276,7 @@ module VCAP::CloudController
           let(:route) { route_binding.route }
 
           context 'running on diego' do
-            let(:process) { AppFactory.make(space: route.space, diego: true, ports: ports) }
+            let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: ports) }
 
             it 'maps the route' do
               expect {
@@ -289,7 +289,7 @@ module VCAP::CloudController
           end
 
           context 'running on dea backend' do
-            let(:process) { AppFactory.make(space: route.space, diego: false) }
+            let(:process) { ProcessModelFactory.make(space: route.space, diego: false) }
 
             it 'raises RouteServiceNotSupportedError' do
               expect { route_mapping_create.add }.to raise_error(RouteMappingCreate::RouteServiceNotSupportedError)

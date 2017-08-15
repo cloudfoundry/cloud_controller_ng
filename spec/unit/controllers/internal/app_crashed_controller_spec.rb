@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppCrashedController do
     describe 'POST /internal/apps/:process_guid/crashed' do
-      let(:diego_process) { AppFactory.make(state: 'STARTED', diego: true) }
+      let(:diego_process) { ProcessModelFactory.make(state: 'STARTED', diego: true) }
       let(:process_guid) { Diego::ProcessGuid.from(diego_process.guid, 'some-version-guid') }
       let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
       end
 
       context 'with a dea app' do
-        let(:dea_process) { AppFactory.make(state: 'STARTED', diego: false) }
+        let(:dea_process) { ProcessModelFactory.make(state: 'STARTED', diego: false) }
         let(:process_guid) { Diego::ProcessGuid.from(dea_process.guid, 'some-version-guid') }
         let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /internal/v4/apps/:process_guid/crashed' do
-      let(:diego_process) { AppFactory.make(state: 'STARTED', diego: true) }
+      let(:diego_process) { ProcessModelFactory.make(state: 'STARTED', diego: true) }
       let(:process_guid) { Diego::ProcessGuid.from(diego_process.guid, 'some-version-guid') }
       let(:url) { "/internal/v4/apps/#{process_guid}/crashed" }
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
       end
 
       context 'with a dea app' do
-        let(:dea_process) { AppFactory.make(state: 'STARTED', diego: false) }
+        let(:dea_process) { ProcessModelFactory.make(state: 'STARTED', diego: false) }
         let(:process_guid) { Diego::ProcessGuid.from(dea_process.guid, 'some-version-guid') }
 
         it 'fails with a 403' do

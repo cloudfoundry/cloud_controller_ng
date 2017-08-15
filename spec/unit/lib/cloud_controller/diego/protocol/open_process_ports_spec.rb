@@ -6,7 +6,7 @@ module VCAP::CloudController
       RSpec.describe OpenProcessPorts do
         describe '#to_a' do
           let(:process) do
-            AppFactory.make(
+            ProcessModelFactory.make(
               command: 'start_me',
               diego:   true,
               type:    type,
@@ -38,7 +38,7 @@ module VCAP::CloudController
 
             context 'when this is a docker process' do
               let(:process) do
-                AppFactory.make(
+                ProcessModelFactory.make(
                   docker_image:      'some-image',
                   command:           'start_me',
                   diego:             true,

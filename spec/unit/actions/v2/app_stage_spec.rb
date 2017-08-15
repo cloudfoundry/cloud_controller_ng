@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'requests to start the app after staging' do
-          process = AppFactory.make(memory: 765, disk_quota: 1234)
+          process = ProcessModelFactory.make(memory: 765, disk_quota: 1234)
 
           action.stage(process)
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         it 'provides a docker lifecycle for docker apps' do
-          process = AppFactory.make(docker_image: 'some-image', memory: 765, disk_quota: 1234)
+          process = ProcessModelFactory.make(docker_image: 'some-image', memory: 765, disk_quota: 1234)
 
           action.stage(process)
 
@@ -50,7 +50,7 @@ module VCAP::CloudController
         end
 
         it 'provides a buildpack lifecyle for buildpack apps' do
-          process = AppFactory.make(memory: 765, disk_quota: 1234)
+          process = ProcessModelFactory.make(memory: 765, disk_quota: 1234)
 
           action.stage(process)
 
@@ -62,13 +62,13 @@ module VCAP::CloudController
         end
 
         it 'attaches the staging response to the app' do
-          process = AppFactory.make
+          process = ProcessModelFactory.make
           action.stage(process)
           expect(process.last_stager_response).to eq('staging-response')
         end
 
         it 'validates the app before staging' do
-          process = AppFactory.make
+          process = ProcessModelFactory.make
           allow(stagers).to receive(:validate_process).with(process).and_raise(StandardError.new)
 
           expect {
@@ -79,7 +79,7 @@ module VCAP::CloudController
         end
 
         describe 'handling BuildCreate errors' do
-          let(:process) { AppFactory.make }
+          let(:process) { ProcessModelFactory.make }
 
           context 'when BuildError error is raised' do
             before do

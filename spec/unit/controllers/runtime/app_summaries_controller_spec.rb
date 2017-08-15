@@ -14,7 +14,7 @@ module VCAP::CloudController
       @route2   = Route.make(space: @space)
       @services = []
 
-      @process = AppFactory.make(
+      @process = ProcessModelFactory.make(
         space:      @space,
         production: false,
         instances:  1,

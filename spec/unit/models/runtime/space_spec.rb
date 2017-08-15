@@ -361,15 +361,15 @@ module VCAP::CloudController
       describe 'apps which is the process relationship' do
         it 'has apps' do
           space = Space.make
-          process1  = AppFactory.make(space: space)
-          process2  = AppFactory.make(space: space)
+          process1  = ProcessModelFactory.make(space: space)
+          process2  = ProcessModelFactory.make(space: space)
           expect(space.apps).to match_array([process1, process2])
         end
 
         it 'does not associate non-web v2 apps' do
           space = Space.make
-          process1 = AppFactory.make(type: 'web', space: space)
-          AppFactory.make(type: 'other', space: space)
+          process1 = ProcessModelFactory.make(type: 'web', space: space)
+          ProcessModelFactory.make(type: 'other', space: space)
           expect(space.apps).to match_array([process1])
         end
 
@@ -381,25 +381,25 @@ module VCAP::CloudController
             space3 = Space.make
             space4 = Space.make
 
-            process1_space1 = AppFactory.make(space: space1)
-            process2_space1 = AppFactory.make(space: space1)
-            process3_space1 = AppFactory.make(space: space1)
-            non_web_process_space1 = AppFactory.make(space: space1, type: 'other')
+            process1_space1 = ProcessModelFactory.make(space: space1)
+            process2_space1 = ProcessModelFactory.make(space: space1)
+            process3_space1 = ProcessModelFactory.make(space: space1)
+            non_web_process_space1 = ProcessModelFactory.make(space: space1, type: 'other')
 
-            process1_space2 = AppFactory.make(space: space2)
-            process2_space2 = AppFactory.make(space: space2)
-            process3_space2 = AppFactory.make(space: space2)
-            non_web_process_space2 = AppFactory.make(space: space2, type: 'other')
+            process1_space2 = ProcessModelFactory.make(space: space2)
+            process2_space2 = ProcessModelFactory.make(space: space2)
+            process3_space2 = ProcessModelFactory.make(space: space2)
+            non_web_process_space2 = ProcessModelFactory.make(space: space2, type: 'other')
 
-            process1_space3 = AppFactory.make(space: space3)
-            process2_space3 = AppFactory.make(space: space3)
-            process3_space3 = AppFactory.make(space: space3)
-            non_web_process_space3 = AppFactory.make(space: space3, type: 'other')
+            process1_space3 = ProcessModelFactory.make(space: space3)
+            process2_space3 = ProcessModelFactory.make(space: space3)
+            process3_space3 = ProcessModelFactory.make(space: space3)
+            non_web_process_space3 = ProcessModelFactory.make(space: space3, type: 'other')
 
-            process1_space4 = AppFactory.make(space: space4)
-            process2_space4 = AppFactory.make(space: space4)
-            process3_space4 = AppFactory.make(space: space4)
-            non_web_app_space4 = AppFactory.make(space: space4, type: 'other')
+            process1_space4 = ProcessModelFactory.make(space: space4)
+            process2_space4 = ProcessModelFactory.make(space: space4)
+            process3_space4 = ProcessModelFactory.make(space: space4)
+            non_web_app_space4 = ProcessModelFactory.make(space: space4, type: 'other')
 
             spaces = Space.where(id: [space1.id, space3.id]).eager(:apps).all
 
@@ -418,29 +418,29 @@ module VCAP::CloudController
             space3 = Space.make
             space4 = Space.make
 
-            process1_space1 = AppFactory.make(space: space1)
-            process2_space1 = AppFactory.make(space: space1)
-            process3_space1 = AppFactory.make(space: space1)
-            non_web_process_space1 = AppFactory.make(space: space1, type: 'other')
-            scaled_process_space1 = AppFactory.make(space: space1, instances: 5)
+            process1_space1 = ProcessModelFactory.make(space: space1)
+            process2_space1 = ProcessModelFactory.make(space: space1)
+            process3_space1 = ProcessModelFactory.make(space: space1)
+            non_web_process_space1 = ProcessModelFactory.make(space: space1, type: 'other')
+            scaled_process_space1 = ProcessModelFactory.make(space: space1, instances: 5)
 
-            process1_space2 = AppFactory.make(space: space2)
-            process2_space2 = AppFactory.make(space: space2)
-            process3_space2 = AppFactory.make(space: space2)
-            non_web_process_space2 = AppFactory.make(space: space2, type: 'other')
-            scaled_process_space2 = AppFactory.make(space: space2, instances: 5)
+            process1_space2 = ProcessModelFactory.make(space: space2)
+            process2_space2 = ProcessModelFactory.make(space: space2)
+            process3_space2 = ProcessModelFactory.make(space: space2)
+            non_web_process_space2 = ProcessModelFactory.make(space: space2, type: 'other')
+            scaled_process_space2 = ProcessModelFactory.make(space: space2, instances: 5)
 
-            process1_space3 = AppFactory.make(space: space3)
-            process2_space3 = AppFactory.make(space: space3)
-            process3_space3 = AppFactory.make(space: space3)
-            non_web_process_space3 = AppFactory.make(space: space3, type: 'other')
-            scaled_process_space3 = AppFactory.make(space: space3, instances: 5)
+            process1_space3 = ProcessModelFactory.make(space: space3)
+            process2_space3 = ProcessModelFactory.make(space: space3)
+            process3_space3 = ProcessModelFactory.make(space: space3)
+            non_web_process_space3 = ProcessModelFactory.make(space: space3, type: 'other')
+            scaled_process_space3 = ProcessModelFactory.make(space: space3, instances: 5)
 
-            process1_space4 = AppFactory.make(space: space4)
-            process2_space4 = AppFactory.make(space: space4)
-            process3_space4 = AppFactory.make(space: space4)
-            non_web_process_space4 = AppFactory.make(space: space4, type: 'other')
-            scaled_process_space4 = AppFactory.make(space: space4, instances: 5)
+            process1_space4 = ProcessModelFactory.make(space: space4)
+            process2_space4 = ProcessModelFactory.make(space: space4)
+            process3_space4 = ProcessModelFactory.make(space: space4)
+            non_web_process_space4 = ProcessModelFactory.make(space: space4, type: 'other')
+            scaled_process_space4 = ProcessModelFactory.make(space: space4, instances: 5)
 
             spaces = Space.where(id: [space1.id, space3.id]).eager(apps: proc { |ds| ds.where(instances: 5) }).all
 
@@ -541,22 +541,22 @@ module VCAP::CloudController
       let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
 
       it 'returns true if there is enough memory remaining when no processes are running' do
-        AppFactory.make(space: space, memory: 50, instances: 1)
+        ProcessModelFactory.make(space: space, memory: 50, instances: 1)
 
         expect(space.has_remaining_memory(500)).to eq(true)
         expect(space.has_remaining_memory(501)).to eq(false)
       end
 
       it 'returns true if there is enough memory remaining when processes are consuming memory' do
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
-        AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
+        ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(space.has_remaining_memory(50)).to eq(true)
         expect(space.has_remaining_memory(51)).to eq(false)
       end
 
       it 'includes RUNNING tasks when determining available memory' do
-        process = AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
         TaskModel.make(app: process.app, memory_in_mb: 50, state: 'RUNNING')
 
         expect(space.has_remaining_memory(50)).to eq(true)
@@ -564,7 +564,7 @@ module VCAP::CloudController
       end
 
       it 'does not include non-RUNNING tasks when determining available memory' do
-        process = AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        process = ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
         TaskModel.make(app: process.app, memory_in_mb: 50, state: 'SUCCEEDED')
 
         expect(space.has_remaining_memory(100)).to eq(true)

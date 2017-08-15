@@ -236,7 +236,7 @@ module VCAP::CloudController
       end
 
       it 'does not mark v2 apps for restaging that were bound to the deleted service' do
-        AppFactory.make(app: service_binding.app, type: 'web')
+        ProcessModelFactory.make(app: service_binding.app, type: 'web')
         expect { service.purge(event_repository) }.not_to change { service_binding.v2_app.reload.needs_staging? }.from(false)
       end
 

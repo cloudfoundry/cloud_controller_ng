@@ -157,7 +157,7 @@ module VCAP::CloudController
 
           context 'when the route has an app', isolation: :truncation do
             before do
-              process = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+              process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
               RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
             end
 
@@ -171,7 +171,7 @@ module VCAP::CloudController
 
             context 'when the app does not use diego' do
               before do
-                non_diego_process = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
+                non_diego_process = ProcessModelFactory.make(diego: false, space: route.space, state: 'STARTED')
                 RouteMappingModel.make(app: non_diego_process.app, route: route, process_type: non_diego_process.type)
               end
 
@@ -347,7 +347,7 @@ module VCAP::CloudController
               allow(logger).to receive(:info)
               allow(logger).to receive(:error)
 
-              process = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+              process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
               RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
               process_guid = Diego::ProcessGuid.from_process(process)
@@ -390,7 +390,7 @@ module VCAP::CloudController
         before do
           allow(access_validator).to receive(:validate_access).with(:update, anything).and_return(true)
 
-          process = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+          process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
           process_guid = Diego::ProcessGuid.from_process(process)

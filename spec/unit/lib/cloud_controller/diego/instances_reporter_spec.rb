@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe InstancesReporter do
       subject(:instances_reporter) { described_class.new(bbs_instances_client, traffic_controller_client) }
 
-      let(:process) { AppFactory.make(instances: desired_instances) }
+      let(:process) { ProcessModelFactory.make(instances: desired_instances) }
       let(:desired_instances) { 1 }
       let(:bbs_instances_client) { instance_double(BbsInstancesClient) }
       let(:traffic_controller_client) { instance_double(TrafficController::Client) }
@@ -68,7 +68,7 @@ module VCAP::CloudController
         end
 
         context 'when the bbs response contains more lrps than the process is configured for' do
-          let(:process) { AppFactory.make(instances: 3) }
+          let(:process) { ProcessModelFactory.make(instances: 3) }
 
           it 'does not include the instances whose index is larger than the desired instances on the process' do
             result    = instances_reporter.crashed_instances_for_app(process)
@@ -209,9 +209,9 @@ module VCAP::CloudController
       end
 
       describe '#number_of_starting_and_running_instances_for_processes' do
-        let(:process_a) { AppFactory.make(instances: bbs_instances_response_a.length) }
-        let(:process_b) { AppFactory.make(instances: 3) }
-        let(:process_c) { AppFactory.make(instances: bbs_instances_response_c.length) }
+        let(:process_a) { ProcessModelFactory.make(instances: bbs_instances_response_a.length) }
+        let(:process_b) { ProcessModelFactory.make(instances: 3) }
+        let(:process_c) { ProcessModelFactory.make(instances: bbs_instances_response_c.length) }
 
         let(:bbs_instances_response_a) do
           [
@@ -285,7 +285,7 @@ module VCAP::CloudController
         end
 
         context 'when a desired instance is missing' do
-          let(:process_a) { AppFactory.make(instances: 3) }
+          let(:process_a) { ProcessModelFactory.make(instances: 3) }
           let(:bbs_instances_response_a) do
             [
               make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
@@ -299,7 +299,7 @@ module VCAP::CloudController
         end
 
         context 'when the bbs response contains more lrps than the process is configured for' do
-          let(:process_a) { AppFactory.make(instances: 3) }
+          let(:process_a) { ProcessModelFactory.make(instances: 3) }
           let(:bbs_instances_response_a) do
             [
               make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),

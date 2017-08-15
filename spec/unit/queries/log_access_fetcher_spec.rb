@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         context 'to the v2 app guid' do
-          let(:process) { AppFactory.make(space: space) }
+          let(:process) { ProcessModelFactory.make(space: space) }
           it 'returns true' do
             expect(fetcher.app_exists_by_space?(process.guid, space_guids)).to eq(true)
           end

@@ -1,5 +1,5 @@
 require 'securerandom'
-require_relative 'app_factory'
+require_relative 'process_model_factory'
 require_relative '../test_models'
 
 Sham.define do
@@ -267,7 +267,7 @@ module VCAP::CloudController
     description       { Sham.description }
   end
 
-  # if you want to create an app with droplet, use AppFactory.make
+  # if you want to create an app with droplet, use ProcessModelFactory.make
   # This is because the lack of factory hooks in Machinist.
   ProcessModel.blueprint do
     instances { 1 }
@@ -368,7 +368,7 @@ module VCAP::CloudController
   end
 
   AppEvent.blueprint do
-    app               { AppFactory.make }
+    app               { ProcessModelFactory.make }
     instance_guid     { Sham.guid }
     instance_index    { Sham.instance_index }
     exit_status       { Random.rand(256) }

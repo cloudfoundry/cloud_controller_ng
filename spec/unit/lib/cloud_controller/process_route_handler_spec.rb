@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     describe '#update_route_information' do
       context 'dea' do
-        let!(:process) { AppFactory.make(diego: false) }
+        let!(:process) { ProcessModelFactory.make(diego: false) }
 
         it 'updates the version' do
           expect { handler.update_route_information }.to change { process.reload.version }
@@ -18,7 +18,7 @@ module VCAP::CloudController
 
       context 'diego' do
         let!(:process) do
-          AppFactory.make(diego: true).tap do |p|
+          ProcessModelFactory.make(diego: true).tap do |p|
             p.this.update(updated_at: Time.now - 1.day)
             p.reload
           end
@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       describe 'updating the backend' do
-        let(:process) { AppFactory.make(state: 'STARTED') }
+        let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
         it 'registers notify_backend_of_route_update for after_commit', isolation: :truncation do
           handler.update_route_information
@@ -50,7 +50,7 @@ module VCAP::CloudController
       end
 
       context 'when the process is started and staged' do
-        let!(:process) { AppFactory.make(state: 'STARTED') }
+        let!(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
         it 'updates the backend' do
           expect(process.state).to eq('STARTED')
@@ -63,7 +63,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is started but not staged' do
-        let!(:process) { AppFactory.make(state: 'STARTED') }
+        let!(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
         before do
           process.current_droplet.destroy
@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is not started' do
-        let!(:process) { AppFactory.make(state: 'STOPPED') }
+        let!(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
         it 'does not update the backend' do
           expect(process.state).to eq('STOPPED')
@@ -91,7 +91,7 @@ module VCAP::CloudController
       end
 
       context 'when there is a CannotCommunicateWithDiegoError' do
-        let!(:process) { AppFactory.make(state: 'STARTED') }
+        let!(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
         before do
           allow(runner).to receive(:update_routes).and_raise(Diego::Runner::CannotCommunicateWithDiegoError.new)

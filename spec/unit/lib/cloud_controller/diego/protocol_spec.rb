@@ -108,7 +108,7 @@ module VCAP::CloudController
       end
 
       describe '#desire_app_request' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
         let(:default_health_check_timeout) { 99 }
         let(:request) { protocol.desire_app_request(process, default_health_check_timeout) }
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
 
       describe '#desire_app_message' do
         let(:space) { Space.make }
-        let(:process) { AppFactory.make(space: space, diego: true, ports: ports, type: type, health_check_timeout: 12) }
+        let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: ports, type: type, health_check_timeout: 12) }
         let(:default_health_check_timeout) { 99 }
         let(:message) { protocol.desire_app_message(process, default_health_check_timeout) }
         let(:ports) { [2222, 3333] }
@@ -204,7 +204,7 @@ module VCAP::CloudController
           let(:ports) { nil }
 
           context 'when this is a docker app' do
-            let(:process) { AppFactory.make(docker_image: 'docker/image', diego: true, ports: ports, type: type) }
+            let(:process) { ProcessModelFactory.make(docker_image: 'docker/image', diego: true, ports: ports, type: type) }
 
             before do
               allow(process).to receive(:docker_ports).and_return([123, 456])
@@ -239,7 +239,7 @@ module VCAP::CloudController
             TestConfig.override(default_health_check_timeout: default_health_check_timeout)
           end
 
-          let(:process) { AppFactory.make(health_check_timeout: nil, diego: true) }
+          let(:process) { ProcessModelFactory.make(health_check_timeout: nil, diego: true) }
 
           it 'uses the default app health check from the config' do
             expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)

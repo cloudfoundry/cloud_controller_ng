@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       it 'should not bind an app and a service instance from different app spaces' do
-        AppFactory.make(space: service_instance.space)
+        ProcessModelFactory.make(space: service_instance.space)
         service_binding = ServiceBinding.make
         expect {
           service_instance.add_service_binding(service_binding)

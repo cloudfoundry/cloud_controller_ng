@@ -19,7 +19,7 @@ module CloudController::Presenters::V2
       let(:space) { VCAP::CloudController::Space.make }
       let(:stack) { VCAP::CloudController::Stack.make }
       let(:process) do
-        VCAP::CloudController::AppFactory.make(
+        VCAP::CloudController::ProcessModelFactory.make(
           name:             'utako',
           space:            space,
           stack:            stack,

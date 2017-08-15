@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SpaceSummariesController do
     let(:space) { Space.make }
-    let(:process) { AppFactory.make(space: space) }
+    let(:process) { ProcessModelFactory.make(space: space) }
     let!(:first_route) { Route.make(space: space) }
     let!(:second_route) { Route.make(space: space) }
     let(:first_service) { ManagedServiceInstance.make(space: space) }
@@ -87,7 +87,7 @@ module VCAP::CloudController
       end
 
       context 'when an app is deleted concurrently' do
-        let(:deleted_process) { AppFactory.make(space: space) }
+        let(:deleted_process) { ProcessModelFactory.make(space: space) }
         before do
           deleted_process.app = nil
           allow_any_instance_of(Space).to receive(:apps).and_return([process, deleted_process])

@@ -1,6 +1,6 @@
 module VCAP
   module CloudController
-    class AppFactory
+    class ProcessModelFactory
       APP_ATTRIBUTES     = %i(name space environment_json stack).freeze
       PACKAGE_ATTRIBUTES = %i(docker_image docker_credentials).freeze
 

@@ -23,7 +23,7 @@ module VCAP::CloudController
       end
 
       num_free_apps.times do
-        AppFactory.make(
+        ProcessModelFactory.make(
           space: @spaces.first,
           production: false,
           instances: 1,
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       num_prod_apps.times do
-        AppFactory.make(
+        ProcessModelFactory.make(
           space: @spaces.first,
           production: true,
           instances: 1,

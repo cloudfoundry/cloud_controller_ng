@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe DockerPolicy do
-  let(:process) { VCAP::CloudController::AppFactory.make(:docker, docker_image: 'some-image:latest') }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(:docker, docker_image: 'some-image:latest') }
 
   subject(:validator) { DockerPolicy.new(process) }
 

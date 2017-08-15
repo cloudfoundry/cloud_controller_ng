@@ -842,7 +842,7 @@ module VCAP::CloudController
     describe 'GET /v2/organizations/:guid/memory_usage' do
       before do
         space = Space.make(organization: org)
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
       end
 
       context 'for an organization that does not exist' do

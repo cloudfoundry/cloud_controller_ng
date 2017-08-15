@@ -107,7 +107,7 @@ module VCAP::CloudController
         context 'with 2 started apps with 2 instances, 5 stopped apps, and 3 service' do
           before do
             2.times do
-              AppFactory.make(
+              ProcessModelFactory.make(
                 space: current_user.default_space,
                 state: 'STARTED',
                 instances: 2,
@@ -116,7 +116,7 @@ module VCAP::CloudController
             end
 
             5.times do
-              AppFactory.make(
+              ProcessModelFactory.make(
                 space: current_user.default_space,
                 state: 'STOPPED',
                 instances: 2,

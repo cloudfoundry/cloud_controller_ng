@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe Runner do
       let(:messenger) { instance_double(Messenger) }
-      let(:process) { AppFactory.make(state: 'STARTED') }
+      let(:process) { ProcessModelFactory.make(state: 'STARTED') }
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
       let(:config) do
@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         context 'when the app has not been started' do
-          let(:process) { AppFactory.make(state: 'STOPPED') }
+          let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
           it 'does not desire an app and raises an exception' do
             expect(messenger).to_not receive(:send_desire_request)
@@ -92,7 +92,7 @@ module VCAP::CloudController
         end
 
         context 'when an app is in staging status' do
-          let(:process) { AppFactory.make(state: 'STARTED') }
+          let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
             BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
@@ -109,7 +109,7 @@ module VCAP::CloudController
         end
 
         context 'when the app has not been started' do
-          let(:process) { AppFactory.make(state: 'STOPPED') }
+          let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
           it 'does not desire an app and raises an exception' do
             expect(messenger).to_not receive(:send_desire_request)

@@ -132,7 +132,7 @@ module VCAP::CloudController
 
         context 'when the app is already staged' do
           let(:process) do
-            AppFactory.make(
+            ProcessModelFactory.make(
               instances: 1,
               state:     'STARTED'
             )
@@ -149,7 +149,7 @@ module VCAP::CloudController
         end
 
         context 'when the app needs staged' do
-          let(:process) { AppFactory.make(state: 'STARTED') }
+          let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
             PackageModel.make(app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
@@ -221,7 +221,7 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_image' do
-        let(:process) { AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+        let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
 
@@ -296,7 +296,7 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_credentials' do
-        let(:process) { AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+        let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
 
@@ -321,7 +321,7 @@ module VCAP::CloudController
         end
 
         context 'when docker_image is not requested and the app does not have a docker_image' do
-          let(:process) { AppFactory.make(app: AppModel.make(:docker)) }
+          let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker)) }
 
           it 'raises an error' do
             request_attrs = { 'docker_credentials' => {
@@ -335,7 +335,7 @@ module VCAP::CloudController
 
       describe 'staging' do
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
-        let(:process) { AppFactory.make(state: 'STARTED') }
+        let(:process) { ProcessModelFactory.make(state: 'STARTED') }
         let(:app) { process.app }
 
         before do
@@ -429,7 +429,7 @@ module VCAP::CloudController
 
       describe 'starting and stopping' do
         let(:app) { process.app }
-        let(:process) { AppFactory.make(instances: 1, state: state) }
+        let(:process) { ProcessModelFactory.make(instances: 1, state: state) }
         let(:sibling_process) { ProcessModel.make(instances: 1, state: state, app: app, type: 'worker') }
 
         context 'starting' do

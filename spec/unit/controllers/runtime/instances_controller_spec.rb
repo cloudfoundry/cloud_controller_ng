@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/apps/:id/instances' do
       before :each do
-        @process = AppFactory.make
+        @process = ProcessModelFactory.make
         @user      = make_user_for_space(@process.space)
         @developer = make_developer_for_space(@process.space)
         set_current_user(user)
@@ -135,7 +135,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/apps/:id/instances/:index' do
-      let(:process) { AppFactory.make(state: 'STARTED', instances: 2) }
+      let(:process) { ProcessModelFactory.make(state: 'STARTED', instances: 2) }
 
       before { set_current_user(user) }
 

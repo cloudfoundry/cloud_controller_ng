@@ -19,7 +19,7 @@ module VCAP::CloudController
     end
 
     describe 'query by org_guid' do
-      let(:process) { AppFactory.make }
+      let(:process) { ProcessModelFactory.make }
       it 'filters apps by org_guid' do
         set_current_user_as_admin
         get "/v2/apps?q=organization_guid:#{process.organization.guid}"
@@ -561,7 +561,7 @@ module VCAP::CloudController
     describe 'update app' do
       let(:update_hash) { {} }
 
-      let(:process) { AppFactory.make(diego: false, instances: 1) }
+      let(:process) { ProcessModelFactory.make(diego: false, instances: 1) }
       let(:developer) { make_developer_for_space(process.space) }
 
       before do
@@ -592,7 +592,7 @@ module VCAP::CloudController
       end
 
       context 'switch from dea to diego' do
-        let(:process) { AppFactory.make(instances: 1, diego: false, type: 'web') }
+        let(:process) { ProcessModelFactory.make(instances: 1, diego: false, type: 'web') }
         let(:developer) { make_developer_for_space(process.space) }
         let(:route) { Route.make(space: process.space) }
         let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route) }
@@ -607,7 +607,7 @@ module VCAP::CloudController
       end
 
       context 'switch from diego to dea' do
-        let(:process) { AppFactory.make(instances: 1, diego: true, ports: [8080, 5222]) }
+        let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [8080, 5222]) }
         it 'updates the backend of the app and returns 201 with warning' do
           put "/v2/apps/#{process.guid}", '{ "diego": false}'
           expect(last_response).to have_status_code(201)
@@ -626,7 +626,7 @@ module VCAP::CloudController
         end
 
         context 'when the app has existing custom ports' do
-          let(:process) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
+          let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
           let(:route) { Route.make(space: process.space) }
           let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route) }
 
@@ -639,7 +639,7 @@ module VCAP::CloudController
         end
 
         context 'when the app is mapped to multiple ports' do
-          let(:process) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
+          let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
           let(:route) { Route.make(space: process.space) }
           let!(:route_mapping_1) { RouteMappingModel.make(app: process.app, route: route, app_port: 9090) }
           let!(:route_mapping_2) { RouteMappingModel.make(app: process.app, route: route, app_port: 5222) }
@@ -656,7 +656,7 @@ module VCAP::CloudController
         end
 
         context 'when the app is a docker app' do
-          let(:process) { AppFactory.make(instances: 1, diego: true) }
+          let(:process) { ProcessModelFactory.make(instances: 1, diego: true) }
           let(:error_message) do
             'Docker apps cannot run on DEAs'
           end
@@ -685,7 +685,7 @@ module VCAP::CloudController
       end
 
       context 'when app is diego app' do
-        let(:process) { AppFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
+        let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
 
         it 'sets ports to user specified values' do
           put "/v2/apps/#{process.guid}", '{ "ports": [1883,5222] }'
@@ -860,7 +860,7 @@ module VCAP::CloudController
         it 'changes the stack' do
           set_current_user(admin_user, admin: true)
 
-          process = AppFactory.make
+          process = ProcessModelFactory.make
 
           expect(process.stack).not_to eq(new_stack)
 
@@ -872,7 +872,7 @@ module VCAP::CloudController
 
         context 'when the app is already staged' do
           let(:process) do
-            AppFactory.make(
+            ProcessModelFactory.make(
               instances: 1,
               state:     'STARTED')
           end
@@ -890,7 +890,7 @@ module VCAP::CloudController
         end
 
         context 'when the app needs staged' do
-          let(:process) { AppFactory.make(state: 'STARTED') }
+          let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
             PackageModel.make(app: process.app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
@@ -961,7 +961,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new docker package' do
-          process          = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+          process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
           original_package = process.latest_package
 
           expect(process.docker_image).not_to eq('repo/new-image')
@@ -985,7 +985,7 @@ module VCAP::CloudController
           end
 
           it 'creates a new docker package with those credentials' do
-            process          = AppFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
             original_package = process.latest_package
 
             expect(process.docker_image).not_to eq('repo/new-image')
@@ -1007,7 +1007,7 @@ module VCAP::CloudController
 
       describe 'staging' do
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
 
         before do
           allow(V2::AppStage).to receive(:new).and_return(app_stage)
@@ -1081,7 +1081,7 @@ module VCAP::CloudController
 
       describe 'starting and stopping' do
         let(:parent_app) { process.app }
-        let(:process) { AppFactory.make(instances: 1, state: state) }
+        let(:process) { ProcessModelFactory.make(instances: 1, state: state) }
         let(:sibling) { ProcessModel.make(instances: 1, state: state, app: parent_app, type: 'worker') }
 
         context 'starting' do
@@ -1131,7 +1131,7 @@ module VCAP::CloudController
     end
 
     describe 'delete an app' do
-      let(:process) { AppFactory.make }
+      let(:process) { ProcessModelFactory.make }
       let(:developer) { make_developer_for_space(process.space) }
       let(:decoded_response) { MultiJson.load(last_response.body) }
       let(:parent_app) { process.app }
@@ -1223,7 +1223,7 @@ module VCAP::CloudController
     end
 
     describe 'route mapping' do
-      let!(:process) { AppFactory.make(instances: 1, diego: true) }
+      let!(:process) { ProcessModelFactory.make(instances: 1, diego: true) }
       let!(:developer) { make_developer_for_space(process.space) }
       let!(:route) { Route.make(space: process.space) }
       let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
@@ -1268,7 +1268,7 @@ module VCAP::CloudController
       let(:space) { process.space }
       let(:developer) { make_developer_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
-      let(:process) { AppFactory.make(detected_buildpack: 'buildpack-name') }
+      let(:process) { ProcessModelFactory.make(detected_buildpack: 'buildpack-name') }
       let(:decoded_response) { MultiJson.load(last_response.body) }
 
       before do
@@ -1410,7 +1410,7 @@ module VCAP::CloudController
         let!(:test_environment_json) { { 'environ_key' => 'value' } }
         let(:parent_app) { AppModel.make(environment_variables: test_environment_json) }
         let!(:process) do
-          AppFactory.make(
+          ProcessModelFactory.make(
             detected_buildpack: 'buildpack-name',
             app:                parent_app
           )
@@ -1444,7 +1444,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is NOT a member of the space this instance exists in' do
-        let(:process) { AppFactory.make(detected_buildpack: 'buildpack-name') }
+        let(:process) { ProcessModelFactory.make(detected_buildpack: 'buildpack-name') }
 
         before do
           set_current_user(User.make)
@@ -1606,7 +1606,7 @@ module VCAP::CloudController
 
       context 'when app will be staged', isolation: :truncation do
         let(:process) do
-          AppFactory.make(diego: false, state: 'STOPPED', instances: 1).tap do |p|
+          ProcessModelFactory.make(diego: false, state: 'STOPPED', instances: 1).tap do |p|
             p.current_droplet.destroy
             p.reload
           end
@@ -1630,7 +1630,7 @@ module VCAP::CloudController
       end
 
       context 'when app will not be staged' do
-        let(:process) { AppFactory.make(state: 'STOPPED') }
+        let(:process) { ProcessModelFactory.make(state: 'STOPPED') }
 
         it 'does not add X-App-Staging-Log' do
           put "/v2/apps/#{process.guid}", MultiJson.dump({})
@@ -1641,7 +1641,7 @@ module VCAP::CloudController
     end
 
     describe 'downloading the droplet' do
-      let(:process) { AppFactory.make }
+      let(:process) { ProcessModelFactory.make }
       let(:blob) { instance_double(CloudController::Blobstore::FogBlob) }
       let(:developer) { make_developer_for_space(process.space) }
 
@@ -1744,7 +1744,7 @@ module VCAP::CloudController
       let(:domain) do
         PrivateDomain.make(name: 'jesse.cloud', owning_organization: space.organization)
       end
-      let(:process) { AppFactory.make(diego: false, state: 'STARTED') }
+      let(:process) { ProcessModelFactory.make(diego: false, state: 'STARTED') }
 
       before do
         FeatureFlag.create(name: 'diego_docker', enabled: true)
@@ -1770,7 +1770,7 @@ module VCAP::CloudController
         let(:route) { domain.add_route(host: 'app', space: space) }
         let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
         let(:docker_process) do
-          AppFactory.make(
+          ProcessModelFactory.make(
             state:        'STARTED',
             diego:        true,
             docker_image: 'some-image',
@@ -1811,7 +1811,7 @@ module VCAP::CloudController
 
       context 'when docker is disabled' do
         let!(:started_process) do
-          AppFactory.make(state: 'STARTED', docker_image: 'docker-image')
+          ProcessModelFactory.make(state: 'STARTED', docker_image: 'docker-image')
         end
 
         before do
@@ -1833,8 +1833,8 @@ module VCAP::CloudController
       end
 
       context 'when docker is disabled' do
-        let!(:stopped_process) { AppFactory.make(:docker, state: 'STOPPED', docker_image: 'docker-image') }
-        let!(:started_process) { AppFactory.make(:docker, state: 'STARTED', docker_image: 'docker-image') }
+        let!(:stopped_process) { ProcessModelFactory.make(:docker, state: 'STOPPED', docker_image: 'docker-image') }
+        let!(:started_process) { ProcessModelFactory.make(:docker, state: 'STARTED', docker_image: 'docker-image') }
 
         before do
           FeatureFlag.find(name: 'diego_docker').update(enabled: false)
@@ -1864,8 +1864,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = AppFactory.make(app: AppModel.make(space: @space_a))
-        @obj_b = AppFactory.make(app: AppModel.make(space: @space_b))
+        @obj_a = ProcessModelFactory.make(app: AppModel.make(space: @space_a))
+        @obj_b = ProcessModelFactory.make(app: AppModel.make(space: @space_b))
       end
 
       describe 'Org Level Permissions' do
@@ -1945,7 +1945,7 @@ module VCAP::CloudController
 
     describe 'Validation messages' do
       let(:space) { process.space }
-      let!(:process) { AppFactory.make(state: 'STARTED') }
+      let!(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
       before do
         set_current_user(make_developer_for_space(space))
@@ -2084,7 +2084,7 @@ module VCAP::CloudController
 
     describe 'PUT /v2/apps/:app_guid/routes/:route_guid' do
       let(:space) { Space.make }
-      let(:process) { AppFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space: space) }
       let(:route) { Route.make(space: space) }
       let(:developer) { make_developer_for_space(space) }
 
@@ -2148,7 +2148,7 @@ module VCAP::CloudController
       context 'when a route with a routing service is mapped to a non-diego app' do
         let(:route_binding) { RouteBinding.make }
         let(:route) { route_binding.route }
-        let(:process) { AppFactory.make(space: space, diego: false) }
+        let(:process) { ProcessModelFactory.make(space: space, diego: false) }
         let(:space) { route.space }
 
         it 'fails to add the route' do
@@ -2175,7 +2175,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is diego' do
-        let(:process) { AppFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
+        let(:process) { ProcessModelFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
 
         it 'uses the first port for the app as the app_port' do
           put "/v2/apps/#{process.guid}/routes/#{route.guid}", nil
@@ -2227,7 +2227,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/apps/:app_guid/routes/:route_guid' do
       let(:space) { Space.make }
-      let(:process) { AppFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space: space) }
       let(:route) { Route.make(space: space) }
       let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
       let(:developer) { make_developer_for_space(space) }
@@ -2288,7 +2288,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/apps/:app_guid/service_bindings/:service_binding_guid' do
       let(:space) { Space.make }
-      let(:process) { AppFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space: space) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
       let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: instance) }
       let(:developer) { make_developer_for_space(space) }
@@ -2336,7 +2336,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/apps/:guid/permissions' do
-      let(:process) { AppFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space: space) }
       let(:space) { Space.make }
       let(:user) { User.make }
 

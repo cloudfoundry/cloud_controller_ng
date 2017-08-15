@@ -57,7 +57,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :events, class: AppEvent }
 
       it 'has service_bindings through the parent app' do
-        process  = AppFactory.make(type: 'potato')
+        process  = ProcessModelFactory.make(type: 'potato')
         binding1 = ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space))
         binding2 = ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space))
 
@@ -65,7 +65,7 @@ module VCAP::CloudController
       end
 
       it 'has route_mappings' do
-        process = AppFactory.make
+        process = ProcessModelFactory.make
         route1  = Route.make(space: process.space)
         route2  = Route.make(space: process.space)
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       it 'has routes through route_mappings' do
-        process = AppFactory.make
+        process = ProcessModelFactory.make
         route1  = Route.make(space: process.space)
         route2  = Route.make(space: process.space)
 
@@ -123,7 +123,7 @@ module VCAP::CloudController
       end
 
       context 'when an app has multiple ports bound to the same route' do
-        subject(:process) { AppFactory.make(diego: true, ports: [8080, 9090]) }
+        subject(:process) { ProcessModelFactory.make(diego: true, ports: [8080, 9090]) }
         let(:route) { Route.make(host: 'host2', space: process.space, path: '/my%20path') }
         let!(:route_mapping1) { RouteMappingModel.make(app: process.app, route: route, app_port: 8080) }
         let!(:route_mapping2) { RouteMappingModel.make(app: process.app, route: route, app_port: 9090) }
@@ -152,7 +152,7 @@ module VCAP::CloudController
       end
 
       describe 'org and space quota validator policies' do
-        subject(:process) { AppFactory.make(app: parent_app) }
+        subject(:process) { ProcessModelFactory.make(app: parent_app) }
         let(:org) { Organization.make }
         let(:space) { Space.make(organization: org, space_quota_definition: SpaceQuotaDefinition.make(organization: org)) }
 
@@ -220,7 +220,7 @@ module VCAP::CloudController
       end
 
       describe 'disk_quota' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
 
         it 'allows any disk_quota below the maximum' do
           process.disk_quota = 1000
@@ -241,7 +241,7 @@ module VCAP::CloudController
       end
 
       describe 'health_check_http_endpoint' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
 
         it 'can be set to the root path' do
           process.health_check_type          = 'http'
@@ -277,7 +277,7 @@ module VCAP::CloudController
       end
 
       describe 'health_check_type' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
 
         it "defaults to 'port'" do
           expect(process.health_check_type).to eq('port')
@@ -301,7 +301,7 @@ module VCAP::CloudController
       end
 
       describe 'instances' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
 
         it 'does not allow negative instances' do
           process.instances = -1
@@ -311,7 +311,7 @@ module VCAP::CloudController
       end
 
       describe 'metadata' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
 
         it 'defaults to an empty hash' do
           expect(ProcessModel.new.metadata).to eql({})
@@ -334,7 +334,7 @@ module VCAP::CloudController
       end
 
       describe 'quota' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
         let(:quota) do
           QuotaDefinition.make(memory_limit: 128)
         end
@@ -353,7 +353,7 @@ module VCAP::CloudController
           let(:org) { Organization.make(quota_definition: quota) }
           let(:space) { Space.make(name: 'hi', organization: org, space_quota_definition: space_quota) }
           let(:parent_app) { AppModel.make(space: space) }
-          subject!(:process) { AppFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
+          subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
 
           it 'should raise error when quota is exceeded' do
             process.memory = 65
@@ -446,7 +446,7 @@ module VCAP::CloudController
       end
 
       describe 'ports and health check type' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
 
         describe 'health check type is not "ports"' do
           before do
@@ -479,7 +479,7 @@ module VCAP::CloudController
       end
 
       describe 'uniqueness of types for v3 app processes' do
-        subject(:process) { AppFactory.make }
+        subject(:process) { ProcessModelFactory.make }
         let(:app_model) { AppModel.make }
 
         before do
@@ -629,7 +629,7 @@ module VCAP::CloudController
     end
 
     describe '#detected_start_command' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       context 'when the app has a current droplet' do
         before do
@@ -721,7 +721,7 @@ module VCAP::CloudController
 
     describe 'metadata' do
       it 'deserializes the serialized value' do
-        process = AppFactory.make(
+        process = ProcessModelFactory.make(
           metadata: { 'jesse' => 'super awesome' },
         )
         expect(process.metadata).to eq('jesse' => 'super awesome')
@@ -730,7 +730,7 @@ module VCAP::CloudController
 
     describe 'command' do
       it 'stores the command in its own column, not metadata' do
-        process = AppFactory.make(command: 'foobar')
+        process = ProcessModelFactory.make(command: 'foobar')
         expect(process.metadata).to eq('command' => 'foobar')
         expect(process.metadata_without_command).to_not eq('command' => 'foobar')
         process.save
@@ -743,12 +743,12 @@ module VCAP::CloudController
       end
 
       it 'saves the field as nil when initializing to empty string' do
-        process = AppFactory.make(command: '')
+        process = ProcessModelFactory.make(command: '')
         expect(process.command).to eq(nil)
       end
 
       it 'saves the field as nil when overriding to empty string' do
-        process         = AppFactory.make(command: 'echo hi')
+        process         = ProcessModelFactory.make(command: 'echo hi')
         process.command = ''
         process.save
         process.refresh
@@ -756,7 +756,7 @@ module VCAP::CloudController
       end
 
       it 'saves the field as nil when set to nil' do
-        process         = AppFactory.make(command: 'echo hi')
+        process         = ProcessModelFactory.make(command: 'echo hi')
         process.command = nil
         process.save
         process.refresh
@@ -764,7 +764,7 @@ module VCAP::CloudController
       end
 
       it 'falls back to metadata value if command is not present' do
-        process         = AppFactory.make(metadata: { command: 'echo hi' })
+        process         = ProcessModelFactory.make(metadata: { command: 'echo hi' })
         process.command = nil
         process.save
         process.refresh
@@ -774,7 +774,7 @@ module VCAP::CloudController
 
     describe 'console' do
       it 'stores the command in the metadata' do
-        process = AppFactory.make(console: true)
+        process = ProcessModelFactory.make(console: true)
         expect(process.metadata).to eq('console' => true)
         process.save
         expect(process.metadata).to eq('console' => true)
@@ -783,24 +783,24 @@ module VCAP::CloudController
       end
 
       it 'returns true if console was set to true' do
-        process = AppFactory.make(console: true)
+        process = ProcessModelFactory.make(console: true)
         expect(process.console).to eq(true)
       end
 
       it 'returns false if console was set to false' do
-        process = AppFactory.make(console: false)
+        process = ProcessModelFactory.make(console: false)
         expect(process.console).to eq(false)
       end
 
       it 'returns false if console was not set' do
-        process = AppFactory.make
+        process = ProcessModelFactory.make
         expect(process.console).to eq(false)
       end
     end
 
     describe 'debug' do
       it 'stores the command in the metadata' do
-        process = AppFactory.make(debug: 'suspend')
+        process = ProcessModelFactory.make(debug: 'suspend')
         expect(process.metadata).to eq('debug' => 'suspend')
         process.save
         expect(process.metadata).to eq('debug' => 'suspend')
@@ -809,12 +809,12 @@ module VCAP::CloudController
       end
 
       it 'returns nil if debug was explicitly set to nil' do
-        process = AppFactory.make(debug: nil)
+        process = ProcessModelFactory.make(debug: nil)
         expect(process.debug).to be_nil
       end
 
       it 'returns nil if debug was not set' do
-        process = AppFactory.make
+        process = ProcessModelFactory.make
         expect(process.debug).to be_nil
       end
     end
@@ -849,27 +849,27 @@ module VCAP::CloudController
 
       context 'when the health_check_timeout was not specified' do
         it 'should use nil as health_check_timeout' do
-          process = AppFactory.make
+          process = ProcessModelFactory.make
           expect(process.health_check_timeout).to eq(nil)
         end
 
         it 'should not raise error if value is nil' do
           expect {
-            AppFactory.make(health_check_timeout: nil)
+            ProcessModelFactory.make(health_check_timeout: nil)
           }.to_not raise_error
         end
       end
 
       context 'when a valid health_check_timeout is specified' do
         it 'should use that value' do
-          process = AppFactory.make(health_check_timeout: 256)
+          process = ProcessModelFactory.make(health_check_timeout: 256)
           expect(process.health_check_timeout).to eq(256)
         end
       end
     end
 
     describe 'staged?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if package_state is STAGED' do
         expect(process.package_state).to eq('STAGED')
@@ -886,7 +886,7 @@ module VCAP::CloudController
     end
 
     describe 'pending?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if package_state is PENDING' do
         PackageModel.make(app: process.app)
@@ -903,7 +903,7 @@ module VCAP::CloudController
     end
 
     describe 'staging?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if the latest_build is STAGING' do
         BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
@@ -924,7 +924,7 @@ module VCAP::CloudController
     end
 
     describe 'failed?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if the latest_build is FAILED' do
         process.latest_build.update(state: BuildModel::FAILED_STATE)
@@ -964,7 +964,7 @@ module VCAP::CloudController
     end
 
     describe 'needs_staging?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       context 'when the app is started' do
         before do
@@ -999,7 +999,7 @@ module VCAP::CloudController
     end
 
     describe 'started?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if app is STARTED' do
         process.state = 'STARTED'
@@ -1013,7 +1013,7 @@ module VCAP::CloudController
     end
 
     describe 'stopped?' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if app is STOPPED' do
         process.state = 'STOPPED'
@@ -1041,7 +1041,7 @@ module VCAP::CloudController
     end
 
     describe 'version' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'should have a version on create' do
         expect(process.version).not_to be_nil
@@ -1171,7 +1171,7 @@ module VCAP::CloudController
 
     describe 'uris' do
       it 'should return the fqdns and paths on the app' do
-        process = AppFactory.make(app: parent_app)
+        process = ProcessModelFactory.make(app: parent_app)
         domain = PrivateDomain.make(name: 'mydomain.com', owning_organization: org)
         route  = Route.make(host: 'myhost', domain: domain, space: space, path: '/my%20path')
         RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
@@ -1321,14 +1321,14 @@ module VCAP::CloudController
 
     describe 'saving' do
       it 'calls AppObserver.updated', isolation: :truncation do
-        process = AppFactory.make
+        process = ProcessModelFactory.make
         expect(AppObserver).to receive(:updated).with(process)
         process.update(instances: process.instances + 1)
       end
 
       context 'when app state changes from STOPPED to STARTED' do
         it 'creates an AppUsageEvent' do
-          process = AppFactory.make
+          process = ProcessModelFactory.make
           expect {
             process.update(state: 'STARTED')
           }.to change { AppUsageEvent.count }.by(1)
@@ -1339,7 +1339,7 @@ module VCAP::CloudController
 
       context 'when app state changes from STARTED to STOPPED' do
         it 'creates an AppUsageEvent' do
-          process = AppFactory.make(state: 'STARTED')
+          process = ProcessModelFactory.make(state: 'STARTED')
           expect {
             process.update(state: 'STOPPED')
           }.to change { AppUsageEvent.count }.by(1)
@@ -1350,7 +1350,7 @@ module VCAP::CloudController
 
       context 'when app instances changes' do
         it 'creates an AppUsageEvent when the app is STARTED' do
-          process = AppFactory.make(state: 'STARTED')
+          process = ProcessModelFactory.make(state: 'STARTED')
           expect {
             process.update(instances: 2)
           }.to change { AppUsageEvent.count }.by(1)
@@ -1359,7 +1359,7 @@ module VCAP::CloudController
         end
 
         it 'does not create an AppUsageEvent when the app is STOPPED' do
-          process = AppFactory.make(state: 'STOPPED')
+          process = ProcessModelFactory.make(state: 'STOPPED')
           expect {
             process.update(instances: 2)
           }.not_to change { AppUsageEvent.count }
@@ -1368,7 +1368,7 @@ module VCAP::CloudController
 
       context 'when app memory changes' do
         it 'creates an AppUsageEvent when the app is STARTED' do
-          process = AppFactory.make(state: 'STARTED')
+          process = ProcessModelFactory.make(state: 'STARTED')
           expect {
             process.update(memory: 2)
           }.to change { AppUsageEvent.count }.by(1)
@@ -1377,7 +1377,7 @@ module VCAP::CloudController
         end
 
         it 'does not create an AppUsageEvent when the app is STOPPED' do
-          process = AppFactory.make(state: 'STOPPED')
+          process = ProcessModelFactory.make(state: 'STOPPED')
           expect {
             process.update(memory: 2)
           }.not_to change { AppUsageEvent.count }
@@ -1386,7 +1386,7 @@ module VCAP::CloudController
 
       context 'when a custom buildpack was used for staging' do
         it 'creates an AppUsageEvent that contains the custom buildpack url' do
-          process = AppFactory.make(state: 'STOPPED')
+          process = ProcessModelFactory.make(state: 'STOPPED')
           process.app.lifecycle_data.update(buildpacks: ['https://example.com/repo.git'])
           expect {
             process.update(state: 'STARTED')
@@ -1400,7 +1400,7 @@ module VCAP::CloudController
       context 'when a detected admin buildpack was used for staging' do
         it 'creates an AppUsageEvent that contains the detected buildpack guid' do
           buildpack = Buildpack.make
-          process = AppFactory.make(state: 'STOPPED')
+          process = ProcessModelFactory.make(state: 'STOPPED')
           process.current_droplet.update(
             buildpack_receipt_buildpack: 'Admin buildpack detect string',
             buildpack_receipt_buildpack_guid: buildpack.guid
@@ -1416,7 +1416,7 @@ module VCAP::CloudController
     end
 
     describe 'destroy' do
-      subject(:process) { AppFactory.make(app: parent_app) }
+      subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'notifies the app observer', isolation: :truncation do
         expect(AppObserver).to receive(:deleted).with(process)
@@ -1434,7 +1434,7 @@ module VCAP::CloudController
       end
 
       it 'creates an AppUsageEvent when the app state is STARTED' do
-        process = AppFactory.make(state: 'STARTED')
+        process = ProcessModelFactory.make(state: 'STARTED')
         expect {
           process.destroy
         }.to change { AppUsageEvent.count }.by(1)
@@ -1442,7 +1442,7 @@ module VCAP::CloudController
       end
 
       it 'does not create an AppUsageEvent when the app state is STOPPED' do
-        process = AppFactory.make(state: 'STOPPED')
+        process = ProcessModelFactory.make(state: 'STOPPED')
         expect {
           process.destroy
         }.not_to change { AppUsageEvent.count }
@@ -1455,12 +1455,12 @@ module VCAP::CloudController
     end
 
     describe 'file_descriptors' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
       its(:file_descriptors) { should == 16_384 }
     end
 
     describe 'docker_image' do
-      subject(:process) { AppFactory.make(app: parent_app) }
+      subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'does not allow a docker package for a buildpack app' do
         process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
@@ -1477,7 +1477,7 @@ module VCAP::CloudController
     end
 
     describe 'docker_username' do
-      subject(:process) { AppFactory.make(app: parent_app) }
+      subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'retrieves the docker registry username from the package' do
         PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_username: 'user')
@@ -1486,7 +1486,7 @@ module VCAP::CloudController
     end
 
     describe 'docker_password' do
-      subject(:process) { AppFactory.make(app: parent_app) }
+      subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'retrieves the docker registry password from the package' do
         PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_password: 'pass')
@@ -1495,14 +1495,14 @@ module VCAP::CloudController
     end
 
     describe 'diego' do
-      subject(:process) { AppFactory.make }
+      subject(:process) { ProcessModelFactory.make }
 
       it 'defaults to run on diego' do
         expect(process.diego).to be_truthy
       end
 
       context 'when updating app ports' do
-        subject!(:process) { AppFactory.make(diego: true, state: 'STARTED') }
+        subject!(:process) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
 
         before do
           allow(AppObserver).to receive(:updated).with(process)
@@ -1538,7 +1538,7 @@ module VCAP::CloudController
 
     describe '#docker_ports' do
       describe 'when the app is not docker' do
-        subject(:process) { AppFactory.make(diego: true, docker_image: nil) }
+        subject(:process) { ProcessModelFactory.make(diego: true, docker_image: nil) }
 
         it 'is an empty array' do
           expect(process.docker_ports).to eq []
@@ -1547,7 +1547,7 @@ module VCAP::CloudController
 
       context 'when tcp ports are saved in the droplet metadata' do
         subject(:process) {
-          process = AppFactory.make(diego: true, docker_image: 'some-docker-image')
+          process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image')
           process.current_droplet.update(
             execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
           )
@@ -1575,7 +1575,7 @@ module VCAP::CloudController
         context 'when app is staged' do
           context 'when some tcp ports are exposed' do
             subject(:process) {
-              process = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
+              process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
               process.current_droplet.update(
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
               )
@@ -1609,7 +1609,7 @@ module VCAP::CloudController
 
           context 'when no tcp ports are exposed' do
             it 'returns the ports that were specified during creation' do
-              process = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
+              process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
 
               process.current_droplet.update(
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
@@ -1623,7 +1623,7 @@ module VCAP::CloudController
 
           context 'when execution metadata is malformed' do
             it 'returns the ports that were specified during creation' do
-              process = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
+              process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
               process.current_droplet.update(
                 execution_metadata: 'some-invalid-json',
               )
@@ -1636,7 +1636,7 @@ module VCAP::CloudController
 
           context 'when no ports are specified in the execution metadata' do
             it 'returns the default port' do
-              process = AppFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
+              process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
               process.current_droplet.update(
                 execution_metadata: '{"cmd":"run.sh"}',
               )
@@ -1661,7 +1661,7 @@ module VCAP::CloudController
         context 'when app is staged' do
           context 'with no execution_metadata' do
             it 'returns the ports that were specified during creation' do
-              process = AppFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
+              process = ProcessModelFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
               expect(process.ports).to eq([1025, 1026, 1027, 1028])
               expect(process.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
@@ -1669,7 +1669,7 @@ module VCAP::CloudController
 
           context 'with execution_metadata' do
             it 'returns the ports that were specified during creation' do
-              process = AppFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
+              process = ProcessModelFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
               process.current_droplet.update(
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
               )
@@ -1683,7 +1683,7 @@ module VCAP::CloudController
       end
 
       context 'switching from diego to dea' do
-        subject(:process) { AppFactory.make(app: parent_app, state: 'STARTED', diego: true, ports: [8080, 2345]) }
+        subject(:process) { ProcessModelFactory.make(app: parent_app, state: 'STARTED', diego: true, ports: [8080, 2345]) }
         let(:route) { Route.make(host: 'host', space: process.space) }
         let(:route2) { Route.make(host: 'host', space: process.space) }
         let!(:route_mapping_1) { RouteMappingModel.make(app: parent_app, route: route, process_type: process.type) }

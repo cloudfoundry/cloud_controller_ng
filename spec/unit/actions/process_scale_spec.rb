@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:valid_message_params) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
     let(:message) { ProcessScaleMessage.new(valid_message_params) }
     let(:app) { AppModel.make }
-    let!(:process) { AppFactory.make(disk_quota: 50, app: app) }
+    let!(:process) { ProcessModelFactory.make(disk_quota: 50, app: app) }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#scale' do

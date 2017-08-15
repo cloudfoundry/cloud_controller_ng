@@ -79,8 +79,8 @@ module VCAP::CloudController
       end
 
       it 'creates events for existing STARTED apps' do
-        process = AppFactory.make(state: 'STARTED')
-        AppFactory.make(state: 'STOPPED')
+        process = ProcessModelFactory.make(state: 'STARTED')
+        ProcessModelFactory.make(state: 'STOPPED')
         post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'
         expect(last_response).to be_successful
         expect(AppUsageEvent.count).to eq(1)

@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-    let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:route) { VCAP::CloudController::Route.make(domain: domain, space: space) }
     let(:object) { VCAP::CloudController::RouteMappingModel.make(route: route, app: process) }
 

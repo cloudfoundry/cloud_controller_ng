@@ -3062,7 +3062,7 @@ module VCAP::CloudController
 
       context 'when the route is mapped to a diego app' do
         before do
-          diego_process = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+          diego_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
           RouteMappingModel.make(app: diego_process.app, route: route, process_type: diego_process.type)
         end
 
@@ -3073,7 +3073,7 @@ module VCAP::CloudController
 
         context 'and is mapped to another diego app as well' do
           before do
-            another_diego_process = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            another_diego_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
             RouteMappingModel.make(app: another_diego_process.app, route: route, process_type: another_diego_process.type)
           end
 
@@ -3087,7 +3087,7 @@ module VCAP::CloudController
 
       context 'when the route is mapped to a non-diego app' do
         before do
-          process = AppFactory.make(diego: false, space: route.space, state: 'STARTED')
+          process = ProcessModelFactory.make(diego: false, space: route.space, state: 'STARTED')
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
         end
 
@@ -3101,7 +3101,7 @@ module VCAP::CloudController
 
         context 'and is mapped to a diego app' do
           before do
-            diego_process = AppFactory.make(diego: true, space: route.space, state: 'STARTED')
+            diego_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
             RouteMappingModel.make(app: diego_process.app, route: route, process_type: diego_process.type)
           end
 

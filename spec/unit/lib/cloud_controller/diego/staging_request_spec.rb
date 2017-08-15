@@ -5,7 +5,7 @@ module VCAP::CloudController::Diego
   RSpec.describe StagingRequest do
     let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:process) do
-      VCAP::CloudController::AppFactory.make(
+      VCAP::CloudController::ProcessModelFactory.make(
         stack:            VCAP::CloudController::Stack.default,
         file_descriptors: 16384,
         memory:           1024,

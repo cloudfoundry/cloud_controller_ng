@@ -1119,7 +1119,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Binding Create Events' do
       space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-      process         = VCAP::CloudController::AppFactory.make(space: space)
+      process         = VCAP::CloudController::ProcessModelFactory.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
 
       VCAP::CloudController::Repositories::ServiceBindingEventRepository.record_create(service_binding, user_audit_info, { foo: 'bar' })
@@ -1145,7 +1145,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     example 'List Service Binding Delete Events' do
       space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
-      process         = VCAP::CloudController::AppFactory.make(space: space)
+      process         = VCAP::CloudController::ProcessModelFactory.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
 
       VCAP::CloudController::Repositories::ServiceBindingEventRepository.record_delete(service_binding, user_audit_info)

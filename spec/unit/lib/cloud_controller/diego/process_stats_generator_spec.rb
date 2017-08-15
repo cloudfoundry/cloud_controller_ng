@@ -29,8 +29,8 @@ module VCAP::CloudController
       describe '#bulk_generate' do
         let(:bbs_response) { [make_actual_lrp('instance-guid', 1, 'UNCLAIMED', '', 1.day.ago.to_i)] }
 
-        let(:process1) { VCAP::CloudController::AppFactory.make }
-        let(:process2) { VCAP::CloudController::AppFactory.make }
+        let(:process1) { VCAP::CloudController::ProcessModelFactory.make }
+        let(:process2) { VCAP::CloudController::ProcessModelFactory.make }
         before do
           allow(bbs_instances_client).to receive(:lrp_instances).and_return(bbs_response)
         end
@@ -52,7 +52,7 @@ module VCAP::CloudController
             make_actual_lrp(instance_guid, 4, 'CRASHED', 'instance-details', yesterday)
           ]
         end
-        let(:process) { VCAP::CloudController::AppFactory.make }
+        let(:process) { VCAP::CloudController::ProcessModelFactory.make }
         let(:process_guid) { ProcessGuid.from_process(process) }
         let(:instance_guid) { 'instance_guid' }
         let(:yesterday) { 1.day.ago.to_i }

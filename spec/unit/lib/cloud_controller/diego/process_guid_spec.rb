@@ -4,7 +4,7 @@ require 'cloud_controller/diego/process_guid'
 module VCAP::CloudController::Diego
   RSpec.describe ProcessGuid do
     let(:process) do
-      VCAP::CloudController::AppFactory.make
+      VCAP::CloudController::ProcessModelFactory.make
     end
 
     describe 'process_guid' do

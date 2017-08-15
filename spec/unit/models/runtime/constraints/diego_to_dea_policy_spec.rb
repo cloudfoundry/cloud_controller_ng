@@ -8,7 +8,7 @@ RSpec.describe DiegoToDeaPolicy do
       ports: [8081, 8082]
     }
   end
-  let(:process) { VCAP::CloudController::AppFactory.make(app_hash) }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(app_hash) }
   let(:route) { VCAP::CloudController::Route.make(host: 'host', space: process.space) }
   let(:route2) { VCAP::CloudController::Route.make(host: 'host', space: process.space) }
   let(:validator) { DiegoToDeaPolicy.new(process, true) }

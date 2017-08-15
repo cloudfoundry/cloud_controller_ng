@@ -373,7 +373,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             Note that crashing apps are included in this count."
 
           space = VCAP::CloudController::Space.make(organization: organization)
-          VCAP::CloudController::AppFactory.make(space: space, state: 'STARTED', instances: 3)
+          VCAP::CloudController::ProcessModelFactory.make(space: space, state: 'STARTED', instances: 3)
 
           client.get "/v2/organizations/#{guid}/instance_usage", {}, headers
           expect(status).to eq(200)

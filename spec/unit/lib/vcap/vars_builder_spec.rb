@@ -5,13 +5,13 @@ module VCAP::CloudController
   RSpec.describe 'VarsBuilder' do
     describe 'vcap_application' do
       let(:v3_app_model) { AppModel.make(name: 'v3-app-name') }
-      let(:v2_app) { AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'v2-app-name') }
+      let(:v2_app) { ProcessModelFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'v2-app-name') }
       let(:space) { VCAP::CloudController::Space.make }
 
       describe 'building hash for a v2 app model' do
         context 'when a v3 app is associated' do
           it 'has the expected values' do
-            process = AppFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name')
+            process = ProcessModelFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name')
             v3_app_model.add_process(process)
             expected_hash = {
               cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",

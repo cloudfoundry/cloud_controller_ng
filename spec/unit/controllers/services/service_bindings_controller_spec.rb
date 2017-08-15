@@ -61,14 +61,14 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @process_a = AppFactory.make(space: @space_a)
+        @process_a = ProcessModelFactory.make(space: @space_a)
         @service_instance_a = ManagedServiceInstance.make(space: @space_a)
         @obj_a = ServiceBinding.make(
           app: @process_a.app,
           service_instance: @service_instance_a
         )
 
-        @process_b = AppFactory.make(space: @space_b)
+        @process_b = ProcessModelFactory.make(space: @space_b)
         @service_instance_b = ManagedServiceInstance.make(space: @space_b)
         @obj_b = ServiceBinding.make(
           app: @process_b.app,
@@ -154,7 +154,7 @@ module VCAP::CloudController
     describe 'create' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:process) { AppFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space: space) }
 
       before { set_current_user(developer) }
 
@@ -309,7 +309,7 @@ module VCAP::CloudController
           end
 
           context 'because it maps to non-web process' do
-            let(:process) { AppFactory.make(space: space, type: 'non-web') }
+            let(:process) { ProcessModelFactory.make(space: space, type: 'non-web') }
 
             it 'returns CF-AppNotFound' do
               post '/v2/service_bindings', { app_guid: process.guid, service_instance_guid: instance.guid }.to_json
@@ -703,7 +703,7 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
       let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
-      let(:process) { AppFactory.make(space: space) }
+      let(:process) { ProcessModelFactory.make(space: space) }
       let(:developer) { make_developer_for_space(space) }
 
       it 'returns both user provided and managed service instances' do

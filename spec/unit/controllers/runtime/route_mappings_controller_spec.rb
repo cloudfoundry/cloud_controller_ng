@@ -12,8 +12,8 @@ module VCAP::CloudController
         include_context 'permissions'
 
         before do
-          @process_a = AppFactory.make(space: @space_a)
-          @process_b = AppFactory.make(space: @space_b)
+          @process_a = ProcessModelFactory.make(space: @space_a)
+          @process_b = ProcessModelFactory.make(space: @space_b)
           @route_a   = Route.make(space: @space_a)
           @route_b   = Route.make(space: @space_b)
           @obj_a     = RouteMappingModel.make(app_guid: @process_a.app.guid, route_guid: @route_a.guid, process_type: @process_a.type)
@@ -99,7 +99,7 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:developer) { make_developer_for_space(space) }
         let(:route) { Route.make(space: space) }
-        let(:process) { AppFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space: space) }
         let(:route_mapping) { RouteMappingModel.make(app: process, route: route) }
 
         before do
@@ -137,7 +137,7 @@ module VCAP::CloudController
       describe 'POST /v2/route_mappings' do
         let(:space) { Space.make }
         let(:route) { Route.make(space: space) }
-        let(:process) { AppFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space: space) }
         let(:developer) { make_developer_for_space(space) }
 
         before do
@@ -177,7 +177,7 @@ module VCAP::CloudController
         end
 
         context 'when the app is a diego app' do
-          let(:process) { AppFactory.make(space: space, diego: true, ports: [8080, 9090]) }
+          let(:process) { ProcessModelFactory.make(space: space, diego: true, ports: [8080, 9090]) }
           let(:body) do
             {
               app_guid:   process.guid,
@@ -232,7 +232,7 @@ module VCAP::CloudController
           end
 
           context 'and the app is bound to another route' do
-            let(:process_2) { AppFactory.make(space: space, diego: true, ports: [9090]) }
+            let(:process_2) { ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
             let(:body) do
               {
                 app_guid:   process.guid,
@@ -352,7 +352,7 @@ module VCAP::CloudController
         end
 
         context 'when the app is a DEA app' do
-          let(:process) { AppFactory.make(space: space, diego: false) }
+          let(:process) { ProcessModelFactory.make(space: space, diego: false) }
 
           context 'and app port is not specified' do
             let(:body) do
@@ -409,7 +409,7 @@ module VCAP::CloudController
           context 'when a route bound to a service is specified' do
             let(:route_binding) { RouteBinding.make }
             let(:route) { route_binding.route }
-            let(:process) { AppFactory.make(space: route.space, diego: false) }
+            let(:process) { ProcessModelFactory.make(space: route.space, diego: false) }
             let(:space) { route.space }
             let(:body) do
               {
@@ -431,7 +431,7 @@ module VCAP::CloudController
           let(:space_quota) { SpaceQuotaDefinition.make(organization: space.organization) }
           let(:tcp_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
           let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
-          let(:process) { AppFactory.make(space: space, ports: [9090], diego: true) }
+          let(:process) { ProcessModelFactory.make(space: space, ports: [9090], diego: true) }
           let(:space_developer) { make_developer_for_space(space) }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
@@ -516,7 +516,7 @@ module VCAP::CloudController
 
       describe 'DELETE /v2/route_mappings/:guid' do
         let(:route) { Route.make }
-        let(:process) { AppFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space: space) }
         let(:space) { route.space }
         let(:developer) { make_developer_for_space(space) }
         let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }

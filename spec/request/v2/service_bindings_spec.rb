@@ -11,8 +11,8 @@ RSpec.describe 'ServiceBindings' do
 
   describe 'GET /v2/service_bindings' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process1) { VCAP::CloudController::AppFactory.make(diego: false, space: space) }
-    let(:process2) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(diego: false, space: space) }
+    let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
     end
@@ -79,7 +79,7 @@ RSpec.describe 'ServiceBindings' do
     end
 
     it 'does not list service bindings without web processes' do
-      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process = VCAP::CloudController::ProcessModelFactory.make(space: space, type: 'non-web')
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get '/v2/service_bindings', nil, headers_for(user)
@@ -229,7 +229,7 @@ RSpec.describe 'ServiceBindings' do
 
   describe 'GET /v2/service_bindings/:guid' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process1) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
     end
@@ -264,7 +264,7 @@ RSpec.describe 'ServiceBindings' do
     end
 
     it 'does not display service bindings without a web process' do
-      non_web_process = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process = VCAP::CloudController::ProcessModelFactory.make(space: space, type: 'non-web')
       non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
 
       get "/v2/service_bindings/#{non_displayed_binding.guid}", nil, headers_for(user)
@@ -274,7 +274,7 @@ RSpec.describe 'ServiceBindings' do
 
   describe 'POST /v2/service_bindings' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
 
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|

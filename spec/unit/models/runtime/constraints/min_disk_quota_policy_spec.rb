@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe MinDiskQuotaPolicy do
-  let(:process) { VCAP::CloudController::AppFactory.make }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make }
 
   subject(:validator) { MinDiskQuotaPolicy.new(process) }
 

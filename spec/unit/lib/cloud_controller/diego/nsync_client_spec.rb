@@ -4,7 +4,7 @@ require 'cloud_controller/diego/task_protocol'
 module VCAP::CloudController::Diego
   RSpec.describe NsyncClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-    let(:process) { VCAP::CloudController::AppFactory.make }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make }
     let(:process_guid) { ProcessGuid.from_process(process) }
     let(:desire_message) { MultiJson.dump({ process_guid: process_guid }) }
     let(:config) { TestConfig.config }

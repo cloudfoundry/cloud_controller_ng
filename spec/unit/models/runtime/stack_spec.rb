@@ -9,15 +9,15 @@ module VCAP::CloudController
     describe 'Associations' do
       it 'has apps' do
         stack = Stack.make
-        process1 = AppFactory.make(stack: stack)
-        process2 = AppFactory.make(stack: stack)
+        process1 = ProcessModelFactory.make(stack: stack)
+        process2 = ProcessModelFactory.make(stack: stack)
         expect(stack.apps).to match_array([process1, process2])
       end
 
       it 'does not associate non-web v2 apps' do
         stack = Stack.make
-        process1 = AppFactory.make(type: 'web', stack: stack)
-        AppFactory.make(type: 'other', stack: stack)
+        process1 = ProcessModelFactory.make(type: 'web', stack: stack)
+        ProcessModelFactory.make(type: 'other', stack: stack)
         expect(stack.apps).to match_array([process1])
       end
     end
@@ -154,7 +154,7 @@ module VCAP::CloudController
       end
 
       it 'fails if there are apps' do
-        AppFactory.make(stack: stack)
+        ProcessModelFactory.make(stack: stack)
         expect { stack.destroy }.to raise_error CloudController::Errors::ApiError, /Please delete the app associations for your stack/
       end
     end

@@ -9,7 +9,7 @@ module VCAP::CloudController
       let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }
       let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['admin-buildpack']) }
       let(:app_model) { AppModel.make }
-      let(:process_model) { AppFactory.make(:buildpack, app: app_model) }
+      let(:process_model) { ProcessModelFactory.make(:buildpack, app: app_model) }
 
       before do
         app_model.update(buildpack_lifecycle_data: buildpack_lifecycle_data)
@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       context 'with a docker app' do
         let(:app_model) { AppModel.make(:docker) }
-        let(:app) { AppFactory.make(app: app_model, docker_image: 'docker/image') }
+        let(:app) { ProcessModelFactory.make(app: app_model, docker_image: 'docker/image') }
 
         before { app_model.update(buildpack_lifecycle_data: nil) }
 

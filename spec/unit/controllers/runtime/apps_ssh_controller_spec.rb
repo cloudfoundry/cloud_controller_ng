@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:diego) { true }
     let(:enable_ssh) { true }
     let(:user) { User.make }
-    let(:process) { AppFactory.make(diego: diego, enable_ssh: enable_ssh) }
+    let(:process) { ProcessModelFactory.make(diego: diego, enable_ssh: enable_ssh) }
     let(:instance_index) { '2' }
     let(:space) { process.space }
 

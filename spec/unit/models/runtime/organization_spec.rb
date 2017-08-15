@@ -434,7 +434,7 @@ module VCAP::CloudController
       it 'should return the memory available when no processes are running' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
-        AppFactory.make(space: space, memory: 200, instances: 2)
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2)
 
         expect(org.has_remaining_memory(500)).to eq(true)
         expect(org.has_remaining_memory(501)).to eq(false)
@@ -444,8 +444,8 @@ module VCAP::CloudController
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
-        AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
+        ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(org.has_remaining_memory(50)).to eq(true)
         expect(org.has_remaining_memory(51)).to eq(false)
@@ -455,7 +455,7 @@ module VCAP::CloudController
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        process = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
 
@@ -467,7 +467,7 @@ module VCAP::CloudController
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        process = AppFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
+        process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::SUCCEEDED_STATE)
 

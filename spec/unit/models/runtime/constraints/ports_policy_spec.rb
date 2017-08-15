@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe PortsPolicy do
-  let!(:process) { VCAP::CloudController::AppFactory.make }
+  let!(:process) { VCAP::CloudController::ProcessModelFactory.make }
   let(:validator) { PortsPolicy.new(process, changed_to_diego) }
   let(:changed_to_diego) { false }
 

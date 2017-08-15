@@ -172,7 +172,7 @@ RSpec.describe 'Spaces' do
 
   describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
     before do
       space.organization.add_user(user)

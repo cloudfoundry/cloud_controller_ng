@@ -192,8 +192,8 @@ module VCAP::CloudController
       end
 
       context 'when a service binding exists' do
-        let(:process) { AppFactory.make(space: service_instance.space) }
-        let(:process2) { AppFactory.make(space: service_instance.space) }
+        let(:process) { ProcessModelFactory.make(space: service_instance.space) }
+        let(:process2) { ProcessModelFactory.make(space: service_instance.space) }
         let!(:service_binding) {
           ServiceBinding.make(app_guid: process.app.guid, service_instance_guid: service_instance.guid)
         }

@@ -380,7 +380,7 @@ module VCAP::CloudController
 
     describe 'POST /v2/apps/:guid/copy_bits' do
       let(:dest_process) { ProcessModel.make }
-      let(:src_process) { AppFactory.make }
+      let(:src_process) { ProcessModelFactory.make }
       let(:json_payload) { { 'source_app_guid' => src_process.guid }.to_json }
 
       class FakeCopier

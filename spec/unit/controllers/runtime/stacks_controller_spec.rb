@@ -64,7 +64,7 @@ module VCAP::CloudController
       end
 
       context 'if apps exist' do
-        let!(:process) { AppFactory.make(stack: stack) }
+        let!(:process) { ProcessModelFactory.make(stack: stack) }
 
         it 'fails even when recursive' do
           delete "/v2/stacks/#{stack.guid}?recursive=true"

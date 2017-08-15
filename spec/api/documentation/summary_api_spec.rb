@@ -5,7 +5,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:process) { VCAP::CloudController::AppFactory.make space: space }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make space: space }
   let(:user) { make_developer_for_space(process.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
@@ -66,7 +66,7 @@ end
 RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:process) { VCAP::CloudController::AppFactory.make(diego: false, space: space) }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(diego: false, space: space) }
   let(:user) { make_developer_for_space(process.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route1) { VCAP::CloudController::Route.make(space: space) }

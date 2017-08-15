@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       describe '#staging' do
         let(:space) { VCAP::CloudController::Space.make }
-        let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+        let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
 
         before do
           SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       describe '#running' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
         let(:sg_default_rules_1) { [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }] }
         let(:sg_default_rules_2) { [{ 'protocol' => 'tcp', 'ports' => '9090-9095', 'destination' => '198.41.191.48/1', 'log' => true }] }
         let(:sg_for_space_rules) { [{ 'protocol' => 'udp', 'ports' => '1010,2020', 'destination' => '198.41.191.49/1' }] }

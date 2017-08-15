@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       describe '#create_from_process' do
         let(:parent_app) { AppModel.make(name: 'parent-app') }
-        let(:process) { AppFactory.make(app: parent_app, type: 'other') }
+        let(:process) { ProcessModelFactory.make(app: parent_app, type: 'other') }
 
         it 'will create an event which matches the app' do
           event = repository.create_from_process(process)
@@ -160,7 +160,7 @@ module VCAP::CloudController
           let(:old_state) { 'STARTED' }
           let(:old_instances) { 4 }
           let(:old_memory) { 256 }
-          let(:process) { AppFactory.make(state: old_state, instances: old_instances, memory: old_memory) }
+          let(:process) { ProcessModelFactory.make(state: old_state, instances: old_instances, memory: old_memory) }
 
           it 'always sets previous_package_state to UNKNOWN' do
             event = repository.create_from_process(process)
@@ -509,7 +509,7 @@ module VCAP::CloudController
       end
 
       describe '#purge_and_reseed_started_apps!' do
-        let(:process) { AppFactory.make }
+        let(:process) { ProcessModelFactory.make }
 
         before do
           # Truncate in mysql causes an implicit commit.
@@ -532,7 +532,7 @@ module VCAP::CloudController
           before do
             process.state = 'STARTED'
             process.save
-            AppFactory.make(state: 'STOPPED')
+            ProcessModelFactory.make(state: 'STOPPED')
           end
 
           it 'creates new events for the started apps' do

@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::StatsController do
     describe 'GET /v2/apps/:id/stats' do
       before :each do
-        @process   = AppFactory.make
+        @process   = ProcessModelFactory.make
         @user      = make_user_for_space(@process.space)
         @developer = make_developer_for_space(@process.space)
         @auditor   = make_auditor_for_space(@process.space)

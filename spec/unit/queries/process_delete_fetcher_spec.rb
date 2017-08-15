@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe '#fetch' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let!(:process) { AppFactory.make(space: space) }
+      let!(:process) { ProcessModelFactory.make(space: space) }
 
       subject(:process_delete_fetcher) { ProcessDeleteFetcher.new }
 

@@ -19,7 +19,7 @@ module VCAP::CloudController
       @internal_user     = 'internal_user'
       @internal_password = 'internal_password'
 
-      5.times { AppFactory.make(diego: true, state: 'STARTED') }
+      5.times { ProcessModelFactory.make(diego: true, state: 'STARTED') }
     end
 
     describe 'GET', '/internal/bulk/apps' do
@@ -76,19 +76,19 @@ module VCAP::CloudController
 
         context 'when a format parameter is not specified' do
           before do
-            process = AppFactory.make(diego: true,
-                                      state:                         'STARTED',
-                                      disk_quota:                    1_024,
-                                      environment_json:              {
+            process = ProcessModelFactory.make(diego:   true,
+                                               state:            'STARTED',
+                                               disk_quota:       1_024,
+                                               environment_json: {
                 'env-key-3' => 'env-value-3',
                 'env-key-4' => 'env-value-4',
               },
-                                      file_descriptors:              16_384,
-                                      instances:                     4,
-                                      memory:                        1_024,
-                                      guid:                          'app-guid-6',
-                                      command:                       'start-command-6',
-                                      stack:                         Stack.make(name: 'stack-6'),
+                                               file_descriptors: 16_384,
+                                               instances:        4,
+                                               memory:                        1_024,
+                                               guid:                          'app-guid-6',
+                                               command:                       'start-command-6',
+                                               stack:                         Stack.make(name: 'stack-6'),
             )
 
             route1 = Route.make(
@@ -148,7 +148,7 @@ module VCAP::CloudController
 
         context 'when there are unstaged apps' do
           before do
-            process = AppFactory.make(diego: true, state: 'STARTED')
+            process = ProcessModelFactory.make(diego: true, state: 'STARTED')
             process.current_droplet.destroy
             process.reload
           end
@@ -166,7 +166,7 @@ module VCAP::CloudController
 
         context 'when apps are not in the STARTED state' do
           before do
-            AppFactory.make(diego: true, state: 'STOPPED')
+            ProcessModelFactory.make(diego: true, state: 'STOPPED')
           end
 
           it 'does not return apps in the STOPPED state' do
@@ -189,7 +189,7 @@ module VCAP::CloudController
           end
 
           let!(:docker_process) do
-            AppFactory.make(diego: true, docker_image: 'some-image', state: 'STARTED')
+            ProcessModelFactory.make(diego: true, docker_image: 'some-image', state: 'STARTED')
           end
 
           it 'does return docker apps' do
@@ -339,7 +339,7 @@ module VCAP::CloudController
 
             context 'when there is a mixture of diego and dea apps' do
               before do
-                5.times { AppFactory.make }
+                5.times { ProcessModelFactory.make }
               end
 
               it 'only returns the diego apps' do

@@ -85,7 +85,7 @@ module VCAP::CloudController
 
       describe 'apps association' do
         let(:space) { Space.make }
-        let(:process) { AppFactory.make(space: space) }
+        let(:process) { ProcessModelFactory.make(space: space) }
         let(:route) { Route.make(space: space) }
 
         it 'associates apps through route mappings' do
@@ -95,7 +95,7 @@ module VCAP::CloudController
         end
 
         it 'does not associate non-web v2 apps' do
-          non_web_process = AppFactory.make(type: 'other', space: space)
+          non_web_process = ProcessModelFactory.make(type: 'other', space: space)
 
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
           RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
@@ -124,13 +124,13 @@ module VCAP::CloudController
       context 'changing space' do
         context 'apps' do
           it 'succeeds with no mapped apps' do
-            route = Route.make(space: AppFactory.make.space, domain: SharedDomain.make)
+            route = Route.make(space: ProcessModelFactory.make.space, domain: SharedDomain.make)
 
             expect { route.space = Space.make }.not_to raise_error
           end
 
           it 'fails when changing the space when there are apps mapped to it' do
-            process = AppFactory.make
+            process = ProcessModelFactory.make
             route = Route.make(space: process.space, domain: SharedDomain.make)
             RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
@@ -1029,7 +1029,7 @@ module VCAP::CloudController
       end
 
       describe 'all_apps_diego?' do
-        let(:diego_process) { AppFactory.make(diego: true) }
+        let(:diego_process) { ProcessModelFactory.make(diego: true) }
         let(:route) { Route.make(space: diego_process.space, domain: SharedDomain.make) }
 
         before do
@@ -1042,7 +1042,7 @@ module VCAP::CloudController
         end
 
         context 'when some apps are not using diego' do
-          let(:non_diego_process) { AppFactory.make(diego: false, space: diego_process.space) }
+          let(:non_diego_process) { ProcessModelFactory.make(diego: false, space: diego_process.space) }
 
           before do
             RouteMappingModel.make(app: non_diego_process.app, route: route, process_type: non_diego_process.type)
@@ -1082,8 +1082,8 @@ module VCAP::CloudController
         fake_route_handler_app2 = instance_double(ProcessRouteHandler)
 
         space = Space.make
-        process1   = AppFactory.make(space: space, state: 'STARTED', diego: false)
-        process2   = AppFactory.make(space: space, state: 'STARTED', diego: false)
+        process1   = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+        process2   = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
 
         route = Route.make(space: space)
         RouteMappingModel.make(app: process1.app, route: route, process_type: process1.type)
@@ -1105,7 +1105,7 @@ module VCAP::CloudController
       context 'with route bindings' do
         let(:route_binding) { RouteBinding.make }
         let(:route) { route_binding.route }
-        let(:process) { AppFactory.make(space: route.space, diego: true) }
+        let(:process) { ProcessModelFactory.make(space: route.space, diego: true) }
 
         before do
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)

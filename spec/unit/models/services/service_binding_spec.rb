@@ -193,7 +193,7 @@ module VCAP::CloudController
     end
 
     describe 'restaging' do
-      let(:v2_app) { AppFactory.make(state: 'STARTED', instances: 1, type: 'web') }
+      let(:v2_app) { ProcessModelFactory.make(state: 'STARTED', instances: 1, type: 'web') }
       let(:service_instance) { ManagedServiceInstance.make(space: v2_app.space) }
 
       it 'should not trigger restaging when creating a binding' do

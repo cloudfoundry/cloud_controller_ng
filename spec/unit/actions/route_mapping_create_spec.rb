@@ -79,7 +79,7 @@ module VCAP::CloudController
         end
 
         context 'docker' do
-          let(:process) { AppFactory.make(app: app, diego: true, type: process_type, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
+          let(:process) { ProcessModelFactory.make(app: app, diego: true, type: process_type, ports: [1234, 5678], health_check_type: 'none', docker_image: 'docker/image') }
 
           before do
             allow_any_instance_of(AppModel).to receive(:lifecycle_type).and_return(DockerLifecycleDataModel::LIFECYCLE_TYPE)

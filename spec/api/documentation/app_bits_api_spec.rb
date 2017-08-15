@@ -19,7 +19,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   let(:space) { VCAP::CloudController::Space.make }
-  let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+  let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
 
   authenticated_request
 
@@ -154,8 +154,8 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   post '/v2/apps/:guid/copy_bits' do
-    let(:src_process) { VCAP::CloudController::AppFactory.make }
-    let(:dest_process) { VCAP::CloudController::AppFactory.make }
+    let(:src_process) { VCAP::CloudController::ProcessModelFactory.make }
+    let(:dest_process) { VCAP::CloudController::ProcessModelFactory.make }
     let(:json_payload) { { source_app_guid: src_process.guid }.to_json }
 
     field :source_app_guid, 'The guid for the source app', required: true

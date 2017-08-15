@@ -170,7 +170,7 @@ module VCAP::CloudController
 
     # explicitly unstaged app
     let(:process) do
-      AppFactory.make.tap do |app|
+      ProcessModelFactory.make.tap do |app|
         app.current_droplet.destroy
         app.reload
       end

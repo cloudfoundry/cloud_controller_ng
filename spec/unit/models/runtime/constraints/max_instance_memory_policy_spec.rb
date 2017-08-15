@@ -5,7 +5,7 @@ RSpec.describe 'max instance memory policies' do
   let(:error_name) { :random_memory_error }
 
   describe AppMaxInstanceMemoryPolicy do
-    let(:process) { VCAP::CloudController::AppFactory.make(memory: 100, state: 'STARTED') }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(memory: 100, state: 'STARTED') }
 
     subject(:validator) { AppMaxInstanceMemoryPolicy.new(process, policy_target, error_name) }
 

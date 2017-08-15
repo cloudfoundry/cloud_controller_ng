@@ -8,8 +8,8 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
     let(:app) { AppModel.make(desired_state: 'STARTED') }
-    let!(:process1) { AppFactory.make(app: app, state: 'STARTED', type: 'this') }
-    let!(:process2) { AppFactory.make(app: app, state: 'STARTED', type: 'that') }
+    let!(:process1) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'this') }
+    let!(:process2) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'that') }
 
     describe '#stop' do
       it 'sets the desired state on the app' do

@@ -7,8 +7,8 @@ module VCAP::CloudController
     let(:cancel_action) { instance_double(StagingCancel, cancel: nil) }
 
     let(:app) { AppModel.make(desired_state: 'STARTED') }
-    let!(:process1) { AppFactory.make(app: app, state: 'STARTED', type: 'this') }
-    let!(:process2) { AppFactory.make(app: app, state: 'STARTED', type: 'that') }
+    let!(:process1) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'this') }
+    let!(:process2) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'that') }
 
     before do
       allow(AppStop).to receive(:stop_without_event).and_call_original

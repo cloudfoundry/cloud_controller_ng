@@ -57,11 +57,11 @@ module ModelCreation
   end
 
   def make_app_for_service_instance(service_instance)
-    VCAP::CloudController::AppFactory.make(space: service_instance.space)
+    VCAP::CloudController::ProcessModelFactory.make(space: service_instance.space)
   end
 
   def make_service_binding_for_service_instance(service_instance)
-    process = VCAP::CloudController::AppFactory.make(space: service_instance.space)
+    process = VCAP::CloudController::ProcessModelFactory.make(space: service_instance.space)
     process.space = service_instance.space
     VCAP::CloudController::ServiceBinding.make(
       app: process.app,

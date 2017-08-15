@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController::Diego
   RSpec.describe TPSClient do
-    let(:process) { VCAP::CloudController::AppFactory.make }
-    let(:process2) { VCAP::CloudController::AppFactory.make }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make }
+    let(:process2) { VCAP::CloudController::ProcessModelFactory.make }
 
     let(:process_guid) { "#{process.guid}-#{process.version}" }
     let(:process_guid2) { "#{process2.guid}-#{process2.version}" }

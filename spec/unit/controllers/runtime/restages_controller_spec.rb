@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe 'POST /v2/apps/:id/restage' do
       subject(:restage_request) { post "/v2/apps/#{process.guid}/restage", {} }
-      let!(:process) { AppFactory.make }
+      let!(:process) { ProcessModelFactory.make }
       let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
 
       before do
@@ -89,7 +89,7 @@ module VCAP::CloudController
         end
 
         context 'when the web process has 0 instances' do
-          let!(:process) { AppFactory.make(type: 'web', instances: 0) }
+          let!(:process) { ProcessModelFactory.make(type: 'web', instances: 0) }
 
           before do
             process.reload
@@ -106,8 +106,8 @@ module VCAP::CloudController
         end
 
         context 'when calling with a non-web process guid' do
-          let!(:web_process) { AppFactory.make(type: 'web', instances: 1) }
-          let!(:process) { AppFactory.make(type: 'foobar', instances: 1) }
+          let!(:web_process) { ProcessModelFactory.make(type: 'web', instances: 1) }
+          let!(:process) { ProcessModelFactory.make(type: 'foobar', instances: 1) }
 
           before do
             process.reload
@@ -124,7 +124,7 @@ module VCAP::CloudController
         end
 
         context 'with a Docker app' do
-          let!(:process) { AppFactory.make(docker_image: 'some-image') }
+          let!(:process) { ProcessModelFactory.make(docker_image: 'some-image') }
 
           before do
             FeatureFlag.create(name: 'diego_docker', enabled: true)

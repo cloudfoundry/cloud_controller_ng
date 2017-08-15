@@ -10,7 +10,7 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'GET /v2/route_mappings/:guid' do
-    let(:process) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:route) { route_mapping.route }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app) }
 
@@ -37,7 +37,7 @@ RSpec.describe 'RouteMappings' do
     end
 
     it 'does not display route mappings without a web process' do
-      non_web_process       = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process       = VCAP::CloudController::ProcessModelFactory.make(space: space, type: 'non-web')
       non_displayed_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, route: route, process_type: non_web_process.type)
 
       get "/v2/route_mappings/#{non_displayed_mapping.guid}", nil, headers_for(user)
@@ -77,11 +77,11 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'GET /v2/route_mappings' do
-    let(:process1) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:route1) { route_mapping1.route }
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: process1.app) }
 
-    let(:process2) { VCAP::CloudController::AppFactory.make(space: space) }
+    let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:route2) { route_mapping2.route }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: process2.app) }
 
@@ -135,7 +135,7 @@ RSpec.describe 'RouteMappings' do
     end
 
     it 'does not list mappings to non-web processes' do
-      non_web_process       = VCAP::CloudController::AppFactory.make(space: space, type: 'non-web')
+      non_web_process       = VCAP::CloudController::ProcessModelFactory.make(space: space, type: 'non-web')
       non_web_route_mapping = VCAP::CloudController::RouteMappingModel.make(app: non_web_process.app, process_type: non_web_process.type)
 
       get '/v2/route_mappings', nil, headers_for(user)
@@ -147,7 +147,7 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'POST /v2/route_mappings' do
-    let(:process) { VCAP::CloudController::AppFactory.make(space: space, diego: true, ports: [9090]) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
 
     it 'creates a route mapping' do
@@ -194,7 +194,7 @@ RSpec.describe 'RouteMappings' do
   end
 
   describe 'DELETE /V2/route_mappings' do
-    let(:process) { VCAP::CloudController::AppFactory.make(space: space, diego: true, ports: [9090]) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, diego: true, ports: [9090]) }
     let(:route) { VCAP::CloudController::Route.make(space: space) }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 

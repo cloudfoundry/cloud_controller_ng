@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController::Diego
   RSpec.describe StagerClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-    let(:process) { VCAP::CloudController::AppFactory.make }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make }
     let(:staging_guid) { process.latest_droplet.guid }
     let(:staging_url) { "#{TestConfig.config[:diego][:stager_url]}/v1/staging/#{staging_guid}" }
 

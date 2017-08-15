@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:admin_buildpack) { VCAP::CloudController::Buildpack.make }
-  let!(:processes) { 3.times { VCAP::CloudController::AppFactory.make } }
+  let!(:processes) { 3.times { VCAP::CloudController::ProcessModelFactory.make } }
   let(:process) { VCAP::CloudController::ProcessModel.first }
   let(:guid) { process.guid }
 
@@ -235,7 +235,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
   get '/v2/apps/:guid/env' do
     include_context 'guid_parameter'
-    let(:process) { VCAP::CloudController::AppFactory.make(detected_buildpack: 'buildpack-name', environment_json: { env_var: 'env_val' }) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(detected_buildpack: 'buildpack-name', environment_json: { env_var: 'env_val' }) }
 
     before do
       group = VCAP::CloudController::EnvironmentVariableGroup.staging
@@ -270,7 +270,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/instances' do
     include_context 'guid_parameter'
 
-    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
     example 'Get the instance information for a STARTED App' do
       explanation <<-EOD
@@ -324,7 +324,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     include_context 'guid_parameter'
     parameter :index, 'The index of the App Instance to terminate'
 
-    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED', instances: 2, diego: false) }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED', instances: 2, diego: false) }
 
     example 'Terminate the running App Instance at the given index' do
       expect_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop_index)
@@ -336,7 +336,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   get '/v2/apps/:guid/stats' do
     include_context 'guid_parameter'
 
-    let(:process) { VCAP::CloudController::AppFactory.make(state: 'STARTED') }
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
     example 'Get detailed stats for a STARTED App' do
       explanation <<-EOD
