@@ -57,7 +57,6 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -81,7 +80,6 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -292,7 +290,6 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -459,7 +456,6 @@ RSpec.describe 'Processes' do
           'type' => 'process',
           'data' => {
             'timeout' => 20,
-            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -542,7 +538,6 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -677,7 +672,6 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -701,7 +695,6 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
-                'endpoint' => nil
               }
             },
             'created_at'   => iso8601,
@@ -797,7 +790,6 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
@@ -1050,7 +1042,6 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
-            'endpoint' => nil
           }
         },
         'created_at'   => iso8601,
