@@ -37,7 +37,7 @@ module VCAP::CloudController
             return @ports
           end
           execution_metadata = MultiJson.load(@execution_metadata)
-          if execution_metadata['ports'].empty?
+          if execution_metadata['ports'].blank?
             return [DEFAULT_APP_PORT]
           end
           tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }

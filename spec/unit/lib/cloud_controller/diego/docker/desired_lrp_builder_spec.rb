@@ -94,9 +94,19 @@ module VCAP::CloudController
               end
             end
 
-            context 'when the execution_metadata does not contain ports' do
+            context 'when the execution_metadata has an empty array of ports' do
               let(:execution_metadata) {
                 { ports: [] }.to_json
+              }
+
+              it 'returns an array containing only the default' do
+                expect(builder.ports).to eq([DEFAULT_APP_PORT])
+              end
+            end
+
+            context 'when the execution_metadata does not contain ports' do
+              let(:execution_metadata) {
+                {}.to_json
               }
 
               it 'returns an array containing only the default' do

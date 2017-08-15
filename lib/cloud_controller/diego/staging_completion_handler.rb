@@ -93,9 +93,14 @@ module VCAP::CloudController
         else
           begin
             save_staging_result(payload)
-            start_process if with_start
           rescue => e
             logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: build.guid, response: payload, error: e.message)
+          end
+
+          begin
+            start_process if with_start
+          rescue => e
+            logger.error(logger_prefix + 'starting-process-failed', staging_guid: build.guid, response: payload, error: e.message)
           end
 
           BitsExpiration.new.expire_droplets!(app)

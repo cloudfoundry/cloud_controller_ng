@@ -169,6 +169,25 @@ module VCAP::CloudController
                   expect(runner).not_to have_received(:start)
                 end
               end
+
+              context 'when an error occurs while starting the process' do
+                let(:start_error) { StandardError.new('start-error') }
+
+                before do
+                  allow(runner).to receive(:start).and_raise(start_error)
+                end
+
+                it 'logs an error for the CF operator' do
+                  subject.staging_complete(payload, true)
+
+                  expect(logger).to have_received(:error).with(
+                    'diego.staging.docker.starting-process-failed',
+                    staging_guid: build.guid,
+                    response:     payload,
+                    error:        'start-error',
+                  )
+                end
+              end
             end
 
             context 'when a docker_image is returned' do
