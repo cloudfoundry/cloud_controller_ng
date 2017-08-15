@@ -19,9 +19,6 @@ jobs:
   global:
     timeout_in_seconds: 14400
 
-app_events:
-  cutoff_age_in_days: 31
-
 app_usage_events:
   cutoff_age_in_days: 31
 

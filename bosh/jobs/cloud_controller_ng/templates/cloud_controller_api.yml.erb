@@ -85,9 +85,6 @@ jobs:
     timeout_in_seconds: <%= timeout %>
   <% end %>
 
-app_events:
-  cutoff_age_in_days: <%= p("cc.app_events.cutoff_age_in_days") %>
-
 app_usage_events:
   cutoff_age_in_days: <%= p("cc.app_usage_events.cutoff_age_in_days") %>
 
