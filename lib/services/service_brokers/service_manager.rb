@@ -93,6 +93,33 @@ module VCAP::Services::ServiceBrokers
       end
     end
 
+    def create_instance_schema(catalog_plan)
+      if catalog_plan.schemas &&
+          catalog_plan.schemas.service_instance &&
+          catalog_plan.schemas.service_instance.create &&
+          catalog_plan.schemas.service_instance.create.schema
+        catalog_plan.schemas.service_instance.create.schema.try(:to_json)
+      end
+    end
+
+    def update_instance_schema(catalog_plan)
+      if catalog_plan.schemas &&
+          catalog_plan.schemas.service_instance &&
+          catalog_plan.schemas.service_instance.update &&
+          catalog_plan.schemas.service_instance.update.schema
+        catalog_plan.schemas.service_instance.update.schema.try(:to_json)
+      end
+    end
+
+    def create_binding_schema(catalog_plan)
+      if catalog_plan.schemas &&
+          catalog_plan.schemas.service_binding &&
+          catalog_plan.schemas.service_binding.create &&
+          catalog_plan.schemas.service_binding.create.schema
+        catalog_plan.schemas.service_binding.create.schema.try(:to_json)
+      end
+    end
+
     def find_or_new_model(model_class, cond)
       obj = model_class.first(cond)
       unless obj

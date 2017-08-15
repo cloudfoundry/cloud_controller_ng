@@ -12,7 +12,16 @@ module VCAP::Services::ServiceBrokers::V2
       @errors             = VCAP::Services::ValidationErrors.new
       @free               = attrs['free'].nil? ? true : attrs['free']
       @bindable           = attrs['bindable']
-      @schemas            = attrs['schemas'].nil? ? nil : Schemas.new(attrs['schemas'])
+      build_schemas(attrs['schemas'])
+    end
+
+    def build_schemas(schemas)
+      return if schemas.nil?
+      @schemas_data = schemas
+
+      if @schemas_data.is_a? Hash
+        @schemas = CatalogSchemas.new(schemas)
+      end
     end
 
     def cc_plan
@@ -37,10 +46,11 @@ module VCAP::Services::ServiceBrokers::V2
       validate_hash!(:metadata, metadata) if metadata
       validate_bool!(:free, free) if free
       validate_bool!(:bindable, bindable) if bindable
+      validate_hash!(:schemas, @schemas_data) if @schemas_data
     end
 
     def validate_schemas!
-      if @schema.nil?
+      if schemas
         errors.add_nested(schemas, schemas.errors) unless schemas.valid?
       end
     end

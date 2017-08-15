@@ -38,7 +38,6 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'defaults schemas to an empty hash' do
         attrs = build_valid_plan_attrs
-        attrs.delete('schemas')
 
         plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
 
@@ -120,6 +119,14 @@ module VCAP::Services::ServiceBrokers::V2
         plan.valid?
 
         expect(plan.errors.messages).to include 'Plan bindable must be a boolean, but has value "true"'
+      end
+
+      it 'validates that @schemas is a hash' do
+        attrs = build_valid_plan_attrs(schemas: 'true')
+        plan = CatalogPlan.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        plan.valid?
+
+        expect(plan.errors.messages.first).to include 'Plan schemas must be a hash, but has value "true"'
       end
 
       describe '#valid?' do
