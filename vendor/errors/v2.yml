@@ -1008,6 +1008,11 @@
   http_code: 404
   message: "The service instance could not be found: %s"
 
+340002:
+  name: UserProvidedServiceInstanceHandlerNeeded
+  http_code: 400
+  message: "Please use the User Provided Services API to manage this resource."
+
 350001:
   name: ProcessInvalid
   http_code: 400

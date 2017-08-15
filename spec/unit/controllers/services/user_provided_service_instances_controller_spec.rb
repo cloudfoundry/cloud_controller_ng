@@ -350,6 +350,24 @@ module VCAP::CloudController
         end
       end
 
+      context 'when we try to access a upsi via a managed SI endpoint' do
+        let(:update_req) do
+          { 'uri' => 'https://user:password@service-location.com:port/db' }
+        end
+        it 'fails with a 400 error' do
+          post '/v2/user_provided_service_instances', req.to_json
+
+          expect(last_response.status).to eq 201
+
+          service_instance = UserProvidedServiceInstance.first
+          expect(service_instance.name).to eq 'my-upsi'
+
+          put "/v2/service_instances/#{service_instance.guid}", update_req.to_json
+          expect(last_response.status).to eq(400), last_response.body
+          expect(parsed_response['description']).to eq('Please use the User Provided Services API to manage this resource.')
+        end
+      end
+
       it 'records a create event' do
         set_current_user(developer, email: email)
         post '/v2/user_provided_service_instances', req.to_json

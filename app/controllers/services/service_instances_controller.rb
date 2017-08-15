@@ -113,6 +113,9 @@ module VCAP::CloudController
 
       service_instance, related_objects = ServiceInstanceFetcher.new.fetch(guid)
       not_found!(guid) if !service_instance
+      if service_instance.is_a?(UserProvidedServiceInstance)
+        raise CloudController::Errors::ApiError.new_from_details('UserProvidedServiceInstanceHandlerNeeded')
+      end
 
       validate_access(:read_for_update, service_instance)
       validate_access(:update, projected_service_instance(service_instance))
