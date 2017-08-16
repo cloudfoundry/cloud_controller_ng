@@ -27,6 +27,10 @@ module VCAP::CloudController
         connection_options[:charset] = 'utf8'
       end
 
+      if opts[:database] == 'mssql'
+        connection_options[:mssql_unicode_strings] = false
+      end
+
       connection_options[:after_connect] = proc do |conn|
         # time zone is a per connection setting, ensure it is set for each connection in the pool
         if conn.class.to_s =~ /mysql/i
