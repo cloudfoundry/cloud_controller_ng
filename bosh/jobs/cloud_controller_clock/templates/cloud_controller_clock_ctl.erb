@@ -4,8 +4,8 @@ RUN_DIR="/var/vcap/sys/run/cloud_controller_clock"
 LOG_DIR="/var/vcap/sys/log/cloud_controller_clock"
 PIDFILE="${RUN_DIR}/cloud_controller_clock.pid"
 
-export CLOUD_CONTROLLER_NG_CONFIG=/var/vcap/jobs/cloud_controller_clock/config/cloud_controller_ng.yml"
-export BUNDLE_GEMFILE=/var/vcap/packages/cloud_controller_ng/Gemfile"
+export CLOUD_CONTROLLER_NG_CONFIG=/var/vcap/jobs/cloud_controller_clock/config/cloud_controller_ng.yml
+export BUNDLE_GEMFILE=/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/Gemfile
 
 export C_INCLUDE_PATH="/var/vcap/packages/libpq/include:${C_INCLUDE_PATH}"
 export LIBRARY_PATH="/var/vcap/packages/libpq/lib:${LIBRARY_PATH}"

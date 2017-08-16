@@ -8,7 +8,7 @@ RUN_DIR="/var/vcap/sys/run/cloud_controller_worker"
 LOG_DIR="/var/vcap/sys/log/cloud_controller_worker"
 PIDFILE="${RUN_DIR}/cloud_controller_worker_${INDEX}.pid"
 
-export CLOUD_CONTROLLER_NG_CONFIG="/var/vcap/jobs/cloud_controller_worker/cloud_controller_ng.yml"
+export CLOUD_CONTROLLER_NG_CONFIG="/var/vcap/jobs/cloud_controller_worker/config/cloud_controller_ng.yml"
 export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
 
 export C_INCLUDE_PATH="/var/vcap/packages/libpq/include:${C_INCLUDE_PATH}"
