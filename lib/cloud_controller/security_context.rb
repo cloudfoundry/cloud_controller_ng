@@ -15,6 +15,10 @@ module VCAP::CloudController
       Thread.current[:vcap_user]
     end
 
+    def self.current_user_guid
+      current_user.guid if current_user
+    end
+
     def self.admin?
       roles.admin?
     end

@@ -92,14 +92,14 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'ssl cert verification' do
           let(:http_client) do
             double(:http_client,
-              :connect_timeout= => nil,
-              :receive_timeout= => nil,
-              :send_timeout= => nil,
-              :set_auth => nil,
-              :default_header= => nil,
-              :default_header => {},
-              :ssl_config => ssl_config,
-              :request => response)
+                   :connect_timeout= => nil,
+                   :receive_timeout= => nil,
+                   :send_timeout= => nil,
+                   :set_auth => nil,
+                   :default_header= => nil,
+                   :default_header => {},
+                   :ssl_config => ssl_config,
+                   :request => response)
           end
 
           let(:response) { double(:response, code: nil, reason: nil, body: {}.to_json, headers: nil) }
@@ -132,6 +132,38 @@ module VCAP::Services::ServiceBrokers::V2
               expect(http_client).to have_received(:ssl_config).exactly(2).times
               expect(ssl_config).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
             end
+          end
+        end
+      end
+
+      context 'X-Broker-Api-Originating-Identity' do
+        context 'when user guid is set' do
+          before do
+            allow(VCAP::CloudController::SecurityContext).to receive(:current_user_guid).and_return('some-user-id')
+          end
+
+          it 'sets the X-Broker-API-Originating-Identity' do
+            make_request
+            expected_header = Base64.strict_encode64('{"user_id":"some-user-id"}')
+
+            expect(a_request(http_method, full_url).
+              with(query: hash_including({})).
+              with(headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{expected_header}" })).
+              to have_been_made
+          end
+        end
+
+        context 'when user guid is not provided' do
+          it 'does not set the X-Broker-Api-Originating-Identity' do
+            make_request
+            no_user_guid = ->(request) {
+              expect(request.headers).not_to have_key(VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY)
+              true
+            }
+
+            expect(a_request(http_method, full_url).
+              with(query: hash_including({})).
+              with(&no_user_guid)).to have_been_made
           end
         end
       end
@@ -185,14 +217,14 @@ module VCAP::Services::ServiceBrokers::V2
 
       let(:http_client) do
         double(:http_client,
-          :connect_timeout= => nil,
-          :receive_timeout= => nil,
-          :send_timeout= => nil,
-          :set_auth => nil,
-          :default_header= => nil,
-          :default_header => {},
-          :ssl_config => ssl_config,
-          :request => response)
+               :connect_timeout= => nil,
+               :receive_timeout= => nil,
+               :send_timeout= => nil,
+               :set_auth => nil,
+               :default_header= => nil,
+               :default_header => {},
+               :ssl_config => ssl_config,
+               :request => response)
       end
 
       let(:response) { double(:response, code: 200, reason: 'OK', body: {}.to_json, headers: {}) }
@@ -491,9 +523,9 @@ module VCAP::Services::ServiceBrokers::V2
           make_request
           expect(a_request(:patch, full_url).
             with(body: {
-            'key1' => 'value1',
-            'key2' => 'value2'
-          }.to_json)).
+              'key1' => 'value1',
+              'key2' => 'value2'
+            }.to_json)).
             to have_been_made
         end
 

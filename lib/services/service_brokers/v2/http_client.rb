@@ -126,6 +126,9 @@ module VCAP::Services
 
         client.default_header = default_headers
         opts[:header]['Content-Type'] = content_type if content_type
+
+        user_guid = VCAP::CloudController::SecurityContext.current_user_guid
+        opts[:header][VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY] = originating_identity(user_guid) if user_guid
         headers = default_headers.merge(opts[:header])
 
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
@@ -157,6 +160,10 @@ module VCAP::Services
           'Accept' => 'application/json',
           VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config[:external_domain]}/v2/info"
         }
+      end
+
+      def originating_identity(user_guid)
+        "cloudfoundry #{Base64.strict_encode64({ user_id: user_guid }.to_json)}"
       end
 
       def verify_certs?
