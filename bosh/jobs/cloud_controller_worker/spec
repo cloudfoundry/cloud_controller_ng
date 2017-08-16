@@ -43,7 +43,7 @@ consumes:
 
 properties:
   bpm.enabled:
-    description: "Enable Bosh Process Manager"
+    description: "Experimental feature flag: Enable Bosh Process Manager"
     default: false
 
   ssl.skip_cert_verify:
