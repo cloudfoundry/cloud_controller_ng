@@ -19,10 +19,10 @@ module VCAP::CloudController::BrokerApiHelper
     'password'
   end
 
-  def stub_catalog_fetch(broker_response_status=200, catalog=nil)
+  def stub_catalog_fetch(broker_response_status=200, catalog=nil, broker_host=stubbed_broker_host)
     catalog ||= default_catalog
 
-    stub_request(:get, "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/catalog").to_return(
+    stub_request(:get, "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{broker_host}/v2/catalog").to_return(
       status: broker_response_status,
       body: catalog.to_json)
   end
@@ -48,6 +48,29 @@ module VCAP::CloudController::BrokerApiHelper
               id: 'plan2-guid-here',
               name: 'large',
               description: 'A large dedicated database with 10GB storage quota, 512MB of RAM, and 100 connections'
+            }
+          ]
+        }
+      ]
+    }
+  end
+
+  def small_catalog
+    {
+      services: [
+        {
+          id: 'other-id',
+          name: 'Redis',
+          description: 'A Redis-thing',
+          bindable: true,
+          requires: [],
+          plan_updateable: false,
+          plans: [
+            {
+              id: 'plan1-redis-guid-here',
+              name: 'small',
+              description: 'A small shared cache with 100mb storage quota and 10 connections',
+              schemas: {}
             }
           ]
         }
@@ -84,6 +107,19 @@ module VCAP::CloudController::BrokerApiHelper
     WebMock.reset!
   end
 
+  def setup_broker_with_user(user)
+    stub_catalog_fetch(200, small_catalog, 'other-broker-url')
+    UAARequests.stub_all
+
+    headers = admin_headers_for(user)
+
+    post('/v2/service_brokers',
+         { name: 'other-broker-name', broker_url: 'http://other-broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
+         headers)
+    response = JSON.parse(last_response.body)
+    @broker_guid = response['metadata']['guid']
+  end
+
   def update_broker(catalog)
     stub_catalog_fetch(200, catalog)
 
@@ -109,8 +145,8 @@ module VCAP::CloudController::BrokerApiHelper
       to_return(status: status, body: broker_response_body)
 
     delete("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
-      {}.to_json,
-      admin_headers)
+           {}.to_json,
+           admin_headers)
   end
 
   def async_provision_service(status: 202, operation_data: nil)
@@ -128,8 +164,8 @@ module VCAP::CloudController::BrokerApiHelper
     }
 
     post('/v2/service_instances?accepts_incomplete=true',
-      body.to_json,
-      admin_headers)
+         body.to_json,
+         admin_headers)
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
@@ -146,7 +182,7 @@ module VCAP::CloudController::BrokerApiHelper
     end
 
     stub_request(:get,
-      Regexp.new(url)).
+                 Regexp.new(url)).
       to_return(
         status: 200,
         body: fetch_body.to_json)
@@ -166,9 +202,11 @@ module VCAP::CloudController::BrokerApiHelper
       body[:parameters] = opts[:parameters]
     end
 
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
     post('/v2/service_instances',
          body.to_json,
-         admin_headers)
+         headers)
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
@@ -184,9 +222,11 @@ module VCAP::CloudController::BrokerApiHelper
       body[:parameters] = opts[:parameters]
     end
 
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
     put("/v2/service_instances/#{@service_instance_guid}",
         body.to_json,
-        admin_headers
+        headers
     )
   end
 
@@ -201,8 +241,8 @@ module VCAP::CloudController::BrokerApiHelper
     }
 
     put("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
-      body.to_json,
-      admin_headers)
+        body.to_json,
+        admin_headers)
   end
 
   def create_app
@@ -219,22 +259,25 @@ module VCAP::CloudController::BrokerApiHelper
       body[:parameters] = opts[:parameters]
     end
 
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
     post('/v2/service_bindings',
          body.to_json,
-         admin_headers
+         headers
     )
 
     metadata = JSON.parse(last_response.body).fetch('metadata', {})
     @binding_id = metadata.fetch('guid', nil)
   end
 
-  def unbind_service
+  def unbind_service(opts={})
     stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 204, body: {}.to_json)
 
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
     delete("/v2/service_bindings/#{@binding_id}",
-      '{}',
-      admin_headers
+           '{}',
+           headers
     )
   end
 
@@ -247,28 +290,56 @@ module VCAP::CloudController::BrokerApiHelper
       body[:parameters] = opts[:parameters]
     end
 
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
     post('/v2/service_keys',
          body.to_json,
-         admin_headers
+         headers
     )
 
     @service_key_id = JSON.parse(last_response.body)['metadata']['guid']
   end
 
-  def delete_key
+  def delete_key(opts={})
     stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: 204, body: {}.to_json)
 
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
     delete("/v2/service_keys/#{@service_key_id}",
-      '{}',
-      admin_headers
+           '{}',
+           headers
     )
   end
 
-  def deprovision_service
+  def deprovision_service(opts={})
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
     stub_request(:delete, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
       to_return(status: 200, body: '{}')
 
-    delete("/v2/service_instances/#{@service_instance_guid}", '{}', admin_headers)
+    delete("/v2/service_instances/#{@service_instance_guid}", '{}', headers)
+  end
+
+  def create_route_binding(route, opts={})
+    stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+      to_return(status: 201, body: { route_service_url: 'https://example.com' }.to_json)
+
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
+    put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}",
+        '{}',
+        headers
+    )
+  end
+
+  def delete_route_binding(route, opts={})
+    stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+      to_return(status: 200, body: '{}')
+
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
+    delete("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}",
+           nil,
+           headers
+    )
   end
 end
