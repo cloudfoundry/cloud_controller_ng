@@ -223,6 +223,12 @@ buildpacks:
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 
+<% if_p("cc.database_encryption_keys") do %>
+database_encryption_keys:
+  keys: <%= p("cc.database_encryption_keys.keys") %>
+  current_key_label: <%= p("cc.database_encryption_keys.current_key_label").inspect %>
+<% end %>
+
 <% if_p("uaa.clients.cc_service_broker_client.secret") do %>
 uaa_client_name: "cc_service_broker_client"
 uaa_client_secret: <%= p("uaa.clients.cc_service_broker_client.secret") %>

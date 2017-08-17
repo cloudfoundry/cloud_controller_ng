@@ -26,7 +26,7 @@ module VCAP::CloudController
                 key: :app_guid,
                 primary_key: :guid
 
-    encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
+    set_field_as_encrypted :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
     add_association_dependencies buildpack_lifecycle_data: :destroy

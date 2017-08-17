@@ -16,6 +16,11 @@ module VCAP::CloudController
 
           db_encryption_key: String,
 
+          optional(:database_encryption_keys) => {
+              keys: Hash,
+              current_key_label: String
+          },
+
           logging: {
             level: String, # debug, info, etc.
             file: String, # Log file to use

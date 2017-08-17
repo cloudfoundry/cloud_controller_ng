@@ -2,7 +2,7 @@ require 'utils/uri_utils'
 
 module VCAP::CloudController
   class BuildpackLifecycleBuildpackModel < Sequel::Model(:buildpack_lifecycle_buildpacks)
-    encrypt :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
+    set_field_as_encrypted :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
 
     many_to_one :buildpack_lifecycle_data,
       class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
