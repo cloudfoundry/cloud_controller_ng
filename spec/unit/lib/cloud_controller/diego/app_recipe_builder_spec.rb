@@ -720,6 +720,7 @@ module VCAP::CloudController
                   ],
                   resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
                   env:             expected_action_environment_variables,
+                  log_source: 'CELL/SSHD',
                 )
               )
             end
