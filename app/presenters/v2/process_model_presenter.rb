@@ -8,44 +8,44 @@ module CloudController
 
         REDACTED_MESSAGE = '***'.freeze
 
-        def entity_hash(controller, app, opts, depth, parents, orphans=nil)
+        def entity_hash(controller, process, opts, depth, parents, orphans=nil)
           entity = {
-            'name'                       => app.name,
-            'production'                 => app.production,
-            'space_guid'                 => app.space.guid,
-            'stack_guid'                 => app.stack.guid,
-            'buildpack'                  => buildpack_name_or_url(app.buildpack),
-            'detected_buildpack'         => app.detected_buildpack,
-            'detected_buildpack_guid'    => app.detected_buildpack_guid,
-            'environment_json'           => redact(app.environment_json, can_read_env?(app)),
-            'memory'                     => app.memory,
-            'instances'                  => app.instances,
-            'disk_quota'                 => app.disk_quota,
-            'state'                      => app.state,
-            'version'                    => app.version,
-            'command'                    => app.command,
-            'console'                    => app.console,
-            'debug'                      => app.debug,
-            'staging_task_id'            => app.staging_task_id,
-            'package_state'              => app.package_state,
-            'health_check_type'          => app.health_check_type,
-            'health_check_timeout'       => app.health_check_timeout,
-            'health_check_http_endpoint' => app.health_check_http_endpoint,
-            'staging_failed_reason'      => app.staging_failed_reason,
-            'staging_failed_description' => app.staging_failed_description,
-            'diego'                      => app.diego,
-            'docker_image'               => app.docker_image,
+            'name'                       => process.name,
+            'production'                 => process.production,
+            'space_guid'                 => process.space.guid,
+            'stack_guid'                 => process.stack.guid,
+            'buildpack'                  => buildpack_name_or_url(process.buildpack),
+            'detected_buildpack'         => process.detected_buildpack,
+            'detected_buildpack_guid'    => process.detected_buildpack_guid,
+            'environment_json'           => redact(process.environment_json, can_read_env?(process)),
+            'memory'                     => process.memory,
+            'instances'                  => process.instances,
+            'disk_quota'                 => process.disk_quota,
+            'state'                      => process.state,
+            'version'                    => process.version,
+            'command'                    => process.command,
+            'console'                    => process.console,
+            'debug'                      => process.debug,
+            'staging_task_id'            => process.staging_task_id,
+            'package_state'              => process.package_state,
+            'health_check_type'          => process.health_check_type,
+            'health_check_timeout'       => process.health_check_timeout,
+            'health_check_http_endpoint' => process.health_check_http_endpoint,
+            'staging_failed_reason'      => process.staging_failed_reason,
+            'staging_failed_description' => process.staging_failed_description,
+            'diego'                      => process.diego,
+            'docker_image'               => process.docker_image,
             'docker_credentials'         => {
-              'username' => app.docker_username,
-              'password' => app.docker_username && REDACTED_MESSAGE,
+              'username' => process.docker_username,
+              'password' => process.docker_username && REDACTED_MESSAGE,
             },
-            'package_updated_at'         => app.package_updated_at,
-            'detected_start_command'     => app.detected_start_command,
-            'enable_ssh'                 => app.enable_ssh,
-            'ports'                      => VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(app).to_a,
+            'package_updated_at'         => process.package_updated_at,
+            'detected_start_command'     => process.detected_start_command,
+            'enable_ssh'                 => process.app.enable_ssh,
+            'ports'                      => VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(process).to_a,
           }
 
-          entity.merge!(RelationsPresenter.new.to_hash(controller, app, opts, depth, parents, orphans))
+          entity.merge!(RelationsPresenter.new.to_hash(controller, process, opts, depth, parents, orphans))
         rescue NoMethodError => e
           logger.info("Error presenting app: no associated object: #{e}")
           nil

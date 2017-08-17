@@ -1,12 +1,13 @@
 module VCAP
   module CloudController
     class ProcessModelFactory
-      APP_ATTRIBUTES     = %i(name space environment_json stack).freeze
+      APP_ATTRIBUTES     = %i(name space environment_json stack enable_ssh).freeze
       PACKAGE_ATTRIBUTES = %i(docker_image docker_credentials).freeze
 
       class << self
         def make(*args)
-          options               = args.extract_options!.symbolize_keys
+          options = args.extract_options!.symbolize_keys
+          options[:enable_ssh] = true unless options.key?(:enable_ssh) # FIXME
           parent_app_attributes = options.slice(*APP_ATTRIBUTES)
           package_attributes    = options.slice(*PACKAGE_ATTRIBUTES)
           process_attributes    = options.except(*APP_ATTRIBUTES, *PACKAGE_ATTRIBUTES)

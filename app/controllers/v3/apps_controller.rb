@@ -217,7 +217,14 @@ class AppsV3Controller < ApplicationController
   def features
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    render status: :ok, json: { pagination: {}, resources: [] }
+    render status: :ok, json: {
+      pagination: {},
+      resources:   [{
+        name:        'ssh',
+        description: 'Enable SSHing into the app.',
+        enabled:     app.enable_ssh,
+      }]
+    }
   end
 
   private

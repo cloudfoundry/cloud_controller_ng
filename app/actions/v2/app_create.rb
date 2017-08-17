@@ -13,6 +13,7 @@ module VCAP::CloudController
             name:                  request_attrs['name'],
             space_guid:            request_attrs['space_guid'],
             environment_variables: request_attrs['environment_json'],
+            enable_ssh:                 request_attrs['enable_ssh'],
           )
 
           validate_lifecycle!(request_attrs)
@@ -32,7 +33,6 @@ module VCAP::CloudController
             health_check_type:          request_attrs['health_check_type'],
             health_check_timeout:       request_attrs['health_check_timeout'],
             diego:                      request_attrs['diego'],
-            enable_ssh:                 request_attrs['enable_ssh'],
             ports:                      request_attrs['ports'],
             route_guids:                request_attrs['route_guids'],
             app:                        app

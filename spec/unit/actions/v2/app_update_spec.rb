@@ -22,7 +22,7 @@ module VCAP::CloudController
           'health_check_timeout'       => 20,
           'health_check_http_endpoint' => '/health',
           'diego'                      => true,
-          'enable_ssh'                 => true,
+          'enable_ssh'                 => false,
           'ports'                      => [8080],
           'route_guids'                => [],
         }
@@ -38,7 +38,6 @@ module VCAP::CloudController
         expect(process.health_check_timeout).to eq(20)
         expect(process.health_check_http_endpoint).to eq('/health')
         expect(process.diego).to eq(true)
-        expect(process.enable_ssh).to eq(true)
         expect(process.ports).to eq([8080])
         expect(process.route_guids).to eq([])
       end
@@ -52,7 +51,8 @@ module VCAP::CloudController
           'name'             => 'maria',
           'environment_json' => { 'KEY' => 'val' },
           'stack_guid'       => stack.guid,
-          'buildpack'        => 'http://example.com/buildpack'
+          'buildpack'        => 'http://example.com/buildpack',
+          'enable_ssh' => false
         }
 
         app_update.update(app, process, request_attrs)
@@ -64,6 +64,7 @@ module VCAP::CloudController
 
         expect(app.name).to eq('maria')
         expect(app.environment_variables).to eq({ 'KEY' => 'val' })
+        expect(app.enable_ssh).to be false
         expect(app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         expect(app.lifecycle_data.stack).to eq('stack-name')
         expect(app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])

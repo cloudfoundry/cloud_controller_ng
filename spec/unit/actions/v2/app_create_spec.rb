@@ -18,7 +18,8 @@ module VCAP::CloudController
           'buildpack'         => 'http://example.com/buildpack',
           'state'             => 'STOPPED',
           'health_check_type' => 'port',
-          'stack_guid'        => stack.guid
+          'enable_ssh' => 'false',
+          'stack_guid' => stack.guid
         }
 
         v2_app = app_create.create(request_attrs)
@@ -37,6 +38,7 @@ module VCAP::CloudController
         expect(v3_app.lifecycle_data.stack).to eq('stacks-on-stacks')
         expect(v3_app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
         expect(v3_app.desired_state).to eq(v2_app.state)
+        expect(v3_app.enable_ssh).to be false
 
         expect(v3_app.guid).to eq(v2_app.guid)
       end

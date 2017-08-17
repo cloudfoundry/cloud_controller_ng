@@ -28,7 +28,7 @@ module VCAP::CloudController
         end
 
         let(:lifecycle_type) { nil }
-        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
+        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
@@ -678,7 +678,7 @@ module VCAP::CloudController
 
           describe 'ssh' do
             before do
-              process.update(enable_ssh: true)
+              process.app.update(enable_ssh: true)
             end
 
             it 'includes the ssh port' do

@@ -43,7 +43,7 @@ module VCAP::CloudController
       def assign_process_values(process, request_attrs)
         mass_assign = request_attrs.slice('production', 'memory', 'instances', 'disk_quota', 'state',
           'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
-          'diego', 'enable_ssh', 'ports', 'route_guids')
+          'diego', 'ports', 'route_guids')
 
         process.set(mass_assign)
       end
@@ -52,6 +52,7 @@ module VCAP::CloudController
         app.name                  = request_attrs['name'] if request_attrs.key?('name')
         app.space_guid            = request_attrs['space_guid'] if request_attrs.key?('space_guid')
         app.environment_variables = request_attrs['environment_json'] if request_attrs.key?('environment_json')
+        app.enable_ssh = request_attrs['enable_ssh'] if request_attrs.key?('enable_ssh')
         app.save
       end
 

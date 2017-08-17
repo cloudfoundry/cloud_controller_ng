@@ -1127,12 +1127,6 @@ module VCAP::CloudController
           expect { process.update(instances: 8) }.to_not change(process, :version)
         end
 
-        it 'should update the version when changing enable_ssh' do
-          expect {
-            process.update(enable_ssh: !process.enable_ssh)
-          }.to change { process.version }
-        end
-
         it 'should update the version when changing health_check_http_endpoint' do
           process.update(health_check_type: 'http', health_check_http_endpoint: '/oldpath')
           expect {
@@ -1184,77 +1178,6 @@ module VCAP::CloudController
         expect {
           ProcessModel.make
         }.not_to change { AppUsageEvent.count }
-      end
-
-      describe 'default enable_ssh' do
-        context 'when enable_ssh is set explicitly' do
-          it 'does not overwrite it with the default' do
-            process1 = ProcessModel.make(enable_ssh: true)
-            expect(process1.enable_ssh).to eq(true)
-
-            process2 = ProcessModel.make(enable_ssh: false)
-            expect(process2.enable_ssh).to eq(false)
-          end
-        end
-
-        context 'when global allow_ssh config is true' do
-          before do
-            TestConfig.override({ allow_app_ssh_access: true })
-          end
-
-          context 'when space allow_ssh config is true' do
-            let(:parent_app) { AppModel.make(:buildpack, space: space) }
-
-            before do
-              space.update(allow_ssh: true)
-            end
-            context 'when default_app_ssh_access is true' do
-              before do
-                TestConfig.override({ default_app_ssh_access: true })
-              end
-
-              it 'sets enable_ssh to true' do
-                process = ProcessModel.make(app: parent_app)
-                expect(process.enable_ssh).to eq(true)
-              end
-            end
-
-            context 'when default_app_ssh_access is false' do
-              before do
-                TestConfig.override({ default_app_ssh_access: false })
-              end
-
-              it 'sets enable_ssh to false' do
-                process = ProcessModel.make(app: parent_app)
-                expect(process.enable_ssh).to eq(false)
-              end
-            end
-          end
-
-          context 'when space allow_ssh config is false' do
-            let(:parent_app) { AppModel.make(:buildpack, space: space) }
-
-            before do
-              space.update(allow_ssh: false)
-            end
-
-            it 'sets enable_ssh to false' do
-              process = ProcessModel.make(app: parent_app)
-              expect(process.enable_ssh).to eq(false)
-            end
-          end
-        end
-
-        context 'when global allow_ssh config is false' do
-          before do
-            TestConfig.override({ allow_app_ssh_access: false })
-          end
-
-          it 'sets enable_ssh to false' do
-            process = ProcessModel.make
-            expect(process.enable_ssh).to eq(false)
-          end
-        end
       end
 
       describe 'default_app_memory' do

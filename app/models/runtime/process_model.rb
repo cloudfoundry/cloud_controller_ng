@@ -286,7 +286,6 @@ module VCAP::CloudController
     end
 
     def before_save
-      self.enable_ssh = Config.config[:allow_app_ssh_access] && space.allow_ssh && Config.config[:default_app_ssh_access] if enable_ssh.nil?
       set_new_version if version_needs_to_be_updated?
       super
     end
@@ -311,6 +310,10 @@ module VCAP::CloudController
         column_changed?(:enable_ssh) ||
         @ports_changed_by_user
       ) && started?
+    end
+
+    def enable_ssh
+      app.enable_ssh
     end
 
     def set_new_version

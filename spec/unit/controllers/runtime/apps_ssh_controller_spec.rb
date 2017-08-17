@@ -59,7 +59,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app is does not allow ssh access' do
+        context 'when the app does not allow ssh access' do
           let(:enable_ssh) { false }
 
           it 'returns a 400' do
@@ -76,6 +76,10 @@ module VCAP::CloudController
             expect(event.actor).to eq(user.guid)
             expect(event.metadata).to eq({ 'index' => instance_index })
           end
+
+          # TODO: Add coverage involving these fields:
+          # process.diego && process.app.enable_ssh &&
+          # CAP::CloudController::Config.config[:allow_app_ssh_access] && process.space.allow_ssh
         end
 
         context 'when the app does not exists' do
