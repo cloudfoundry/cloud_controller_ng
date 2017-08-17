@@ -179,6 +179,7 @@ module VCAP::CloudController
                  ],
                  env:             environment_variables,
                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit),
+                 log_source:      SSHD_LOG_SOURCE,
         ))
       end
 

@@ -17,6 +17,7 @@ module VCAP::CloudController
     TASK_LOG_SOURCE                  = 'CELL'.freeze
     APP_LOG_SOURCE                   = 'APP'.freeze
     HEALTH_LOG_SOURCE                = 'HEALTH'.freeze
+    SSHD_LOG_SOURCE                  = "#{LRP_LOG_SOURCE}/SSHD".freeze
 
     APP_LRP_DOMAIN     = 'cf-apps'.freeze
     APP_LRP_DOMAIN_TTL = 2.minutes
