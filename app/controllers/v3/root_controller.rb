@@ -29,6 +29,9 @@ class RootController < ActionController::Base
           },
           processes: {
             href: build_api_uri(path: '/processes')
+          },
+          droplets: {
+            href: build_api_uri(path: '/droplets')
           }
         }
       }, pretty: true)
