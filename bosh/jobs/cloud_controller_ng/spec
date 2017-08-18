@@ -56,7 +56,7 @@ packages:
   - nginx
   - nginx_newrelic_plugin
   - libpq
-  - libmariadb
+  - mariadb_connector_c
   - ruby-2.3
 
 provides:
