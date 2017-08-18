@@ -8,6 +8,7 @@ includes:
  # snippets have to be at the top to be used in other files
   - snippets/query_params
   - snippets/object_attributes
+  - api_resources/app_features
   - api_resources/apps
   - api_resources/builds
   - api_resources/droplets
@@ -111,7 +112,10 @@ includes:
   - resources/tasks/app/list
   - experimental_resources/header
   - experimental_resources/app_features/header
+  - experimental_resources/app_features/object
+  - experimental_resources/app_features/get
   - experimental_resources/app_features/list
+  - experimental_resources/app_features/supported_features
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create

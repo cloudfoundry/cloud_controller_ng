@@ -1,0 +1,36 @@
+### Get an app feature
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/features/[name]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_app_feature %>
+```
+
+#### Definition
+`GET /v3/apps/:guid/features/:name` <br>
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Global Auditor |

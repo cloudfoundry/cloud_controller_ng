@@ -1,0 +1,20 @@
+<% content_for :single_app_feature do %>
+{
+  "name": "ssh",
+  "description": "Enable SSHing into the app.",
+  "enabled": true
+}
+<% end %>
+
+<% content_for :paginated_list_of_app_features do %>
+{
+  "pagination": { },
+  "resources": [
+    {
+      "name": "ssh",
+      "description": "Enable SSHing into the app.",
+      "enabled": true
+    }
+  ]
+}
+<% end %>
