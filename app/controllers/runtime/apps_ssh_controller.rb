@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       check_authentication(:ssh_access_internal)
       process = find_guid_and_validate_access(:update, guid)
-      unless process.diego && process.app.enable_ssh && global_allow_ssh && process.space.allow_ssh
+      unless process.enable_ssh && global_allow_ssh && process.space.allow_ssh
         raise ApiError.new_from_details('InvalidRequest')
       end
 
