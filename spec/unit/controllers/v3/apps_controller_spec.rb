@@ -1792,6 +1792,63 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
+  describe '#feature/' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:ssh_enabled) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
+    let(:ssh_disabled) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => false } }
+    role_to_expected_http_response = {
+      'admin'               => 200,
+      'admin_read_only'     => 200,
+      'global_auditor'      => 200,
+      'space_developer'     => 200,
+      'space_manager'       => 200,
+      'space_auditor'       => 200,
+      'org_manager'         => 200,
+      'org_auditor'         => 404,
+      'org_billing_manager' => 404,
+    }.freeze
+
+    describe '#feature/ssh' do
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value} for features/ssh" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            get :feature, guid: app_model.guid, name: 'ssh'
+
+            expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+            if expected_return_value == 200
+              expect(parsed_body).to eq(ssh_enabled), "failed to match parsed_body for role #{role}: got #{parsed_body}"
+            end
+          end
+        end
+      end
+
+      context 'enable_ssh is false' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: false) }
+
+        it 'returns enabled false' do
+          set_current_user_as_role(role: 'admin', org: nil, space: nil, user: user)
+          get :feature, guid: app_model.guid, name: 'ssh'
+          expect(parsed_body).to eq(ssh_disabled)
+        end
+      end
+    end
+
+    describe '#feature/404' do
+      it 'throws 404 for a non-existent feature' do
+        set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
+
+        get :feature, guid: app_model.guid, name: 'i-dont-exist'
+
+        expect(response.status).to eq(404)
+      end
+    end
+  end
+
   describe '#features' do
     let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
     let(:space) { app_model.space }
@@ -1823,25 +1880,25 @@ RSpec.describe AppsV3Controller, type: :controller do
             expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             if expected_return_value == 200
               expect(parsed_body).to eq(
-                'resources' => [ssh_enabled],
+                'resources'  => [ssh_enabled],
                 'pagination' => {}
               ), "failed to match parsed_body for role #{role}: got #{parsed_body}"
             end
           end
         end
       end
-    end
 
-    context 'enable_ssh is false' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: false) }
+      context 'enable_ssh is false' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: false) }
 
-      it 'returns enabled false' do
-        set_current_user_as_role(role: 'admin', org: nil, space: nil, user: user)
-        get :features, guid: app_model.guid
-        expect(parsed_body).to eq(
-          'resources' => [ssh_disabled],
-          'pagination' => {}
-        )
+        it 'returns enabled false' do
+          set_current_user_as_role(role: 'admin', org: nil, space: nil, user: user)
+          get :features, guid: app_model.guid
+          expect(parsed_body).to eq(
+            'resources'  => [ssh_disabled],
+            'pagination' => {}
+          )
+        end
       end
     end
   end

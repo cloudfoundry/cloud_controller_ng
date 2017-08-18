@@ -219,18 +219,34 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     render status: :ok, json: {
       pagination: {},
-      resources:   [{
-        name:        'ssh',
-        description: 'Enable SSHing into the app.',
-        enabled:     app.enable_ssh,
-      }]
+      resources:   [feature_ssh(app),]
     }
+  end
+
+  def feature
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    name = params[:name]
+    case name
+    when 'ssh'
+      render status: :ok, json: feature_ssh(app)
+    else
+      resource_not_found!(name)
+    end
   end
 
   private
 
   def droplet_not_found!
     resource_not_found!(:droplet)
+  end
+
+  def feature_ssh(app)
+    {
+      name:        'ssh',
+      description: 'Enable SSHing into the app.',
+      enabled:     app.enable_ssh,
+    }
   end
 
   def unprocessable_space!
