@@ -26,7 +26,14 @@ module VCAP::CloudController
       if opts[:ca_cert_path]
         if opts[:database].start_with?('mysql')
           connection_options[:sslca] = opts[:ca_cert_path]
-          connection_options[:sslmode] = opts[:ssl_verify_hostname] ? :verify_identity : :verify_ca
+          if opts[:ssl_verify_hostname]
+            connection_options[:sslmode] = :verify_identity
+            # Unclear why this second line is necessary:
+            # https://github.com/brianmario/mysql2/issues/879
+            connection_options[:sslverify] = true
+          else
+            connection_options[:sslmode] = :verify_ca
+          end
         elsif opts[:database].start_with?('postgres')
           connection_options[:sslrootcert] = opts[:ca_cert_path]
           connection_options[:sslmode] = opts[:ssl_verify_hostname] ? 'verify-full' : 'verify-ca'
