@@ -19,14 +19,6 @@ module VCAP::CloudController
           service_instance
         end
         let(:broker) { service_instance.service_broker }
-        let(:client_attrs) do
-          {
-            url: broker.broker_url,
-            auth_username: broker.auth_username,
-            auth_password: broker.auth_password,
-          }
-        end
-
         let(:name) { 'fake-name' }
 
         let(:user) { User.make }
@@ -52,7 +44,6 @@ module VCAP::CloudController
         subject(:job) do
           VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
             name,
-            client_attrs,
             service_instance.guid,
             UserAuditInfo.new(user_guid: user.guid, user_email: user_email),
             request_attrs,

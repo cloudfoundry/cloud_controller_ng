@@ -13,17 +13,20 @@ module VCAP::CloudController
       let(:service_plan) { ServicePlan.make }
       let(:request_attrs) do
         {
-            'space_guid' => space.guid,
-            'service_plan_guid' => service_plan.guid,
-            'name' => 'my-instance',
-            'dashboard_url' => 'test-dashboardurl.com'
+          'space_guid' => space.guid,
+          'service_plan_guid' => service_plan.guid,
+          'name' => 'my-instance',
+          'dashboard_url' => 'test-dashboardurl.com'
         }
       end
       let(:dashboard_url) { 'http://meow.com' }
-      let(:broker_response_body) { { dashboard_url: dashboard_url } }
+      let(:broker_response_body) { { credentials: {}, dashboard_url: dashboard_url } }
+      let(:last_operation) { { type: 'create', description: '', broker_provided_operation: nil, state: 'succeeded' } }
+      let(:client) { VCAP::Services::ServiceBrokers::V2::Client }
 
       before do
-        stub_provision(service_plan.service.service_broker, body: broker_response_body.to_json)
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:provision).and_return({ instance: broker_response_body, last_operation: last_operation })
       end
 
       it 'creates the service instance with the requested params' do
@@ -57,23 +60,21 @@ module VCAP::CloudController
         let(:parameters) { { 'some-param' => 'some-value' } }
         let(:request_attrs) do
           {
-              'space_guid' => space.guid,
-              'service_plan_guid' => service_plan.guid,
-              'name' => 'my-instance',
-              'parameters' => parameters
+            'space_guid' => space.guid,
+            'service_plan_guid' => service_plan.guid,
+            'name' => 'my-instance',
+            'parameters' => parameters
           }
         end
 
         it 'passes the params to the client' do
           create_action.create(request_attrs, false)
-          expect(a_request(:put, /.*/).with(body: hash_including({ parameters: parameters }))).to have_been_made
+          expect(client).to have_received(:provision).with(anything, hash_including(arbitrary_parameters: parameters))
         end
       end
 
       context 'with accepts_incomplete' do
-        before do
-          stub_provision(service_plan.service.service_broker, accepts_incomplete: true, status: 202)
-        end
+        let(:last_operation) { { type: 'create', description: '', broker_provided_operation: nil, state: 'in progress' } }
 
         it 'enqueues a fetch job' do
           expect {
