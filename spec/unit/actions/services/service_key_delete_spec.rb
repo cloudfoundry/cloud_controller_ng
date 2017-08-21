@@ -29,10 +29,11 @@ module VCAP::CloudController
       let!(:service_key_dataset) { ServiceKey.dataset }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
+      let(:client) { VCAP::Services::ServiceBrokers::V2::Client }
 
       before do
-        stub_unbind(service_key_1)
-        stub_unbind(service_key_2)
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:unbind).and_return({})
       end
 
       it 'deletes the service keys' do
@@ -44,8 +45,8 @@ module VCAP::CloudController
 
       it 'deletes the service key from broker side' do
         service_key_delete.delete(service_key_dataset)
-        expect(a_request(:delete, service_key_url_regex(service_instance: service_key_1.service_instance, service_key: service_key_1))).to have_been_made
-        expect(a_request(:delete, service_key_url_regex(service_instance: service_key_2.service_instance, service_key: service_key_2))).to have_been_made
+        expect(client).to have_received(:unbind).with(service_key_1)
+        expect(client).to have_received(:unbind).with(service_key_2)
       end
 
       it 'fails if the instance has another operation in progress' do
@@ -58,9 +59,9 @@ module VCAP::CloudController
         let(:service_key_3) { ServiceKey.make }
 
         before do
-          stub_unbind(service_key_1)
-          stub_unbind(service_key_2, status: 500)
-          stub_unbind(service_key_3)
+          allow(client).to receive(:unbind).with(service_key_1).and_return({})
+          allow(client).to receive(:unbind).with(service_key_2).and_raise('meow')
+          allow(client).to receive(:unbind).with(service_key_3).and_return({})
         end
 
         it 'deletes all other keys' do
@@ -73,7 +74,7 @@ module VCAP::CloudController
 
         it 'returns all of the errors caught' do
           errors = service_key_delete.delete(service_key_dataset)
-          expect(errors[0]).to be_instance_of(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
+          expect(errors[0].message).to eq('meow')
         end
       end
     end

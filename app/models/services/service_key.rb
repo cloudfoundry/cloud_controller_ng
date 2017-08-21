@@ -75,13 +75,5 @@ module VCAP::CloudController
     def logger
       @logger ||= Steno.logger('cc.models.service_key')
     end
-
-    private
-
-    def safe_unbind
-      client.unbind(self)
-    rescue => unbind_e
-      logger.error "Unable to unbind #{self}: #{unbind_e}"
-    end
   end
 end

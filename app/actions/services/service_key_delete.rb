@@ -15,11 +15,12 @@ module VCAP::CloudController
     def delete_service_binding(service_binding)
       errors = []
       service_instance = service_binding.service_instance
+      client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
       begin
         raise_if_locked(service_instance)
 
-        service_instance.client.unbind(service_binding)
+        client.unbind(service_binding)
         service_binding.destroy
       rescue => e
         errors << e
