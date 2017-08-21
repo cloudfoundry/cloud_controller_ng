@@ -112,7 +112,6 @@ module VCAP::CloudController
 
           inner_job = job.payload_object.handler.handler
           expect(inner_job.name).to eq 'service-instance-state-fetch'
-          expect(inner_job.client_attrs).to eq service_instance.client.attrs
           expect(inner_job.service_instance_guid).to eq service_instance.guid
           expect(inner_job.request_attrs).to eq({})
           expect(inner_job.poll_interval).to eq(60)

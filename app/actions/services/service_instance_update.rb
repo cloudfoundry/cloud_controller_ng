@@ -65,7 +65,9 @@ module VCAP::CloudController
                        service_instance.service_plan
                      end
 
-      response, err = service_instance.client.update(
+      client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+
+      response, err = client.update(
         service_instance,
         service_plan,
         accepts_incomplete: accepts_incomplete,
@@ -98,10 +100,10 @@ module VCAP::CloudController
 
     def cache_previous_values(service_instance)
       {
-          plan_id: service_instance.service_plan.broker_provided_id,
-          service_id: service_instance.service.broker_provided_id,
-          organization_id: service_instance.organization.guid,
-          space_id: service_instance.space.guid
+        plan_id: service_instance.service_plan.broker_provided_id,
+        service_id: service_instance.service.broker_provided_id,
+        organization_id: service_instance.organization.guid,
+        space_id: service_instance.space.guid
       }
     end
 
@@ -112,7 +114,6 @@ module VCAP::CloudController
     def build_fetch_job(service_instance, request_attrs)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
-        service_instance.client.attrs,
         service_instance.guid,
         @services_event_repository.user_audit_info,
         request_attrs,
@@ -131,10 +132,10 @@ module VCAP::CloudController
 
     def successful_sync_operation
       {
-          last_operation: {
-              state: 'succeeded',
-              description: nil
-          }
+        last_operation: {
+          state: 'succeeded',
+          description: nil
+        }
       }
     end
   end

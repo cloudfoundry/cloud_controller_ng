@@ -73,7 +73,7 @@ module VCAP::CloudController
         end
 
         it 'enqueues the job' do
-          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil, nil)
+          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil)
           deleter_lock.enqueue_unlock!({}, job)
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end
