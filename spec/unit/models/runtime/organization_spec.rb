@@ -561,10 +561,10 @@ module VCAP::CloudController
 
         before do
           service_instance = ManagedServiceInstance.make(:v2, space: space)
-          attrs = service_instance.client.attrs
-          uri = URI(attrs[:url])
-          uri.user = attrs[:auth_username]
-          uri.password = attrs[:auth_password]
+          broker = service_instance.service_broker
+          uri = URI(broker.broker_url)
+          uri.user = broker.auth_username
+          uri.password = broker.auth_password
 
           plan = service_instance.service_plan
           service = plan.service
