@@ -26,11 +26,11 @@ module VCAP::CloudController
     def delete(service_bindings)
       bindings_to_delete = Array(service_bindings)
 
-      errors = each_with_error_aggregation(bindings_to_delete) do |binding|
-        raise_if_locked(binding.service_instance)
-        remove_from_broker(binding)
-        Repositories::ServiceBindingEventRepository.record_delete(binding, @user_audit_info)
-        binding.destroy
+      errors = each_with_error_aggregation(bindings_to_delete) do |service_binding|
+        raise_if_locked(service_binding.service_instance)
+        remove_from_broker(service_binding)
+        Repositories::ServiceBindingEventRepository.record_delete(service_binding, @user_audit_info)
+        service_binding.destroy
       end
 
       errors
@@ -42,10 +42,11 @@ module VCAP::CloudController
       @logger ||= Steno.logger('cc.action.service_binding_delete')
     end
 
-    def remove_from_broker(binding)
-      binding.unbind_from_broker
+    def remove_from_broker(service_binding)
+      client = VCAP::Services::ServiceClientProvider.provide(binding: service_binding)
+      client.unbind(service_binding)
     rescue => e
-      logger.error("Failed unbinding #{binding.guid}: #{e.message}")
+      logger.error("Failed unbinding #{service_binding.guid}: #{e.message}")
       raise e
     end
 

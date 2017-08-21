@@ -3,15 +3,22 @@ require 'actions/service_binding_delete'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingDelete do
-    subject(:service_binding_delete) { described_class.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email)) }
+    subject(:service_binding_delete) do
+      described_class.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email))
+    end
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
 
     describe '#single_delete_sync' do
       let(:service_binding) { ServiceBinding.make }
+      let(:service_instance) { service_binding.service_instance }
+      let(:client) { VCAP::Services::ServiceBrokers::V2::Client }
+      let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
       before do
-        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:unbind)
+        stub_request(:delete, service_binding_url_pattern)
       end
 
       it 'deletes the service binding' do
@@ -29,8 +36,8 @@ module VCAP::CloudController
       end
 
       it 'asks the broker to unbind the instance' do
+        expect(client).to receive(:unbind).with(service_binding)
         service_binding_delete.single_delete_sync(service_binding)
-        expect(service_binding.client).to have_received(:unbind).with(service_binding)
       end
 
       context 'when the service instance has another operation in progress' do
@@ -49,7 +56,7 @@ module VCAP::CloudController
         let(:error) { StandardError.new('kablooey') }
 
         before do
-          allow(service_binding.client).to receive(:unbind).and_raise(error)
+          allow(client).to receive(:unbind).and_raise(error)
         end
 
         it 're-raises the same error' do
