@@ -15,9 +15,11 @@ RSpec.describe 'Synchronous orphan mitigation' do
     let(:service_instance_guid) { '5' }
 
     before do
-      allow(service_instance).to receive(:client).and_return(client)
       allow(service_instance).to receive(:guid).and_return(service_instance_guid)
       allow(client).to receive(:deprovision)
+
+      allow(VCAP::Services::ServiceClientProvider).to receive(:provide).
+        with(hash_including(instance: service_instance)).and_return(client)
     end
 
     it 'attempts to deprovision the service instance' do
@@ -56,9 +58,11 @@ RSpec.describe 'Synchronous orphan mitigation' do
     let(:service_binding_guid) { '5' }
 
     before do
-      allow(service_binding).to receive(:client).and_return(client)
       allow(service_binding).to receive(:guid).and_return(service_binding_guid)
       allow(client).to receive(:unbind)
+
+      allow(VCAP::Services::ServiceClientProvider).to receive(:provide).
+        with(hash_including(binding: service_binding)).and_return(client)
     end
 
     it 'attempts to unbind the binding' do
@@ -97,9 +101,11 @@ RSpec.describe 'Synchronous orphan mitigation' do
     let(:service_key_guid) { '5' }
 
     before do
-      allow(service_key).to receive(:client).and_return(client)
       allow(service_key).to receive(:guid).and_return(service_key_guid)
       allow(client).to receive(:unbind)
+
+      allow(VCAP::Services::ServiceClientProvider).to receive(:provide).
+        with(hash_including(binding: service_key)).and_return(client)
     end
 
     it 'attempts to unbind the service key' do
