@@ -14,5 +14,5 @@ echo 'Running migrations and seeds'
 echo 'Finished migrations and seeds'
 <% end %>
 
-/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/bin/cloud_controller \
+exec /var/vcap/packages/cloud_controller_ng/cloud_controller_ng/bin/cloud_controller \
   -c /var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml
