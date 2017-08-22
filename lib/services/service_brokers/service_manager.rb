@@ -66,13 +66,13 @@ module VCAP::Services::ServiceBrokers
 
         update_instance = nil
         begin
-          update_instance = catalog_plan.schemas.service_instance.create.schema.try(:to_json)
+          update_instance = catalog_plan.schemas.service_instance.update.schema.try(:to_json)
         rescue
         end
 
         create_binding = nil
         begin
-          create_binding = catalog_plan.schemas.service_instance.create.schema.try(:to_json)
+          create_binding = catalog_plan.schemas.service_binding.create.schema.try(:to_json)
         rescue
         end
 

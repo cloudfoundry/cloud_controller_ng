@@ -57,7 +57,6 @@ module VCAP::Services::ServiceBrokers
           }
       }
     end
-
     let(:catalog_hash) do
       {
         'services' => [
@@ -83,7 +82,6 @@ module VCAP::Services::ServiceBrokers
         ]
       }
     end
-
     let(:catalog) { V2::Catalog.new(broker, catalog_hash) }
     let(:service_manager) { ServiceManager.new(service_event_repository) }
 
@@ -251,6 +249,48 @@ module VCAP::Services::ServiceBrokers
           service_manager.sync_services_and_plans(catalog)
           plan = VCAP::CloudController::ServicePlan.last
           expect(plan.extra).to be_nil
+        end
+      end
+
+      context 'when the catalog service plan has schemas' do
+        let(:plan_schemas_hash) do
+          {
+            'schemas' => {
+              'service_instance' => {
+                'create' => {
+                  'parameters' => {
+                    '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'anything_youd_like' => 'woohooo'
+                  }
+                },
+                'update' => {
+                  'parameters' => {
+                    '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'crazy_stuff' => 'yay'
+                  }
+                }
+              },
+              'service_binding' => {
+                'create' => {
+                  'parameters' => {
+                    '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'title' => 'also titles'
+                  }
+                }
+              }
+            }
+          }
+        end
+
+        it 'persists the schemas in the catalog' do
+          service_manager.sync_services_and_plans(catalog)
+          plan = VCAP::CloudController::ServicePlan.last
+          expect(plan.create_instance_schema).to eq(
+            '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","anything_youd_like":"woohooo"}'
+          )
+          expect(plan.update_instance_schema).to eq(
+            '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","crazy_stuff":"yay"}'
+          )
+          expect(plan.create_binding_schema).to eq(
+            '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","title":"also titles"}'
+          )
         end
       end
 
