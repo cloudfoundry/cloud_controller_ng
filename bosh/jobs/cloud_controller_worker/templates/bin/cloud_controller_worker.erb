@@ -12,4 +12,4 @@ source /var/vcap/jobs/cloud_controller_worker/bin/blobstore_waiter.sh
 wait_for_blobstore
 
 cd /var/vcap/packages/cloud_controller_ng/cloud_controller_ng
-bundle exec rake jobs:generic[cc_global_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]
+exec bundle exec rake jobs:generic[cc_global_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]
