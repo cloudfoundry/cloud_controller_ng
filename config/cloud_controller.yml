@@ -19,7 +19,6 @@ system_hostnames:
   - login
   - doppler
   - loggregator
-  - hm9000
 
 jobs:
   global:
@@ -85,10 +84,6 @@ uaa:
   symmetric_secret: "tokensecret"
   ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
-hm9000:
-  url: "http://localhost:5155"
-  internal_url: "https://localhost:5155/internal"
-
 routing_api:
   url: "http://localhost:3000"
   routing_client_name: 'routing-client'
@@ -96,8 +91,6 @@ routing_api:
 
 route_services_enabled: true
 volume_services_enabled: true
-
-cc_partition: ng
 
 bulk_api:
   auth_user: bulk_user
@@ -166,8 +159,6 @@ varz_password: password
 
 default_health_check_timeout: 60
 maximum_health_check_timeout: 180
-
-flapping_crash_count_threshold: 3
 
 disable_custom_buildpacks: false
 broker_client_timeout_seconds: 60
