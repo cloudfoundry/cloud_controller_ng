@@ -242,8 +242,6 @@ default_staging_security_groups: ["public_networks","dns"]
 
 allowed_cors_domains: []
 
-placement_top_stager_percentage: 10
-
 system_hostnames: ["api", "uaa", "login", "doppler", "loggregator"]
 
 rate_limiter:
