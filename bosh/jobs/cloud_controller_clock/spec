@@ -124,9 +124,6 @@ properties:
   cc.default_health_check_timeout:
     default: 60
     description: "Default health check timeout (in seconds) that can be set for the app"
-  cc.maximum_health_check_timeout:
-    default: 180
-    description: "Maximum health check timeout (in seconds) that can be set for the app"
 
   cc.stacks:
     default:
@@ -143,10 +140,6 @@ properties:
   cc.staging_upload_password:
     default: ""
     description: "User's password used to access internal endpoints of Cloud Controller to upload files when staging"
-
-  cc.default_quota_definition:
-    default: default
-    description: "Local to use a local (NFS) file system.  AWS to use AWS."
 
   cc.resource_pool.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
@@ -407,10 +400,6 @@ properties:
   cc.thresholds.api.restart_if_above_mb:
     description: "The cc will restart if memory remains above this threshold for 3 monit cycles"
     default: 3750
-
-  cc.instance_file_descriptor_limit:
-    description: "The file descriptors made available to each app instance"
-    default: 16384
 
   cc.bits_service.enabled:
     description: "Enable integration of the bits-service incubator (experimental)"

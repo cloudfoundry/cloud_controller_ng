@@ -34,7 +34,7 @@ external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
 system_domain_organization: 'unused-spec-property'
-system_domain: <%= p("system_domain") %>
+system_domain: 'unused-spec-property'
 app_domains: ['unused-spec-property']
 
 jobs:
@@ -83,7 +83,7 @@ default_app_memory: 0 # unused-spec-property
 default_app_disk_in_mb: 0 # unused-spec-property
 maximum_app_disk_in_mb: 0 # unused-spec-property
 
-instance_file_descriptor_limit: <%= p("cc.instance_file_descriptor_limit") %>
+instance_file_descriptor_limit: 0 # unused-spec-property
 
 request_timeout_in_seconds: 0 # unused-spec-property
 
@@ -168,15 +168,14 @@ staging:
     password: "<%= p("cc.staging_upload_password") %>"
 
 default_health_check_timeout: <%= p("cc.default_health_check_timeout") %>
-maximum_health_check_timeout: <%= p("cc.maximum_health_check_timeout") %>
+maximum_health_check_timeout: 0 # 'unused-spec-property'
 
 runtimes_file: /var/vcap/jobs/cloud_controller_clock/config/runtimes.yml
 stacks_file: /var/vcap/jobs/cloud_controller_clock/config/stacks.yml
 
 shared_isolation_segment_name: 'unused-spec-property'
 quota_definitions: {} # unused-spec-property
-
-default_quota_definition: <%= p("cc.default_quota_definition") %>
+default_quota_definition: 'unused-spec-property'
 
 # TODO: we believe these blobstore properties are not used by the clock, but our Config parser requires these properties
 # Story: https://www.pivotaltracker.com/story/show/136759317

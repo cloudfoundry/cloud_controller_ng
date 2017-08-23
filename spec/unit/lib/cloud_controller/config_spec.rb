@@ -289,7 +289,6 @@ module VCAP::CloudController
             fog_connection: {},
             resource_directory_key: 'resource_key',
           },
-          cc_partition: 'ng',
           bulk_api: {},
           external_host: 'host',
           external_port: 1234,
