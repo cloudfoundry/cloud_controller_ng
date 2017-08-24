@@ -33,19 +33,46 @@ development_mode: false
 external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
-system_domain_organization: 'unused-spec-property'
+system_domain_organization: <%= p("system_domain_organization") %>
 system_domain: <%= p("system_domain") %>
-app_domains: ['unused-spec-property']
+app_domains:
+  <%= p("app_domains").map { |domain|
+  if domain.is_a?(Hash)
+    domain
+  else
+    { name: domain }
+  end
+}.to_yaml.gsub("---", "") %>
 
 jobs:
   global:
     timeout_in_seconds: <%= p("cc.jobs.global.timeout_in_seconds") %>
+  <% if_p("cc.jobs.app_bits_packer.timeout_in_seconds") do |timeout| %>
+  app_bits_packer:
+    timeout_in_seconds: <%= timeout %>
+  <% end %>
   <% if_p("cc.jobs.app_usage_events_cleanup.timeout_in_seconds") do |timeout| %>
   app_usage_events_cleanup:
     timeout_in_seconds: <%= timeout %>
   <% end %>
   <% if_p("cc.jobs.blobstore_delete.timeout_in_seconds") do |timeout| %>
   blobstore_delete:
+    timeout_in_seconds: <%= timeout %>
+  <% end %>
+  <% if_p("cc.jobs.blobstore_upload.timeout_in_seconds") do |timeout| %>
+  blobstore_upload:
+    timeout_in_seconds: <%= timeout %>
+  <% end %>
+  <% if_p("cc.jobs.droplet_deletion.timeout_in_seconds") do |timeout| %>
+  droplet_deletion:
+    timeout_in_seconds: <%= timeout %>
+  <% end %>
+  <% if_p("cc.jobs.droplet_upload.timeout_in_seconds") do |timeout| %>
+  droplet_upload:
+    timeout_in_seconds: <%= timeout %>
+  <% end %>
+  <% if_p("cc.jobs.droplet_upload.timeout_in_seconds") do |timeout| %>
+  droplet_upload:
     timeout_in_seconds: <%= timeout %>
   <% end %>
   <% if_p("cc.jobs.diego_sync.timeout_in_seconds") do |timeout| %>
@@ -79,17 +106,19 @@ pending_builds:
 diego_sync:
   frequency_in_seconds: <%= p("cc.diego_sync.frequency_in_seconds") %>
 
-default_app_memory: 0 # unused-spec-property
-default_app_disk_in_mb: 0 # unused-spec-property
-maximum_app_disk_in_mb: 0 # unused-spec-property
+default_app_memory: <%= p("cc.default_app_memory") %>
+default_app_disk_in_mb: <%= p("cc.default_app_disk_in_mb") %>
+maximum_app_disk_in_mb: <%= p("cc.maximum_app_disk_in_mb") %>
 
 instance_file_descriptor_limit: <%= p("cc.instance_file_descriptor_limit") %>
 
-request_timeout_in_seconds: 0 # unused-spec-property
+request_timeout_in_seconds: <%= p("request_timeout_in_seconds") %>
+
+cc_partition: <%= p("cc.cc_partition") %>
 
 bulk_api:
-  auth_user: 'unused-spec-property'
-  auth_password: 'unused-spec-property'
+  auth_user: <%= p("cc.bulk_api_user") %>
+  auth_password: "<%= p("cc.bulk_api_password") %>"
 
 internal_api:
   auth_user: <%= p("cc.internal_api_user") %>
@@ -103,11 +132,11 @@ index: <%= spec.index %>
 name: <%= name %>
 
 info:
-  name: 'unused-spec-property'
-  build: 'unused-spec-property'
-  version: 0 # unused-spec-property
-  support_address: 'unused-spec-property'
-  description: 'unused-spec-property'
+  name: "<%= p("name") %>"
+  build: "<%= p("build") %>"
+  version: <%= p("version") %>
+  support_address: "<%= p("support_address") %>"
+  description: "<%= p("description") %>"
 
 <% if_p("cc.directories") do %>
 directories:<% p("cc.directories").each do |key, value| %>
@@ -126,7 +155,7 @@ loggregator:
 <% end %>
 
 doppler:
-  url: 'unused-spec-property'
+  url: ws<%= "s" if p("doppler.use_ssl") %>://doppler.<%= p("system_domain") %>:<%= p("doppler.port") %>
 
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
 <% db_role = p("ccdb.roles").find { |role| role["tag"] == "admin" } %>
@@ -148,21 +177,32 @@ db: &db
   ssl_verify_hostname: <%= p("ccdb.ssl_verify_hostname") %>
 <% end %>
 
-<% system_domain = p("system_domain") %>
+<% scheme = p("login.protocol")
+   system_domain = p("system_domain") %>
 
+<% if p("login.enabled") %>
+login:
+  url: <%= p("login.url", "#{scheme}://login.#{system_domain}") %>
+<% end %>
 uaa:
-  url: 'unused-spec-property'
+  url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
   internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
-  resource_id: 'unused-spec-property'
+  resource_id: <%= p("cc.uaa_resource_id") %>
   ca_file: /var/vcap/jobs/cloud_controller_clock/config/certs/uaa_ca.crt
-  symmetric_secret: 'unused-spec-property'
+  <% if_p("uaa.cc.token_secret") do |token_secret| %>
+  symmetric_secret: "<%= token_secret %>"
+  <% end %>
+
+hm9000:
+  url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
+  internal_url: <%= "http://hm9000.service.cf.internal:#{p('hm9000.port')}" %>
 
 # App staging parameters
 staging:
   timeout_in_seconds: <%= p("cc.staging_timeout_in_seconds") %>
-  minimum_staging_memory_mb: 0 # unused-spec-property
-  minimum_staging_disk_mb: 0 # unused-spec-property
-  minimum_staging_file_descriptor_limit: 0 # unused-spec-property
+  minimum_staging_memory_mb: <%= p("dea_next.staging_memory_limit_mb") %>
+  minimum_staging_disk_mb: <%= p("dea_next.staging_disk_limit_mb") %>
+  minimum_staging_file_descriptor_limit: <%= p("cc.staging_file_descriptor_limit") %>
   auth:
     user: <%= p("cc.staging_upload_user") %>
     password: "<%= p("cc.staging_upload_password") %>"
@@ -173,8 +213,13 @@ maximum_health_check_timeout: <%= p("cc.maximum_health_check_timeout") %>
 runtimes_file: /var/vcap/jobs/cloud_controller_clock/config/runtimes.yml
 stacks_file: /var/vcap/jobs/cloud_controller_clock/config/stacks.yml
 
-shared_isolation_segment_name: 'unused-spec-property'
-quota_definitions: {} # unused-spec-property
+shared_isolation_segment_name: <%= p("cc.shared_isolation_segment_name") %>
+
+quota_definitions:
+  <% p("cc.quota_definitions").each do |name, quota_properties| %>
+  <%= name %>:<% quota_properties.each do |key,value|%>
+    <%= key %>: <%= value %><% end %>
+  <% end %>
 
 default_quota_definition: <%= p("cc.default_quota_definition") %>
 
@@ -269,14 +314,16 @@ buildpacks:
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 
-disable_custom_buildpacks: false # unused-spec-property
+flapping_crash_count_threshold: <%= p("cc.flapping_crash_count_threshold") %>
 
-broker_client_timeout_seconds: 0 # unused-spec-property
+disable_custom_buildpacks: <%= p("cc.disable_custom_buildpacks") %>
+
+broker_client_timeout_seconds: <%= p("cc.broker_client_timeout_seconds") %>
 
 renderer:
-  max_results_per_page: 0 # unused-spec-property
-  default_results_per_page: 0 # unused-spec-property
-  max_inline_relations_depth: 0 # unused-spec-property
+  max_results_per_page: <%= p("cc.renderer.max_results_per_page") %>
+  default_results_per_page: <%= p("cc.renderer.default_results_per_page") %>
+  max_inline_relations_depth: <%= p("cc.renderer.max_inline_relations_depth") %>
 
 <% if_p("uaa.clients.cc_service_broker_client.secret") do %>
 uaa_client_name: "cc_service_broker_client"
@@ -288,17 +335,20 @@ uaa_client_secret: <%= p("uaa.clients.cc-service-dashboards.secret") %>
 uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
-allow_app_ssh_access: false # unused-spec-property
+users_can_select_backend: <%= p("cc.users_can_select_backend") %>
+allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
 <% end %>
 
-app_bits_upload_grace_period_in_seconds: 0 # unused-spec-property
+app_bits_upload_grace_period_in_seconds: <%= p("cc.app_bits_upload_grace_period_in_seconds") %>
 
-security_group_definitions: [] # unused-spec-property
-default_running_security_groups: [] # unused-spec-property
-default_staging_security_groups: [] # unused-spec-property
+security_group_definitions: <%= p("cc.security_group_definitions").to_json %>
+default_running_security_groups: <%= p("cc.default_running_security_groups").to_json %>
+default_staging_security_groups: <%= p("cc.default_staging_security_groups").to_json %>
+
+system_hostnames: <%= p("cc.system_hostnames") %>
 
 bits_service:
   enabled: <%= p("cc.bits_service.enabled") %>

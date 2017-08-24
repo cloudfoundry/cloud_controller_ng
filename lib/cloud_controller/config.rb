@@ -58,6 +58,11 @@ module VCAP::CloudController
           url: String
         },
 
+        :hm9000 => {
+          url: String,
+          internal_url: String
+        },
+
         optional(:dea_client) => {
           ca_file: String,
           cert_file: String,
@@ -116,6 +121,8 @@ module VCAP::CloudController
             password: String,
           }
         },
+
+        :cc_partition => String,
 
         optional(:default_account_capacity) => {
           memory: Integer,   #:default => 2048,
@@ -189,6 +196,8 @@ module VCAP::CloudController
         },
 
         :db_encryption_key => String,
+
+        optional(:flapping_crash_count_threshold) => Integer,
 
         optional(:varz_port) => Integer,
         optional(:varz_user) => String,
@@ -294,8 +303,6 @@ module VCAP::CloudController
         },
 
         optional(:perform_blob_cleanup) => bool,
-
-        optional(:allow_app_ssh_access) => bool,
       }
     end
 

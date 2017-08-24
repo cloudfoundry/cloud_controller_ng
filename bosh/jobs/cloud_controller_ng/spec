@@ -83,6 +83,8 @@ properties:
     description: "specifies that the job is allowed to skip ssl cert verification"
     default: false
 
+  domain:
+    description: "Deprecated in favor of system_domain. Domain where cloud_controller will listen (api.domain)"
   system_domain:
     description: "Domain reserved for CF operator, base URL where the login, uaa, and other non-user apps listen"
   system_domain_organization:
@@ -157,10 +159,34 @@ properties:
   cc.jobs.global.timeout_in_seconds:
     description: "The longest any job can take before it is cancelled unless overridden per job"
     default: 14400 # 4 hours
+  cc.jobs.app_bits_packer.timeout_in_seconds:
+    description: "The longest this job can take before it is cancelled"
+  cc.jobs.app_usage_events_cleanup.timeout_in_seconds:
+    description: "The longest this job can take before it is cancelled"
   cc.jobs.blobstore_delete.timeout_in_seconds:
+    description: "The longest this job can take before it is cancelled"
+  cc.jobs.blobstore_upload.timeout_in_seconds:
+    description: "The longest this job can take before it is cancelled"
+  cc.jobs.droplet_deletion.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
   cc.jobs.droplet_upload.timeout_in_seconds:
     description: "The longest this job can take before it is cancelled"
+
+  cc.app_usage_events.cutoff_age_in_days:
+    description: "How old an app usage event should stay in cloud controller database before being cleaned up"
+    default: 31
+  cc.service_usage_events.cutoff_age_in_days:
+    description: "How old a service usage event should stay in cloud controller database before being cleaned up"
+    default: 31
+  cc.audit_events.cutoff_age_in_days:
+    description: "How old an audit event should stay in cloud controller database before being cleaned up"
+    default: 31
+  cc.failed_jobs.cutoff_age_in_days:
+    description: "How old a failed job should stay in cloud controller database before being cleaned up"
+    default: 31
+  cc.completed_tasks.cutoff_age_in_days:
+    description: "How long a completed task will stay in cloud controller database before being cleaned up based on last updated time with success or failure."
+    default: 31
 
   cc.directories.tmpdir:
     default: "/var/vcap/data/cloud_controller_ng/tmp"
@@ -175,6 +201,9 @@ properties:
   cc.external_host:
     default: "api"
     description: "Host part of the cloud_controller api URI, will be joined with value of 'domain'"
+  cc.cc_partition:
+    default: "default"
+    description: "Deprecated. Defines a 'partition' for the health_manager job"
 
   cc.bulk_api_user:
     default: "bulk_api"
@@ -476,6 +505,13 @@ properties:
     default: "https"
   login.url:
     description: "URL of the login server"
+
+  hm9000.url:
+    description: "URL of the hm9000 server"
+  hm9000.port:
+    description: "Port of the hm9000 Api Server"
+    default: 5155
+
   login.enabled:
     default: true
     description: "whether use login as the authorization endpoint or not"
@@ -516,6 +552,9 @@ properties:
   cc.default_app_ssh_access:
     default: true
     description: "When ssh is allowed and not explicitly set in the application, new applications will start with ssh service enabled"
+  cc.flapping_crash_count_threshold:
+    default: 3
+    description: "The threshold of crashes after which the app is marked as flapping"
   cc.client_max_body_size:
     default: "15M"
     description: "Maximum body size for nginx"
