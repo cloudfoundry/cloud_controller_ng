@@ -37,42 +37,6 @@ RSpec.describe VCAP::Services::ServiceClientProvider do
       end
     end
 
-    context 'service bindings' do
-      context 'when bound to a user provided service instance' do
-        let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
-        let(:binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
-
-        before do
-          allow(VCAP::Services::ServiceBrokers::UserProvided::Client).to receive(:new).and_call_original
-        end
-
-        it 'returns a client for a user provided service' do
-          VCAP::Services::ServiceClientProvider.provide(binding: binding)
-          expect(VCAP::Services::ServiceBrokers::UserProvided::Client).to have_received(:new)
-        end
-      end
-
-      context 'when bound to a managed service instance' do
-        let(:binding) { VCAP::CloudController::ServiceBinding.make }
-        let(:expected_attrs) do
-          {
-            url: binding.service_instance.service_broker.broker_url,
-            auth_username: binding.service_instance.service_broker.auth_username,
-            auth_password: binding.service_instance.service_broker.auth_password
-          }
-        end
-
-        before do
-          allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_call_original
-        end
-
-        it 'return a service broker client' do
-          VCAP::Services::ServiceClientProvider.provide(binding: binding)
-          expect(VCAP::Services::ServiceBrokers::V2::Client).to have_received(:new).with(expected_attrs)
-        end
-      end
-    end
-
     context 'service brokers' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
       let(:expected_attrs) do
