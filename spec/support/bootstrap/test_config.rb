@@ -28,6 +28,9 @@ module TestConfig
     packages_connection_provider = config[:packages][:fog_connection][:provider].downcase
     Fog.mock! unless res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
 
+    # reset dependency locator
+    dependency_locator = CloudController::DependencyLocator.instance
+    dependency_locator.reset(config)
     VCAP::CloudController::Config.configure_components(config)
     VCAP::CloudController::Config.configure_runner_components
 
