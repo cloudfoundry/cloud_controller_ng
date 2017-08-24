@@ -76,8 +76,9 @@ module VCAP::CloudController
     private
 
     def bind(binding_obj, arbitrary_parameters)
-      raise_if_locked(binding_obj.service_instance)
-      client = VCAP::Services::ServiceClientProvider.provide(binding: binding_obj)
+      service_instance = binding_obj.service_instance
+      raise_if_locked(service_instance)
+      client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
       client.bind(binding_obj, arbitrary_parameters)
     end
 
