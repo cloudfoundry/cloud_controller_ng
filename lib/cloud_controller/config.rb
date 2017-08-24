@@ -313,11 +313,8 @@ module VCAP::CloudController
         dependency_locator = CloudController::DependencyLocator.instance
         dependency_locator.config = @config
 
-        run_initializers(config)
-      end
+        run_initializers(@config)
 
-      def configure_runner_components
-        dependency_locator = CloudController::DependencyLocator.instance
         AppObserver.configure(dependency_locator.stagers, dependency_locator.runners)
         InternalApi.configure(@config)
       end

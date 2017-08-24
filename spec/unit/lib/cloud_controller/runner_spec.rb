@@ -64,11 +64,6 @@ module VCAP::CloudController
         subject.run!
       end
 
-      it 'configures components depending on message bus' do
-        expect(Config).to receive(:configure_runner_components)
-        subject.run!
-      end
-
       it 'starts thin server on set up bind address' do
         allow(subject).to receive(:start_thin_server).and_call_original
         expect(VCAP).to receive(:local_ip).and_return('some_local_ip')

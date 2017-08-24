@@ -12,26 +12,6 @@ class BackgroundJobEnvironment
     VCAP::CloudController::DB.load_models(@config.fetch(:db), Steno.logger('cc.background'))
     VCAP::CloudController::Config.configure_components(@config)
 
-    Thread.new do
-      EM.run do
-        runners = VCAP::CloudController::Runners.new(@config)
-        CloudController::DependencyLocator.instance.register(:runners, runners)
-
-        stagers = VCAP::CloudController::Stagers.new(@config)
-        CloudController::DependencyLocator.instance.register(:stagers, stagers)
-
-        VCAP::CloudController::AppObserver.configure(stagers, runners)
-      end
-    end
-
-    if block_given?
-      yield
-
-      stop
-    end
-  end
-
-  def stop
-    EM.stop if EM.reactor_running?
+    yield if block_given?
   end
 end

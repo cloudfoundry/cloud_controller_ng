@@ -32,7 +32,6 @@ module TestConfig
     dependency_locator = CloudController::DependencyLocator.instance
     dependency_locator.reset(config)
     VCAP::CloudController::Config.configure_components(config)
-    VCAP::CloudController::Config.configure_runner_components
 
     # configure the dependency locator
     CloudController::DependencyLocator.instance.config = config

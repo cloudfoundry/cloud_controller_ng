@@ -312,7 +312,6 @@ module VCAP::CloudController
         expect(AppObserver).to receive(:configure).with(instance_of(VCAP::CloudController::Stagers), instance_of(VCAP::CloudController::Runners))
 
         Config.configure_components(@test_config)
-        Config.configure_runner_components
       end
 
       it 'sets up the quota definition' do

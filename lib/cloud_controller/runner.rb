@@ -132,10 +132,9 @@ module VCAP::CloudController
       setup_logging
       setup_db
       Config.configure_components(@config)
-      setup_loggregator_emitter
 
+      setup_loggregator_emitter
       @config[:external_host] = VCAP.local_ip(@config[:local_route])
-      Config.configure_runner_components
     end
 
     def create_pidfile
