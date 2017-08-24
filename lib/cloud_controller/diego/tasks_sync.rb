@@ -15,9 +15,10 @@ module VCAP::CloudController
 
       def sync
         logger.info('run-task-sync')
+        bbs_fetch_time = Time.now.utc
         diego_tasks = bbs_task_client.fetch_tasks.index_by(&:task_guid)
 
-        batched_tasks do |tasks|
+        batched_tasks(bbs_fetch_time) do |tasks|
           tasks_to_fail = []
 
           tasks.each do |task|
@@ -68,10 +69,13 @@ module VCAP::CloudController
 
       private
 
-      def batched_tasks
+      def batched_tasks(fetch_time)
         last_id = 0
         loop do
-          tasks = TaskModel.where(Sequel.lit('tasks.id > ?', last_id)).order(:id).limit(BATCH_SIZE).all
+          tasks = TaskModel.where(
+            Sequel.lit('tasks.id > ? AND tasks.created_at < ?', last_id, fetch_time)
+          ).order(:id).limit(BATCH_SIZE).all
+
           yield tasks
           return if tasks.count < BATCH_SIZE
           last_id = tasks.last.id

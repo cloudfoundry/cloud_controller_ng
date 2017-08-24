@@ -22,7 +22,7 @@ module VCAP::CloudController
         end
 
         context 'when bbs and CC are in sync' do
-          let!(:task) { TaskModel.make(:running) }
+          let!(:task) { TaskModel.make(:running, created_at: 1.minute.ago) }
           let(:bbs_tasks) do
             [::Diego::Bbs::Models::Task.new(task_guid: task.guid)]
           end
@@ -35,8 +35,8 @@ module VCAP::CloudController
         end
 
         context 'when bbs does not know about a running/canceling task' do
-          let!(:running_task) { TaskModel.make(:running) }
-          let!(:canceling_task) { TaskModel.make(:canceling) }
+          let!(:running_task) { TaskModel.make(:running, created_at: 1.minute.ago) }
+          let!(:canceling_task) { TaskModel.make(:canceling, created_at: 1.minute.ago) }
           let(:bbs_tasks) { [] }
 
           it 'marks the task as failed' do
@@ -70,8 +70,8 @@ module VCAP::CloudController
         end
 
         context 'when bbs does not know about a pending/succeeded task' do
-          let!(:pending_task) { TaskModel.make(:pending) }
-          let!(:succeeded_task) { TaskModel.make(:succeeded) }
+          let!(:pending_task) { TaskModel.make(:pending, created_at: 1.minute.ago) }
+          let!(:succeeded_task) { TaskModel.make(:succeeded, created_at: 1.minute.ago) }
           let(:bbs_tasks) { [] }
 
           it 'does nothing to the task' do
@@ -224,7 +224,7 @@ module VCAP::CloudController
           before do
             stub_const('VCAP::CloudController::Diego::TasksSync::BATCH_SIZE', 5)
             (TasksSync::BATCH_SIZE + 1).times do |_|
-              task = TaskModel.make(:running)
+              task = TaskModel.make(:running, created_at: 1.minute.ago)
               bbs_tasks << ::Diego::Bbs::Models::Task.new(task_guid: task.guid)
             end
           end
@@ -233,6 +233,24 @@ module VCAP::CloudController
             allow(bbs_task_client).to receive(:cancel_task)
             subject.sync
             expect(bbs_task_client).not_to have_received(:cancel_task)
+          end
+        end
+
+        context 'when a new task is created after cc fetches tasks from bbs' do
+          let(:syncing_time) { Time.new(2017, 1, 1) }
+
+          it 'does not fail the new task' do
+            task = TaskModel.make(created_at: syncing_time + 1.second, state: TaskModel::RUNNING_STATE)
+            Timecop.freeze(syncing_time) do
+              subject.sync
+            end
+
+            expect(task.reload.state).to eq(TaskModel::RUNNING_STATE)
+          end
+
+          it 'bumps freshness' do
+            subject.sync
+            expect(bbs_task_client).to have_received(:bump_freshness).once
           end
         end
       end
