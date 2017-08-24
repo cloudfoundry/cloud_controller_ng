@@ -39,10 +39,6 @@ maximum_app_disk_in_mb: 2048
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
 
-hm9000:
-  url: "http://localhost:5155"
-  internal_url: "http://localhost:5155/internal"
-
 uaa:
   url: "http://localhost:8080/uaa"
   internal_url: "https://uaa.service.cf.internal"
@@ -67,8 +63,6 @@ bulk_api:
 internal_api:
   auth_user: internal_user
   auth_password: internal_password
-
-cc_partition: ng
 
 nginx:
   use_nginx: false

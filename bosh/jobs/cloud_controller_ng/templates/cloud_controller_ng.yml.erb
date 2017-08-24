@@ -60,28 +60,8 @@ reserved_private_domains: <%= reserved %>
 jobs:
   global:
     timeout_in_seconds: <%= p("cc.jobs.global.timeout_in_seconds") %>
-  <% if_p("cc.jobs.app_bits_packer.timeout_in_seconds") do |timeout| %>
-  app_bits_packer:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.app_usage_events_cleanup.timeout_in_seconds") do |timeout| %>
-  app_usage_events_cleanup:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
   <% if_p("cc.jobs.blobstore_delete.timeout_in_seconds") do |timeout| %>
   blobstore_delete:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.blobstore_upload.timeout_in_seconds") do |timeout| %>
-  blobstore_upload:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.droplet_deletion.timeout_in_seconds") do |timeout| %>
-  droplet_deletion:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.droplet_upload.timeout_in_seconds") do |timeout| %>
-  droplet_upload:
     timeout_in_seconds: <%= timeout %>
   <% end %>
   <% if_p("cc.jobs.droplet_upload.timeout_in_seconds") do |timeout| %>
@@ -90,19 +70,15 @@ jobs:
   <% end %>
 
 app_usage_events:
-  cutoff_age_in_days: <%= p("cc.app_usage_events.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 service_usage_events:
-  cutoff_age_in_days: <%= p("cc.service_usage_events.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 audit_events:
-  cutoff_age_in_days: <%= p("cc.audit_events.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 failed_jobs:
-  cutoff_age_in_days: <%= p("cc.failed_jobs.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 completed_tasks:
-  cutoff_age_in_days: <%= p("cc.completed_tasks.cutoff_age_in_days") %>
+  cutoff_age_in_days: 0 # unused-spec-property
 
 default_app_memory: <%= p("cc.default_app_memory") %>
 default_app_disk_in_mb: <%= p("cc.default_app_disk_in_mb") %>
@@ -111,8 +87,6 @@ maximum_app_disk_in_mb: <%= p("cc.maximum_app_disk_in_mb") %>
 instance_file_descriptor_limit: <%= p("cc.instance_file_descriptor_limit") %>
 
 request_timeout_in_seconds: <%= p("request_timeout_in_seconds") %>
-
-cc_partition: <%= p("cc.cc_partition") %>
 
 bulk_api:
   auth_user: <%= p("cc.bulk_api_user") %>
@@ -216,10 +190,6 @@ uaa:
   symmetric_secret: "<%= token_secret %>"
   <% end %>
   ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/uaa_ca.crt
-
-hm9000:
-  url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
-  internal_url: <%= "http://hm9000.service.cf.internal:#{p('hm9000.port')}" %>
 
 <% if p("routing_api.enabled") %>
 routing_api:
@@ -345,8 +315,6 @@ buildpacks:
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 
-flapping_crash_count_threshold: <%= p("cc.flapping_crash_count_threshold") %>
-
 disable_custom_buildpacks: <%= p("cc.disable_custom_buildpacks") %>
 
 broker_client_timeout_seconds: <%= p("cc.broker_client_timeout_seconds") %>
@@ -387,24 +355,10 @@ security_group_definitions: <%= p("cc.security_group_definitions").to_json %>
 default_running_security_groups: <%= p("cc.default_running_security_groups").to_json %>
 default_staging_security_groups: <%= p("cc.default_staging_security_groups").to_json %>
 
-<% if_p("cc.feature_disabled_message") do %>
-feature_disabled_message: <%= p("cc.feature_disabled_message") %>
-<% end %>
-
 allowed_cors_domains: <%= p("cc.allowed_cors_domains").to_json %>
-
-placement_top_stager_percentage: <%= p("cc.placement_top_stager_percentage") %>
-minimum_candidate_stagers: <%= p("cc.minimum_candidate_stagers") %>
 
 statsd_host: <%= p("cc.statsd_host") %>
 statsd_port: <%= p("cc.statsd_port") %>
-
-<% if p("cc.dea_use_https") %>
-dea_client:
-  key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/dea_client.key
-  cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/dea_client.crt
-  ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/dea_ca.crt
-<% end %>
 
 security_event_logging:
   enabled: <%= p("cc.security_event_logging.enabled") %>

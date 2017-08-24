@@ -33,80 +33,40 @@ development_mode: <%= p("cc.development_mode") %>
 external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
-system_domain_organization: <%= p("system_domain_organization") %>
-system_domain: <%= p("system_domain") %>
-app_domains:
-  <%= p("app_domains").map { |domain|
-  if domain.is_a?(Hash)
-    domain
-  else
-    { name: domain }
-  end
-}.to_yaml.gsub("---", "") %>
-<% if_p("cc.reserved_private_domains") do |reserved| %>
-reserved_private_domains: <%= reserved %>
-<% end %>
+system_domain_organization: 'unused-spec-property'
+system_domain: 'unused-spec-property'
+app_domains: ['unused-spec-property']
 
 jobs:
   global:
     timeout_in_seconds: <%= p("cc.jobs.global.timeout_in_seconds") %>
-  <% if_p("cc.jobs.app_bits_packer.timeout_in_seconds") do |timeout| %>
-  app_bits_packer:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.app_usage_events_cleanup.timeout_in_seconds") do |timeout| %>
-  app_usage_events_cleanup:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
   <% if_p("cc.jobs.blobstore_delete.timeout_in_seconds") do |timeout| %>
   blobstore_delete:
     timeout_in_seconds: <%= timeout %>
   <% end %>
-  <% if_p("cc.jobs.blobstore_upload.timeout_in_seconds") do |timeout| %>
-  blobstore_upload:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.droplet_deletion.timeout_in_seconds") do |timeout| %>
-  droplet_deletion:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.droplet_upload.timeout_in_seconds") do |timeout| %>
-  droplet_upload:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
-  <% if_p("cc.jobs.droplet_upload.timeout_in_seconds") do |timeout| %>
-  droplet_upload:
-    timeout_in_seconds: <%= timeout %>
-  <% end %>
 
 app_usage_events:
-  cutoff_age_in_days: <%= p("cc.app_usage_events.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 service_usage_events:
-  cutoff_age_in_days: <%= p("cc.service_usage_events.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 audit_events:
-  cutoff_age_in_days: <%= p("cc.audit_events.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 failed_jobs:
-  cutoff_age_in_days: <%= p("cc.failed_jobs.cutoff_age_in_days") %>
-
+  cutoff_age_in_days: 0 # unused-spec-property
 completed_tasks:
-  cutoff_age_in_days: <%= p("cc.completed_tasks.cutoff_age_in_days") %>
+  cutoff_age_in_days: 0 # unused-spec-property
 
-default_app_memory: <%= p("cc.default_app_memory") %>
-default_app_disk_in_mb: <%= p("cc.default_app_disk_in_mb") %>
-maximum_app_disk_in_mb: <%= p("cc.maximum_app_disk_in_mb") %>
+default_app_memory: 0 # unused-spec-property
+default_app_disk_in_mb: 0 # unused-spec-property
+maximum_app_disk_in_mb: 0 # unused-spec-property
 
-instance_file_descriptor_limit: <%= p("cc.instance_file_descriptor_limit") %>
+instance_file_descriptor_limit: 0 # unused-spec-property
 
-request_timeout_in_seconds: <%= p("request_timeout_in_seconds") %>
-
-cc_partition: <%= p("cc.cc_partition") %>
+request_timeout_in_seconds: 0 # unused-spec-property
 
 bulk_api:
-  auth_user: <%= p("cc.bulk_api_user") %>
-  auth_password: "<%= p("cc.bulk_api_password") %>"
+  auth_user: 'unused-spec-property'
+  auth_password: 'unused-spec-property'
 
 internal_api:
   auth_user: <%= p("cc.internal_api_user") %>
@@ -120,11 +80,11 @@ index: <%= spec.index %>
 name: <%= name %>
 
 info:
-  name: "<%= p("name") %>"
-  build: "<%= p("build") %>"
-  version: <%= p("version") %>
-  support_address: "<%= p("support_address") %>"
-  description: "<%= p("description") %>"
+  name: 'unused-spec-property'
+  build: 'unused-spec-property'
+  version: 0 # unused-spec-property
+  support_address: 'unused-spec-property'
+  description: 'unused-spec-property'
 
 <% if_p("cc.directories") do %>
 directories:<% p("cc.directories").each do |key, value| %>
@@ -144,7 +104,7 @@ loggregator:
 <% end %>
 
 doppler:
-  url: ws<%= "s" if p("doppler.use_ssl") %>://doppler.<%= p("system_domain") %>:<%= p("doppler.port") %>
+  url: 'unused-spec-property'
 
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
 <% db_role = p("ccdb.roles").find { |role| role["tag"] == "admin" } %>
@@ -166,51 +126,34 @@ db: &db
   ssl_verify_hostname: <%= p("ccdb.ssl_verify_hostname") %>
   <% end %>
 
-<% scheme = p("login.protocol")
-   system_domain = p("system_domain") %>
+<% system_domain = p("system_domain") %>
 
-<% if p("login.enabled") %>
-login:
-  url: <%= p("login.url", "#{scheme}://login.#{system_domain}") %>
-<% end %>
 uaa:
-  url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
+  url: 'unused-spec-property'
   internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
-  resource_id: <%= p("cc.uaa_resource_id") %>
+  resource_id: 'unused-spec-property'
   ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/uaa_ca.crt
-  <% if_p("uaa.cc.token_secret") do |token_secret| %>
-  symmetric_secret: "<%= token_secret %>"
-  <% end %>
-
-hm9000:
-  url: <%= p("hm9000.url", "https://hm9000.#{system_domain}") %>
-  internal_url: <%= "http://hm9000.service.cf.internal:#{p('hm9000.port')}" %>
+  symmetric_secret: 'unused-spec-property'
 
 # App staging parameters
 staging:
   timeout_in_seconds: <%= p("cc.staging_timeout_in_seconds") %>
-  minimum_staging_memory_mb: <%= p("dea_next.staging_memory_limit_mb") %>
-  minimum_staging_disk_mb: <%= p("dea_next.staging_disk_limit_mb") %>
-  minimum_staging_file_descriptor_limit: <%= p("cc.staging_file_descriptor_limit") %>
+  minimum_staging_memory_mb: 0 # unused-spec-property
+  minimum_staging_disk_mb: 0 # unused-spec-property
+  minimum_staging_file_descriptor_limit: 0 # unused-spec-property
   auth:
     user: <%= p("cc.staging_upload_user") %>
     password: "<%= p("cc.staging_upload_password") %>"
 
 default_health_check_timeout: <%= p("cc.default_health_check_timeout") %>
-maximum_health_check_timeout: <%= p("cc.maximum_health_check_timeout") %>
+maximum_health_check_timeout: 0 # unused-spec-property
 
 runtimes_file: /var/vcap/jobs/cloud_controller_worker/config/runtimes.yml
 stacks_file: /var/vcap/jobs/cloud_controller_worker/config/stacks.yml
 
-shared_isolation_segment_name: <%= p("cc.shared_isolation_segment_name") %>
-
-quota_definitions:
-  <% p("cc.quota_definitions").each do |name, quota_properties| %>
-  <%= name %>:<% quota_properties.each do |key,value|%>
-    <%= key %>: <%= value %><% end %>
-  <% end %>
-
-default_quota_definition: <%= p("cc.default_quota_definition") %>
+shared_isolation_segment_name: 'unused-spec-property'
+quota_definitions: {} # unused-spec-property
+default_quota_definition: 'unused-spec-property'
 
 resource_pool:
   blobstore_type: <%= p("cc.resource_pool.blobstore_type") %>
@@ -301,18 +244,16 @@ buildpacks:
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 
-flapping_crash_count_threshold: <%= p("cc.flapping_crash_count_threshold") %>
-
-disable_custom_buildpacks: <%= p("cc.disable_custom_buildpacks") %>
+disable_custom_buildpacks: false # unused-spec-property
 
 broker_client_timeout_seconds: <%= p("cc.broker_client_timeout_seconds") %>
 broker_client_default_async_poll_interval_seconds: <%= p('cc.broker_client_default_async_poll_interval_seconds') %>
 broker_client_max_async_poll_duration_minutes: <%= p('cc.broker_client_max_async_poll_duration_minutes') %>
 
 renderer:
-  max_results_per_page: <%= p("cc.renderer.max_results_per_page") %>
-  default_results_per_page: <%= p("cc.renderer.default_results_per_page") %>
-  max_inline_relations_depth: <%= p("cc.renderer.max_inline_relations_depth") %>
+  max_results_per_page: 0 # unused-spec-property
+  default_results_per_page: 0 # unused-spec-property
+  max_inline_relations_depth: 0 # unused-spec-property
 
 <% if_p("uaa.clients.cc_service_broker_client.secret") do %>
 uaa_client_name: "cc_service_broker_client"
@@ -324,21 +265,18 @@ uaa_client_secret: <%= p("uaa.clients.cc-service-dashboards.secret") %>
 uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
-users_can_select_backend: <%= p("cc.users_can_select_backend") %>
-allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
-default_app_ssh_access: <%= p("cc.default_app_ssh_access") %>
+allow_app_ssh_access: false # unused-spec-property
+default_app_ssh_access: false # unused-spec-property
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
 <% end %>
 
-app_bits_upload_grace_period_in_seconds: <%= p("cc.app_bits_upload_grace_period_in_seconds") %>
+app_bits_upload_grace_period_in_seconds: 0 # unused-spec-property
 
-security_group_definitions: <%= p("cc.security_group_definitions").to_json %>
-default_running_security_groups: <%= p("cc.default_running_security_groups").to_json %>
-default_staging_security_groups: <%= p("cc.default_staging_security_groups").to_json %>
-
-system_hostnames: <%= p("cc.system_hostnames") %>
+security_group_definitions: [] # unused-spec-property
+default_running_security_groups: [] # unused-spec-property
+default_staging_security_groups: [] # unused-spec-property
 
 bits_service:
   enabled: <%= p("cc.bits_service.enabled") %>
@@ -374,15 +312,6 @@ diego:
     cert_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls.crt
     ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/mutual_tls_ca.crt
   pid_limit: <%= p("cc.diego.pid_limit") %>
-
-uaa :
-  url: <%= p("uaa.url", "#{scheme}://uaa.#{system_domain}") %>
-  internal_url: <%= "https://#{p("cc.uaa.internal_url")}:#{p("uaa.ssl.port")}" %>
-  resource_id: <%= p("cc.uaa_resource_id") %>
-  <% if_p("uaa.cc.token_secret") do |token_secret| %>
-  symmetric_secret: "<%= token_secret %>"
-  <% end %>
-  ca_file: /var/vcap/jobs/cloud_controller_worker/config/certs/uaa_ca.crt
 
 <% if p("routing_api.enabled") %>
 routing_api:

@@ -61,10 +61,6 @@ module VCAP::CloudController
           expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(16384)
         end
 
-        it 'sets a default value for placement_top_stager_percentage' do
-          expect(config[:placement_top_stager_percentage]).to eq(10)
-        end
-
         it 'sets a default value for broker_timeout_seconds' do
           expect(config[:broker_client_timeout_seconds]).to eq(60)
         end
@@ -79,10 +75,6 @@ module VCAP::CloudController
 
         it ' sets a default value for num_of_staged_droplets_per_app_to_store' do
           expect(config[:droplets][:max_staged_droplets_stored]).to eq(5)
-        end
-
-        it 'sets a default value for the minimum number of candidate stagers' do
-          expect(config[:minimum_candidate_stagers]).to eq(5)
         end
 
         it 'sets a default value for the bits service' do
@@ -231,7 +223,6 @@ module VCAP::CloudController
             config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
             config_hash['staging']['auth']['user'] = 'f@t:%a'
             config_hash['staging']['auth']['password'] = 'm@/n!'
-            config_hash['minimum_candidate_stagers'] = 0
             config_hash['diego']['pid_limit'] = -5
 
             File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
@@ -241,10 +232,6 @@ module VCAP::CloudController
 
           after do
             FileUtils.rm_r(tmpdir)
-          end
-
-          it 'resets minimum_candidate_stagers to the default of 5' do
-            expect(config_from_file[:minimum_candidate_stagers]).to eq(5)
           end
 
           it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
@@ -289,7 +276,6 @@ module VCAP::CloudController
             fog_connection: {},
             resource_directory_key: 'resource_key',
           },
-          cc_partition: 'ng',
           bulk_api: {},
           external_host: 'host',
           external_port: 1234,

@@ -58,17 +58,6 @@ module VCAP::CloudController
           url: String
         },
 
-        :hm9000 => {
-          url: String,
-          internal_url: String
-        },
-
-        optional(:dea_client) => {
-          ca_file: String,
-          cert_file: String,
-          key_file: String,
-        },
-
         :uaa => {
           :url                        => String,
           :resource_id                => String,
@@ -121,8 +110,6 @@ module VCAP::CloudController
             password: String,
           }
         },
-
-        :cc_partition => String,
 
         optional(:default_account_capacity) => {
           memory: Integer,   #:default => 2048,
@@ -197,8 +184,6 @@ module VCAP::CloudController
 
         :db_encryption_key => String,
 
-        optional(:flapping_crash_count_threshold) => Integer,
-
         optional(:varz_port) => Integer,
         optional(:varz_user) => String,
         optional(:varz_password) => String,
@@ -243,9 +228,6 @@ module VCAP::CloudController
         optional(:app_bits_upload_grace_period_in_seconds) => Integer,
         optional(:default_locale) => String,
         optional(:allowed_cors_domains) => [String],
-
-        optional(:placement_top_stager_percentage) => Integer,
-        optional(:minimum_candidate_stagers) => Integer,
 
         optional(:users_can_select_backend) => bool,
         optional(:routing_api) => {
@@ -303,6 +285,8 @@ module VCAP::CloudController
         },
 
         optional(:perform_blob_cleanup) => bool,
+
+        optional(:allow_app_ssh_access) => bool,
       }
     end
 
@@ -402,7 +386,6 @@ module VCAP::CloudController
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
         config[:default_locale] ||= 'en_US'
         config[:allowed_cors_domains] ||= []
-        config[:placement_top_stager_percentage] ||= 10
         config[:staging][:minimum_staging_memory_mb] ||= 1024
         config[:staging][:minimum_staging_disk_mb] ||= 4096
         config[:staging][:minimum_staging_file_descriptor_limit] ||= 16384
@@ -410,7 +393,6 @@ module VCAP::CloudController
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
         config[:packages][:max_valid_packages_stored] ||= 5
         config[:droplets][:max_staged_droplets_stored] ||= 5
-        config[:minimum_candidate_stagers] = (config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers] > 0) ? config[:minimum_candidate_stagers] : 5
         config[:bits_service] ||= { enabled: false }
         config[:rate_limiter] ||= { enabled: false }
         config[:rate_limiter][:general_limit] ||= 2000

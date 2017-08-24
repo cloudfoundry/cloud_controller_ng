@@ -42,10 +42,6 @@ maximum_health_check_timeout: 180 #seconds
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
 
-hm9000:
-  url: "http://localhost:5155"
-  internal_url: "http://localhost:5155/internal"
-
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
@@ -72,8 +68,6 @@ staging:
   auth:
     user: user
     password: password
-
-cc_partition: ng
 
 nginx:
   use_nginx: false
