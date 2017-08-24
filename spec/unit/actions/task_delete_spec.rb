@@ -57,14 +57,18 @@ module VCAP::CloudController
           expect(event.actee).to eq(task1.app.guid)
         end
 
-        it 'creates a task stopped usage event' do
+        it 'creates a TASK_STOPPED usage events for the deleted tasks' do
           task_delete.delete(task_dataset)
 
-          event = AppUsageEvent.order(:id).last
-          expect(event).not_to be_nil
-          expect(event.state).to eq('TASK_STOPPED')
-          expect(event.task_guid).to eq(task1.guid)
-          expect(event.parent_app_guid).to eq(task1.app.guid)
+          task1_event = AppUsageEvent.find(task_guid: task1.guid, state: 'TASK_STOPPED')
+          expect(task1_event).not_to be_nil
+          expect(task1_event.task_guid).to eq(task1.guid)
+          expect(task1_event.parent_app_guid).to eq(task1.app.guid)
+
+          task2_event = AppUsageEvent.find(task_guid: task2.guid, state: 'TASK_STOPPED')
+          expect(task2_event).not_to be_nil
+          expect(task2_event.task_guid).to eq(task2.guid)
+          expect(task2_event.parent_app_guid).to eq(task2.app.guid)
         end
       end
     end

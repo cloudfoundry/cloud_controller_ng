@@ -121,18 +121,11 @@ module VCAP::CloudController
         end
       end
 
-      it 'creates an app usage event for TASK_STARTED' do
-        task = task_create_action.create(app, message, user_audit_info)
-
-        event = AppUsageEvent.last
-        expect(event.state).to eq('TASK_STARTED')
-        expect(event.task_guid).to eq(task.guid)
-      end
-
       it 'creates a task create audit event' do
         task = task_create_action.create(app, message, user_audit_info)
 
         event = Event.last
+        expect(event).not_to be_nil
         expect(event.type).to eq('audit.app.task.create')
         expect(event.metadata['task_guid']).to eq(task.guid)
         expect(event.actee).to eq(app.guid)

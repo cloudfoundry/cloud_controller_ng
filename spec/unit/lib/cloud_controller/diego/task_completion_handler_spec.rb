@@ -35,7 +35,8 @@ module VCAP::CloudController
               handler.complete_task(task, response)
             }.to change { AppUsageEvent.count }.by(1)
 
-            event = AppUsageEvent.last
+            event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
+            expect(event).not_to be_nil
             expect(event.state).to eq('TASK_STOPPED')
             expect(event.task_guid).to eq(task.guid)
           end

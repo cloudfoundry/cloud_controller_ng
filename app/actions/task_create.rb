@@ -32,8 +32,6 @@ module VCAP::CloudController
         )
 
         app.update(max_task_sequence_id: app.max_task_sequence_id + 1)
-
-        app_usage_event_repository.create_from_task(task, 'TASK_STARTED')
         task_event_repository.record_task_create(task, user_audit_info)
       end
 

@@ -20,6 +20,24 @@ module VCAP::CloudController
     encrypt :environment_variables, salt: :salt, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
+    def after_create
+      super
+      create_start_event
+    end
+
+    def after_update
+      super
+
+      if column_changed?(:state) && (state == SUCCEEDED_STATE || state == FAILED_STATE)
+        create_stop_event
+      end
+    end
+
+    def after_destroy
+      super
+      create_stop_event
+    end
+
     private
 
     def validate
@@ -60,6 +78,14 @@ module VCAP::CloudController
 
     def organization
       space && space.organization
+    end
+
+    def create_start_event
+      Repositories::AppUsageEventRepository.new.create_from_task(self, 'TASK_STARTED')
+    end
+
+    def create_stop_event
+      Repositories::AppUsageEventRepository.new.create_from_task(self, 'TASK_STOPPED')
     end
   end
 end

@@ -20,8 +20,6 @@ module VCAP::CloudController
           end
 
           task.save_changes(raise_on_save_failure: true)
-
-          app_usage_event_repository.create_from_task(task, 'TASK_STOPPED')
         end
       rescue => e
         logger.error('diego.tasks.saving-failed', task_guid: task.guid, payload: payload, error: e.message)

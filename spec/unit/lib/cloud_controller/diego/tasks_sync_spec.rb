@@ -53,6 +53,20 @@ module VCAP::CloudController
             subject.sync
             expect(bbs_task_client).to have_received(:bump_freshness).once
           end
+
+          it 'creates TASK_STOPPED events' do
+            subject.sync
+
+            task1_event = AppUsageEvent.find(task_guid: running_task.guid, state: 'TASK_STOPPED')
+            expect(task1_event).not_to be_nil
+            expect(task1_event.task_guid).to eq(running_task.guid)
+            expect(task1_event.parent_app_guid).to eq(running_task.app.guid)
+
+            task2_event = AppUsageEvent.find(task_guid: canceling_task.guid, state: 'TASK_STOPPED')
+            expect(task2_event).not_to be_nil
+            expect(task2_event.task_guid).to eq(canceling_task.guid)
+            expect(task2_event.parent_app_guid).to eq(canceling_task.app.guid)
+          end
         end
 
         context 'when bbs does not know about a pending/succeeded task' do
