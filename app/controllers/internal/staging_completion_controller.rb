@@ -87,6 +87,7 @@ module VCAP::CloudController
     def parse_bbs_task_callback(staging_response)
       result = {}
       if staging_response[:failed]
+        logger.error('diego.staging.completion-controller.staging-failed', staging_response)
         result[:error] = Diego::FailureReasonSanitizer.sanitize(staging_response[:failure_reason])
       else
         result[:result] = MultiJson.load(staging_response[:result], symbolize_keys: true)
