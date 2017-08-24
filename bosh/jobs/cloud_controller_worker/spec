@@ -88,6 +88,10 @@ properties:
   cc.internal_api_password:
     description: "Password used by Diego to access internal endpoints"
 
+  cc.db_logging_level:
+    default: "debug2"
+    description: "Log level for cc database operations"
+
   cc.logging_level:
     default: "info"
     description: "Log level for cc"
@@ -101,6 +105,9 @@ properties:
   cc.default_health_check_timeout:
     default: 60
     description: "Default health check timeout (in seconds) that can be set for the app"
+  cc.maximum_health_check_timeout:
+    default: 180
+    description: "Maximum health check timeout (in seconds) that can be set for the app"
 
   cc.stacks:
     default:
@@ -117,6 +124,10 @@ properties:
   cc.staging_upload_password:
     default: ""
     description: "User's password used to access internal endpoints of Cloud Controller to upload files when staging"
+
+  cc.default_quota_definition:
+    default: default
+    description: "Local to use a local (NFS) file system.  AWS to use AWS."
 
   cc.resource_pool.blobstore_type:
     description: "The type of blobstore backing to use. Valid values: ['fog', 'webdav']"
@@ -302,12 +313,6 @@ properties:
   ccdb.ssl_verify_hostname:
     default: false
     description: "Verify that the database SSL certificate matches the host to which the connection is attempted"
-  cc.db_logging_level:
-    default: "debug2"
-    description: "Log level for cc database operations"
-  cc.db_encryption_key:
-    default: ""
-    description: "key for encrypting sensitive values in the CC database"
 
   uaa.ssl.port:
     description: "The port used by UAA for ssl connections"
@@ -326,6 +331,23 @@ properties:
   metron_endpoint.port:
     description: "The port used to emit messages to the Metron agent"
     default: 3457
+
+  cc.db_encryption_key:
+    default: ""
+    description: "key for encrypting sensitive values in the CC database"
+
+  cc.default_app_memory:
+    default: 1024
+    description: "How much memory given to an app if not specified"
+  cc.default_app_disk_in_mb:
+    default: 1024
+    description: "The default disk space an app gets"
+  cc.maximum_app_disk_in_mb:
+    default: 2048
+    description: "The maximum amount of disk a user can request"
+  cc.default_app_ssh_access:
+    default: true
+    description: "When ssh is allowed and not explicitly set in the application, new applications will start with ssh service enabled"
 
   cc.broker_client_timeout_seconds:
     default: 60
@@ -391,6 +413,10 @@ properties:
   cc.thresholds.worker.restart_if_above_mb:
     description: "The cc will restart if memory remains above this threshold for 3 monit cycles"
     default: 512
+
+  cc.instance_file_descriptor_limit:
+    description: "The file descriptors made available to each app instance"
+    default: 16384
 
   cc.broker_client_default_async_poll_interval_seconds:
     default: 60

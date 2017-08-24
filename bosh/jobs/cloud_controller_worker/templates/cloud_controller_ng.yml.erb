@@ -34,7 +34,7 @@ external_protocol: <%= p("cc.external_protocol") %>
 external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
 system_domain_organization: 'unused-spec-property'
-system_domain: 'unused-spec-property'
+system_domain: <%= p("system_domain") %>
 app_domains: ['unused-spec-property']
 
 jobs:
@@ -56,11 +56,11 @@ failed_jobs:
 completed_tasks:
   cutoff_age_in_days: 0 # unused-spec-property
 
-default_app_memory: 0 # unused-spec-property
-default_app_disk_in_mb: 0 # unused-spec-property
-maximum_app_disk_in_mb: 0 # unused-spec-property
+default_app_memory: <%= p("cc.default_app_memory") %>
+default_app_disk_in_mb: <%= p("cc.default_app_disk_in_mb") %>
+maximum_app_disk_in_mb: <%= p("cc.maximum_app_disk_in_mb") %>
 
-instance_file_descriptor_limit: 0 # unused-spec-property
+instance_file_descriptor_limit: <%= p("cc.instance_file_descriptor_limit") %>
 
 request_timeout_in_seconds: 0 # unused-spec-property
 
@@ -146,14 +146,15 @@ staging:
     password: "<%= p("cc.staging_upload_password") %>"
 
 default_health_check_timeout: <%= p("cc.default_health_check_timeout") %>
-maximum_health_check_timeout: 0 # unused-spec-property
+maximum_health_check_timeout: <%= p("cc.maximum_health_check_timeout") %>
 
 runtimes_file: /var/vcap/jobs/cloud_controller_worker/config/runtimes.yml
 stacks_file: /var/vcap/jobs/cloud_controller_worker/config/stacks.yml
 
 shared_isolation_segment_name: 'unused-spec-property'
 quota_definitions: {} # unused-spec-property
-default_quota_definition: 'unused-spec-property'
+
+default_quota_definition: <%= p("cc.default_quota_definition") %>
 
 resource_pool:
   blobstore_type: <%= p("cc.resource_pool.blobstore_type") %>
@@ -266,7 +267,7 @@ uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
 allow_app_ssh_access: false # unused-spec-property
-default_app_ssh_access: false # unused-spec-property
+default_app_ssh_access: <%= p("cc.default_app_ssh_access") %>
 
 <% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
 skip_cert_verify: <%= skip_cert_verify %>
