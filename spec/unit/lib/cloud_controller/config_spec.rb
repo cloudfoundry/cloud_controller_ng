@@ -308,18 +308,6 @@ module VCAP::CloudController
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 
-      it 'creates the runners' do
-        expect(VCAP::CloudController::Runners).to receive(:new).with(@test_config)
-        Config.configure_components(@test_config)
-        Config.configure_runner_components
-      end
-
-      it 'creates the stagers' do
-        expect(VCAP::CloudController::Stagers).to receive(:new).with(@test_config)
-        Config.configure_components(@test_config)
-        Config.configure_runner_components
-      end
-
       it 'sets up the app manager' do
         expect(AppObserver).to receive(:configure).with(instance_of(VCAP::CloudController::Stagers), instance_of(VCAP::CloudController::Runners))
 
@@ -386,20 +374,6 @@ module VCAP::CloudController
           Config.configure_components(config)
           expect(GC::Profiler.enabled?).to eq(true)
         end
-      end
-
-      it 'creates the nsync client' do
-        expect(Diego::NsyncClient).to receive(:new).with(@test_config).and_call_original
-
-        Config.configure_components(@test_config)
-        expect(dependency_locator.nsync_client).to be_an_instance_of(VCAP::CloudController::Diego::NsyncClient)
-      end
-
-      it 'creates the stager client' do
-        expect(Diego::StagerClient).to receive(:new).with(@test_config).and_call_original
-
-        Config.configure_components(@test_config)
-        expect(dependency_locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
       end
 
       it 'sets up the reserved private domain' do

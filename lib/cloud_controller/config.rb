@@ -311,33 +311,14 @@ module VCAP::CloudController
         PrivateDomain.configure(config[:reserved_private_domains])
 
         dependency_locator = CloudController::DependencyLocator.instance
-        nsync_client = Diego::NsyncClient.new(@config)
-        dependency_locator.register(:nsync_client, nsync_client)
-        stager_client = Diego::StagerClient.new(@config)
-        dependency_locator.register(:stager_client, stager_client)
+        dependency_locator.config = @config
 
         run_initializers(config)
       end
 
       def configure_runner_components
         dependency_locator = CloudController::DependencyLocator.instance
-        dependency_locator.config = @config
-        tps_client = Diego::TPSClient.new(@config)
-        dependency_locator.register(:tps_client, tps_client)
-        dependency_locator.register(:upload_handler, UploadHandler.new(config))
-        dependency_locator.register(:app_event_repository, Repositories::AppEventRepository.new)
-
-        runners = Runners.new(@config)
-        dependency_locator.register(:runners, runners)
-
-        stagers = Stagers.new(@config)
-        dependency_locator.register(:stagers, stagers)
-
-        dependency_locator.register(:instances_reporters, InstancesReporters.new)
-        dependency_locator.register(:index_stopper, IndexStopper.new(runners))
-
-        AppObserver.configure(stagers, runners)
-
+        AppObserver.configure(dependency_locator.stagers, dependency_locator.runners)
         InternalApi.configure(@config)
       end
 
