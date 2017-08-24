@@ -20,6 +20,9 @@ templates:
   cloud_controller_api_health_check.erb: bin/cloud_controller_ng_health_check
   cloud_controller_api_worker_ctl.erb: bin/cloud_controller_worker_ctl
   console.erb: bin/console
+  dea_ca.crt.erb: config/certs/dea_ca.crt
+  dea_client.crt.erb: config/certs/dea_client.crt
+  dea_client.key.erb: config/certs/dea_client.key
   dns_health_check.erb: bin/dns_health_check
   drain.sh.erb: bin/drain
   droplets_ca_cert.pem.erb: config/certs/droplets_ca_cert.pem
@@ -184,6 +187,7 @@ properties:
     description: "User name used by Diego to access internal endpoints"
   cc.internal_api_password:
     description: "Password used by Diego to access internal endpoints"
+
 
   cc.min_cli_version:
     description: "Minimum version of the CF CLI to work with the API."
@@ -668,6 +672,8 @@ properties:
   cc.default_staging_security_groups:
     description: "The default staging security groups that will be seeded in CloudController. Note: security groups are only seeded on the first deploy, after which they should be managed via the API"
 
+  cc.feature_disabled_message:
+    description: "Custom message to use for a disabled feature."
   cc.allowed_cors_domains:
     description: "List of domains (including scheme) from which Cross-Origin requests will be accepted, a * can be used as a wildcard for any part of a domain"
     default: []
@@ -684,6 +690,14 @@ properties:
     description: "The port for the statsd server, defaults to the local metron agent"
     default: 8125
 
+  cc.placement_top_stager_percentage:
+    description: "The percentage of top stagers considered when choosing a stager"
+    default: 10
+
+  cc.minimum_candidate_stagers:
+    description: "Minimum number of candidate deas for staging.  Defaults to 5, should be fewer than the total DEAs in the deployment."
+    default: 5
+
   router.route_services_secret:
     description: "Support for route services is disabled when no value is configured."
     default: ""
@@ -695,6 +709,19 @@ properties:
   cc.reserved_private_domains:
     description: "File location of a list of reserved private domains (for file format, see https://publicsuffix.org/)"
     default: ~
+
+  cc.dea_use_https:
+    description: "enable ssl for communication with DEAs"
+    default: false
+
+  dea_next.ca_cert:
+    description: "PEM-encoded CA certificate"
+
+  dea_next.client_cert:
+    description: "PEM-encoded server certificate"
+
+  dea_next.client_key:
+    description: "PEM-encoded server key"
 
   cc.core_file_pattern:
     description: "Filename template for core dump files. Use an empty string if you don't want core files saved."
@@ -731,12 +758,15 @@ properties:
   cc.rate_limiter.enabled:
     description: "Enable rate limiting for UAA-authenticated endpoints per user or client"
     default: false
+
   cc.rate_limiter.general_limit:
     description: "The number of requests a user or client is allowed to make for all endpoints that do not have a custom limit over the configured interval"
     default: 2000
+
   cc.rate_limiter.unauthenticated_limit:
     description: "The number of requests an unauthenticated client is allowed to make over the configured interval"
     default: 100
+
   cc.rate_limiter.reset_interval_in_minutes:
     description: "The interval in minutes, after which, a user's available api requests will be reset"
     default: 60
