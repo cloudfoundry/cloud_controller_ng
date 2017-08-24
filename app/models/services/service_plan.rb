@@ -35,8 +35,6 @@ module VCAP::CloudController
 
     strip_attributes :name
 
-    delegate :client, to: :service
-
     alias_method :active?, :active
 
     alias_method :broker_provided_id, :unique_id

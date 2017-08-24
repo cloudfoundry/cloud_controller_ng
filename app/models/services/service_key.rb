@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     import_attributes :name, :service_instance_guid, :credentials
 
-    delegate :client, :service, :service_plan, to: :service_instance
+    delegate :service, :service_plan, to: :service_instance
 
     plugin :after_initialize
 

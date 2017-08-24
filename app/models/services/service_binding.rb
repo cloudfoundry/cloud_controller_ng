@@ -24,8 +24,7 @@ module VCAP::CloudController
 
     import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url
 
-    delegate :client, :service, :service_plan,
-      to: :service_instance
+    delegate :service, :service_plan, to: :service_instance
 
     def validate
       validates_presence :app
