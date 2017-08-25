@@ -319,8 +319,10 @@ module VCAP::CloudController
         InternalApi.configure(@config)
       end
 
+      private
+
       def config_dir
-        @config_dir ||= File.expand_path('../../../config', __FILE__)
+        @config_dir ||= File.expand_path('../../config', __dir__)
       end
 
       def run_initializers(config)
@@ -382,8 +384,6 @@ module VCAP::CloudController
 
         sanitize(config)
       end
-
-      private
 
       def sanitize(config)
         sanitize_grace_period(config)

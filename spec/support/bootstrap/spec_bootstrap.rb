@@ -27,7 +27,6 @@ module VCAP::CloudController
     end
 
     def self.seed
-      Config.run_initializers(TestConfig.config)
       Seeds.write_seed_data(TestConfig.config)
     end
   end

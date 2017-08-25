@@ -8,243 +8,243 @@ module VCAP::CloudController
           Config.from_file('nonexistent.yml')
         }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
-    end
 
-    describe '.merge_defaults' do
-      context 'when no config values are provided' do
-        let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
-        it 'sets the default isolation segment name' do
-          expect(config[:shared_isolation_segment_name]).to eq('shared')
+      context 'merges default values' do
+        context 'when no config values are provided' do
+          let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
+          it 'sets the default isolation segment name' do
+            expect(config[:shared_isolation_segment_name]).to eq('shared')
+          end
+
+          it 'sets default stacks_file' do
+            expect(config[:stacks_file]).to eq(File.join(Paths::CONFIG, 'stacks.yml'))
+          end
+
+          it 'sets default maximum_app_disk_in_mb' do
+            expect(config[:maximum_app_disk_in_mb]).to eq(2048)
+          end
+
+          it 'sets default directories' do
+            expect(config[:directories]).to eq({})
+          end
+
+          it 'sets a default request_timeout_in_seconds value' do
+            expect(config[:request_timeout_in_seconds]).to eq(900)
+          end
+
+          it 'sets a default value for skip_cert_verify' do
+            expect(config[:skip_cert_verify]).to eq false
+          end
+
+          it 'sets a default value for app_bits_upload_grace_period_in_seconds' do
+            expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(0)
+          end
+
+          it 'sets a default value for database' do
+            expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
+          end
+
+          it 'sets a default value for allowed_cors_domains' do
+            expect(config[:allowed_cors_domains]).to eq([])
+          end
+
+          it 'allows users to select the backend for their apps' do
+            expect(config[:users_can_select_backend]).to eq(true)
+          end
+
+          it 'sets a default value for min staging memory' do
+            expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
+          end
+
+          it 'sets a default value for min staging file descriptor limit' do
+            expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(16384)
+          end
+
+          it 'sets a default value for broker_timeout_seconds' do
+            expect(config[:broker_client_timeout_seconds]).to eq(60)
+          end
+
+          it 'sets a default value for broker_client_default_async_poll_interval_seconds' do
+            expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(60)
+          end
+
+          it ' sets a default value for num_of_valid_packages_per_app_to_store' do
+            expect(config[:packages][:max_valid_packages_stored]).to eq(5)
+          end
+
+          it ' sets a default value for num_of_staged_droplets_per_app_to_store' do
+            expect(config[:droplets][:max_staged_droplets_stored]).to eq(5)
+          end
+
+          it 'sets a default value for the bits service' do
+            expect(config[:bits_service]).to eq({ enabled: false })
+          end
         end
 
-        it 'sets default stacks_file' do
-          expect(config[:stacks_file]).to eq(File.join(Config.config_dir, 'stacks.yml'))
-        end
+        context 'when config values are provided' do
+          context 'and the values are valid' do
+            let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')) }
 
-        it 'sets default maximum_app_disk_in_mb' do
-          expect(config[:maximum_app_disk_in_mb]).to eq(2048)
-        end
+            it 'preserves cli info from the file' do
+              expect(config[:info][:min_cli_version]).to eq('6.0.0')
+              expect(config[:info][:min_recommended_cli_version]).to eq('6.9.0')
+            end
 
-        it 'sets default directories' do
-          expect(config[:directories]).to eq({})
-        end
+            it 'preserves the stacks_file value from the file' do
+              expect(config[:stacks_file]).to eq('/tmp/foo')
+            end
 
-        it 'sets a default request_timeout_in_seconds value' do
-          expect(config[:request_timeout_in_seconds]).to eq(900)
-        end
+            it 'preserves the default_app_disk_in_mb value from the file' do
+              expect(config[:default_app_disk_in_mb]).to eq(512)
+            end
 
-        it 'sets a default value for skip_cert_verify' do
-          expect(config[:skip_cert_verify]).to eq false
-        end
+            it 'preserves the maximum_app_disk_in_mb value from the file' do
+              expect(config[:maximum_app_disk_in_mb]).to eq(3)
+            end
 
-        it 'sets a default value for app_bits_upload_grace_period_in_seconds' do
-          expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(0)
-        end
+            it 'preserves the directories value from the file' do
+              expect(config[:directories]).to eq({ some: 'value' })
+            end
 
-        it 'sets a default value for database' do
-          expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
-        end
+            it 'preserves the external_protocol value from the file' do
+              expect(config[:external_protocol]).to eq('http')
+            end
 
-        it 'sets a default value for allowed_cors_domains' do
-          expect(config[:allowed_cors_domains]).to eq([])
-        end
+            it 'preserves the request_timeout_in_seconds value from the file' do
+              expect(config[:request_timeout_in_seconds]).to eq(600)
+            end
 
-        it 'allows users to select the backend for their apps' do
-          expect(config[:users_can_select_backend]).to eq(true)
-        end
+            it 'preserves the value of skip_cert_verify from the file' do
+              expect(config[:skip_cert_verify]).to eq true
+            end
 
-        it 'sets a default value for min staging memory' do
-          expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
-        end
+            it 'preserves the value for app_bits_upload_grace_period_in_seconds' do
+              expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
+            end
 
-        it 'sets a default value for min staging file descriptor limit' do
-          expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(16384)
-        end
+            it 'preserves the value of the staging auth user/password' do
+              expect(config[:staging][:auth][:user]).to eq('user')
+              expect(config[:staging][:auth][:password]).to eq('password')
+            end
 
-        it 'sets a default value for broker_timeout_seconds' do
-          expect(config[:broker_client_timeout_seconds]).to eq(60)
-        end
+            it 'preserves the values of the minimum staging limits' do
+              expect(config[:staging][:minimum_staging_memory_mb]).to eq(512)
+              expect(config[:staging][:minimum_staging_disk_mb]).to eq(1024)
+              expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(2048)
+            end
 
-        it 'sets a default value for broker_client_default_async_poll_interval_seconds' do
-          expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(60)
-        end
+            it 'preserves the value of the allowed cross-origin domains' do
+              expect(config[:allowed_cors_domains]).to eq(['http://andrea.corr', 'http://caroline.corr', 'http://jim.corr', 'http://sharon.corr'])
+            end
 
-        it ' sets a default value for num_of_valid_packages_per_app_to_store' do
-          expect(config[:packages][:max_valid_packages_stored]).to eq(5)
-        end
+            it 'preserves the backend selection configuration from the file' do
+              expect(config[:users_can_select_backend]).to eq(false)
+            end
 
-        it ' sets a default value for num_of_staged_droplets_per_app_to_store' do
-          expect(config[:droplets][:max_staged_droplets_stored]).to eq(5)
-        end
+            it 'preserves the enable allow ssh configuration from the file' do
+              expect(config[:allow_app_ssh_access]).to eq(true)
+            end
 
-        it 'sets a default value for the bits service' do
-          expect(config[:bits_service]).to eq({ enabled: false })
-        end
-      end
+            it 'preserves the default_health_check_timeout value from the file' do
+              expect(config[:default_health_check_timeout]).to eq(30)
+            end
 
-      context 'when config values are provided' do
-        context 'and the values are valid' do
-          let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')) }
+            it 'preserves the maximum_health_check_timeout value from the file' do
+              expect(config[:maximum_health_check_timeout]).to eq(90)
+            end
 
-          it 'preserves cli info from the file' do
-            expect(config[:info][:min_cli_version]).to eq('6.0.0')
-            expect(config[:info][:min_recommended_cli_version]).to eq('6.9.0')
+            it 'preserves the broker_client_timeout_seconds value from the file' do
+              expect(config[:broker_client_timeout_seconds]).to eq(120)
+            end
+
+            it 'preserves the broker_client_default_async_poll_interval_seconds value from the file' do
+              expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(120)
+            end
+
+            it 'preserves the internal_service_hostname value from the file' do
+              expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.cf.internal')
+            end
+
+            it 'preserves the expiration values from the file' do
+              expect(config[:packages][:max_valid_packages_stored]).to eq(10)
+              expect(config[:droplets][:max_staged_droplets_stored]).to eq(10)
+            end
+
+            context 'when the staging auth is already url encoded' do
+              let(:tmpdir) { Dir.mktmpdir }
+              let(:config_from_file) { Config.from_file(File.join(tmpdir, 'overridden_with_urlencoded_values.yml')) }
+
+              before do
+                config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
+                config_hash['staging']['auth']['user'] = 'f%40t%3A%25a'
+                config_hash['staging']['auth']['password'] = 'm%40%2Fn!'
+
+                File.open(File.join(tmpdir, 'overridden_with_urlencoded_values.yml'), 'w') do |f|
+                  YAML.dump(config_hash, f)
+                end
+              end
+
+              it 'preserves the url-encoded values' do
+                config_from_file[:staging][:auth][:user] = 'f%40t%3A%25a'
+                config_from_file[:staging][:auth][:password] = 'm%40%2Fn!'
+              end
+            end
           end
 
-          it 'preserves the stacks_file value from the file' do
-            expect(config[:stacks_file]).to eq('/tmp/foo')
-          end
-
-          it 'preserves the default_app_disk_in_mb value from the file' do
-            expect(config[:default_app_disk_in_mb]).to eq(512)
-          end
-
-          it 'preserves the maximum_app_disk_in_mb value from the file' do
-            expect(config[:maximum_app_disk_in_mb]).to eq(3)
-          end
-
-          it 'preserves the directories value from the file' do
-            expect(config[:directories]).to eq({ some: 'value' })
-          end
-
-          it 'preserves the external_protocol value from the file' do
-            expect(config[:external_protocol]).to eq('http')
-          end
-
-          it 'preserves the request_timeout_in_seconds value from the file' do
-            expect(config[:request_timeout_in_seconds]).to eq(600)
-          end
-
-          it 'preserves the value of skip_cert_verify from the file' do
-            expect(config[:skip_cert_verify]).to eq true
-          end
-
-          it 'preserves the value for app_bits_upload_grace_period_in_seconds' do
-            expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
-          end
-
-          it 'preserves the value of the staging auth user/password' do
-            expect(config[:staging][:auth][:user]).to eq('user')
-            expect(config[:staging][:auth][:password]).to eq('password')
-          end
-
-          it 'preserves the values of the minimum staging limits' do
-            expect(config[:staging][:minimum_staging_memory_mb]).to eq(512)
-            expect(config[:staging][:minimum_staging_disk_mb]).to eq(1024)
-            expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(2048)
-          end
-
-          it 'preserves the value of the allowed cross-origin domains' do
-            expect(config[:allowed_cors_domains]).to eq(['http://andrea.corr', 'http://caroline.corr', 'http://jim.corr', 'http://sharon.corr'])
-          end
-
-          it 'preserves the backend selection configuration from the file' do
-            expect(config[:users_can_select_backend]).to eq(false)
-          end
-
-          it 'preserves the enable allow ssh configuration from the file' do
-            expect(config[:allow_app_ssh_access]).to eq(true)
-          end
-
-          it 'preserves the default_health_check_timeout value from the file' do
-            expect(config[:default_health_check_timeout]).to eq(30)
-          end
-
-          it 'preserves the maximum_health_check_timeout value from the file' do
-            expect(config[:maximum_health_check_timeout]).to eq(90)
-          end
-
-          it 'preserves the broker_client_timeout_seconds value from the file' do
-            expect(config[:broker_client_timeout_seconds]).to eq(120)
-          end
-
-          it 'preserves the broker_client_default_async_poll_interval_seconds value from the file' do
-            expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(120)
-          end
-
-          it 'preserves the internal_service_hostname value from the file' do
-            expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.cf.internal')
-          end
-
-          it 'preserves the expiration values from the file' do
-            expect(config[:packages][:max_valid_packages_stored]).to eq(10)
-            expect(config[:droplets][:max_staged_droplets_stored]).to eq(10)
-          end
-
-          context 'when the staging auth is already url encoded' do
+          context 'and the password contains double quotes' do
             let(:tmpdir) { Dir.mktmpdir }
-            let(:config_from_file) { Config.from_file(File.join(tmpdir, 'overridden_with_urlencoded_values.yml')) }
+            let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
 
             before do
               config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
-              config_hash['staging']['auth']['user'] = 'f%40t%3A%25a'
-              config_hash['staging']['auth']['password'] = 'm%40%2Fn!'
+              config_hash['staging']['auth']['password'] = 'pass"wor"d'
 
-              File.open(File.join(tmpdir, 'overridden_with_urlencoded_values.yml'), 'w') do |f|
+              File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
                 YAML.dump(config_hash, f)
               end
             end
 
-            it 'preserves the url-encoded values' do
-              config_from_file[:staging][:auth][:user] = 'f%40t%3A%25a'
-              config_from_file[:staging][:auth][:password] = 'm%40%2Fn!'
+            after do
+              FileUtils.rm_r(tmpdir)
             end
-          end
-        end
 
-        context 'and the password contains double quotes' do
-          let(:tmpdir) { Dir.mktmpdir }
-          let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
-
-          before do
-            config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
-            config_hash['staging']['auth']['password'] = 'pass"wor"d'
-
-            File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
-              YAML.dump(config_hash, f)
+            it 'URL-encodes staging password as neccesary' do
+              expect(config_from_file[:staging][:auth][:password]).to eq('pass%22wor%22d')
             end
           end
 
-          after do
-            FileUtils.rm_r(tmpdir)
-          end
+          context 'and the values are invalid' do
+            let(:tmpdir) { Dir.mktmpdir }
+            let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
 
-          it 'URL-encodes staging password as neccesary' do
-            expect(config_from_file[:staging][:auth][:password]).to eq('pass%22wor%22d')
-          end
-        end
+            before do
+              config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
+              config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
+              config_hash['staging']['auth']['user'] = 'f@t:%a'
+              config_hash['staging']['auth']['password'] = 'm@/n!'
+              config_hash['diego']['pid_limit'] = -5
 
-        context 'and the values are invalid' do
-          let(:tmpdir) { Dir.mktmpdir }
-          let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
-
-          before do
-            config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
-            config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
-            config_hash['staging']['auth']['user'] = 'f@t:%a'
-            config_hash['staging']['auth']['password'] = 'm@/n!'
-            config_hash['diego']['pid_limit'] = -5
-
-            File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
-              YAML.dump(config_hash, f)
+              File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
+                YAML.dump(config_hash, f)
+              end
             end
-          end
 
-          after do
-            FileUtils.rm_r(tmpdir)
-          end
+            after do
+              FileUtils.rm_r(tmpdir)
+            end
 
-          it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
-            expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
-          end
+            it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
+              expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
+            end
 
-          it 'sets a negative "pid_limit" to 0' do
-            expect(config_from_file[:diego][:pid_limit]).to eq(0)
-          end
+            it 'sets a negative "pid_limit" to 0' do
+              expect(config_from_file[:diego][:pid_limit]).to eq(0)
+            end
 
-          it 'URL-encodes staging auth as necessary' do
-            expect(config_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
-            expect(config_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
+            it 'URL-encodes staging auth as necessary' do
+              expect(config_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
+              expect(config_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
+            end
           end
         end
       end
