@@ -31,7 +31,7 @@ module VCAP::CloudController
 
         def root_fs
           if @config[:diego][:temporary_oci_buildpack_mode] == 'oci-phase-1'
-            "preloaded+layer:#{@stack}?layer=#{URI.encode(@droplet_uri)}"
+            "preloaded+layer:#{@stack}?layer=#{URI.encode(@droplet_uri)}&layer_path=#{action_user_home}&layer_digest=#{@checksum_value}"
           else
             "preloaded:#{@stack}"
           end
@@ -45,7 +45,7 @@ module VCAP::CloudController
               from: @droplet_uri,
               to: '.',
               cache_key: "droplets-#{@process_guid}",
-              user: 'vcap',
+              user: action_user,
               checksum_algorithm: @checksum_algorithm,
               checksum_value: @checksum_value,
             )
@@ -74,6 +74,10 @@ module VCAP::CloudController
 
         def action_user
           'vcap'
+        end
+
+        def action_user_home
+          "/home/#{action_user}"
         end
       end
     end
