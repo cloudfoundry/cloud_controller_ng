@@ -20,7 +20,6 @@ module VCAP::CloudController
       # default to production. this may be overridden during opts parsing
       ENV['NEW_RELIC_ENV'] ||= 'production'
 
-      @config_file = File.expand_path('../../../config/cloud_controller.yml', __FILE__)
       parse_options!
       parse_config
 
@@ -51,10 +50,10 @@ module VCAP::CloudController
     end
 
     def parse_options!
-      options_parser.parse! @argv
+      options_parser.parse!(@argv)
+      raise 'Missing config' unless @config_file.present?
     rescue
-      puts options_parser
-      exit 1
+      raise options_parser.to_s
     end
 
     def parse_config
@@ -62,11 +61,9 @@ module VCAP::CloudController
 
       @config[:statsd_port] = @config[:statsd_port].try(:to_i)
     rescue Membrane::SchemaValidationError => ve
-      puts "ERROR: There was a problem validating the supplied config: #{ve}"
-      exit 1
+      raise "ERROR: There was a problem validating the supplied config: #{ve}"
     rescue => e
-      puts "ERROR: Failed loading config from file '#{@config_file}': #{e}"
-      exit 1
+      raise "ERROR: Failed loading config from file '#{@config_file}': #{e}"
     end
 
     def run!
@@ -141,8 +138,7 @@ module VCAP::CloudController
       pid_file = VCAP::PidFile.new(@config[:pid_filename])
       pid_file.unlink_at_exit
     rescue
-      puts "ERROR: Can't create pid file #{@config[:pid_filename]}"
-      exit 1
+      raise "ERROR: Can't create pid file #{@config[:pid_filename]}"
     end
 
     def setup_logging

@@ -5,4 +5,9 @@ require File.expand_path('../../config/boot', __FILE__)
 ENV['RAILS_ENV'] ||= 'production'
 
 require 'cloud_controller'
-VCAP::CloudController::Runner.new(ARGV).run!
+begin
+  VCAP::CloudController::Runner.new(ARGV).run!
+rescue => e
+  puts e
+  exit 1
+end

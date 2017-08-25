@@ -167,21 +167,11 @@ module VCAP::CloudController
     end
 
     describe '#initialize' do
+      subject { Runner.new(argv_options) }
       let(:argv_options) { [] }
 
       before do
         allow_any_instance_of(Runner).to receive(:deprecation_warning)
-      end
-
-      subject { Runner.new(argv_options) }
-
-      it "should set ENV['NEW_RELIC_ENV'] to production" do
-        ENV.delete('NEW_RELIC_ENV')
-        expect { subject }.to change { ENV['NEW_RELIC_ENV'] }.from(nil).to('production')
-      end
-
-      it 'should set the configuration file' do
-        expect(subject.config_file).to eq(File.expand_path('config/cloud_controller.yml'))
       end
 
       describe 'argument parsing' do
@@ -189,6 +179,11 @@ module VCAP::CloudController
           ['-c', '--config'].each do |flag|
             describe flag do
               let(:argv_options) { [flag, config_file.path] }
+
+              it "should set ENV['NEW_RELIC_ENV'] to production" do
+                ENV.delete('NEW_RELIC_ENV')
+                expect { subject }.to change { ENV['NEW_RELIC_ENV'] }.from(nil).to('production')
+              end
 
               it 'should set the configuration file' do
                 expect(subject.config_file).to eq(config_file.path)
