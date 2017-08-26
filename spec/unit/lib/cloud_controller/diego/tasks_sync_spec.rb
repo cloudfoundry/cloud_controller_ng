@@ -11,6 +11,7 @@ module VCAP::CloudController
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
+        allow(bbs_task_client).to receive(:fetch_task).and_return(nil)
         allow(bbs_task_client).to receive(:fetch_tasks).and_return(bbs_tasks)
         allow(bbs_task_client).to receive(:bump_freshness)
       end
@@ -34,24 +35,22 @@ module VCAP::CloudController
           end
         end
 
-        context 'when bbs does not know about a running/canceling task' do
+        context 'when a running CC task is missing from BBS' do
           let!(:running_task) { TaskModel.make(:running, created_at: 1.minute.ago) }
           let!(:canceling_task) { TaskModel.make(:canceling, created_at: 1.minute.ago) }
           let(:bbs_tasks) { [] }
 
-          it 'marks the task as failed' do
+          it 'marks the tasks as failed' do
             subject.sync
+
+            expect(bbs_task_client).to have_received(:fetch_task).with(running_task.guid)
+            expect(bbs_task_client).to have_received(:fetch_task).with(canceling_task.guid)
 
             expect(running_task.reload.state).to eq(VCAP::CloudController::TaskModel::FAILED_STATE)
             expect(running_task.reload.failure_reason).to eq(BULKER_TASK_FAILURE)
 
             expect(canceling_task.reload.state).to eq(VCAP::CloudController::TaskModel::FAILED_STATE)
             expect(canceling_task.reload.failure_reason).to eq(BULKER_TASK_FAILURE)
-          end
-
-          it 'bumps freshness' do
-            subject.sync
-            expect(bbs_task_client).to have_received(:bump_freshness).once
           end
 
           it 'creates TASK_STOPPED events' do
@@ -66,6 +65,11 @@ module VCAP::CloudController
             expect(task2_event).not_to be_nil
             expect(task2_event.task_guid).to eq(canceling_task.guid)
             expect(task2_event.parent_app_guid).to eq(canceling_task.app.guid)
+          end
+
+          it 'bumps freshness' do
+            subject.sync
+            expect(bbs_task_client).to have_received(:bump_freshness).once
           end
         end
 
@@ -236,21 +240,58 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a new task is created after cc fetches tasks from bbs' do
-          let(:syncing_time) { Time.new(2017, 1, 1) }
+        context 'when a new task is created after cc initally fetches tasks from bbs' do
+          context 'and the newly started task does not complete before checking to see if it should fail' do
+            let(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
+            let(:bbs_task) { ::Diego::Bbs::Models::Task.new(task_guid: 'some-task-guid', state: ::Diego::Bbs::Models::Task::State::Running) }
 
-          it 'does not fail the new task' do
-            task = TaskModel.make(created_at: syncing_time + 1.second, state: TaskModel::RUNNING_STATE)
-            Timecop.freeze(syncing_time) do
-              subject.sync
+            before do
+              allow(bbs_task_client).to receive(:fetch_task).and_return(bbs_task)
             end
 
-            expect(task.reload.state).to eq(TaskModel::RUNNING_STATE)
+            it 'does not fail the new task' do
+              subject.sync
+
+              expect(cc_task.reload.state).to eq(TaskModel::RUNNING_STATE)
+            end
+
+            it 'does not create TASK_STOPPED events' do
+              subject.sync
+
+              task_event = AppUsageEvent.find(task_guid: cc_task.guid, state: 'TASK_STOPPED')
+              expect(task_event).to be_nil
+            end
+
+            it 'bumps freshness' do
+              subject.sync
+              expect(bbs_task_client).to have_received(:bump_freshness).once
+            end
           end
 
-          it 'bumps freshness' do
-            subject.sync
-            expect(bbs_task_client).to have_received(:bump_freshness).once
+          context 'and the newly started task completes before the iteration completes' do
+            let!(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
+            let(:bbs_tasks) { [] }
+
+            before do
+              # HACK: simulate a task completing while the iteration is underway
+              allow(bbs_task_client).to receive(:fetch_task) do |task_guid|
+                expect(task_guid).to eq('some-task-guid')
+                cc_task.update(state: TaskModel::SUCCEEDED_STATE)
+
+                nil
+              end
+            end
+
+            it 'does not fail the new task' do
+              subject.sync
+
+              expect(cc_task.reload.state).to eq(TaskModel::SUCCEEDED_STATE)
+            end
+
+            it 'bumps freshness' do
+              subject.sync
+              expect(bbs_task_client).to have_received(:bump_freshness).once
+            end
           end
         end
       end

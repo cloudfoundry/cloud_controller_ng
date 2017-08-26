@@ -268,8 +268,8 @@ module Diego
         let(:response_status) { 404 }
         let(:response_body) { 'not found' }
 
-        it 'raises' do
-          expect { client.task_by_guid('some-guid') }.to raise_error(ResponseError, /status: 404, body: not found/)
+        it 'returns nil' do
+          expect(client.task_by_guid('some-guid')).to eq(Bbs::Models::TaskResponse.new(error: nil, task: nil))
         end
       end
 

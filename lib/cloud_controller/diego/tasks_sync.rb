@@ -15,29 +15,28 @@ module VCAP::CloudController
 
       def sync
         logger.info('run-task-sync')
-        bbs_fetch_time = Time.now.utc
         diego_tasks = bbs_task_client.fetch_tasks.index_by(&:task_guid)
 
-        batched_tasks(bbs_fetch_time) do |tasks|
+        batched_cc_tasks do |cc_tasks|
           tasks_to_fail = []
 
-          tasks.each do |task|
-            diego_task = diego_tasks.delete(task.guid)
-            next unless [TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE].include? task.state
+          cc_tasks.each do |cc_task|
+            diego_task = diego_tasks.delete(cc_task.guid)
+            next unless [TaskModel::RUNNING_STATE, TaskModel::CANCELING_STATE].include? cc_task.state
 
             if diego_task.nil?
-              tasks_to_fail << task.guid
-              logger.info('missing-diego-task', task_guid: task.guid)
-            elsif task.state == TaskModel::CANCELING_STATE
-              @workpool.submit(task.guid) do |guid|
+              tasks_to_fail << cc_task.guid if diego_task_missing?(cc_task.guid) && !task_finished_while_iterating?(cc_task.guid)
+              logger.info('missing-diego-task', task_guid: cc_task.guid)
+            elsif cc_task.state == TaskModel::CANCELING_STATE
+              @workpool.submit(cc_task.guid) do |guid|
                 bbs_task_client.cancel_task(guid)
                 logger.info('canceled-cc-task', task_guid: guid)
               end
             end
           end
 
-          TaskModel.where(guid: tasks_to_fail).each do |task|
-            task.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
+          TaskModel.where(guid: tasks_to_fail).each do |cc_task|
+            cc_task.update(state: TaskModel::FAILED_STATE, failure_reason: BULKER_TASK_FAILURE)
           end
         end
 
@@ -69,11 +68,20 @@ module VCAP::CloudController
 
       private
 
-      def batched_tasks(fetch_time)
+      def diego_task_missing?(task_guid)
+        bbs_task_client.fetch_task(task_guid).nil?
+      end
+
+      def task_finished_while_iterating?(task_guid)
+        cc_task = TaskModel.find(guid: task_guid)
+        cc_task.state == TaskModel::FAILED_STATE || cc_task.state == TaskModel::SUCCEEDED_STATE
+      end
+
+      def batched_cc_tasks
         last_id = 0
         loop do
           tasks = TaskModel.where(
-            Sequel.lit('tasks.id > ? AND tasks.created_at < ?', last_id, fetch_time)
+            Sequel.lit('tasks.id > ?', last_id)
           ).order(:id).limit(BATCH_SIZE).all
 
           yield tasks

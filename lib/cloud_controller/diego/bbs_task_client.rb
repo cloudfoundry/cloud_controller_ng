@@ -30,6 +30,16 @@ module VCAP::CloudController
         end
       end
 
+      def fetch_task(guid)
+        logger.info('fetch.task.request')
+
+        handle_diego_errors do
+          response = client.task_by_guid(guid)
+          logger.info('fetch.task.response', error: response.error)
+          response
+        end.task
+      end
+
       def fetch_tasks
         logger.info('fetch.tasks.request')
 
