@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:droplet) { DropletModel.make(app: app, state: DropletModel::PROCESSING_UPLOAD_STATE) }
 
-      subject(:job) { described_class.new('file_path', droplet.guid) }
+      subject(:job) { UploadDropletFromUser.new('file_path', droplet.guid) }
 
       it { is_expected.to be_a_valid_job }
 

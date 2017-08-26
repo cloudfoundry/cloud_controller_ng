@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe TaskActionBuilder do
-        subject(:builder) { described_class.new(config, task, lifecycle_data) }
+        subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
 
         let(:config) do
           {

@@ -21,7 +21,7 @@ module VCAP::CloudController
     let!(:package_for_app2) { PackageModel.make(app_guid: app2_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::CREATED_STATE) }
     let!(:package_for_app3) { PackageModel.make(app_guid: app3_in_space2.guid, type: PackageModel::BITS_TYPE) }
 
-    subject(:fetcher) { described_class.new }
+    subject(:fetcher) { PackageListFetcher.new }
     let(:message) { PackagesListMessage.new(filters) }
 
     let(:filters) { {} }

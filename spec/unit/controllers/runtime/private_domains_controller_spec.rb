@@ -3,19 +3,19 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe PrivateDomainsController do
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(PrivateDomainsController).to be_queryable_by(:name) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(PrivateDomainsController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           owning_organization_guid: { type: 'string', required: true }
         })
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(PrivateDomainsController).to have_updatable_attributes({
           name: { type: 'string' },
           owning_organization_guid: { type: 'string' }
         })
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes(
+        expect(PrivateDomainsController).to have_nested_routes(
           {
             shared_organizations: [:get],
           })

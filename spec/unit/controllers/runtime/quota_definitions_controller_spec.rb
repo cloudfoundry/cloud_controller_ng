@@ -3,12 +3,12 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::QuotaDefinitionsController do
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::QuotaDefinitionsController).to be_queryable_by(:name) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(VCAP::CloudController::QuotaDefinitionsController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           non_basic_services_allowed: { type: 'bool', required: true },
           total_services: { type: 'integer', required: true },
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(VCAP::CloudController::QuotaDefinitionsController).to have_updatable_attributes({
           name: { type: 'string' },
           non_basic_services_allowed: { type: 'bool' },
           total_services: { type: 'integer' },

@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe StagingActionBuilder do
-        subject(:builder) { described_class.new(config, staging_details, lifecycle_data) }
+        subject(:builder) { StagingActionBuilder.new(config, staging_details, lifecycle_data) }
 
         let(:droplet) { DropletModel.make(:buildpack) }
         let(:config) do

@@ -18,14 +18,14 @@ module CloudController
       end
       let(:directory_key) { 'a-directory-key' }
       let(:client_with_root) do
-        described_class.new(connection_config: connection_config,
-                            directory_key: directory_key,
-                            root_dir: root_dir)
+        FogClient.new(connection_config: connection_config,
+                      directory_key: directory_key,
+                      root_dir: root_dir)
       end
 
       subject(:client) do
-        described_class.new(connection_config: connection_config,
-                            directory_key: directory_key)
+        FogClient.new(connection_config: connection_config,
+                      directory_key: directory_key)
       end
 
       describe 'conforms to blobstore client interface' do
@@ -56,9 +56,9 @@ module CloudController
         let(:key) { 'abcdef' }
 
         subject(:client) do
-          described_class.new(connection_config: connection_config,
-                              directory_key: directory_key,
-                              cdn: cdn)
+          FogClient.new(connection_config: connection_config,
+                        directory_key: directory_key,
+                        cdn: cdn)
         end
 
         before do
@@ -95,8 +95,8 @@ module CloudController
 
       context 'common behaviors' do
         let(:directory) { Fog::Storage.new(connection_config).directories.create(key: directory_key) }
-        let(:client) { described_class.new(connection_config: connection_config,
-                                           directory_key: directory_key)
+        let(:client) { FogClient.new(connection_config: connection_config,
+                                     directory_key: directory_key)
         }
 
         context 'with existing files' do
@@ -159,10 +159,10 @@ module CloudController
             let(:max_size) { 50 }
 
             subject(:client) do
-              described_class.new(connection_config: connection_config,
-                                  directory_key: directory_key,
-                                  min_size: min_size,
-                                  max_size: max_size)
+              FogClient.new(connection_config: connection_config,
+                            directory_key: directory_key,
+                            min_size: min_size,
+                            max_size: max_size)
             end
 
             it 'does not copy files below the minimum size limit' do
@@ -296,10 +296,10 @@ module CloudController
             let(:max_size) { 50 }
 
             subject(:client) do
-              described_class.new(connection_config: connection_config,
-                                  directory_key: directory_key,
-                                  min_size: min_size,
-                                  max_size: max_size)
+              FogClient.new(connection_config: connection_config,
+                            directory_key: directory_key,
+                            min_size: min_size,
+                            max_size: max_size)
             end
 
             it 'does not copy files below the minimum size limit' do
@@ -329,9 +329,9 @@ module CloudController
             end
 
             context 'when encryption type is specified' do
-              let(:client_with_encryption) { described_class.new(connection_config: connection_config,
-                                                                 directory_key: directory_key,
-                                                                 storage_options: { encryption: 'my-algo' })
+              let(:client_with_encryption) { FogClient.new(connection_config: connection_config,
+                                                           directory_key: directory_key,
+                                                           storage_options: { encryption: 'my-algo' })
               }
 
               it 'passes the encryption options to aws' do
@@ -349,8 +349,8 @@ module CloudController
             end
 
             context 'when encryption type is not specified' do
-              let(:client_with_encryption) { described_class.new(connection_config: connection_config,
-                                                                 directory_key: directory_key)
+              let(:client_with_encryption) { FogClient.new(connection_config: connection_config,
+                                                           directory_key: directory_key)
               }
 
               it 'does not pass the encryption options to aws' do
@@ -431,9 +431,9 @@ module CloudController
           context 'encryption' do
             let(:encryption) { 'my-algo' }
             let(:client) do
-              described_class.new(connection_config: connection_config,
-                                  directory_key: directory_key,
-                                  storage_options: { encryption: encryption, other: 'thing' })
+              FogClient.new(connection_config: connection_config,
+                            directory_key: directory_key,
+                            storage_options: { encryption: encryption, other: 'thing' })
             end
             let(:dest_file) { double(:file, copy: true, save: true, nil?: false) }
             let(:src_file) { double(:file, copy: true, nil?: false) }
@@ -725,9 +725,9 @@ module CloudController
           let(:cdn) { Cdn.make(uri) }
 
           subject(:client) do
-            described_class.new(connection_config: connection_config,
-                                directory_key: directory_key,
-                                cdn: cdn)
+            FogClient.new(connection_config: connection_config,
+                          directory_key: directory_key,
+                          cdn: cdn)
           end
 
           around(:each) do |example|

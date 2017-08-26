@@ -7,17 +7,17 @@ module VCAP::CloudController
     let(:logger) { double(:logger) }
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
-      it { expect(described_class).to be_queryable_by(:service_plan_guid) }
-      it { expect(described_class).to be_queryable_by(:service_binding_guid) }
-      it { expect(described_class).to be_queryable_by(:gateway_name) }
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(VCAP::CloudController::ServiceInstancesController).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::ServiceInstancesController).to be_queryable_by(:space_guid) }
+      it { expect(VCAP::CloudController::ServiceInstancesController).to be_queryable_by(:service_plan_guid) }
+      it { expect(VCAP::CloudController::ServiceInstancesController).to be_queryable_by(:service_binding_guid) }
+      it { expect(VCAP::CloudController::ServiceInstancesController).to be_queryable_by(:gateway_name) }
+      it { expect(VCAP::CloudController::ServiceInstancesController).to be_queryable_by(:organization_guid) }
     end
 
     describe 'Attributes' do
       it 'has creatable attributes' do
-        expect(described_class).to have_creatable_attributes({
+        expect(VCAP::CloudController::ServiceInstancesController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           space_guid: { type: 'string', required: true },
           service_plan_guid: { type: 'string', required: true },
@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       it 'has updatable attributes' do
-        expect(described_class).to have_updatable_attributes({
+        expect(VCAP::CloudController::ServiceInstancesController).to have_updatable_attributes({
           name: { type: 'string' },
           space_guid: { type: 'string' },
           service_plan_guid: { type: 'string' },
@@ -260,7 +260,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes(
+        expect(VCAP::CloudController::ServiceInstancesController).to have_nested_routes(
           service_bindings: [:get],
           service_keys: [:get, :put, :delete],
           routes: [:get, :put, :delete]
@@ -3722,8 +3722,8 @@ module VCAP::CloudController
       end
 
       it 'returns a generic ServiceInstanceInvalid error' do
-        expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceInvalid')
-        expect(described_class.translate_validation_exception(e, attributes).message).to include(full_messages)
+        expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceInvalid')
+        expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).message).to include(full_messages)
       end
 
       context "when errors are included but aren't supported validation exceptions" do
@@ -3734,8 +3734,8 @@ module VCAP::CloudController
         let(:service_instance_tags_errors) { [:stuff] }
 
         it 'returns a generic ServiceInstanceInvalid error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceInvalid')
-          expect(described_class.translate_validation_exception(e, attributes).message).to include(full_messages)
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceInvalid')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).message).to include(full_messages)
         end
       end
 
@@ -3744,8 +3744,8 @@ module VCAP::CloudController
         let(:space_and_name_errors) { [:unique] }
 
         it 'returns a ServiceInstanceNameTaken error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTaken')
-          expect(described_class.translate_validation_exception(e, attributes).message).to include(attributes['name'])
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTaken')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).message).to include(attributes['name'])
         end
       end
 
@@ -3753,7 +3753,7 @@ module VCAP::CloudController
         let(:quota_errors) { [:service_instance_space_quota_exceeded] }
 
         it 'returns a ServiceInstanceSpaceQuotaExceeded error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceSpaceQuotaExceeded')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceSpaceQuotaExceeded')
         end
       end
 
@@ -3761,7 +3761,7 @@ module VCAP::CloudController
         let(:quota_errors) { [:service_instance_quota_exceeded] }
 
         it 'returns a ServiceInstanceSpaceQuotaExceeded error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceQuotaExceeded')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceQuotaExceeded')
         end
       end
 
@@ -3769,7 +3769,7 @@ module VCAP::CloudController
         let(:service_plan_errors) { [:paid_services_not_allowed_by_space_quota] }
 
         it 'returns a ServiceInstanceServicePlanNotAllowedBySpaceQuota error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceServicePlanNotAllowedBySpaceQuota')
         end
       end
 
@@ -3777,7 +3777,7 @@ module VCAP::CloudController
         let(:service_plan_errors) { [:paid_services_not_allowed_by_quota] }
 
         it 'returns a ServiceInstanceServicePlanNotAllowed error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceServicePlanNotAllowed')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceServicePlanNotAllowed')
         end
       end
 
@@ -3785,7 +3785,7 @@ module VCAP::CloudController
         let(:service_instance_name_errors) { [:max_length] }
 
         it 'returns a ServiceInstanceNameTooLong error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTooLong')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTooLong')
         end
       end
 
@@ -3793,7 +3793,7 @@ module VCAP::CloudController
         let(:service_instance_name_errors) { [:presence] }
 
         it 'returns a ServiceInstanceNameEmpty error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameEmpty')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameEmpty')
         end
       end
 
@@ -3801,7 +3801,7 @@ module VCAP::CloudController
         let(:service_instance_tags_errors) { [:too_long] }
 
         it 'returns a ServiceInstanceTagsTooLong error' do
-          expect(described_class.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceTagsTooLong')
+          expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceTagsTooLong')
         end
       end
     end

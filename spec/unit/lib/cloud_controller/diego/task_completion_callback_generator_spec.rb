@@ -4,7 +4,7 @@ require 'cloud_controller/diego/task_completion_callback_generator'
 module VCAP::CloudController
   module Diego
     RSpec.describe TaskCompletionCallbackGenerator do
-      subject(:generator) { described_class.new(TestConfig.config) }
+      subject(:generator) { TaskCompletionCallbackGenerator.new(TestConfig.config) }
 
       describe '#generate' do
         let(:task) { TaskModel.make }
@@ -49,7 +49,7 @@ module VCAP::CloudController
         end
 
         context 'when there is no "diego" configuration (this is only possible in tests)' do
-          subject(:generator) { described_class.new(task_config) }
+          subject(:generator) { TaskCompletionCallbackGenerator.new(task_config) }
           let(:task_config) do
             {
               internal_service_hostname: 'google.com',
@@ -70,7 +70,7 @@ module VCAP::CloudController
         end
 
         context 'when there is no "internal_api" configuration and local sync is on (this is only possible in tests)' do
-          subject(:generator) { described_class.new(task_config) }
+          subject(:generator) { TaskCompletionCallbackGenerator.new(task_config) }
 
           let(:task_config) do
             {

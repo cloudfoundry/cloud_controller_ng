@@ -7,14 +7,14 @@ module VCAP::CloudController
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(ServicePlanVisibilitiesController).to have_creatable_attributes({
           service_plan_guid: { type: 'string', required: true },
           organization_guid: { type: 'string', required: true }
         })
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(ServicePlanVisibilitiesController).to have_updatable_attributes({
           service_plan_guid: { type: 'string' },
           organization_guid: { type: 'string' }
         })
@@ -51,8 +51,8 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
-      it { expect(described_class).to be_queryable_by(:service_plan_guid) }
+      it { expect(ServicePlanVisibilitiesController).to be_queryable_by(:organization_guid) }
+      it { expect(ServicePlanVisibilitiesController).to be_queryable_by(:service_plan_guid) }
     end
 
     describe 'POST /v2/service_plan_visibilities' do

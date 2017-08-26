@@ -5,8 +5,8 @@ module VCAP::CloudController
     let(:event_guid1) { SecureRandom.uuid }
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:service_instance_type) }
-      it { expect(described_class).to be_queryable_by(:service_guid) }
+      it { expect(ServiceUsageEventsController).to be_queryable_by(:service_instance_type) }
+      it { expect(ServiceUsageEventsController).to be_queryable_by(:service_guid) }
     end
 
     before do

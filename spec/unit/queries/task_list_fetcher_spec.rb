@@ -23,7 +23,7 @@ module VCAP::CloudController
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { TasksListMessage.new(filters) }
     let(:filters) { {} }
-    subject(:fetcher) { described_class.new }
+    subject(:fetcher) { TaskListFetcher.new }
 
     results = nil
 

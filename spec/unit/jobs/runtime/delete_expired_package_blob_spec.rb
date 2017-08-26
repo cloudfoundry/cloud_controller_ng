@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe DeleteExpiredPackageBlob do
-      subject(:job) { described_class.new(package.guid) }
+      subject(:job) { DeleteExpiredPackageBlob.new(package.guid) }
       let(:package) { PackageModel.make(package_hash: 'some-hash', sha256_checksum: 'example-256-checksum') }
 
       it { is_expected.to be_a_valid_job }
@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'when the package does not exist' do
-        let(:job) { described_class.new('phooey') }
+        let(:job) { DeleteExpiredPackageBlob.new('phooey') }
 
         it 'does not raise' do
           expect { job.perform }.not_to raise_error

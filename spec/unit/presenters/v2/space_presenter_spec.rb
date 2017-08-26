@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController::Presenters::V2
   RSpec.describe SpacePresenter do
-    let(:space_presenter) { described_class.new }
+    let(:space_presenter) { SpacePresenter.new }
     let(:controller) { 'controller' }
     let(:opts) { {} }
     let(:depth) { 'depth' }

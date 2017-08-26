@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe BuildpackDelete do
-      subject(:job) { described_class.new(guid: buildpack_guid, timeout: timeout) }
+      subject(:job) { BuildpackDelete.new(guid: buildpack_guid, timeout: timeout) }
       let(:buildpack_guid) { buildpack.guid }
       let(:timeout) { 90000 }
 

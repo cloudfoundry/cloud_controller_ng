@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SharedDomain, type: :model do
-    subject { described_class.make name: 'test.example.com', router_group_guid: router_group_guid, router_group_type: 'tcp' }
+    subject { SharedDomain.make name: 'test.example.com', router_group_guid: router_group_guid, router_group_type: 'tcp' }
 
     let(:router_group_guid) { 'my-router-group-guid' }
 

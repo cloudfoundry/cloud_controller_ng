@@ -118,7 +118,7 @@ RSpec.describe RuboCop::Cop::Migration::AddConstraintName do
     end
   end
 
-  subject(:cop) { described_class.new(RuboCop::Config.new({})) }
+  subject(:cop) { RuboCop::Cop::Migration::AddConstraintName.new(RuboCop::Config.new({})) }
 
   context 'when the method is add_unique_constraint' do
     it_behaves_like 'a cop that validates explicit names are added to the index', :add_unique_constraint

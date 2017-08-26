@@ -145,7 +145,7 @@ module VCAP::Services::ServiceBrokers::V2
         )
       end
       let(:catalog_plan) do
-        described_class.new(catalog_service,
+        CatalogPlan.new(catalog_service,
           'id' => plan_broker_provided_id,
           'name' => 'my-plan-name',
           'description' => 'my plan description',

@@ -13,7 +13,7 @@ module VCAP::CloudController
       it 'finds calls #to_hash on a presenter for the object' do
         allow(::CloudController::Presenters::V2::PresenterProvider).to receive(:presenter_for).with(object).
           and_return(presenter)
-        expect(described_class.new.serialize(controller, object, opts, orphans)).to be(serialized_object)
+        expect(RestController::PreloadedObjectSerializer.new.serialize(controller, object, opts, orphans)).to be(serialized_object)
         expect(presenter).to have_received(:to_hash).with(controller, object, opts, 0, [], orphans)
       end
     end

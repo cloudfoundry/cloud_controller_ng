@@ -4,7 +4,7 @@ require 'messages/route_mappings/route_mappings_list_message'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteMappingPresenter do
-    subject(:presenter) { described_class.new(route_mapping) }
+    subject(:presenter) { RouteMappingPresenter.new(route_mapping) }
 
     let(:route_mapping) do
       VCAP::CloudController::RouteMappingModel.make(

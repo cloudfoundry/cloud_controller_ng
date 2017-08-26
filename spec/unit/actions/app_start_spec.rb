@@ -29,12 +29,12 @@ module VCAP::CloudController
         end
 
         it 'starts the app' do
-          described_class.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app: app, user_audit_info: user_audit_info)
           expect(app.desired_state).to eq('STARTED')
         end
 
         it 'sets the docker image on the process' do
-          described_class.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app: app, user_audit_info: user_audit_info)
 
           process1.reload
           expect(process1.docker_image).to eq(droplet.docker_receipt_image)
@@ -56,7 +56,7 @@ module VCAP::CloudController
         end
 
         it 'sets the desired state on the app' do
-          described_class.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app: app, user_audit_info: user_audit_info)
           expect(app.desired_state).to eq('STARTED')
         end
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
             user_audit_info,
           )
 
-          described_class.start(app: app, user_audit_info: user_audit_info)
+          AppStart.start(app: app, user_audit_info: user_audit_info)
         end
 
         context 'when the app is invalid' do
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
           it 'raises a InvalidApp exception' do
             expect {
-              described_class.start(app: app, user_audit_info: user_audit_info)
+              AppStart.start(app: app, user_audit_info: user_audit_info)
             }.to raise_error(AppStart::InvalidApp, 'some message')
           end
         end
@@ -92,7 +92,7 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
 
           it 'sets the package hash correctly on the process' do
-            described_class.start(app: app, user_audit_info: user_audit_info)
+            AppStart.start(app: app, user_audit_info: user_audit_info)
 
             process1.reload
             expect(process1.package_hash).to eq(package.package_hash)
@@ -109,13 +109,13 @@ module VCAP::CloudController
         let(:app) { AppModel.make(:buildpack, desired_state: 'STOPPED') }
 
         it 'sets the desired state on the app' do
-          described_class.start_without_event(app)
+          AppStart.start_without_event(app)
           expect(app.desired_state).to eq('STARTED')
         end
 
         it 'does not create an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).not_to receive(:record_app_start)
-          described_class.start_without_event(app)
+          AppStart.start_without_event(app)
         end
       end
     end

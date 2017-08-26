@@ -3,14 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe UserProvidedServiceInstancesController, :services do
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(UserProvidedServiceInstancesController).to be_queryable_by(:name) }
+      it { expect(UserProvidedServiceInstancesController).to be_queryable_by(:space_guid) }
+      it { expect(UserProvidedServiceInstancesController).to be_queryable_by(:organization_guid) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(UserProvidedServiceInstancesController).to have_creatable_attributes({
               name:                  { type: 'string', required: true },
               credentials:           { type: 'hash', default: {} },
               syslog_drain_url:      { type: 'string', default: '' },
@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(UserProvidedServiceInstancesController).to have_updatable_attributes({
               name:                  { type: 'string' },
               credentials:           { type: 'hash' },
               syslog_drain_url:      { type: 'string' },
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes(
+        expect(UserProvidedServiceInstancesController).to have_nested_routes(
           service_bindings: [:get, :put, :delete],
           routes: [:get, :put, :delete]
         )

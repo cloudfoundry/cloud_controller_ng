@@ -22,7 +22,7 @@ module CloudController
       let(:upload_url_generator) { instance_double(UploadUrlGenerator) }
 
       subject(:url_generator) do
-        described_class.new(blobstore_options,
+        UrlGenerator.new(blobstore_options,
           package_blobstore,
           buildpack_cache_blobstore,
           admin_buildpack_blobstore,

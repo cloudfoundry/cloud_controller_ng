@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe OrphanedBlobsCleanup do
-      subject(:job) { described_class.new }
+      subject(:job) { OrphanedBlobsCleanup.new }
       let(:perform_blob_cleanup) { true }
       let(:logger) { double(:logger, info: nil, error: nil) }
 

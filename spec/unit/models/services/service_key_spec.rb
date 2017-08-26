@@ -66,7 +66,7 @@ module VCAP::CloudController
 
     describe '#new' do
       it 'has a guid when constructed' do
-        service_key = described_class.new
+        service_key = VCAP::CloudController::ServiceKey.new
         expect(service_key.guid).to be
       end
     end

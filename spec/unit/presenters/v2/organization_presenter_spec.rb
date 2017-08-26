@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController::Presenters::V2
   RSpec.describe OrganizationPresenter do
-    let(:org_presenter) { described_class.new }
+    let(:org_presenter) { OrganizationPresenter.new }
     let(:controller) { 'controller' }
     let(:opts) { {} }
     let(:depth) { 'depth' }

@@ -3,7 +3,7 @@ require 'cloud_controller/diego/docker/docker_uri_converter'
 
 module VCAP::CloudController
   RSpec.describe DockerURIConverter do
-    let(:converter) { described_class.new }
+    let(:converter) { DockerURIConverter.new }
 
     context('and the docker image url has no host') do
       context('and image only') do

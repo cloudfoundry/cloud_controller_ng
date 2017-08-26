@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe TaskCreateFetcher do
-    let(:fetcher) { described_class.new }
+    let(:fetcher) { TaskCreateFetcher.new }
     let(:app) { AppModel.make(space_guid: space.guid) }
     let(:space) { Space.make }
     let(:org) { space.organization }

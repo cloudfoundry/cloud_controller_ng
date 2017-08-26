@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController::Presenters::V2
   RSpec.describe RouteMappingPresenter do
-    subject { described_class.new }
+    subject { RouteMappingPresenter.new }
 
     let(:controller) { 'controller' }
     let(:opts) { {} }

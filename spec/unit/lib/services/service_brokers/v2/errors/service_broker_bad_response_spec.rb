@@ -17,7 +17,7 @@ module VCAP::Services
             end
 
             it 'generates the correct hash' do
-              exception = described_class.new(uri, method, response)
+              exception = ServiceBrokerBadResponse.new(uri, method, response)
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
@@ -35,7 +35,7 @@ module VCAP::Services
             end
 
             it 'renders the correct status code to the user' do
-              exception = described_class.new(uri, method, response)
+              exception = ServiceBrokerBadResponse.new(uri, method, response)
               expect(exception.response_code).to eq 502
             end
           end
@@ -46,7 +46,7 @@ module VCAP::Services
             end
 
             it 'generates the correct hash' do
-              exception = described_class.new(uri, method, response)
+              exception = ServiceBrokerBadResponse.new(uri, method, response)
               exception.set_backtrace(['/foo:1', '/bar:2'])
 
               expect(exception.to_h).to eq({
@@ -63,7 +63,7 @@ module VCAP::Services
             end
 
             it 'renders the correct status code to the user' do
-              exception = described_class.new(uri, method, response)
+              exception = ServiceBrokerBadResponse.new(uri, method, response)
               expect(exception.response_code).to eq 502
             end
           end

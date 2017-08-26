@@ -6,7 +6,7 @@ require 'isolation_segment_unassign'
 module VCAP::CloudController
   RSpec.describe BuildCreate do
     subject(:action) do
-      described_class.new(
+      BuildCreate.new(
         user_audit_info:         user_audit_info,
         memory_limit_calculator: memory_limit_calculator,
         disk_limit_calculator:   disk_limit_calculator,

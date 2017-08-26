@@ -5,7 +5,7 @@ require_relative 'client_shared'
 module CloudController
   module Blobstore
     RSpec.describe SafeDeleteClient do
-      subject(:client) { described_class.new(wrapped_client, root_dir) }
+      subject(:client) { SafeDeleteClient.new(wrapped_client, root_dir) }
       let(:wrapped_client) { NullClient.new }
       let(:root_dir) { 'root-dir' }
       let(:deletable_blob) { Blob.new }

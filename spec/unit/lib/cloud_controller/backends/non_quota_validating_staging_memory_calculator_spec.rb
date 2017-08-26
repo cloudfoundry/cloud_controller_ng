@@ -3,7 +3,7 @@ require 'cloud_controller/backends/non_quota_validating_staging_memory_calculato
 
 module VCAP::CloudController
   RSpec.describe NonQuotaValidatingStagingMemoryCalculator do
-    let(:calculator) { described_class.new }
+    let(:calculator) { NonQuotaValidatingStagingMemoryCalculator.new }
 
     describe '#get_limit' do
       let(:minimum_limit) { 10 }

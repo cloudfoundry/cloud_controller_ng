@@ -21,7 +21,7 @@ module VCAP::CloudController
           end
 
           it 'does not set an isolation segment' do
-            expect(described_class.for_space(space)).to be_nil
+            expect(IsolationSegmentSelector.for_space(space)).to be_nil
           end
         end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
           end
 
           it 'sets the isolation segment' do
-            expect(described_class.for_space(space)).to eq(isolation_segment_model.name)
+            expect(IsolationSegmentSelector.for_space(space)).to eq(isolation_segment_model.name)
           end
 
           context 'and the space from that org has an isolation segment' do
@@ -44,7 +44,7 @@ module VCAP::CloudController
               end
 
               it 'does not set the isolation segment' do
-                expect(described_class.for_space(space)).to be_nil
+                expect(IsolationSegmentSelector.for_space(space)).to be_nil
               end
             end
 
@@ -56,7 +56,7 @@ module VCAP::CloudController
               end
 
               it 'sets the IS from the space' do
-                expect(described_class.for_space(space)).to eq(isolation_segment_model_2.name)
+                expect(IsolationSegmentSelector.for_space(space)).to eq(isolation_segment_model_2.name)
               end
             end
           end
@@ -73,7 +73,7 @@ module VCAP::CloudController
             end
 
             it 'sets the isolation segment' do
-              expect(described_class.for_space(space)).to eq(isolation_segment_model.name)
+              expect(IsolationSegmentSelector.for_space(space)).to eq(isolation_segment_model.name)
             end
           end
         end

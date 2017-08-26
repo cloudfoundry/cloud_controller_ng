@@ -7,7 +7,7 @@ module CloudController
   module Blobstore
     RSpec.describe RetryableClient do
       subject(:client) do
-        described_class.new(
+        RetryableClient.new(
           client: wrapped_client,
           errors: [RetryableError],
           logger: logger,

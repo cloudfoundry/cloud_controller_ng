@@ -4,9 +4,7 @@ require_relative '../blob_shared'
 module CloudController
   module Blobstore
     RSpec.describe FogBlob do
-      subject(:blob) do
-        described_class.new(file, cdn)
-      end
+      subject(:blob) { FogBlob.new(file, cdn) }
       let(:attrs) { { 'a' => 'b', 'c' => 'd' } }
       let(:file) { double('file', key: 'abcdef', attributes: attrs, destroy: nil) }
       let(:cdn) { double(:cdn, download_uri: 'http://localhost') }

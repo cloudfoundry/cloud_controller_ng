@@ -24,7 +24,7 @@ module VCAP
 
     describe '.current_id' do
       after do
-        described_class.current_id = nil
+        Request.current_id = nil
       end
 
       let(:request_id) { SecureRandom.uuid }
@@ -35,21 +35,21 @@ module VCAP
       end
 
       it 'sets the new current_id value' do
-        described_class.current_id = request_id
+        Request.current_id = request_id
 
-        expect(described_class.current_id).to eq request_id
+        expect(Request.current_id).to eq request_id
         expect(Steno.config.context.data.fetch('request_guid')).to eq request_id
       end
 
       it 'deletes from steno context when set to nil' do
-        described_class.current_id = nil
+        Request.current_id = nil
 
-        expect(described_class.current_id).to be_nil
+        expect(Request.current_id).to be_nil
         expect(Steno.config.context.data.key?('request_guid')).to be false
       end
 
       it 'uses the :vcap_request_id thread local' do
-        described_class.current_id = request_id
+        Request.current_id = request_id
 
         expect(Thread.current[:vcap_request_id]).to eq(request_id)
       end

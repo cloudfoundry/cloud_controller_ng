@@ -5,7 +5,7 @@ require_relative 'lifecycle_protocol_shared'
 module VCAP::CloudController
   module Diego
     RSpec.describe TaskProtocol do
-      subject(:protocol) { described_class.new(egress_rules) }
+      subject(:protocol) { TaskProtocol.new(egress_rules) }
 
       let(:default_health_check_timeout) { 99 }
       let(:egress_rules) { double(:egress_rules) }

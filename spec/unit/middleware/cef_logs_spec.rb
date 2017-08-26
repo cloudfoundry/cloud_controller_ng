@@ -4,7 +4,7 @@ require 'request_logs'
 module CloudFoundry
   module Middleware
     RSpec.describe CefLogs do
-      subject(:middleware) { described_class.new(app, logger, '10.10.10.100') }
+      subject(:middleware) { CefLogs.new(app, logger, '10.10.10.100') }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }
       let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_forwarded_ip' }) }

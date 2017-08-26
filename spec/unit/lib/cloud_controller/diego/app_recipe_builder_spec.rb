@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe AppRecipeBuilder do
       subject(:builder) do
-        described_class.new(
+        AppRecipeBuilder.new(
           config:  config,
           process: process,
           ssh_key: ssh_key

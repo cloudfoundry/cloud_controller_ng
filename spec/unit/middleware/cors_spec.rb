@@ -5,7 +5,7 @@ module CloudFoundry
   module Middleware
     RSpec.describe Cors do
       let(:allowed_domains) { ['http://*.inblue.net', 'http://talkoncorners.com', 'http://borrowedheaven.org'] }
-      let(:middleware) { described_class.new(app, allowed_domains) }
+      let(:middleware) { Cors.new(app, allowed_domains) }
       let(:app) { double(:app, call: [123, {}, 'a body']) }
 
       context 'when the Origin header is not present' do

@@ -7,18 +7,18 @@ module VCAP::CloudController
     let(:user_email) { Sham.email }
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
-      it { expect(described_class).to be_queryable_by(:user_guid) }
-      it { expect(described_class).to be_queryable_by(:manager_guid) }
-      it { expect(described_class).to be_queryable_by(:billing_manager_guid) }
-      it { expect(described_class).to be_queryable_by(:auditor_guid) }
-      it { expect(described_class).to be_queryable_by(:status) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:space_guid) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:user_guid) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:manager_guid) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:billing_manager_guid) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:auditor_guid) }
+      it { expect(VCAP::CloudController::OrganizationsController).to be_queryable_by(:status) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes(
+        expect(VCAP::CloudController::OrganizationsController).to have_creatable_attributes(
           {
             name:                  { type: 'string', required: true },
             billing_enabled:       { type: 'bool', default: false },
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes(
+        expect(VCAP::CloudController::OrganizationsController).to have_updatable_attributes(
           {
             name:                         { type: 'string' },
             billing_enabled:              { type: 'bool' },
@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       it 'can order by name and id when listing' do
-        expect(described_class.sortable_parameters).to match_array([:id, :name])
+        expect(VCAP::CloudController::OrganizationsController.sortable_parameters).to match_array([:id, :name])
       end
     end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes(
+        expect(VCAP::CloudController::OrganizationsController).to have_nested_routes(
           {
             spaces:                  [:get, :put, :delete],
             domains:                 [:get, :delete],

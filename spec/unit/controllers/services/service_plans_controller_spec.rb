@@ -11,16 +11,16 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:active) }
-      it { expect(described_class).to be_queryable_by(:service_guid) }
-      it { expect(described_class).to be_queryable_by(:service_instance_guid) }
-      it { expect(described_class).to be_queryable_by(:service_broker_guid) }
-      it { expect(described_class).to be_queryable_by(:unique_id) }
+      it { expect(ServicePlansController).to be_queryable_by(:active) }
+      it { expect(ServicePlansController).to be_queryable_by(:service_guid) }
+      it { expect(ServicePlansController).to be_queryable_by(:service_instance_guid) }
+      it { expect(ServicePlansController).to be_queryable_by(:service_broker_guid) }
+      it { expect(ServicePlansController).to be_queryable_by(:unique_id) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).
+        expect(ServicePlansController).
           to have_creatable_attributes(
             {
               name: { type: 'string', required: true },
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).
+        expect(ServicePlansController).
           to have_updatable_attributes(
             {
               name: { type: 'string' },
@@ -116,7 +116,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ service_instances: [:get, :put, :delete] })
+        expect(ServicePlansController).to have_nested_routes({ service_instances: [:get, :put, :delete] })
       end
     end
 

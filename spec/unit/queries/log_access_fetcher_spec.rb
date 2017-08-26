@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:process) { AppModel.make(space_guid: space.guid) }
     let(:sad_process) { AppModel.make }
     let(:org) { space.organization }
-    let(:fetcher) { described_class.new }
+    let(:fetcher) { LogAccessFetcher.new }
     let(:space_guids) { [space.guid] }
 
     describe '#app_exists?' do

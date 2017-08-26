@@ -17,7 +17,7 @@ module VCAP::CloudController
         it 'requests app creation' do
           allow(client).to receive(:desire_app)
 
-          described_class.create_or_update_app(process_guid, recipe_builder, client)
+          DesireAppHandler.create_or_update_app(process_guid, recipe_builder, client)
 
           expect(client).to have_received(:desire_app).with(desired_lrp)
         end
@@ -34,7 +34,7 @@ module VCAP::CloudController
           end
 
           it 'updates the app' do
-            described_class.create_or_update_app(process_guid, recipe_builder, client)
+            DesireAppHandler.create_or_update_app(process_guid, recipe_builder, client)
 
             expect(client).to have_received(:update_app).with('the-process-guid', desired_lrp_update)
             expect(client).not_to have_received(:desire_app)

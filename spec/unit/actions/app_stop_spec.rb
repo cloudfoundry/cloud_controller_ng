@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     describe '#stop' do
       it 'sets the desired state on the app' do
-        described_class.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app: app, user_audit_info: user_audit_info)
         expect(app.desired_state).to eq('STOPPED')
       end
 
@@ -23,11 +23,11 @@ module VCAP::CloudController
           user_audit_info,
         )
 
-        described_class.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app: app, user_audit_info: user_audit_info)
       end
 
       it 'prepares the sub-processes of the app' do
-        described_class.stop(app: app, user_audit_info: user_audit_info)
+        AppStop.stop(app: app, user_audit_info: user_audit_info)
         app.processes.each do |process|
           expect(process.started?).to eq(false)
           expect(process.state).to eq('STOPPED')
@@ -41,7 +41,7 @@ module VCAP::CloudController
 
         it 'raises a InvalidApp exception' do
           expect {
-            described_class.stop(app: app, user_audit_info: user_audit_info)
+            AppStop.stop(app: app, user_audit_info: user_audit_info)
           }.to raise_error(AppStop::InvalidApp, 'some message')
         end
       end
@@ -49,13 +49,13 @@ module VCAP::CloudController
 
     describe '#stop_without_event' do
       it 'sets the desired state on the app' do
-        described_class.stop_without_event(app)
+        AppStop.stop_without_event(app)
         expect(app.desired_state).to eq('STOPPED')
       end
 
       it 'does not record an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).not_to receive(:record_app_stop)
-        described_class.stop_without_event(app)
+        AppStop.stop_without_event(app)
       end
     end
   end

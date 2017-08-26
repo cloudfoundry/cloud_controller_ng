@@ -56,12 +56,12 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(ServiceBrokersController).to be_queryable_by(:name) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(ServiceBrokersController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           broker_url: { type: 'string', required: true },
           auth_username: { type: 'string', required: true },
@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(ServiceBrokersController).to have_updatable_attributes({
           name: { type: 'string' },
           broker_url: { type: 'string' },
           auth_username: { type: 'string' },

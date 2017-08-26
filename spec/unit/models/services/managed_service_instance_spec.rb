@@ -94,17 +94,17 @@ module VCAP::CloudController
 
     describe '#create' do
       it 'has a guid when constructed' do
-        instance = described_class.new
+        instance = ManagedServiceInstance.new
         expect(instance.guid).to be
       end
 
       it 'saves with is_gateway_service true' do
-        instance = described_class.make
+        instance = ManagedServiceInstance.make
         expect(instance.refresh.is_gateway_service).to eq(true)
       end
 
       it 'creates a CREATED service usage event' do
-        instance = described_class.make
+        instance = ManagedServiceInstance.make
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)

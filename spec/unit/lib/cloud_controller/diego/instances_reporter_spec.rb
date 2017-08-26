@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Diego
     RSpec.describe InstancesReporter do
-      subject(:instances_reporter) { described_class.new(bbs_instances_client, traffic_controller_client) }
+      subject(:instances_reporter) { InstancesReporter.new(bbs_instances_client, traffic_controller_client) }
 
       let(:process) { ProcessModelFactory.make(instances: desired_instances) }
       let(:desired_instances) { 1 }

@@ -3,7 +3,7 @@ require 'fetchers/isolation_segment_spaces_fetcher'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentSpacesFetcher do
-    subject(:fetcher) { described_class.new(isolation_segment_model) }
+    subject(:fetcher) { IsolationSegmentSpacesFetcher.new(isolation_segment_model) }
 
     let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
 

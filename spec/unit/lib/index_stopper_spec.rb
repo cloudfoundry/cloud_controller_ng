@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:runner) { double(:runner, stop_index: nil) }
     let(:app) { double(:app, guid: 'app-guid') }
 
-    subject(:index_stopper) { described_class.new(runners) }
+    subject(:index_stopper) { IndexStopper.new(runners) }
 
     describe '#stop_index' do
       it 'stops the index of the app' do

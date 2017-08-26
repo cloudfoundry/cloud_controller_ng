@@ -9,12 +9,12 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::StacksController).to be_queryable_by(:name) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(VCAP::CloudController::StacksController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           description: { type: 'string', required: false }
         })

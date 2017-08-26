@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController::RestController
   RSpec.describe ObjectRenderer do
-    subject(:renderer) { described_class.new(eager_loader, serializer, renderer_opts) }
+    subject(:renderer) { ObjectRenderer.new(eager_loader, serializer, renderer_opts) }
     let(:eager_loader) { SecureEagerLoader.new }
     let(:serializer) { PreloadedObjectSerializer.new }
     let(:renderer_opts) { { max_inline_relations_depth: 100_000 } }

@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe V2::AppUpdate do
     let(:access_validator) { double('access_validator', validate_access: true) }
     let(:stagers) { instance_double(Stagers) }
-    subject(:app_update) { described_class.new(access_validator: access_validator, stagers: stagers) }
+    subject(:app_update) { V2::AppUpdate.new(access_validator: access_validator, stagers: stagers) }
 
     describe 'update' do
       it 'updates the process' do

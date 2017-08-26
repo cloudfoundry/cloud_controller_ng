@@ -104,7 +104,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     describe 'initializing' do
-      subject { described_class.new(service_event_repository) }
+      subject { ServiceManager.new(service_event_repository) }
 
       its(:has_warnings?) { should eq false }
       its(:warnings) { should eq [] }

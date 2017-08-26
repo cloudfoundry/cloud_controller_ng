@@ -84,7 +84,7 @@ RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
     end
   end
 
-  subject(:cop) { described_class.new(RuboCop::Config.new({})) }
+  subject(:cop) { RuboCop::Cop::Migration::IncludeStringSize.new(RuboCop::Config.new({})) }
 
   context 'when the method is add_column' do
     it_behaves_like 'a cop that validates inclusion of string size', :add_column

@@ -3,7 +3,7 @@ require 'cloud_controller/packager/package_upload_handler'
 
 module CloudController::Packager
   RSpec.describe PackageUploadHandler do
-    subject(:packer) { described_class.new(package.guid, uploaded_files_path, cached_files_fingerprints) }
+    subject(:packer) { PackageUploadHandler.new(package.guid, uploaded_files_path, cached_files_fingerprints) }
 
     let(:package) { VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE) }
     let(:uploaded_files_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }

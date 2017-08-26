@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe DesiredLrpBuilder do
-        subject(:builder) { described_class.new(config, opts) }
+        subject(:builder) { DesiredLrpBuilder.new(config, opts) }
         let(:opts) do
           {
             stack: 'potato-stack',

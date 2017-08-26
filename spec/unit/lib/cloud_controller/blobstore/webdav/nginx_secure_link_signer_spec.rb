@@ -5,7 +5,7 @@ module CloudController
   module Blobstore
     RSpec.describe NginxSecureLinkSigner do
       subject(:signer) do
-        described_class.new(
+        NginxSecureLinkSigner.new(
           internal_endpoint:    internal_endpoint,
           internal_path_prefix: internal_path_prefix,
           public_endpoint:      public_endpoint,

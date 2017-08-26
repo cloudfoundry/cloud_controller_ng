@@ -3,7 +3,7 @@ require 'cloud_controller/uaa/uaa_token_decoder'
 
 module VCAP::CloudController
   RSpec.describe UaaTokenDecoder do
-    subject { described_class.new(config_hash) }
+    subject { UaaTokenDecoder.new(config_hash) }
 
     let(:config_hash) do
       { uaa:              {
@@ -29,7 +29,7 @@ module VCAP::CloudController
     describe '.new' do
       context 'when the decoder is created with a grace period' do
         context 'and that grace period is negative' do
-          subject { described_class.new(config_hash, -10) }
+          subject { UaaTokenDecoder.new(config_hash, -10) }
 
           it 'logs a warning that the grace period was changed to 0' do
             expect(logger).to receive(:warn).with(/negative grace period interval.*-10.*is invalid, changed to 0/i)
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         context 'and that grace period is not an integer' do
-          subject { described_class.new(config_hash, 'blabla') }
+          subject { UaaTokenDecoder.new(config_hash, 'blabla') }
 
           it 'raises an ArgumentError' do
             expect {
@@ -359,7 +359,7 @@ module VCAP::CloudController
         end
 
         context 'when the decoder has an grace period specified' do
-          subject { described_class.new(config_hash, 100) }
+          subject { UaaTokenDecoder.new(config_hash, 100) }
           let(:token_content) do
             { 'aud'     => 'resource-id',
               'payload' => 123,
@@ -389,7 +389,7 @@ module VCAP::CloudController
           end
 
           context 'and that grace period interval is negative' do
-            subject { described_class.new(config_hash, -10) }
+            subject { UaaTokenDecoder.new(config_hash, -10) }
 
             it 'sets the grace period to be 0 instead' do
               token_content['exp'] = Time.now.utc.to_i

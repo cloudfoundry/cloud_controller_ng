@@ -3,7 +3,7 @@ require 'actions/task_create'
 
 module VCAP::CloudController
   RSpec.describe TaskCreate do
-    subject(:task_create_action) { described_class.new(config) }
+    subject(:task_create_action) { TaskCreate.new(config) }
     let(:config) { { maximum_app_disk_in_mb: 4096 } }
 
     describe '#create' do

@@ -3,13 +3,13 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceBindingsController do
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:app_guid) }
-      it { expect(described_class).to be_queryable_by(:service_instance_guid) }
+      it { expect(ServiceBindingsController).to be_queryable_by(:app_guid) }
+      it { expect(ServiceBindingsController).to be_queryable_by(:service_instance_guid) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(ServiceBindingsController).to have_creatable_attributes({
           app_guid: { type: 'string', required: true },
           service_instance_guid: { type: 'string', required: true },
           parameters: { type: 'hash', required: false }
@@ -17,7 +17,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(ServiceBindingsController).to have_updatable_attributes({
           app_guid: { type: 'string' },
           service_instance_guid: { type: 'string' },
           parameters: { type: 'hash', required: false }

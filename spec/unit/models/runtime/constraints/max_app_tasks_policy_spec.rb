@@ -8,7 +8,7 @@ RSpec.describe MaxAppTasksPolicy do
   let(:task) { VCAP::CloudController::TaskModel.new(app: app) }
   let(:error_name) { :app_task_limit_error }
 
-  subject(:validator) { described_class.new(task, org, error_name) }
+  subject(:validator) { MaxAppTasksPolicy.new(task, org, error_name) }
 
   before do
     org.quota_definition = quota_definition if org

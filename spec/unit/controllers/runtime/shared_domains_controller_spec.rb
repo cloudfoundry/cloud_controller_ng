@@ -3,21 +3,21 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SharedDomainsController do
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(SharedDomainsController).to be_queryable_by(:name) }
     end
 
     before { set_current_user_as_admin }
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(SharedDomainsController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           router_group_guid: { type: 'string', required: false }
         })
       end
 
       it 'cannot update its fields' do
-        expect(described_class).not_to have_updatable_attributes({
+        expect(SharedDomainsController).not_to have_updatable_attributes({
           name: { type: 'string' },
           router_group_guid: { type: 'string' }
         })

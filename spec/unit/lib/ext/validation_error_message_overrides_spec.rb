@@ -6,7 +6,7 @@ RSpec.describe ::Membrane::Schemas::Regexp::MatchValidator do
   describe '#fail' do
     let(:object) { 'some-string' }
 
-    subject { described_class.new(regexp, object) }
+    subject { ::Membrane::Schemas::Regexp::MatchValidator.new(regexp, object) }
 
     context 'with a normal ruby regexp' do
       let(:regexp) { /foo/ }

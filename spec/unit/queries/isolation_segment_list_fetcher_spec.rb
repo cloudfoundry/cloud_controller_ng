@@ -7,7 +7,7 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentListFetcher do
     let(:filters) { {} }
     let(:message) { IsolationSegmentsListMessage.new(filters) }
-    subject(:fetcher) { described_class.new(message: message) }
+    subject(:fetcher) { IsolationSegmentListFetcher.new(message: message) }
 
     let!(:isolation_segment_model_1) { VCAP::CloudController::IsolationSegmentModel.make }
     let!(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'frank') }

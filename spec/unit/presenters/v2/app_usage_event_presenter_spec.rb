@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController::Presenters::V2
   RSpec.describe AppUsageEventPresenter do
-    subject { described_class.new }
+    subject { AppUsageEventPresenter.new }
 
     let(:controller) { 'controller' }
     let(:opts) { {} }

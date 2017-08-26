@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:service_key_delete_action) { double(:service_key_delete_action) }
     let(:delete_action_job) { double(:delete_action_job) }
 
-    subject { described_class.new(services_event_repository, nil, nil) }
+    subject { ServiceKeyManager.new(services_event_repository, nil, nil) }
 
     def broker_url(broker)
       base_broker_uri = URI.parse(broker.broker_url)

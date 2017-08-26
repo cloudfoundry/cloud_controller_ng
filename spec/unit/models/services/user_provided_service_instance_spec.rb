@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     it_behaves_like 'a model with an encrypted attribute' do
       def new_model
-        described_class.create(
+        VCAP::CloudController::UserProvidedServiceInstance.create(
           name: Sham.name,
           space: VCAP::CloudController::Space.make,
           credentials: value_to_encrypt,
@@ -36,7 +36,7 @@ module VCAP::CloudController
       it { is_expected.to strip_whitespace :syslog_drain_url }
 
       it 'should not bind an app and a service instance from different app spaces' do
-        service_instance = described_class.make
+        service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
         VCAP::CloudController::ProcessModelFactory.make(space: service_instance.space)
         service_binding = VCAP::CloudController::ServiceBinding.make
         expect {
@@ -46,21 +46,21 @@ module VCAP::CloudController
 
       it 'raises an error if the route_service_url is not https' do
         expect {
-          described_class.make(route_service_url: 'http://route.url.com')
+          VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'http://route.url.com')
         }.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_not_https')
       end
 
       it 'raises an error if the route_service_url does not have a valid host' do
         expect {
-          described_class.make(route_service_url: 'https://.com')
+          VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https://.com')
         }.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
 
       it 'raises an error if the route_service_url format is invalid' do
         expect {
-          described_class.make(route_service_url: 'https\\route')
+          VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: 'https\\route')
         }.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
@@ -73,7 +73,7 @@ module VCAP::CloudController
 
     describe '#create' do
       it 'saves with is_gateway_service false' do
-        instance = described_class.create(
+        instance = VCAP::CloudController::UserProvidedServiceInstance.create(
           name: 'awesome-service',
           space: VCAP::CloudController::Space.make,
           credentials: { 'foo' => 'bar' },
@@ -83,7 +83,7 @@ module VCAP::CloudController
       end
 
       it 'creates a CREATED service usage event' do
-        instance = described_class.make
+        instance = VCAP::CloudController::UserProvidedServiceInstance.make
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)
@@ -92,14 +92,14 @@ module VCAP::CloudController
       end
 
       it 'should create the service instance if the route_service_url is empty' do
-        described_class.make(route_service_url: '')
+        VCAP::CloudController::UserProvidedServiceInstance.make(route_service_url: '')
         expect(ServiceInstance.count).to eq(1)
       end
     end
 
     describe '#delete' do
       it 'creates a DELETED service usage event' do
-        instance = described_class.make
+        instance = VCAP::CloudController::UserProvidedServiceInstance.make
         instance.destroy
 
         event = VCAP::CloudController::ServiceUsageEvent.last
@@ -112,7 +112,7 @@ module VCAP::CloudController
 
     describe '#tags' do
       it 'does not have tags' do
-        service_instance = described_class.make
+        service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
         expect(service_instance.tags).to eq []
       end
     end

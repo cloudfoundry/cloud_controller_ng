@@ -141,7 +141,7 @@ module VCAP::CloudController
         let(:sinatra) { double('sinatra', request: request) }
         let(:env) { double(:env) }
         let(:app) do
-          described_class.new(
+          RestController::BaseController.new(
             double(:config),
             logger, env, double(:params, :[] => nil),
             double(:body),

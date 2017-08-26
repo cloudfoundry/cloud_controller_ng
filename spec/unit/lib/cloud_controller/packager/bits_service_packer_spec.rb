@@ -3,7 +3,7 @@ require 'cloud_controller/packager/bits_service_packer'
 
 module CloudController::Packager
   RSpec.describe BitsServicePacker do
-    subject(:packer) { described_class.new }
+    subject(:packer) { BitsServicePacker.new }
 
     let(:uploaded_files_path) { 'tmp/uploaded.zip' }
     let(:blobstore_key) { 'some-blobstore-key' }

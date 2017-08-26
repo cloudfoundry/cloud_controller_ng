@@ -379,7 +379,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
       let(:broker_provided_id) { SecureRandom.uuid }
       let(:catalog_service) do
-        described_class.new(service_broker,
+        CatalogService.new(service_broker,
           'id' => broker_provided_id,
           'name' => 'service-name',
           'description' => 'service description',

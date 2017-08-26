@@ -31,7 +31,7 @@ module CloudController
       let(:blob) { instance_double(Blobstore::FogBlob, internal_download_url: internal_url) }
 
       subject(:url_generator) do
-        described_class.new(connection_options,
+        InternalUrlGenerator.new(connection_options,
           package_blobstore,
           buildpack_cache_blobstore,
           admin_buildpack_blobstore,

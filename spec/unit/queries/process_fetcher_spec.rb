@@ -3,7 +3,7 @@ require 'fetchers/process_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ProcessFetcher do
-    subject(:fetcher) { described_class.new }
+    subject(:fetcher) { ProcessFetcher.new }
 
     describe '#fetch' do
       let(:app) { AppModel.make }

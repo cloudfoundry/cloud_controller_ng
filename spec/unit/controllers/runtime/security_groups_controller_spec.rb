@@ -5,12 +5,12 @@ module VCAP::CloudController
     let(:group) { SecurityGroup.make }
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(SecurityGroupsController).to be_queryable_by(:name) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(SecurityGroupsController).to have_creatable_attributes({
           name: { type: 'string', required: true },
           rules: { type: '[hash]', default: [] },
           space_guids: { type: '[string]' },
@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(SecurityGroupsController).to have_updatable_attributes({
           name: { type: 'string' },
           rules: { type: '[hash]' },
           space_guids: { type: '[string]' },
@@ -31,7 +31,7 @@ module VCAP::CloudController
     describe 'Associations' do
       describe 'nested routes' do
         it do
-          expect(described_class).to have_nested_routes({
+          expect(SecurityGroupsController).to have_nested_routes({
             spaces: [:get, :put, :delete],
             staging_spaces: [:get, :put, :delete],
           })

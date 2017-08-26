@@ -12,12 +12,12 @@ module VCAP::CloudController
     before { set_current_user_as_admin }
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::BuildpacksController).to be_queryable_by(:name) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(VCAP::CloudController::BuildpacksController).to have_creatable_attributes({
           name:     { type: 'string', required: true },
           position: { type: 'integer', default: 0 },
           enabled:  { type: 'bool', default: true },
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(VCAP::CloudController::BuildpacksController).to have_updatable_attributes({
           name:     { type: 'string' },
           position: { type: 'integer' },
           enabled:  { type: 'bool' },

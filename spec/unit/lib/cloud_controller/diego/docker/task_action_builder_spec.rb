@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Docker
       RSpec.describe TaskActionBuilder do
-        subject(:task_action_builder) { described_class.new(config, task, lifecycle_data) }
+        subject(:task_action_builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
 
         let(:config) do
           {

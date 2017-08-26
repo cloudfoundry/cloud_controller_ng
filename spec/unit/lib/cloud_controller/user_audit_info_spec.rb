@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     describe '.from_context' do
       it 'creates from a Security Context' do
-        info = described_class.from_context(security_context)
+        info = UserAuditInfo.from_context(security_context)
         expect(info.user_email).to eq('email')
         expect(info.user_name).to eq('username')
         expect(info.user_guid).to eq('the-guid')
@@ -31,7 +31,7 @@ module VCAP::CloudController
 
       describe '.from_context' do
         it 'defaults to empty strings from a nil-valued Security Context' do
-          info = described_class.from_context(security_context)
+          info = UserAuditInfo.from_context(security_context)
           expect(info.user_email).to eq('')
           expect(info.user_name).to eq('')
           expect(info.user_guid).to eq('the-guid')

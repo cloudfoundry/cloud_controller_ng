@@ -9,7 +9,7 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_url' => 'http://relationship.example.com' } }
-    subject { described_class.new }
+    subject { ServicePlanPresenter.new }
 
     describe '#entity_hash' do
       before do

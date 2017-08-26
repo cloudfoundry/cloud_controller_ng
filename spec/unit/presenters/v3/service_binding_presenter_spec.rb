@@ -3,7 +3,7 @@ require 'presenters/v3/service_binding_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ServiceBindingPresenter do
-    let(:presenter) { described_class.new(service_binding) }
+    let(:presenter) { ServiceBindingPresenter.new(service_binding) }
     let(:credentials) { { 'very-secret' => 'password' }.to_json }
     let(:volume_mounts) { [{ 'container_dir' => '/a/reasonable/path', 'device' => { 'very-secret' => 'password' } }] }
     let(:censored_volume_mounts) { [{ 'container_dir' => '/a/reasonable/path' }] }
@@ -40,7 +40,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when show_secrets is false' do
-        let(:result) { described_class.new(service_binding, show_secrets: false).to_hash }
+        let(:result) { ServiceBindingPresenter.new(service_binding, show_secrets: false).to_hash }
 
         it 'redacts credentials' do
           expect(result[:data][:credentials]).to eq({ 'redacted_message' => '[PRIVATE DATA HIDDEN]' })

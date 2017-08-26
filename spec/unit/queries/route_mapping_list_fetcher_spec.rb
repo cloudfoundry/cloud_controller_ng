@@ -3,7 +3,7 @@ require 'fetchers/route_mapping_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe RouteMappingListFetcher do
-    subject(:fetcher) { described_class.new(message: message) }
+    subject(:fetcher) { RouteMappingListFetcher.new(message: message) }
     let(:message) { RouteMappingsListMessage.new(filters) }
     let(:filters) { {} }
 

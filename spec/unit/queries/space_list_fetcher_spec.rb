@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     let(:message) { SpacesListMessage.new }
 
-    let(:fetcher) { described_class.new }
+    let(:fetcher) { SpaceListFetcher.new }
 
     describe '#fetch' do
       let(:space_guids) { [space1.guid, space3.guid, space4.guid] }

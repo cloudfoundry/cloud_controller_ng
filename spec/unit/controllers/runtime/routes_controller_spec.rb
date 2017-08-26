@@ -31,16 +31,16 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:host) }
-      it { expect(described_class).to be_queryable_by(:domain_guid) }
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
-      it { expect(described_class).to be_queryable_by(:path) }
-      it { expect(described_class).to be_queryable_by(:port) }
+      it { expect(VCAP::CloudController::RoutesController).to be_queryable_by(:host) }
+      it { expect(VCAP::CloudController::RoutesController).to be_queryable_by(:domain_guid) }
+      it { expect(VCAP::CloudController::RoutesController).to be_queryable_by(:organization_guid) }
+      it { expect(VCAP::CloudController::RoutesController).to be_queryable_by(:path) }
+      it { expect(VCAP::CloudController::RoutesController).to be_queryable_by(:port) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes(
+        expect(VCAP::CloudController::RoutesController).to have_creatable_attributes(
           host:        { type: 'string', default: '' },
           domain_guid: { type: 'string', required: true },
           space_guid:  { type: 'string', required: true },
@@ -49,7 +49,7 @@ module VCAP::CloudController
         )
       end
       it do
-        expect(described_class).to have_updatable_attributes(
+        expect(VCAP::CloudController::RoutesController).to have_updatable_attributes(
           host:        { type: 'string' },
           domain_guid: { type: 'string' },
           space_guid:  { type: 'string' },
@@ -338,7 +338,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes({ apps: [:get], route_mappings: [:get] })
+        expect(VCAP::CloudController::RoutesController).to have_nested_routes({ apps: [:get], route_mappings: [:get] })
       end
 
       context 'with Docker app' do

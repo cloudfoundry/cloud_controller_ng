@@ -132,16 +132,16 @@ module VCAP::CloudController
       describe 'when is_gateway_service is false' do
         it 'returns a UserProvidedServiceInstance' do
           service_instance_attrs[:is_gateway_service] = false
-          service_instance = described_class.create(service_instance_attrs)
-          expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::UserProvidedServiceInstance)
+          service_instance = ServiceInstance.create(service_instance_attrs)
+          expect(ServiceInstance.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::UserProvidedServiceInstance)
         end
       end
 
       describe 'when is_gateway_service is true' do
         it 'returns a ManagedServiceInstance' do
           service_instance_attrs[:is_gateway_service] = true
-          service_instance = described_class.create(service_instance_attrs)
-          expect(described_class.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
+          service_instance = ServiceInstance.create(service_instance_attrs)
+          expect(ServiceInstance.find(guid: service_instance.guid).class).to eq(VCAP::CloudController::ManagedServiceInstance)
         end
       end
     end

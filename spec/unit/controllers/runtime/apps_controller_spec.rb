@@ -11,11 +11,11 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
-      it { expect(described_class).to be_queryable_by(:diego) }
-      it { expect(described_class).to be_queryable_by(:stack_guid) }
+      it { expect(VCAP::CloudController::AppsController).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::AppsController).to be_queryable_by(:space_guid) }
+      it { expect(VCAP::CloudController::AppsController).to be_queryable_by(:organization_guid) }
+      it { expect(VCAP::CloudController::AppsController).to be_queryable_by(:diego) }
+      it { expect(VCAP::CloudController::AppsController).to be_queryable_by(:stack_guid) }
     end
 
     describe 'query by org_guid' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes(
+        expect(VCAP::CloudController::AppsController).to have_creatable_attributes(
           {
             enable_ssh:                 { type: 'bool' },
             buildpack:                  { type: 'string' },
@@ -77,7 +77,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes(
+        expect(VCAP::CloudController::AppsController).to have_updatable_attributes(
           {
             enable_ssh:                 { type: 'bool' },
             buildpack:                  { type: 'string' },
@@ -107,7 +107,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it do
-        expect(described_class).to have_nested_routes(
+        expect(VCAP::CloudController::AppsController).to have_nested_routes(
           {
             events:           [:get, :put, :delete],
             service_bindings: [:get],

@@ -92,7 +92,7 @@ module VCAP::CloudController
 
     describe '#new' do
       it 'has a guid when constructed' do
-        binding = described_class.new
+        binding = VCAP::CloudController::ServiceBinding.new
         expect(binding.guid).to be
       end
     end

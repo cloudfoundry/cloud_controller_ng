@@ -5,7 +5,7 @@ RSpec.describe StructuredError do
     let(:source) { { 'foo' => 'bar' } }
 
     it 'generates the correct hash' do
-      exception = described_class.new('some msg', source)
+      exception = StructuredError.new('some msg', source)
       exception.set_backtrace(['/foo:1', '/bar:2'])
 
       expect(exception.to_h).to eq({
@@ -20,7 +20,7 @@ RSpec.describe StructuredError do
     let(:source) { [] }
 
     it 'returns the hashed array' do
-      exception = described_class.new('some msg', source)
+      exception = StructuredError.new('some msg', source)
       exception.set_backtrace(['/foo:1', '/bar:2'])
 
       expect(exception.to_h).to eq({
@@ -34,7 +34,7 @@ RSpec.describe StructuredError do
       let(:source) { [{}] }
 
       it 'returns the string form of the array' do
-        exception = described_class.new('some msg', source)
+        exception = StructuredError.new('some msg', source)
         exception.set_backtrace(['/foo:1', '/bar:2'])
 
         expect(exception.to_h).to eq({
@@ -54,7 +54,7 @@ RSpec.describe StructuredError do
     end
 
     it 'generates the correct hash' do
-      exception = described_class.new('some msg', source)
+      exception = StructuredError.new('some msg', source)
 
       source_hash = exception.to_h.fetch('source')
       expect(source_hash).to eq({
@@ -76,7 +76,7 @@ RSpec.describe StructuredError do
     end
 
     it 'generates the correct hash' do
-      exception = described_class.new('some msg', source)
+      exception = StructuredError.new('some msg', source)
 
       source_hash = exception.to_h.fetch('source')
       expect(source_hash).to eq({
@@ -94,7 +94,7 @@ RSpec.describe StructuredError do
     let(:source) { 'foo' }
 
     it 'generates the correct hash' do
-      exception = described_class.new('some msg', source)
+      exception = StructuredError.new('some msg', source)
 
       expect(exception.to_h.fetch('source')).to eq('foo')
     end

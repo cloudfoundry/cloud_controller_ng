@@ -23,7 +23,7 @@ module CloudController
       let(:password) { 'password' }
 
       subject(:url_generator) do
-        described_class.new(connection_options)
+        UploadUrlGenerator.new(connection_options)
       end
 
       context 'uploads' do

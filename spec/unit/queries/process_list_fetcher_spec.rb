@@ -3,7 +3,7 @@ require 'fetchers/process_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe ProcessListFetcher do
-    let(:fetcher) { described_class.new(message) }
+    let(:fetcher) { ProcessListFetcher.new(message) }
     let(:pagination_options) { PaginationOptions.new({}) }
     let(:message) { ProcessesListMessage.new(filters) }
     let(:filters) { {} }

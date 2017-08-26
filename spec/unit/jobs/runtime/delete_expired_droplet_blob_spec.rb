@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe DeleteExpiredDropletBlob do
-      subject(:job) { described_class.new(droplet.guid) }
+      subject(:job) { DeleteExpiredDropletBlob.new(droplet.guid) }
       let(:droplet) { DropletModel.make }
 
       it { is_expected.to be_a_valid_job }
@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       context 'when the droplet does not exist' do
-        let(:job) { described_class.new('phooey') }
+        let(:job) { DeleteExpiredDropletBlob.new('phooey') }
 
         it 'does not raise' do
           expect { job.perform }.not_to raise_error

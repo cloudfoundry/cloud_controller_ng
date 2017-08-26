@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteMappingDelete do
-    subject(:route_mapping_delete) { described_class.new(user_audit_info) }
+    subject(:route_mapping_delete) { RouteMappingDelete.new(user_audit_info) }
     let(:user) { User.make }
     let(:user_email) { 'user_email' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }

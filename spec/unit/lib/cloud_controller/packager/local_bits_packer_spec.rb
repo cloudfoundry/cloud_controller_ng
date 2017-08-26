@@ -3,7 +3,7 @@ require 'cloud_controller/packager/local_bits_packer'
 
 module CloudController::Packager
   RSpec.describe LocalBitsPacker do
-    subject(:packer) { described_class.new }
+    subject(:packer) { LocalBitsPacker.new }
 
     let(:uploaded_files_path) { File.join(local_tmp_dir, 'good.zip') }
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }

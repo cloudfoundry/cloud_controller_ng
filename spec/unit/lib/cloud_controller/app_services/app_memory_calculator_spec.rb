@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AppMemoryCalculator do
-    subject { described_class.new(process) }
+    subject { AppMemoryCalculator.new(process) }
     let(:process) { ProcessModelFactory.make }
     let(:stopped_state) { 'STOPPED' }
     let(:started_state) { 'STARTED' }

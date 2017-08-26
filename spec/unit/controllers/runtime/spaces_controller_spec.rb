@@ -11,16 +11,16 @@ module VCAP::CloudController
     end
 
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:name) }
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
-      it { expect(described_class).to be_queryable_by(:developer_guid) }
-      it { expect(described_class).to be_queryable_by(:app_guid) }
-      it { expect(described_class).to be_queryable_by(:isolation_segment_guid) }
+      it { expect(VCAP::CloudController::SpacesController).to be_queryable_by(:name) }
+      it { expect(VCAP::CloudController::SpacesController).to be_queryable_by(:organization_guid) }
+      it { expect(VCAP::CloudController::SpacesController).to be_queryable_by(:developer_guid) }
+      it { expect(VCAP::CloudController::SpacesController).to be_queryable_by(:app_guid) }
+      it { expect(VCAP::CloudController::SpacesController).to be_queryable_by(:isolation_segment_guid) }
     end
 
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(VCAP::CloudController::SpacesController).to have_creatable_attributes({
           name:                         { type: 'string', required: true },
           allow_ssh:                    { type: 'bool', default: true },
           isolation_segment_guid:       { type: 'string', default: nil, required: false },
@@ -37,7 +37,7 @@ module VCAP::CloudController
       end
 
       it do
-        expect(described_class).to have_updatable_attributes({
+        expect(VCAP::CloudController::SpacesController).to have_updatable_attributes({
           name:                         { type: 'string' },
           allow_ssh:                    { type: 'bool' },
           isolation_segment_guid:       { type: 'string', required: false },
@@ -140,7 +140,7 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       it do
-        expect(described_class).to have_nested_routes(
+        expect(VCAP::CloudController::SpacesController).to have_nested_routes(
           {
             developers:              [:get, :put, :delete],
             managers:                [:get, :put, :delete],
@@ -190,7 +190,7 @@ module VCAP::CloudController
     end
 
     it 'can order by name and id when listing' do
-      expect(described_class.sortable_parameters).to match_array([:id, :name])
+      expect(VCAP::CloudController::SpacesController.sortable_parameters).to match_array([:id, :name])
     end
 
     describe 'GET /v2/spaces/:guid/user_roles' do

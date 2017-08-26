@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module CloudController::Presenters::V2
   RSpec.describe SharedDomainPresenter do
-    subject { described_class.new }
+    subject { SharedDomainPresenter.new }
 
     let(:controller) { 'controller' }
     let(:opts) { {} }

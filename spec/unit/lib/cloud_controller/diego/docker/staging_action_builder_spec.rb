@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     module Docker
       RSpec.describe StagingActionBuilder do
-        subject(:builder) { described_class.new(config, staging_details) }
+        subject(:builder) { StagingActionBuilder.new(config, staging_details) }
 
         let(:config) do
           {

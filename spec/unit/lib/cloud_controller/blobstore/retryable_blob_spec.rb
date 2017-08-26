@@ -7,7 +7,7 @@ module CloudController
   module Blobstore
     RSpec.describe RetryableBlob do
       subject(:blob) do
-        described_class.new(
+        RetryableBlob.new(
           blob: wrapped_blob,
           errors: [RetryableError],
           logger: logger,

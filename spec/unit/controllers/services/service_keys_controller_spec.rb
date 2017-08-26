@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ServiceKeysController do
     describe 'Attributes' do
       it do
-        expect(described_class).to have_creatable_attributes({
+        expect(ServiceKeysController).to have_creatable_attributes({
            name: { type: 'string', required: true },
            service_instance_guid: { type: 'string', required: true },
            parameters: { type: 'hash', required: false }
@@ -53,11 +53,11 @@ module VCAP::CloudController
       let(:logger) { Steno.logger('vcap_spec') }
 
       it 'contains services_event_repository in the dependencies' do
-        expect(described_class.dependencies).to include :services_event_repository
+        expect(ServiceKeysController.dependencies).to include :services_event_repository
       end
 
       it 'injects the services_event_repository dependency' do
-        expect { described_class.new(nil, logger, {}, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
+        expect { ServiceKeysController.new(nil, logger, {}, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
       end
     end
 

@@ -7,7 +7,7 @@ module CloudController
         let(:url) { 'https://amelialovescats:meowmeow@github.com/my-stuff&q=heart' }
 
         it 'obfuscates the username and password' do
-          obfuscated_url = described_class.obfuscate(url)
+          obfuscated_url = UrlSecretObfuscator.obfuscate(url)
 
           expect(obfuscated_url).to eq 'https://***:***@github.com/my-stuff&q=heart'
         end
@@ -17,7 +17,7 @@ module CloudController
         let(:url) { 'https://amelialovescats@github.com/my-stuff&q=heart' }
 
         it 'obfuscates the username and password' do
-          obfuscated_url = described_class.obfuscate(url)
+          obfuscated_url = UrlSecretObfuscator.obfuscate(url)
 
           expect(obfuscated_url).to eq 'https://***:***@github.com/my-stuff&q=heart'
         end
@@ -27,7 +27,7 @@ module CloudController
         let(:url) { 'https://github.com/my-stuff&q=heart' }
 
         it 'obfuscates nothing' do
-          obfuscated_url = described_class.obfuscate(url)
+          obfuscated_url = UrlSecretObfuscator.obfuscate(url)
 
           expect(obfuscated_url).to eq 'https://github.com/my-stuff&q=heart'
         end
@@ -37,7 +37,7 @@ module CloudController
         let(:url) { "i'm a potato" }
 
         it 'obfuscates nothing' do
-          obfuscated_url = described_class.obfuscate(url)
+          obfuscated_url = UrlSecretObfuscator.obfuscate(url)
 
           expect(obfuscated_url).to eq "i'm a potato"
         end

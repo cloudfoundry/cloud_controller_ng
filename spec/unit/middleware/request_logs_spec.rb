@@ -4,7 +4,7 @@ require 'request_logs'
 module CloudFoundry
   module Middleware
     RSpec.describe RequestLogs do
-      let(:middleware) { described_class.new(app, logger) }
+      let(:middleware) { RequestLogs.new(app, logger) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }
       let(:fake_request) { double('request', request_method: 'request_method', ip: 'ip', filtered_path: 'filtered_path') }

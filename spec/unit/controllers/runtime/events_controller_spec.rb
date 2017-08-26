@@ -3,15 +3,15 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe EventsController do
     describe 'Query Parameters' do
-      it { expect(described_class).to be_queryable_by(:timestamp) }
-      it { expect(described_class).to be_queryable_by(:type) }
-      it { expect(described_class).to be_queryable_by(:actee) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
-      it { expect(described_class).to be_queryable_by(:organization_guid) }
+      it { expect(EventsController).to be_queryable_by(:timestamp) }
+      it { expect(EventsController).to be_queryable_by(:type) }
+      it { expect(EventsController).to be_queryable_by(:actee) }
+      it { expect(EventsController).to be_queryable_by(:space_guid) }
+      it { expect(EventsController).to be_queryable_by(:organization_guid) }
     end
 
     it 'can order by name and id when listing' do
-      expect(described_class.sortable_parameters).to match_array([:timestamp, :id])
+      expect(EventsController.sortable_parameters).to match_array([:timestamp, :id])
     end
 
     describe 'GET /v2/events' do

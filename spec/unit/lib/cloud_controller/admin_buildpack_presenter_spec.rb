@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe AdminBuildpacksPresenter do
     let(:url_generator) { double(:url_generator) }
 
-    subject { described_class }
+    subject { AdminBuildpacksPresenter }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator) { url_generator }

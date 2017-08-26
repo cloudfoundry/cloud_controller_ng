@@ -3,7 +3,7 @@ require 'cloud_controller/uaa/uaa_verification_keys'
 
 module VCAP::CloudController
   RSpec.describe UaaVerificationKeys do
-    subject { described_class.new(uaa_info) }
+    subject { UaaVerificationKeys.new(uaa_info) }
 
     let(:config_hash) { { url: 'http://uaa-url' } }
     let(:uaa_info) { double(CF::UAA::Info) }

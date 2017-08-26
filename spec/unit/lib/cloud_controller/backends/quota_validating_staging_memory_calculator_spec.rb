@@ -3,7 +3,7 @@ require 'cloud_controller/backends/quota_validating_staging_memory_calculator'
 
 module VCAP::CloudController
   RSpec.describe QuotaValidatingStagingMemoryCalculator do
-    let(:calculator) { described_class.new }
+    let(:calculator) { QuotaValidatingStagingMemoryCalculator.new }
 
     describe '#get_limit' do
       let(:minimum_limit) { 10 }

@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe AppStage do
       let(:stagers) { instance_double(Stagers, validate_process: nil) }
 
-      subject(:action) { described_class.new(stagers: stagers) }
+      subject(:action) { AppStage.new(stagers: stagers) }
 
       describe '#stage' do
         let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: nil, staging_response: 'staging-response') }

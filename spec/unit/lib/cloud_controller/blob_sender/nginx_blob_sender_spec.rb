@@ -4,7 +4,7 @@ module CloudController
   module BlobSender
     RSpec.describe NginxLocalBlobSender do
       subject(:sender) do
-        described_class.new
+        NginxLocalBlobSender.new
       end
 
       let(:blob) { instance_double(Blobstore::FogBlob, internal_download_url: 'http://url/to/blob') }

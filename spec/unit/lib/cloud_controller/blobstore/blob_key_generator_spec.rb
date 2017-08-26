@@ -3,7 +3,7 @@ require 'spec_helper'
 module CloudController
   module Blobstore
     RSpec.describe BlobKeyGenerator do
-      let(:subject) { described_class }
+      let(:subject) { BlobKeyGenerator }
 
       describe '#key_from_full_path' do
         let(:path) { 'ab/cd/some-guid' }

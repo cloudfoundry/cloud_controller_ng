@@ -10,7 +10,7 @@ module VCAP::CloudController
     let!(:org4) { Organization.make(name: 'Capybara') }
     let!(:org5) { Organization.make(name: 'Groundhog') }
 
-    let(:fetcher) { described_class.new }
+    let(:fetcher) { OrgListFetcher.new }
 
     let(:message) { OrgsListMessage.new }
 
