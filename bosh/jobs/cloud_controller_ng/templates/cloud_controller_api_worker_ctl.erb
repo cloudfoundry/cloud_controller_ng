@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-INDEX=$2
-
 export CC_JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
 
 CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
@@ -41,7 +39,7 @@ case $1 in
 
     echo $$ > "$PIDFILE"
 
-    exec /var/vcap/jobs/cloud_controller_ng/bin/local_worker
+    exec /var/vcap/jobs/cloud_controller_ng/bin/local_worker "$@"
   ;;
 
   stop)
