@@ -38,18 +38,18 @@ module VCAP::CloudController
           },
 
           uaa: {
-            href: VCAP::CloudController::Config.config[:uaa][:url]
+            href: VCAP::CloudController::Config.config.config_hash[:uaa][:url]
           },
 
           logging: {
-            href: VCAP::CloudController::Config.config[:doppler][:url]
+            href: VCAP::CloudController::Config.config.config_hash[:doppler][:url]
           },
 
           app_ssh: {
-            href: VCAP::CloudController::Config.config[:info][:app_ssh_endpoint],
+            href: VCAP::CloudController::Config.config.config_hash[:info][:app_ssh_endpoint],
             meta: {
-              host_key_fingerprint: VCAP::CloudController::Config.config[:info][:app_ssh_host_key_fingerprint],
-              oauth_client: VCAP::CloudController::Config.config[:info][:app_ssh_oauth_client]
+              host_key_fingerprint: VCAP::CloudController::Config.config.config_hash[:info][:app_ssh_host_key_fingerprint],
+              oauth_client: VCAP::CloudController::Config.config.config_hash[:info][:app_ssh_oauth_client]
             }
           },
 

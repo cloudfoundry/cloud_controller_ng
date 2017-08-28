@@ -270,9 +270,7 @@ RSpec.describe 'Service Broker' do
       let(:service) { build_service(dashboard_client: { id: 'client-id', secret: 'shhhhh', redirect_uri: 'http://example.com/client-id' }) }
 
       before do
-        allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
-        allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
+        TestConfig.override(uaa_client_name: nil, uaa_client_secret: nil)
 
         stub_catalog_fetch(200, services: [service])
       end

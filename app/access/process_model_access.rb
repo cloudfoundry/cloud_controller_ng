@@ -15,7 +15,7 @@ module VCAP::CloudController
         FeatureFlag.raise_unless_enabled!(:app_scaling)
       end
 
-      if !Config.config[:users_can_select_backend] && params.key?('diego') && params['diego'] != app.diego
+      if !Config.config.config_hash[:users_can_select_backend] && params.key?('diego') && params['diego'] != app.diego
         raise CloudController::Errors::ApiError.new_from_details('BackendSelectionNotAuthorized')
       end
 

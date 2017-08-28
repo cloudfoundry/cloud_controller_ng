@@ -122,11 +122,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     standard_model_get 'ProcessModel', path: :app, nested_associations: [:stack, :space], response_fields: true
 
     before do
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:diego).and_return(
-        staging: 'optional',
-        running: 'optional',
-      )
+      TestConfig.override(diego: { staging: 'optional', running: 'optional' })
     end
 
     def after_standard_model_delete(guid)

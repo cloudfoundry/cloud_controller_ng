@@ -57,7 +57,7 @@ module VCAP::CloudController
       after { Timecop.return }
 
       let(:uaa_issuer_string) { 'https://uaa.my-cf.com/uaa/stuff/here' }
-      let(:uaa_issuer_info_url) { "#{VCAP::CloudController::Config.config[:uaa][:internal_url]}/.well-known/openid-configuration" }
+      let(:uaa_issuer_info_url) { "#{VCAP::CloudController::Config.config.config_hash[:uaa][:internal_url]}/.well-known/openid-configuration" }
 
       context 'when symmetric key is used' do
         before { config_hash[:uaa][:symmetric_secret] = 'symmetric-key' }

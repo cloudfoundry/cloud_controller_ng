@@ -78,7 +78,7 @@ module VCAP::CloudController
         end
 
         if CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: domains.map { |domain_hash| domain_hash['name'] })
-          Config.config[:system_hostnames].each do |hostnames|
+          Config.config.config_hash[:system_hostnames].each do |hostnames|
             domains.each do |app_domain|
               raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
             end

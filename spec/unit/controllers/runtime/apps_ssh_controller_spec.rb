@@ -11,8 +11,7 @@ module VCAP::CloudController
     let(:space) { process.space }
 
     before do
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-      allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
+      TestConfig.override(allow_app_ssh_access: true)
     end
 
     describe 'GET /internal/apps/:guid/ssh_access/:index' do
@@ -105,7 +104,7 @@ module VCAP::CloudController
 
         context 'when the global allow_app_ssh_access is set to false' do
           before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
+            TestConfig.override(allow_app_ssh_access: false)
           end
 
           it 'returns a 400' do

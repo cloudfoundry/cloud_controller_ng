@@ -291,69 +291,18 @@ module VCAP::CloudController
     end
 
     class << self
-      def from_file(file_name)
-        config = super(file_name)
-        merge_defaults(config)
+      def load_from_file(file_name)
+        config = merge_defaults(from_file(file_name))
+        @instance = new(config)
       end
 
-      attr_reader :config
-
-      def configure_components(config)
-        @config = config
-
-        Encryptor.db_encryption_key = config[:db_encryption_key]
-        AccountCapacity.configure(config)
-        ResourcePool.instance = ResourcePool.new(config)
-
-        QuotaDefinition.configure(config)
-        Stack.configure(config[:stacks_file])
-
-        PrivateDomain.configure(config[:reserved_private_domains])
-
-        dependency_locator = CloudController::DependencyLocator.instance
-        dependency_locator.config = @config
-
-        run_initializers(@config)
-
-        AppObserver.configure(dependency_locator.stagers, dependency_locator.runners)
-        InternalApi.configure(@config)
+      def config
+        @instance
       end
+
+      private :from_file
 
       private
-
-      def config_dir
-        @config_dir ||= File.expand_path('../../config', __dir__)
-      end
-
-      def run_initializers(config)
-        return if @initialized
-        run_initializers_in_directory(config, '../../../config/initializers/*.rb')
-        if config[:newrelic_enabled]
-          require 'newrelic_rpm'
-
-          # We need to explicitly initialize NewRelic before running our initializers
-          # When Rails is present, NewRelic adds itself to the Rails initializers instead
-          # of initializing immediately.
-
-          opts = if (Rails.env.test? || Rails.env.development?) && !ENV['NRCONFIG']
-                   { env: ENV['NEW_RELIC_ENV'] || 'production', monitor_mode: false }
-                 else
-                   { env: ENV['NEW_RELIC_ENV'] || 'production' }
-                 end
-
-          NewRelic::Agent.manual_start(opts)
-          run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
-        end
-        @initialized = true
-      end
-
-      def run_initializers_in_directory(config, path)
-        Dir.glob(File.expand_path(path, __FILE__)).each do |file|
-          require file
-          method = File.basename(file).sub('.rb', '').tr('-', '_')
-          CCInitializers.send(method, config)
-        end
-      end
 
       def merge_defaults(config)
         config[:stacks_file] ||= File.join(config_dir, 'stacks.yml')
@@ -383,6 +332,10 @@ module VCAP::CloudController
         end
 
         sanitize(config)
+      end
+
+      def config_dir
+        @config_dir ||= File.expand_path('../../config', __dir__)
       end
 
       def sanitize(config)
@@ -421,6 +374,63 @@ module VCAP::CloudController
 
       def valid_in_userinfo?(value)
         URI::REGEXP::PATTERN::USERINFO.match(value)
+      end
+    end
+
+    attr_reader :config_hash
+
+    def initialize(config_hash)
+      @config_hash = config_hash
+    end
+
+    def configure_components
+      Encryptor.db_encryption_key = config_hash[:db_encryption_key]
+      AccountCapacity.configure(config_hash)
+      ResourcePool.instance = ResourcePool.new(config_hash)
+
+      QuotaDefinition.configure(config_hash)
+      Stack.configure(config_hash[:stacks_file])
+
+      PrivateDomain.configure(config_hash[:reserved_private_domains])
+
+      dependency_locator = CloudController::DependencyLocator.instance
+      dependency_locator.config = config_hash
+
+      run_initializers
+
+      AppObserver.configure(dependency_locator.stagers, dependency_locator.runners)
+      InternalApi.configure(@config_hash)
+    end
+
+    private
+
+    def run_initializers
+      return if @initialized
+      run_initializers_in_directory('../../../config/initializers/*.rb')
+      if @config_hash[:newrelic_enabled]
+        require 'newrelic_rpm'
+
+        # We need to explicitly initialize NewRelic before running our initializers
+        # When Rails is present, NewRelic adds itself to the Rails initializers instead
+        # of initializing immediately.
+
+        opts = if (Rails.env.test? || Rails.env.development?) && !ENV['NRCONFIG']
+                 { env: ENV['NEW_RELIC_ENV'] || 'production', monitor_mode: false }
+               else
+                 { env: ENV['NEW_RELIC_ENV'] || 'production' }
+               end
+
+        NewRelic::Agent.manual_start(opts)
+        run_initializers_in_directory('../../../config/newrelic/initializers/*.rb')
+      end
+      @initialized = true
+    end
+
+    def run_initializers_in_directory(path)
+      Dir.glob(File.expand_path(path, __FILE__)).each do |file|
+        require file
+        method = File.basename(file).sub('.rb', '').tr('-', '_')
+        CCInitializers.send(method, @config_hash)
       end
     end
   end

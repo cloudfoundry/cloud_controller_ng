@@ -2,8 +2,8 @@ module VCAP::CloudController
   class BitsExpiration
     def initialize(input_config=Config.config)
       config                  = {}
-      config[:packages]       = input_config[:packages] || {}
-      config[:droplets]       = input_config[:droplets] || {}
+      config[:packages]       = input_config.config_hash[:packages] || {}
+      config[:droplets]       = input_config.config_hash[:droplets] || {}
       @packages_storage_count = config[:packages][:max_valid_packages_stored] || 5
       @droplets_storage_count = config[:droplets][:max_staged_droplets_stored] || 5
     end

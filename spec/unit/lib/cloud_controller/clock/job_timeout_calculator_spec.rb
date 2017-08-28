@@ -3,7 +3,8 @@ require 'cloud_controller/clock/job_timeout_calculator'
 
 module VCAP::CloudController
   RSpec.describe JobTimeoutCalculator do
-    let(:config) do
+    let(:config) { Config.new(config_hash) }
+    let(:config_hash) do
       {
         jobs: {
           global: {
@@ -17,7 +18,7 @@ module VCAP::CloudController
     let(:job_name) { 'my_job' }
 
     context 'when a job is specified in the config' do
-      let(:config) do
+      let(:config_hash) do
         {
           jobs: {
             my_job: {
@@ -34,13 +35,14 @@ module VCAP::CloudController
 
     context 'when a job timeout is NOT specified in the config' do
       let(:config) do
-        {
-          jobs: {
-            global: {
-              timeout_in_seconds: global_timeout
+        Config.new(
+          {
+            jobs: {
+              global: {
+                timeout_in_seconds: global_timeout
+              }
             }
-          }
-        }
+          })
       end
 
       it 'returns the global timeout' do

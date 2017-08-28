@@ -40,7 +40,7 @@ module CloudController
     attr_accessor :config
 
     def initialize
-      @config       = VCAP::CloudController::Config.config
+      @config       = VCAP::CloudController::Config.config.config_hash
       @dependencies = {}
     end
 

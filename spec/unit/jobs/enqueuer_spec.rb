@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController::Jobs
   RSpec.describe Enqueuer do
-    let(:config) do
+    let(:config_override) do
       {
         jobs: {
           global: {
@@ -14,7 +14,7 @@ module VCAP::CloudController::Jobs
     let(:global_timeout) { 5.hours }
 
     before do
-      allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+      TestConfig.override(config_override)
     end
 
     shared_examples_for 'a job enqueueing method' do
@@ -30,7 +30,7 @@ module VCAP::CloudController::Jobs
       end
 
       context 'when the config has a timeout defined for the given job' do
-        let(:config) do
+        let(:config_override) do
           {
             jobs: {
               "#{wrapped_job.job_name_in_configuration}": {

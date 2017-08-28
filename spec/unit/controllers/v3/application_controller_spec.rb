@@ -177,7 +177,7 @@ RSpec.describe ApplicationController, type: :controller do
   describe 'https schema validation' do
     before do
       set_current_user(VCAP::CloudController::User.make)
-      VCAP::CloudController::Config.config[:https_required] = true
+      VCAP::CloudController::Config.config.config_hash[:https_required] = true
     end
 
     context 'when request is http' do

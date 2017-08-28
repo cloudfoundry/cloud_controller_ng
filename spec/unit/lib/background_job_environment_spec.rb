@@ -1,15 +1,17 @@
 require 'spec_helper'
 
 RSpec.describe BackgroundJobEnvironment do
-  let(:bg_config) { { db: 'cc-db',
-                      logging: { level: 'debug2' },
-                      bits_service: { enabled: false } }
-  }
-  subject(:background_job_environment) { described_class.new(bg_config) }
-
   before do
     allow(Steno).to receive(:init)
+    TestConfig.override(
+      db: 'cc-db',
+      logging: { level: 'debug2' },
+      bits_service: { enabled: false },
+    )
   end
+  let(:config) { VCAP::CloudController::Config.config }
+
+  subject(:background_job_environment) { BackgroundJobEnvironment.new(config) }
 
   describe '#setup_environment' do
     before do
@@ -25,7 +27,7 @@ RSpec.describe BackgroundJobEnvironment do
     end
 
     it 'configures components' do
-      expect(VCAP::CloudController::Config).to receive(:configure_components)
+      expect(config).to receive(:configure_components)
       background_job_environment.setup_environment
     end
 

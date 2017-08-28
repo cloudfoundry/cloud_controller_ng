@@ -2,16 +2,20 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Config do
-    describe '.from_file' do
+    describe '.load_from_file' do
       it 'raises if the file does not exist' do
         expect {
-          Config.from_file('nonexistent.yml')
+          Config.load_from_file('nonexistent.yml')
         }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
 
       context 'merges default values' do
         context 'when no config values are provided' do
-          let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
+          let(:config) do
+            config_path = File.join(Paths::FIXTURES, 'config/minimal_config.yml')
+            Config.load_from_file(config_path).config_hash
+          end
+
           it 'sets the default isolation segment name' do
             expect(config[:shared_isolation_segment_name]).to eq('shared')
           end
@@ -83,7 +87,10 @@ module VCAP::CloudController
 
         context 'when config values are provided' do
           context 'and the values are valid' do
-            let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')) }
+            let(:config) do
+              config_path = File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')
+              Config.load_from_file(config_path).config_hash
+            end
 
             it 'preserves cli info from the file' do
               expect(config[:info][:min_cli_version]).to eq('6.0.0')
@@ -172,7 +179,10 @@ module VCAP::CloudController
 
             context 'when the staging auth is already url encoded' do
               let(:tmpdir) { Dir.mktmpdir }
-              let(:config_from_file) { Config.from_file(File.join(tmpdir, 'overridden_with_urlencoded_values.yml')) }
+              let(:config_load_from_file) do
+                config_path = File.join(tmpdir, 'overridden_with_urlencoded_values.yml')
+                Config.load_from_file(config_path).config_hash
+              end
 
               before do
                 config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
@@ -185,15 +195,18 @@ module VCAP::CloudController
               end
 
               it 'preserves the url-encoded values' do
-                config_from_file[:staging][:auth][:user] = 'f%40t%3A%25a'
-                config_from_file[:staging][:auth][:password] = 'm%40%2Fn!'
+                config_load_from_file[:staging][:auth][:user] = 'f%40t%3A%25a'
+                config_load_from_file[:staging][:auth][:password] = 'm%40%2Fn!'
               end
             end
           end
 
           context 'and the password contains double quotes' do
             let(:tmpdir) { Dir.mktmpdir }
-            let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
+            let(:config_load_from_file) do
+              config_path = File.join(tmpdir, 'incorrect_overridden_config.yml')
+              Config.load_from_file(config_path).config_hash
+            end
 
             before do
               config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
@@ -209,13 +222,16 @@ module VCAP::CloudController
             end
 
             it 'URL-encodes staging password as neccesary' do
-              expect(config_from_file[:staging][:auth][:password]).to eq('pass%22wor%22d')
+              expect(config_load_from_file[:staging][:auth][:password]).to eq('pass%22wor%22d')
             end
           end
 
           context 'and the values are invalid' do
             let(:tmpdir) { Dir.mktmpdir }
-            let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
+            let(:config_load_from_file) do
+              config_path = File.join(tmpdir, 'incorrect_overridden_config.yml')
+              Config.load_from_file(config_path).config_hash
+            end
 
             before do
               config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
@@ -234,27 +250,28 @@ module VCAP::CloudController
             end
 
             it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
-              expect(config_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
+              expect(config_load_from_file[:app_bits_upload_grace_period_in_seconds]).to eq(0)
             end
 
             it 'sets a negative "pid_limit" to 0' do
-              expect(config_from_file[:diego][:pid_limit]).to eq(0)
+              expect(config_load_from_file[:diego][:pid_limit]).to eq(0)
             end
 
             it 'URL-encodes staging auth as necessary' do
-              expect(config_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
-              expect(config_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
+              expect(config_load_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
+              expect(config_load_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
             end
           end
         end
       end
     end
 
-    describe '.configure_components' do
+    describe '#configure_components' do
       let(:dependency_locator) { CloudController::DependencyLocator.instance }
 
-      before do
-        @test_config = {
+      let(:test_config_hash) {
+        {
+          admin_account_capacity: { memory: 64 * 1024 },
           packages: {
             fog_connection: {},
             fog_aws_storage_options: {
@@ -271,7 +288,7 @@ module VCAP::CloudController
             buildpack_directory_key: 'bp_key',
           },
           resource_pool: {
-            minimum_size: 0,
+            minimum_size: 9001,
             maximum_size: 0,
             fog_connection: {},
             resource_directory_key: 'resource_key',
@@ -288,96 +305,95 @@ module VCAP::CloudController
           bits_service: { enabled: false },
           reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
           diego: {},
+          stacks_file: 'path/to/stacks/file',
+          db_encryption_key: '123-456'
         }
+      }
+
+      let(:config_instance) do
+        Config.new(test_config_hash)
+      end
+
+      before do
+        allow(Stack).to receive(:configure)
+      end
+
+      after do
+        AccountCapacity.admin[:memory] = AccountCapacity::ADMIN_MEM
       end
 
       it 'sets up the db encryption key' do
-        Config.configure_components(@test_config.merge(db_encryption_key: '123-456'))
+        config_instance.configure_components
         expect(Encryptor.db_encryption_key).to eq('123-456')
       end
 
       it 'sets up the account capacity' do
-        Config.configure_components(@test_config.merge(admin_account_capacity: { memory: 64 * 1024 }))
+        config_instance.configure_components
         expect(AccountCapacity.admin[:memory]).to eq(64 * 1024)
-
-        AccountCapacity.admin[:memory] = AccountCapacity::ADMIN_MEM
       end
 
       it 'sets up the resource pool instance' do
-        Config.configure_components(@test_config.merge(resource_pool: { resource_directory_key: 'foo', minimum_size: 9001, fog_connection: {} }))
+        config_instance.configure_components
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 
       it 'sets up the app manager' do
-        expect(AppObserver).to receive(:configure).with(instance_of(VCAP::CloudController::Stagers), instance_of(VCAP::CloudController::Runners))
+        expect(AppObserver).to receive(:configure).with(instance_of(Stagers), instance_of(Runners))
 
-        Config.configure_components(@test_config)
+        config_instance.configure_components
       end
 
       it 'sets up the quota definition' do
-        expect(QuotaDefinition).to receive(:configure).with(@test_config)
-        Config.configure_components(@test_config)
+        expect(QuotaDefinition).to receive(:configure).with(test_config_hash)
+        config_instance.configure_components
       end
 
       it 'sets up the stack' do
-        config = @test_config.merge(stacks_file: 'path/to/stacks/file')
         expect(Stack).to receive(:configure).with('path/to/stacks/file')
-        Config.configure_components(config)
+        config_instance.configure_components
       end
 
       it 'sets up app with whether custom buildpacks are enabled' do
-        config = @test_config.merge(disable_custom_buildpacks: true)
+        config = Config.new(test_config_hash.merge(disable_custom_buildpacks: true))
+        expect(config.config_hash[:disable_custom_buildpacks]).to be true
 
-        expect {
-          Config.configure_components(config)
-        }.to change {
-          VCAP::CloudController::Config.config[:disable_custom_buildpacks]
-        }.to(true)
-
-        config = @test_config.merge(disable_custom_buildpacks: false)
-
-        expect {
-          Config.configure_components(config)
-        }.to change {
-          VCAP::CloudController::Config.config[:disable_custom_buildpacks]
-        }.to(false)
+        config = Config.new(test_config_hash.merge(disable_custom_buildpacks: false))
+        expect(config.config_hash[:disable_custom_buildpacks]).to be false
       end
 
       context 'when newrelic is disabled' do
-        let(:config) do
-          @test_config.merge(newrelic_enabled: false)
+        let(:config_instance) do
+          Config.new(test_config_hash.merge(newrelic_enabled: false))
         end
 
         before do
           GC::Profiler.disable
-          Config.instance_eval('@initialized = false')
         end
 
         it 'does not enable GC profiling' do
-          Config.configure_components(config)
+          config_instance.configure_components
           expect(GC::Profiler.enabled?).to eq(false)
         end
       end
 
       context 'when newrelic is enabled' do
-        let(:config) do
-          @test_config.merge(newrelic_enabled: true)
+        let(:config_instance) do
+          Config.new(test_config_hash.merge(newrelic_enabled: true))
         end
 
         before do
           GC::Profiler.disable
-          Config.instance_eval('@initialized = false')
         end
 
         it 'enables GC profiling' do
-          Config.configure_components(config)
+          config_instance.configure_components
           expect(GC::Profiler.enabled?).to eq(true)
         end
       end
 
       it 'sets up the reserved private domain' do
-        expect(PrivateDomain).to receive(:configure).with(@test_config[:reserved_private_domains])
-        Config.configure_components(@test_config)
+        expect(PrivateDomain).to receive(:configure).with(test_config_hash[:reserved_private_domains])
+        config_instance.configure_components
       end
     end
   end

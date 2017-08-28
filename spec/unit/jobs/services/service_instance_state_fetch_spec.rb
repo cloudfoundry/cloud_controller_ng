@@ -60,10 +60,11 @@ module VCAP::CloudController
           let(:max_duration) { 10080 }
 
           before do
-            allow(VCAP::CloudController::Config).to receive(:config).and_return({
+            config_override = {
               broker_client_default_async_poll_interval_seconds: default_polling_interval,
               broker_client_max_async_poll_duration_minutes: max_duration,
-            })
+            }
+            TestConfig.override(config_override)
           end
 
           context 'when the caller does not provide the maximum number of attempts' do
@@ -379,18 +380,14 @@ module VCAP::CloudController
           end
 
           context 'when the poll_interval is changed after the job was created' do
-            let(:default_polling_interval) { VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds] }
+            let(:default_polling_interval) { VCAP::CloudController::Config.config.config_hash[:broker_client_default_async_poll_interval_seconds] }
             let(:new_polling_interval) { default_polling_interval * 2 }
             let(:state) { 'in progress' }
 
             before do
               expect(job.poll_interval).to eq(default_polling_interval)
               expect(default_polling_interval).not_to eq(new_polling_interval)
-              updated_config = VCAP::CloudController::Config.config.merge(
-                {
-                  broker_client_default_async_poll_interval_seconds: new_polling_interval
-                })
-              allow(VCAP::CloudController::Config).to receive(:config).and_return(updated_config)
+              TestConfig.override(broker_client_default_async_poll_interval_seconds: new_polling_interval)
             end
 
             it 'updates the poll interval after the next run' do
@@ -461,7 +458,7 @@ module VCAP::CloudController
         end
 
         describe '#end_timestamp' do
-          let(:max_poll_duration) { VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes] }
+          let(:max_poll_duration) { VCAP::CloudController::Config.config.config_hash[:broker_client_max_async_poll_duration_minutes] }
 
           context 'when the job is new' do
             it 'adds the broker_client_max_async_poll_duration_minutes to the current time' do

@@ -391,9 +391,7 @@ module VCAP::Services::SSO
 
         context 'when the cloud controller is not configured to modify sso_client' do
           before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
+            TestConfig.override(uaa_client_name: nil, uaa_client_secret: nil)
             allow(client_manager).to receive(:modify_transaction)
           end
 
@@ -553,9 +551,7 @@ module VCAP::Services::SSO
 
         context 'when the cloud controller is not configured to modify sso_client' do
           before do
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_name).and_return nil
-            allow(VCAP::CloudController::Config.config).to receive(:[]).with(:uaa_client_secret).and_return nil
+            TestConfig.override(uaa_client_name: nil, uaa_client_secret: nil)
           end
 
           it 'does not delete any clients in UAA' do

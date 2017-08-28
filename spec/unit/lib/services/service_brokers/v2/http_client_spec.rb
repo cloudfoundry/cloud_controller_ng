@@ -106,7 +106,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:ssl_config) { double(:ssl_config, :verify_mode= => nil) }
 
           before do
-            allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+            TestConfig.override(config)
             allow(HTTPClient).to receive(:new).and_return(http_client)
             allow(http_client).to receive(http_method)
             allow(ssl_config).to receive(:set_default_paths)
@@ -210,7 +210,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     shared_examples 'timeout behavior' do
       before do
-        allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
+        TestConfig.override(config)
         allow(HTTPClient).to receive(:new).and_return(http_client)
         allow(http_client).to receive(http_method)
       end

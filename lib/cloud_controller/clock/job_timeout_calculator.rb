@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     def calculate(job_name)
       job_name ||= :global
-      config.dig(:jobs, job_name.to_sym, :timeout_in_seconds) || config.dig(:jobs, :global, :timeout_in_seconds)
+      config.config_hash.dig(:jobs, job_name.to_sym, :timeout_in_seconds) || config.config_hash.dig(:jobs, :global, :timeout_in_seconds)
     end
 
     private

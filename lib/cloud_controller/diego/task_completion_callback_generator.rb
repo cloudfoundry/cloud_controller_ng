@@ -1,7 +1,7 @@
 module VCAP::CloudController
   module Diego
     class TaskCompletionCallbackGenerator
-      def initialize(config=Config.config)
+      def initialize(config=Config.config.config_hash)
         @config = config
       end
 

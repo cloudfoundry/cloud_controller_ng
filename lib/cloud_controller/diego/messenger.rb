@@ -71,7 +71,7 @@ module VCAP::CloudController
       private
 
       def do_local_staging
-        !!HashUtils.dig(Config.config, :diego, :temporary_local_staging)
+        !!HashUtils.dig(Config.config.config_hash, :diego, :temporary_local_staging)
       end
 
       def logger
@@ -103,7 +103,7 @@ module VCAP::CloudController
       end
 
       def bypass_bridge?
-        !!HashUtils.dig(Config.config, :diego, :temporary_local_apps)
+        !!HashUtils.dig(Config.config.config_hash, :diego, :temporary_local_apps)
       end
     end
   end

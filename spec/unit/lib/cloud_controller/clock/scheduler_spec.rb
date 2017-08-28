@@ -8,7 +8,7 @@ module VCAP::CloudController
 
       let(:clock) { instance_double(Clock) }
       let(:config) do
-        {
+        VCAP::CloudController::Config.new({
           jobs: {
             global: { timeout_in_seconds: global_timeout },
           },
@@ -20,7 +20,7 @@ module VCAP::CloudController
           pending_droplets: { frequency_in_seconds: 300, expiration_in_seconds: 600 },
           pending_builds: { frequency_in_seconds: 400, expiration_in_seconds: 700 },
           diego_sync: { frequency_in_seconds: 30 },
-        }
+        })
       end
       let(:global_timeout) { 4.hours }
 

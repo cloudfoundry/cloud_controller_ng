@@ -20,13 +20,14 @@ unless File.exist?(@config_file)
   warn "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>."
   exit 1
 end
-@config = VCAP::CloudController::Config.from_file(@config_file)
+@config = VCAP::CloudController::Config.load_from_file(@config_file)
 logger = Logger.new(STDOUT)
-db_config = @config.fetch(:db).merge(log_level: :debug)
+
+db_config = @config.config_hash.fetch(:db).merge(log_level: :debug)
 db_config[:database] ||= DbConfig.new.connection_string
 
 VCAP::CloudController::DB.load_models_without_migrations_check(db_config, logger)
-VCAP::CloudController::Config.configure_components(@config)
+@config.configure_components
 
 if ENV['NEW_RELIC_ENV'] == 'development'
   $LOAD_PATH.unshift(File.expand_path('../../../spec/support', __FILE__))

@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     def bypass_bridge?
-      !!HashUtils.dig(Config.config, :diego, :temporary_local_tps)
+      !!HashUtils.dig(Config.config.config_hash, :diego, :temporary_local_tps)
     end
 
     def dependency_locator

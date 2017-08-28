@@ -566,8 +566,8 @@ module VCAP::CloudController
 
       context 'when the CC is not configured to use the UAA correctly and the service broker requests dashboard access' do
         before do
-          VCAP::CloudController::Config.config[:uaa_client_name] = nil
-          VCAP::CloudController::Config.config[:uaa_client_secret] = nil
+          VCAP::CloudController::Config.config.config_hash[:uaa_client_name] = nil
+          VCAP::CloudController::Config.config.config_hash[:uaa_client_secret] = nil
 
           catalog_json['services'][0]['dashboard_client'] = {
             id: 'p-mysql-client',

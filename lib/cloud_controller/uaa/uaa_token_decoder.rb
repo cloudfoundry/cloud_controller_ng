@@ -101,8 +101,8 @@ module VCAP::CloudController
     end
 
     def http_client
-      uaa_target                    = VCAP::CloudController::Config.config[:uaa][:internal_url]
-      uaa_ca                        = VCAP::CloudController::Config.config[:uaa][:ca_file]
+      uaa_target                    = VCAP::CloudController::Config.config.config_hash[:uaa][:internal_url]
+      uaa_ca                        = VCAP::CloudController::Config.config.config_hash[:uaa][:ca_file]
       client                        = HTTPClient.new(base_url: uaa_target)
       client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
       client.ssl_config.set_trust_ca(uaa_ca)

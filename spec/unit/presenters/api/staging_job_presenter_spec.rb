@@ -31,11 +31,11 @@ RSpec.describe StagingJobPresenter do
 
     context 'when temporary_cc_uploader_mtls is true' do
       before do
-        TestConfig.load({
+        TestConfig.override(
           diego: {
             temporary_cc_uploader_mtls: true,
           }
-        })
+        )
       end
 
       let(:expected_polling_url) do

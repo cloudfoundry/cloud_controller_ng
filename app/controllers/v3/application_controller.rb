@@ -49,7 +49,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
-    Config.config
+    Config.config.config_hash
   end
 
   def query_params

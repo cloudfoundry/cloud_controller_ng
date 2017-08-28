@@ -53,7 +53,7 @@ module VCAP::CloudController
       end
 
       it 'configures components' do
-        expect(Config).to receive(:configure_components)
+        expect_any_instance_of(Config).to receive(:configure_components)
         subject.run!
       end
 

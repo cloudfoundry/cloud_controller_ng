@@ -39,7 +39,7 @@ module VCAP::CloudController
         private
 
         def new_end_timestamp
-          Time.now + VCAP::CloudController::Config.config[:broker_client_max_async_poll_duration_minutes].minutes
+          Time.now + VCAP::CloudController::Config.config.config_hash[:broker_client_max_async_poll_duration_minutes].minutes
         end
 
         def repository
@@ -99,7 +99,7 @@ module VCAP::CloudController
         end
 
         def update_polling_interval
-          default_poll_interval = VCAP::CloudController::Config.config[:broker_client_default_async_poll_interval_seconds]
+          default_poll_interval = VCAP::CloudController::Config.config.config_hash[:broker_client_default_async_poll_interval_seconds]
           poll_interval         = [default_poll_interval, 24.hours].min
           @poll_interval        = poll_interval
         end

@@ -308,7 +308,7 @@ module VCAP::CloudController
           let(:system_domain) { 'example.com' }
 
           before do
-            Config.config[:system_hostnames] = ['api', 'uaa']
+            Config.config.config_hash[:system_hostnames] = ['api', 'uaa']
             SharedDomain.make(name: 'example.com')
           end
 

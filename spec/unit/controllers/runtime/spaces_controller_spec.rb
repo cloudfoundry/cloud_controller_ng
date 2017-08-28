@@ -829,14 +829,7 @@ module VCAP::CloudController
 
         context 'when the async job times out' do
           before do
-            fake_config = {
-              jobs: {
-                global: {
-                  timeout_in_seconds: 0.1
-                }
-              }
-            }
-            allow(VCAP::CloudController::Config).to receive(:config).and_return(fake_config)
+            TestConfig.override({ jobs: { global: { timeout_in_seconds: 0.1 } } })
             stub_deprovision(service_instance, accepts_incomplete: true) do
               sleep 0.11
               { status: 200, body: {}.to_json }

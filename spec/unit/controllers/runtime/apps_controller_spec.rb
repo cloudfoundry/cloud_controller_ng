@@ -178,8 +178,7 @@ module VCAP::CloudController
 
       context 'when allow_ssh is enabled globally' do
         before do
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return true
+          TestConfig.override(allow_app_ssh_access: true)
         end
 
         context 'when allow_ssh is enabled on the space' do
@@ -234,8 +233,7 @@ module VCAP::CloudController
       context 'when allow_ssh is disabled globally' do
         before do
           set_current_user_as_admin
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(anything).and_call_original
-          allow(VCAP::CloudController::Config.config).to receive(:[]).with(:allow_app_ssh_access).and_return false
+          TestConfig.override(allow_app_ssh_access: false)
         end
 
         context 'when allow_ssh is enabled on the space' do

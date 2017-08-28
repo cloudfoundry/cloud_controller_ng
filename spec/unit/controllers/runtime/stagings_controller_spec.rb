@@ -327,7 +327,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), "Response Body: #{last_response.body}"
 
           job         = Delayed::Job.last
-          config      = VCAP::CloudController::Config.config
+          config      = VCAP::CloudController::Config.config.config_hash
           user        = config[:staging][:auth][:user]
           password    = config[:staging][:auth][:password]
           polling_url = "http://#{user}:#{password}@#{config[:internal_service_hostname]}:#{config[:external_port]}/staging/jobs/#{job.guid}"
@@ -398,7 +398,7 @@ module VCAP::CloudController
           post url, upload_req
 
           job         = Delayed::Job.last
-          config      = VCAP::CloudController::Config.config
+          config      = VCAP::CloudController::Config.config.config_hash
           polling_url = "https://#{config[:internal_service_hostname]}:#{config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
 
           expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)

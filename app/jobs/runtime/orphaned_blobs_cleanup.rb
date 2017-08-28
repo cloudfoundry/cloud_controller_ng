@@ -175,7 +175,7 @@ module VCAP::CloudController
         end
 
         def config
-          @config ||= Config.config
+          @config ||= Config.config.config_hash
         end
       end
     end
