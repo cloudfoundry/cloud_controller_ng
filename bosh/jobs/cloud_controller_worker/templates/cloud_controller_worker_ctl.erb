@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+INDEX="$2"
+
 CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
 
 RUN_DIR="/var/vcap/sys/run/cloud_controller_worker"
@@ -36,7 +38,7 @@ case $1 in
 
     echo $$ > "$PIDFILE"
 
-    exec /var/vcap/jobs/cloud_controller_worker/bin/cloud_controller_worker "$@"
+    exec /var/vcap/jobs/cloud_controller_worker/bin/cloud_controller_worker "$INDEX"
   ;;
 
   stop)
