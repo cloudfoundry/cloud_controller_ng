@@ -1,8 +1,8 @@
 <% if p("bpm.enabled") %>
 check process cloud_controller_clock
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_clock/cloud_controller_clock.pid
-  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_clock"
-  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_clock"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_clock"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_clock"
   group vcap
 <% else %>
 check process cloud_controller_clock

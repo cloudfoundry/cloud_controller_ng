@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 <% if p("bpm.enabled") %>
-/var/vcap/packages/bpm/bin/bpm stop cloud_controller_clock 1>&2
+/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_clock 1>&2
 echo 0
 exit 0
 <% else %>
