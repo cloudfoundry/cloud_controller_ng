@@ -395,7 +395,7 @@ properties:
     default: ~
     description: "The ca cert to use when communicating with the database over SSL"
   ccdb.ssl_verify_hostname:
-    default: false
+    default: true
     description: "Verify that the database SSL certificate matches the host to which the connection is attempted"
 
   uaa.cc.token_secret:
