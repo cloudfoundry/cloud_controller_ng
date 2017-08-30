@@ -113,6 +113,7 @@ module VCAP::CloudController
             port_range:   rule['port_range'],
             icmp_info:    rule['icmp_info'],
             log:          rule['log'],
+            annotations:  rule['annotations'],
           )
         end
       end
@@ -126,6 +127,7 @@ module VCAP::CloudController
             port_range:   rule['port_range'],
             icmp_info:    rule['icmp_info'],
             log:          rule['log'],
+            annotations:  rule['annotations'],
           )
         end
       end

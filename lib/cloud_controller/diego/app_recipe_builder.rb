@@ -14,9 +14,9 @@ module VCAP::CloudController
       MONITORED_HEALTH_CHECK_TYPES = ['port', 'http', ''].map(&:freeze).freeze
 
       def initialize(config:, process:, ssh_key: SSHKey.new)
-        @config      = config
-        @process     = process
-        @ssh_key     = ssh_key
+        @config  = config
+        @process = process
+        @ssh_key = ssh_key
       end
 
       def build_app_lrp
@@ -66,7 +66,7 @@ module VCAP::CloudController
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
           PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
-          check_definition:                  generate_healthcheck_definition(desired_lrp_builder),
+          check_definition:                 generate_healthcheck_definition(desired_lrp_builder),
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config[:diego][:pid_limit],
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
@@ -205,7 +205,7 @@ module VCAP::CloudController
         return unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
 
         desired_ports = lrp_builder.ports
-        checks = []
+        checks        = []
         desired_ports.each_with_index do |port, index|
           checks << build_check(port, index)
         end
@@ -217,14 +217,14 @@ module VCAP::CloudController
         if process.health_check_type == 'http' && index == 0
           ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
-              path:               process.health_check_http_endpoint,
-              port:               port,
+              path: process.health_check_http_endpoint,
+              port: port,
             )
           )
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
-              port:               port,
+              port: port,
             )
           )
         end
@@ -268,6 +268,7 @@ module VCAP::CloudController
             port_range:   rule['port_range'],
             icmp_info:    rule['icmp_info'],
             log:          rule['log'],
+            annotations:  rule['annotations'],
           )
         end
       end

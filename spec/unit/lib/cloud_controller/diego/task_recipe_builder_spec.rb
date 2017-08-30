@@ -56,7 +56,8 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol: 'udp',
             destinations: ['0.0.0.0/0'],
-            ports: [53]
+            ports: [53],
+            annotations: ['security_group_id:guid1']
           )
         end
         let(:rule_http_everywhere) do
@@ -64,7 +65,8 @@ module VCAP::CloudController
             protocol: 'tcp',
             destinations: ['0.0.0.0/0'],
             ports: [80],
-            log: true
+            log: true,
+            annotations: ['security_group_id:guid2']
           )
         end
         let(:rule_staging_specific) do
@@ -72,7 +74,8 @@ module VCAP::CloudController
             protocol: 'tcp',
             destinations: ['0.0.0.0/0'],
             ports: [443],
-            log: true
+            log: true,
+            annotations: ['security_group_id:guid3']
           )
         end
         let(:certificate_properties) do
@@ -87,9 +90,15 @@ module VCAP::CloudController
         end
 
         before do
-          SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], staging_default: true)
-          SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: true)
-          security_group = SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }], staging_default: false)
+          SecurityGroup.make(guid: 'guid1',
+                             rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }],
+                             staging_default: true)
+          SecurityGroup.make(guid: 'guid2',
+                             rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }],
+                             staging_default: true)
+          security_group = SecurityGroup.make(guid: 'guid3',
+                                              rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }],
+                                              staging_default: false)
           security_group.add_staging_space(app.space)
           allow(LifecycleProtocol).to receive(:protocol_for_type).with(lifecycle_type).and_return(lifecycle_protocol)
         end
@@ -351,7 +360,8 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol: 'udp',
             destinations: ['0.0.0.0/0'],
-            ports: [53]
+            ports: [53],
+            annotations: ['security_group_id:guid1']
           )
         end
         let(:rule_http_everywhere) do
@@ -359,16 +369,17 @@ module VCAP::CloudController
             protocol: 'tcp',
             destinations: ['0.0.0.0/0'],
             ports: [80],
-            log: true
+            log: true,
+            annotations: ['security_group_id:guid2']
           )
         end
 
         before do
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return(isolation_segment)
 
-          SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
+          SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
           app.space.add_security_group(
-            SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
+            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
           )
         end
 

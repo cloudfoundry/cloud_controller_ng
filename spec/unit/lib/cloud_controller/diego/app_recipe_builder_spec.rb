@@ -150,7 +150,8 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol:     'udp',
             destinations: ['0.0.0.0/0'],
-            ports:        [53]
+            ports:        [53],
+            annotations:  ['security_group_id:guid1']
           )
         end
         let(:rule_http_everywhere) do
@@ -158,7 +159,8 @@ module VCAP::CloudController
             protocol:     'tcp',
             destinations: ['0.0.0.0/0'],
             ports:        [80],
-            log:          true
+            log:          true,
+            annotations:  ['security_group_id:guid2']
           )
         end
         let(:rule_staging_specific) do
@@ -166,7 +168,8 @@ module VCAP::CloudController
             protocol:     'tcp',
             destinations: ['0.0.0.0/0'],
             ports:        [443],
-            log:          true
+            log: true,
+            annotations: ['security_group_id:guid3']
           )
         end
         let(:execution_metadata) { { user: execution_metadata_user }.to_json }
@@ -174,9 +177,9 @@ module VCAP::CloudController
 
         before do
           [
-            SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
-            SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
-            SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
+            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }]),
           ].each { |security_group| security_group.add_space(process.space) }
 
           RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)
@@ -204,7 +207,7 @@ module VCAP::CloudController
                 lifecycle_bundles:                     {
                   'potato-stack' => 'some-uri'
                 },
-                pid_limit: 100,
+                pid_limit:                             100,
               }
             }
           end
@@ -236,9 +239,9 @@ module VCAP::CloudController
 
           before do
             VCAP::CloudController::BuildpackLifecycleDataModel.make(
-              app:       app_model,
+              app:        app_model,
               buildpacks: nil,
-              stack:     'potato-stack',
+              stack:      'potato-stack',
             )
 
             allow(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).and_return(desired_lrp_builder)
@@ -371,7 +374,7 @@ module VCAP::CloudController
               end
 
               it 'adds a TCP health check definition' do
-                lrp = builder.build_app_lrp
+                lrp       = builder.build_app_lrp
                 tcp_check = lrp.check_definition.checks.first.tcp_check
                 expect(tcp_check.port).to eq(4444)
               end
@@ -389,7 +392,7 @@ module VCAP::CloudController
               end
 
               it 'does not add healthcheck definitions' do
-                lrp = builder.build_app_lrp
+                lrp              = builder.build_app_lrp
                 check_definition = lrp.check_definition
                 expect(check_definition).to be_nil
               end
@@ -407,7 +410,7 @@ module VCAP::CloudController
               end
 
               it 'adds a TCP health check definition' do
-                lrp = builder.build_app_lrp
+                lrp       = builder.build_app_lrp
                 tcp_check = lrp.check_definition.checks.first.tcp_check
                 expect(tcp_check.port).to eq(4444)
               end
@@ -460,14 +463,14 @@ module VCAP::CloudController
               end
 
               it 'adds an HTTP health check definition using the first port' do
-                lrp = builder.build_app_lrp
+                lrp        = builder.build_app_lrp
                 http_check = lrp.check_definition.checks.first.http_check
                 expect(http_check.port).to eq(4444)
                 expect(http_check.path).to eq('http-endpoint')
               end
 
               it 'keeps a TCP health check definition for other ports' do
-                lrp = builder.build_app_lrp
+                lrp       = builder.build_app_lrp
                 tcp_check = lrp.check_definition.checks.second.tcp_check
                 expect(tcp_check.port).to eq(5555)
               end
@@ -485,7 +488,7 @@ module VCAP::CloudController
               end
 
               it 'does not add healthcheck definitions' do
-                lrp = builder.build_app_lrp
+                lrp              = builder.build_app_lrp
                 check_definition = lrp.check_definition
                 expect(check_definition).to be_nil
               end
@@ -532,11 +535,11 @@ module VCAP::CloudController
                     key:   'cf-router',
                     value: [
                       {
-                        'hostnames'         => ['potato.example.com'],
-                        'port'              => 8080,
-                        'route_service_url' => nil,
-                        'isolation_segment' => 'placement-tag',
-                      },
+                               'hostnames'         => ['potato.example.com'],
+                               'port'              => 8080,
+                               'route_service_url' => nil,
+                               'isolation_segment' => 'placement-tag',
+                             },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
@@ -649,11 +652,11 @@ module VCAP::CloudController
                       key:   'cf-router',
                       value: [
                         {
-                          'hostnames'         => ['potato.example.com'],
-                          'port'              => 8080,
-                          'route_service_url' => nil,
-                          'isolation_segment' => 'placement-tag',
-                        },
+                                 'hostnames'         => ['potato.example.com'],
+                                 'port'              => 8080,
+                                 'route_service_url' => nil,
+                                 'isolation_segment' => 'placement-tag',
+                               },
                         {
                           'hostnames'         => ['tomato.example.com'],
                           'port'              => 8080,
@@ -744,10 +747,10 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
           let(:droplet) do
             DropletModel.make(:docker,
-              package:              package,
-              state:                DropletModel::STAGED_STATE,
-              execution_metadata:   execution_metadata,
-              docker_receipt_image: 'docker-receipt-image',
+              package:                 package,
+              state:                   DropletModel::STAGED_STATE,
+              execution_metadata:      execution_metadata,
+              docker_receipt_image:    'docker-receipt-image',
               docker_receipt_username: 'dockeruser',
               docker_receipt_password: 'dockerpass',
             )
@@ -986,8 +989,8 @@ module VCAP::CloudController
             routing_info = {
               'http_routes' => [
                 {
-                  'hostname' => 'potato.example.com',
-                  'port'     => 8080,
+                  'hostname'          => 'potato.example.com',
+                  'port'              => 8080,
                   'router_group_guid' => 'potato-guid'
                 },
                 {
@@ -1023,11 +1026,11 @@ module VCAP::CloudController
                   key:   'cf-router',
                   value: [
                     {
-                      'hostnames'         => ['potato.example.com'],
-                      'port'              => 8080,
-                      'route_service_url' => nil,
-                      'isolation_segment' => 'placement-tag',
-                    },
+                             'hostnames'         => ['potato.example.com'],
+                             'port'              => 8080,
+                             'route_service_url' => nil,
+                             'isolation_segment' => 'placement-tag',
+                           },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
@@ -1140,11 +1143,11 @@ module VCAP::CloudController
                     key:   'cf-router',
                     value: [
                       {
-                        'hostnames'         => ['potato.example.com'],
-                        'port'              => 8080,
-                        'route_service_url' => nil,
-                        'isolation_segment' => 'placement-tag',
-                      },
+                               'hostnames'         => ['potato.example.com'],
+                               'port'              => 8080,
+                               'route_service_url' => nil,
+                               'isolation_segment' => 'placement-tag',
+                             },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
