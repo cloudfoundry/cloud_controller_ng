@@ -8,8 +8,15 @@ module VCAP::CloudController
     let(:config_hash) { { url: 'http://uaa-url' } }
     let(:uaa_info) { double(CF::UAA::Info) }
     let(:key_hash) { { 'key-name' => { 'value' => 'value-from-uaa' } } }
+    let(:my_logger) { double(Steno::Logger) }
 
     describe '#value' do
+      before do
+        allow(Steno).to receive(:logger).and_return(my_logger)
+        allow(my_logger).to receive(:debug)
+        allow(my_logger).to receive(:error)
+      end
+
       context 'when verification key is nil' do
         before { config_hash[:verification_key] = nil }
         before { allow(uaa_info).to receive_messages(validation_keys_hash: key_hash) }
@@ -64,11 +71,15 @@ module VCAP::CloudController
       end
 
       context 'when the verification keys cannot be fetched from uaa' do
-        it 'tries to fetch three times' do
-          allow(uaa_info).to receive(:validation_keys_hash).and_return({}, {}, key_hash)
-          subject.value
+        context 'because UAA returns an empty key map' do
+          before do
+            allow(uaa_info).to receive(:validation_keys_hash).and_return({})
+          end
 
-          expect(uaa_info).to have_received(:validation_keys_hash).exactly(3).times
+          it 'tries to fetch three times' do
+            expect { subject.value }.to raise_error(VCAP::CloudController::UaaUnavailable)
+            expect(uaa_info).to have_received(:validation_keys_hash).exactly(3).times
+          end
         end
 
         context 'but have been previously fetched' do
@@ -99,6 +110,7 @@ module VCAP::CloudController
             expect {
               subject.value
             }.to raise_error(VCAP::CloudController::UaaUnavailable)
+            expect(uaa_info).to have_received(:validation_keys_hash).exactly(3).times
           end
         end
       end

@@ -15,6 +15,8 @@ module VCAP::CloudController
       @uaa_keys = nil
     end
 
+    private
+
     def update_keys(last_fetched_keys)
       validation_hash = fetch_from_uaa
 
@@ -41,6 +43,7 @@ module VCAP::CloudController
       uaa_keys
     end
 
+    # Gets validation keys from the UAA server.  Retries 3 times.  Returns a validation hash.  Retries if hash is empty and retries remaining.
     def fetch_from_uaa
       validation_hash = {}
       retries         = 3
@@ -49,14 +52,12 @@ module VCAP::CloudController
         begin
           validation_hash = @info.validation_keys_hash
         rescue => e
-          logger.debug('fetch-verification-keys-retry', error: e.message, remaining_retries: retries)
-          retries -= 1
+          logger.debug('fetch-verification-keys-retry', error: e.message, remaining_retries: retries - 1)
         end
+        retries -= 1
       end
       validation_hash
     end
-
-    private
 
     def invalid_keys?
       return true unless Time.now - @uaa_keys[:requested_time] < 30
