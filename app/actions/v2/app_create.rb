@@ -52,8 +52,7 @@ module VCAP::CloudController
       private
 
       def create_lifecycle(app, request_attrs)
-        buildpack_type_requested = request_attrs.key?('buildpack') || request_attrs.key?('stack_guid')
-        docker_type_requested    = request_attrs.key?('docker_image')
+        docker_type_requested = request_attrs.key?('docker_image')
 
         if docker_type_requested
           relationships = { app: { data: { guid: app.guid } } }
@@ -69,11 +68,11 @@ module VCAP::CloudController
             data:          docker_data
           })
           PackageCreate.create_without_event(create_message)
-        elsif buildpack_type_requested || !docker_type_requested
+        else
           # it is important to create the lifecycle model with the app instead of doing app.buildpack_lifecycle_data_model = x
           # because mysql will deadlock when requests happen concurrently otherwise.
           BuildpackLifecycleDataModel.create(
-            buildpacks: Array(request_attrs['buildpack']),
+            buildpacks: Array(request_attrs['buildpack'].presence),
             stack:     get_stack_name(request_attrs['stack_guid']),
             app:       app
           )

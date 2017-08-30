@@ -5,13 +5,11 @@ module VCAP::CloudController
   RSpec.describe V2::AppCreate do
     let(:space) { Space.make }
     let(:access_validator) { double('access_validator', validate_access: true) }
-    subject(:app_create) { described_class.new(access_validator: access_validator) }
+    subject(:app_create) { V2::AppCreate.new(access_validator: access_validator) }
 
     describe 'create' do
-      it 'creates the app' do
-        stack = Stack.make(name: 'stacks-on-stacks')
-
-        request_attrs = {
+      let(:request_attrs) do
+        {
           'name'              => 'maria',
           'space_guid'        => space.guid,
           'environment_json'  => { 'KEY' => 'val' },
@@ -19,35 +17,37 @@ module VCAP::CloudController
           'state'             => 'STOPPED',
           'health_check_type' => 'port',
           'enable_ssh' => 'false',
-          'stack_guid' => stack.guid
+          'stack_guid' => stack.guid,
         }
+      end
 
-        v2_app = app_create.create(request_attrs)
+      let(:stack) { Stack.make(name: 'stacks-on-stacks') }
 
-        expect(v2_app.name).to eq('maria')
-        expect(v2_app.space).to eq(space)
-        expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
-        expect(v2_app.stack).to eq(stack)
-        expect(v2_app.custom_buildpack_url).to eq('http://example.com/buildpack')
+      it 'creates the app' do
+        process = app_create.create(request_attrs)
 
-        v3_app = v2_app.app
+        expect(process.name).to eq('maria')
+        expect(process.space).to eq(space)
+        expect(process.environment_json).to eq({ 'KEY' => 'val' })
+        expect(process.stack).to eq(stack)
+        expect(process.custom_buildpack_url).to eq('http://example.com/buildpack')
+
+        v3_app = process.app
         expect(v3_app.name).to eq('maria')
         expect(v3_app.space).to eq(space)
         expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
         expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         expect(v3_app.lifecycle_data.stack).to eq('stacks-on-stacks')
         expect(v3_app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
-        expect(v3_app.desired_state).to eq(v2_app.state)
+        expect(v3_app.desired_state).to eq(process.state)
         expect(v3_app.enable_ssh).to be false
 
-        expect(v3_app.guid).to eq(v2_app.guid)
+        expect(v3_app.guid).to eq(process.guid)
       end
 
       context 'when the health_check_type is http' do
-        it 'creates the app' do
-          stack = Stack.make(name: 'stacks-on-stacks')
-
-          request_attrs = {
+        let(:request_attrs) do
+          {
             'name'                       => 'maria',
             'space_guid'                 => space.guid,
             'environment_json'           => { 'KEY' => 'val' },
@@ -57,11 +57,13 @@ module VCAP::CloudController
             'health_check_http_endpoint' => '/healthz',
             'stack_guid'                 => stack.guid
           }
+        end
 
-          v2_app = app_create.create(request_attrs)
+        it 'creates the app' do
+          process = app_create.create(request_attrs)
 
-          expect(v2_app.health_check_type).to eq('http')
-          expect(v2_app.health_check_http_endpoint).to eq('/healthz')
+          expect(process.health_check_type).to eq('http')
+          expect(process.health_check_http_endpoint).to eq('/healthz')
         end
       end
 
@@ -104,22 +106,26 @@ module VCAP::CloudController
         end
       end
 
-      it 'creates docker apps correctly' do
-        request_attrs = {
-          'name'              => 'maria',
-          'space_guid'        => space.guid,
-          'state'             => 'STOPPED',
-          'health_check_type' => 'port',
-          'docker_image'      => 'some-image:latest',
-        }
+      context 'when the app is based on a docker image' do
+        let(:request_attrs) do
+          {
+            'name'              => 'maria',
+            'space_guid'        => space.guid,
+            'state'             => 'STOPPED',
+            'health_check_type' => 'port',
+            'docker_image'      => 'some-image:latest',
+          }
+        end
 
-        v2_app = app_create.create(request_attrs)
+        it 'creates docker apps correctly' do
+          process = app_create.create(request_attrs)
 
-        expect(v2_app.docker_image).to eq('some-image:latest')
-        expect(v2_app.package_hash).to eq('some-image:latest')
+          expect(process.docker_image).to eq('some-image:latest')
+          expect(process.package_hash).to eq('some-image:latest')
 
-        package = v2_app.latest_package
-        expect(package.image).to eq('some-image:latest')
+          package = process.latest_package
+          expect(package.image).to eq('some-image:latest')
+        end
       end
 
       context 'when docker credentials are specified' do
@@ -140,14 +146,14 @@ module VCAP::CloudController
           it 'creates the app with docker credentials' do
             request_attrs['docker_image'] = 'some-image:latest'
 
-            v2_app = app_create.create(request_attrs)
+            process = app_create.create(request_attrs)
 
-            expect(v2_app.docker_image).to eq('some-image:latest')
-            expect(v2_app.docker_username).to eq('username')
-            expect(v2_app.docker_password).to eq('password')
-            expect(v2_app.package_hash).to eq('some-image:latest')
+            expect(process.docker_image).to eq('some-image:latest')
+            expect(process.docker_username).to eq('username')
+            expect(process.docker_password).to eq('password')
+            expect(process.package_hash).to eq('some-image:latest')
 
-            package = v2_app.latest_package
+            package = process.latest_package
             expect(package.image).to eq('some-image:latest')
             expect(package.docker_username).to eq('username')
             expect(package.docker_password).to eq('password')
@@ -163,15 +169,51 @@ module VCAP::CloudController
       end
 
       context 'when starting an app without a package' do
-        it 'raises an error' do
-          request_attrs = {
+        let(:request_attrs) do
+          {
             'name'              => 'maria',
             'space_guid'        => space.guid,
             'state'             => 'STARTED',
             'health_check_type' => 'port',
           }
+        end
 
+        it 'raises an error' do
           expect { app_create.create(request_attrs) }.to raise_error(/bits have not been uploaded/)
+        end
+      end
+
+      context 'when the nil buildpack is specified' do
+        let(:request_attrs) do
+          {
+            'name'       => 'maria',
+            'space_guid' => space.guid,
+            'buildpack'  => nil,
+            'state'      => 'STOPPED',
+            'health_check_type' => 'port',
+          }
+        end
+
+        it 'creates the app' do
+          process = app_create.create(request_attrs)
+          expect(process.app.lifecycle_data.buildpacks).to eq([])
+        end
+      end
+
+      context 'when the blank buildpack is specified' do
+        let(:request_attrs) do
+          {
+            'name'       => 'maria',
+            'space_guid' => space.guid,
+            'buildpack'  => '',
+            'state'      => 'STOPPED',
+            'health_check_type' => 'port',
+          }
+        end
+
+        it 'creates the app' do
+          process = app_create.create(request_attrs)
+          expect(process.app.lifecycle_data.buildpacks).to eq([])
         end
       end
     end
