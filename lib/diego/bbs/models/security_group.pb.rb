@@ -43,6 +43,7 @@ module Diego
         optional ::Diego::Bbs::Models::PortRange, :port_range, 4
         optional ::Diego::Bbs::Models::ICMPInfo, :icmp_info, 5
         optional :bool, :log, 6
+        repeated :string, :annotations, 7
       end
 
     end

@@ -29,6 +29,7 @@ module Diego
       #
       class CheckDefinition
         repeated ::Diego::Bbs::Models::Check, :checks, 1
+        optional :string, :log_source, 2
       end
 
       class Check

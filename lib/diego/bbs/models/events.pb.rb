@@ -12,6 +12,7 @@ require 'protobuf/message'
 require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 require 'actual_lrp.pb'
 require 'desired_lrp.pb'
+require 'task.pb'
 
 module Diego
   module Bbs
@@ -28,6 +29,9 @@ module Diego
       class DesiredLRPRemovedEvent < ::Protobuf::Message; end
       class ActualLRPCrashedEvent < ::Protobuf::Message; end
       class EventsByCellId < ::Protobuf::Message; end
+      class TaskCreatedEvent < ::Protobuf::Message; end
+      class TaskChangedEvent < ::Protobuf::Message; end
+      class TaskRemovedEvent < ::Protobuf::Message; end
 
 
       ##
@@ -69,6 +73,19 @@ module Diego
 
       class EventsByCellId
         optional :string, :cell_id, 1
+      end
+
+      class TaskCreatedEvent
+        optional ::Diego::Bbs::Models::Task, :task, 1
+      end
+
+      class TaskChangedEvent
+        optional ::Diego::Bbs::Models::Task, :before, 1
+        optional ::Diego::Bbs::Models::Task, :after, 2
+      end
+
+      class TaskRemovedEvent
+        optional ::Diego::Bbs::Models::Task, :task, 1
       end
 
     end
