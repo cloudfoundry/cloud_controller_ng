@@ -21,9 +21,9 @@ module VCAP::CloudController
 
     def after_initialize
       self.instances        ||= db_schema[:instances][:default].to_i
-      self.memory           ||= Config.config.config_hash[:default_app_memory]
-      self.disk_quota       ||= Config.config.config_hash[:default_app_disk_in_mb]
-      self.file_descriptors ||= Config.config.config_hash[:instance_file_descriptor_limit] if Config.config.config_hash[:instance_file_descriptor_limit]
+      self.memory           ||= Config.config.get(:default_app_memory)
+      self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
+      self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit) if Config.config.get(:instance_file_descriptor_limit)
     end
 
     NO_APP_PORT_SPECIFIED = -1
@@ -440,11 +440,11 @@ module VCAP::CloudController
     end
 
     def custom_buildpacks_enabled?
-      !VCAP::CloudController::Config.config.config_hash[:disable_custom_buildpacks]
+      !VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
     end
 
     def max_app_disk_in_mb
-      VCAP::CloudController::Config.config.config_hash[:maximum_app_disk_in_mb]
+      VCAP::CloudController::Config.config.get(:maximum_app_disk_in_mb)
     end
 
     def self.user_visibility_filter(user)

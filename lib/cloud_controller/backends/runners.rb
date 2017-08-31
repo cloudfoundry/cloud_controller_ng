@@ -103,7 +103,7 @@ module VCAP::CloudController
     end
 
     def staging_timeout
-      @config[:staging][:timeout_in_seconds]
+      @config.get(:staging, :timeout_in_seconds)
     end
   end
 end

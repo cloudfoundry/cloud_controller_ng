@@ -605,7 +605,7 @@ module VCAP::CloudController
             Timecop.freeze do
               create_managed_service_instance
               job = Delayed::Job.last
-              poll_interval = VCAP::CloudController::Config.config.config_hash[:broker_client_default_async_poll_interval_seconds].seconds
+              poll_interval = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds).seconds
               expect(job.run_at).to be < Time.now.utc + poll_interval
             end
           end
@@ -683,7 +683,7 @@ module VCAP::CloudController
 
           context 'and the worker never gets a success response during polling' do
             let!(:now) { Time.now }
-            let(:max_poll_duration) { VCAP::CloudController::Config.config.config_hash[:broker_client_max_async_poll_duration_minutes] }
+            let(:max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
             let(:before_poll_timeout) { now + (max_poll_duration / 2).minutes }
             let(:after_poll_timeout) { now + max_poll_duration.minutes + 1.minutes }
 
@@ -1785,7 +1785,7 @@ module VCAP::CloudController
               job = Delayed::Job.first
               expect(job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
 
-              poll_interval = VCAP::CloudController::Config.config.config_hash[:broker_client_default_async_poll_interval_seconds].seconds
+              poll_interval = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds).seconds
               expect(job.run_at).to be < Time.now.utc + poll_interval
             end
           end

@@ -23,7 +23,7 @@ end
 @config = VCAP::CloudController::Config.load_from_file(@config_file)
 logger = Logger.new(STDOUT)
 
-db_config = @config.config_hash.fetch(:db).merge(log_level: :debug)
+db_config = @config.set(:db, @config.get(:db).merge(log_level: :debug))
 db_config[:database] ||= DbConfig.new.connection_string
 
 VCAP::CloudController::DB.load_models_without_migrations_check(db_config, logger)

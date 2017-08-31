@@ -12,7 +12,7 @@ RSpec.describe 'Route Mappings' do
   end
 
   before do
-    allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config)
+    allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config_instance)
   end
 
   describe 'POST /v3/route_mappings' do

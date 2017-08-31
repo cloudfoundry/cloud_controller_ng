@@ -27,7 +27,7 @@ module VCAP::CloudController
       end
 
       def desire_app_message
-        Diego::Protocol.new.desire_app_message(@process, @config[:default_health_check_timeout])
+        Diego::Protocol.new.desire_app_message(@process, @config.get(:default_health_check_timeout))
       end
 
       def stop

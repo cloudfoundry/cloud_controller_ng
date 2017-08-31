@@ -174,36 +174,6 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
-  describe 'https schema validation' do
-    before do
-      set_current_user(VCAP::CloudController::User.make)
-      VCAP::CloudController::Config.config.config_hash[:https_required] = true
-    end
-
-    context 'when request is http' do
-      before do
-        @request.env['rack.url_scheme'] = 'http'
-      end
-
-      it 'raises an error' do
-        get :index
-        expect(response.status).to eq(403)
-        expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
-      end
-    end
-
-    context 'when request is https' do
-      before do
-        @request.env['rack.url_scheme'] = 'https'
-      end
-
-      it 'is a valid request' do
-        get :index
-        expect(response.status).to eq(200)
-      end
-    end
-  end
-
   describe 'auth token validation' do
     context 'when the token contains a valid user' do
       before do

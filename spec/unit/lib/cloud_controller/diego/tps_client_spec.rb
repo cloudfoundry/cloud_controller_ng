@@ -12,7 +12,7 @@ module VCAP::CloudController::Diego
     let(:tps_stats_url) { "#{TestConfig.config[:diego][:tps_url]}/v1/actual_lrps/#{process_guid}/stats" }
     let(:tps_bulk_status_url) { "#{TestConfig.config[:diego][:tps_url]}/v1/bulk_actual_lrp_status?guids=#{process_guid},#{process_guid2}" }
 
-    subject(:client) { TPSClient.new(TestConfig.config) }
+    subject(:client) { TPSClient.new(TestConfig.config_instance) }
 
     describe 'fetching lrp status' do
       context 'when there is a tps url configured' do

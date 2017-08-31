@@ -28,7 +28,7 @@ module VCAP::CloudController
         def cached_dependencies
           dependencies = [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from:      LifecycleBundleUriGenerator.uri(config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
+              from:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
               to:        '/tmp/lifecycle',
               cache_key: "buildpack-#{stack}-lifecycle",
             )
@@ -95,7 +95,7 @@ module VCAP::CloudController
             user:            'vcap',
             args:            [
               "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
-              "-skipCertVerify=#{config[:skip_cert_verify]}",
+              "-skipCertVerify=#{config.get(:skip_cert_verify)}",
               "-skipDetect=#{skip_detect?}",
               '-buildDir=/tmp/app',
               '-outputDroplet=/tmp/droplet',
@@ -104,7 +104,7 @@ module VCAP::CloudController
               '-buildpacksDir=/tmp/buildpacks',
               '-buildArtifactsCacheDir=/tmp/cache',
             ],
-            resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config[:staging][:minimum_staging_file_descriptor_limit]),
+            resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
             env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
           )
         end
@@ -136,21 +136,21 @@ module VCAP::CloudController
         end
 
         def upload_buildpack_artifacts_cache_uri
-          upload_buildpack_artifacts_cache_uri       = URI(config[:diego][:cc_uploader_url])
+          upload_buildpack_artifacts_cache_uri       = URI(config.get(:diego, :cc_uploader_url))
           upload_buildpack_artifacts_cache_uri.path  = "/v1/build_artifacts/#{staging_details.staging_guid}"
           upload_buildpack_artifacts_cache_uri.query = {
             'cc-build-artifacts-upload-uri' => lifecycle_data[:build_artifacts_cache_upload_uri],
-            'timeout'                       => config[:staging][:timeout_in_seconds],
+            'timeout'                       => config.get(:staging, :timeout_in_seconds),
           }.to_param
           upload_buildpack_artifacts_cache_uri.to_s
         end
 
         def upload_droplet_uri
-          upload_droplet_uri       = URI(config[:diego][:cc_uploader_url])
+          upload_droplet_uri       = URI(config.get(:diego, :cc_uploader_url))
           upload_droplet_uri.path  = "/v1/droplet/#{staging_details.staging_guid}"
           upload_droplet_uri.query = {
             'cc-droplet-upload-uri' => lifecycle_data[:droplet_upload_uri],
-            'timeout'               => config[:staging][:timeout_in_seconds],
+            'timeout'               => config.get(:staging, :timeout_in_seconds),
           }.to_param
           upload_droplet_uri.to_s
         end

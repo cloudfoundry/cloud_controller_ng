@@ -44,7 +44,7 @@ module VCAP::CloudController
     context 'Buildpack binaries' do
       let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', position: 0 }) }
 
-      before { CloudController::DependencyLocator.instance.register(:upload_handler, UploadHandler.new(TestConfig.config)) }
+      before { CloudController::DependencyLocator.instance.register(:upload_handler, UploadHandler.new(TestConfig.config_instance)) }
 
       context 'PUT /v2/buildpacks/:guid/bits' do
         before do

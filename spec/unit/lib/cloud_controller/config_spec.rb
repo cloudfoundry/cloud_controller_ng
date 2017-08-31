@@ -2,6 +2,52 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Config do
+    let(:test_config_hash) {
+      {
+        admin_account_capacity: { memory: 64 * 1024 },
+        packages: {
+          fog_connection: {},
+          fog_aws_storage_options: {
+            encryption: 'AES256'
+          },
+          app_package_directory_key: 'app_key',
+        },
+        droplets: {
+          fog_connection: {},
+          droplet_directory_key: 'droplet_key',
+        },
+        buildpacks: {
+          fog_connection: {},
+          buildpack_directory_key: 'bp_key',
+        },
+        resource_pool: {
+          minimum_size: 9001,
+          maximum_size: 0,
+          fog_connection: {},
+          resource_directory_key: 'resource_key',
+        },
+        bulk_api: {},
+        external_domain: 'host',
+        external_port: 1234,
+        staging: {
+          auth: {
+            user: 'user',
+            password: 'password',
+          },
+        },
+        bits_service: { enabled: false },
+        reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
+        diego: {},
+        stacks_file: 'path/to/stacks/file',
+        db_encryption_key: '123-456',
+        install_buildpacks: [
+          {
+            name: 'some-buildpack',
+          }
+        ]
+      }
+    }
+
     describe '.load_from_file' do
       it 'raises if the file does not exist' do
         expect {
@@ -327,11 +373,6 @@ module VCAP::CloudController
         expect(Encryptor.db_encryption_key).to eq('123-456')
       end
 
-      it 'sets up the account capacity' do
-        config_instance.configure_components
-        expect(AccountCapacity.admin[:memory]).to eq(64 * 1024)
-      end
-
       it 'sets up the resource pool instance' do
         config_instance.configure_components
         expect(ResourcePool.instance.minimum_size).to eq(9001)
@@ -344,7 +385,7 @@ module VCAP::CloudController
       end
 
       it 'sets up the quota definition' do
-        expect(QuotaDefinition).to receive(:configure).with(test_config_hash)
+        expect(QuotaDefinition).to receive(:configure).with(config_instance)
         config_instance.configure_components
       end
 
@@ -355,10 +396,10 @@ module VCAP::CloudController
 
       it 'sets up app with whether custom buildpacks are enabled' do
         config = Config.new(test_config_hash.merge(disable_custom_buildpacks: true))
-        expect(config.config_hash[:disable_custom_buildpacks]).to be true
+        expect(config.get(:disable_custom_buildpacks)).to be true
 
         config = Config.new(test_config_hash.merge(disable_custom_buildpacks: false))
-        expect(config.config_hash[:disable_custom_buildpacks]).to be false
+        expect(config.get(:disable_custom_buildpacks)).to be false
       end
 
       context 'when newrelic is disabled' do
@@ -394,6 +435,72 @@ module VCAP::CloudController
       it 'sets up the reserved private domain' do
         expect(PrivateDomain).to receive(:configure).with(test_config_hash[:reserved_private_domains])
         config_instance.configure_components
+      end
+    end
+
+    describe '#get' do
+      let(:config_instance) do
+        Config.new(test_config_hash)
+      end
+
+      it 'returns the value at the given key' do
+        expect(config_instance.get(:external_domain)).to eq 'host'
+      end
+
+      it 'returns an array at the given key' do
+        expect(config_instance.get(:install_buildpacks)).to eq([{ name: 'some-buildpack' }])
+      end
+
+      it 'returns a hash for nested properties' do
+        expect(config_instance.get(:packages)).to eq({
+                                                       fog_connection: {},
+                                                       fog_aws_storage_options: {
+                                                         encryption: 'AES256'
+                                                       },
+                                                       app_package_directory_key: 'app_key',
+                                                     })
+        expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')
+      end
+
+      it 'raises an exception when given an invalid key' do
+        expect {
+          config_instance.get(:blub_blub)
+        }.to raise_error Config::InvalidConfigPath, /"blub_blub" is not a valid config key/
+      end
+
+      it 'raises when you dig into a leaf property' do
+        expect {
+          config_instance.get(:external_domain, :pantaloons)
+        }.to raise_error Config::InvalidConfigPath, /"external_domain.pantaloons" is not a valid config key/
+      end
+
+      it 'raises when you dig into hashes' do
+        expect {
+          config_instance.get(:packages, :fog_aws_storage_options, :encryption)
+        }.to raise_error Config::InvalidConfigPath, /"packages.fog_aws_storage_options.encryption" is not a valid config key/
+      end
+
+      it 'raises when given a path with an invalid key' do
+        expect {
+          config_instance.get(:packages, :ham_sandwich)
+        }.to raise_error Config::InvalidConfigPath, /"packages.ham_sandwich" is not a valid config key/
+      end
+
+      it 'raises when you dig into arrays' do
+        expect {
+          config_instance.get(:install_buildpacks, :name)
+        }.to raise_error Config::InvalidConfigPath, /"install_buildpacks.name" is not a valid config key/
+      end
+    end
+
+    describe '#set' do
+      let(:config_instance) do
+        Config.new(test_config_hash)
+      end
+
+      it 'saves the value at the key in the config' do
+        config_instance.set(:external_host, 'foobar.example.com')
+        expect(config_instance.get(:external_host)).to eq 'foobar.example.com'
       end
     end
   end

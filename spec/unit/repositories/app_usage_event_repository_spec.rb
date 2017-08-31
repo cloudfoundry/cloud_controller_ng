@@ -38,7 +38,7 @@ module VCAP::CloudController
           event = repository.create_from_process(process)
 
           default_instances = ProcessModel.db_schema[:instances][:default].to_i
-          default_memory    = VCAP::CloudController::Config.config.config_hash[:default_app_memory]
+          default_memory    = VCAP::CloudController::Config.config.get(:default_app_memory)
 
           expect(event.previous_state).to eq('STOPPED')
           expect(event.previous_instance_count).to eq(default_instances)

@@ -17,8 +17,7 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
     org = org_with_default_quota(@authed_headers)
     org_guid = org.json_body['metadata']['guid']
 
-    space = make_post_request(
-      '/v2/spaces',
+    space = make_post_request('/v2/spaces',
       {
         'name' => 'foo_space',
         'organization_guid' => org_guid
@@ -34,8 +33,7 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
   end
 
   it 'send logs to the loggregator' do
-    app = make_post_request(
-      '/v2/apps',
+    app = make_post_request('/v2/apps',
       {
         'name' => 'foo_app',
         'space_guid' => @space_guid

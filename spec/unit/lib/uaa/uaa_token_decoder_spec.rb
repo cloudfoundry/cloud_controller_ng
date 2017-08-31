@@ -3,14 +3,15 @@ require 'cloud_controller/uaa/uaa_token_decoder'
 
 module VCAP::CloudController
   RSpec.describe UaaTokenDecoder do
-    subject { UaaTokenDecoder.new(config_hash) }
+    subject { UaaTokenDecoder.new(uaa_config) }
 
-    let(:config_hash) do
-      { uaa:              {
-        resource_id:      'resource-id',
-        symmetric_secret: nil
-      },
-        skip_cert_verify: true
+    let(:uaa_config) do
+      {
+        resource_id: 'resource-id',
+        symmetric_secret: nil,
+        url: 'http://localhost:8080/uaa',
+        internal_url: 'https://uaa.service.cf.internal',
+        ca_file: 'spec/fixtures/certs/uaa_ca.crt',
       }
     end
 
@@ -29,7 +30,7 @@ module VCAP::CloudController
     describe '.new' do
       context 'when the decoder is created with a grace period' do
         context 'and that grace period is negative' do
-          subject { UaaTokenDecoder.new(config_hash, -10) }
+          subject { UaaTokenDecoder.new(uaa_config, -10) }
 
           it 'logs a warning that the grace period was changed to 0' do
             expect(logger).to receive(:warn).with(/negative grace period interval.*-10.*is invalid, changed to 0/i)
@@ -38,7 +39,7 @@ module VCAP::CloudController
         end
 
         context 'and that grace period is not an integer' do
-          subject { UaaTokenDecoder.new(config_hash, 'blabla') }
+          subject { UaaTokenDecoder.new(uaa_config, 'blabla') }
 
           it 'raises an ArgumentError' do
             expect {
@@ -57,10 +58,10 @@ module VCAP::CloudController
       after { Timecop.return }
 
       let(:uaa_issuer_string) { 'https://uaa.my-cf.com/uaa/stuff/here' }
-      let(:uaa_issuer_info_url) { "#{VCAP::CloudController::Config.config.config_hash[:uaa][:internal_url]}/.well-known/openid-configuration" }
+      let(:uaa_issuer_info_url) { "#{VCAP::CloudController::Config.config.get(:uaa, :internal_url)}/.well-known/openid-configuration" }
 
       context 'when symmetric key is used' do
-        before { config_hash[:uaa][:symmetric_secret] = 'symmetric-key' }
+        before { uaa_config[:symmetric_secret] = 'symmetric-key' }
 
         context 'when token is valid' do
           let(:token_content) do
@@ -149,7 +150,7 @@ module VCAP::CloudController
       end
 
       context 'when asymmetric key is used' do
-        before { config_hash[:uaa][:symmetric_secret] = nil }
+        before { uaa_config[:symmetric_secret] = nil }
 
         let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
         before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } }) }
@@ -359,7 +360,7 @@ module VCAP::CloudController
         end
 
         context 'when the decoder has an grace period specified' do
-          subject { UaaTokenDecoder.new(config_hash, 100) }
+          subject { UaaTokenDecoder.new(uaa_config, 100) }
           let(:token_content) do
             { 'aud'     => 'resource-id',
               'payload' => 123,
@@ -389,7 +390,7 @@ module VCAP::CloudController
           end
 
           context 'and that grace period interval is negative' do
-            subject { UaaTokenDecoder.new(config_hash, -10) }
+            subject { UaaTokenDecoder.new(uaa_config, -10) }
 
             it 'sets the grace period to be 0 instead' do
               token_content['exp'] = Time.now.utc.to_i

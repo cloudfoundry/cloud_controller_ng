@@ -7,13 +7,13 @@ module VCAP::CloudController
         subject(:task_action_builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
 
         let(:config) do
-          {
+          Config.new({
             diego: {
               lifecycle_bundles: {
                 docker: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz'
               }
             }
-          }
+          })
         end
         let(:task) { TaskModel.make command: command, name: 'my-task' }
         let(:lifecycle_data) do
@@ -86,7 +86,7 @@ module VCAP::CloudController
           end
 
           context 'when the requested stack is not in the configured lifecycle bundles' do
-            let(:config) { { diego: { lifecycle_bundles: {} } } }
+            let(:config) { Config.new({ diego: { lifecycle_bundles: {} } }) }
 
             it 'returns an error' do
               expect {

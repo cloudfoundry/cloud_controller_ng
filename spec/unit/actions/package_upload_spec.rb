@@ -8,7 +8,7 @@ module VCAP::CloudController
     describe '#upload_async' do
       let(:package) { PackageModel.make(type: 'bits') }
       let(:message) { PackageUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
-      let(:config) { { name: 'local', index: '1' } }
+      let(:config) { Config.new({ name: 'local', index: '1' }) }
       let(:user_guid) { 'gooid' }
       let(:user_email) { 'utako.loves@cats.com' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
@@ -56,7 +56,7 @@ module VCAP::CloudController
     describe '#upload_async_without_event' do
       let(:package) { PackageModel.make(type: 'bits') }
       let(:message) { PackageUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
-      let(:config) { { name: 'local', index: '1' } }
+      let(:config) { Config.new({ name: 'local', index: '1' }) }
 
       it 'enqueues and returns an upload job' do
         returned_job = nil

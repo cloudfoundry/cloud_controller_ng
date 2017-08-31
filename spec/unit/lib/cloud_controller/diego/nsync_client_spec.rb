@@ -7,7 +7,7 @@ module VCAP::CloudController::Diego
     let(:process) { VCAP::CloudController::ProcessModelFactory.make }
     let(:process_guid) { ProcessGuid.from_process(process) }
     let(:desire_message) { MultiJson.dump({ process_guid: process_guid }) }
-    let(:config) { TestConfig.config }
+    let(:config) { TestConfig.config_instance }
 
     subject(:client) { NsyncClient.new(config) }
 
@@ -186,8 +186,8 @@ module VCAP::CloudController::Diego
       let(:content_type_header) { { 'Content-Type' => 'application/json' } }
       let(:droplet) { VCAP::CloudController::DropletModel.make }
       let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet, state: 'PENDING') }
-      let(:config) { {} }
-      let(:client_url) { "#{config[:diego][:nsync_url]}/v1/tasks" }
+      let(:config) { VCAP::CloudController::Config.new({}) }
+      let(:client_url) { "#{config.get(:diego, :nsync_url)}/v1/tasks" }
 
       context 'when the config is missing a diego task url' do
         it 'sets the state to FAILED and returns an error' do
@@ -199,14 +199,14 @@ module VCAP::CloudController::Diego
 
       context 'when there is a valid config' do
         let(:config) do
-          {
+          VCAP::CloudController::Config.new({
             diego: { nsync_url: 'http://nsync.service.cf.internal:8787' },
             internal_api: {
               auth_user: 'my-cool-user',
               auth_password: 'my-not-so-cool-password'
             },
             internal_service_hostname: 'hostname'
-          }
+          })
         end
         let(:protocol) { instance_double(VCAP::CloudController::Diego::TaskProtocol) }
         let(:desired_message) { MultiJson.dump({ process_guid: 'process-guid' }) }
@@ -257,8 +257,8 @@ module VCAP::CloudController::Diego
     describe '#cancel_task' do
       let(:content_type_header) { { 'Content-Type' => 'application/json' } }
       let(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::CANCELING_STATE) }
-      let(:config) { {} }
-      let(:client_url) { "#{config[:diego][:nsync_url]}/v1/tasks/#{task.guid}" }
+      let(:config) { VCAP::CloudController::Config.new({}) }
+      let(:client_url) { "#{config.get(:diego, :nsync_url)}/v1/tasks/#{task.guid}" }
 
       context 'when the config is missing a diego task url' do
         it 'leaves the state as CANCELING and returns an error' do
@@ -269,14 +269,14 @@ module VCAP::CloudController::Diego
 
       context 'when there is a valid config' do
         let(:config) do
-          {
+          VCAP::CloudController::Config.new({
             diego: { nsync_url: 'http://nsync.service.cf.internal:8787' },
             internal_api: {
               auth_user: 'my-cool-user',
               auth_password: 'my-not-so-cool-password'
             },
             internal_service_hostname: 'hostname'
-          }
+          })
         end
 
         before do

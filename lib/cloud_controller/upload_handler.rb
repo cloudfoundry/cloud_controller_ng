@@ -45,6 +45,6 @@ class UploadHandler
   end
 
   def tmpdir
-    config[:directories][:tmpdir]
+    config.get(:directories, :tmpdir)
   end
 end

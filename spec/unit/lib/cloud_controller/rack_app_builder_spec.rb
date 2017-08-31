@@ -8,8 +8,8 @@ module VCAP::CloudController
       let(:request_metrics) { nil }
 
       it 'returns a Rack application' do
-        expect(builder.build(TestConfig.config, request_metrics)).to be_a(Rack::Builder)
-        expect(builder.build(TestConfig.config, request_metrics)).to respond_to(:call)
+        expect(builder.build(TestConfig.config_instance, request_metrics)).to be_a(Rack::Builder)
+        expect(builder.build(TestConfig.config_instance, request_metrics)).to respond_to(:call)
       end
 
       describe 'Rack::CommonLogger' do

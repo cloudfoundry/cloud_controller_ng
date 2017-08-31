@@ -43,7 +43,7 @@ module VCAP::CloudController
     end
 
     def self.configure(config)
-      @default_quota_name = config[:default_quota_definition]
+      @default_quota_name = config.get(:default_quota_definition)
     end
 
     class << self

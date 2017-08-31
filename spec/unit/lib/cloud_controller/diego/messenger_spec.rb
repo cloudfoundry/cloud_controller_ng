@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:stager_client) { instance_double(StagerClient) }
       let(:nsync_client) { instance_double(NsyncClient) }
       let(:bbs_stager_client) { instance_double(BbsStagerClient) }
-      let(:config) { TestConfig.config }
+      let(:config) { TestConfig.config_instance }
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:task_recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
       let(:config_overrides) { {} }
@@ -77,7 +77,7 @@ module VCAP::CloudController
         let(:default_health_check_timeout) { 99 }
         let(:process_guid) { ProcessGuid.from_process(process) }
         let(:message) { { desire: 'message' } }
-        let(:config) { { default_health_check_timeout: default_health_check_timeout } }
+        let(:config) { Config.new({ default_health_check_timeout: default_health_check_timeout }) }
 
         before do
           allow(protocol).to receive(:desire_app_request).and_return(message)

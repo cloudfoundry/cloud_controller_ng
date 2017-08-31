@@ -62,7 +62,7 @@ module VCAP::CloudController
       context 'when the value is in the configuration' do
         let(:expected_limit) { 99 }
         before do
-          VCAP::CloudController::Config.config.config_hash[:staging][:minimum_staging_disk_mb] = expected_limit
+          TestConfig.override(staging: { minimum_staging_disk_mb: expected_limit })
         end
 
         it 'returns the configured value' do
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
       before do
         allow(calculator).to receive(:minimum_limit).and_return(minimum_limit)
-        VCAP::CloudController::Config.config.config_hash[:maximum_app_disk_in_mb] = maximum_limit
+        TestConfig.override(maximum_app_disk_in_mb: maximum_limit)
       end
 
       it 'returns the configured value' do

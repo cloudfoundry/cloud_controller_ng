@@ -10,11 +10,11 @@ module VCAP::CloudController
     end
 
     def minimum_limit
-      Config.config.config_hash[:staging][:minimum_staging_disk_mb] || 4096
+      Config.config.get(:staging, :minimum_staging_disk_mb) || 4096
     end
 
     def maximum_limit
-      configured_running_maximum = Config.config.config_hash[:maximum_app_disk_in_mb]
+      configured_running_maximum = Config.config.get(:maximum_app_disk_in_mb)
       return minimum_limit if configured_running_maximum.nil? || configured_running_maximum < minimum_limit
       configured_running_maximum
     end

@@ -11,7 +11,7 @@ module VCAP::CloudController
       let(:messenger) { instance_double(Diego::Messenger) }
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:package) { PackageModel.make }
-      let(:config) { TestConfig.config }
+      let(:config) { TestConfig.config_instance }
       let(:build) { BuildModel.make(package_guid: package.guid) }
       let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
       let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }

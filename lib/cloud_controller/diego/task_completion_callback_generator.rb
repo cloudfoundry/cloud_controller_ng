@@ -1,21 +1,21 @@
 module VCAP::CloudController
   module Diego
     class TaskCompletionCallbackGenerator
-      def initialize(config=Config.config.config_hash)
+      def initialize(config=Config.config)
         @config = config
       end
 
       def generate(task)
         schema = 'https'
         auth = ''
-        host = @config[:internal_service_hostname]
-        port = @config[:tls_port]
+        host = @config.get(:internal_service_hostname)
+        port = @config.get(:tls_port)
         api_version = 'v4'
 
-        unless @config.fetch(:diego, {})[:temporary_local_sync]
+        unless @config.get(:diego, :temporary_local_sync)
           schema = 'http'
-          auth = "#{@config[:internal_api][:auth_user]}:#{@config[:internal_api][:auth_password]}@"
-          port = @config[:external_port]
+          auth = "#{@config.get(:internal_api, :auth_user)}:#{@config.get(:internal_api, :auth_password)}@"
+          port = @config.get(:external_port)
           api_version = 'v3'
         end
 

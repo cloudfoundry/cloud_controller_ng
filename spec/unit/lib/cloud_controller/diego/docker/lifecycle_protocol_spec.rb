@@ -85,7 +85,7 @@ module VCAP
           end
 
           describe '#desired_lrp_builder' do
-            let(:config) { {} }
+            let(:config) { Config.new({}) }
             let(:app) { AppModel.make(droplet: droplet) }
             let(:droplet) do
               DropletModel.make(:docker, {
@@ -119,7 +119,7 @@ module VCAP
           end
 
           describe '#task_action_builder' do
-            let(:config) { {} }
+            let(:config) { Config.new({}) }
             let(:droplet) { DropletModel.make(:docker, docker_receipt_image: 'repository/the-image') }
             let(:task) { TaskModel.make(droplet: droplet) }
             let(:lifecycle_data) do

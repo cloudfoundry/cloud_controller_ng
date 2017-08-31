@@ -29,17 +29,6 @@ module VCAP::CloudController
           apps: ADMIN_APPS
         }
       end
-
-      def configure(config)
-        [:default, :admin].each do |type|
-          key = "#{type}_account_capacity".to_sym
-          next unless config.key?(key)
-          options = send(type)
-          config[key].each do |limit_type, limit|
-            options[limit_type.to_sym] = limit.to_i
-          end
-        end
-      end
     end
   end
 end

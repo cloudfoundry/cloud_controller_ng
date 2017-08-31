@@ -6,7 +6,9 @@ RSpec.describe UploadHandler do
   subject(:uploader) { UploadHandler.new(config) }
 
   context 'Nginx mode' do
-    let(:config) { { nginx: { use_nginx: true }, directories: { tmpdir: tmpdir } } }
+    let(:config) do
+      VCAP::CloudController::Config.new({ nginx: { use_nginx: true }, directories: { tmpdir: tmpdir } })
+    end
 
     context 'when the file exists' do
       let(:params) { { "#{key}_path" => "#{tmpdir}/file" } }
@@ -57,7 +59,9 @@ RSpec.describe UploadHandler do
   end
 
   context 'Rack Mode' do
-    let(:config) { { nginx: { use_nginx: false }, directories: { tmpdir: tmpdir } } }
+    let(:config) do
+      VCAP::CloudController::Config.new({ nginx: { use_nginx: false }, directories: { tmpdir: tmpdir } })
+    end
 
     context 'and the tempfile key is a symbol' do
       let(:params) { { key => { tempfile: Struct.new(:path).new("#{tmpdir}/file") } } }

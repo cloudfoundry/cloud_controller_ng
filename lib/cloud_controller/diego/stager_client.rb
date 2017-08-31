@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     class StagerClient
       def initialize(config)
-        @url = URI(config[:diego][:stager_url]) if HashUtils.dig(config, :diego, :stager_url)
+        @url = URI(config.get(:diego, :stager_url)) if config.get(:diego, :stager_url)
       end
 
       def stage(staging_guid, staging_message)

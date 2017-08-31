@@ -63,7 +63,7 @@ module CloudController
       end
 
       def tmp_dir
-        @tmp_dir ||= VCAP::CloudController::Config.config.config_hash[:directories][:tmpdir]
+        @tmp_dir ||= VCAP::CloudController::Config.config.get(:directories, :tmpdir)
       end
 
       def package_blobstore
@@ -75,7 +75,7 @@ module CloudController
       end
 
       def max_package_size
-        @max_package_size ||= VCAP::CloudController::Config.config.config_hash[:packages][:max_package_size] || 512 * 1024 * 1024
+        @max_package_size ||= VCAP::CloudController::Config.config.get(:packages, :max_package_size) || 512 * 1024 * 1024
       end
     end
   end

@@ -22,7 +22,7 @@ module VCAP::CloudController
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from: LifecycleBundleUriGenerator.uri(@config[:diego][:lifecycle_bundles][lifecycle_bundle_key]),
+              from: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
               to: '/tmp/lifecycle',
               cache_key: "buildpack-#{@stack}-lifecycle"
             )
@@ -30,7 +30,7 @@ module VCAP::CloudController
         end
 
         def root_fs
-          if @config[:diego][:temporary_oci_buildpack_mode] == 'oci-phase-1'
+          if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
             "preloaded+layer:#{@stack}?layer=#{URI.encode(@droplet_uri)}&layer_path=#{action_user_home}&layer_digest=#{@checksum_value}"
           else
             "preloaded:#{@stack}"
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         def setup
-          return nil if @config[:diego][:temporary_oci_buildpack_mode] == 'oci-phase-1'
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
 
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
@@ -69,7 +69,7 @@ module VCAP::CloudController
         end
 
         def privileged?
-          @config[:diego][:use_privileged_containers_for_running]
+          @config.get(:diego, :use_privileged_containers_for_running)
         end
 
         def action_user

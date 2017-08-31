@@ -41,7 +41,7 @@ module VCAP::CloudController
           app_recipe_builder = AppRecipeBuilder.new(config: config, process: process)
           DesireAppHandler.create_or_update_app(process_guid, app_recipe_builder, bbs_apps_client)
         else
-          desire_message = protocol.desire_app_request(process, config[:default_health_check_timeout])
+          desire_message = protocol.desire_app_request(process, config.get(:default_health_check_timeout))
           nsync_client.desire_app(process_guid, desire_message)
         end
       end
@@ -71,7 +71,7 @@ module VCAP::CloudController
       private
 
       def do_local_staging
-        !!HashUtils.dig(Config.config.config_hash, :diego, :temporary_local_staging)
+        !!Config.config.get(:diego, :temporary_local_staging)
       end
 
       def logger
@@ -103,7 +103,7 @@ module VCAP::CloudController
       end
 
       def bypass_bridge?
-        !!HashUtils.dig(Config.config.config_hash, :diego, :temporary_local_apps)
+        !!Config.config.get(:diego, :temporary_local_apps)
       end
     end
   end

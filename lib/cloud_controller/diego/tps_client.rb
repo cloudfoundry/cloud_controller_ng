@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     class TPSClient
       def initialize(config)
-        @url = URI(config[:diego][:tps_url]) if HashUtils.dig(config, :diego, :tps_url)
+        @url = URI(config.get(:diego, :tps_url)) if config.get(:diego, :tps_url)
       end
 
       def lrp_instances(process)

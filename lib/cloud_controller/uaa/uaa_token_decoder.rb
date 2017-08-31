@@ -7,8 +7,8 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    def initialize(config, grace_period_in_seconds=0)
-      @config = config
+    def initialize(uaa_config, grace_period_in_seconds=0)
+      @config = uaa_config
       @logger = Steno.logger('cc.uaa_token_decoder')
 
       raise ArgumentError.new('grace period should be an integer') unless grace_period_in_seconds.is_a? Integer
@@ -64,7 +64,7 @@ module VCAP::CloudController
     end
 
     def decode_token_with_key(auth_token, options)
-      options         = { audience_ids: uaa_config[:resource_id] }.merge(options)
+      options         = { audience_ids: config[:resource_id] }.merge(options)
       token           = CF::UAA::TokenCoder.new(options).decode_at_reference_time(auth_token, Time.now.utc.to_i - @grace_period_in_seconds)
       expiration_time = token['exp'] || token[:exp]
       if expiration_time && expiration_time < Time.now.utc.to_i
@@ -77,11 +77,7 @@ module VCAP::CloudController
     end
 
     def symmetric_key
-      uaa_config[:symmetric_secret]
-    end
-
-    def uaa_config
-      config[:uaa]
+      config[:symmetric_secret]
     end
 
     def asymmetric_key
@@ -101,8 +97,8 @@ module VCAP::CloudController
     end
 
     def http_client
-      uaa_target                    = VCAP::CloudController::Config.config.config_hash[:uaa][:internal_url]
-      uaa_ca                        = VCAP::CloudController::Config.config.config_hash[:uaa][:ca_file]
+      uaa_target                    = config[:internal_url]
+      uaa_ca                        = config[:ca_file]
       client                        = HTTPClient.new(base_url: uaa_target)
       client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
       client.ssl_config.set_trust_ca(uaa_ca)

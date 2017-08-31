@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     def setup_i18n
-      CloudController::Errors::ApiError.setup_i18n(Dir[File.expand_path('../../../vendor/errors/i18n/*.yml', __FILE__)], @config.config_hash[:default_locale])
+      CloudController::Errors::ApiError.setup_i18n(Dir[File.expand_path('../../../vendor/errors/i18n/*.yml', __FILE__)], @config.get(:default_locale))
     end
 
     def logger
@@ -58,8 +58,6 @@ module VCAP::CloudController
 
     def parse_config
       @config = Config.load_from_file(@config_file)
-
-      @config.config_hash[:statsd_port] = @config.config_hash[:statsd_port].try(:to_i)
     rescue Membrane::SchemaValidationError => ve
       raise "ERROR: There was a problem validating the supplied config: #{ve}"
     rescue => e
@@ -79,7 +77,7 @@ module VCAP::CloudController
           gather_periodic_metrics
 
           builder = RackAppBuilder.new
-          app     = builder.build(@config.config_hash, request_metrics)
+          app     = builder.build(@config, request_metrics)
 
           start_thin_server(app)
         rescue => e
@@ -131,42 +129,42 @@ module VCAP::CloudController
       @config.configure_components
 
       setup_loggregator_emitter
-      @config.config_hash[:external_host] = VCAP.local_ip(@config.config_hash[:local_route])
+      @config.set(:external_host, VCAP.local_ip(@config.get(:local_route)))
     end
 
     def create_pidfile
-      pid_file = VCAP::PidFile.new(@config.config_hash[:pid_filename])
+      pid_file = VCAP::PidFile.new(@config.get(:pid_filename))
       pid_file.unlink_at_exit
     rescue
-      raise "ERROR: Can't create pid file #{@config.config_hash[:pid_filename]}"
+      raise "ERROR: Can't create pid file #{@config.get(:pid_filename)}"
     end
 
     def setup_logging
       return if @setup_logging
       @setup_logging = true
 
-      StenoConfigurer.new(@config.config_hash[:logging]).configure do |steno_config_hash|
+      StenoConfigurer.new(@config.get(:logging)).configure do |steno_config_hash|
         steno_config_hash[:sinks] << @log_counter
       end
     end
 
     def setup_db
       db_logger = Steno.logger('cc.db')
-      DB.load_models(@config.config_hash[:db], db_logger)
+      DB.load_models(@config.get(:db), db_logger)
     end
 
     def setup_loggregator_emitter
-      if @config.config_hash[:loggregator] && @config.config_hash[:loggregator][:router]
-        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config.config_hash[:loggregator][:router], 'cloud_controller', 'API', @config.config_hash[:index])
+      if @config.get(:loggregator) && @config.get(:loggregator, :router)
+        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config.get(:loggregator, :router), 'cloud_controller', 'API', @config.get(:index))
         Loggregator.logger = logger
       end
     end
 
     def start_thin_server(app)
-      @thin_server = if @config.config_hash[:nginx][:use_nginx]
-                       Thin::Server.new(@config.config_hash[:nginx][:instance_socket], signals: false)
+      @thin_server = if @config.get(:nginx, :use_nginx)
+                       Thin::Server.new(@config.get(:nginx, :instance_socket), signals: false)
                      else
-                       Thin::Server.new(@config.config_hash[:external_host], @config.config_hash[:external_port], signals: false)
+                       Thin::Server.new(@config.get(:external_host), @config.get(:external_port), signals: false)
                      end
 
       @thin_server.app = app
@@ -174,7 +172,7 @@ module VCAP::CloudController
 
       # The routers proxying to us handle killing inactive connections.
       # Set an upper limit just to be safe.
-      @thin_server.timeout = @config.config_hash[:request_timeout_in_seconds]
+      @thin_server.timeout = @config.get(:request_timeout_in_seconds)
       @thin_server.threaded = true
       @thin_server.start!
     end
@@ -195,11 +193,11 @@ module VCAP::CloudController
     def register_with_collector
       VCAP::Component.register(
         type: 'CloudController',
-        host: @config.config_hash[:external_host],
-        port: @config.config_hash[:varz_port],
-        user: @config.config_hash[:varz_user],
-        password: @config.config_hash[:varz_password],
-        index: @config.config_hash[:index],
+        host: @config.get(:external_host),
+        port: @config.get(:varz_port),
+        user: @config.get(:varz_user),
+        password: @config.get(:varz_password),
+        index: @config.get(:index),
         nats: MockNats.new,
         logger: logger,
         log_counter: @log_counter
@@ -220,13 +218,13 @@ module VCAP::CloudController
     def statsd_client
       return @statsd_client if @statsd_client
 
-      logger.info("configuring statsd server at #{@config.config_hash[:statsd_host]}:#{@config.config_hash[:statsd_port]}")
+      logger.info("configuring statsd server at #{@config.get(:statsd_host)}:#{@config.get(:statsd_port)}")
       Statsd.logger = Steno.logger('statsd.client')
-      @statsd_client = Statsd.new(@config.config_hash[:statsd_host], @config.config_hash[:statsd_port])
+      @statsd_client = Statsd.new(@config.get(:statsd_host), @config.get(:statsd_port))
     end
 
     def collect_diagnostics
-      @diagnostics_dir ||= @config.config_hash[:directories][:diagnostics]
+      @diagnostics_dir ||= @config.get(:directories, :diagnostics)
       @diagnostics_dir ||= Dir.mktmpdir
       file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir, periodic_updater)
       logger.warn("Diagnostics written to #{file}")

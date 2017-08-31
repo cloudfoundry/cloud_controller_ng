@@ -18,6 +18,14 @@ module VCAP::CloudController::Jobs
     end
 
     shared_examples_for 'a job enqueueing method' do
+      let(:job_timeout) { rand(20).hours }
+      let(:timeout_calculator) { instance_double(VCAP::CloudController::JobTimeoutCalculator) }
+
+      before do
+        expect(VCAP::CloudController::JobTimeoutCalculator).to receive(:new).with(TestConfig.config_instance).and_return(timeout_calculator)
+        allow(timeout_calculator).to receive(:calculate).and_return(job_timeout)
+      end
+
       it "populates LoggingContextJob's ID with the one from the thread-local Request" do
         original_enqueue = Delayed::Job.method(:enqueue)
         expect(Delayed::Job).to receive(:enqueue) do |logging_context_job, opts|
@@ -29,45 +37,15 @@ module VCAP::CloudController::Jobs
         Enqueuer.new(wrapped_job, opts).public_send(method_name)
       end
 
-      context 'when the config has a timeout defined for the given job' do
-        let(:config_override) do
-          {
-            jobs: {
-              "#{wrapped_job.job_name_in_configuration}": {
-                timeout_in_seconds: job_timeout,
-              }
-            }
-          }
+      it 'uses the JobTimeoutCalculator' do
+        original_enqueue = Delayed::Job.method(:enqueue)
+        expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+          expect(enqueued_job.handler).to be_a TimeoutJob
+          expect(enqueued_job.handler.timeout).to eq(job_timeout)
+          original_enqueue.call(enqueued_job, opts)
         end
-        let(:job_timeout) { 2.hours }
-
-        it 'uses the job timeout' do
-          original_enqueue = Delayed::Job.method(:enqueue)
-          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
-            expect(enqueued_job.handler).to be_a TimeoutJob
-            expect(enqueued_job.handler.timeout).to eq(job_timeout)
-            original_enqueue.call(enqueued_job, opts)
-          end
-          Enqueuer.new(wrapped_job, opts).public_send(method_name)
-        end
-      end
-
-      context 'when the job does NOT implement job_name_in_configuration' do
-        before do
-          wrapped_job.instance_eval do
-            undef :job_name_in_configuration
-          end
-        end
-
-        it 'uses the job timeout' do
-          original_enqueue = Delayed::Job.method(:enqueue)
-          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
-            expect(enqueued_job.handler).to be_a TimeoutJob
-            expect(enqueued_job.handler.timeout).to eq(global_timeout)
-            original_enqueue.call(enqueued_job, opts)
-          end
-          Enqueuer.new(wrapped_job, opts).public_send(method_name)
-        end
+        Enqueuer.new(wrapped_job, opts).public_send(method_name)
+        expect(timeout_calculator).to have_received(:calculate).with(wrapped_job.job_name_in_configuration)
       end
     end
 
@@ -116,8 +94,6 @@ module VCAP::CloudController::Jobs
       end
 
       it 'returns the PollableJobModel' do
-        # pollable_job_model = instance_double(VCAP::CloudController::PollableJobModel)
-        # expect(VCAP::CloudController::PollableJobModel).to receive(:create).and_return(pollable_job_model)
         result = Enqueuer.new(wrapped_job, opts).enqueue_pollable
         latest_job = VCAP::CloudController::PollableJobModel.last
         expect(result).to eq(latest_job)

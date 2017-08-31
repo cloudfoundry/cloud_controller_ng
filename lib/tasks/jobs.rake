@@ -8,7 +8,7 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
   task :local, [:name] do |t, args|
-    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(RakeConfig.config.config_hash).to_s],
+    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(RakeConfig.config).to_s],
                                        name: args.name).start_working
   end
 

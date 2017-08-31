@@ -94,11 +94,10 @@ RSpec.configure do |rspec_config|
 
     VCAP::CloudController::SecurityContext.clear
     allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(nil)
-    TestConfig.config[:uaa][:internal_url] = 'https://uaa.service.cf.internal'
   end
 
   rspec_config.around :each do |example|
-    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config, DbConfig.new.connection)
+    isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config_instance, DbConfig.new.connection)
     isolation.cleanly { example.run }
   end
 
@@ -120,7 +119,7 @@ RSpec.configure do |rspec_config|
   rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
   RspecApiDocumentation.configure do |c|
-    c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config, VCAP::CloudController::Metrics::RequestMetrics.new)
+    c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config_instance, VCAP::CloudController::Metrics::RequestMetrics.new)
     c.format = [:html, :json]
     c.api_name = 'Cloud Foundry API'
     c.template_path = 'spec/api/documentation/templates'

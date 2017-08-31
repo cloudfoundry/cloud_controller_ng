@@ -18,8 +18,8 @@ class VCAP::CloudController::ResourcePool
     attr_accessor :instance
   end
 
-  def initialize(config={})
-    options = config.fetch(:resource_pool, {})
+  def initialize(config)
+    options = config.get(:resource_pool) || {} # TODO: move default into config object?
 
     @blobstore = CloudController::Blobstore::ClientProvider.provide(
       options: options,
@@ -27,8 +27,8 @@ class VCAP::CloudController::ResourcePool
       root_dir: CloudController::DependencyLocator::RESOURCE_POOL_DIR,
     )
 
-    @minimum_size = options[:minimum_size] || 0
-    @maximum_size = options[:maximum_size] || 512 * 1024 * 1024 # MB
+    @minimum_size = options[:minimum_size] || 0 # TODO: move default into config object?
+    @maximum_size = options[:maximum_size] || 512 * 1024 * 1024 # MB #TODO: move default into config object?
   end
 
   def match_resources(descriptors)

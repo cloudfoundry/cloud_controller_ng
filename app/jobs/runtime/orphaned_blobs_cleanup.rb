@@ -14,7 +14,7 @@ module VCAP::CloudController
         ].freeze
 
         def perform
-          unless HashUtils.dig(config, :perform_blob_cleanup)
+          unless config.get(:perform_blob_cleanup)
             logger.info('Skipping OrphanedBlobsCleanup as the `perform_blob_cleanup` manifest property is false')
             return
           end
@@ -74,22 +74,22 @@ module VCAP::CloudController
           full_list = [
             {
               type:          :droplet_blobstore,
-              directory_key: config.dig(:droplets, :droplet_directory_key),
+              directory_key: config.get(:droplets, :droplet_directory_key),
               root_dir:      CloudController::DependencyLocator.instance.public_send(:droplet_blobstore).root_dir
             },
             {
               type:          :package_blobstore,
-              directory_key: config.dig(:packages, :app_package_directory_key),
+              directory_key: config.get(:packages, :app_package_directory_key),
               root_dir:      CloudController::DependencyLocator.instance.public_send(:package_blobstore).root_dir
             },
             {
               type:          :buildpack_blobstore,
-              directory_key: config.dig(:buildpacks, :buildpack_directory_key),
+              directory_key: config.get(:buildpacks, :buildpack_directory_key),
               root_dir:      CloudController::DependencyLocator.instance.public_send(:buildpack_blobstore).root_dir
             },
             {
               type:          :legacy_global_app_bits_cache,
-              directory_key: config.dig(:resource_pool, :resource_directory_key),
+              directory_key: config.get(:resource_pool, :resource_directory_key),
               root_dir:      CloudController::DependencyLocator.instance.public_send(:legacy_global_app_bits_cache).root_dir
             },
           ]
@@ -175,7 +175,7 @@ module VCAP::CloudController
         end
 
         def config
-          @config ||= Config.config.config_hash
+          @config ||= Config.config
         end
       end
     end

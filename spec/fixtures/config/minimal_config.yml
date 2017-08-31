@@ -16,6 +16,7 @@ internal_service_hostname: cc.internal.cf
 
 system_domain_organization: the-system-domain-org-name
 system_domain: the-system-domain.com
+external_domain: api.the-system-domain.com
 app_domains:
   - name: customer-app-domain1.com
   - name: customer-app-domain2.com
@@ -104,7 +105,7 @@ droplets:
     provider: Local
 
 buildpacks:
-  droplet_directory_key: cc-buildpacks
+  buildpack_directory_key: cc-buildpacks
   fog_connection:
     provider: Local
 
@@ -119,6 +120,7 @@ doppler:
 renderer:
   max_results_per_page: 100
   default_results_per_page: 50
+  max_inline_relations_depth: 2
 
 security_group_definitions:
   - name: defaults
@@ -161,3 +163,9 @@ diego:
   tps_url: 'tps_url-value'
   use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
+  insecure_docker_registry_list: []
+  docker_staging_stack: cflinuxfs2
+
+jobs:
+  global:
+    timeout_in_seconds: 14400

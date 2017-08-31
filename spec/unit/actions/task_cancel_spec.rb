@@ -7,11 +7,11 @@ module VCAP::CloudController
       subject(:task_cancel) { described_class.new(config) }
 
       let(:config) do
-        {
+        Config.new({
           diego: {
             temporary_local_tasks: temporary_local_tasks_enabled,
           }
-        }
+        })
       end
       let(:temporary_local_tasks_enabled) { false }
 

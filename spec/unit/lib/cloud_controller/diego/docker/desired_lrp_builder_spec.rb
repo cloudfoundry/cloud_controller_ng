@@ -14,13 +14,13 @@ module VCAP::CloudController
           }
         end
         let(:config) do
-          {
+          Config.new({
             diego: {
               lifecycle_bundles: {
                 docker: 'http://docker.example.com/path/to/lifecycle.tgz'
               }
             }
-          }
+          })
         end
         let(:ports) { [] }
         let(:execution_metadata) { '{}' }

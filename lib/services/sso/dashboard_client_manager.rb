@@ -136,8 +136,8 @@ module VCAP::Services::SSO
     end
 
     def cc_configured_to_modify_uaa_clients?
-      uaa_client = VCAP::CloudController::Config.config.config_hash[:uaa_client_name]
-      uaa_client_secret = VCAP::CloudController::Config.config.config_hash[:uaa_client_secret]
+      uaa_client = VCAP::CloudController::Config.config.get(:uaa_client_name)
+      uaa_client_secret = VCAP::CloudController::Config.config.get(:uaa_client_secret)
       uaa_client && uaa_client_secret
     end
   end

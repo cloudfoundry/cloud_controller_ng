@@ -8,7 +8,7 @@ module VCAP::CloudController
 
         let(:droplet) { DropletModel.make(:buildpack) }
         let(:config) do
-          {
+          Config.new({
             skip_cert_verify: false,
             diego:            {
               cc_uploader_url:   'http://cc-uploader.example.com',
@@ -21,7 +21,7 @@ module VCAP::CloudController
               minimum_staging_file_descriptor_limit: 4,
               timeout_in_seconds:                    90,
             },
-          }
+          })
         end
         let(:staging_details) do
           StagingDetails.new.tap do |details|

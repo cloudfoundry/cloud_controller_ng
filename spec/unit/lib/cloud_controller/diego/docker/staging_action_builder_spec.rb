@@ -7,7 +7,7 @@ module VCAP::CloudController
         subject(:builder) { StagingActionBuilder.new(config, staging_details) }
 
         let(:config) do
-          {
+          Config.new({
             diego:   {
               docker_staging_stack:          'docker-staging-stack',
               lifecycle_bundles:             {
@@ -18,7 +18,7 @@ module VCAP::CloudController
             staging: {
               minimum_staging_file_descriptor_limit: 4
             }
-          }
+          })
         end
         let(:staging_details) do
           StagingDetails.new.tap do |details|
@@ -53,7 +53,7 @@ module VCAP::CloudController
 
           context 'when there are insecure docker registries' do
             before do
-              config[:diego][:insecure_docker_registry_list] = ['registry-1', 'registry-2']
+              config.set(:diego, config.get(:diego).deep_merge(insecure_docker_registry_list: ['registry-1', 'registry-2']))
             end
 
             it 'includes them in the run action args' do

@@ -470,7 +470,7 @@ properties:
     default: false
   cc.diego.temporary_local_tps:
     description: "Temporary flag to manage app state directly to the bbs from cc"
-    default: false
+    default: falsecutoff_age_in_days
   cc.diego.temporary_cc_uploader_mtls:
     description: "Temporary flag to ensure droplet upload callback endpoints require mTLS"
     default: false

@@ -14,7 +14,7 @@ module VCAP::CloudController
 
         def cached_dependencies
           [::Diego::Bbs::Models::CachedDependency.new(
-            from: LifecycleBundleUriGenerator.uri(@config[:diego][:lifecycle_bundles][:docker]),
+            from: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[:docker]),
             to: '/tmp/lifecycle',
             cache_key: 'docker-lifecycle',
           )]

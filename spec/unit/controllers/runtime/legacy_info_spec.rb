@@ -25,14 +25,14 @@ module VCAP::CloudController
     it 'includes data from the config' do
       get '/info'
       hash = MultiJson.load(last_response.body)
-      expect(hash['name']).to eq(TestConfig.config[:info][:name])
-      expect(hash['build']).to eq(TestConfig.config[:info][:build])
-      expect(hash['support']).to eq(TestConfig.config[:info][:support_address])
-      expect(hash['version']).to eq(TestConfig.config[:info][:version])
-      expect(hash['description']).to eq(TestConfig.config[:info][:description])
-      expect(hash['authorization_endpoint']).to eq(TestConfig.config[:uaa][:url])
-      expect(hash['token_endpoint']).to eq(TestConfig.config[:uaa][:url])
-      expect(hash['allow_debug']).to eq(TestConfig.config.fetch(:allow_debug, true))
+      expect(hash['name']).to eq(TestConfig.config_instance.get(:info, :name))
+      expect(hash['build']).to eq(TestConfig.config_instance.get(:info, :build))
+      expect(hash['support']).to eq(TestConfig.config_instance.get(:info, :support_address))
+      expect(hash['version']).to eq(TestConfig.config_instance.get(:info, :version))
+      expect(hash['description']).to eq(TestConfig.config_instance.get(:info, :description))
+      expect(hash['authorization_endpoint']).to eq(TestConfig.config_instance.get(:uaa, :url))
+      expect(hash['token_endpoint']).to eq(TestConfig.config_instance.get(:uaa, :url))
+      expect(hash['allow_debug']).to eq(true)
     end
 
     it 'includes login url when configured' do

@@ -7,21 +7,21 @@ class StagingJobPresenter < JobPresenter
   end
 
   def status_url
-    config = VCAP::CloudController::Config.config.config_hash
+    config = VCAP::CloudController::Config.config
 
     if @scheme == 'https'
       URI::HTTPS.build(
-        host:     config[:internal_service_hostname],
-        port:     config[:tls_port],
+        host:     config.get(:internal_service_hostname),
+        port:     config.get(:tls_port),
         path:     "/internal/v4/staging_jobs/#{@object.guid}",
       ).to_s
     else
       uri = URI::HTTP.build(
-        host:     config[:internal_service_hostname],
-        port:     config[:external_port],
+        host:     config.get(:internal_service_hostname),
+        port:     config.get(:external_port),
         path:     "/staging/jobs/#{@object.guid}",
       )
-      uri.userinfo = [config[:staging][:auth][:user], config[:staging][:auth][:password]]
+      uri.userinfo = [config.get(:staging, :auth, :user), config.get(:staging, :auth, :password)]
       uri.to_s
     end
   end

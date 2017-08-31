@@ -27,10 +27,10 @@ module VCAP::CloudController
           legacy_download_user:             STAGING_LEGACY_DOWNLOAD_USER,
           log_guid:                         task.app.guid,
           log_source:                       TASK_LOG_SOURCE,
-          max_pids:                         config[:diego][:pid_limit],
+          max_pids:                         config.get(:diego, :pid_limit),
           memory_mb:                        task.memory_in_mb,
           network:                          generate_network(task),
-          privileged:                       config[:diego][:use_privileged_containers_for_running],
+          privileged:                       config.get(:diego, :use_privileged_containers_for_running),
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
           volume_mounts:                    generate_volume_mounts(app_volume_mounts),
           action:                           task_action_builder.action,
@@ -59,15 +59,15 @@ module VCAP::CloudController
           log_guid:                         staging_details.package.app_guid,
           log_source:                       STAGING_LOG_SOURCE,
           memory_mb:                        staging_details.staging_memory_in_mb,
-          privileged:                       config[:diego][:use_privileged_containers_for_staging],
+          privileged:                       config.get(:diego, :use_privileged_containers_for_staging),
           result_file:                      STAGING_RESULT_FILE,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,
           root_fs:                          "preloaded:#{action_builder.stack}",
-          action:                           timeout(action_builder.action, timeout_ms: config[:staging][:timeout_in_seconds].to_i * 1000),
+          action:                           timeout(action_builder.action, timeout_ms: config.get(:staging, :timeout_in_seconds).to_i * 1000),
           environment_variables:            action_builder.task_environment_variables,
           cached_dependencies:              action_builder.cached_dependencies,
           PlacementTags:                    find_staging_isolation_segment(staging_details),
-          max_pids:                         config[:diego][:pid_limit],
+          max_pids:                         config.get(:diego, :pid_limit),
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["app:#{staging_details.package.app_guid}"]
           ),
@@ -77,11 +77,11 @@ module VCAP::CloudController
       end
 
       def staging_completion_callback(staging_details, config)
-        port   = config[:tls_port]
+        port   = config.get(:tls_port)
         scheme = 'https'
 
-        auth      = "#{config[:internal_api][:auth_user]}:#{config[:internal_api][:auth_password]}"
-        host_port = "#{config[:internal_service_hostname]}:#{port}"
+        auth      = "#{config.get(:internal_api, :auth_user)}:#{config.get(:internal_api, :auth_password)}"
+        host_port = "#{config.get(:internal_service_hostname)}:#{port}"
         path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
         "#{scheme}://#{auth}@#{host_port}#{path}"
       end

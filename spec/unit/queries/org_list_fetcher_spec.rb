@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     describe '#fetch_all' do
       let(:config) { CloudController::DependencyLocator.instance.config }
-      let(:system_org) { Organization.find(name: config[:system_domain_organization]) }
+      let(:system_org) { Organization.find(name: config.get(:system_domain_organization)) }
 
       it 'fetches all the orgs' do
         all_orgs = fetcher.fetch_all(message: message)

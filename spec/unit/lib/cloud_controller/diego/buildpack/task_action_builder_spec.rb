@@ -7,13 +7,13 @@ module VCAP::CloudController
         subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
 
         let(:config) do
-          {
+          Config.new({
             diego: {
               lifecycle_bundles: {
                 'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
               }
             }
-          }
+          })
         end
         let(:task) { TaskModel.make command: command, name: 'my-task' }
         let(:command) { 'echo "hello"' }

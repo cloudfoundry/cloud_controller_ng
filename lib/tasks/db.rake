@@ -29,11 +29,11 @@ namespace :db do
 
   def for_each_database
     if ENV['DB'] || ENV['DB_CONNECTION_STRING']
-      RakeConfig.config.config_hash[:db][:database] = DbConfig.new.connection_string
+      RakeConfig.config.set(:db, RakeConfig.get(:db).merge({ database: DbConfig.new.connection_string }))
       yield
     else
       %w(postgres mysql).each do |db_type|
-        RakeConfig.config.config_hash[:db][:database] = DbConfig.new(db_type: db_type).connection_string
+        RakeConfig.config.set(:db, RakeConfig.get(:db).merge({ database: DbConfig.new(db_type: db_type).connection_string }))
         puts "Using #{db_type}"
         yield
 
@@ -45,7 +45,7 @@ namespace :db do
   def migrate
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger('cc.db.migrations')
-    DBMigrator.from_config(RakeConfig.config.config_hash, db_logger).apply_migrations
+    DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
   end
 
   desc 'Perform Sequel migration to database'
@@ -56,7 +56,7 @@ namespace :db do
   def rollback(number_to_rollback)
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger('cc.db.migrations')
-    DBMigrator.from_config(RakeConfig.config.config_hash, db_logger).rollback(number_to_rollback)
+    DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
   end
 
   def parse_db_connection_string
@@ -177,7 +177,7 @@ namespace :db do
   task :seed do
     require 'cloud_controller/seeds'
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
-      VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config.config_hash)
+      VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config)
     end
   end
 
@@ -185,8 +185,8 @@ namespace :db do
   task :ensure_migrations_are_current do
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger('cc.db.migrations')
-    VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.config_hash[:db_encryption_key]
-    db = VCAP::CloudController::DB.connect(RakeConfig.config.config_hash[:db], db_logger)
+    VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)
+    db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)
 
     latest_migration_in_db = db[:schema_migrations].order(Sequel.desc(:filename)).first[:filename]
     latest_migration_in_dir = File.basename(Dir['db/migrations/*'].sort.last)

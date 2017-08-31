@@ -75,6 +75,6 @@ class ServiceBindingsController < ApplicationController
   end
 
   def volume_services_enabled?
-    configuration[:volume_services_enabled]
+    configuration.get(:volume_services_enabled)
   end
 end

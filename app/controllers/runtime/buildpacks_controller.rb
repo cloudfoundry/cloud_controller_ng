@@ -81,7 +81,7 @@ module VCAP::CloudController
     def delete(guid)
       find_guid_and_validate_access(:delete, guid)
 
-      job = Jobs::Runtime::BuildpackDelete.new(guid: guid, timeout: @config[:staging][:timeout_in_seconds])
+      job = Jobs::Runtime::BuildpackDelete.new(guid: guid, timeout: @config.get(:staging, :timeout_in_seconds))
       enqueue_deletion_job(job)
     end
 

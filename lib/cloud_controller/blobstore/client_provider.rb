@@ -10,7 +10,7 @@ module CloudController
   module Blobstore
     class ClientProvider
       def self.provide(options:, directory_key:, root_dir: nil, resource_type: nil)
-        bits_service_options = VCAP::CloudController::Config.config.config_hash[:bits_service]
+        bits_service_options = VCAP::CloudController::Config.config.get(:bits_service)
 
         if bits_service_options[:enabled] && resource_type
           provide_bits_service(bits_service_options, resource_type)

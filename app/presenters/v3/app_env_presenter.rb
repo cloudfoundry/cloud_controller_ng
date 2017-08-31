@@ -11,7 +11,7 @@ module VCAP::CloudController
         def to_hash
           vars_builder = VCAP::VarsBuilder.new(
             app,
-            file_descriptors: Config.config.config_hash[:instance_file_descriptor_limit] || 16384
+            file_descriptors: Config.config.get(:instance_file_descriptor_limit) || 16384
           )
 
           vcap_application = {

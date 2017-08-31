@@ -8,9 +8,9 @@ module VCAP::CloudController
       let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
       let(:default_health_check_timeout) { 9999 }
       let(:config) do
-        {
+        Config.new({
           default_health_check_timeout: default_health_check_timeout,
-        }
+        })
       end
 
       subject(:runner) { Runner.new(process, config) }

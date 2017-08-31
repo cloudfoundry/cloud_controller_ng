@@ -26,8 +26,8 @@ module VCAP::CloudController
           droplet:               droplet,
           command:               message.command,
           app:                   app,
-          disk_in_mb:            message.disk_in_mb || config[:default_app_disk_in_mb],
-          memory_in_mb:          message.memory_in_mb || config[:default_app_memory],
+          disk_in_mb:            message.disk_in_mb || config.get(:default_app_disk_in_mb),
+          memory_in_mb:          message.memory_in_mb || config.get(:default_app_memory),
           sequence_id:           app.max_task_sequence_id
         )
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
     end
 
     def bypass_bridge?
-      config[:diego] && config[:diego][:temporary_local_tasks]
+      config.get(:diego) && config.get(:diego, :temporary_local_tasks)
     end
 
     def use_requested_name_or_generate_name(message)
@@ -75,7 +75,11 @@ module VCAP::CloudController
 
     def validate_maximum_disk!(message)
       return unless message.requested?(:disk_in_mb)
-      raise MaximumDiskExceeded.new("Cannot request disk_in_mb greater than #{config[:maximum_app_disk_in_mb]}") if message.disk_in_mb.to_i > config[:maximum_app_disk_in_mb]
+      if message.disk_in_mb.to_i > config.get(:maximum_app_disk_in_mb)
+        raise MaximumDiskExceeded.new(
+          "Cannot request disk_in_mb greater than #{config.get(:maximum_app_disk_in_mb)}"
+        )
+      end
     end
 
     def dependency_locator

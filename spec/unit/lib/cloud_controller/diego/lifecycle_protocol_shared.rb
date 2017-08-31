@@ -1,7 +1,7 @@
 RSpec.shared_examples_for 'a lifecycle protocol' do
   let(:process) { double(:process) }
   let(:staging_details) { double(:staging_details) }
-  let(:config) { double(:config) }
+  let(:config) { instance_double(VCAP::CloudController::Config) }
 
   it 'provides lifecycle data' do
     lifecycle_data = lifecycle_protocol.lifecycle_data(staging_details)

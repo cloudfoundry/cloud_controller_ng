@@ -21,7 +21,7 @@ module VCAP::CloudController
         let(:external_port) { 8081 }
         let(:tls_port) { 8080 }
         let(:config) do
-          {
+          Config.new({
             internal_api:              {
               auth_user:     user,
               auth_password: password,
@@ -30,7 +30,7 @@ module VCAP::CloudController
             external_port:             external_port,
             tls_port:             tls_port,
             default_app_disk_in_mb:    1024,
-          }
+          })
         end
 
         before do

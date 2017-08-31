@@ -6,7 +6,9 @@ I18n.enforce_available_locales = false # avoid deprecation warning
 module TestConfig
   class << self
     def override(overrides)
-      @config = load(overrides)
+      @config_instance = load(overrides)
+      @config = @config_instance.config_hash
+      @config_instance
     end
 
     def reset
@@ -14,7 +16,11 @@ module TestConfig
     end
 
     def config
-      @config ||= load
+      @config ||= config_instance.config_hash
+    end
+
+    def config_instance
+      @config_instance ||= load
     end
 
     private
@@ -24,7 +30,7 @@ module TestConfig
       config = VCAP::CloudController::Config.new(config_hash)
       VCAP::CloudController::Config.instance_variable_set(:@instance, config)
       configure_components(config)
-      config.config_hash
+      config
     end
 
     def defaults
@@ -61,21 +67,23 @@ module TestConfig
           },
         },
 
-        db: DbConfig.new.config
+        db: DbConfig.new.config,
       )
+
+      config_hash.deep_merge!(uaa: { internal_url: 'https://uaa.service.cf.internal' })
 
       config_hash
     end
 
     def configure_components(config)
       # Always enable Fog mocking (except when using a local provider, which Fog can't mock).
-      res_pool_connection_provider = config.config_hash[:resource_pool][:fog_connection][:provider].downcase
-      packages_connection_provider = config.config_hash[:packages][:fog_connection][:provider].downcase
+      res_pool_connection_provider = config.get(:resource_pool, :fog_connection)[:provider].downcase
+      packages_connection_provider = config.get(:packages, :fog_connection)[:provider].downcase
       Fog.mock! unless res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
 
       # reset dependency locator
       dependency_locator = CloudController::DependencyLocator.instance
-      dependency_locator.reset(config.config_hash)
+      dependency_locator.reset(config)
       config.configure_components
 
       stacks_file = File.join(Paths::FIXTURES, 'config/stacks.yml')

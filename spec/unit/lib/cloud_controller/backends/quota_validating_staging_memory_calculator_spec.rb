@@ -82,7 +82,7 @@ module VCAP::CloudController
       context 'when the value is in the configuration' do
         let(:expected_limit) { 99 }
         before do
-          VCAP::CloudController::Config.config.config_hash[:staging][:minimum_staging_memory_mb] = expected_limit
+          TestConfig.override(staging: { minimum_staging_memory_mb: expected_limit })
         end
 
         it 'returns the configured value' do
@@ -92,7 +92,7 @@ module VCAP::CloudController
 
       context 'when there is no configured value' do
         before do
-          VCAP::CloudController::Config.config.config_hash[:staging][:minimum_staging_memory_mb] = nil
+          TestConfig.override(staging: { minimum_staging_memory_mb: nil })
         end
 
         it 'returns 1024' do

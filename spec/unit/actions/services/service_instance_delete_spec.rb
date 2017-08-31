@@ -124,7 +124,7 @@ module VCAP::CloudController
             expect(Delayed::Job.count).to eq 1
             job = Delayed::Job.last
 
-            poll_interval = VCAP::CloudController::Config.config.config_hash[:broker_client_default_async_poll_interval_seconds].seconds
+            poll_interval = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds).seconds
             expect(job.run_at).to be < Time.now.utc + poll_interval
           end
         end

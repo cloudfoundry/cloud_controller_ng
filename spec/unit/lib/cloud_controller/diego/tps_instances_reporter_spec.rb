@@ -49,7 +49,7 @@ module VCAP::CloudController
           { instance_guid: 'instance-G', index: 4, state: 'CRASHED', uptime: 7, since: 707 },
         ]
       }
-      let(:config) { TestConfig.config }
+      let(:config) { TestConfig.config_instance }
 
       before do
         allow(tps_client).to receive(:lrp_instances).and_return(instances_to_return)

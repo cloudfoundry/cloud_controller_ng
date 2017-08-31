@@ -79,7 +79,7 @@ module VCAP::CloudController
     private
 
     def update_enable_ssh
-      self.enable_ssh = Config.config.config_hash[:default_app_ssh_access] if self.enable_ssh.nil?
+      self.enable_ssh = Config.config.get(:default_app_ssh_access) if self.enable_ssh.nil?
 
       if column_changed?(:enable_ssh)
         processes.each do |process|

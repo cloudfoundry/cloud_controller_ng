@@ -12,7 +12,7 @@ module VCAP::CloudController
         memory_limit: memory_limit,
         staging_disk_in_mb: staging_disk_in_mb,
         space: space,
-        file_descriptors: Config.config.config_hash[:instance_file_descriptor_limit] || 16384,
+        file_descriptors: Config.config.get(:instance_file_descriptor_limit) || 16384,
         version: SecureRandom.uuid
       )
       vcap_application = vars_builder.to_hash

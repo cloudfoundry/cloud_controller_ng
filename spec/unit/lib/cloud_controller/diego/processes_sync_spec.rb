@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe ProcessesSync do
       subject { ProcessesSync.new(config: config, statsd_updater: statsd_updater) }
-      let(:config) { double(:config) }
+      let(:config) { instance_double(Config) }
 
       let(:bbs_apps_client) { instance_double(BbsAppsClient) }
 

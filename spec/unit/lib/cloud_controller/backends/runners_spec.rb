@@ -6,11 +6,11 @@ module VCAP::CloudController
     subject(:runners) { Runners.new(config) }
 
     let(:config) do
-      {
+      Config.new({
         staging: {
           timeout_in_seconds: 90
         }
-      }
+      })
     end
     let(:package_hash) { 'fake-package-hash' }
     let(:custom_buildpacks_enabled?) { true }

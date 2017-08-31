@@ -5,7 +5,7 @@ module VCAP::CloudController
     end
 
     def minimum_limit
-      Config.config.config_hash[:staging][:minimum_staging_memory_mb] || 1024
+      Config.config.get(:staging, :minimum_staging_memory_mb) || 1024
     end
   end
 end

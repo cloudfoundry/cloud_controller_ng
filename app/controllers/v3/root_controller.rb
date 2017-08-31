@@ -40,8 +40,8 @@ class RootController < ActionController::Base
   private
 
   def build_api_uri(path: nil)
-    my_uri        = URI::HTTP.build(host: VCAP::CloudController::Config.config.config_hash[:external_domain], path: "/v3#{path}")
-    my_uri.scheme = VCAP::CloudController::Config.config.config_hash[:external_protocol]
+    my_uri        = URI::HTTP.build(host: VCAP::CloudController::Config.config.get(:external_domain), path: "/v3#{path}")
+    my_uri.scheme = VCAP::CloudController::Config.config.get(:external_protocol)
     my_uri.to_s
   end
 end

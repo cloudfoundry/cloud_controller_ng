@@ -1,25 +1,6 @@
 module ControllerHelpers
   include VCAP::CloudController
 
-  HTTPS_ENFORCEMENT_SCENARIOS = [
-    { protocol: 'http',  config_setting: nil, user: 'user',  success: true },
-    { protocol: 'http',  config_setting: nil, user: 'admin', success: true },
-    { protocol: 'https', config_setting: nil, user: 'user',  success: true },
-    { protocol: 'https', config_setting: nil, user: 'admin', success: true },
-
-    # Next with https_required
-    { protocol: 'http',  config_setting: :https_required, user: 'user',  success: false },
-    { protocol: 'http',  config_setting: :https_required, user: 'admin', success: false },
-    { protocol: 'https', config_setting: :https_required, user: 'user',  success: true },
-    { protocol: 'https', config_setting: :https_required, user: 'admin', success: true },
-
-    # Finally with https_required_for_admins
-    { protocol: 'http',  config_setting: :https_required_for_admins, user: 'user',  success: true },
-    { protocol: 'http',  config_setting: :https_required_for_admins, user: 'admin', success: false },
-    { protocol: 'https', config_setting: :https_required_for_admins, user: 'user',  success: true },
-    { protocol: 'https', config_setting: :https_required_for_admins, user: 'admin', success: true }
-  ].freeze
-
   def self.description_for_inline_depth(depth, pagination=50)
     if depth
       "?inline-relations-depth=#{depth}&results-per-page=#{pagination}"
@@ -58,7 +39,7 @@ module ControllerHelpers
   end
 
   def app
-    FakeFrontController.new(TestConfig.config)
+    FakeFrontController.new(TestConfig.config_instance)
   end
 
   def admin_headers_for(user, opts={})

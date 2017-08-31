@@ -13,7 +13,7 @@ module VCAP::CloudController
         when 'http', 'https'
           lifecycle_cached_dependency_uri = lifecycle_bundle_url
         when nil
-          lifecycle_cached_dependency_uri = URI(Config.config.config_hash[:diego][:file_server_url])
+          lifecycle_cached_dependency_uri = URI(Config.config.get(:diego, :file_server_url))
           lifecycle_cached_dependency_uri.path = "/v1/static/#{lifecycle_bundle}"
         else
           raise InvalidCompiler.new('invalid compiler URI')

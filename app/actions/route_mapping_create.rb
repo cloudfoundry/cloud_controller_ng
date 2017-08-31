@@ -77,7 +77,7 @@ module VCAP::CloudController
     end
 
     def validate_routing_api_enabled!
-      if Config.config.config_hash[:routing_api].nil? && route.domain.shared? && route.domain.router_group_guid
+      if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
         raise RoutingApiDisabledError.new('Routing API is disabled')
       end
     end

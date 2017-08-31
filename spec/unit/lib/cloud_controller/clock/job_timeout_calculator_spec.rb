@@ -3,58 +3,36 @@ require 'cloud_controller/clock/job_timeout_calculator'
 
 module VCAP::CloudController
   RSpec.describe JobTimeoutCalculator do
-    let(:config) { Config.new(config_hash) }
-    let(:config_hash) do
-      {
-        jobs: {
-          global: {
-            timeout_in_seconds: global_timeout
-          }
-        }
-      }
+    let(:global_timeout) { 1.hour }
+
+    let(:config) do
+      Config.new({
+                   jobs: {
+                     global: { timeout_in_seconds: global_timeout },
+                     app_usage_events_cleanup: { timeout_in_seconds: 2.hours },
+                     blobstore_delete: { timeout_in_seconds: 3.hours },
+                     diego_sync: { timeout_in_seconds: 4.hours },
+                   }
+                 })
     end
-    let(:global_timeout) { 4.hours }
-    let(:my_job_timeout) { 2.hours }
-    let(:job_name) { 'my_job' }
 
     context 'when a job is specified in the config' do
-      let(:config_hash) do
-        {
-          jobs: {
-            my_job: {
-              timeout_in_seconds: my_job_timeout
-            }
-          }
-        }
-      end
-
       it 'returns the job timeout from the config' do
-        expect(JobTimeoutCalculator.new(config).calculate(job_name)).to eq(my_job_timeout)
+        expect(JobTimeoutCalculator.new(config).calculate(:app_usage_events_cleanup)).to eq(2.hours)
+        expect(JobTimeoutCalculator.new(config).calculate(:blobstore_delete)).to eq(3.hours)
+        expect(JobTimeoutCalculator.new(config).calculate(:diego_sync)).to eq(4.hours)
       end
     end
 
     context 'when a job timeout is NOT specified in the config' do
-      let(:config) do
-        Config.new(
-          {
-            jobs: {
-              global: {
-                timeout_in_seconds: global_timeout
-              }
-            }
-          })
-      end
-
       it 'returns the global timeout' do
-        expect(JobTimeoutCalculator.new(config).calculate(job_name)).to eq(global_timeout)
+        expect(JobTimeoutCalculator.new(config).calculate(:bogus)).to eq(global_timeout)
       end
     end
 
     context 'when the job_name is nil' do
-      let(:job_name) { nil }
-
       it 'returns the global timeout' do
-        expect(JobTimeoutCalculator.new(config).calculate(job_name)).to eq(global_timeout)
+        expect(JobTimeoutCalculator.new(config).calculate(nil)).to eq(global_timeout)
       end
     end
   end

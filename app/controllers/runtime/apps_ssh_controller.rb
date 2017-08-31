@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     def ssh_access_with_index(guid, index)
       index            = index.nil? ? 'unknown' : index
-      global_allow_ssh = VCAP::CloudController::Config.config.config_hash[:allow_app_ssh_access]
+      global_allow_ssh = VCAP::CloudController::Config.config.get(:allow_app_ssh_access)
 
       check_authentication(:ssh_access_internal)
       process = find_guid_and_validate_access(:update, guid)

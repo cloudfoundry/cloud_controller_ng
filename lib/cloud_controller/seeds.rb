@@ -16,16 +16,16 @@ module VCAP::CloudController
         shared_isolation_segment_model = IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
 
         if shared_isolation_segment_model
-          if !shared_isolation_segment_model.name.eql?(config[:shared_isolation_segment_name])
-            shared_isolation_segment_model.update(name: config[:shared_isolation_segment_name])
+          if !shared_isolation_segment_model.name.eql?(config.get(:shared_isolation_segment_name))
+            shared_isolation_segment_model.update(name: config.get(:shared_isolation_segment_name))
           end
         else
-          IsolationSegmentModel.create(name: config[:shared_isolation_segment_name], guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+          IsolationSegmentModel.create(name: config.get(:shared_isolation_segment_name), guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
         end
       end
 
       def create_seed_quota_definitions(config)
-        config[:quota_definitions].each do |name, values|
+        config.get(:quota_definitions).each do |name, values|
           quota = QuotaDefinition.find(name: name.to_s)
 
           if quota
@@ -46,14 +46,14 @@ module VCAP::CloudController
       def create_seed_organizations(config)
         # It is assumed that if no system domain organization is present,
         # then the 'system domain' feature is unused.
-        return unless config[:system_domain_organization]
+        return unless config.get(:system_domain_organization)
 
         quota_definition = QuotaDefinition.default
         unless quota_definition
           raise ArgumentError.new('Missing default quota definition in config file')
         end
 
-        org = Organization.find(name: config[:system_domain_organization])
+        org = Organization.find(name: config.get(:system_domain_organization))
         if org
           org.set(quota_definition: quota_definition)
           if org.modified?
@@ -61,13 +61,13 @@ module VCAP::CloudController
           end
           org
         else
-          Organization.create(name: config[:system_domain_organization], quota_definition: quota_definition)
+          Organization.create(name: config.get(:system_domain_organization), quota_definition: quota_definition)
         end
       end
 
       def create_seed_domains(config, system_org)
-        domains = parsed_domains(config[:app_domains])
-        system_domain = config[:system_domain]
+        domains = parsed_domains(config.get(:app_domains))
+        system_domain = config.get(:system_domain)
 
         domains.each do |domain|
           domain_name = domain['name']
@@ -78,7 +78,7 @@ module VCAP::CloudController
         end
 
         if CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: domains.map { |domain_hash| domain_hash['name'] })
-          Config.config.config_hash[:system_hostnames].each do |hostnames|
+          Config.config.get(:system_hostnames).each do |hostnames|
             domains.each do |app_domain|
               raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
             end
@@ -111,16 +111,16 @@ module VCAP::CloudController
       end
 
       def create_seed_security_groups(config)
-        return unless config[:security_group_definitions] && SecurityGroup.count == 0
+        return unless config.get(:security_group_definitions) && SecurityGroup.count == 0
 
-        config[:security_group_definitions].each do |security_group|
+        config.get(:security_group_definitions).each do |security_group|
           seed_security_group = security_group.dup
 
-          if config[:default_staging_security_groups].include?(security_group['name'])
+          if config.get(:default_staging_security_groups).include?(security_group['name'])
             seed_security_group['staging_default'] = true
           end
 
-          if config[:default_running_security_groups].include?(security_group['name'])
+          if config.get(:default_running_security_groups).include?(security_group['name'])
             seed_security_group['running_default'] = true
           end
 

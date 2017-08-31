@@ -380,7 +380,7 @@ module VCAP::CloudController
           end
 
           context 'when the poll_interval is changed after the job was created' do
-            let(:default_polling_interval) { VCAP::CloudController::Config.config.config_hash[:broker_client_default_async_poll_interval_seconds] }
+            let(:default_polling_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
             let(:new_polling_interval) { default_polling_interval * 2 }
             let(:state) { 'in progress' }
 
@@ -458,7 +458,7 @@ module VCAP::CloudController
         end
 
         describe '#end_timestamp' do
-          let(:max_poll_duration) { VCAP::CloudController::Config.config.config_hash[:broker_client_max_async_poll_duration_minutes] }
+          let(:max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
 
           context 'when the job is new' do
             it 'adds the broker_client_max_async_poll_duration_minutes to the current time' do

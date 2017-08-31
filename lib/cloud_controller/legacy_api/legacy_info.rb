@@ -7,14 +7,14 @@ module VCAP::CloudController
     get '/info', :info
     def info
       info = {
-        name: config[:info][:name],
-        build: config[:info][:build],
-        support: config[:info][:support_address],
-        version: config[:info][:version],
-        description: config[:info][:description],
-        authorization_endpoint: config[:login] ? config[:login][:url] : config[:uaa][:url],
-        token_endpoint: config[:uaa][:url],
-        allow_debug: config.fetch(:allow_debug, true)
+        name: config.get(:info, :name),
+        build: config.get(:info, :build),
+        support: config.get(:info, :support_address),
+        version: config.get(:info, :version),
+        description: config.get(:info, :description),
+        authorization_endpoint: config.get(:login) ? config.get(:login, :url) : config.get(:uaa, :url),
+        token_endpoint: config.get(:uaa, :url),
+        allow_debug: true,
       }
 
       # If there is a logged in user, give out additional information

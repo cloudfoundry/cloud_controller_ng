@@ -4,11 +4,11 @@ require 'cloud_controller/dependency_locator'
 RSpec.describe CloudController::DependencyLocator do
   subject(:locator) { CloudController::DependencyLocator.instance }
 
-  let(:config) { TestConfig.config }
+  let(:config) { TestConfig.config_instance }
   let(:bits_service_config) do
     {
-      enabled:          true,
-      public_endpoint:  'https://bits-service.com',
+      enabled: true,
+      public_endpoint: 'https://bits-service.com',
       private_endpoint: 'http://bits-service.service.cf.internal'
     }
   end
@@ -17,34 +17,34 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#droplet_blobstore' do
     let(:config) do
-      {
+      VCAP::CloudController::Config.new(
         droplets: {
-          fog_connection:        'fog_connection',
+          fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
         },
-      }
+      )
     end
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-        with(options: config[:droplets], directory_key: 'key', resource_type: :droplets)
+        with(options: config.get(:droplets), directory_key: 'key', resource_type: :droplets)
       locator.droplet_blobstore
     end
 
     context('when bits service is enabled') do
       let(:config) do
-        {
-          droplets:     {
-            fog_connection:        'fog_connection',
+        VCAP::CloudController::Config.new(
+          droplets: {
+            fog_connection: 'fog_connection',
             droplet_directory_key: 'key',
           },
           bits_service: bits_service_config
-        }
+        )
       end
 
       it 'creates the client with the right arguments' do
         expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config[:droplets], directory_key: 'key', resource_type: :droplets)
+          with(options: config.get(:droplets), directory_key: 'key', resource_type: :droplets)
         locator.droplet_blobstore
       end
     end
@@ -52,37 +52,37 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#buildpack_cache_blobstore' do
     let(:config) do
-      {
+      VCAP::CloudController::Config.new(
         droplets: {
-          fog_connection:        'fog_connection',
+          fog_connection: 'fog_connection',
           droplet_directory_key: 'key',
         }
-      }
+      )
     end
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
-        options:       config[:droplets],
+        options: config.get(:droplets),
         directory_key: 'key',
-        root_dir:      'buildpack_cache',
+        root_dir: 'buildpack_cache',
         resource_type: :buildpack_cache)
       locator.buildpack_cache_blobstore
     end
 
     context('when bits service is enabled') do
       let(:config) do
-        {
-          droplets:     {
-            fog_connection:        'fog_connection',
+        VCAP::CloudController::Config.new(
+          droplets: {
+            fog_connection: 'fog_connection',
             droplet_directory_key: 'key',
           },
           bits_service: bits_service_config
-        }
+        )
       end
 
       it 'creates the client with the right arguments' do
         expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config[:droplets], directory_key: 'key', root_dir: 'buildpack_cache', resource_type: :buildpack_cache)
+          with(options: config.get(:droplets), directory_key: 'key', root_dir: 'buildpack_cache', resource_type: :buildpack_cache)
         locator.buildpack_cache_blobstore
       end
     end
@@ -90,33 +90,33 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#package_blobstore' do
     let(:config) do
-      {
+      VCAP::CloudController::Config.new(
         packages: {
-          fog_connection:            'fog_connection',
+          fog_connection: 'fog_connection',
           app_package_directory_key: 'key',
         }
-      }
+      )
     end
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-        with(options: config[:packages], directory_key: 'key', resource_type: :packages)
+        with(options: config.get(:packages), directory_key: 'key', resource_type: :packages)
       locator.package_blobstore
     end
 
     context('when bits service is enabled') do
       let(:config) do
-        {
-          packages:     {
+        VCAP::CloudController::Config.new(
+          packages: {
             app_package_directory_key: 'key'
           },
           bits_service: bits_service_config
-        }
+        )
       end
 
       it 'creates the client with the right arguments' do
         expect(CloudController::Blobstore::ClientProvider).to receive(:provide).
-          with(options: config[:packages], directory_key: 'key', resource_type: :packages)
+          with(options: config.get(:packages), directory_key: 'key', resource_type: :packages)
         locator.package_blobstore
       end
     end
@@ -124,17 +124,17 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#legacy_global_app_bits_cache' do
     let(:config) do
-      {
+      VCAP::CloudController::Config.new(
         resource_pool: {
-          fog_connection:         'fog_connection',
+          fog_connection: 'fog_connection',
           resource_directory_key: 'key',
         }
-      }
+      )
     end
 
     it 'creates blob store' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
-        options: config[:resource_pool],
+        options: config.get(:resource_pool),
         directory_key: 'key',
       )
       locator.legacy_global_app_bits_cache
@@ -143,17 +143,17 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#global_app_bits_cache' do
     let(:config) do
-      {
+      VCAP::CloudController::Config.new(
         resource_pool: {
-          fog_connection:         'fog_connection',
+          fog_connection: 'fog_connection',
           resource_directory_key: 'key',
         }
-      }
+      )
     end
 
     it 'creates blob store with a app_bits_cache as root_dir' do
       expect(CloudController::Blobstore::ClientProvider).to receive(:provide).with(
-        options: config[:resource_pool],
+        options: config.get(:resource_pool),
         directory_key: 'key',
         root_dir: 'app_bits_cache',
       )
@@ -187,19 +187,19 @@ RSpec.describe CloudController::DependencyLocator do
 
     it 'creates blobstore_url_generator with the internal_service_hostname, port, and blobstores' do
       connection_options = {
-        blobstore_host:          'internal.service.hostname',
+        blobstore_host: 'internal.service.hostname',
         blobstore_external_port: 8282,
-        blobstore_tls_port:      8283,
-        user:                    'username',
-        password:                'password',
-        mtls:                    true,
+        blobstore_tls_port: 8283,
+        user: 'username',
+        password: 'password',
+        mtls: true,
       }
       expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),
-          kind_of(CloudController::Blobstore::Client),
-          kind_of(CloudController::Blobstore::Client),
-          kind_of(CloudController::Blobstore::Client),
-          kind_of(CloudController::Blobstore::Client)
+             kind_of(CloudController::Blobstore::Client),
+             kind_of(CloudController::Blobstore::Client),
+             kind_of(CloudController::Blobstore::Client),
+             kind_of(CloudController::Blobstore::Client)
         )
       locator.blobstore_url_generator
     end
@@ -224,9 +224,9 @@ RSpec.describe CloudController::DependencyLocator do
     it 'creates droplet_url_generator with the internal_service_hostname, ports, and diego flag' do
       expect(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:new).with(
         internal_service_hostname: 'internal.service.hostname',
-        external_port:             8282,
-        tls_port:                  8283,
-        mtls:                      true)
+        external_port: 8282,
+        tls_port: 8283,
+        mtls: true)
       locator.droplet_url_generator
     end
   end
@@ -256,8 +256,8 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#object_renderer' do
     it 'returns paginated collection renderer configured via config' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer   = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts         = { max_inline_relations_depth: 100_002, object_transformer: nil }
+      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      opts = { max_inline_relations_depth: 100_002, object_transformer: nil }
 
       TestConfig.override(renderer: opts)
 
@@ -274,12 +274,12 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#paginated_collection_renderer' do
     it 'returns paginated collection renderer configured via config' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer   = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts         = {
-        max_results_per_page:       100_000,
-        default_results_per_page:   100_001,
+      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      opts = {
+        max_results_per_page: 100_000,
+        default_results_per_page: 100_001,
         max_inline_relations_depth: 100_002,
-        collection_transformer:     nil
+        collection_transformer: nil
       }
 
       TestConfig.override(renderer: opts)
@@ -297,12 +297,12 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#large_paginated_collection_renderer' do
     it 'returns paginated collection renderer configured via config with a max of 10,000 results per page' do
       eager_loader = instance_of(VCAP::CloudController::RestController::SecureEagerLoader)
-      serializer   = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
-      opts         = {
-        max_results_per_page:       10,
-        default_results_per_page:   100_001,
+      serializer = instance_of(VCAP::CloudController::RestController::PreloadedObjectSerializer)
+      opts = {
+        max_results_per_page: 10,
+        default_results_per_page: 100_001,
         max_inline_relations_depth: 100_002,
-        collection_transformer:     nil
+        collection_transformer: nil
       }
 
       TestConfig.override(renderer: opts)
@@ -362,27 +362,27 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#uaa_client' do
     it 'returns a uaa client with credentials for looking up usernames' do
       uaa_client = locator.uaa_client
-      expect(uaa_client.client_id).to eq(config[:cloud_controller_username_lookup_client_name])
-      expect(uaa_client.secret).to eq(config[:cloud_controller_username_lookup_client_secret])
-      expect(uaa_client.uaa_target).to eq(config[:uaa][:internal_url])
+      expect(uaa_client.client_id).to eq(config.get(:cloud_controller_username_lookup_client_name))
+      expect(uaa_client.secret).to eq(config.get(:cloud_controller_username_lookup_client_secret))
+      expect(uaa_client.uaa_target).to eq(config.get(:uaa, :internal_url))
     end
   end
 
   describe '#routing_api_client' do
     let(:config) do
       TestConfig.override(routing_api:
-        {
-          url:                   'routing-api-url',
-          routing_client_name:   'routing-client',
-          routing_client_secret: 'routing-secret',
-        }
+                            {
+                              url: 'routing-api-url',
+                              routing_client_name: 'routing-client',
+                              routing_client_secret: 'routing-secret',
+                            }
       )
-      TestConfig.config
+      TestConfig.config_instance
     end
 
     context 'when routing api in not enabled' do
       before do
-        config[:routing_api] = nil
+        config.set(:routing_api, nil)
       end
 
       it 'returns a disabled client' do
@@ -394,18 +394,18 @@ RSpec.describe CloudController::DependencyLocator do
     it 'returns a routing_api_client' do
       uaa_client = instance_double(VCAP::CloudController::UaaClient)
       expect(VCAP::CloudController::UaaClient).to receive(:new).with(
-        uaa_target: config[:uaa][:internal_url],
-        client_id:  config[:routing_api][:routing_client_name],
-        secret:     config[:routing_api][:routing_client_secret],
-        ca_file:    config[:uaa][:ca_file],
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: config.get(:routing_api, :routing_client_name),
+        secret: config.get(:routing_api, :routing_client_secret),
+        ca_file: config.get(:uaa, :ca_file),
       ).and_return(uaa_client)
 
       client = locator.routing_api_client
 
       expect(client).to be_an_instance_of(VCAP::CloudController::RoutingApi::Client)
       expect(client.uaa_client).to eq uaa_client
-      expect(client.routing_api_uri.to_s).to eq(config[:routing_api][:url])
-      expect(client.skip_cert_verify).to eq(config[:skip_cert_verify])
+      expect(client.routing_api_uri.to_s).to eq(config.get(:routing_api, :url))
+      expect(client.skip_cert_verify).to eq(config.get(:skip_cert_verify))
     end
   end
 
@@ -420,13 +420,13 @@ RSpec.describe CloudController::DependencyLocator do
   describe '#blob_sender' do
     let(:sender) { double('sender') }
     it 'returns the correct sender when using ngx' do
-      config[:nginx][:use_nginx] = true
+      config.set(:nginx, config.get(:nginx).merge(use_nginx: true))
       expect(CloudController::BlobSender::NginxLocalBlobSender).to receive(:new).and_return(sender)
       expect(locator.blob_sender).to eq(sender)
     end
 
     it 'returns the correct sender when not using ngx' do
-      config[:nginx][:use_nginx] = false
+      config.set(:nginx, config.get(:nginx).merge(use_nginx: false))
       expect(CloudController::BlobSender::DefaultLocalBlobSender).to receive(:new).and_return(sender)
       expect(locator.blob_sender).to eq(sender)
     end

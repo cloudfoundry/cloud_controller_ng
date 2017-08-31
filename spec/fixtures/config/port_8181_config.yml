@@ -1,6 +1,7 @@
 ---
 local_route: 127.0.0.1
 external_port: 8181
+external_domain: api2.vcap.me
 tls_port: 8183
 pid_filename: /tmp/cloud_controller.8181.pid
 internal_service_hostname: cc.internal.cf

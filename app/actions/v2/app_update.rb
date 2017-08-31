@@ -152,7 +152,7 @@ module VCAP::CloudController
       end
 
       def custom_buildpacks_disabled?
-        VCAP::CloudController::Config.config.config_hash[:disable_custom_buildpacks]
+        VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
       end
 
       def staging_necessary?(process, request_attrs)

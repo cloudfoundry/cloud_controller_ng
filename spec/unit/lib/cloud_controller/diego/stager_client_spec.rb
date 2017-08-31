@@ -7,7 +7,7 @@ module VCAP::CloudController::Diego
     let(:staging_guid) { process.latest_droplet.guid }
     let(:staging_url) { "#{TestConfig.config[:diego][:stager_url]}/v1/staging/#{staging_guid}" }
 
-    subject(:client) { StagerClient.new(TestConfig.config) }
+    subject(:client) { StagerClient.new(TestConfig.config_instance) }
 
     describe 'making a staging request' do
       let(:staging_message) { { app_id: process.guid } }

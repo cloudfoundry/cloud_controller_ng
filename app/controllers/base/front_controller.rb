@@ -1,5 +1,4 @@
 require 'cloud_controller/security/security_context_configurer'
-require 'cloud_controller/request_scheme_validator'
 
 module VCAP::CloudController
   include VCAP::RestAPI
@@ -18,17 +17,6 @@ module VCAP::CloudController
 
     before do
       I18n.locale = env['HTTP_ACCEPT_LANGUAGE']
-      validate_scheme!
-    end
-
-    private
-
-    def validate_scheme!
-      validator = CloudController::RequestSchemeValidator.new
-      current_user = VCAP::CloudController::SecurityContext.current_user
-      roles = VCAP::CloudController::SecurityContext.roles
-
-      validator.validate!(current_user, roles, @config, request)
     end
   end
 end

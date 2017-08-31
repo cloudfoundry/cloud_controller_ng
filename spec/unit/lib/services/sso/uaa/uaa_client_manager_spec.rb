@@ -11,7 +11,7 @@ module VCAP::Services::SSO::UAA
     end
 
     describe '#modify_transaction' do
-      let(:uaa_uri) { VCAP::CloudController::Config.config.config_hash[:uaa][:internal_url] }
+      let(:uaa_uri) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
       let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
       let(:auth_header) { 'bearer ACCESSTOKENSTUFF' }
       let(:token_info) { double('info', auth_header: auth_header) }

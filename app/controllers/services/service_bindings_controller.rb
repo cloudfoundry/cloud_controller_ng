@@ -97,7 +97,7 @@ module VCAP::CloudController
     end
 
     def volume_services_enabled?
-      @config[:volume_services_enabled]
+      @config.get(:volume_services_enabled)
     end
   end
 end

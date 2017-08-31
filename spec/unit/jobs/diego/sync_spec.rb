@@ -9,11 +9,11 @@ module VCAP::CloudController
 
       describe '#perform' do
         let(:config) do
-          {
+          Config.new({
             diego: {
               temporary_local_sync: true
             },
-          }
+          })
         end
 
         before do
@@ -37,11 +37,11 @@ module VCAP::CloudController
 
         context 'when local sync are disabled' do
           let(:config) do
-            {
+            Config.new({
               diego: {
                 temporary_local_sync: false
               },
-            }
+            })
           end
 
           it 'does not sync processes' do

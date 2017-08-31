@@ -36,7 +36,6 @@ class ApplicationController < ActionController::Base
   wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 
   before_action :set_locale
-  before_action :validate_scheme!, except: [:not_found, :internal_error, :bad_request]
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
@@ -49,7 +48,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
 
   def configuration
-    Config.config.config_hash
+    Config.config
   end
 
   def query_params
@@ -157,11 +156,6 @@ class ApplicationController < ActionController::Base
   def check_write_permissions!
     write_scope = SecurityContext.scopes.include?('cloud_controller.write')
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !roles.admin? && !write_scope
-  end
-
-  def validate_scheme!
-    validator = CloudController::RequestSchemeValidator.new
-    validator.validate!(current_user, roles, configuration, request)
   end
 
   def set_locale

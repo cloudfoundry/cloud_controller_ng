@@ -530,7 +530,7 @@ module VCAP::CloudController
 
             context 'when volume_services_enabled are not enabled' do
               before do
-                TestConfig.config[:volume_services_enabled] = false
+                TestConfig.override(volume_services_enabled: false)
               end
 
               context 'when all services require volume mounting' do
@@ -566,8 +566,7 @@ module VCAP::CloudController
 
       context 'when the CC is not configured to use the UAA correctly and the service broker requests dashboard access' do
         before do
-          VCAP::CloudController::Config.config.config_hash[:uaa_client_name] = nil
-          VCAP::CloudController::Config.config.config_hash[:uaa_client_secret] = nil
+          TestConfig.override(uaa_client_name: nil, uaa_client_secret: nil)
 
           catalog_json['services'][0]['dashboard_client'] = {
             id: 'p-mysql-client',

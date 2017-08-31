@@ -99,8 +99,8 @@ module VCAP::CloudController
     def validate_host_and_domain
       return unless domain
 
-      domain_is_system_domain = domain.name == Config.config.config_hash[:system_domain]
-      host_is_system_hostname = Config.config.config_hash[:system_hostnames].include? host
+      domain_is_system_domain = domain.name == Config.config.get(:system_domain)
+      host_is_system_hostname = Config.config.get(:system_hostnames).include? host
 
       errors.add(:host, :system_hostname_conflict) if domain_is_system_domain && host_is_system_hostname
     end

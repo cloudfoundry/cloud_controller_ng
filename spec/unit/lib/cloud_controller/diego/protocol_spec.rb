@@ -27,7 +27,7 @@ module VCAP::CloudController
     RSpec.describe Protocol do
       subject(:protocol) { Protocol.new }
 
-      let(:config) { TestConfig.config }
+      let(:config) { TestConfig.config_instance }
       let(:egress_rules) { instance_double(EgressRules) }
       let(:fake_lifecycle_protocol) { FakeLifecycleProtocol.new }
       let(:running_env) { { 'KEY' => 'running_value' } }
@@ -64,7 +64,7 @@ module VCAP::CloudController
           LifecycleProvider.provide(package, staging_message)
         end
         let(:config) do
-          {
+          Config.new({
             external_port:             external_port,
             internal_service_hostname: internal_service_hostname,
             internal_api:              {
@@ -76,7 +76,7 @@ module VCAP::CloudController
               minimum_staging_file_descriptor_limit: 30,
               timeout_in_seconds:                    90,
             }
-          }
+          })
         end
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }

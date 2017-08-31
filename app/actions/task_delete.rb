@@ -31,7 +31,7 @@ module VCAP::CloudController
     end
 
     def bypass_bridge?
-      !!HashUtils.dig(Config.config.config_hash, :diego, :temporary_local_tasks)
+      !!Config.config.get(:diego, :temporary_local_tasks)
     end
 
     def nsync_client

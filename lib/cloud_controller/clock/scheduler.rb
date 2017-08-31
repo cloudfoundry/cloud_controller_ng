@@ -43,7 +43,7 @@ module VCAP::CloudController
     def start_inline_jobs
       clock_opts = {
         name:     'diego_sync',
-        interval: @config.config_hash.dig(:diego_sync, :frequency_in_seconds),
+        interval: @config.get(:diego_sync, :frequency_in_seconds),
         timeout:  @timeout_calculator.calculate(:diego_sync),
       }
       @clock.schedule_frequent_inline_job(clock_opts) do
@@ -55,18 +55,18 @@ module VCAP::CloudController
       FREQUENTS.each do |job_config|
         clock_opts = {
           name:     job_config[:name],
-          interval: @config.config_hash.dig(job_config[:name].to_sym, :frequency_in_seconds),
+          interval: @config.get(job_config[:name].to_sym, :frequency_in_seconds),
         }
         @clock.schedule_frequent_worker_job(clock_opts) do
           klass = job_config[:class]
-          klass.new(@config.config_hash.dig(job_config[:name].to_sym, :expiration_in_seconds))
+          klass.new(@config.get(job_config[:name].to_sym, :expiration_in_seconds))
         end
       end
     end
 
     def start_daily_jobs
       CLEANUPS.each do |cleanup_config|
-        cutoff_age_in_days = @config.config_hash.dig(cleanup_config[:name].to_sym, :cutoff_age_in_days)
+        cutoff_age_in_days = @config.get(cleanup_config[:name].to_sym, :cutoff_age_in_days)
         clock_opts = {
           name: cleanup_config[:name],
           at: cleanup_config[:time],

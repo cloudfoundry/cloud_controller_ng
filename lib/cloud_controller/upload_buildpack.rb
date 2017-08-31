@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
 
       if !missing_bits && old_buildpack_key && new_bits?(buildpack, old_buildpack_key)
-        staging_timeout = VCAP::CloudController::Config.config.config_hash[:staging][:timeout_in_seconds]
+        staging_timeout = VCAP::CloudController::Config.config.get(:staging, :timeout_in_seconds)
         BuildpackBitsDelete.delete_when_safe(old_buildpack_key, staging_timeout)
       end
 

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe Stagers do
     subject(:stagers) { Stagers.new(config) }
-    let(:config) { TestConfig.config }
+    let(:config) { TestConfig.config_instance }
 
     describe '#validate_app' do
       let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }

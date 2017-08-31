@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe InstallBuildpacks do
     describe 'installs buildpacks' do
-      let(:installer) { InstallBuildpacks.new(TestConfig.config) }
+      let(:installer) { InstallBuildpacks.new(TestConfig.config_instance) }
       let(:job) { instance_double(Jobs::Runtime::BuildpackInstaller) }
       let(:job2) { instance_double(Jobs::Runtime::BuildpackInstaller) }
       let(:job3) { instance_double(Jobs::Runtime::BuildpackInstaller) }

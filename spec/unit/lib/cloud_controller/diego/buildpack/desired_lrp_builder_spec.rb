@@ -19,7 +19,7 @@ module VCAP::CloudController
         end
         let(:ports) { [1111, 2222, 3333] }
         let(:config) do
-          {
+          Config.new({
             diego: {
               file_server_url: 'http://file-server.example.com',
               lifecycle_bundles: {
@@ -28,7 +28,7 @@ module VCAP::CloudController
               use_privileged_containers_for_running: use_privileged_containers_for_running,
               temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
             }
-          }
+          })
         end
         let(:use_privileged_containers_for_running) { false }
         let(:temporary_oci_buildpack_mode) { '' }
@@ -112,7 +112,7 @@ module VCAP::CloudController
         describe '#privileged?' do
           context 'when the config is true' do
             before do
-              config[:diego][:use_privileged_containers_for_running] = true
+              config.set(:diego, config.get(:diego).merge(use_privileged_containers_for_running: true))
             end
 
             it 'returns true' do
@@ -122,7 +122,7 @@ module VCAP::CloudController
 
           context 'when the config is false' do
             before do
-              config[:diego][:use_privileged_containers_for_running] = false
+              config.set(:diego, config.get(:diego).merge(use_privileged_containers_for_running: false))
             end
 
             it 'returns false' do

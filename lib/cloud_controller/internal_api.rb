@@ -1,14 +1,14 @@
 module VCAP::CloudController
   module InternalApi
     def configure(config)
-      @config = config[:internal_api]
+      @config = config
     end
     module_function :configure
 
     def credentials
       [
-        @config[:auth_user],
-        @config[:auth_password],
+        @config.get(:internal_api, :auth_user),
+        @config.get(:internal_api, :auth_password),
       ]
     end
     module_function :credentials

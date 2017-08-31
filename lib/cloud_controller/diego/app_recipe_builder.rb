@@ -68,7 +68,7 @@ module VCAP::CloudController
           PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
           check_definition:                 generate_healthcheck_definition(desired_lrp_builder),
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
-          max_pids:                         @config[:diego][:pid_limit],
+          max_pids:                         @config.get(:diego, :pid_limit),
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: ["app:#{process.app.guid}"]
           ),
@@ -100,7 +100,7 @@ module VCAP::CloudController
       end
 
       def health_check_timeout_in_seconds
-        process.health_check_timeout || config[:default_health_check_timeout]
+        process.health_check_timeout || config.get(:default_health_check_timeout)
       end
 
       def generate_routes(info)

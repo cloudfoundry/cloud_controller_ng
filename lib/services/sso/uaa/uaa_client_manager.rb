@@ -95,7 +95,7 @@ module VCAP::Services::SSO::UAA
     end
 
     def filter_uaa_client_scope
-      configured_scope = VCAP::CloudController::Config.config.config_hash[:uaa_client_scope].split(',')
+      configured_scope = VCAP::CloudController::Config.config.get(:uaa_client_scope).split(',')
       filtered_scope   = configured_scope.select do |val|
         ['cloud_controller.write', 'openid', 'cloud_controller.read', 'cloud_controller_service_permissions.read'].include?(val)
       end
@@ -106,18 +106,18 @@ module VCAP::Services::SSO::UAA
     def create_uaa_client
       VCAP::CloudController::UaaClient.new(
         uaa_target: uaa_target,
-        client_id:  VCAP::CloudController::Config.config.config_hash[:uaa_client_name],
-        secret:     VCAP::CloudController::Config.config.config_hash[:uaa_client_secret],
+        client_id:  VCAP::CloudController::Config.config.get(:uaa_client_name),
+        secret:     VCAP::CloudController::Config.config.get(:uaa_client_secret),
         ca_file:    uaa_ca_file
       )
     end
 
     def uaa_ca_file
-      VCAP::CloudController::Config.config.config_hash[:uaa][:ca_file]
+      VCAP::CloudController::Config.config.get(:uaa, :ca_file)
     end
 
     def uaa_target
-      VCAP::CloudController::Config.config.config_hash[:uaa][:internal_url]
+      VCAP::CloudController::Config.config.get(:uaa, :internal_url)
     end
   end
 end

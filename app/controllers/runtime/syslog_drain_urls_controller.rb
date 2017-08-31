@@ -4,8 +4,8 @@ module VCAP::CloudController
     allow_unauthenticated_access
 
     authenticate_basic_auth('/v2/syslog_drain_urls') do
-      [VCAP::CloudController::Config.config.config_hash[:bulk_api][:auth_user],
-       VCAP::CloudController::Config.config.config_hash[:bulk_api][:auth_password]]
+      [VCAP::CloudController::Config.config.get(:bulk_api, :auth_user),
+       VCAP::CloudController::Config.config.get(:bulk_api, :auth_password)]
     end
 
     get '/v2/syslog_drain_urls', :list

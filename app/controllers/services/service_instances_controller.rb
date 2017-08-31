@@ -304,11 +304,11 @@ module VCAP::CloudController
     private
 
     def route_services_enabled?
-      @config[:route_services_enabled]
+      @config.get(:route_services_enabled)
     end
 
     def volume_services_enabled?
-      @config[:volume_services_enabled]
+      @config.get(:volume_services_enabled)
     end
 
     def route_service_warning(service_instance)

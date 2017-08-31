@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     def tmpdir
-      HashUtils.dig(VCAP::CloudController::Config.config.config_hash, :directories, :tmpdir)
+      VCAP::CloudController::Config.config.get(:directories, :tmpdir)
     end
   end
 end

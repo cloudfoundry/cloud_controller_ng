@@ -4,7 +4,7 @@ require 'actions/task_create'
 module VCAP::CloudController
   RSpec.describe TaskCreate do
     subject(:task_create_action) { TaskCreate.new(config) }
-    let(:config) { { maximum_app_disk_in_mb: 4096 } }
+    let(:config) { Config.new({ maximum_app_disk_in_mb: 4096 }) }
 
     describe '#create' do
       let(:app) { AppModel.make }
@@ -60,9 +60,7 @@ module VCAP::CloudController
           let(:recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
 
           before do
-            config[:diego] = {
-              temporary_local_tasks: true
-            }
+            config.set(:diego, temporary_local_tasks: true)
             allow(recipe_builder).to receive(:build_app_task).with(config, instance_of(TaskModel)).and_return(task_definition)
             allow(Diego::TaskRecipeBuilder).to receive(:new).and_return(recipe_builder)
           end
@@ -161,10 +159,10 @@ module VCAP::CloudController
       describe 'default values' do
         let(:message) { TaskCreateMessage.new name: name, command: command }
 
-        before { config[:default_app_memory] = 200 }
+        before { config.set(:default_app_memory, 200) }
 
         it 'sets disk_in_mb to configured :default_app_disk_in_mb' do
-          config[:default_app_disk_in_mb] = 200
+          config.set(:default_app_disk_in_mb, 200)
 
           task = task_create_action.create(app, message, user_audit_info)
 
@@ -220,7 +218,7 @@ module VCAP::CloudController
       end
 
       context 'when the requested disk in mb is higher than the configured maximum' do
-        let(:config) { { maximum_app_disk_in_mb: 10 } }
+        let(:config) { Config.new({ maximum_app_disk_in_mb: 10 }) }
 
         it 'raises an error' do
           expect {

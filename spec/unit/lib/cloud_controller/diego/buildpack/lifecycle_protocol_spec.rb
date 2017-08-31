@@ -202,7 +202,7 @@ module VCAP
           end
 
           describe '#staging_action_builder' do
-            let(:config) { { some: 'config' } }
+            let(:config) { Config.new({ some: 'config' }) }
             let(:package) { PackageModel.make }
             let(:droplet) { DropletModel.make }
             let(:staging_details) do
@@ -239,7 +239,7 @@ module VCAP
 
           describe '#task_action_builder' do
             let(:task) { TaskModel.make }
-            let(:config) { { some: 'config' } }
+            let(:config) { Config.new({ some: 'config' }) }
 
             it 'returns a TaskActionBuilder' do
               task.app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
@@ -270,7 +270,7 @@ module VCAP
           end
 
           describe '#desired_lrp_builder' do
-            let(:config) { {} }
+            let(:config) { Config.new({}) }
             let(:app) { AppModel.make(droplet: droplet) }
             let(:droplet) { DropletModel.make }
             let(:process) do
