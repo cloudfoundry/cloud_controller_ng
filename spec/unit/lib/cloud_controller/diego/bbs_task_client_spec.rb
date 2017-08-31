@@ -80,23 +80,6 @@ module VCAP::CloudController::Diego
         end
       end
 
-      context 'when the task is not in Diego' do
-        before do
-          allow(bbs_client).to receive(:cancel_task).and_return(
-            ::Diego::Bbs::Models::TaskLifecycleResponse.new(
-              error: ::Diego::Bbs::Models::Error.new(
-                type:    ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
-                message: 'error message'
-              )))
-        end
-
-        it 'succeeds without error' do
-          expect {
-            client.cancel_task(task_guid)
-          }.to_not raise_error
-        end
-      end
-
       context 'when bbs returns a response with an error' do
         before do
           allow(bbs_client).to receive(:cancel_task).and_return(
@@ -105,6 +88,23 @@ module VCAP::CloudController::Diego
                 type:    ::Diego::Bbs::Models::Error::Type::InvalidRecord,
                 message: 'error message'
               )))
+        end
+
+        context 'when the task is not in Diego' do
+          before do
+            allow(bbs_client).to receive(:cancel_task).and_return(
+              ::Diego::Bbs::Models::TaskLifecycleResponse.new(
+                error: ::Diego::Bbs::Models::Error.new(
+                  type:    ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+                  message: 'error message'
+                )))
+          end
+
+          it 'succeeds without error' do
+            expect {
+              client.cancel_task(task_guid)
+            }.to_not raise_error
+          end
         end
 
         it 'raises an api error' do
@@ -134,6 +134,26 @@ module VCAP::CloudController::Diego
             error: ::Diego::Bbs::Models::Error.new(message: 'error message'),
           )
           allow(bbs_client).to receive(:task_by_guid).and_return(error_response)
+        end
+
+        context 'when the task is not in Diego' do
+          before do
+            allow(bbs_client).to receive(:task_by_guid).and_return(
+              ::Diego::Bbs::Models::TaskResponse.new(
+                error: ::Diego::Bbs::Models::Error.new(
+                  type:    ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+                  message: 'error message'
+                ),
+                task: nil
+              ))
+          end
+
+          it 'returns nil without error' do
+            expect {
+              task = client.fetch_task(task_guid)
+              expect(task).to be_nil
+            }.to_not raise_error
+          end
         end
 
         it 'raises an api error' do

@@ -26,11 +26,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.ping }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.ping }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -76,11 +76,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.upsert_domain(domain: domain, ttl: ttl) }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.upsert_domain(domain: domain, ttl: ttl) }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -131,11 +131,13 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain') }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect {
+            client.desire_task(task_definition: task_definition, task_guid: 'task_guid', domain: 'domain')
+          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -211,11 +213,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.tasks }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.tasks }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -265,11 +267,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
-        it 'returns nil' do
-          expect(client.task_by_guid('some-guid')).to eq(Bbs::Models::TaskResponse.new(error: nil, task: nil))
+        it 'raises' do
+          expect { client.task_by_guid('some-guid') }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -319,11 +321,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.cancel_task('some-guid') }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.cancel_task('some-guid') }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -374,11 +376,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.desire_lrp(lrp) }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.desire_lrp(lrp) }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -432,13 +434,13 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
           expect {
             client.desired_lrp_by_process_guid(process_guid)
-          }.to raise_error(ResponseError, /status: 404, body: not found/)
+          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -489,11 +491,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.remove_desired_lrp(process_guid) }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.remove_desired_lrp('some-guid') }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -544,11 +546,13 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.retire_actual_lrp(actual_lrp_key) }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect {
+            client.retire_actual_lrp(actual_lrp_key)
+          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -620,11 +624,11 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
-          expect { client.update_desired_lrp(process_guid, lrp_update) }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.update_desired_lrp(process_guid, lrp_update) }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 
@@ -701,13 +705,13 @@ module Diego
       end
 
       context 'when it does not return successfully' do
-        let(:response_status) { 404 }
-        let(:response_body) { 'not found' }
+        let(:response_status) { 500 }
+        let(:response_body) { 'Internal Server Error' }
 
         it 'raises' do
           expect {
             client.desired_lrp_scheduling_infos(domain)
-          }.to raise_error(ResponseError, /status: 404, body: not found/)
+          }.to raise_error(ResponseError, /status: 500, body: Internal Server Error/)
         end
       end
 

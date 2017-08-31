@@ -72,6 +72,26 @@ module VCAP::CloudController
         expect(event.task_guid).to eq(task.guid)
         expect(event.parent_app_guid).to eq(task.app.guid)
       end
+
+      context 'when the task is already in a terminal state (and thus already has a stop event)' do
+        describe 'when the task is failed' do
+          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::FAILED_STATE) }
+
+          it 'does not create an additional stop event' do
+            task.destroy
+            expect(AppUsageEvent.where(task_guid: task.guid, state: 'TASK_STOPPED').count).to eq 0
+          end
+        end
+
+        describe 'when the task is succeeded' do
+          let(:task) { TaskModel.make(app: parent_app, state: TaskModel::SUCCEEDED_STATE) }
+
+          it 'does not create an additional stop event' do
+            task.destroy
+            expect(AppUsageEvent.where(task_guid: task.guid, state: 'TASK_STOPPED').count).to eq 0
+          end
+        end
+      end
     end
 
     describe 'validations' do

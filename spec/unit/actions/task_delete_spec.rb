@@ -57,18 +57,46 @@ module VCAP::CloudController
           expect(event.actee).to eq(task1.app.guid)
         end
 
-        it 'creates a TASK_STOPPED usage events for the deleted tasks' do
-          task_delete.delete(task_dataset)
+        context 'when deleting multiple tasks' do
+          context 'when some tasks are in terminal states' do
+            let!(:task1) { TaskModel.make(state: TaskModel::RUNNING_STATE) }
+            let!(:task2) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
+            let!(:task3) { TaskModel.make(state: TaskModel::FAILED_STATE) }
 
-          task1_event = AppUsageEvent.find(task_guid: task1.guid, state: 'TASK_STOPPED')
-          expect(task1_event).not_to be_nil
-          expect(task1_event.task_guid).to eq(task1.guid)
-          expect(task1_event.parent_app_guid).to eq(task1.app.guid)
+            it 'creates a TASK_STOPPED usage events non-terminal tasks' do
+              task_delete.delete(task_dataset)
 
-          task2_event = AppUsageEvent.find(task_guid: task2.guid, state: 'TASK_STOPPED')
-          expect(task2_event).not_to be_nil
-          expect(task2_event.task_guid).to eq(task2.guid)
-          expect(task2_event.parent_app_guid).to eq(task2.app.guid)
+              task1_event = AppUsageEvent.find(task_guid: task1.guid, state: 'TASK_STOPPED')
+              expect(task1_event).not_to be_nil
+              expect(task1_event.task_guid).to eq(task1.guid)
+              expect(task1_event.parent_app_guid).to eq(task1.app.guid)
+
+              task2_event = AppUsageEvent.find(task_guid: task2.guid, state: 'TASK_STOPPED')
+              expect(task2_event).to be_nil
+
+              task3_event = AppUsageEvent.find(task_guid: task3.guid, state: 'TASK_STOPPED')
+              expect(task3_event).to be_nil
+            end
+          end
+
+          context 'when both tasks are not in terminal states' do
+            let!(:task1) { TaskModel.make(state: TaskModel::RUNNING_STATE) }
+            let!(:task2) { TaskModel.make(state: TaskModel::PENDING_STATE) }
+
+            it 'creates a TASK_STOPPED usage events for the deleted tasks' do
+              task_delete.delete(task_dataset)
+
+              task1_event = AppUsageEvent.find(task_guid: task1.guid, state: 'TASK_STOPPED')
+              expect(task1_event).not_to be_nil
+              expect(task1_event.task_guid).to eq(task1.guid)
+              expect(task1_event.parent_app_guid).to eq(task1.app.guid)
+
+              task2_event = AppUsageEvent.find(task_guid: task2.guid, state: 'TASK_STOPPED')
+              expect(task2_event).not_to be_nil
+              expect(task2_event.task_guid).to eq(task2.guid)
+              expect(task2_event.parent_app_guid).to eq(task2.app.guid)
+            end
+          end
         end
       end
     end

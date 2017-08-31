@@ -9,6 +9,7 @@ module VCAP::CloudController
       RUNNING_STATE = 'RUNNING'.freeze,
       CANCELING_STATE = 'CANCELING'.freeze
     ].map(&:freeze).freeze
+    TERMINAL_STATES = [FAILED_STATE, SUCCEEDED_STATE].freeze
     COMMAND_MAX_LENGTH = 4096
     ENV_VAR_MAX_LENGTH = 4096
 
@@ -28,17 +29,21 @@ module VCAP::CloudController
     def after_update
       super
 
-      if column_changed?(:state) && (state == SUCCEEDED_STATE || state == FAILED_STATE)
+      if column_changed?(:state) && terminal_state?
         create_stop_event
       end
     end
 
     def after_destroy
       super
-      create_stop_event
+      create_stop_event unless terminal_state?
     end
 
     private
+
+    def terminal_state?
+      TERMINAL_STATES.include? state
+    end
 
     def validate
       validates_includes TASK_STATES, :state

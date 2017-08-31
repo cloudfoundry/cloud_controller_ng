@@ -48,10 +48,6 @@ module Diego
         client.post(Routes::TASK_BY_GUID, request, PROTOBUF_HEADER)
       end
 
-      if response.status == 404
-        return Bbs::Models::TaskResponse.new(error: nil, task: nil)
-      end
-
       validate_status!(response: response, statuses: [200])
       protobuf_decode!(response.body, Bbs::Models::TaskResponse)
     end

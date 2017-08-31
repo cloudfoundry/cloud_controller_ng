@@ -33,7 +33,7 @@ module VCAP::CloudController
       def fetch_task(guid)
         logger.info('fetch.task.request')
 
-        handle_diego_errors do
+        handle_diego_errors(acceptable_errors: [::Diego::Bbs::Models::Error::Type::ResourceNotFound]) do
           response = client.task_by_guid(guid)
           logger.info('fetch.task.response', error: response.error)
           response
