@@ -61,7 +61,7 @@ module VCAP::CloudController
         docker_type_requested    = request_attrs.key?('docker_image') || request_attrs.key?('docker_credentials')
 
         if buildpack_type_requested
-          app.lifecycle_data.buildpacks = [request_attrs['buildpack']] if request_attrs.key?('buildpack')
+          app.lifecycle_data.buildpacks = Array(request_attrs['buildpack'].presence) if request_attrs.key?('buildpack')
 
           if request_attrs.key?('stack_guid')
             app.lifecycle_data.stack = Stack.find(guid: request_attrs['stack_guid']).try(:name)

@@ -70,51 +70,81 @@ module VCAP::CloudController
         expect(app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
       end
 
-      context 'when custom buildpacks are disabled' do
-        let(:process) { ProcessModel.make }
-        let(:app) { process.app }
+      context 'updating buildpack' do
+        context 'when custom buildpacks are disabled' do
+          let(:process) { ProcessModel.make }
+          let(:app) { process.app }
 
-        before { TestConfig.override(disable_custom_buildpacks: true) }
+          before { TestConfig.override(disable_custom_buildpacks: true) }
 
-        it 'does NOT allow a public git url' do
-          request_attrs = { 'buildpack' => 'http://example.com/buildpack' }
+          it 'does NOT allow a public git url' do
+            request_attrs = { 'buildpack' => 'http://example.com/buildpack' }
 
-          expect {
-            app_update.update(app, process, request_attrs)
-          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            expect {
+              app_update.update(app, process, request_attrs)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+          end
+
+          it 'does NOT allow a public http url' do
+            request_attrs = { 'buildpack' => 'http://example.com/foo' }
+
+            expect {
+              app_update.update(app, process, request_attrs)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+          end
+
+          it 'does allow a buildpack name' do
+            admin_buildpack = Buildpack.make
+            request_attrs   = { 'buildpack' => admin_buildpack.name }
+
+            expect {
+              app_update.update(app, process, request_attrs)
+            }.not_to raise_error
+          end
+
+          it 'does not allow a private git url' do
+            request_attrs = { 'buildpack' => 'git://github.com/johndoe/my-buildpack.git' }
+
+            expect {
+              app_update.update(app, process, request_attrs)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+          end
+
+          it 'does not allow a private git url with ssh schema' do
+            request_attrs = { 'buildpack' => 'ssh://git@example.com/foo.git' }
+
+            expect {
+              app_update.update(app, process, request_attrs)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+          end
         end
 
-        it 'does NOT allow a public http url' do
-          request_attrs = { 'buildpack' => 'http://example.com/foo' }
+        describe 'empty values (that trigger autodetect)' do
+          it 'allows buildpack to be set to nil' do
+            process = ProcessModel.make
+            app     = process.app
 
-          expect {
+            request_attrs = {
+              'buildpack' => nil,
+            }
+
             app_update.update(app, process, request_attrs)
-          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
-        end
 
-        it 'does allow a buildpack name' do
-          admin_buildpack = Buildpack.make
-          request_attrs   = { 'buildpack' => admin_buildpack.name }
+            expect(process.app.lifecycle_data.buildpacks).to eq([])
+          end
 
-          expect {
+          it 'allows buildpack to be set to empty string' do
+            process = ProcessModel.make
+            app     = process.app
+
+            request_attrs = {
+              'buildpack' => '',
+            }
+
             app_update.update(app, process, request_attrs)
-          }.not_to raise_error
-        end
 
-        it 'does not allow a private git url' do
-          request_attrs = { 'buildpack' => 'git://github.com/johndoe/my-buildpack.git' }
-
-          expect {
-            app_update.update(app, process, request_attrs)
-          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
-        end
-
-        it 'does not allow a private git url with ssh schema' do
-          request_attrs = { 'buildpack' => 'ssh://git@example.com/foo.git' }
-
-          expect {
-            app_update.update(app, process, request_attrs)
-          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+            expect(process.app.lifecycle_data.buildpacks).to eq([])
+          end
         end
       end
 
