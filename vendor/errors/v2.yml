@@ -146,7 +146,7 @@
 30007:
   name: OrganizationAlreadySet
   http_code: 400
-  message: 'Cannot change organization'
+  message: "Cannot change organization"
 
 40001:
   name: SpaceInvalid
@@ -211,17 +211,17 @@
 60008:
   name: ServiceInstanceDuplicateNotAllowed
   http_code: 400
-  message: "An instance of this service is already present in this space.  Some services only support one instance per space."
+  message: "An instance of this service is already present in this space. Some services only support one instance per space."
 
 60009:
   name: ServiceInstanceNameTooLong
   http_code: 400
-  message: "You have requested an invalid service instance name.  Names are limited to 50 characters."
+  message: "You have requested an invalid service instance name. Names are limited to 50 characters."
 
 60010:
   name: ServiceInstanceOrganizationNotAuthorized
   http_code: 403
-  message: A service instance for the selected plan cannot be created in this organization. The plan is visible because another organization you belong to has access to it.
+  message: "A service instance for the selected plan cannot be created in this organization. The plan is visible because another organization you belong to has access to it."
 
 60011:
   name: ServiceInstanceDeprovisionFailed
@@ -261,7 +261,7 @@
 60018:
   name: ServiceInstanceSpaceNotAuthorized
   http_code: 403
-  message: A service instance for the selected plan cannot be created in this space.
+  message: "A service instance for the selected plan cannot be created in this space."
 
 60019:
   name: ServiceInstanceRouteServiceURLInvalid
@@ -461,12 +461,12 @@
 130006:
   name: ServiceDoesNotSupportRoutes
   http_code: 400
-  message: This service does not support route binding.
+  message: "This service does not support route binding."
 
 130007:
   name: RouteAlreadyBoundToServiceInstance
   http_code: 400
-  message: A route may only be bound to a single service instance
+  message: "A route may only be bound to a single service instance"
 
 130008:
   name: ServiceInstanceAlreadyBoundToSameRoute
@@ -966,7 +966,7 @@
 320001:
   name: DiegoDisabled
   http_code: 400
-  message: Diego has not been enabled.
+  message: "Diego has not been enabled."
 
 320002:
   name: DiegoDockerBuildpackConflict
@@ -976,7 +976,7 @@
 320003:
   name: DockerDisabled
   http_code: 400
-  message: Docker support has not been enabled.
+  message: "Docker support has not been enabled."
 
 320004:
   name: StagingBackendInvalid
