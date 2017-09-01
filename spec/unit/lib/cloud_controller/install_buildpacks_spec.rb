@@ -30,7 +30,7 @@ module VCAP::CloudController
 
           it 'does nothing and does not raise any errors' do
             expect {
-              installer.install(TestConfig.config[:install_buildpacks])
+              installer.install(TestConfig.config_instance.get(:install_buildpacks))
             }.to_not raise_error
           end
         end
@@ -62,7 +62,7 @@ module VCAP::CloudController
             expect(job2).not_to receive(:perform)
             expect(job3).not_to receive(:perform)
 
-            installer.install(TestConfig.config[:install_buildpacks])
+            installer.install(TestConfig.config_instance.get(:install_buildpacks))
           end
 
           context 'when the canary successfully installs' do
@@ -74,7 +74,7 @@ module VCAP::CloudController
 
               expect(enqueuer).to receive(:enqueue).twice
 
-              installer.install(TestConfig.config[:install_buildpacks])
+              installer.install(TestConfig.config_instance.get(:install_buildpacks))
             end
           end
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
               expect(Jobs::Enqueuer).not_to receive(:new)
 
               expect {
-                installer.install(TestConfig.config[:install_buildpacks])
+                installer.install(TestConfig.config_instance.get(:install_buildpacks))
               }.to raise_error 'BOOM'
             end
           end
@@ -96,7 +96,7 @@ module VCAP::CloudController
         expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').and_return([])
         expect(installer.logger).to receive(:error).with(/No file found for the buildpack/)
 
-        installer.install(TestConfig.config[:install_buildpacks])
+        installer.install(TestConfig.config_instance.get(:install_buildpacks))
       end
 
       context 'when no buildpacks defined' do
@@ -123,13 +123,13 @@ module VCAP::CloudController
           expect(job).to receive(:perform)
           expect(File).to receive(:file?).with('another.zip').and_return(true)
 
-          installer.install(TestConfig.config[:install_buildpacks])
+          installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
 
         it 'fails when no buildpack zip file is found' do
           expect(installer.logger).to receive(:error).with(/File not found: another.zip/)
 
-          installer.install(TestConfig.config[:install_buildpacks])
+          installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
 
         it 'succeeds when no package is specified' do
@@ -139,7 +139,7 @@ module VCAP::CloudController
           expect(job).to receive(:perform)
           expect(File).to receive(:file?).with('another.zip').and_return(true)
 
-          installer.install(TestConfig.config[:install_buildpacks])
+          installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
       end
 
@@ -148,14 +148,14 @@ module VCAP::CloudController
           TestConfig.config[:install_buildpacks][0].delete('package')
           expect(installer.logger).to receive(:error).with(/A package or file must be specified/)
 
-          installer.install(TestConfig.config[:install_buildpacks])
+          installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
 
         it 'fails when no name is specified' do
           TestConfig.config[:install_buildpacks][0].delete('name')
           expect(installer.logger).to receive(:error).with(/A name must be specified for the buildpack/)
 
-          installer.install(TestConfig.config[:install_buildpacks])
+          installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
       end
 
@@ -176,7 +176,7 @@ module VCAP::CloudController
 
         it 'the config is valid' do
           TestConfig.config[:nginx][:instance_socket] = 'mysocket'
-          Config.schema.validate(TestConfig.config)
+          expect { Config.new(TestConfig.config) }.not_to raise_error
         end
 
         it 'passes optional attributes to the job' do
@@ -185,7 +185,7 @@ module VCAP::CloudController
           expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').and_return(['abuildpack.zip'])
           expect(File).to receive(:file?).with('abuildpack.zip').and_return(true)
 
-          installer.install(TestConfig.config[:install_buildpacks])
+          installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
       end
     end

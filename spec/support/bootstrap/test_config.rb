@@ -5,10 +5,16 @@ I18n.enforce_available_locales = false # avoid deprecation warning
 
 module TestConfig
   class << self
-    def override(overrides)
-      @config_instance = load(overrides)
-      @config = @config_instance.config_hash
-      @config_instance
+    def context
+      @context || :api
+    end
+
+    def context=(context)
+      @context = context
+    end
+
+    def override(**overrides)
+      @config_instance = load(**overrides)
     end
 
     def reset
@@ -16,7 +22,7 @@ module TestConfig
     end
 
     def config
-      @config ||= config_instance.config_hash
+      config_instance.config_hash
     end
 
     def config_instance
@@ -25,9 +31,9 @@ module TestConfig
 
     private
 
-    def load(overrides={})
+    def load(**overrides)
       config_hash = defaults.merge(overrides)
-      config = VCAP::CloudController::Config.new(config_hash)
+      config = VCAP::CloudController::Config.new(config_hash, context: context)
       VCAP::CloudController::Config.instance_variable_set(:@instance, config)
       configure_components(config)
       config

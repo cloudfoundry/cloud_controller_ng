@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Services
-    RSpec.describe DeleteOrphanedKey do
+    RSpec.describe DeleteOrphanedKey, job_context: :worker do
       let(:client) { instance_double('VCAP::Services::ServiceBrokers::V2::Client') }
       let(:service_instance_guid) { 'fake-instance-guid' }
       let(:key_guid) { 'fake-key-guid' }

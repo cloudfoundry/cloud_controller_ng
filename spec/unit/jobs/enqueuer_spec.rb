@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Jobs
-  RSpec.describe Enqueuer do
+  RSpec.describe Enqueuer, job_context: :api do
     let(:config_override) do
       {
         jobs: {

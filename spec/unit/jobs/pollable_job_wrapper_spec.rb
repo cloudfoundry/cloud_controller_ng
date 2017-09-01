@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'jobs/pollable_job_wrapper'
 
 module VCAP::CloudController::Jobs
-  RSpec.describe PollableJobWrapper do
+  RSpec.describe PollableJobWrapper, job_context: :worker do
     let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil) }
     let(:pollable_job) { PollableJobWrapper.new(job) }
 

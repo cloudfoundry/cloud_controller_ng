@@ -309,6 +309,16 @@ properties:
     default: ""
     description: "key for encrypting sensitive values in the CC database"
 
+  cc.default_app_memory:
+    default: 1024
+    description: "How much memory given to an app if not specified"
+  cc.default_app_disk_in_mb:
+    default: 1024
+    description: "The default disk space an app gets"
+  cc.maximum_app_disk_in_mb:
+    default: 2048
+    description: "The maximum amount of disk a user can request"
+
   uaa.ssl.port:
     description: "The port used by UAA for ssl connections"
     default: 8443
@@ -381,6 +391,10 @@ properties:
   routing_api.enabled:
     description: "Whether to expose the routing_endpoint listed at /v2/info. Enable this after deploying the Routing API"
     default: false
+
+  cc.instance_file_descriptor_limit:
+    description: "The file descriptors made available to each app instance"
+    default: 16384
 
   cc.thresholds.worker.alert_if_above_mb:
     description: "The cc will alert if memory remains above this threshold for 3 monit cycles"

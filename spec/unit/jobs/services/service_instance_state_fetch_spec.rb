@@ -4,7 +4,7 @@ require 'jobs/services/service_instance_state_fetch'
 module VCAP::CloudController
   module Jobs
     module Services
-      RSpec.describe ServiceInstanceStateFetch do
+      RSpec.describe ServiceInstanceStateFetch, job_context: :worker do
         let(:proposed_service_plan) { ServicePlan.make }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {

@@ -1,11 +1,10 @@
 module VCAP::CloudController
   class BitsExpiration
-    def initialize(input_config=Config.config)
-      config = Config.new({})
-      config.set(:packages, input_config.get(:packages) || {})
-      config.set(:droplets, input_config.get(:droplets) || {})
-      @packages_storage_count = config.get(:packages, :max_valid_packages_stored) || 5
-      @droplets_storage_count = config.get(:droplets, :max_staged_droplets_stored) || 5
+    def initialize(config=Config.config)
+      packages = config.get(:packages) || {}
+      droplets = config.get(:droplets) || {}
+      @packages_storage_count = packages[:max_valid_packages_stored] || 5 # TODO: default elsewhere?
+      @droplets_storage_count = droplets[:max_staged_droplets_stored] || 5 # TODO: default elsewhere?
     end
 
     attr_reader :droplets_storage_count, :packages_storage_count

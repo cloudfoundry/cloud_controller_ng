@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    RSpec.describe LoggingContextJob do
+    RSpec.describe LoggingContextJob, job_context: :worker do
       subject(:logging_context_job) do
         LoggingContextJob.new(handler, request_id)
       end

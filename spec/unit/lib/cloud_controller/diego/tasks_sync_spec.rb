@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Diego
-    RSpec.describe TasksSync do
+    RSpec.describe TasksSync, job_context: :clock do
       subject { TasksSync.new(config: config) }
       let(:config) { instance_double(Config) }
 

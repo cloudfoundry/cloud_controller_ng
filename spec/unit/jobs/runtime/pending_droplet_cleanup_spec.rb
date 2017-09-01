@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe PendingDropletCleanup do
+    RSpec.describe PendingDropletCleanup, job_context: :worker do
       subject(:cleanup_job) { PendingDropletCleanup.new(staging_timeout) }
       let(:staging_timeout) { 15.minutes.to_i }
 

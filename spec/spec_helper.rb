@@ -90,6 +90,7 @@ RSpec.configure do |rspec_config|
     Sequel::Deprecation.output = StringIO.new
     Sequel::Deprecation.backtrace_filter = 5
 
+    TestConfig.context = example.metadata[:job_context] || :api
     TestConfig.reset
 
     VCAP::CloudController::SecurityContext.clear

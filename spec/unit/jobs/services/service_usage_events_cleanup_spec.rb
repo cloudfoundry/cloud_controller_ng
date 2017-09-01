@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Services
-    RSpec.describe ServiceUsageEventsCleanup do
+    RSpec.describe ServiceUsageEventsCleanup, job_context: :worker do
       let(:cutoff_age_in_days) { 30 }
       let(:logger) { double(Steno::Logger, info: nil) }
 

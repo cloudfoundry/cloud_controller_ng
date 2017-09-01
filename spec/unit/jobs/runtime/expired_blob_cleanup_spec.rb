@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe ExpiredBlobCleanup do
+    RSpec.describe ExpiredBlobCleanup, job_context: :worker do
       subject(:job) { ExpiredBlobCleanup.new }
 
       it { is_expected.to be_a_valid_job }

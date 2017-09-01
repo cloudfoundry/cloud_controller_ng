@@ -2,24 +2,25 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Diego
-    RSpec.describe Sync do
+    RSpec.describe Sync, job_context: :clock do
       let(:processes_sync) { instance_double(Diego::ProcessesSync) }
       let(:tasks_sync) { instance_double(Diego::ProcessesSync) }
       subject(:job) { Sync.new }
 
+      before { TestConfig.override(config_hash) }
+
       describe '#perform' do
-        let(:config) do
-          Config.new({
+        let(:config_hash) do
+          {
             diego: {
               temporary_local_sync: true
             },
-          })
+          }
         end
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:config).and_return(config)
-          allow(Diego::ProcessesSync).to receive(:new).with(config: config).and_return(processes_sync)
-          allow(Diego::TasksSync).to receive(:new).with(config: config).and_return(tasks_sync)
+          allow(Diego::ProcessesSync).to receive(:new).and_return(processes_sync)
+          allow(Diego::TasksSync).to receive(:new).and_return(tasks_sync)
 
           allow(processes_sync).to receive(:sync)
           allow(tasks_sync).to receive(:sync)
@@ -36,12 +37,12 @@ module VCAP::CloudController
         end
 
         context 'when local sync are disabled' do
-          let(:config) do
-            Config.new({
+          let(:config_hash) do
+            {
               diego: {
                 temporary_local_sync: false
               },
-            })
+            }
           end
 
           it 'does not sync processes' do

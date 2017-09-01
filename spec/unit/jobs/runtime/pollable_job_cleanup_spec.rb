@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe PollableJobCleanup do
+    RSpec.describe PollableJobCleanup, job_context: :worker do
       subject(:job) { PollableJobCleanup.new }
       let!(:old_blob) { PollableJobModel.create(created_at: 91.days.ago) }
       let!(:new_blob) { PollableJobModel.create(created_at: 1.days.ago) }

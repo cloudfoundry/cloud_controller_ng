@@ -29,11 +29,11 @@ namespace :db do
 
   def for_each_database
     if ENV['DB'] || ENV['DB_CONNECTION_STRING']
-      RakeConfig.config.set(:db, RakeConfig.get(:db).merge({ database: DbConfig.new.connection_string }))
+      RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge({ database: DbConfig.new.connection_string }))
       yield
     else
       %w(postgres mysql).each do |db_type|
-        RakeConfig.config.set(:db, RakeConfig.get(:db).merge({ database: DbConfig.new(db_type: db_type).connection_string }))
+        RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge({ database: DbConfig.new(db_type: db_type).connection_string }))
         puts "Using #{db_type}"
         yield
 

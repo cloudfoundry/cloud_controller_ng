@@ -1,12 +1,15 @@
 namespace :jobs do
   desc 'Clear the delayed_job queue.'
   task :clear do
+    RakeConfig.context = :worker
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
       Delayed::Job.delete_all
     end
   end
 
   desc 'Start a delayed_job worker that works on jobs that require access to local resources.'
+  RakeConfig.context = :api
+
   task :local, [:name] do |t, args|
     CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(RakeConfig.config).to_s],
                                        name: args.name).start_working
@@ -14,6 +17,7 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker.'
   task :generic, [:name] do |t, args|
+    RakeConfig.context = :worker
     CloudController::DelayedWorker.new(queues: ['cc-generic', 'sync-queue'],
                                        name: args.name).start_working
   end

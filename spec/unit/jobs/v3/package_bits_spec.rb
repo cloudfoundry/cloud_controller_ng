@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    RSpec.describe PackageBits do
+    RSpec.describe PackageBits, job_context: :api do
       let(:uploaded_path) { 'tmp/uploaded.zip' }
       let(:package_guid) { SecureRandom.uuid }
       let(:fingerprints) { [:fingerprint] }

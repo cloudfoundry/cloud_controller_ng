@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe DeleteExpiredPackageBlob do
+    RSpec.describe DeleteExpiredPackageBlob, job_context: :worker do
       subject(:job) { DeleteExpiredPackageBlob.new(package.guid) }
       let(:package) { PackageModel.make(package_hash: 'some-hash', sha256_checksum: 'example-256-checksum') }
 

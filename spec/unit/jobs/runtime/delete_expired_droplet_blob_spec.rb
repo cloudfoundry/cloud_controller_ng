@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    RSpec.describe DeleteExpiredDropletBlob do
+    RSpec.describe DeleteExpiredDropletBlob, job_context: :worker do
       subject(:job) { DeleteExpiredDropletBlob.new(droplet.guid) }
       let(:droplet) { DropletModel.make }
 
