@@ -200,9 +200,12 @@ module VCAP::CloudController
 
             context 'when updating the droplet record with data from staging fails' do
               let(:save_error) { StandardError.new('save-error') }
+              let(:runner) { instance_double(Diego::Runner, start: nil) }
+              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
 
               before do
                 allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
+                allow(runners).to receive(:runner_for_app).and_return(runner)
               end
 
               it 'logs an error for the CF operator' do
@@ -214,6 +217,15 @@ module VCAP::CloudController
                   response:     success_response,
                   error:        'save-error',
                 )
+              end
+
+              it 'does not attempt to start the app' do
+                expect(runner).to_not receive(:start)
+                expect(logger).to_not receive(:error).with(
+                  'diego.staging.buildpack.starting-process-failed', anything
+                )
+
+                subject.staging_complete(success_response, true)
               end
             end
 
