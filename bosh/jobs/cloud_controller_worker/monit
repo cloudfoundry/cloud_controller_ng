@@ -2,8 +2,8 @@
 <% if p("bpm.enabled") %>
 check process cloud_controller_worker_<%= index %>
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_worker/worker_<%= index %>.pid
-  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_worker -p worker_<%= index %> -c /var/vcap/jobs/cloud_controller_worker/config/bpm/cloud_controller_worker.yml"
-  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_worker -p worker_<%= index %>"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_worker -p worker_<%= index %> -c /var/vcap/jobs/cloud_controller_worker/config/bpm/cloud_controller_worker.yml"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_worker -p worker_<%= index %>"
   group vcap
 <% else %>
 check process cloud_controller_worker_<%= index %>

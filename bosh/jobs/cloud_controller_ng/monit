@@ -21,8 +21,8 @@
 <% if p("bpm.enabled") %>
 check process cloud_controller_ng
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_ng/cloud_controller_ng.pid
-  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_ng"
-  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_ng"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_ng"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_ng"
   group vcap
 <% if p('cc.nginx.ip').empty? %>
   if failed host <%= discover_external_ip %> port <%= p("cc.external_port") %> protocol http
@@ -36,23 +36,23 @@ check process cloud_controller_ng
 <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
 check process cloud_controller_worker_local_<%= index %>
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_ng/local_worker_<%= index %>.pid
-  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_ng -p local_worker_<%= index %> -c /var/vcap/jobs/cloud_controller_ng/config/bpm/local_worker.yml"
-  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_ng -p local_worker_<%= index %>"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_ng -p local_worker_<%= index %> -c /var/vcap/jobs/cloud_controller_ng/config/bpm/local_worker.yml"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_ng -p local_worker_<%= index %>"
   group vcap
 <% end %>
 
 check process nginx_cc
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_ng/nginx.pid
-  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_ng -p nginx"
-  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_ng -p nginx"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_ng -p nginx"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_ng -p nginx"
   depends on cloud_controller_ng
   group vcap
 
 <% if_p("cc.newrelic.license_key") do %>
 check process nginx_newrelic_plugin
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_ng/nginx_newrelic_plugin.pid
-  start program "/var/vcap/packages/bpm/bin/bpm start cloud_controller_ng -p nginx_newrelic_plugin"
-  stop program "/var/vcap/packages/bpm/bin/bpm stop cloud_controller_ng -p nginx_newrelic_plugin"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_ng -p nginx_newrelic_plugin"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_ng -p nginx_newrelic_plugin"
   group vcap
 <% end %>
 
