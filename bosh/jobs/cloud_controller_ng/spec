@@ -7,10 +7,7 @@ templates:
   bin/cloud_controller_ng.erb: bin/cloud_controller_ng
   bin/local_worker.erb: bin/local_worker
   bin/nginx_newrelic_plugin.erb: bin/nginx_newrelic_plugin
-  bpm/cloud_controller_ng.yml.erb: config/bpm/cloud_controller_ng.yml
-  bpm/local_worker.yml.erb: config/bpm/local_worker.yml
-  bpm/nginx.yml.erb: config/bpm/nginx.yml
-  bpm/nginx_newrelic_plugin.yml.erb: config/bpm/nginx_newrelic_plugin.yml
+  bpm.yml.erb: config/bpm.yml
 
   cloud_controller_ng.yml.erb: config/cloud_controller_ng.yml
   blobstore_waiter.sh.erb: bin/blobstore_waiter.sh
