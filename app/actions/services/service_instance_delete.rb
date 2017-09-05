@@ -43,7 +43,9 @@ module VCAP::CloudController
         lock = DeleterLock.new(service_instance)
         lock.lock!
 
-        attributes_to_update = service_instance.client.deprovision(
+        client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+
+        attributes_to_update = client.deprovision(
           service_instance,
           accepts_incomplete: @accepts_incomplete
         )
@@ -64,7 +66,8 @@ module VCAP::CloudController
 
     def delete_route_bindings(service_instance)
       route_bindings_dataset = RouteBinding.where(service_instance_id: service_instance.id)
-      RouteBindingDelete.new.delete(route_bindings_dataset)
+      route_deleter = RouteBindingDelete.new
+      route_deleter.delete(route_bindings_dataset)
     end
 
     def delete_service_bindings(service_instance)
@@ -72,13 +75,13 @@ module VCAP::CloudController
     end
 
     def delete_service_keys(service_instance)
-      ServiceKeyDelete.new.delete(service_instance.service_keys_dataset)
+      service_key_deleter = ServiceKeyDelete.new
+      service_key_deleter.delete(service_instance.service_keys_dataset)
     end
 
     def build_fetch_job(service_instance)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
-        service_instance.client.attrs,
         service_instance.guid,
         @event_repository.user_audit_info,
         {},

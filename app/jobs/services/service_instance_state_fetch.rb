@@ -2,11 +2,10 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :client_attrs, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval, :end_timestamp
+        attr_accessor :name, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval, :end_timestamp
 
-        def initialize(name, client_attrs, service_instance_guid, user_audit_info, request_attrs, end_timestamp=nil)
+        def initialize(name, service_instance_guid, user_audit_info, request_attrs, end_timestamp=nil)
           @name                  = name
-          @client_attrs          = client_attrs
           @service_instance_guid = service_instance_guid
           @request_attrs         = request_attrs
           @end_timestamp         = end_timestamp || new_end_timestamp
@@ -17,7 +16,7 @@ module VCAP::CloudController
         def perform
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
           return if service_instance.nil?
-          client = service_instance.service_broker.client
+          client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
           attrs_to_update = client.fetch_service_instance_state(service_instance)
           update_with_attributes(attrs_to_update, service_instance)

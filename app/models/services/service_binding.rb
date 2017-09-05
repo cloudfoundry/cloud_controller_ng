@@ -24,8 +24,7 @@ module VCAP::CloudController
 
     import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url
 
-    delegate :client, :service, :service_plan,
-      to: :service_instance
+    delegate :service, :service_plan, to: :service_instance
 
     def validate
       validates_presence :app
@@ -84,10 +83,6 @@ module VCAP::CloudController
 
     def required_parameters
       { app_guid: app_guid }
-    end
-
-    def unbind_from_broker
-      client.unbind(self)
     end
   end
 end

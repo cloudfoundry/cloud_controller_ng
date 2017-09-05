@@ -13,7 +13,9 @@ module VCAP::CloudController
 
       service_instance = ManagedServiceInstance.new(request_params)
 
-      broker_response = service_instance.client.provision(
+      client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+
+      broker_response = client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete,
         arbitrary_parameters: arbitrary_params
@@ -39,7 +41,6 @@ module VCAP::CloudController
     def setup_async_job(request_attrs, service_instance)
       job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
         'service-instance-state-fetch',
-        service_instance.client.attrs,
         service_instance.guid,
         @services_event_repository.user_audit_info,
         request_attrs,

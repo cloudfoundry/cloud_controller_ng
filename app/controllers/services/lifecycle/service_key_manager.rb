@@ -51,12 +51,6 @@ module VCAP::CloudController
 
     private
 
-    def safe_unbind_instance(service_key)
-      service_key.client.unbind(service_key)
-    rescue => e
-      @logger.error "Unable to unbind #{service_key}: #{e}"
-    end
-
     def validate_create_action(request_attrs)
       service_key = ServiceKey.new(request_attrs.except('parameters'))
       @access_validator.validate_access(:create, service_key)

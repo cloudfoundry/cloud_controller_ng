@@ -49,8 +49,9 @@ module VCAP::CloudController
 
     private
 
-    def request_binding_from_broker(instance, binding, parameters)
-      instance.client.bind(binding, parameters).tap do |response|
+    def request_binding_from_broker(instance, service_binding, parameters)
+      client = VCAP::Services::ServiceClientProvider.provide(instance: instance)
+      client.bind(service_binding, parameters).tap do |response|
         response.delete(:route_service_url)
       end
     end

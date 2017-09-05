@@ -42,12 +42,11 @@ module VCAP::CloudController
     end
 
     let(:broker_catalog_url) do
-      attributes = {
-        url: body_hash[:url] || body_hash[:broker_url],
-        auth_username: body_hash[:auth_username],
-        auth_password: body_hash[:auth_password],
-      }
-      build_broker_url(attributes, '/v2/catalog')
+      build_broker_url_from_params(
+        body_hash[:url] || body_hash[:broker_url],
+        body_hash[:auth_username],
+        body_hash[:auth_password],
+        '/v2/catalog')
     end
 
     def stub_catalog(broker_url: nil)
@@ -687,7 +686,7 @@ module VCAP::CloudController
           auth_username: 'new-username',
           auth_password: 'new-password',
         }
-        stub_request(:get, build_broker_url(attrs, '/v2/catalog')).
+        stub_request(:get, build_broker_url_from_params(attrs[:url], attrs[:auth_username], attrs[:auth_password], '/v2/catalog')).
           to_return(status: 200, body: catalog_json.to_json)
         set_current_user_as_admin
       end
@@ -793,38 +792,38 @@ module VCAP::CloudController
           let(:catalog_json) do
             {
               'services' => [{
-                  'name' => 'fake-service',
-                  'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
-                  'description' => 'fake service',
-                  'tags' => ['no-sql', 'relational'],
-                  'max_db_per_node' => 5,
-                  'bindable' => true,
-                  'metadata' => {
-                    'provider' => { 'name' => 'The name' },
-                    'listing' => {
-                      'imageUrl' => 'http://catgifpage.com/cat.gif',
-                      'blurb' => 'fake broker that is fake',
-                      'longDescription' => 'A long time ago, in a galaxy far far away...'
-                    },
-                    'displayName' => 'The Fake Broker'
+                'name' => 'fake-service',
+                'id' => 'f479b64b-7c25-42e6-8d8f-e6d22c456c9b',
+                'description' => 'fake service',
+                'tags' => ['no-sql', 'relational'],
+                'max_db_per_node' => 5,
+                'bindable' => true,
+                'metadata' => {
+                  'provider' => { 'name' => 'The name' },
+                  'listing' => {
+                    'imageUrl' => 'http://catgifpage.com/cat.gif',
+                    'blurb' => 'fake broker that is fake',
+                    'longDescription' => 'A long time ago, in a galaxy far far away...'
                   },
-                  'dashboard_client' => nil,
-                  'plan_updateable' => true,
-                  'plans' => [{
-                      'name' => 'fake-plan-2',
-                      'id' => 'fake-plan-2-guid',
-                      'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
-                      'max_storage_tb' => 5,
-                      'metadata' => {
-                        'cost' => 0.0,
-                        'bullets' => [
-                          { 'content' => 'Shared fake server' },
-                          { 'content' => '5 TB storage' },
-                          { 'content' => '40 concurrent connections' }
-                        ],
-                      },
-                    }],
+                  'displayName' => 'The Fake Broker'
+                },
+                'dashboard_client' => nil,
+                'plan_updateable' => true,
+                'plans' => [{
+                  'name' => 'fake-plan-2',
+                  'id' => 'fake-plan-2-guid',
+                  'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
+                  'max_storage_tb' => 5,
+                  'metadata' => {
+                    'cost' => 0.0,
+                    'bullets' => [
+                      { 'content' => 'Shared fake server' },
+                      { 'content' => '5 TB storage' },
+                      { 'content' => '40 concurrent connections' }
+                    ],
+                  },
                 }],
+              }],
             }
           end
           let(:service) { Service.make(:v2, service_broker: broker) }
@@ -866,12 +865,8 @@ module VCAP::CloudController
           before do
             space.organization.add_user user
             space.add_developer user
-            attrs = {
-              url: 'http://broker.example.com',
-              auth_username: 'me',
-              auth_password: 'abc123',
-            }
-            stub_request(:get, build_broker_url(attrs, '/v2/catalog')).
+
+            stub_request(:get, build_broker_url(broker, '/v2/catalog')).
               to_return(status: 200, body: catalog_json.to_json)
             set_current_user(user)
           end
