@@ -1,6 +1,7 @@
 *~
 .idea
 .yardoc
+.byebug_history
 \#*\#
 .\#*
 .bundle
