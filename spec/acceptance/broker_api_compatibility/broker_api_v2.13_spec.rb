@@ -88,7 +88,7 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
 
-      context 'with an invalid create schema' do
+      context 'when the create schema is not a hash' do
         before do
           update_broker(default_catalog(plan_schemas: { 'service_instance' => { 'create' => true } }))
         end
@@ -101,7 +101,7 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
 
-      context 'with an invalid update schema' do
+      context 'when an update schema is not a hash' do
         before do
           update_broker(default_catalog(plan_schemas: { 'service_instance' => { 'update' => true } }))
         end
@@ -143,7 +143,7 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
 
-      context 'with an invalid create schema' do
+      context 'when a service binding create schema is not a hash' do
         before do
           update_broker(default_catalog(plan_schemas: { 'service_binding' => { 'create' => true } }))
         end
