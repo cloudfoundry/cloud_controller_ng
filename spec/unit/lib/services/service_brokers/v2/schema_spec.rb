@@ -262,7 +262,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'should be valid' do
             expect(schema.validate).to be true
-            expect(schema.errors.full_messages.length).to be 0
+            expect(schema.errors.full_messages.length).to eq 0
           end
         end
       end
