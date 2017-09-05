@@ -6,18 +6,18 @@ module VCAP::Services::ServiceBrokers::V2
       let(:schema) { Schema.new(raw_schema) }
       let(:raw_schema) {
         {
-          :'$schema' => 'http://json-schema.org/draft-04/schema#',
+          '$schema' => 'http://json-schema.org/draft-04/schema#',
           'type' => 'object',
           :properties => { 'foo': { 'type': 'string' } },
           :required => ['foo']
         }
       }
 
-      it 'parse hash into json' do
+      it 'converts a hash into json' do
         expect(schema.to_json).to eq '{"$schema":"http://json-schema.org/draft-04/schema#",'\
-              '"type":"object",'\
-              '"properties":{"foo":{"type":"string"}},'\
-              '"required":["foo"]}'
+          '"type":"object",'\
+          '"properties":{"foo":{"type":"string"}},'\
+          '"required":["foo"]}'
       end
     end
 
@@ -26,7 +26,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:raw_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
       let(:schema) { Schema.new(raw_schema) }
 
-      context 'validating JSON Schema draft 04' do
+      context 'JSON Schema draft04 validations' do
         let(:version) { 'draft-04' }
 
         context 'when the schema has an internal reference' do
@@ -49,7 +49,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'when the schema has multiple valid constraints ' do
           let(:raw_schema) {
             {
-              :'$schema' => 'http://json-schema.org/draft-04/schema#',
+              '$schema' => draft_schema,
               'type' => 'object',
               :properties => { 'foo': { 'type': 'string' } },
               :required => ['foo']
@@ -70,8 +70,8 @@ module VCAP::Services::ServiceBrokers::V2
               it 'should not be valid' do
                 expect(schema.validate).to be false
                 expect(schema.errors.full_messages.length).to eq 1
-                expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04: ' \
-        "The property '#/properties' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#"
+                expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+                  "The property '#/properties' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#"
               end
               context 'when there are multiple errors' do
                 let(:raw_schema) { { 'type' => 'object', 'properties': true, 'anyOf': true } }
@@ -79,10 +79,10 @@ module VCAP::Services::ServiceBrokers::V2
                 it 'should have more than one error message' do
                   expect(schema.validate).to be false
                   expect(schema.errors.full_messages.length).to eq 2
-                  expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04: ' \
-                            'The property \'#/properties\' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#'
-                  expect(schema.errors.full_messages.last).to eq 'Must conform to JSON Schema Draft 04: ' \
-                            'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
+                  expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+                    'The property \'#/properties\' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#'
+                  expect(schema.errors.full_messages.last).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+                    'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
                 end
               end
 
@@ -193,9 +193,9 @@ module VCAP::Services::ServiceBrokers::V2
                 it 'returns one error' do
                   expect(schema.validate).to be false
                   expect(schema.errors.full_messages.length).to eq 1
-                  expect(schema.errors.full_messages.first).to match 'Must conform to JSON Schema Draft 04: ' \
-                  'The property \'#/properties\' of type boolean did not match the following type: ' \
-                  'object in schema http://json-schema.org/draft-04/schema#'
+                  expect(schema.errors.full_messages.first).to match 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+                    'The property \'#/properties\' of type boolean did not match the following type: ' \
+                    'object in schema http://json-schema.org/draft-04/schema#'
                 end
               end
             end
@@ -244,6 +244,36 @@ module VCAP::Services::ServiceBrokers::V2
               'foo' => 'x' * (bytes - surrounding_bytes)
             }
           end
+        end
+      end
+
+      context 'JSON Schema draft06 validations' do
+        let(:version) { 'draft-06' }
+
+        context 'when the schema has multiple valid constraints ' do
+          let(:raw_schema) {
+            {
+              '$schema' => draft_schema,
+              'type' => 'object',
+              :properties => { 'foo': { 'type': 'string' } },
+              :required => ['foo']
+            }
+          }
+
+          it 'should be valid' do
+            expect(schema.validate).to be true
+            expect(schema.errors.full_messages.length).to be 0
+          end
+        end
+      end
+
+      context 'when neither draft6 nor draft4 schema has been specified' do
+        let(:version) { 'some-random-schema' }
+
+        it 'should return a helpful error' do
+          expect(schema.validate).to be false
+          expect(schema.errors.full_messages.length).to eq 1
+          expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported'
         end
       end
     end

@@ -39,7 +39,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       errors.each do |error|
-        add_schema_error_msg("Must conform to JSON Schema Draft 04: #{error[:message]}")
+        add_schema_error_msg("Must conform to JSON Schema Draft 04 (experimental support for later versions): #{error[:message]}")
       end
     end
 
