@@ -136,7 +136,7 @@ module VCAP::CloudController
         proto_volume_mounts = []
         app_volume_mounts.each do |volume_mount|
           proto_volume_mount = ::Diego::Bbs::Models::VolumeMount.new(
-            driver:        volume_mount['device']['driver'],
+            driver:        volume_mount['driver'],
             container_dir: volume_mount['container_dir'],
             mode:          volume_mount['mode']
           )
