@@ -2914,7 +2914,7 @@ module VCAP::CloudController
         service             = binding.service
         service_binding_uri = service_binding_url(binding)
         expected_body       = { service_id: service.broker_provided_id, plan_id: service_plan.broker_provided_id, bind_resource: { route: route.uri } }
-        expect(a_request(:put, service_binding_uri).with(body: expected_body)).to have_been_made
+        expect(a_request(:put, service_binding_uri).with(body: hash_including(expected_body))).to have_been_made
       end
 
       context 'when the body is empty string' do

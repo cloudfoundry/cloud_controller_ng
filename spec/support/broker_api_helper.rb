@@ -342,4 +342,15 @@ module VCAP::CloudController::BrokerApiHelper
            headers
     )
   end
+
+  def create_route_binding(route, opts={})
+    stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+      to_return(status: 201, body: { route_service_url: 'https://example.com' }.to_json)
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+
+    put("/v2/service_instances/#{@service_instance_guid}/routes/#{route.guid}",
+      '{}',
+      headers
+    )
+  end
 end

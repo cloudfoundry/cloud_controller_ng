@@ -137,10 +137,10 @@ module VCAP::Services::ServiceBrokers::V2
           plan_id:           instance.service_plan.broker_provided_id,
           organization_guid: instance.organization.guid,
           space_guid:        instance.space.guid,
-          context: {
-            platform: 'cloudfoundry',
+          context:           {
+            platform:          'cloudfoundry',
             organization_guid: instance.organization.guid,
-            space_guid: instance.space_guid
+            space_guid:        instance.space_guid
           }
         )
       end
@@ -208,7 +208,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:message) { 'Accepted' }
 
           it 'return immediately with the operation from the broker response' do
-            client = Client.new(client_attrs)
+            client        = Client.new(client_attrs)
             attributes, _ = client.provision(instance, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
@@ -218,7 +218,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'and the response is 200' do
           let(:code) { 200 }
           it 'ignores the operation' do
-            client = Client.new(client_attrs)
+            client        = Client.new(client_attrs)
             attributes, _ = client.provision(instance, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
@@ -516,9 +516,9 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:patch).with(anything,
           hash_including({
             context: {
-              platform: 'cloudfoundry',
+              platform:          'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid: instance.space_guid
+              space_guid:        instance.space_guid
             }
           })
         )
@@ -635,7 +635,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:message) { 'Accepted' }
 
           it 'return immediately with the operation from the broker response' do
-            client = Client.new(client_attrs)
+            client        = Client.new(client_attrs)
             attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
@@ -645,7 +645,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'and the response is 200' do
           let(:code) { 200 }
           it 'ignores the operation' do
-            client = Client.new(client_attrs)
+            client        = Client.new(client_attrs)
             attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
@@ -805,7 +805,12 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:put).
           with(anything,
             plan_id:    key.service_plan.broker_provided_id,
-            service_id: key.service.broker_provided_id
+            service_id: key.service.broker_provided_id,
+            context:    {
+              platform:          'cloudfoundry',
+              organization_guid: key.service_instance.organization.guid,
+              space_guid:        key.service_instance.space.guid
+            }
           )
       end
 
@@ -821,14 +826,14 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
-        it 'make a put request with correct message and arbitrary parameters' do
+        it 'make a put request with arbitrary parameters' do
           arbitrary_parameters = { 'name' => 'value' }
           client.create_service_key(key, arbitrary_parameters: arbitrary_parameters)
           expect(http_client).to have_received(:put).
             with(anything,
-              plan_id:    key.service_plan.broker_provided_id,
-              service_id: key.service.broker_provided_id,
-              parameters: arbitrary_parameters
+              hash_including(
+                parameters: arbitrary_parameters
+              )
             )
         end
       end
@@ -936,7 +941,12 @@ module VCAP::Services::ServiceBrokers::V2
             plan_id:       binding.service_plan.broker_provided_id,
             service_id:    binding.service.broker_provided_id,
             app_guid:      binding.app_guid,
-            bind_resource: binding.required_parameters
+            bind_resource: binding.required_parameters,
+            context:       {
+              platform:          'cloudfoundry',
+              organization_guid: instance.organization.guid,
+              space_guid:        instance.space_guid
+            }
           )
       end
 
@@ -955,15 +965,13 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
         let(:arbitrary_parameters) { { 'name' => 'value' } }
 
-        it 'make a put request with correct message and arbitrary parameters' do
+        it 'make a put request with arbitrary parameters' do
           client.bind(binding, arbitrary_parameters)
           expect(http_client).to have_received(:put).
             with(anything,
-              plan_id:       binding.service_plan.broker_provided_id,
-              service_id:    binding.service.broker_provided_id,
-              app_guid:      binding.app_guid,
-              parameters:    arbitrary_parameters,
-              bind_resource: binding.required_parameters
+              hash_including(
+                parameters: arbitrary_parameters
+              )
             )
         end
       end
@@ -976,9 +984,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           expect(http_client).to have_received(:put).
             with(anything,
-              plan_id:       binding.service_plan.broker_provided_id,
-              service_id:    binding.service.broker_provided_id,
-              bind_resource: binding.required_parameters
+              hash_excluding(:app_guid)
             )
         end
       end
@@ -1341,7 +1347,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:message) { 'Accepted' }
 
           it 'return immediately with the operation from the broker response' do
-            client = Client.new(client_attrs)
+            client     = Client.new(client_attrs)
             attributes = client.deprovision(instance)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to eq('a_broker_operation_identifier')
@@ -1351,7 +1357,7 @@ module VCAP::Services::ServiceBrokers::V2
         context 'and the response is 200' do
           let(:code) { 200 }
           it 'ignores the operation' do
-            client = Client.new(client_attrs)
+            client     = Client.new(client_attrs)
             attributes = client.deprovision(instance)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil

@@ -87,7 +87,12 @@ module VCAP::Services::ServiceBrokers::V2
       path = service_binding_resource_path(key.guid, key.service_instance.guid)
       body = {
           service_id:  key.service.broker_provided_id,
-          plan_id:     key.service_plan.broker_provided_id
+          plan_id:     key.service_plan.broker_provided_id,
+          context: {
+            platform: PLATFORM,
+            organization_guid: key.service_instance.organization.guid,
+            space_guid: key.service_instance.space.guid
+          }
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -111,7 +116,12 @@ module VCAP::Services::ServiceBrokers::V2
         service_id:    binding.service.broker_provided_id,
         plan_id:       binding.service_plan.broker_provided_id,
         app_guid:      binding.try(:app_guid),
-        bind_resource: binding.required_parameters
+        bind_resource: binding.required_parameters,
+        context: {
+          platform: PLATFORM,
+          organization_guid: binding.service_instance.organization.guid,
+          space_guid: binding.service_instance.space.guid
+        }
       }
       body = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
