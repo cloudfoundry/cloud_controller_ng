@@ -50,8 +50,8 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def validate_schemas!
-      if schemas
-        errors.add_nested(schemas, schemas.errors) unless schemas.valid?
+      if schemas && !schemas.valid?
+        errors.add_nested(schemas, schemas.errors)
       end
     end
 
