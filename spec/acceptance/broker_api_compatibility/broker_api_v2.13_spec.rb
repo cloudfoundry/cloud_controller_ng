@@ -206,8 +206,8 @@ RSpec.describe 'Service Broker API integration' do
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_instance']['create']
@@ -233,8 +233,8 @@ RSpec.describe 'Service Broker API integration' do
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
-                {}.to_json,
-                json_headers(admin_headers))
+                  {}.to_json,
+                  json_headers(admin_headers))
 
               parsed_body = MultiJson.load(last_response.body)
               update_schema = parsed_body['entity']['schemas']['service_instance']['update']
