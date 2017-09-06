@@ -14,7 +14,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def build_schema
-      return unless @parameters_data
       @schema = Schema.new(@parameters_data) if @parameters_data.is_a?(Hash)
     end
 

@@ -17,12 +17,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def build_create
-      return unless @create_data
       @create = ParametersSchema.new(@create_data, @path + ['create']) if @create_data.is_a?(Hash)
     end
 
     def build_update
-      return unless @update_data
       @update = ParametersSchema.new(@update_data, @path + ['update']) if @update_data.is_a?(Hash)
     end
 
