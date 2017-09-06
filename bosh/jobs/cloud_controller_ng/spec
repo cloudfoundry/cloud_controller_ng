@@ -850,6 +850,7 @@ properties:
     default:
       "buildpack/cflinuxfs2": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
       "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"
+      "buildpack/windows2016": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
       "docker": "docker_app_lifecycle/docker_app_lifecycle.tgz"
   cc.diego.insecure_docker_registry_list:
     description: "An array of insecure Docker registries in the form of <HOSTNAME|IP>:PORT"
