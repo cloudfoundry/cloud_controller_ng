@@ -5,6 +5,7 @@ module VCAP::Services::ServiceBrokers
     def initialize(service_event_repository)
       @services_event_repository = service_event_repository
       @warnings = []
+      @logger = Steno.logger('cc.service_broker.service_manager')
     end
 
     def sync_services_and_plans(catalog)
@@ -60,20 +61,23 @@ module VCAP::Services::ServiceBrokers
 
         create_instance = nil
         begin
-          create_instance = catalog_plan.schemas.service_instance.create.schema.try(:to_json)
-        rescue
+          create_instance = catalog_plan.schemas.service_instance.create.schema.to_json
+        rescue => e
+          @logger.error("Error parsing service_instance create schema: #{e.message}")
         end
 
         update_instance = nil
         begin
-          update_instance = catalog_plan.schemas.service_instance.update.schema.try(:to_json)
-        rescue
+          update_instance = catalog_plan.schemas.service_instance.update.schema.to_json
+        rescue => e
+          @logger.error("Error parsing service_instance update schema: #{e.message}")
         end
 
         create_binding = nil
         begin
-          create_binding = catalog_plan.schemas.service_binding.create.schema.try(:to_json)
-        rescue
+          create_binding = catalog_plan.schemas.service_binding.create.schema.to_json
+        rescue => e
+          @logger.error("Error parsing service_binding create schema: #{e.message}")
         end
 
         plan.set({
