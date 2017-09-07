@@ -1,4 +1,11 @@
 GIT
+  remote: https://github.com/cloudfoundry-incubator/perm-rb.git
+  revision: 0cfd33c3d82ef6a1558efc68ed6fde0c057ec678
+  specs:
+    cf-perm (0.0.0)
+      grpc (~> 1.0)
+
+GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
@@ -180,6 +187,7 @@ GEM
       multi_json (~> 1.10)
       retriable (~> 1.4)
       signet (~> 0.6)
+    google-protobuf (3.4.0.2)
     googleauth (0.5.1)
       faraday (~> 0.9)
       jwt (~> 1.4)
@@ -188,6 +196,9 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
+    grpc (1.6.0)
+      google-protobuf (~> 3.1)
+      googleauth (~> 0.5.1)
     hashdiff (0.3.4)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -420,6 +431,7 @@ DEPENDENCIES
   awesome_print
   bits_service_client
   byebug
+  cf-perm!
   cf-uaa-lib (~> 3.11.0)
   clockwork
   cloudfront-signer
