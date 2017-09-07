@@ -101,7 +101,7 @@ function start_consul_agent {
     # If consul is already running, start exits 1
     set +e
     /var/vcap/jobs/consul_agent/bin/pre-start
-    chpst -u vcap:vcap /var/vcap/jobs/consul_agent/bin/agent_ctl start
+    chpst -u vcap:vcap /var/vcap/jobs/consul_agent/bin/agent_ctl start &> /dev/null
     set -e
   fi
 }
