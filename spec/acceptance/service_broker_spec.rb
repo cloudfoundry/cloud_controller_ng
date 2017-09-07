@@ -205,7 +205,7 @@ RSpec.describe 'Service Broker' do
           "  Service id must be a string, but has value 12345\n" \
           "  Plan small\n" \
           "    Schemas\n" \
-          '      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04: '\
+          '      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): '\
           "The property '#/properties' of type boolean did not match the following type: object in schema "\
           "http://json-schema.org/draft-04/schema#\n" \
           "Service service-2\n" \
@@ -362,7 +362,7 @@ RSpec.describe 'Service Broker' do
             end
           end
 
-          context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04" do
+          context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions)" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
             let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object', 'properties': true } } } } }
 
@@ -385,12 +385,12 @@ RSpec.describe 'Service Broker' do
                 "Service MySQL\n" \
                 "  Plan small\n" \
                 "    Schemas\n" \
-                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/properties' " \
+                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/properties' " \
                 "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n")
             end
           end
 
-          context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 with multiple problems" do
+          context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions) with multiple problems" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
             let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object', 'properties': true, 'anyOf': true } } } } }
 
@@ -412,9 +412,9 @@ RSpec.describe 'Service Broker' do
                 "Service MySQL\n" \
                 "  Plan small\n" \
                 "    Schemas\n" \
-                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/properties' " \
+                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/properties' " \
                 "of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#\n"\
-                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04: The property '#/anyOf' " \
+                "      Schema #{path} is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): The property '#/anyOf' " \
                 "of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#\n")
             end
           end
