@@ -6,10 +6,10 @@ require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/route_mapping_presenter'
 require 'actions/route_mapping_create'
 require 'actions/route_mapping_delete'
-require 'controllers/v3/mixins/sub_resource'
+require 'controllers/v3/mixins/app_sub_resource'
 
 class RouteMappingsController < ApplicationController
-  include SubResource
+  include AppSubResource
 
   def index
     message = RouteMappingsListMessage.from_params(subresource_query_params)

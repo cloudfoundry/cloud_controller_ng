@@ -5,10 +5,10 @@ require 'messages/service_bindings/service_binding_create_message'
 require 'messages/service_bindings/service_bindings_list_message'
 require 'actions/service_binding_create'
 require 'actions/service_binding_delete'
-require 'controllers/v3/mixins/sub_resource'
+require 'controllers/v3/mixins/app_sub_resource'
 
 class ServiceBindingsController < ApplicationController
-  include SubResource
+  include AppSubResource
 
   def create
     message = ServiceBindingCreateMessage.create_from_http_request(params[:body])

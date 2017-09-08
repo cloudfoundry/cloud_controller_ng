@@ -11,10 +11,10 @@ require 'actions/process_update'
 require 'messages/processes/process_scale_message'
 require 'messages/processes/process_update_message'
 require 'messages/processes/processes_list_message'
-require 'controllers/v3/mixins/sub_resource'
+require 'controllers/v3/mixins/app_sub_resource'
 
 class ProcessesController < ApplicationController
-  include SubResource
+  include AppSubResource
 
   before_action :find_process_and_space, except: :index
   before_action :ensure_can_write, only: %i(update terminate scale)

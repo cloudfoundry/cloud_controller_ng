@@ -7,10 +7,10 @@ require 'actions/droplet_copy'
 require 'messages/droplets/droplets_list_message'
 require 'messages/droplets/droplet_copy_message'
 require 'cloud_controller/membership'
-require 'controllers/v3/mixins/sub_resource'
+require 'controllers/v3/mixins/app_sub_resource'
 
 class DropletsController < ApplicationController
-  include SubResource
+  include AppSubResource
 
   def index
     message = DropletsListMessage.from_params(subresource_query_params)

@@ -1,9 +1,9 @@
 require 'messages/apps/app_feature_update_message'
-require 'controllers/v3/mixins/sub_resource'
+require 'controllers/v3/mixins/app_sub_resource'
 require 'presenters/v3/app_feature_presenter'
 
 class AppFeaturesController < ApplicationController
-  include SubResource
+  include AppSubResource
 
   def index
     app, space, org = AppFetcher.new.fetch(params[:guid])

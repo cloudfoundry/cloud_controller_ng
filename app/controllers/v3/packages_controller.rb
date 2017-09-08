@@ -8,10 +8,10 @@ require 'actions/package_copy'
 require 'messages/packages/package_create_message'
 require 'messages/packages/package_upload_message'
 require 'messages/packages/packages_list_message'
-require 'controllers/v3/mixins/sub_resource'
+require 'controllers/v3/mixins/app_sub_resource'
 
 class PackagesController < ApplicationController
-  include SubResource
+  include AppSubResource
 
   def index
     message = PackagesListMessage.from_params(subresource_query_params)

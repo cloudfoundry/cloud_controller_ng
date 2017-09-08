@@ -1,10 +1,6 @@
 module SubResource
   private
 
-  def app_not_found!
-    resource_not_found!(:app)
-  end
-
   def base_url(resource:)
     if app_nested?
       "/v3/apps/#{params[:app_guid]}/#{resource}"
