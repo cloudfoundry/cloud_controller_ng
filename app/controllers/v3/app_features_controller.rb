@@ -1,5 +1,6 @@
 require 'messages/apps/app_feature_update_message'
 require 'controllers/v3/mixins/sub_resource'
+require 'presenters/v3/app_feature_presenter'
 
 class AppFeaturesController < ApplicationController
   include SubResource
@@ -9,7 +10,7 @@ class AppFeaturesController < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     render status: :ok, json: {
       pagination: {},
-      resources:   [feature_ssh(app),]
+      resources:  [Presenters::V3::AppFeaturePresenter.new(app)]
     }
   end
 
@@ -18,7 +19,7 @@ class AppFeaturesController < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     resource_not_found!(:feature) unless params[:name] == 'ssh'
 
-    render status: :ok, json: feature_ssh(app)
+    render status: :ok, json: Presenters::V3::AppFeaturePresenter.new(app)
   end
 
   def update
@@ -33,16 +34,6 @@ class AppFeaturesController < ApplicationController
 
     app.update(enable_ssh: message.enabled)
 
-    render status: :ok, json: feature_ssh(app)
-  end
-
-  private
-
-  def feature_ssh(app)
-    {
-      name:        'ssh',
-      description: 'Enable SSHing into the app.',
-      enabled:     app.enable_ssh,
-    }
+    render status: :ok, json: Presenters::V3::AppFeaturePresenter.new(app)
   end
 end
