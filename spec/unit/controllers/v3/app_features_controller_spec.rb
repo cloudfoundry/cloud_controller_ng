@@ -100,7 +100,7 @@ RSpec.describe AppFeaturesController, type: :controller do
       get :show, guid: app_model.guid, name: 'i-dont-exist'
 
       expect(response.status).to eq(404)
-      expect(parsed_body['errors'][0]['detail']).to eq('Feature not found')
+      expect(response).to have_error_message('Feature not found')
     end
 
     it 'responds 404 when the app does not exist' do
@@ -171,7 +171,7 @@ RSpec.describe AppFeaturesController, type: :controller do
       }.not_to change { app_model.reload.values }
 
       expect(response.status).to eq(422)
-      expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
+      expect(response).to have_error_message('Enabled must be a boolean')
     end
   end
 end

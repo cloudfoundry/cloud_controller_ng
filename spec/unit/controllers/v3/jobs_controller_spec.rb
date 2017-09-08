@@ -16,7 +16,7 @@ RSpec.describe V3::JobsController, type: :controller do
 
           get :show, guid: job.guid
           expect(response.status).to eq(403)
-          expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
+          expect(response).to have_error_message('You are not authorized to perform the requested action')
         end
       end
 

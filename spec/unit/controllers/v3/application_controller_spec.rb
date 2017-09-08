@@ -64,14 +64,14 @@ RSpec.describe ApplicationController, type: :controller do
       get :index
 
       expect(response.status).to eq(403)
-      expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
+      expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
     it 'is required on show' do
       get :show, id: 1
 
       expect(response.status).to eq(403)
-      expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
+      expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
     context 'cloud_controller.read' do
@@ -163,7 +163,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'is required on other actions' do
       post :create
       expect(response.status).to eq(403)
-      expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
+      expect(response).to have_error_message('You are not authorized to perform the requested action')
     end
 
     it 'is not required for admin' do
@@ -190,7 +190,7 @@ RSpec.describe ApplicationController, type: :controller do
       it 'raises NotAuthenticated' do
         get :index
         expect(response.status).to eq(401)
-        expect(parsed_body['errors'].first['detail']).to eq('Authentication error')
+        expect(response).to have_error_message('Authentication error')
       end
     end
 
@@ -202,7 +202,7 @@ RSpec.describe ApplicationController, type: :controller do
       it 'raises InvalidAuthToken' do
         get :index
         expect(response.status).to eq(401)
-        expect(parsed_body['errors'].first['detail']).to eq('Invalid Auth Token')
+        expect(response).to have_error_message('Invalid Auth Token')
       end
     end
 
@@ -215,7 +215,7 @@ RSpec.describe ApplicationController, type: :controller do
       it 'raises InvalidAuthToken' do
         get :index
         expect(response.status).to eq(401)
-        expect(parsed_body['errors'].first['detail']).to eq('Invalid Auth Token')
+        expect(response).to have_error_message('Invalid Auth Token')
       end
     end
   end
@@ -304,7 +304,7 @@ RSpec.describe ApplicationController, type: :controller do
       routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
       get :blobstore_error
       expect(response.status).to eq(500)
-      expect(parsed_body['errors'].first['detail']).to match /three retries/
+      expect(response).to have_error_message(/three retries/)
     end
   end
 
@@ -315,7 +315,7 @@ RSpec.describe ApplicationController, type: :controller do
       routes.draw { get 'api_explode' => 'anonymous#api_explode' }
       get :api_explode
       expect(response.status).to eq(400)
-      expect(parsed_body['errors'].first['detail']).to eq('The request is invalid')
+      expect(response).to have_error_message('The request is invalid')
     end
   end
 
@@ -326,7 +326,7 @@ RSpec.describe ApplicationController, type: :controller do
       routes.draw { get 'not_found' => 'anonymous#not_found' }
       get :not_found
       expect(response.status).to eq(404)
-      expect(parsed_body['errors'].first['detail']).to eq('Unknown request')
+      expect(response).to have_error_message('Unknown request')
     end
   end
 end

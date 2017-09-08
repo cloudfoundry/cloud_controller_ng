@@ -119,7 +119,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'displays an informative error' do
           post :create, body: { name: '' }
           expect(response.status).to eq(422)
-          expect(parsed_body['errors'][0]['detail']).to include("Name can't be blank")
+          expect(response).to have_error_message("Name can't be blank")
         end
       end
 
@@ -133,7 +133,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'displays an informative error' do
           post :create, body: { name: name }
           expect(response.status).to eq(422)
-          expect(parsed_body['errors'][0]['detail']).to eq('Name must be unique')
+          expect(response).to have_error_message('Name must be unique')
         end
       end
 
@@ -148,7 +148,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'responds with 422' do
           post :create, body: { name: 'George' }
           expect(response.status).to eq(422)
-          expect(parsed_body['errors'][0]['detail']).to eq('blork is busted')
+          expect(response).to have_error_message('blork is busted')
         end
       end
     end

@@ -20,7 +20,7 @@ RSpec.describe ErrorsController, type: :controller do
       get :internal_error
 
       expect(response.status).to eq(500)
-      expect(parsed_body['errors'].first['detail']).to eq('An unknown error occurred.')
+      expect(response).to have_error_message('An unknown error occurred.')
     end
   end
 
@@ -41,7 +41,7 @@ RSpec.describe ErrorsController, type: :controller do
         get :bad_request
 
         expect(response.status).to eq(400)
-        expect(parsed_body['errors'].first['detail']).to eq('Request invalid due to parse error: invalid request body')
+        expect(response).to have_error_message('Request invalid due to parse error: invalid request body')
       end
     end
   end
