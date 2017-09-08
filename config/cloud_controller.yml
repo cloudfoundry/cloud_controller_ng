@@ -79,10 +79,6 @@ loggregator:
 doppler:
   url: 'wss://doppler.example.com:443'
 
-db:
-  max_connections: 32
-  pool_timeout: 10
-
 uaa:
   url: "http://localhost:8080/uaa"
   internal_url: "http://localhost:6789"
@@ -254,7 +250,6 @@ stacks_file: config/stacks.yml
 newrelic_enabled: false
 
 db:
-  database: postgres://postgres@localhost:5432/cc_test
   log_level: 'debug'
   ssl_verify_hostname: false
   max_connections: 42

@@ -42,7 +42,7 @@ module VCAP::CloudController
           newrelic_enabled: bool,
 
           db: {
-            :database => String, # db connection string for sequel
+            optional(:database) => String, # db connection string for sequel
             :max_connections => Integer, # max connections in the connection pool
             :pool_timeout => Integer, # timeout before raising an error when connection can't be established to the db
             :log_level => String, # debug, info, etc.
