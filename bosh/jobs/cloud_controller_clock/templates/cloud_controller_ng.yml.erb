@@ -1,21 +1,10 @@
 <%
   require 'uri'
-  
+
   def discover_external_ip
     networks = spec.networks.marshal_dump
-
-    _, network = networks.find do |_name, network_spec|
-      network_spec.default
-    end
-
-    if !network
-      _, network = networks.first
-    end
-
-    if !network
-      raise "Could not determine IP via network spec: #{networks}"
-    end
-
+    network = networks.values.detect(&:default) || networks.values.first
+    raise "Could not determine IP via network spec: #{networks}" unless network
     network.ip
   end
 %>
@@ -92,21 +81,14 @@ nginx:
 index: <%= spec.index %>
 name: <%= name %>
 
-<% if_p("cc.directories") do %>
-directories:<% p("cc.directories").each do |key, value| %>
-  <%= key %>: <%= value %><% end %>
-<% end %>
-
 logging:
   file: /var/vcap/sys/log/cloud_controller_clock/cloud_controller_clock.log
   syslog: vcap.cloud_controller_ng
   level: <%= p("cc.logging_level") %>
   max_retries: <%= p("cc.logging_max_retries") %>
 
-<% if_p("metron_endpoint.host", "metron_endpoint.port") do |host, port| %>
 loggregator:
-  router: <%= host %>:<%= port %>
-<% end %>
+  router: <%= p("metron_endpoint.host") %>:<%= p("metron_endpoint.port") %>
 
 <% db = p("ccdb.databases").find { |db| db["tag"] == "cc" } %>
 <% db_role = p("ccdb.roles").find { |role| role["tag"] == "admin" } %>
@@ -123,9 +105,9 @@ db: &db
   max_connections: <%= p("ccdb.max_connections") %>
   pool_timeout: <%= p("ccdb.pool_timeout") %>
   log_level: <%= p("cc.db_logging_level") %>
+  ssl_verify_hostname: <%= p("ccdb.ssl_verify_hostname") %>
 <% if_p('ccdb.ca_cert') do %>
   ca_cert_path: '/var/vcap/jobs/cloud_controller_clock/config/certs/db_ca.crt'
-  ssl_verify_hostname: <%= p("ccdb.ssl_verify_hostname") %>
 <% end %>
 
 <% system_domain = p("system_domain") %>
@@ -144,7 +126,6 @@ staging:
 default_health_check_timeout: <%= p("cc.default_health_check_timeout") %>
 
 runtimes_file: /var/vcap/jobs/cloud_controller_clock/config/runtimes.yml
-stacks_file: /var/vcap/jobs/cloud_controller_clock/config/stacks.yml
 
 # TODO: we believe these blobstore properties are not used by the clock, but our Config parser requires these properties
 # Story: https://www.pivotaltracker.com/story/show/136759317
@@ -247,18 +228,10 @@ uaa_client_secret: <%= p("uaa.clients.cc-service-dashboards.secret") %>
 uaa_client_scope: <%= p("uaa.clients.cc-service-dashboards.scope") %>
 <% end %>
 
-<% if_p("ssl.skip_cert_verify") do |skip_cert_verify|%>
-skip_cert_verify: <%= skip_cert_verify %>
-<% end %>
+allow_app_ssh_access: <%= p("cc.allow_app_ssh_access") %>
+default_app_ssh_access: <%= p("cc.default_app_ssh_access") %>
 
-bits_service:
-  enabled: <%= p("cc.bits_service.enabled") %>
-  <% if p("cc.bits_service.enabled") %>
-  public_endpoint: <%= p("cc.bits_service.public_endpoint") %>
-  private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
-  username: <%= p("cc.bits_service.username") %>
-  password: <%= p("cc.bits_service.password") %>
-  <% end %>
+skip_cert_verify: <%= p("ssl.skip_cert_verify") %>
 
 diego:
   temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>
@@ -268,9 +241,7 @@ diego:
   temporary_local_tps: <%= p("cc.diego.temporary_local_tps") %>
   temporary_cc_uploader_mtls: <%= p("cc.diego.temporary_cc_uploader_mtls") %>
   temporary_droplet_download_mtls: <%= p("cc.diego.temporary_droplet_download_mtls") %>
-  <% if_p("cc.diego.temporary_oci_buildpack_mode") do |value| %>
-  temporary_oci_buildpack_mode: <%= value %>
-  <% end %>
+  temporary_oci_buildpack_mode: <%= p("cc.diego.temporary_oci_buildpack_mode", nil) %>
   nsync_url: <%= p("cc.diego.nsync_url") %>
   stager_url: <%= p("cc.diego.stager_url") %>
   tps_url: <%= p("cc.diego.tps_url") %>

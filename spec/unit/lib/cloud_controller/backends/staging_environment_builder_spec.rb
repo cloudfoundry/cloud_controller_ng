@@ -42,7 +42,7 @@ module VCAP::CloudController
                 limits: {
                   mem: memory_limit,
                   disk: staging_disk_in_mb,
-                  fds: 16384
+                  fds: TestConfig.config[:instance_file_descriptor_limit]
                 },
                 application_id: app.guid,
                 application_name: app.name,
@@ -72,20 +72,13 @@ module VCAP::CloudController
       end
 
       describe 'file descriptor limits' do
-        it 'defaults to 16384' do
-          environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
-          expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(16384)
+        before do
+          TestConfig.config[:instance_file_descriptor_limit] = 100
         end
 
-        context 'when the file descriptor limit is configured' do
-          before do
-            TestConfig.config[:instance_file_descriptor_limit] = 100
-          end
-
-          it 'uses the configured value' do
-            environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
-            expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(100)
-          end
+        it 'uses the configured value' do
+          environment_variables = builder.build(app, space, lifecycle, memory_limit, staging_disk_in_mb)
+          expect(environment_variables['VCAP_APPLICATION'][:limits][:fds]).to eq(100)
         end
       end
 

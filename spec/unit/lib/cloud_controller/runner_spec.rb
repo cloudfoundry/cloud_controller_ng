@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Runner do
-    let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/minimal_config.yml') }
+    let(:valid_config_file_path) { File.join(Paths::CONFIG, 'cloud_controller.yml') }
     let(:config_file) { File.new(valid_config_file_path) }
     let(:diagnostics) { instance_double(VCAP::CloudController::Diagnostics) }
     let(:periodic_updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater) }
@@ -197,7 +197,6 @@ module VCAP::CloudController
     describe '#start_thin_server' do
       let(:app) { double(:app) }
       let(:thin_server) { OpenStruct.new }
-      let(:valid_config_file_path) { File.join(Paths::FIXTURES, 'config/default_overriding_config.yml') }
 
       subject(:start_thin_server) do
         runner = Runner.new(argv + ['-c', config_file.path])
@@ -258,43 +257,22 @@ module VCAP::CloudController
         subject.trap_signals
       end
 
-      context 'when the diagnostics directory is not configured' do
-        it 'uses a temporary directory' do
-          expect(Dir).to receive(:mktmpdir).and_return('some/tmp/dir')
-          expect(subject).to receive(:collect_diagnostics).and_call_original
-          expect(diagnostics).to receive(:collect).with('some/tmp/dir', periodic_updater)
-
-          callback.call
-        end
-
-        it 'memoizes the temporary directory' do
-          expect(Dir).to receive(:mktmpdir).and_return('some/tmp/dir')
-          expect(subject).to receive(:collect_diagnostics).twice.and_call_original
-          expect(diagnostics).to receive(:collect).with('some/tmp/dir', periodic_updater).twice
-
-          callback.call
-          callback.call
-        end
+      let(:config_file) do
+        config = YAML.load_file(valid_config_file_path)
+        config[:directories] ||= { tmpdir: 'tmpdir' }
+        config[:directories][:diagnostics] = 'diagnostics/dir'
+        file = Tempfile.new('config')
+        file.write(YAML.dump(config))
+        file.rewind
+        file
       end
 
-      context 'when the diagnostics directory is not configured' do
-        let(:config_file) do
-          config = YAML.load_file(valid_config_file_path)
-          config[:directories] ||= {}
-          config[:directories][:diagnostics] = 'diagnostics/dir'
-          file = Tempfile.new('config')
-          file.write(YAML.dump(config))
-          file.rewind
-          file
-        end
+      it 'uses the configured directory' do
+        expect(Dir).not_to receive(:mktmpdir)
+        expect(subject).to receive(:collect_diagnostics).and_call_original
+        expect(diagnostics).to receive(:collect).with('diagnostics/dir', periodic_updater)
 
-        it 'uses the configured directory' do
-          expect(Dir).not_to receive(:mktmpdir)
-          expect(subject).to receive(:collect_diagnostics).and_call_original
-          expect(diagnostics).to receive(:collect).with('diagnostics/dir', periodic_updater)
-
-          callback.call
-        end
+        callback.call
       end
     end
   end

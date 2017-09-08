@@ -4,11 +4,15 @@ require 'cloud_controller/clock/scheduler'
 module VCAP::CloudController
   RSpec.describe Scheduler, job_context: :clock do
     describe '#start' do
-      subject(:schedule) { Scheduler.new(config) }
+      subject(:schedule) { Scheduler.new(TestConfig.config_instance) }
 
       let(:clock) { instance_double(Clock) }
-      let(:config) do
-        VCAP::CloudController::Config.new({
+      let(:global_timeout) { 4.hours }
+
+      before do
+        allow(Clock).to receive(:new).with(no_args).and_return(clock)
+        allow(Clockwork).to receive(:run)
+        TestConfig.override({
           jobs: {
             global: { timeout_in_seconds: global_timeout },
           },
@@ -21,12 +25,6 @@ module VCAP::CloudController
           pending_builds: { frequency_in_seconds: 400, expiration_in_seconds: 700 },
           diego_sync: { frequency_in_seconds: 30 },
         })
-      end
-      let(:global_timeout) { 4.hours }
-
-      before do
-        allow(Clock).to receive(:new).with(no_args).and_return(clock)
-        allow(Clockwork).to receive(:run)
       end
 
       it 'configures Clockwork with a logger' do

@@ -188,8 +188,10 @@ properties:
 
   cc.min_cli_version:
     description: "Minimum version of the CF CLI to work with the API."
+    default: ~
   cc.min_recommended_cli_version:
     description: "Minimum recommended version of the CF CLI."
+    default: ~
 
   cc.run_prestart_migrations:
     description: "Run Cloud Controller DB migrations in BOSH pre-start script. Should be changed to false for deployments where the PostgreSQL job is deployed to the same VM as Cloud Controller. Otherwise, the default of true is preferable."
@@ -658,6 +660,7 @@ properties:
 
   cc.install_buildpacks:
     description: "Set of buildpacks to install during deploy"
+    default: []
   cc.app_bits_upload_grace_period_in_seconds:
     description: "Extra token expiry time while uploading big apps."
     default: 1200
@@ -814,6 +817,7 @@ properties:
     default: false
   cc.diego.temporary_oci_buildpack_mode:
     description: "Temporary flag to enable OCI buildpack flow. Valid values: 'oci-phase-1'"
+    default: ~
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024

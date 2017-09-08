@@ -98,6 +98,10 @@ RSpec.configure do |rspec_config|
   end
 
   rspec_config.around :each do |example|
+    # DatabaseIsolation requires the api config context
+    TestConfig.context = :api
+    TestConfig.reset
+
     isolation = DatabaseIsolation.choose(example.metadata[:isolation], TestConfig.config_instance, DbConfig.new.connection)
     isolation.cleanly { example.run }
   end

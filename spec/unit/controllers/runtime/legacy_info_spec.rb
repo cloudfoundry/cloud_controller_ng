@@ -30,16 +30,9 @@ module VCAP::CloudController
       expect(hash['support']).to eq(TestConfig.config_instance.get(:info, :support_address))
       expect(hash['version']).to eq(TestConfig.config_instance.get(:info, :version))
       expect(hash['description']).to eq(TestConfig.config_instance.get(:info, :description))
-      expect(hash['authorization_endpoint']).to eq(TestConfig.config_instance.get(:uaa, :url))
+      expect(hash['authorization_endpoint']).to eq(TestConfig.config_instance.get(:login, :url))
       expect(hash['token_endpoint']).to eq(TestConfig.config_instance.get(:uaa, :url))
       expect(hash['allow_debug']).to eq(true)
-    end
-
-    it 'includes login url when configured' do
-      TestConfig.override(login: { url: 'login_url' })
-      get '/info'
-      hash = MultiJson.load(last_response.body)
-      expect(hash['authorization_endpoint']).to eq('login_url')
     end
 
     describe 'account capacity' do

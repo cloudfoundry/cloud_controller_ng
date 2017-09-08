@@ -57,7 +57,7 @@ module VCAP::CloudController
     end
 
     def parse_config
-      @config = Config.load_from_file(@config_file)
+      @config = Config.load_from_file(@config_file, context: :api)
     rescue Membrane::SchemaValidationError => ve
       raise "ERROR: There was a problem validating the supplied config: #{ve}"
     rescue => e
@@ -225,7 +225,7 @@ module VCAP::CloudController
 
     def collect_diagnostics
       @diagnostics_dir ||= @config.get(:directories, :diagnostics)
-      @diagnostics_dir ||= Dir.mktmpdir
+
       file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir, periodic_updater)
       logger.warn("Diagnostics written to #{file}")
     rescue => e

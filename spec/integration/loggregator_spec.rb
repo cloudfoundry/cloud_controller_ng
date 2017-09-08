@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'securerandom'
+require 'tempfile'
 
 RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
   before(:all) do
@@ -12,7 +13,14 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
         'Content-Type' => 'application/json'
     }
 
-    start_cc(debug: false, config: 'spec/fixtures/config/port_8181_config.yml')
+    base_cc_config_file = 'config/cloud_controller.yml'
+    port_8181_overrides = 'spec/fixtures/config/port_8181_config.yml'
+    config = YAML.load_file(base_cc_config_file).deep_merge(YAML.load_file(port_8181_overrides))
+    @cc_config_file = Tempfile.new('cc_config.yml')
+    @cc_config_file.write(YAML.dump(config))
+    @cc_config_file.close
+
+    start_cc(debug: false, config: @cc_config_file.path)
 
     org = org_with_default_quota(@authed_headers)
     org_guid = org.json_body['metadata']['guid']
@@ -29,6 +37,7 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
 
   after(:all) do
     stop_cc
+    @cc_config_file.unlink
     @loggregator_server.stop
   end
 

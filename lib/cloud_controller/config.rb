@@ -17,7 +17,8 @@ module VCAP::CloudController
     class << self
       def load_from_file(file_name, context: :api)
         schema_class = schema_class_for_context(context)
-        hash = merge_defaults(schema_class.from_file(file_name))
+        config_from_file = schema_class.from_file(file_name)
+        hash = merge_defaults(config_from_file)
         @instance = new(hash, context: context)
       end
 
@@ -113,11 +114,6 @@ module VCAP::CloudController
 
     def configure_components
       Encryptor.db_encryption_key = get(:db_encryption_key)
-      ResourcePool.instance = ResourcePool.new(self)
-
-      Stack.configure(get(:stacks_file))
-
-      PrivateDomain.configure(get(:reserved_private_domains))
 
       dependency_locator = CloudController::DependencyLocator.instance
       dependency_locator.config = self

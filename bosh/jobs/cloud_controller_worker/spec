@@ -319,6 +319,13 @@ properties:
     default: 2048
     description: "The maximum amount of disk a user can request"
 
+  cc.allow_app_ssh_access:
+    default: true
+    description: "Allow users to change the value of the app-level allow_ssh attribute"
+  cc.default_app_ssh_access:
+    default: true
+    description: "When ssh is allowed and not explicitly set in the application, new applications will start with ssh service enabled"
+
   uaa.ssl.port:
     description: "The port used by UAA for ssl connections"
     default: 8443
@@ -484,7 +491,7 @@ properties:
     default: false
   cc.diego.temporary_local_tps:
     description: "Temporary flag to manage app state directly to the bbs from cc"
-    default: falsecutoff_age_in_days
+    default: false
   cc.diego.temporary_cc_uploader_mtls:
     description: "Temporary flag to ensure droplet upload callback endpoints require mTLS"
     default: false
@@ -493,6 +500,7 @@ properties:
     default: false
   cc.diego.temporary_oci_buildpack_mode:
     description: "Temporary flag to enable OCI buildpack flow. Valid values: 'oci-phase-1'"
+    default: ~
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024

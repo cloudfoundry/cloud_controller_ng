@@ -10,7 +10,7 @@ module VCAP::CloudController
         support: @config.get(:info, :support_address),
         version: @config.get(:info, :version),
         description: @config.get(:info, :description),
-        authorization_endpoint: @config.get(:login) ? @config.get(:login, :url) : @config.get(:uaa, :url),
+        authorization_endpoint: @config.get(:login, :url),
         token_endpoint: config.get(:uaa, :url),
         min_cli_version: @config.get(:info, :min_cli_version),
         min_recommended_cli_version: @config.get(:info, :min_recommended_cli_version),

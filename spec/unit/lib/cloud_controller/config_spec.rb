@@ -4,7 +4,6 @@ module VCAP::CloudController
   RSpec.describe Config do
     let(:test_config_hash) {
       {
-        admin_account_capacity: { memory: 64 * 1024 },
         packages: {
           fog_connection: {},
           fog_aws_storage_options: {
@@ -51,27 +50,52 @@ module VCAP::CloudController
     describe '.load_from_file' do
       it 'raises if the file does not exist' do
         expect {
-          Config.load_from_file('nonexistent.yml')
+          Config.load_from_file('nonexistent.yml', context: :worker)
         }.to raise_error(Errno::ENOENT, /No such file or directory @ rb_sysopen - nonexistent.yml/)
       end
 
       context 'merges default values' do
+        after do
+          cc_config_file.unlink
+        end
+
         context 'when no config values are provided' do
-          let(:config) do
-            config_path = File.join(Paths::FIXTURES, 'config/minimal_config.yml')
-            Config.load_from_file(config_path).config_hash
+          let(:null_overrides) do
+            [
+              'bits_service',
+              'stacks_file',
+              'directories',
+              'request_timeout_in_seconds',
+              'skip_cert_verify',
+              'app_bits_upload_grace_period_in_seconds',
+              'allowed_cors_domains',
+              'users_can_select_backend',
+              'broker_client_timeout_seconds',
+              'broker_client_default_async_poll_interval_seconds',
+            ]
           end
 
-          it 'sets the default isolation segment name' do
-            expect(config[:shared_isolation_segment_name]).to eq('shared')
+          let(:cc_config_file) do
+            config = YAML.load_file('config/cloud_controller.yml')
+            null_overrides.each { |override| config.delete(override) }
+            config['staging'].delete('minimum_staging_memory_mb')
+            config['staging'].delete('minimum_staging_file_descriptor_limit')
+            config['db'].delete('database')
+            config['packages'].delete('max_valid_packages_stored')
+            config['droplets'].delete('max_staged_droplets_stored')
+
+            file = Tempfile.new('cc_config.yml')
+            file.write(YAML.dump(config))
+            file.close
+            file
+          end
+
+          let(:config) do
+            Config.load_from_file(cc_config_file, context: :worker).config_hash
           end
 
           it 'sets default stacks_file' do
             expect(config[:stacks_file]).to eq(File.join(Paths::CONFIG, 'stacks.yml'))
-          end
-
-          it 'sets default maximum_app_disk_in_mb' do
-            expect(config[:maximum_app_disk_in_mb]).to eq(2048)
           end
 
           it 'sets default directories' do
@@ -133,30 +157,34 @@ module VCAP::CloudController
 
         context 'when config values are provided' do
           context 'and the values are valid' do
-            let(:config) do
-              config_path = File.join(Paths::FIXTURES, 'config/default_overriding_config.yml')
-              Config.load_from_file(config_path).config_hash
+            let(:cc_config_file) do
+              config = YAML.load_file('config/cloud_controller.yml')
+              config['stacks_file'] = '/tmp/foo'
+              config['users_can_select_backend'] = false
+              config['maximum_app_disk_in_mb'] = 3072
+              config['broker_client_default_async_poll_interval_seconds'] = 42
+              config['broker_client_timeout_seconds'] = 70
+
+              file = Tempfile.new('cc_config.yml')
+              file.write(YAML.dump(config))
+              file.close
+              file
             end
 
-            it 'preserves cli info from the file' do
-              expect(config[:info][:min_cli_version]).to eq('6.0.0')
-              expect(config[:info][:min_recommended_cli_version]).to eq('6.9.0')
+            let(:config) do
+              Config.load_from_file(cc_config_file.path, context: :worker).config_hash
             end
 
             it 'preserves the stacks_file value from the file' do
               expect(config[:stacks_file]).to eq('/tmp/foo')
             end
 
-            it 'preserves the default_app_disk_in_mb value from the file' do
-              expect(config[:default_app_disk_in_mb]).to eq(512)
-            end
-
             it 'preserves the maximum_app_disk_in_mb value from the file' do
-              expect(config[:maximum_app_disk_in_mb]).to eq(3)
+              expect(config[:maximum_app_disk_in_mb]).to eq(3072)
             end
 
             it 'preserves the directories value from the file' do
-              expect(config[:directories]).to eq({ some: 'value' })
+              expect(config[:directories]).to eq({ tmpdir: '/tmp', diagnostics: '/tmp' })
             end
 
             it 'preserves the external_protocol value from the file' do
@@ -172,22 +200,22 @@ module VCAP::CloudController
             end
 
             it 'preserves the value for app_bits_upload_grace_period_in_seconds' do
-              expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(600)
+              expect(config[:app_bits_upload_grace_period_in_seconds]).to eq(500)
             end
 
             it 'preserves the value of the staging auth user/password' do
-              expect(config[:staging][:auth][:user]).to eq('user')
-              expect(config[:staging][:auth][:password]).to eq('password')
+              expect(config[:staging][:auth][:user]).to eq('bob')
+              expect(config[:staging][:auth][:password]).to eq('laura')
             end
 
             it 'preserves the values of the minimum staging limits' do
-              expect(config[:staging][:minimum_staging_memory_mb]).to eq(512)
-              expect(config[:staging][:minimum_staging_disk_mb]).to eq(1024)
-              expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(2048)
+              expect(config[:staging][:minimum_staging_memory_mb]).to eq(42)
+              expect(config[:staging][:minimum_staging_disk_mb]).to eq(42)
+              expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(42)
             end
 
             it 'preserves the value of the allowed cross-origin domains' do
-              expect(config[:allowed_cors_domains]).to eq(['http://andrea.corr', 'http://caroline.corr', 'http://jim.corr', 'http://sharon.corr'])
+              expect(config[:allowed_cors_domains]).to eq(%w(http://*.appspot.com http://*.inblue.net http://talkoncorners.com http://borrowedheaven.org))
             end
 
             it 'preserves the backend selection configuration from the file' do
@@ -198,46 +226,37 @@ module VCAP::CloudController
               expect(config[:allow_app_ssh_access]).to eq(true)
             end
 
-            it 'preserves the default_health_check_timeout value from the file' do
-              expect(config[:default_health_check_timeout]).to eq(30)
-            end
-
-            it 'preserves the maximum_health_check_timeout value from the file' do
-              expect(config[:maximum_health_check_timeout]).to eq(90)
-            end
-
             it 'preserves the broker_client_timeout_seconds value from the file' do
-              expect(config[:broker_client_timeout_seconds]).to eq(120)
+              expect(config[:broker_client_timeout_seconds]).to eq(70)
             end
 
             it 'preserves the broker_client_default_async_poll_interval_seconds value from the file' do
-              expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(120)
+              expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(42)
             end
 
             it 'preserves the internal_service_hostname value from the file' do
-              expect(config[:internal_service_hostname]).to eq('cloud_controller_ng.service.cf.internal')
+              expect(config[:internal_service_hostname]).to eq('api.internal.cf')
             end
 
             it 'preserves the expiration values from the file' do
-              expect(config[:packages][:max_valid_packages_stored]).to eq(10)
-              expect(config[:droplets][:max_staged_droplets_stored]).to eq(10)
+              expect(config[:packages][:max_valid_packages_stored]).to eq(42)
+              expect(config[:droplets][:max_staged_droplets_stored]).to eq(42)
             end
 
             context 'when the staging auth is already url encoded' do
-              let(:tmpdir) { Dir.mktmpdir }
-              let(:config_load_from_file) do
-                config_path = File.join(tmpdir, 'overridden_with_urlencoded_values.yml')
-                Config.load_from_file(config_path).config_hash
+              let(:cc_config_file) do
+                config = YAML.load_file('config/cloud_controller.yml')
+                config['staging']['auth']['user'] = 'f%40t%3A%25a'
+                config['staging']['auth']['password'] = 'm%40%2Fn!'
+
+                file = Tempfile.new('cc_config.yml')
+                file.write(YAML.dump(config))
+                file.close
+                file
               end
 
-              before do
-                config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
-                config_hash['staging']['auth']['user'] = 'f%40t%3A%25a'
-                config_hash['staging']['auth']['password'] = 'm%40%2Fn!'
-
-                File.open(File.join(tmpdir, 'overridden_with_urlencoded_values.yml'), 'w') do |f|
-                  YAML.dump(config_hash, f)
-                end
+              let(:config_load_from_file) do
+                Config.load_from_file(cc_config_file.path, context: :worker).config_hash
               end
 
               it 'preserves the url-encoded values' do
@@ -248,23 +267,18 @@ module VCAP::CloudController
           end
 
           context 'and the password contains double quotes' do
-            let(:tmpdir) { Dir.mktmpdir }
+            let(:cc_config_file) do
+              config = YAML.load_file('config/cloud_controller.yml')
+              config['staging']['auth']['password'] = 'pass"wor"d'
+
+              file = Tempfile.new('cc_config.yml')
+              file.write(YAML.dump(config))
+              file.close
+              file
+            end
+
             let(:config_load_from_file) do
-              config_path = File.join(tmpdir, 'incorrect_overridden_config.yml')
-              Config.load_from_file(config_path).config_hash
-            end
-
-            before do
-              config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
-              config_hash['staging']['auth']['password'] = 'pass"wor"d'
-
-              File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
-                YAML.dump(config_hash, f)
-              end
-            end
-
-            after do
-              FileUtils.rm_r(tmpdir)
+              Config.load_from_file(cc_config_file.path, context: :worker).config_hash
             end
 
             it 'URL-encodes staging password as neccesary' do
@@ -273,26 +287,21 @@ module VCAP::CloudController
           end
 
           context 'and the values are invalid' do
-            let(:tmpdir) { Dir.mktmpdir }
+            let(:cc_config_file) do
+              config = YAML.load_file('config/cloud_controller.yml')
+              config['app_bits_upload_grace_period_in_seconds'] = -2345
+              config['staging']['auth']['user'] = 'f@t:%a'
+              config['staging']['auth']['password'] = 'm@/n!'
+              config['diego']['pid_limit'] = -5
+
+              file = Tempfile.new('cc_config.yml')
+              file.write(YAML.dump(config))
+              file.close
+              file
+            end
+
             let(:config_load_from_file) do
-              config_path = File.join(tmpdir, 'incorrect_overridden_config.yml')
-              Config.load_from_file(config_path).config_hash
-            end
-
-            before do
-              config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
-              config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
-              config_hash['staging']['auth']['user'] = 'f@t:%a'
-              config_hash['staging']['auth']['password'] = 'm@/n!'
-              config_hash['diego']['pid_limit'] = -5
-
-              File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
-                YAML.dump(config_hash, f)
-              end
-            end
-
-            after do
-              FileUtils.rm_r(tmpdir)
+              Config.load_from_file(cc_config_file.path, context: :worker).config_hash
             end
 
             it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
@@ -317,7 +326,6 @@ module VCAP::CloudController
 
       let(:test_config_hash) {
         {
-          admin_account_capacity: { memory: 64 * 1024 },
           packages: {
             fog_connection: {},
             fog_aws_storage_options: {
@@ -453,12 +461,12 @@ module VCAP::CloudController
 
       it 'returns a hash for nested properties' do
         expect(config_instance.get(:packages)).to eq({
-                                                       fog_connection: {},
-                                                       fog_aws_storage_options: {
-                                                         encryption: 'AES256'
-                                                       },
-                                                       app_package_directory_key: 'app_key',
-                                                     })
+          fog_connection: {},
+          fog_aws_storage_options: {
+            encryption: 'AES256'
+          },
+          app_package_directory_key: 'app_key',
+        })
         expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')
       end
 

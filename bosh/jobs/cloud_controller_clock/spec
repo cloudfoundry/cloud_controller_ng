@@ -326,6 +326,13 @@ properties:
     default: true
     description: "Verify that the database SSL certificate matches the host to which the connection is attempted"
 
+  cc.allow_app_ssh_access:
+    default: true
+    description: "Allow users to change the value of the app-level allow_ssh attribute"
+  cc.default_app_ssh_access:
+    default: true
+    description: "When ssh is allowed and not explicitly set in the application, new applications will start with ssh service enabled"
+
   uaa.ca_cert:
     description: "The certificate authority being used by UAA"
   uaa.ssl.port:
@@ -415,22 +422,6 @@ properties:
     description: "The cc will restart if memory remains above this threshold for 3 monit cycles"
     default: 3750
 
-  cc.bits_service.enabled:
-    description: "Enable integration of the bits-service incubator (experimental)"
-    default: false
-  cc.bits_service.public_endpoint:
-    description: "Public url for the bits-service service"
-    default: ""
-  cc.bits_service.private_endpoint:
-    description: "Private url for the bits-service service"
-    default: ""
-  cc.bits_service.username:
-    description: "Username for the bits-service"
-    default: ""
-  cc.bits_service.password:
-    description: "Password for the bits-service"
-    default: ""
-
   cc.diego.bbs.url:
     description: "URL of the BBS Server"
     default: https://bbs.service.cf.internal:8889
@@ -494,6 +485,7 @@ properties:
     default: false
   cc.diego.temporary_oci_buildpack_mode:
     description: "Temporary flag to enable OCI buildpack flow. Valid values: 'oci-phase-1'"
+    default: ~
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024

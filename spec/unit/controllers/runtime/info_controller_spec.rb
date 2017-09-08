@@ -25,7 +25,7 @@ module VCAP::CloudController
         expect(hash['support']).to eq(TestConfig.config[:info][:support_address])
         expect(hash['version']).to eq(TestConfig.config[:info][:version])
         expect(hash['description']).to eq(TestConfig.config[:info][:description])
-        expect(hash['authorization_endpoint']).to eq(TestConfig.config[:uaa][:url])
+        expect(hash['authorization_endpoint']).to eq(TestConfig.config[:login][:url])
         expect(hash['token_endpoint']).to eq(TestConfig.config[:uaa][:url])
         expect(hash['api_version']).to eq(VCAP::CloudController::Constants::API_VERSION)
         expect(hash['app_ssh_endpoint']).to eq(TestConfig.config[:info][:app_ssh_endpoint])
@@ -57,13 +57,6 @@ module VCAP::CloudController
         get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash).to_not include('bits_endpoint')
-      end
-
-      it 'includes login url when configured' do
-        TestConfig.override(login: { url: 'login_url' })
-        get '/v2/info'
-        hash = MultiJson.load(last_response.body)
-        expect(hash['authorization_endpoint']).to eq('login_url')
       end
 
       it 'includes the routing api endpoint when configured' do

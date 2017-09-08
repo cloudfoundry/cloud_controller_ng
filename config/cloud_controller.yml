@@ -56,7 +56,12 @@ info:
   description: "Cloud Foundry sponsored by Pivotal"
   app_ssh_endpoint: "ssh.system.domain.example.com:2222"
   app_ssh_host_key_fingerprint: "47:0d:d1:c8:c3:3d:0a:36:d1:49:2f:f2:90:27:31:d0"
-  app_ssh_oauth_client_id: "ssh-proxy"
+  app_ssh_oauth_client: "ssh-proxy"
+
+instance_file_descriptor_limit: 16384
+login:
+  url: 'login-url.example.com'
+  enabled: true
 
 nginx:
   use_nginx: false
@@ -65,6 +70,7 @@ nginx:
 logging:
   file: /tmp/cloud_controller.log
   level: debug2
+  syslog: vcap.example
 
 loggregator:
   router: "127.0.0.1:3456"
@@ -242,3 +248,96 @@ diego:
 
 directories:
   tmpdir: /tmp
+  diagnostics: /tmp
+
+stacks_file: config/stacks.yml
+newrelic_enabled: false
+
+db:
+  database: postgres://postgres@localhost:5432/cc_test
+  log_level: 'debug'
+  ssl_verify_hostname: false
+  max_connections: 42
+  pool_timeout: 60
+
+staging:
+  minimum_staging_file_descriptor_limit: 4200
+
+index: 0
+name: api
+resource_pool:
+  maximum_size: 42
+  minimum_size: 1
+  fog_aws_storage_options: {}
+
+buildpacks:
+  fog_aws_storage_options: {}
+
+packages:
+  max_package_size: 42
+  max_valid_packages_stored: 42
+  fog_aws_storage_options: {}
+
+droplets:
+  max_staged_droplets_stored: 42
+  fog_aws_storage_options: {}
+
+request_timeout_in_seconds: 600
+skip_cert_verify: true
+app_bits_upload_grace_period_in_seconds: 500
+security_event_logging:
+  enabled: false
+
+staging:
+  timeout_in_seconds: 42
+  expiration_in_secons: 42
+  minimum_staging_memory_mb: 42
+  minimum_staging_disk_mb: 42
+  minimum_staging_file_descriptor_limit: 42
+  auth:
+    user: 'bob'
+    password: 'laura'
+
+resource_pool:
+  resource_directory_key: ''
+  maximum_size: 42
+  minimum_size: 1
+  fog_connection: {}
+  fog_aws_storage_options: {}
+
+buildpacks:
+  buildpack_directory_key: ''
+  fog_connection: {}
+  fog_aws_storage_options: {}
+
+packages:
+  app_package_directory_key: ''
+  max_package_size: 42
+  max_valid_packages_stored: 42
+  fog_connection: {}
+  fog_aws_storage_options: {}
+
+droplets:
+  droplet_directory_key: ''
+  max_staged_droplets_stored: 42
+  fog_connection: {}
+  fog_aws_storage_options: {}
+
+bits_service:
+  enabled: false
+
+development_mode: true
+statsd_host: "127.0.0.1"
+statsd_port: 8125
+
+perform_blob_cleanup: false
+
+diego_sync:
+  frequency_in_seconds: 30
+pending_droplets:
+  frequency_in_seconds: 300
+  expiration_in_seconds: 42
+
+pending_builds:
+  expiration_in_seconds: 42
+  frequency_in_seconds: 300

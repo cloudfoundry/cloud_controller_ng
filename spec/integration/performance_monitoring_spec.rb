@@ -10,6 +10,10 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
   }
 
   let(:base_cc_config_file) {
+    'config/cloud_controller.yml'
+  }
+
+  let(:port_8181_overrides) {
     'spec/fixtures/config/port_8181_config.yml'
   }
 
@@ -27,7 +31,7 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
   end
 
   let(:cc_config_file) do
-    config = YAML.load_file(base_cc_config_file).merge(cc_config)
+    config = YAML.load_file(base_cc_config_file).deep_merge(YAML.load_file(port_8181_overrides)).merge(cc_config)
     file = Tempfile.new('cc_config.yml')
     file.write(YAML.dump(config))
     file.close
@@ -43,7 +47,7 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
   context 'when new_relic is enabled' do
     context 'when developer_mode is enabled' do
       let(:cc_config) do
-        { development_mode: true, newrelic_enabled: true }
+        { 'development_mode' => true, 'newrelic_enabled' => true }
       end
 
       it 'reports the transaction information in /newrelic' do
@@ -58,10 +62,10 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
 
     context 'when developer_mode is not enabled' do
       let(:cc_config) do
-        { development_mode: false, newrelic_enabled: true }
+        { 'development_mode' => false, 'newrelic_enabled' => true }
       end
 
-      it 'does not report transaction infromation in /newrelic' do
+      it 'does not report transaction information in /newrelic' do
         newrelic_response = make_get_request('/newrelic', {}, port)
         expect(newrelic_response.code).to eq('404')
       end
@@ -75,10 +79,10 @@ RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
   context 'when new relic is disabled' do
     context 'even when developer mode is enabled' do
       let(:cc_config) do
-        { development_mode: true, newrelic_enabled: false }
+        { 'development_mode' => true, 'newrelic_enabled' => false }
       end
 
-      it 'does not report transaction infromation in /newrelic' do
+      it 'does not report transaction information in /newrelic' do
         newrelic_response = make_get_request('/newrelic', {}, port)
         expect(newrelic_response.code).to eq('404')
       end

@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       before do
-        TestConfig.config[:perform_blob_cleanup] = perform_blob_cleanup
+        TestConfig.override(perform_blob_cleanup: perform_blob_cleanup)
         stub_const('VCAP::CloudController::Jobs::Runtime::OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE', 20)
       end
 
@@ -480,14 +480,14 @@ module VCAP::CloudController
 
             it 'creates an orphaned blob audit event' do
               job.perform
+              expect(Event.where(type: 'blob.remove_orphan').count).to eq(4)
 
-              event = Event.last
+              event = Event.where(actee: 'resources/so/me/resource-to-be-deleted').last
               expect(event.type).to eq('blob.remove_orphan')
               expect(event.actor).to eq('system')
               expect(event.actor_type).to eq('system')
               expect(event.actor_name).to eq('system')
               expect(event.actor_username).to eq('system')
-              expect(event.actee).to eq('resources/so/me/resource-to-be-deleted')
               expect(event.actee_type).to eq('blob')
             end
 
