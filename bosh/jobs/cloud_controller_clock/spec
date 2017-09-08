@@ -412,6 +412,22 @@ properties:
     description: "The file descriptors made available to each app instance"
     default: 16384
 
+  cc.bits_service.enabled:
+    description: "Enable integration of the bits-service incubator (experimental)"
+    default: false
+  cc.bits_service.public_endpoint:
+    description: "Public url for the bits-service service"
+    default: ""
+  cc.bits_service.private_endpoint:
+    description: "Private url for the bits-service service"
+    default: ""
+  cc.bits_service.username:
+    description: "Username for the bits-service"
+    default: ""
+  cc.bits_service.password:
+    description: "Password for the bits-service"
+    default: ""
+
   cc.thresholds.api.alert_if_above_mb:
     description: "The cc will alert if memory remains above this threshold for 3 monit cycles"
     default: 3500

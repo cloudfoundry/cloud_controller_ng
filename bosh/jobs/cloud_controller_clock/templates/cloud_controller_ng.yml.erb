@@ -127,8 +127,13 @@ default_health_check_timeout: <%= p("cc.default_health_check_timeout") %>
 
 runtimes_file: /var/vcap/jobs/cloud_controller_clock/config/runtimes.yml
 
-# TODO: we believe these blobstore properties are not used by the clock, but our Config parser requires these properties
-# Story: https://www.pivotaltracker.com/story/show/136759317
+bits_service:
+  enabled: <%= p("cc.bits_service.enabled") %>
+  public_endpoint: <%= p("cc.bits_service.public_endpoint") %>
+  private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
+  username: <%= p("cc.bits_service.username") %>
+  password: <%= p("cc.bits_service.password") %>
+
 resource_pool:
   blobstore_type: <%= p("cc.resource_pool.blobstore_type") %>
   webdav_config:

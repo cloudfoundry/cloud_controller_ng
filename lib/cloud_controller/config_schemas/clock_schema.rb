@@ -117,6 +117,14 @@ module VCAP::CloudController
             routing_client_secret: String,
           },
 
+          optional(:bits_service) => {
+            enabled: bool,
+            optional(:public_endpoint) => enum(String, NilClass),
+            optional(:private_endpoint) => enum(String, NilClass),
+            optional(:username) => enum(String, NilClass),
+            optional(:password) => enum(String, NilClass),
+          },
+
           diego: {
             bbs: {
               url: String,
