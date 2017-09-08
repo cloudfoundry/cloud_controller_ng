@@ -28,6 +28,8 @@ require 'cloud_controller/packager/bits_service_packer'
 
 require 'bits_service_client'
 
+require 'perm'
+
 module CloudController
   class DependencyLocator
     include Singleton
@@ -408,7 +410,7 @@ module CloudController
     end
 
     def build_perm_client
-      CloudFoundry::Perm::V1::Client.new(@config[:perm][:host])
+      CloudFoundry::Perm::V1::Client.new(config.get(:perm, :host))
     end
   end
 end

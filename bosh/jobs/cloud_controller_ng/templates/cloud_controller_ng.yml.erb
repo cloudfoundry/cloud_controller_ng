@@ -376,3 +376,8 @@ diego:
   tps_url: <%= p("cc.diego.tps_url") %>
   use_privileged_containers_for_running: <%= p("cc.diego.use_privileged_containers_for_running") %>
   use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
+
+<% if_link("perm") do |perm| %>
+perm:
+  host: <%= "#{perm.instances[0].address}:#{perm.p("listen_port")}" %>
+<% end %>

@@ -68,6 +68,9 @@ consumes:
 - name: cc_uploader
   type: cc_uploader
   optional: true
+- name: perm
+  type: perm
+  optional: true
 
 properties:
   bpm.enabled:

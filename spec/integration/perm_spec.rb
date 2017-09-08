@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'perm'
 
-include ControllerHelpers
-
 RSpec.describe 'Perm', type: :integration do
-  let(:org) { Organization.make }
+  include ControllerHelpers
+
+  let(:org) { VCAP::CloudController::Organization.make }
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-  let(:user_email) { Sham.email }
+  let(:user_email) { VCAP::CloudController::Sham.email }
 
   let(:perm_host) { ENV.fetch('PERM_RPC_HOST') { 'localhost:6283' } }
   let(:client) { CloudFoundry::Perm::V1::Client.new(perm_host) }
@@ -16,7 +16,7 @@ RSpec.describe 'Perm', type: :integration do
   end
 
   describe 'PUT /v2/organizations/:guid/managers/:user_guid' do
-    let(:org_manager) { User.make }
+    let(:org_manager) { VCAP::CloudController::User.make }
 
     describe 'removing the last org manager' do
       context 'as an admin' do
