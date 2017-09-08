@@ -1,0 +1,39 @@
+### Update an app feature
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/features/[name]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{ "enabled": false }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+
+<%= yield_content :single_app_feature %>
+```
+
+#### Definition
+`PATCH /v3/apps/:guid/features/:name`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**enabled** | _boolean_ | Denotes whether or not the app feature should be enabled.
+
+#### Allowed Roles
+ |
+--- | ---
+Space Developer |
+Admin |

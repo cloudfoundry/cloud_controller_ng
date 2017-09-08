@@ -11,6 +11,7 @@ require 'messages/apps/apps_list_message'
 require 'messages/apps/app_update_message'
 require 'messages/apps/app_create_message'
 require 'messages/apps/app_update_environment_variables_message'
+require 'messages/apps/app_feature_update_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_environment_variables_presenter'
@@ -233,6 +234,21 @@ class AppsV3Controller < ApplicationController
     else
       resource_not_found!(name)
     end
+  end
+
+  def update_feature
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
+    resource_not_found!(:feature) unless params[:name] == 'ssh'
+
+    message = VCAP::CloudController::AppFeatureUpdateMessage.create_from_http_request(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    app.update(enable_ssh: message.enabled)
+
+    render status: :ok, json: feature_ssh(app)
   end
 
   private

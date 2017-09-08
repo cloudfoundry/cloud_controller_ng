@@ -66,6 +66,28 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'BooleanValidator' do
+      let(:boolean_class) do
+        Class.new(fake_class) do
+          validates :field, boolean: true
+        end
+      end
+
+      it 'adds an error if the field is not a boolean' do
+        instance = boolean_class.new field: {}
+        expect(instance.valid?).to be_falsey
+        expect(instance.errors[:field]).to include 'must be a boolean'
+      end
+
+      it 'does not add an error if the field is a boolean' do
+        instance = boolean_class.new field: true
+        expect(instance.valid?).to be_truthy
+
+        instance = boolean_class.new field: false
+        expect(instance.valid?).to be_truthy
+      end
+    end
+
     describe 'HashValidator' do
       let(:hash_class) do
         Class.new(fake_class) do

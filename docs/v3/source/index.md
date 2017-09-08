@@ -113,9 +113,10 @@ includes:
   - experimental_resources/header
   - experimental_resources/app_features/header
   - experimental_resources/app_features/object
-  - experimental_resources/app_features/get
-  - experimental_resources/app_features/list
   - experimental_resources/app_features/supported_features
+  - experimental_resources/app_features/get
+  - experimental_resources/app_features/update
+  - experimental_resources/app_features/list
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create

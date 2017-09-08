@@ -1799,19 +1799,20 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:user) { VCAP::CloudController::User.make }
     let(:ssh_enabled) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
     let(:ssh_disabled) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => false } }
-    role_to_expected_http_response = {
-      'admin'               => 200,
-      'admin_read_only'     => 200,
-      'global_auditor'      => 200,
-      'space_developer'     => 200,
-      'space_manager'       => 200,
-      'space_auditor'       => 200,
-      'org_manager'         => 200,
-      'org_auditor'         => 404,
-      'org_billing_manager' => 404,
-    }.freeze
 
     describe '#feature/ssh' do
+      role_to_expected_http_response = {
+        'admin'               => 200,
+        'admin_read_only'     => 200,
+        'global_auditor'      => 200,
+        'space_developer'     => 200,
+        'space_manager'       => 200,
+        'space_auditor'       => 200,
+        'org_manager'         => 200,
+        'org_auditor'         => 404,
+        'org_billing_manager' => 404,
+      }.freeze
+
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           it "returns #{expected_return_value} for features/ssh" do
@@ -1834,6 +1835,82 @@ RSpec.describe AppsV3Controller, type: :controller do
           set_current_user_as_role(role: 'admin', org: nil, space: nil, user: user)
           get :feature, guid: app_model.guid, name: 'ssh'
           expect(parsed_body).to eq(ssh_disabled)
+        end
+      end
+    end
+
+    describe 'PATCH #feature/ssh' do
+      before do
+        set_current_user_as_role(role: 'admin', org: nil, space: nil, user: user)
+      end
+
+      context 'authorization' do
+        role_to_expected_http_response = {
+          'admin'               => 200,
+          'admin_read_only'     => 403,
+          'global_auditor'      => 403,
+          'space_developer'     => 200,
+          'space_manager'       => 403,
+          'space_auditor'       => 403,
+          'org_manager'         => 403,
+          'org_auditor'         => 404,
+          'org_billing_manager' => 404,
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            it "returns #{expected_return_value} for features/ssh" do
+              set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+              patch :update_feature, guid: app_model.guid, name: 'ssh', body: { enabled: false }
+
+              expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+            end
+          end
+        end
+      end
+
+      context 'enable_ssh becomes false' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
+
+        it 'returns enabled false' do
+          expect {
+            patch :update_feature, guid: app_model.guid, name: 'ssh', body: { enabled: false }
+          }.to change { app_model.reload.enable_ssh }.to(false)
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['name']).to eq('ssh')
+          expect(parsed_body['description']).to eq('Enable SSHing into the app.')
+          expect(parsed_body['enabled']).to eq(false)
+        end
+      end
+
+      context 'when trying to change a non-existent feature' do
+        it 'responds 404' do
+          expect {
+            patch :update_feature, guid: app_model.guid, name: 'no-such-feature', body: { enabled: false }
+          }.not_to change { app_model.reload.values }
+
+          expect(response.status).to eq(404)
+        end
+      end
+
+      context 'when the app does not exist' do
+        it 'responds 404' do
+          patch :update_feature, guid: 'no-such-guid', name: 'ssh', body: { enabled: false }
+
+          expect(response.status).to eq(404)
+        end
+      end
+
+      context 'when enabled param is missing' do
+        it 'responds 422' do
+          expect {
+            patch :update_feature, guid: app_model.guid, name: 'ssh'
+          }.not_to change { app_model.reload.values }
+
+          expect(response.status).to eq(422)
+          expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
         end
       end
     end
