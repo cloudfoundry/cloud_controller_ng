@@ -13,7 +13,6 @@ module VCAP::CloudController
       })
     end
     let(:package_hash) { 'fake-package-hash' }
-    let(:custom_buildpacks_enabled?) { true }
     let(:buildpack) { instance_double(AutoDetectionBuildpack, custom?: false) }
     let(:docker_image) { nil }
 

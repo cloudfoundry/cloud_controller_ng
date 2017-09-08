@@ -439,10 +439,6 @@ module VCAP::CloudController
       DatabaseUriGenerator.new(service_binding_uris).database_uri
     end
 
-    def custom_buildpacks_enabled?
-      !VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
-    end
-
     def max_app_disk_in_mb
       VCAP::CloudController::Config.config.get(:maximum_app_disk_in_mb)
     end
