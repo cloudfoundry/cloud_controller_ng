@@ -619,60 +619,6 @@ RSpec.describe 'Apps' do
     end
   end
 
-  describe 'ssh feature' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space, enable_ssh: true) }
-
-    describe 'GET /v3/apps/:guid/features' do
-      it 'gets a list of available features for the app' do
-        get "/v3/apps/#{app_model.guid}/features", nil, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(
-          {
-            'pagination' => {},
-            'resources' => [{
-              'name' => 'ssh',
-              'description' => 'Enable SSHing into the app.',
-              'enabled' => true
-            }]
-          }
-        )
-      end
-    end
-
-    describe 'GET /v3/apps/:guid/features/ssh' do
-      it 'gets a specific app feature' do
-        get "/v3/apps/#{app_model.guid}/features/ssh", nil, user_header
-        expect(last_response.status).to eq(200)
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(
-          {
-            'name' => 'ssh',
-            'description' => 'Enable SSHing into the app.',
-            'enabled' => true
-          }
-        )
-      end
-    end
-
-    describe 'PATCH /v3/apps/:guid/features/ssh' do
-      it 'enables/disables the specific app feature' do
-        request_body = { body: { enabled: false } }
-        patch "/v3/apps/#{app_model.guid}/features/ssh", request_body.to_json, user_header
-
-        expect(last_response.status).to eq(200)
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like({
-          'name' => 'ssh',
-          'description' => 'Enable SSHing into the app.',
-          'enabled' => false
-        })
-      end
-    end
-  end
-
   describe 'PUT /v3/apps/:guid/start' do
     it 'starts the app' do
       stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
