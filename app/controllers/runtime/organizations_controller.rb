@@ -325,13 +325,12 @@ module VCAP::CloudController
 
       org = find_guid_and_validate_access(:update, guid)
 
-
-      ###
-      r = @perm_client.create_role("org-#{role}-#{guid}")
-      @perm_client.assign_role(user_id, r.id)
+      if config.get(:perm, :enabled)
+        r = @perm_client.create_role("org-#{role}-#{guid}")
+        @perm_client.assign_role(user_id, r.id)
+      end
 
       org.send("add_#{role}", user)
-      ###
 
       @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
 

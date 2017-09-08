@@ -379,5 +379,9 @@ diego:
 
 <% if_link("perm") do |perm| %>
 perm:
+  enabled: <%= p("perm.enabled") %>
   host: <%= "#{perm.instances[0].address}:#{perm.p("listen_port")}" %>
+<% end.else do %>
+perm:
+  enabled: false
 <% end %>

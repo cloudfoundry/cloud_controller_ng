@@ -12,7 +12,10 @@ RSpec.describe 'Perm', type: :integration do
   let(:client) { CloudFoundry::Perm::V1::Client.new(perm_host) }
 
   before do
-    TestConfig.config[:perm][:host] = perm_host
+    TestConfig.config[:perm] = {
+      enabled: true,
+      host: perm_host
+    }
   end
 
   describe 'PUT /v2/organizations/:guid/managers/:user_guid' do

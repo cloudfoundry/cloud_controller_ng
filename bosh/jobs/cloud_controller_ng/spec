@@ -825,3 +825,7 @@ properties:
   cc.loggregator.internal_url:
     description: "Internal url used to communicate with traffic_controller"
     default: "http://loggregator-trafficcontroller.service.cf.internal:8081"
+
+  perm.enabled:
+    description: "Enable CF Permissions external service. Requires perm link to take effect"
+    default: false

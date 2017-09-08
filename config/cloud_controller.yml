@@ -338,4 +338,5 @@ pending_builds:
   frequency_in_seconds: 300
 
 perm:
+  enabled: false
   host: perm.service.cf.internal

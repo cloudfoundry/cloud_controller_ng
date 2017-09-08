@@ -283,6 +283,7 @@ module VCAP::CloudController
           },
 
           perm: {
+            enabled: bool,
             optional(:host) => String
           }
         }
