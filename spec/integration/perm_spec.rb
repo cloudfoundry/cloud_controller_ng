@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'perm'
 
-RSpec.describe 'Perm', type: :integration, :skip => ENV.fetch('CF_RUN_PERM_SPECS') { 'false' } != 'true' do
+RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') { 'false' } != 'true' do
   include ControllerHelpers
 
   let(:org) { VCAP::CloudController::Organization.make }
