@@ -686,6 +686,7 @@ module VCAP::CloudController
 
             it 'includes the ssh port' do
               lrp = builder.build_app_lrp
+              expect(desired_lrp_builder.ports).not_to include(2222)
               expect(lrp.ports).to include(2222)
             end
 
@@ -950,6 +951,54 @@ module VCAP::CloudController
                   shared:        ::Diego::Bbs::Models::SharedDevice.new(volume_id: 'def', mount_config: ''),
                 ),
               ])
+            end
+          end
+
+          describe 'ssh' do
+            before do
+              process.app.update(enable_ssh: true)
+            end
+
+            it 'includes the ssh port' do
+              lrp = builder.build_app_lrp
+              expect(desired_lrp_builder.ports).not_to include(2222)
+              expect(lrp.ports).to include(2222)
+            end
+
+            it 'includes the lrp route' do
+              lrp = builder.build_app_lrp
+              expect(lrp.routes.routes).to include(
+                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                  key:   'diego-ssh',
+                  value: MultiJson.dump({
+                    container_port:   2222,
+                    private_key:      ssh_key.private_key,
+                    host_fingerprint: ssh_key.fingerprint
+                  })
+                )
+              )
+            end
+
+            it 'includes the ssh daemon run action' do
+              lrp = builder.build_app_lrp
+
+              actions = lrp.action.codependent_action.actions.map(&:run_action)
+              expect(actions).to include(
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'lrp-action-user',
+                  path:            '/tmp/lifecycle/diego-sshd',
+                  args:            [
+                    '-address=0.0.0.0:2222',
+                    "-hostKey=#{ssh_key.private_key}",
+                    "-authorizedKey=#{ssh_key.authorized_key}",
+                    '-inheritDaemonEnv',
+                    '-logLevel=fatal',
+                  ],
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                  env:             expected_action_environment_variables,
+                  log_source: 'CELL/SSHD',
+                )
+              )
             end
           end
         end
