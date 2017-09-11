@@ -18,21 +18,21 @@ cloud_controller_ng_config = {
 }
 
 if !!properties.cc.newrelic.license_key || p("cc.development_mode")
-    cloud_controller_ng_confg["env"] << "NEWRELIC_ENABLE=true"
+    cloud_controller_ng_config["env"] << "NEWRELIC_ENABLE=true"
 end
 
 if properties.env
     if properties.env.http_proxy
-        cloud_controller_ng_confg["env"] << "HTTP_PROXY=#{properties.env.http_proxy}"
-        cloud_controller_ng_confg["env"] << "http_proxy=#{properties.env.http_proxy}"
+        cloud_controller_ng_config["env"] << "HTTP_PROXY=#{properties.env.http_proxy}"
+        cloud_controller_ng_config["env"] << "http_proxy=#{properties.env.http_proxy}"
     end
     if properties.env.https_proxy
-        cloud_controller_ng_confg["env"] << "HTTPS_PROXY=#{properties.env.https_proxy}"
-        cloud_controller_ng_confg["env"] << "https_proxy=#{properties.env.https_proxy}"
+        cloud_controller_ng_config["env"] << "HTTPS_PROXY=#{properties.env.https_proxy}"
+        cloud_controller_ng_config["env"] << "https_proxy=#{properties.env.https_proxy}"
     end
     if properties.env.no_proxy
-        cloud_controller_ng_confg["env"] << "NO_PROXY=#{properties.env.no_proxy}"
-        cloud_controller_ng_confg["env"] << "no_proxy=#{properties.env.no_proxy}"
+        cloud_controller_ng_config["env"] << "NO_PROXY=#{properties.env.no_proxy}"
+        cloud_controller_ng_config["env"] << "no_proxy=#{properties.env.no_proxy}"
     end
 end
 
