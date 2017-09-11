@@ -1,0 +1,82 @@
+<%=
+
+cloud_controller_ng_config = {
+  "executable" => "/var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_ng",
+  "limits" => {"memory" => "#{p("cc.thresholds.api.restart_if_above_mb")}M"},
+  "env" => [
+    "BUNDLE_GEMFILE=/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/Gemfile",
+    "CLOUD_CONTROLLER_NG_CONFIG=/var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml",
+    "C_INCLUDE_PATH=/var/vcap/packages/libpq/include",
+    "DYNO=#{spec.job.name}-#{spec.index}",
+    "HOME=/home/vcap",
+    "LANG=en_US.UTF-8",
+    "LIBRARY_PATH=/var/vcap/packages/libpq/lib",
+    "NEW_RELIC_ENV=#{p("cc.newrelic.environment_name")}",
+    "NRCONFIG=/var/vcap/jobs/cloud_controller_ng/config/newrelic.yml",
+    "RAILS_ENV=production",
+  ]
+}
+
+if !!properties.cc.newrelic.license_key || p("cc.development_mode")
+    cloud_controller_ng_confg["env"] << "NEWRELIC_ENABLE=true"
+end
+
+if properties.env
+    if properties.env.http_proxy
+        cloud_controller_ng_confg["env"] << "HTTP_PROXY=#{properties.env.http_proxy}"
+        cloud_controller_ng_confg["env"] << "http_proxy=#{properties.env.http_proxy}"
+    end
+    if properties.env.https_proxy
+        cloud_controller_ng_confg["env"] << "HTTPS_PROXY=#{properties.env.https_proxy}"
+        cloud_controller_ng_confg["env"] << "https_proxy=#{properties.env.https_proxy}"
+    end
+    if properties.env.no_proxy
+        cloud_controller_ng_confg["env"] << "NO_PROXY=#{properties.env.no_proxy}"
+        cloud_controller_ng_confg["env"] << "no_proxy=#{properties.env.no_proxy}"
+    end
+end
+
+nginx_config = {
+  "executable" => "/var/vcap/packages/nginx/sbin/nginx",
+  "args" => ["-c", "/var/vcap/jobs/cloud_controller_ng/config/nginx.conf"],
+}
+
+nginx_newrelic_plugin_config = {
+  "executable" => "/var/vcap/jobs/cloud_controller_ng/bin/nginx_newrelic_plugin",
+}
+
+config = {
+  "processes" => {
+    "cloud_controller_ng" => cloud_controller_ng_config,
+    "nginx" => nginx_config,
+    "nginx_newrelic_plugin" => nginx_newrelic_plugin_config,
+  }
+}
+
+(1..(p("cc.jobs.local.number_of_workers"))).each do |index|
+  local_worker_config = {
+    "executable" => "/var/vcap/jobs/cloud_controller_ng/bin/local_worker",
+    "limits" => {"memory" => "#{p("cc.thresholds.api.restart_if_above_mb")}M"},
+    "env" => [
+      "BUNDLE_GEMFILE=/var/vcap/packages/cloud_controller_ng/cloud_controller_ng/Gemfile",
+      "CLOUD_CONTROLLER_NG_CONFIG=/var/vcap/jobs/cloud_controller_ng/config/cloud_controller_ng.yml",
+      "C_INCLUDE_PATH=/var/vcap/packages/libpq/include",
+      "LANG=en_US.UTF-8",
+      "LIBRARY_PATH=/var/vcap/packages/libpq/lib",
+      "NEW_RELIC_ENV=#{p("cc.newrelic.environment_name")}",
+      "NEW_RELIC_DISPATCHER=delayed_job",
+      "NRCONFIG=/var/vcap/jobs/cloud_controller_ng/config/newrelic.yml",
+      "INDEX=#{index}"
+    ]
+  }
+
+  if !!properties.cc.newrelic.license_key
+   local_worker_config["env"] << "NEWRELIC_ENABLE=true"
+  end
+
+  config["processes"]["local_worker_#{index}"] = local_worker_config
+end
+
+YAML.dump(config)
+
+%>

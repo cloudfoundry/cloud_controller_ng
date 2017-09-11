@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-<% if p("bpm.enabled") %>
-    INDEX=${BPM_ID}
-<% else %>
-    INDEX=$1
+<% if !p("bpm.enabled") %>
+  INDEX=$1
 <% end %>
 
 source /var/vcap/jobs/cloud_controller_ng/bin/ruby_version.sh

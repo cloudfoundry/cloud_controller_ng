@@ -36,7 +36,7 @@ check process cloud_controller_ng
 <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
 check process cloud_controller_worker_local_<%= index %>
   with pidfile /var/vcap/sys/run/bpm/cloud_controller_ng/local_worker_<%= index %>.pid
-  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_ng -p local_worker_<%= index %> -c /var/vcap/jobs/cloud_controller_ng/config/bpm/local_worker.yml"
+  start program "/var/vcap/jobs/bpm/bin/bpm start cloud_controller_ng -p local_worker_<%= index %>"
   stop program "/var/vcap/jobs/bpm/bin/bpm stop cloud_controller_ng -p local_worker_<%= index %>"
   group vcap
 <% end %>
