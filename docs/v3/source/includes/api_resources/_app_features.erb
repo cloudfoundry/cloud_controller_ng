@@ -8,13 +8,20 @@
 
 <% content_for :paginated_list_of_app_features do %>
 {
-  "pagination": { },
   "resources": [
     {
       "name": "ssh",
       "description": "Enable SSHing into the app.",
       "enabled": true
     }
-  ]
+  ],
+  "pagination": {
+    "total_results": 1,
+    "total_pages": 1,
+    "first": { "href": "/v3/apps/05d39de4-2c9e-4c76-8fd6-10417da07e42/features" },
+    "last": { "href": "/v3/apps/05d39de4-2c9e-4c76-8fd6-10417da07e42/features" },
+    "next": null,
+    "previous": null
+  }
 }
 <% end %>

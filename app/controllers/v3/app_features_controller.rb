@@ -6,16 +6,20 @@ class AppFeaturesController < ApplicationController
   include AppSubResource
 
   def index
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(params[:app_guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
+
+    resources = [Presenters::V3::AppFeaturePresenter.new(app)]
+    pagination_presenter = Presenters::V3::PaginationPresenter.new
+
     render status: :ok, json: {
-      pagination: {},
-      resources:  [Presenters::V3::AppFeaturePresenter.new(app)]
+      resources:  resources,
+      pagination: pagination_presenter.present_unpagination_hash(resources, base_url(resource: 'features')),
     }
   end
 
   def show
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(params[:app_guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
     resource_not_found!(:feature) unless params[:name] == 'ssh'
 
@@ -23,7 +27,7 @@ class AppFeaturesController < ApplicationController
   end
 
   def update
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(params[:app_guid])
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)

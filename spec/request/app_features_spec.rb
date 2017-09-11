@@ -19,12 +19,20 @@ RSpec.describe 'App Features' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
-          'pagination' => {},
           'resources' => [{
             'name' => 'ssh',
             'description' => 'Enable SSHing into the app.',
-            'enabled' => true
-          }]
+            'enabled' => true,
+          }],
+          'pagination' =>
+            {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
+              'last' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
+              'next' => nil,
+              'previous' => nil,
+          },
         }
       )
     end

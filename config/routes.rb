@@ -15,9 +15,9 @@ Rails.application.routes.draw do
   get '/apps/:guid/droplets/current', to: 'apps_v3#current_droplet'
 
   # app features
-  get '/apps/:guid/features', to: 'app_features#index'
-  get '/apps/:guid/features/:name', to: 'app_features#show'
-  patch '/apps/:guid/features/:name', to: 'app_features#update'
+  get '/apps/:app_guid/features', to: 'app_features#index'
+  get '/apps/:app_guid/features/:name', to: 'app_features#show'
+  patch '/apps/:app_guid/features/:name', to: 'app_features#update'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'

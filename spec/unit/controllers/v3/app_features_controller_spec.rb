@@ -12,16 +12,26 @@ RSpec.describe AppFeaturesController, type: :controller do
   end
 
   describe '#index' do
+    let(:pagination_hash) do
+      {
+        'total_results' => 1,
+        'total_pages' => 1,
+        'first' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
+        'last' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
+        'next' => nil,
+        'previous' => nil,
+      }
+    end
     describe 'authorization' do
       role_to_expected_http_response = {
-        'admin'               => 200,
-        'admin_read_only'     => 200,
-        'global_auditor'      => 200,
-        'space_developer'     => 200,
-        'space_manager'       => 200,
-        'space_auditor'       => 200,
-        'org_manager'         => 200,
-        'org_auditor'         => 404,
+        'admin' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'space_developer' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
       }.freeze
 
@@ -30,13 +40,13 @@ RSpec.describe AppFeaturesController, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: org, space: space, user: user)
 
-            get :index, guid: app_model.guid
+            get :index, app_guid: app_model.guid
 
             expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             if expected_return_value == 200
               expect(parsed_body).to eq(
-                'resources'  => [ssh_enabled],
-                'pagination' => {}
+                'resources' => [ssh_enabled],
+                'pagination' => pagination_hash
               ), "failed to match parsed_body for role #{role}: got #{parsed_body}"
             end
           end
@@ -45,15 +55,15 @@ RSpec.describe AppFeaturesController, type: :controller do
     end
 
     it 'returns app features' do
-      get :index, guid: app_model.guid
+      get :index, app_guid: app_model.guid
       expect(parsed_body).to eq(
-        'resources'  => [ssh_enabled],
-        'pagination' => {}
+        'resources' => [ssh_enabled],
+        'pagination' => pagination_hash
       )
     end
 
     it 'responds 404 when the app does not exist' do
-      get :index, guid: 'no-such-guid'
+      get :index, app_guid: 'no-such-guid'
 
       expect(response.status).to eq(404)
     end
@@ -62,14 +72,14 @@ RSpec.describe AppFeaturesController, type: :controller do
   describe '#show' do
     describe 'authorization' do
       role_to_expected_http_response = {
-        'admin'               => 200,
-        'admin_read_only'     => 200,
-        'global_auditor'      => 200,
-        'space_developer'     => 200,
-        'space_manager'       => 200,
-        'space_auditor'       => 200,
-        'org_manager'         => 200,
-        'org_auditor'         => 404,
+        'admin' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'space_developer' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
       }.freeze
 
@@ -78,7 +88,7 @@ RSpec.describe AppFeaturesController, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: org, space: space, user: user)
 
-            get :show, guid: app_model.guid, name: 'ssh'
+            get :show, app_guid: app_model.guid, name: 'ssh'
 
             expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             if expected_return_value == 200
@@ -90,21 +100,21 @@ RSpec.describe AppFeaturesController, type: :controller do
     end
 
     it 'returns specific app feature' do
-      get :show, guid: app_model.guid, name: 'ssh'
+      get :show, app_guid: app_model.guid, name: 'ssh'
       expect(parsed_body).to eq(ssh_enabled)
     end
 
     it 'throws 404 for a non-existent feature' do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
 
-      get :show, guid: app_model.guid, name: 'i-dont-exist'
+      get :show, app_guid: app_model.guid, name: 'i-dont-exist'
 
       expect(response.status).to eq(404)
       expect(response).to have_error_message('Feature not found')
     end
 
     it 'responds 404 when the app does not exist' do
-      get :show, guid: 'no-such-guid', name: 'ssh'
+      get :show, app_guid: 'no-such-guid', name: 'ssh'
 
       expect(response.status).to eq(404)
     end
@@ -116,14 +126,14 @@ RSpec.describe AppFeaturesController, type: :controller do
 
     describe 'authorization' do
       role_to_expected_http_response = {
-        'admin'               => 200,
-        'admin_read_only'     => 403,
-        'global_auditor'      => 403,
-        'space_developer'     => 200,
-        'space_manager'       => 403,
-        'space_auditor'       => 403,
-        'org_manager'         => 403,
-        'org_auditor'         => 404,
+        'admin' => 200,
+        'admin_read_only' => 403,
+        'global_auditor' => 403,
+        'space_developer' => 200,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_manager' => 403,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
       }.freeze
 
@@ -132,7 +142,7 @@ RSpec.describe AppFeaturesController, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: org, space: space, user: user)
 
-            patch :update, guid: app_model.guid, name: 'ssh', body: { enabled: false }
+            patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false }
 
             expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
           end
@@ -142,7 +152,7 @@ RSpec.describe AppFeaturesController, type: :controller do
 
     it 'updates a given app feature' do
       expect {
-        patch :update, guid: app_model.guid, name: 'ssh', body: { enabled: false }
+        patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false }
       }.to change { app_model.reload.enable_ssh }.to(false)
 
       expect(response.status).to eq(200)
@@ -153,21 +163,21 @@ RSpec.describe AppFeaturesController, type: :controller do
 
     it 'responds 404 when the feature does not exist' do
       expect {
-        patch :update, guid: app_model.guid, name: 'no-such-feature', body: { enabled: false }
+        patch :update, app_guid: app_model.guid, name: 'no-such-feature', body: { enabled: false }
       }.not_to change { app_model.reload.values }
 
       expect(response.status).to eq(404)
     end
 
     it 'responds 404 when the app does not exist' do
-      patch :update, guid: 'no-such-guid', name: 'ssh', body: { enabled: false }
+      patch :update, app_guid: 'no-such-guid', name: 'ssh', body: { enabled: false }
 
       expect(response.status).to eq(404)
     end
 
     it 'responds 422 when enabled param is missing' do
       expect {
-        patch :update, guid: app_model.guid, name: 'ssh'
+        patch :update, app_guid: app_model.guid, name: 'ssh'
       }.not_to change { app_model.reload.values }
 
       expect(response.status).to eq(422)
