@@ -16,11 +16,12 @@ rescue LoadError
 end
 
 @config_file = ARGV[0] || File.expand_path('../../../config/cloud_controller.yml', __FILE__)
+context = ARGV[1].to_sym || :api
 unless File.exist?(@config_file)
   warn "#{@config_file} not found. Try running bin/console <PATH_TO_CONFIG_FILE>."
   exit 1
 end
-@config = VCAP::CloudController::Config.load_from_file(@config_file)
+@config = VCAP::CloudController::Config.load_from_file(@config_file, context: context)
 logger = Logger.new(STDOUT)
 
 db_config = @config.set(:db, @config.get(:db).merge(log_level: :debug))
