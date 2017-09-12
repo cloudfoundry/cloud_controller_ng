@@ -24,12 +24,11 @@ module VCAP::CloudController
     get '/internal/apps/:guid/ssh_access/:index', :ssh_access_with_index
 
     def ssh_access_with_index(guid, index)
-      index            = index.nil? ? 'unknown' : index
-      global_allow_ssh = VCAP::CloudController::Config.config.get(:allow_app_ssh_access)
+      index = index.nil? ? 'unknown' : index
 
       check_authentication(:ssh_access_internal)
       process = find_guid_and_validate_access(:update, guid)
-      unless process.enable_ssh && global_allow_ssh && process.space.allow_ssh
+      unless VCAP::CloudController::AppSshEnabled.new(process).enabled?
         raise ApiError.new_from_details('InvalidRequest')
       end
 

@@ -47,6 +47,6 @@ class AppFeaturesController < ApplicationController
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
 
-    render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, space, Config.config.get(:allow_app_ssh_access))
+    render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, Config.config.get(:allow_app_ssh_access))
   end
 end
