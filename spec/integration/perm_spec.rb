@@ -133,7 +133,6 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
       end
     end
 
-
     describe 'PUT /v2/spaces/:guid/developers/:user_guid' do
       context 'as an admin' do
         it 'assigns the specified user to the space developer role' do
