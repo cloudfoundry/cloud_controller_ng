@@ -4,6 +4,14 @@ RSpec.describe 'Service Broker API integration' do
   describe 'v2.13' do
     include VCAP::CloudController::BrokerApiHelper
 
+    let(:catalog) { default_catalog }
+
+    before do
+      setup_cc
+      setup_broker(catalog)
+      @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+    end
+
     describe 'configuration parameter schemas' do
       let(:draft_schema) { "http://json-schema.org/#{version}/schema#" }
       let(:create_instance_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
@@ -28,12 +36,6 @@ RSpec.describe 'Service Broker API integration' do
       }
 
       let(:catalog) { default_catalog(plan_schemas: schemas) }
-
-      before do
-        setup_cc
-        setup_broker(catalog)
-        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
-      end
 
       context 'v4' do
         let(:version) { 'draft-04' }
@@ -281,12 +283,6 @@ RSpec.describe 'Service Broker API integration' do
 
     describe 'originating header' do
       let(:catalog) { default_catalog(plan_updateable: true) }
-
-      before do
-        setup_cc
-        setup_broker(catalog)
-        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
-      end
 
       context 'service broker registration' do
         let(:user) { VCAP::CloudController::User.make }

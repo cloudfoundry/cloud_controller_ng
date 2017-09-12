@@ -28,11 +28,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id: instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
         space_guid: instance.space.guid,
-        context: {
-          platform: PLATFORM,
-          organization_guid: instance.organization.guid,
-          space_guid: instance.space.guid
-        }
+        context: context_hash(instance)
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -86,13 +82,9 @@ module VCAP::Services::ServiceBrokers::V2
     def create_service_key(key, arbitrary_parameters: {})
       path = service_binding_resource_path(key.guid, key.service_instance.guid)
       body = {
-          service_id:  key.service.broker_provided_id,
-          plan_id:     key.service_plan.broker_provided_id,
-          context: {
-            platform: PLATFORM,
-            organization_guid: key.service_instance.organization.guid,
-            space_guid: key.service_instance.space.guid
-          }
+          service_id: key.service.broker_provided_id,
+          plan_id: key.service_plan.broker_provided_id,
+          context: context_hash(key.service_instance)
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -100,11 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
       response = @http_client.put(path, body)
       parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
 
-      attributes = {
-        credentials: parsed_response['credentials']
-      }
-
-      attributes
+      { credentials: parsed_response['credentials'] }
     rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_key(@attrs, key)
       raise e
@@ -113,15 +101,11 @@ module VCAP::Services::ServiceBrokers::V2
     def bind(binding, arbitrary_parameters)
       path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
       body = {
-        service_id:    binding.service.broker_provided_id,
-        plan_id:       binding.service_plan.broker_provided_id,
-        app_guid:      binding.try(:app_guid),
+        service_id: binding.service.broker_provided_id,
+        plan_id: binding.service_plan.broker_provided_id,
+        app_guid: binding.try(:app_guid),
         bind_resource: binding.required_parameters,
-        context: {
-          platform: PLATFORM,
-          organization_guid: binding.service_instance.organization.guid,
-          space_guid: binding.service_instance.space.guid
-        }
+        context: context_hash(binding.service_instance)
       }
       body = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -203,11 +187,7 @@ module VCAP::Services::ServiceBrokers::V2
         service_id: instance.service.broker_provided_id,
         plan_id: plan.broker_provided_id,
         previous_values: previous_values,
-        context: {
-          platform: PLATFORM,
-          organization_guid: instance.organization.guid,
-          space_guid: instance.space.guid
-        }
+        context: context_hash(instance)
       }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters
       response = @http_client.patch(path, body)
@@ -249,6 +229,14 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def context_hash(service_instance)
+      {
+        platform: PLATFORM,
+        organization_guid: service_instance.organization.guid,
+        space_guid: service_instance.space.guid
+      }
+    end
 
     def async_response?(response)
       response.code == 202
