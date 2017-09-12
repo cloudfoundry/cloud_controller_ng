@@ -7,7 +7,7 @@ module VCAP::Services::ServiceBrokers::V2
     MAX_SCHEMA_SIZE = 65_536
 
     validates :to_json, length: { maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB' }
-    validate :validate_metaschema, :validate_schema_type, :validate_against_metaschema, :validate_no_external_references
+    validate :validate_schema_type, :validate_against_metaschema, :validate_no_external_references
 
     def initialize(schema)
       @schema = schema
@@ -18,11 +18,6 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
-
-    def validate_metaschema
-      return unless errors.blank?
-      schema = @schema['$schema']
-    end
 
     def validate_against_metaschema
       return unless errors.blank?
@@ -66,7 +61,7 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def add_custom_metaschema_error
-      add_schema_error_msg("Custom meta schemas are not supported.")
+      add_schema_error_msg('Custom meta schemas are not supported.')
     end
 
     def add_schema_error_msg(err)
