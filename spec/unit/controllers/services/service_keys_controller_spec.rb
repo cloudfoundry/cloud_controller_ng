@@ -181,6 +181,24 @@ module VCAP::CloudController
           expect(service_key.credentials).to eq(credentials)
         end
 
+        it 'makes a bind request with the correct message' do
+          post '/v2/service_keys', req
+          expect(last_response).to have_status_code 201
+
+          url_regex = %r{#{broker_url(service.service_broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+          expected_body = {
+            service_id: service.broker_provided_id,
+            plan_id: instance.service_plan.broker_provided_id,
+            context: {
+              platform: 'cloudfoundry',
+              organization_guid: instance.organization.guid,
+              space_guid: instance.space.guid
+            }
+          }.to_json
+
+          expect(a_request(:put, url_regex).with(body: expected_body)).to have_been_made
+        end
+
         it 'creates an audit event after a service key created' do
           req = {
               name: 'fake-service-key',
@@ -364,9 +382,9 @@ module VCAP::CloudController
             expect(last_response).to have_status_code 201
 
             url_regex = %r{#{broker_url(service.service_broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
-            expected_body = { service_id: service.broker_provided_id, plan_id: instance.service_plan.broker_provided_id, parameters: parameters }.to_json
+            expected_body = { service_id: service.broker_provided_id, plan_id: instance.service_plan.broker_provided_id, parameters: parameters }
 
-            expect(a_request(:put, url_regex).with(body: expected_body)).to have_been_made
+            expect(a_request(:put, url_regex).with(body: hash_including(expected_body))).to have_been_made
           end
         end
       end

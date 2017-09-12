@@ -207,7 +207,12 @@ module VCAP::CloudController
             service_id: instance.service.broker_provided_id,
             plan_id: instance.service_plan.broker_provided_id,
             app_guid: process.guid,
-            bind_resource: { app_guid: process.guid }
+            bind_resource: { app_guid: process.guid },
+            context: {
+              platform: 'cloudfoundry',
+              organization_guid: instance.organization.guid,
+              space_guid:        instance.space.guid
+            }
           }
 
           expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
