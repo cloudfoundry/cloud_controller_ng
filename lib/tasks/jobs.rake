@@ -34,9 +34,14 @@ namespace :jobs do
     end
 
     def start_working
-      BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
+      config = RakeConfig.config
+      BackgroundJobEnvironment.new(config).setup_environment
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")
+      if config.get(:loggregator) && config.get(:loggregator, :router)
+        Loggregator.emitter = LoggregatorEmitter::Emitter.new(config.get(:loggregator, :router), 'cloud_controller', 'API', config.get(:index))
+        Loggregator.logger = logger
+      end
       Delayed::Worker.destroy_failed_jobs = false
       Delayed::Worker.max_attempts = 3
       Delayed::Worker.logger = logger
