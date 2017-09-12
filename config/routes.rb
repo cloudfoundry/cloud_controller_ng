@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/features', to: 'app_features#index'
   get '/apps/:app_guid/features/:name', to: 'app_features#show'
   patch '/apps/:app_guid/features/:name', to: 'app_features#update'
+  get '/apps/:guid/ssh_enabled', to: 'app_features#ssh_enabled'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'

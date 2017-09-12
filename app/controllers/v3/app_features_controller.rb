@@ -1,6 +1,7 @@
 require 'messages/apps/app_feature_update_message'
 require 'controllers/v3/mixins/app_sub_resource'
 require 'presenters/v3/app_feature_presenter'
+require 'presenters/v3/app_ssh_status_presenter'
 
 class AppFeaturesController < ApplicationController
   include AppSubResource
@@ -39,5 +40,13 @@ class AppFeaturesController < ApplicationController
     app.update(enable_ssh: message.enabled)
 
     render status: :ok, json: Presenters::V3::AppFeaturePresenter.new(app)
+  end
+
+  def ssh_enabled
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+
+    render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, space, Config.config.get(:allow_app_ssh_access))
   end
 end
