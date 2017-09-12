@@ -1,0 +1,36 @@
+### Get App SSH Enabled
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/:guid/ssh_enabled" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_app_ssh_enabled %>
+```
+
+#### Definition
+`GET /v3/apps/:guid/ssh_enabled` <br>
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Global Auditor |

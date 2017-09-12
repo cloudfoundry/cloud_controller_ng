@@ -9,6 +9,7 @@ includes:
   - snippets/query_params
   - snippets/object_attributes
   - api_resources/app_features
+  - api_resources/app_ssh_enabled
   - api_resources/apps
   - api_resources/builds
   - api_resources/droplets
@@ -117,6 +118,8 @@ includes:
   - experimental_resources/app_features/get
   - experimental_resources/app_features/update
   - experimental_resources/app_features/list
+  - experimental_resources/app_ssh_enabled/header
+  - experimental_resources/app_ssh_enabled/get
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create
