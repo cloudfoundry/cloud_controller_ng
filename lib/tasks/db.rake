@@ -1,6 +1,8 @@
 namespace :db do
   desc 'Create a Sequel migration in ./db/migrate'
   task :create_migration do
+    RakeConfig.context = :migrate
+
     name = ENV['NAME']
     abort('no NAME specified. use `rake db:create_migration NAME=add_users`') if !name
 
@@ -50,6 +52,8 @@ namespace :db do
 
   desc 'Perform Sequel migration to database'
   task :migrate do
+    RakeConfig.context = :migrate
+
     migrate
   end
 
@@ -94,6 +98,8 @@ namespace :db do
 
   desc 'Rollback migrations to the database (one migration by default)'
   task :rollback, [:number_to_rollback] do |_, args|
+    RakeConfig.context = :migrate
+
     number_to_rollback = (args[:number_to_rollback] || 1).to_i
     rollback(number_to_rollback)
   end
@@ -106,12 +112,17 @@ namespace :db do
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
     task :migrate do
+      RakeConfig.context = :migrate
+
       require_relative '../../spec/support/bootstrap/db_config'
+
       for_each_database { migrate }
     end
 
     desc 'Rollback the database migration set in spec/support/bootstrap/db_config'
     task :rollback, [:number_to_rollback] do |_, args|
+      RakeConfig.context = :migrate
+
       require_relative '../../spec/support/bootstrap/db_config'
       number_to_rollback = (args[:number_to_rollback] || 1).to_i
       for_each_database { rollback(number_to_rollback) }
@@ -127,6 +138,8 @@ namespace :db do
 
   desc 'Create the database set in spec/support/bootstrap/db_config'
   task :create do
+    RakeConfig.context = :migrate
+
     require_relative '../../spec/support/bootstrap/db_config'
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
@@ -149,6 +162,8 @@ namespace :db do
 
   desc 'Drop the database set in spec/support/bootstrap/db_config'
   task :drop do
+    RakeConfig.context = :migrate
+
     require_relative '../../spec/support/bootstrap/db_config'
     db_config = DbConfig.new
     host, port, user, pass, passenv = parse_db_connection_string
@@ -175,6 +190,8 @@ namespace :db do
 
   desc 'Seed the database'
   task :seed do
+    RakeConfig.context = :api
+
     require 'cloud_controller/seeds'
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
       VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config)
@@ -183,6 +200,8 @@ namespace :db do
 
   desc 'Ensure migrations in DB match local migration files'
   task :ensure_migrations_are_current do
+    RakeConfig.context = :migrate
+
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger('cc.db.migrations')
     VCAP::CloudController::Encryptor.db_encryption_key = RakeConfig.config.get(:db_encryption_key)

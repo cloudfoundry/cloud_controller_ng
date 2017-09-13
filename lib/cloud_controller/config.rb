@@ -8,6 +8,7 @@ require 'repositories/service_event_repository'
 require 'cloud_controller/config_schemas/api_schema'
 require 'cloud_controller/config_schemas/clock_schema'
 require 'cloud_controller/config_schemas/worker_schema'
+require 'cloud_controller/config_schemas/migrate_schema'
 
 module VCAP::CloudController
   class Config
