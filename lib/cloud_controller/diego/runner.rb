@@ -13,7 +13,9 @@ module VCAP::CloudController
       def scale
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
 
-        # skip LRP request if pending, allow sync job to eventually scale instances
+        # skip LRP request if pending to allow:
+        # - scaling while a push is in-progress, sync job will eventually scale instances
+        # - user specifies the instance count and the app stack in a PUT to update, subsequent `cf start` will submit LRP
         with_logging('scale') { messenger.send_desire_request(@process, @config) } unless @process.pending?
       end
 
