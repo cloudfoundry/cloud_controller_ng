@@ -3,10 +3,9 @@ require 'vcap/config'
 module VCAP::CloudController
   module ConfigSchemas
     class MigrateSchema < VCAP::Config
-      # rubocop:disable Metrics/BlockLength
       define_schema do
         {
-          :db => {
+          db: {
             optional(:database) => String, # db connection string for sequel
             :max_connections => Integer, # max connections in the connection pool
             :pool_timeout => Integer, # timeout before raising an error when connection can't be established to the db
@@ -24,11 +23,9 @@ module VCAP::CloudController
           },
         }
       end
-      # rubocop:enable Metrics/BlockLength
 
       class << self
-        def configure_components(config)
-        end
+        def configure_components(_); end
       end
     end
   end
