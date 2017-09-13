@@ -43,6 +43,7 @@ addons:
 env:
   global:
     - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
+    - CF_RUN_PERM_SPECS=false
 
   matrix:
     - COVERAGE=true DB=postgres TASKS=spec:all
