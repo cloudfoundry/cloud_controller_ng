@@ -5,7 +5,7 @@ module VCAP::CloudController
   class SpacesController < RestController::ModelController
     def self.dependencies
       [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client,
-       :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository, :perm_client]
+       :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository]
     end
 
     define_attributes do
@@ -51,7 +51,6 @@ module VCAP::CloudController
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @app_event_repository = dependencies.fetch(:app_event_repository)
       @route_event_repository = dependencies.fetch(:route_event_repository)
-      @perm_client = dependencies.fetch(:perm_client)
     end
 
     get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
@@ -294,12 +293,6 @@ module VCAP::CloudController
       user.username = username
 
       space = find_guid_and_validate_access(:update, guid)
-
-      if config.get(:perm, :enabled)
-        r = @perm_client.create_role("space-#{role}-#{guid}")
-        @perm_client.assign_role(user_id, r.id)
-      end
-
       space.send("add_#{role}", user)
 
       @user_event_repository.record_space_role_add(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)

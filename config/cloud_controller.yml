@@ -336,7 +336,3 @@ pending_droplets:
 pending_builds:
   expiration_in_seconds: 42
   frequency_in_seconds: 300
-
-perm:
-  enabled: false
-  host: perm.service.cf.internal

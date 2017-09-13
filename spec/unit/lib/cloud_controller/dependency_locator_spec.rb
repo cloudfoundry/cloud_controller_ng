@@ -467,10 +467,4 @@ RSpec.describe CloudController::DependencyLocator do
       expect(locator.instances_reporters).to be_an_instance_of(VCAP::CloudController::InstancesReporters)
     end
   end
-
-  describe '#perm_client' do
-    it 'returns the perm client' do
-      expect(locator.perm_client).to be_an_instance_of(CloudFoundry::Perm::V1::Client)
-    end
-  end
 end

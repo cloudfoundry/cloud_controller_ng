@@ -9,8 +9,7 @@ module VCAP::CloudController
         :uaa_client,
         :services_event_repository,
         :user_event_repository,
-        :organization_event_repository,
-        :perm_client
+        :organization_event_repository
       ]
     end
 
@@ -21,7 +20,6 @@ module VCAP::CloudController
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
       @organization_event_repository = dependencies.fetch(:organization_event_repository)
-      @perm_client = dependencies.fetch(:perm_client)
     end
 
     define_attributes do
@@ -324,12 +322,6 @@ module VCAP::CloudController
       user.username = username
 
       org = find_guid_and_validate_access(:update, guid)
-
-      if config.get(:perm, :enabled)
-        r = @perm_client.create_role("org-#{role}-#{guid}")
-        @perm_client.assign_role(user_id, r.id)
-      end
-
       org.send("add_#{role}", user)
 
       @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
