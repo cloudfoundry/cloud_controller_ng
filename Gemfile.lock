@@ -1,4 +1,11 @@
 GIT
+  remote: https://github.com/cloudfoundry-incubator/perm-rb.git
+  revision: d4847952436b83b2663e5e7c95214af21ddb4f1c
+  specs:
+    cf-perm (0.0.0)
+      grpc (~> 1.0)
+
+GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
@@ -180,6 +187,9 @@ GEM
       multi_json (~> 1.10)
       retriable (~> 1.4)
       signet (~> 0.6)
+    google-protobuf (3.4.0.2)
+    google-protobuf (3.4.0.2-universal-darwin)
+    google-protobuf (3.4.0.2-x86_64-linux)
     googleauth (0.5.1)
       faraday (~> 0.9)
       jwt (~> 1.4)
@@ -188,6 +198,15 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
+    grpc (1.6.0)
+      google-protobuf (~> 3.1)
+      googleauth (~> 0.5.1)
+    grpc (1.6.0-universal-darwin)
+      google-protobuf (~> 3.1)
+      googleauth (~> 0.5.1)
+    grpc (1.6.0-x86_64-linux)
+      google-protobuf (~> 3.1)
+      googleauth (~> 0.5.1)
     hashdiff (0.3.4)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -410,6 +429,9 @@ GEM
 
 PLATFORMS
   ruby
+  x86_64-darwin-14
+  x86_64-darwin-16
+  x86_64-linux
 
 DEPENDENCIES
   actionpack
@@ -420,6 +442,7 @@ DEPENDENCIES
   awesome_print
   bits_service_client
   byebug
+  cf-perm!
   cf-uaa-lib (~> 3.11.0)
   clockwork
   cloudfront-signer
@@ -481,4 +504,4 @@ DEPENDENCIES
   yajl-ruby
 
 BUNDLED WITH
-   1.15.3
+   1.15.4
