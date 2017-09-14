@@ -72,7 +72,7 @@ class AppPackager
   def remove_dir(zip_path, directories)
     directory_arg_list    = directories.map { |dir| Shellwords.escape(dir) }.join(' ')
     stdout, error, status = Open3.capture3(
-      %(zip -d #{Shellwords.escape(zip_path)}) + ' ' + directory_arg_list
+      %(zip -d #{Shellwords.escape(zip_path)}) + ' -- ' + directory_arg_list
     )
 
     unless status.success?
