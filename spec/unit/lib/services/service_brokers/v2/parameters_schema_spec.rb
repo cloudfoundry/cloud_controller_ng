@@ -1,43 +1,54 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  RSpec.describe 'schema validation' do
-    describe 'ParametersSchema' do
-      subject do
-        parameters_schema = ParametersSchema.new(parameters, ['path'])
-        parameters_schema.valid?
-        parameters_schema
-      end
+  RSpec.describe ParametersSchema do
+    let(:parameters_schema) { ParametersSchema.new(parameters, ['path']) }
 
+    describe 'validations' do
       context 'schema' do
-        context 'when not set' do
-          let(:parameters) { {} }
-          its(:valid?) { should be true }
-          its(:errors) { should be_empty }
-          its(:schema) { should be nil }
+        let(:parameters) { { 'parameters' => { 'type' => 'object' } } }
+
+        it 'should be valid' do
+          expect(parameters_schema).to be_valid
+          expect(parameters_schema.errors).to be_empty
+          expect(parameters_schema.schema).to be_an_instance_of(Schema)
         end
 
-        context 'when it is not hash ' do
+        context 'when parameters is empty' do
+          let(:parameters) { {} }
+
+          it 'should be valid' do
+            expect(parameters_schema).to be_valid
+            expect(parameters_schema.errors).to be_empty
+            expect(parameters_schema.schema).to be nil
+          end
+        end
+
+        context 'when parameters is not hash ' do
           let(:parameters) { { 'parameters' => true } }
 
-          its(:valid?) { should be false }
-          its('errors.messages') { should have(1).items }
-          its('errors.messages.first') { should eq 'Schemas path.parameters must be a hash, but has value true' }
-          its(:schema) { should be nil }
-        end
-
-        context 'when it not valid' do
-          let(:parameters) { { 'parameters' => {} } }
-          before do
-            validation_error = double('error')
-            allow(validation_error).to receive(:messages).and_return({ 'error' => ['some error'] })
-            allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Schema).to receive(:errors).and_return(validation_error)
-            allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Schema).to receive(:valid?).and_return(false)
+          it 'should not be valid' do
+            expect(parameters_schema).to_not be_valid
+            expect(parameters_schema.errors.messages.length).to eq 1
+            expect(parameters_schema.errors.messages.first).to eq 'Schemas path.parameters must be a hash, but has value true'
+            expect(parameters_schema.schema).to be nil
           end
-
-          its(:valid?) { should be false }
-          its('errors.messages') { should have(1).items }
         end
+      end
+    end
+
+    describe '#to_json' do
+      let(:parameters) do
+        {
+          'parameters' => {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+          }
+        }
+      end
+
+      it 'converts a hash into json' do
+        expect(parameters_schema.to_json).to eq '{"$schema":"http://json-schema.org/draft-04/schema#","type":"object"}'
       end
     end
   end

@@ -4,9 +4,10 @@ module VCAP::Services::ServiceBrokers::V2
   class Schema
     include ActiveModel::Validations
 
+    attr_reader :schema
     MAX_SCHEMA_SIZE = 65_536
 
-    validates :to_json, length: { maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB' }
+    validates_length_of :to_json, maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB'
     validate :validate_schema_type, :validate_against_metaschema, :validate_no_external_references
 
     def initialize(schema)

@@ -59,25 +59,11 @@ module VCAP::Services::ServiceBrokers
           plan.public = false
         end
 
-        create_instance = nil
-        begin
-          create_instance = catalog_plan.schemas.service_instance.create.schema.to_json
-        rescue => e
-          @logger.error("Error parsing service_instance create schema: #{e.message}")
-        end
-
-        update_instance = nil
-        begin
-          update_instance = catalog_plan.schemas.service_instance.update.schema.to_json
-        rescue => e
-          @logger.error("Error parsing service_instance update schema: #{e.message}")
-        end
-
-        create_binding = nil
-        begin
-          create_binding = catalog_plan.schemas.service_binding.create.schema.to_json
-        rescue => e
-          @logger.error("Error parsing service_binding create schema: #{e.message}")
+        if catalog_plan.schemas
+          schemas = catalog_plan.schemas
+          create_instance = schemas.service_instance.try(:create).try(:to_json)
+          update_instance = schemas.service_instance.try(:update).try(:to_json)
+          create_binding = schemas.service_binding.try(:create).try(:to_json)
         end
 
         plan.set({

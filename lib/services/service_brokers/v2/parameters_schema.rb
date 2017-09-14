@@ -17,6 +17,10 @@ module VCAP::Services::ServiceBrokers::V2
       @schema = Schema.new(@parameters_data) if @parameters_data.is_a?(Hash)
     end
 
+    def to_json
+      @schema.to_json
+    end
+
     def valid?
       return @valid if defined? @valid
 

@@ -2,7 +2,9 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors, :free, :bindable, :schemas
+    attr_reader :broker_provided_id, :name, :description, :metadata
+    attr_reader :catalog_service, :errors, :free, :bindable, :schemas
+
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
       @broker_provided_id = attrs['id']
