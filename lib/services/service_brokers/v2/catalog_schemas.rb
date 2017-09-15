@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogSchemas
     include CatalogValidationHelper
 
-    attr_reader :errors, :schemas, :service_instance, :service_binding
+    attr_reader :errors, :service_instance, :service_binding
 
     def initialize(schemas)
       @errors = VCAP::Services::ValidationErrors.new

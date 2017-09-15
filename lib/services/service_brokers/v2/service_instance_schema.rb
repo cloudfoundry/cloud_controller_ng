@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class ServiceInstanceSchema
     include CatalogValidationHelper
 
-    attr_reader :errors, :instance, :create, :update
+    attr_reader :errors, :create, :update
 
     def initialize(instance)
       @errors = VCAP::Services::ValidationErrors.new

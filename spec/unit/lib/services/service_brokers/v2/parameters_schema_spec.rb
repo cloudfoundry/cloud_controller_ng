@@ -11,7 +11,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'should be valid' do
           expect(parameters_schema).to be_valid
           expect(parameters_schema.errors).to be_empty
-          expect(parameters_schema.schema).to be_an_instance_of(Schema)
+          expect(parameters_schema.parameters).to be_an_instance_of(Schema)
         end
 
         context 'when parameters is empty' do
@@ -20,7 +20,7 @@ module VCAP::Services::ServiceBrokers::V2
           it 'should be valid' do
             expect(parameters_schema).to be_valid
             expect(parameters_schema.errors).to be_empty
-            expect(parameters_schema.schema).to be nil
+            expect(parameters_schema.parameters).to be nil
           end
         end
 
@@ -31,24 +31,9 @@ module VCAP::Services::ServiceBrokers::V2
             expect(parameters_schema).to_not be_valid
             expect(parameters_schema.errors.messages.length).to eq 1
             expect(parameters_schema.errors.messages.first).to eq 'Schemas path.parameters must be a hash, but has value true'
-            expect(parameters_schema.schema).to be nil
+            expect(parameters_schema.parameters).to be nil
           end
         end
-      end
-    end
-
-    describe '#to_json' do
-      let(:parameters) do
-        {
-          'parameters' => {
-            '$schema' => 'http://json-schema.org/draft-04/schema#',
-            'type' => 'object',
-          }
-        }
-      end
-
-      it 'converts a hash into json' do
-        expect(parameters_schema.to_json).to eq '{"$schema":"http://json-schema.org/draft-04/schema#","type":"object"}'
       end
     end
   end

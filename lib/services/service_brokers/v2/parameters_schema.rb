@@ -2,31 +2,26 @@ module VCAP::Services::ServiceBrokers::V2
   class ParametersSchema
     include CatalogValidationHelper
 
-    attr_reader :errors, :parameters, :schema
+    attr_reader :errors, :parameters
 
-    def initialize(parameters, path)
+    def initialize(parent, path)
       @errors = VCAP::Services::ValidationErrors.new
-      @parameters = parameters
-      @parameters_data = parameters['parameters']
+      @parameters_data = parent['parameters']
       @path = path + ['parameters']
 
       build_schema
     end
 
     def build_schema
-      @schema = Schema.new(@parameters_data) if @parameters_data.is_a?(Hash)
-    end
-
-    def to_json
-      @schema.to_json
+      @parameters = Schema.new(@parameters_data) if @parameters_data.is_a?(Hash)
     end
 
     def valid?
       return @valid if defined? @valid
 
       if @parameters_data
-        validate_hash!(:schema, @parameters_data)
-        add_schema_validation_errors(schema.errors) if schema && !schema.valid?
+        validate_hash!(:parameters, @parameters_data)
+        add_schema_validation_errors(parameters.errors) if parameters && !parameters.valid?
       end
       @valid = errors.empty?
     end
@@ -43,7 +38,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def human_readable_attr_name(name)
       {
-        schema: "Schemas #{@path.join('.')}",
+        parameters: "Schemas #{@path.join('.')}",
       }.fetch(name) { raise NotImplementedError }
     end
   end

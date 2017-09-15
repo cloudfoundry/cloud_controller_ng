@@ -61,9 +61,9 @@ module VCAP::Services::ServiceBrokers
 
         if catalog_plan.schemas
           schemas = catalog_plan.schemas
-          create_instance = schemas.service_instance.try(:create).try(:to_json)
-          update_instance = schemas.service_instance.try(:update).try(:to_json)
-          create_binding = schemas.service_binding.try(:create).try(:to_json)
+          create_instance = schemas.service_instance.try(:create).try(:parameters).try(:to_json)
+          update_instance = schemas.service_instance.try(:update).try(:parameters).try(:to_json)
+          create_binding = schemas.service_binding.try(:create).try(:parameters).try(:to_json)
         end
 
         plan.set({
