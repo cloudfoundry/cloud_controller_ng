@@ -23,13 +23,27 @@ module VCAP::Services::ServiceBrokers
 
           plan_errors.nested_errors.each do |schema, schema_errors|
             message += indent(2) + "Schemas\n"
-            schema_errors.messages.each do |error|
+            get_messages(schema_errors).flatten.each do |error|
               message += indent(3) + "#{error}\n"
             end
           end
         end
       end
       message
+    end
+
+    def get_messages(errors)
+      if !errors
+        []
+      end
+
+      msgs = errors.messages || []
+
+      nested = errors.nested_errors.map do |object, object_errors|
+        get_messages(object_errors)
+      end
+
+      nested + msgs
     end
 
     def indent(num=1)

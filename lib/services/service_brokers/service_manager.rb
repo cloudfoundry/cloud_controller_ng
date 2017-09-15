@@ -5,6 +5,7 @@ module VCAP::Services::ServiceBrokers
     def initialize(service_event_repository)
       @services_event_repository = service_event_repository
       @warnings = []
+      @logger = Steno.logger('cc.service_broker.service_manager')
     end
 
     def sync_services_and_plans(catalog)
@@ -58,6 +59,13 @@ module VCAP::Services::ServiceBrokers
           plan.public = false
         end
 
+        if catalog_plan.schemas
+          schemas = catalog_plan.schemas
+          create_instance = schemas.service_instance.try(:create).try(:parameters).try(:to_json)
+          update_instance = schemas.service_instance.try(:update).try(:parameters).try(:to_json)
+          create_binding = schemas.service_binding.try(:create).try(:parameters).try(:to_json)
+        end
+
         plan.set({
           name:        catalog_plan.name,
           description: catalog_plan.description,
@@ -65,9 +73,9 @@ module VCAP::Services::ServiceBrokers
           bindable:    catalog_plan.bindable,
           active:      true,
           extra:       catalog_plan.metadata.try(:to_json),
-          create_instance_schema: catalog_plan.schemas.create_instance.try(:to_json),
-          update_instance_schema: catalog_plan.schemas.update_instance.try(:to_json),
-          create_binding_schema: catalog_plan.schemas.create_binding.try(:to_json)
+          create_instance_schema: create_instance,
+          update_instance_schema: update_instance,
+          create_binding_schema: create_binding,
         })
         @services_event_repository.with_service_plan_event(plan) do
           plan.save(changed: true)

@@ -43,7 +43,7 @@ module VCAP::Services::ServiceBrokers
                   },
                   'update' => {
                       'parameters' => {
-                          'type' => 'object'
+                        '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object'
                       }
                   }
               },
@@ -57,7 +57,6 @@ module VCAP::Services::ServiceBrokers
           }
       }
     end
-
     let(:catalog_hash) do
       {
         'services' => [
@@ -83,7 +82,6 @@ module VCAP::Services::ServiceBrokers
         ]
       }
     end
-
     let(:catalog) { V2::Catalog.new(broker, catalog_hash) }
     let(:service_manager) { ServiceManager.new(service_event_repository) }
 
@@ -184,7 +182,7 @@ module VCAP::Services::ServiceBrokers
           'bindable' => true,
           'active' => service_plan.active,
           'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-          'update_instance_schema' => '{"type":"object"}',
+          'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
           'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
         })
       end
@@ -221,7 +219,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
-          expect(plan.update_instance_schema).to eq('{"type":"object"}')
+          expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.create_binding_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
 
           expect(plan.free).to be false
@@ -254,39 +252,175 @@ module VCAP::Services::ServiceBrokers
         end
       end
 
-      context 'when the catalog service plan schemas is empty' do
-        let(:plan_schemas_hash) { { 'schemas' => nil } }
+      describe 'schemas' do
+        context 'when the catalog service plan has schemas' do
+          let(:plan_schemas_hash) do
+            {
+              'schemas' => {
+                'service_instance' => {
+                  'create' => {
+                    'parameters' => {
+                      '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'anything_youd_like' => 'woohooo'
+                    }
+                  },
+                  'update' => {
+                    'parameters' => {
+                      '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'crazy_stuff' => 'yay'
+                    }
+                  }
+                },
+                'service_binding' => {
+                  'create' => {
+                    'parameters' => {
+                      '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'title' => 'also titles'
+                    }
+                  }
+                }
+              }
+            }
+          end
 
-        it 'leaves the plan schemas field as nil' do
-          service_manager.sync_services_and_plans(catalog)
-          plan = VCAP::CloudController::ServicePlan.last
-          expect(plan.create_instance_schema).to be_nil
-          expect(plan.update_instance_schema).to be_nil
-          expect(plan.create_binding_schema).to be_nil
+          it 'persists the schemas in the catalog' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_instance_schema).to eq(
+              '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","anything_youd_like":"woohooo"}'
+            )
+            expect(plan.update_instance_schema).to eq(
+              '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","crazy_stuff":"yay"}'
+            )
+            expect(plan.create_binding_schema).to eq(
+              '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","title":"also titles"}'
+            )
+          end
         end
-      end
 
-      context 'when the catalog service plan has no schemas key' do
-        let(:plan_schemas_hash) { {} }
+        context 'when the catalog service plan schemas is empty' do
+          let(:plan_schemas_hash) { { 'schemas' => nil } }
 
-        it 'leaves the plan schemas field as nil' do
-          service_manager.sync_services_and_plans(catalog)
-          plan = VCAP::CloudController::ServicePlan.last
-          expect(plan.create_instance_schema).to be_nil
-          expect(plan.update_instance_schema).to be_nil
-          expect(plan.create_binding_schema).to be_nil
+          it 'leaves the plan schemas field as nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_instance_schema).to be_nil
+            expect(plan.update_instance_schema).to be_nil
+            expect(plan.create_binding_schema).to be_nil
+          end
         end
-      end
 
-      context 'when the catalog service plan has no create schema' do
-        let(:plan_schemas_hash) { { 'schemas' => { 'service_instance' => nil } } }
+        context 'when the catalog service plan schema has no service instance' do
+          let(:plan_schemas_hash) do
+            {
+              'schemas' => {
+                'service_binding' => {
+                  'create' => {
+                    'parameters' => {
+                      '$schema' => 'http://json-schema.org/draft-04/schema', 'type' => 'object', 'title' => 'also titles'
+                    }
+                  }
+                }
+              }
+            }
+          end
 
-        it 'leaves the plan schemas field as nil' do
-          service_manager.sync_services_and_plans(catalog)
-          plan = VCAP::CloudController::ServicePlan.last
-          expect(plan.create_instance_schema).to be_nil
-          expect(plan.update_instance_schema).to be_nil
-          expect(plan.create_binding_schema).to be_nil
+          it 'persists everything else' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_instance_schema).to be_nil
+            expect(plan.update_instance_schema).to be_nil
+            expect(plan.create_binding_schema).to eq(
+              '{"$schema":"http://json-schema.org/draft-04/schema","type":"object","title":"also titles"}'
+            )
+          end
+        end
+
+        context 'when the catalog service plan service instance create schema has an incomplete structure' do
+          let(:plan_schemas_hash) do
+            {
+              'schemas' => {
+                'service_instance' => {
+                  'create' => {
+                  }
+                }
+              }
+            }
+          end
+
+          it 'sets all schemas to nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_instance_schema).to be_nil
+          end
+        end
+
+        context 'when the catalog service plan service instance update schema has an incomplete structure' do
+          let(:plan_schemas_hash) do
+            {
+              'schemas' => {
+                'service_instance' => {
+                  'update' => {
+                  }
+                }
+              }
+            }
+          end
+
+          it 'sets all schemas to nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.update_instance_schema).to be_nil
+          end
+        end
+
+        context 'when the catalog service plan service binding create schema has an incomplete structure' do
+          let(:plan_schemas_hash) do
+            {
+              'schemas' => {
+                'service_binding' => {
+                  'create' => {
+                  }
+                }
+              }
+            }
+          end
+
+          it 'sets all schemas to nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_binding_schema).to be_nil
+          end
+        end
+
+        context 'when the catalog service plan has no schemas key' do
+          let(:plan_schemas_hash) { {} }
+
+          it 'leaves the plan schemas field as nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_instance_schema).to be_nil
+            expect(plan.update_instance_schema).to be_nil
+            expect(plan.create_binding_schema).to be_nil
+          end
+        end
+
+        context 'when the catalog service plan has a nil service instance schema' do
+          let(:plan_schemas_hash) { { 'schemas' => { 'service_instance' => nil } } }
+
+          it 'leaves the plan schemas field as nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_instance_schema).to be_nil
+            expect(plan.update_instance_schema).to be_nil
+          end
+        end
+
+        context 'when the catalog service plan has a nil service binding schema' do
+          let(:plan_schemas_hash) { { 'schemas' => { 'service_binding' => nil } } }
+
+          it 'leaves the plan schemas field as nil' do
+            service_manager.sync_services_and_plans(catalog)
+            plan = VCAP::CloudController::ServicePlan.last
+            expect(plan.create_binding_schema).to be_nil
+          end
         end
       end
 
@@ -372,7 +506,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.free).to be false
             expect(plan.bindable).to be true
             expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
-            expect(plan.update_instance_schema).to eq('{"type":"object"}')
+            expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.create_binding_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           end
 
@@ -399,7 +533,7 @@ module VCAP::Services::ServiceBrokers
               'bindable' => true,
               'free' => false,
               'create_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
-              'update_instance_schema' => '{"type":"object"}',
+              'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
               'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
             })
           end

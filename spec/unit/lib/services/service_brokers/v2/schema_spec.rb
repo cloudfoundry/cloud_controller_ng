@@ -2,8 +2,9 @@ require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
   RSpec.describe Schema do
+    let(:schema) { Schema.new(raw_schema) }
+
     describe '#to_json' do
-      let(:schema) { Schema.new(raw_schema) }
       let(:raw_schema) {
         {
           '$schema' => 'http://json-schema.org/draft-04/schema#',
@@ -24,7 +25,6 @@ module VCAP::Services::ServiceBrokers::V2
     describe 'schema validations' do
       let(:draft_schema) { "http://json-schema.org/#{version}/schema#" }
       let(:raw_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
-      let(:schema) { Schema.new(raw_schema) }
 
       context 'JSON Schema draft04 validations' do
         let(:version) { 'draft-04' }
@@ -92,7 +92,7 @@ module VCAP::Services::ServiceBrokers::V2
                 it 'should not be valid' do
                   expect(schema.validate).to be false
                   expect(schema.errors.full_messages.length).to eq 1
-                  expect(schema.errors.full_messages.first).to eq 'Custom meta schemas are not supported.'
+                  expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported.'
                 end
               end
 
@@ -180,7 +180,7 @@ module VCAP::Services::ServiceBrokers::V2
               context 'schema type and does not conform to JSON Schema Draft 4' do
                 let(:raw_schema) { { 'type' => 'notobject', 'properties' => true } }
 
-                it 'returns one error' do
+                it 'only returns type error' do
                   expect(schema.validate).to be false
                   expect(schema.errors.full_messages.length).to eq 1
                   expect(schema.errors.full_messages.first).to match 'must have field "type", with value "object"'
@@ -200,50 +200,50 @@ module VCAP::Services::ServiceBrokers::V2
               end
             end
           end
+        end
 
-          describe 'schema sizes' do
-            context 'that are valid' do
-              {
-                'well below the limit': 1,
-                'just below the limit': 63,
-                'on the limit': 64,
-              }.each do |desc, size_in_kb|
-                context "when the schema is #{desc}" do
-                  let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }
-
-                  it 'should be valid' do
-                    expect(schema.validate).to be true
-                    expect(schema.errors.full_messages.length).to eq 0
-                  end
-                end
-              end
-            end
-
-            context 'that are invalid' do
-              {
-                'just above the limit': 65,
-                'well above the limit': 10 * 1024,
-              }.each do |desc, size_in_kb|
-                context "when the schema is #{desc}" do
-                  let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }
-
-                  it 'returns one error' do
-                    expect(schema.validate).to be false
-                    expect(schema.errors.full_messages.length).to eq 1
-                    expect(schema.errors.full_messages.first).to match 'Must not be larger than 64KB'
-                  end
-                end
-              end
-            end
-          end
-
-          def create_schema_of_size(bytes)
-            surrounding_bytes = 26
+        describe 'schema sizes' do
+          context 'that are valid' do
             {
-              'type' => 'object',
-              'foo' => 'x' * (bytes - surrounding_bytes)
-            }
+              'well below the limit': 1,
+              'just below the limit': 63,
+              'on the limit': 64,
+            }.each do |desc, size_in_kb|
+              context "when the schema json is #{desc}" do
+                let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }
+
+                it 'should be valid' do
+                  expect(schema.validate).to be true
+                  expect(schema.errors.full_messages.length).to eq 0
+                end
+              end
+            end
           end
+
+          context 'that are invalid' do
+            {
+              'just above the limit': 65,
+              'well above the limit': 10 * 1024,
+            }.each do |desc, size_in_kb|
+              context "when the schema json is #{desc}" do
+                let(:raw_schema) { create_schema_of_size(size_in_kb * 1024) }
+
+                it 'returns one error' do
+                  expect(schema.validate).to be false
+                  expect(schema.errors.full_messages.length).to eq 1
+                  expect(schema.errors.full_messages.first).to match 'Must not be larger than 64KB'
+                end
+              end
+            end
+          end
+        end
+
+        def create_schema_of_size(bytes)
+          surrounding_bytes = 26
+          {
+            'type' => 'object',
+            'foo' => 'x' * (bytes - surrounding_bytes)
+          }
         end
       end
 
