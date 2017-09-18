@@ -84,13 +84,6 @@ function display_pre_release_branches_with_sha {
 
     printf "%-40s %s\n" "$(tput setaf 1)${branch}:$(tput sgr0)" "${result}"
   done
-
-  if [[ "${found_one}" -eq 1 ]]; then
-    if which dishy > /dev/null; then
-      echo ""
-      echo $(dishy fail)
-    fi
-  fi
 }
 
 function main {
