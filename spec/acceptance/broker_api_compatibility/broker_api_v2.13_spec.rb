@@ -14,9 +14,9 @@ RSpec.describe 'Service Broker API integration' do
 
     describe 'configuration parameter schemas' do
       let(:draft_schema) { "http://json-schema.org/#{version}/schema#" }
-      let(:create_instance_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
-      let(:update_instance_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
-      let(:create_binding_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
+      let(:create_instance_schema) { { '$schema' => draft_schema } }
+      let(:update_instance_schema) { { '$schema' => draft_schema } }
+      let(:create_binding_schema) { { '$schema' => draft_schema } }
       let(:schemas) {
         {
           'service_instance' => {
@@ -42,12 +42,7 @@ RSpec.describe 'Service Broker API integration' do
 
         context 'when a broker catalog defines a service instance' do
           context 'with a valid create schema' do
-            let(:create_instance_schema) {
-              {
-                '$schema' => draft_schema,
-                'type' => 'object'
-              }
-            }
+            let(:create_instance_schema) { { '$schema' => draft_schema } }
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
@@ -56,23 +51,14 @@ RSpec.describe 'Service Broker API integration' do
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_instance']['create']
-              expect(create_schema).to eq(
-                {
-                  'parameters' =>
-                    {
-                      '$schema' => draft_schema,
-                      'type' => 'object'
-                    }
-                }
-              )
+              expect(create_schema).to eq({ 'parameters' => { '$schema' => draft_schema } })
             end
           end
 
           context 'with a valid update schema' do
             let(:update_instance_schema) {
               {
-                '$schema' => draft_schema,
-                'type' => 'object'
+                '$schema' => draft_schema
               }
             }
 
@@ -83,15 +69,7 @@ RSpec.describe 'Service Broker API integration' do
 
               parsed_body = MultiJson.load(last_response.body)
               update_schema = parsed_body['entity']['schemas']['service_instance']['update']
-              expect(update_schema).to eq(
-                {
-                  'parameters' =>
-                    {
-                      '$schema' => draft_schema,
-                      'type' => 'object'
-                    }
-                }
-              )
+              expect(update_schema).to eq({ 'parameters' => { '$schema' => draft_schema } })
             end
           end
 
@@ -124,12 +102,7 @@ RSpec.describe 'Service Broker API integration' do
 
         context 'when a broker catalog defines a service binding' do
           context 'with a valid create schema' do
-            let(:create_binding_schema) {
-              {
-                '$schema' => draft_schema,
-                'type' => 'object'
-              }
-            }
+            let(:create_binding_schema) { { '$schema' => draft_schema } }
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
@@ -138,15 +111,7 @@ RSpec.describe 'Service Broker API integration' do
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_binding']['create']
-              expect(create_schema).to eq(
-                {
-                  'parameters' =>
-                    {
-                      '$schema' => draft_schema,
-                      'type' => 'object'
-                    }
-                }
-              )
+              expect(create_schema).to eq({ 'parameters' => { '$schema' => draft_schema } })
             end
           end
 
@@ -199,12 +164,7 @@ RSpec.describe 'Service Broker API integration' do
 
         context 'when a broker catalog defines a service instance' do
           context 'with a valid create schema' do
-            let(:create_instance_schema) {
-              {
-                '$schema' => draft_schema,
-                'type' => 'object'
-              }
-            }
+            let(:create_instance_schema) { { '$schema' => draft_schema } }
 
             it 'responds with the schema for a service plan entry' do
               get("/v2/service_plans/#{@plan_guid}",
@@ -213,23 +173,14 @@ RSpec.describe 'Service Broker API integration' do
 
               parsed_body = MultiJson.load(last_response.body)
               create_schema = parsed_body['entity']['schemas']['service_instance']['create']
-              expect(create_schema).to eq(
-                {
-                  'parameters' =>
-                    {
-                      '$schema' => draft_schema,
-                      'type'    => 'object'
-                    }
-                }
-              )
+              expect(create_schema).to eq({ 'parameters' => { '$schema' => draft_schema } })
             end
           end
 
           context 'with a valid update schema' do
             let(:update_instance_schema) {
               {
-                '$schema' => draft_schema,
-                'type' => 'object'
+                '$schema' => draft_schema
               }
             }
 
@@ -240,15 +191,7 @@ RSpec.describe 'Service Broker API integration' do
 
               parsed_body = MultiJson.load(last_response.body)
               update_schema = parsed_body['entity']['schemas']['service_instance']['update']
-              expect(update_schema).to eq(
-                {
-                  'parameters' =>
-                    {
-                      '$schema' => draft_schema,
-                      'type'    => 'object'
-                    }
-                }
-              )
+              expect(update_schema).to eq({ 'parameters' => { '$schema' => draft_schema } })
             end
           end
 

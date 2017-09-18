@@ -587,50 +587,6 @@ RSpec.describe 'Service Broker' do
           expect(plan['entity']['schemas']).to eq(schema)
         end
       end
-
-      context 'when the schemas are invalid' do
-        let(:schema) {
-          {
-            'service_instance' => {
-              'create' => { 'parameters' => { 'type' => 'string' } },
-              'update' => { 'parameters' => { 'type' => 'string' } }
-            },
-            'service_binding' => {
-              'create' => { 'parameters' => { 'type' => 'string' } },
-            }
-          }
-        }
-
-        it 'reponds with validation errors' do
-          expect(last_response.status).to eq(502)
-          expect(decoded_response['code']).to eql(270012)
-          expect(decoded_response['description']).to eql(
-            "Service broker catalog is invalid: \n" \
-            "Service MySQL\n" \
-            "  Plan plan1\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "  Plan plan2\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "Service MySQL-2\n" \
-            "  Plan plan3\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "  Plan plan4\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-          )
-        end
-      end
     end
   end
 

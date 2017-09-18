@@ -8,7 +8,6 @@ module VCAP::Services::ServiceBrokers::V2
       let(:raw_schema) {
         {
           '$schema' => 'http://json-schema.org/draft-04/schema#',
-          'type' => 'object',
           :properties => { 'foo': { 'type': 'string' } },
           :required => ['foo']
         }
@@ -16,7 +15,6 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'converts a hash into json' do
         expect(schema.to_json).to eq '{"$schema":"http://json-schema.org/draft-04/schema#",'\
-          '"type":"object",'\
           '"properties":{"foo":{"type":"string"}},'\
           '"required":["foo"]}'
       end
@@ -24,15 +22,23 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe 'schema validations' do
       let(:draft_schema) { "http://json-schema.org/#{version}/schema#" }
-      let(:raw_schema) { { '$schema' => draft_schema, 'type' => 'object' } }
+      let(:raw_schema) { { '$schema' => draft_schema } }
 
       context 'JSON Schema draft04 validations' do
         let(:version) { 'draft-04' }
 
+        context 'when the schema has the minimum required fields' do
+          let(:raw_schema) { { '$schema' => draft_schema } }
+
+          it 'should be valid' do
+            expect(schema.validate).to be true
+            expect(schema.errors.full_messages.length).to be 0
+          end
+        end
+
         context 'when the schema has an internal reference' do
           let(:raw_schema) {
             {
-              'type' => 'object',
               'properties': {
                 'foo': { 'type': 'integer' },
                 'bar': { '$ref': '#/properties/foo' }
@@ -46,48 +52,74 @@ module VCAP::Services::ServiceBrokers::V2
           end
         end
 
-        context 'when the schema has multiple valid constraints ' do
-          let(:raw_schema) {
-            {
-              '$schema' => draft_schema,
-              'type' => 'object',
-              :properties => { 'foo': { 'type': 'string' } },
-              :required => ['foo']
-            }
-          }
-
-          it 'should be valid' do
-            expect(schema.validate).to be true
-            expect(schema.errors.full_messages.length).to be 0
-          end
-        end
-
         context 'errors' do
-          context 'properties' do
-            context 'when boolean' do
-              let(:raw_schema) { { 'type' => 'object', 'properties': true } }
+          context 'metaschema' do
+            context 'when JSON::Validator returns an error' do
+              let(:raw_schema) { { 'properties': true } }
 
-              it 'should not be valid' do
+              before do
+                allow(JSON::Validator).to receive(:fully_validate).and_return([{ message: 'whoops' }])
+              end
+
+              it 'add a schema error message with a wrapped error' do
                 expect(schema.validate).to be false
                 expect(schema.errors.full_messages.length).to eq 1
-                expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
-                  "The property '#/properties' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#"
+                expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): whoops' \
               end
-              context 'when there are multiple errors' do
-                let(:raw_schema) { { 'type' => 'object', 'properties': true, 'anyOf': true } }
+            end
 
-                it 'should have more than one error message' do
+            context 'when JSON::Validator raises an error' do
+              let(:raw_schema) { { 'properties': true } }
+
+              before do
+                allow(JSON::Validator).to receive(:fully_validate).and_raise('uh oh')
+              end
+
+              it 'add a schema error message with the error' do
+                expect(schema.validate).to be false
+                expect(schema.errors.full_messages.length).to eq 1
+                expect(schema.errors.full_messages.first).to eq 'uh oh'
+              end
+            end
+
+            context 'when there are multiple errors' do
+              let(:raw_schema) { { 'properties': true, 'anyOf': true } }
+
+              it 'should have more than one error message' do
+                expect(schema.validate).to be false
+                expect(schema.errors.full_messages.length).to eq 2
+                expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+                  'The property \'#/properties\' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#'
+                expect(schema.errors.full_messages.last).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
+                  'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
+              end
+            end
+          end
+
+          context 'open service broker restrictions' do
+            context 'when the schema raises a SchemaError' do
+              let(:raw_schema) { { '$schema' => 'blahblahblah' } }
+
+              it 'should a schema error message with the error' do
+                expect(schema.validate).to be false
+                expect(schema.errors.full_messages.length).to eq 1
+                expect(schema.errors.full_messages.first).to eq 'Custom meta schemas are not supported.'
+              end
+            end
+
+            context 'when the schema includes an external reference' do
+              context 'when $ref is an external reference' do
+                let(:raw_schema) { { '$ref' => 'http://example.com/ref' } }
+
+                it 'should add a schema error message with the error' do
                   expect(schema.validate).to be false
-                  expect(schema.errors.full_messages.length).to eq 2
-                  expect(schema.errors.full_messages.first).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
-                    'The property \'#/properties\' of type boolean did not match the following type: object in schema http://json-schema.org/draft-04/schema#'
-                  expect(schema.errors.full_messages.last).to eq 'Must conform to JSON Schema Draft 04 (experimental support for later versions): ' \
-                    'The property \'#/anyOf\' of type boolean did not match the following type: array in schema http://json-schema.org/draft-04/schema#'
+                  expect(schema.errors.full_messages.length).to eq 1
+                  expect(schema.errors.full_messages.first).to eq 'No external references are allowed: Read of URI at http://example.com/ref refused'
                 end
               end
 
-              context 'when the schema has an external schema' do
-                let(:raw_schema) { { 'type' => 'object', '$schema': 'http://example.com/schema' } }
+              context 'when custom schema is not recognized by the library' do
+                let(:raw_schema) { { '$schema': 'http://example.com/schema' } }
 
                 it 'should not be valid' do
                   expect(schema.validate).to be false
@@ -95,50 +127,28 @@ module VCAP::Services::ServiceBrokers::V2
                   expect(schema.errors.full_messages.first).to match 'Custom meta schemas are not supported.'
                 end
               end
+            end
 
-              context 'references' do
-                context 'when the schema has an external uri reference' do
-                  let(:raw_schema) { { 'type' => 'object', '$ref': 'http://example.com/ref' } }
+            context 'when the schema has an external file reference' do
+              let(:raw_schema) { { '$ref': 'path/to/schema.json' } }
 
-                  it 'should not be valid' do
-                    expect(schema.validate).to be false
-                    expect(schema.errors.full_messages.length).to eq 1
-                    expect(schema.errors.full_messages.first).to match 'No external references are allowed.+http://example.com/ref'
-                  end
-                end
-
-                context 'when the schema has an external file reference' do
-                  let(:raw_schema) { { 'type' => 'object', '$ref': 'path/to/schema.json' } }
-
-                  it 'should not be valid' do
-                    expect(schema.validate).to be false
-                    expect(schema.errors.full_messages.length).to eq 1
-                    expect(schema.errors.full_messages.first).to match 'No external references are allowed.+path/to/schema.json'
-                  end
-                end
+              it 'should not be valid' do
+                expect(schema.validate).to be false
+                expect(schema.errors.full_messages.length).to eq 1
+                expect(schema.errors.full_messages.first).to match 'No external references are allowed.+path/to/schema.json'
               end
             end
-          end
 
-          context 'when the schema does not have a type field' do
-            let(:raw_schema) { { '$schema': 'http://json-schema.org/draft-04/schema#' } }
+            context 'when the schema has an unknown parse error' do
+              before do
+                allow(JSON::Validator).to receive(:validate!).and_raise('some unknown error')
+              end
 
-            it 'should not be valid' do
-              expect(schema.validate).to be false
-              expect(schema.errors.full_messages.length).to eq 1
-              expect(schema.errors.full_messages.first).to eq 'must have field "type", with value "object"'
-            end
-          end
-
-          context 'when the schema has an unknown parse error' do
-            before do
-              allow(JSON::Validator).to receive(:validate!) { raise 'some unknown error' }
-            end
-
-            it 'should not be valid' do
-              expect(schema.validate).to be false
-              expect(schema.errors.full_messages.length).to eq 1
-              expect(schema.errors.full_messages.first).to eq 'some unknown error'
+              it 'should a schema error message with the error' do
+                expect(schema.validate).to be false
+                expect(schema.errors.full_messages.length).to eq 1
+                expect(schema.errors.full_messages.first).to eq 'some unknown error'
+              end
             end
           end
 
@@ -177,18 +187,8 @@ module VCAP::Services::ServiceBrokers::V2
                 end
               end
 
-              context 'schema type and does not conform to JSON Schema Draft 4' do
-                let(:raw_schema) { { 'type' => 'notobject', 'properties' => true } }
-
-                it 'only returns type error' do
-                  expect(schema.validate).to be false
-                  expect(schema.errors.full_messages.length).to eq 1
-                  expect(schema.errors.full_messages.first).to match 'must have field "type", with value "object"'
-                end
-              end
-
               context 'does not conform to JSON Schema Draft 4 and external references' do
-                let(:raw_schema) { { 'type' => 'object', 'properties' => true, '$ref' => 'http://example.com/ref' } }
+                let(:raw_schema) { { 'properties' => true, '$ref' => 'http://example.com/ref' } }
 
                 it 'returns one error' do
                   expect(schema.validate).to be false
@@ -241,7 +241,6 @@ module VCAP::Services::ServiceBrokers::V2
         def create_schema_of_size(bytes)
           surrounding_bytes = 26
           {
-            'type' => 'object',
             'foo' => 'x' * (bytes - surrounding_bytes)
           }
         end
@@ -251,14 +250,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:version) { 'draft-06' }
 
         context 'when the schema has multiple valid constraints ' do
-          let(:raw_schema) {
-            {
-              '$schema' => draft_schema,
-              'type' => 'object',
-              :properties => { 'foo': { 'type': 'string' } },
-              :required => ['foo']
-            }
-          }
+          let(:raw_schema) { { '$schema' => draft_schema } }
 
           it 'should be valid' do
             expect(schema.validate).to be true
