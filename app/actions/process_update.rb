@@ -10,7 +10,7 @@ module VCAP::CloudController
       process.db.transaction do
         process.lock!
 
-        process.command              = command(message, process) if message.requested?(:command)
+        process.command              = message.command if message.requested?(:command)
         process.health_check_type    = message.health_check_type if message.requested?(:health_check_type)
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)
         if message.requested?(:health_check_type) && message.health_check_type != 'http'
@@ -25,10 +25,6 @@ module VCAP::CloudController
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidProcess.new(e.message)
-    end
-
-    def command(message, process)
-      message.command.present? ? message.command : process.detected_start_command
     end
   end
 end

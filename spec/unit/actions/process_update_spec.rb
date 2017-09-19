@@ -11,8 +11,7 @@ module VCAP::CloudController
         data: { timeout: 20 }
       }
     end
-    let(:message) { ProcessUpdateMessage.new({ command: command, health_check: health_check }) }
-    let(:command) { 'new' }
+    let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check }) }
     let!(:process) do
       ProcessModel.make(
         :process,
@@ -137,53 +136,6 @@ module VCAP::CloudController
           expect {
             process_update.update(process, message)
           }.to raise_error(ProcessUpdate::InvalidProcess, 'the message')
-        end
-      end
-
-      describe 'update start command' do
-        context 'when setting the start command to nil' do
-          let(:command) { nil }
-
-          before do
-            process.current_droplet = DropletModel.make(process_types: { "#{process.type}": 'detected start command' })
-          end
-
-          it 'sets the start command to the receipt info from the droplet' do
-            process_update.update(process, message)
-
-            process.reload
-            expect(process.command).to eq('detected start command')
-          end
-        end
-
-        context 'when setting the start command to empty string' do
-          let(:command) { '' }
-
-          before do
-            process.current_droplet = DropletModel.make(process_types: { "#{process.type}": 'detected start command' })
-          end
-
-          it 'sets the start command to the receipt info from the droplet' do
-            process_update.update(process, message)
-
-            process.reload
-            expect(process.command).to eq('detected start command')
-          end
-        end
-
-        context 'when omitting the start command' do
-          let(:message) { ProcessUpdateMessage.new(health_check: health_check) }
-
-          before do
-            process.current_droplet = DropletModel.make(process_types: { "#{process.type}": 'detected start command' })
-          end
-
-          it 'does not update the command' do
-            process_update.update(process, message)
-
-            process.reload
-            expect(process.command).to eq('initial command')
-          end
         end
       end
     end

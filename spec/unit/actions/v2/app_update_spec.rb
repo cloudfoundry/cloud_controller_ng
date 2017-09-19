@@ -364,51 +364,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'changing start command' do
-        let(:process) { ProcessModel.make(:process, command: 'initial command') }
-
-        context 'when setting the start command to nil' do
-          before do
-            process.current_droplet = DropletModel.make(process_types: { "#{process.type}": 'detected start command' })
-          end
-
-          it 'sets the start command to the receipt info from the droplet' do
-            app_update.update(process.app, process, 'command' => nil)
-
-            process.reload
-            expect(process.command).to eq('detected start command')
-          end
-        end
-
-        context 'when setting the start command to empty string' do
-          before do
-            process.current_droplet = DropletModel.make(process_types: { "#{process.type}": 'detected start command' })
-          end
-
-          it 'sets the start command to the receipt info from the droplet' do
-            app_update.update(process.app, process, 'command' => '')
-
-            process.reload
-            expect(process.command).to eq('detected start command')
-          end
-        end
-
-        context 'when omitting the start command' do
-          let(:message) { ProcessUpdateMessage.new(health_check: health_check) }
-
-          before do
-            process.current_droplet = DropletModel.make(process_types: { "#{process.type}": 'detected start command' })
-          end
-
-          it 'does not update the command' do
-            app_update.update(process.app, process, {})
-
-            process.reload
-            expect(process.command).to eq('initial command')
-          end
-        end
-      end
-
       describe 'staging' do
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
         let(:process) { ProcessModelFactory.make(state: 'STARTED') }

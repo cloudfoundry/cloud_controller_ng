@@ -776,37 +776,35 @@ module VCAP::CloudController
       end
 
       it 'updates the app' do
-        process = ProcessModel.make
-        app = process.app
-        stack = Stack.make(name: 'stack-name')
+        v2_app = ProcessModel.make
+        v3_app = v2_app.app
+        stack  = Stack.make(name: 'stack-name')
 
         request = {
-          name: 'maria',
+          name:             'maria',
           environment_json: { 'KEY' => 'val' },
-          stack_guid: stack.guid,
-          buildpack: 'http://example.com/buildpack',
-          command: 'new command'
+          stack_guid:       stack.guid,
+          buildpack:        'http://example.com/buildpack',
         }
 
         set_current_user(admin_user, admin: true)
 
-        put "/v2/apps/#{process.guid}", MultiJson.dump(request)
+        put "/v2/apps/#{v2_app.guid}", MultiJson.dump(request)
         expect(last_response.status).to eq(201)
 
-        process.reload
-        app.reload
+        v2_app.reload
+        v3_app.reload
 
-        expect(process.name).to eq('maria')
-        expect(process.environment_json).to eq({ 'KEY' => 'val' })
-        expect(process.stack).to eq(stack)
-        expect(process.buildpack.url).to eq('http://example.com/buildpack')
-        expect(process.command).to eq('new command')
+        expect(v2_app.name).to eq('maria')
+        expect(v2_app.environment_json).to eq({ 'KEY' => 'val' })
+        expect(v2_app.stack).to eq(stack)
+        expect(v2_app.buildpack.url).to eq('http://example.com/buildpack')
 
-        expect(app.name).to eq('maria')
-        expect(app.environment_variables).to eq({ 'KEY' => 'val' })
-        expect(app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
-        expect(app.lifecycle_data.stack).to eq('stack-name')
-        expect(app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
+        expect(v3_app.name).to eq('maria')
+        expect(v3_app.environment_variables).to eq({ 'KEY' => 'val' })
+        expect(v3_app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
+        expect(v3_app.lifecycle_data.stack).to eq('stack-name')
+        expect(v3_app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
       end
 
       context 'when custom buildpacks are disabled and the buildpack attribute is being changed' do

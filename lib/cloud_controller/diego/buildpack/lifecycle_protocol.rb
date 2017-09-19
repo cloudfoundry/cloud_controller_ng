@@ -59,7 +59,7 @@ module VCAP
           def desired_app_message(process)
             checksum_info = droplet_checksum_info(process.current_droplet)
             {
-              'start_command' => process.command,
+              'start_command' => process.command.nil? ? process.detected_start_command : process.command,
               'droplet_uri'   => @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
               'droplet_hash'  => process.current_droplet.droplet_hash,
               'checksum'      => checksum_info,

@@ -45,10 +45,6 @@ module VCAP::CloudController
           'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
           'diego', 'ports', 'route_guids')
 
-        if request_attrs.key?('command')
-          mass_assign['command'] = request_attrs['command'].present? ? request_attrs['command'] : process.detected_start_command
-        end
-
         process.set(mass_assign)
       end
 
