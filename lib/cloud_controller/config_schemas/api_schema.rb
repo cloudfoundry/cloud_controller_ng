@@ -168,6 +168,9 @@ module VCAP::CloudController
           cloud_controller_username_lookup_client_name: String,
           cloud_controller_username_lookup_client_secret: String,
 
+          cc_service_key_client_name: String,
+          cc_service_key_client_secret: String,
+
           renderer: {
             max_results_per_page: Integer,
             default_results_per_page: Integer,

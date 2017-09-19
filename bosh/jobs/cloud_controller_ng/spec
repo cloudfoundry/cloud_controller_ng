@@ -645,7 +645,7 @@ properties:
     default: 2
 
   uaa.clients.cc_service_broker_client.secret:
-    description: "(DEPRECATED) - Used for generating SSO clients for service brokers."
+    description: "(DEPRECATED) - Used for generating SSO clients for service brokers"
   uaa.clients.cc_service_broker_client.scope:
     description: "(DEPRECATED) - Used to grant scope for SSO clients for service brokers"
     default: "openid,cloud_controller_service_permissions.read"
@@ -657,7 +657,10 @@ properties:
     default: "openid,cloud_controller_service_permissions.read"
 
   uaa.clients.cloud_controller_username_lookup.secret:
-    description: "Used for fetching usernames from UAA."
+    description: "Used for fetching usernames from UAA"
+
+  uaa.clients.cc_service_key_client.secret:
+      description: "Used for fetching service key values from CredHub"
 
   uaa.clients.cc_routing.secret:
     description: "Used for fetching routing information from the Routing API"
@@ -666,7 +669,7 @@ properties:
     description: "Set of buildpacks to install during deploy"
     default: []
   cc.app_bits_upload_grace_period_in_seconds:
-    description: "Extra token expiry time while uploading big apps."
+    description: "Extra token expiry time while uploading big apps"
     default: 1200
 
   cc.security_group_definitions:

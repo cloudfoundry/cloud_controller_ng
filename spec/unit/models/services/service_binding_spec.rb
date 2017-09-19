@@ -226,5 +226,17 @@ module VCAP::CloudController
         expect(visible_to_other_user.all).to be_empty
       end
     end
+
+    describe '#required_parameters' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+      let(:app) { service_binding.app }
+
+      it 'returns the required params' do
+        expect(service_binding.required_parameters).to eq(
+          app_guid: app.guid
+        )
+      end
+    end
   end
 end

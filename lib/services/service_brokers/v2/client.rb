@@ -3,16 +3,17 @@ require 'jobs/services/service_instance_state_fetch'
 module VCAP::Services::ServiceBrokers::V2
   class Client
     CATALOG_PATH = '/v2/catalog'.freeze
-    PLATFORM = 'cloudfoundry'.freeze
+    PLATFORM     = 'cloudfoundry'.freeze
 
     attr_reader :orphan_mitigator, :attrs
 
     def initialize(attrs)
       http_client_attrs = attrs.slice(:url, :auth_username, :auth_password)
-      @http_client = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
-      @response_parser = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
-      @attrs = attrs
+      @http_client      = VCAP::Services::ServiceBrokers::V2::HttpClient.new(http_client_attrs)
+      @response_parser  = VCAP::Services::ServiceBrokers::V2::ResponseParser.new(@http_client.url)
+      @attrs            = attrs
       @orphan_mitigator = VCAP::Services::ServiceBrokers::V2::OrphanMitigator.new
+      @config           = VCAP::CloudController::Config.config
     end
 
     def catalog
@@ -24,31 +25,31 @@ module VCAP::Services::ServiceBrokers::V2
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
-        service_id: instance.service.broker_provided_id,
-        plan_id: instance.service_plan.broker_provided_id,
+        service_id:        instance.service.broker_provided_id,
+        plan_id:           instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
-        space_guid: instance.space.guid,
-        context: context_hash(instance)
+        space_guid:        instance.space.guid,
+        context:           context_hash(instance)
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
-      response = @http_client.put(path, body)
+      response          = @http_client.put(path, body)
 
-      parsed_response = @response_parser.parse_provision(path, response)
+      parsed_response     = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      return_values = {
-        instance: {
-          credentials: {},
+      return_values       = {
+        instance:       {
+          credentials:   {},
           dashboard_url: parsed_response['dashboard_url']
         },
         last_operation: {
-          type: 'create',
-          description: last_operation_hash['description'] || '',
+          type:                      'create',
+          description:               last_operation_hash['description'] || '',
           broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
         }
       }
 
-      state = last_operation_hash['state']
+      state                                  = last_operation_hash['state']
       return_values[:last_operation][:state] = state || 'succeeded'
 
       return_values
@@ -61,9 +62,9 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def fetch_service_instance_state(instance)
-      path = service_instance_last_operation_path(instance)
-      response = @http_client.get(path)
-      parsed_response = @response_parser.parse_fetch_state(path, response)
+      path                = service_instance_last_operation_path(instance)
+      response            = @http_client.get(path)
+      parsed_response     = @response_parser.parse_fetch_state(path, response)
       last_operation_hash = parsed_response.delete('last_operation') || {}
 
       state = extract_state(instance, last_operation_hash)
@@ -80,16 +81,17 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def create_service_key(key, arbitrary_parameters: {})
-      path = service_binding_resource_path(key.guid, key.service_instance.guid)
-      body = {
-          service_id: key.service.broker_provided_id,
-          plan_id: key.service_plan.broker_provided_id,
-          context: context_hash(key.service_instance)
+      path              = service_binding_resource_path(key.guid, key.service_instance.guid)
+      body              = {
+        service_id:    key.service.broker_provided_id,
+        plan_id:       key.service_plan.broker_provided_id,
+        bind_resource: { credential_client_id: @config.get(:cc_service_key_client_name) },
+        context:       context_hash(key.service_instance),
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response = @http_client.put(path, body)
+      response        = @http_client.put(path, body)
       parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
 
       { credentials: parsed_response['credentials'] }
@@ -99,18 +101,18 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def bind(binding, arbitrary_parameters)
-      path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
-      body = {
-        service_id: binding.service.broker_provided_id,
-        plan_id: binding.service_plan.broker_provided_id,
-        app_guid: binding.try(:app_guid),
+      path              = service_binding_resource_path(binding.guid, binding.service_instance.guid)
+      body              = {
+        service_id:    binding.service.broker_provided_id,
+        plan_id:       binding.service_plan.broker_provided_id,
+        app_guid:      binding.try(:app_guid),
         bind_resource: binding.required_parameters,
-        context: context_hash(binding.service_instance)
+        context:       context_hash(binding.service_instance)
       }
-      body = body.reject { |_, v| v.nil? }
+      body              = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response = @http_client.put(path, body)
+      response        = @http_client.put(path, body)
       parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
       attributes = {
@@ -143,7 +145,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       body = {
         service_id: binding.service.broker_provided_id,
-        plan_id: binding.service_plan.broker_provided_id,
+        plan_id:    binding.service_plan.broker_provided_id,
       }
       response = @http_client.delete(path, body)
 
@@ -160,19 +162,19 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:    instance.service_plan.broker_provided_id,
       }
       body[:accepts_incomplete] = true if accepts_incomplete
-      response = @http_client.delete(path, body)
+      response                  = @http_client.delete(path, body)
 
-      parsed_response = @response_parser.parse_deprovision(path, response) || {}
+      parsed_response     = @response_parser.parse_deprovision(path, response) || {}
       last_operation_hash = parsed_response['last_operation'] || {}
-      state = last_operation_hash['state']
+      state               = last_operation_hash['state']
 
       {
         last_operation: {
-          type: 'delete',
-          description: last_operation_hash['description'] || '',
-          state: state || 'succeeded',
-          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
-        }.compact
+                          type:                      'delete',
+                          description:               last_operation_hash['description'] || '',
+                          state:                     state || 'succeeded',
+                          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
+                        }.compact
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
@@ -184,23 +186,23 @@ module VCAP::Services::ServiceBrokers::V2
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
-        service_id: instance.service.broker_provided_id,
-        plan_id: plan.broker_provided_id,
+        service_id:      instance.service.broker_provided_id,
+        plan_id:         plan.broker_provided_id,
         previous_values: previous_values,
-        context: context_hash(instance)
+        context:         context_hash(instance)
       }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters
-      response = @http_client.patch(path, body)
+      response          = @http_client.patch(path, body)
 
-      parsed_response = @response_parser.parse_update(path, response)
+      parsed_response     = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
-      state = last_operation_hash['state'] || 'succeeded'
+      state               = last_operation_hash['state'] || 'succeeded'
 
       attributes = {
         last_operation: {
-          type: 'update',
-          state: state,
-          description: last_operation_hash['description'] || '',
+          type:                      'update',
+          state:                     state,
+          description:               last_operation_hash['description'] || '',
           broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
         },
       }
@@ -220,8 +222,8 @@ module VCAP::Services::ServiceBrokers::V2
 
       attributes = {
         last_operation: {
-          state: 'failed',
-          type: 'update',
+          state:       'failed',
+          type:        'update',
           description: e.message
         }
       }
@@ -232,9 +234,9 @@ module VCAP::Services::ServiceBrokers::V2
 
     def context_hash(service_instance)
       {
-        platform: PLATFORM,
+        platform:          PLATFORM,
         organization_guid: service_instance.organization.guid,
-        space_guid: service_instance.space.guid
+        space_guid:        service_instance.space.guid
       }
     end
 
@@ -254,9 +256,9 @@ module VCAP::Services::ServiceBrokers::V2
 
     def service_instance_last_operation_path(instance)
       query_params = {}.tap do |q|
-        q['plan_id'] = instance.service_plan.broker_provided_id
+        q['plan_id']    = instance.service_plan.broker_provided_id
         q['service_id'] = instance.service.broker_provided_id
-        q['operation'] = instance.last_operation.broker_provided_operation if instance.last_operation.broker_provided_operation
+        q['operation']  = instance.last_operation.broker_provided_operation if instance.last_operation.broker_provided_operation
       end
 
       "#{service_instance_resource_path(instance)}/last_operation?#{query_params.to_query}"

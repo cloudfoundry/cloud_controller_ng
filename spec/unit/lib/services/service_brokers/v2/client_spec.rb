@@ -788,9 +788,11 @@ module VCAP::Services::ServiceBrokers::V2
       let(:response_body) { response_data.to_json }
       let(:code) { '201' }
       let(:message) { 'Created' }
+      let(:cc_service_key_client_name) { 'cc-service-key-thingy' }
 
       before do
         allow(http_client).to receive(:put).and_return(response)
+        TestConfig.override(cc_service_key_client_name: cc_service_key_client_name)
       end
 
       it 'makes a put request with correct path' do
@@ -810,6 +812,9 @@ module VCAP::Services::ServiceBrokers::V2
               platform:          'cloudfoundry',
               organization_guid: key.service_instance.organization.guid,
               space_guid:        key.service_instance.space.guid
+            },
+            bind_resource: {
+              credential_client_id: cc_service_key_client_name,
             }
           )
       end

@@ -189,6 +189,7 @@ module VCAP::CloudController
           expected_body = {
             service_id: service.broker_provided_id,
             plan_id: instance.service_plan.broker_provided_id,
+            bind_resource: { credential_client_id: TestConfig.config_instance.get(:cc_service_key_client_name) },
             context: {
               platform: 'cloudfoundry',
               organization_guid: instance.organization.guid,
