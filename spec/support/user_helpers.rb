@@ -90,7 +90,8 @@ module UserHelpers
       encoding_opts = {
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
         email: opts[:email],
-        scope: scopes
+        scope: scopes,
+        iss: opts[:iss]
       }
       encoding_opts[:user_name] = opts[:user_name] if opts[:user_name]
 
