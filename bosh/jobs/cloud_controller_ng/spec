@@ -721,7 +721,7 @@ properties:
 
   cc.system_hostnames:
     description: "List of hostnames for which routes cannot be created on the system domain."
-    default: [api,uaa,login,doppler,loggregator,hm9000]
+    default: [api,uaa,login,doppler,loggregator,hm9000,credhub]
 
   cc.bits_service.enabled:
     description: "Enable integration of the bits-service incubator (experimental)"
