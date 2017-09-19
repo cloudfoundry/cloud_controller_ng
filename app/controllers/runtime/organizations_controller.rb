@@ -326,10 +326,9 @@ module VCAP::CloudController
       org = find_guid_and_validate_access(:update, guid)
 
       if config.get(:perm, :enabled)
-        r = @perm_client.create_role("org-#{role}-#{guid}")
         actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
 
-        @perm_client.assign_role(actor, r.id)
+        @perm_client.assign_role(actor, "org-#{role}-#{guid}")
       end
 
       org.send("add_#{role}", user)
@@ -344,6 +343,12 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
+      if config.get(:perm, :enabled)
+        [:user, :manager, :auditor, :billing_manager].each do |role|
+          @perm_client.create_role("org-#{role}-#{organization.guid}")
+        end
+      end
+
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
       @organization_event_repository.record_organization_create(organization, user_audit_info, request_attrs)

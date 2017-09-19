@@ -296,10 +296,9 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:update, guid)
 
       if config.get(:perm, :enabled)
-        r = @perm_client.create_role("space-#{role}-#{guid}")
         actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
 
-        @perm_client.assign_role(actor, r.id)
+        @perm_client.assign_role(actor, "space-#{role}-#{guid}")
       end
 
       space.send("add_#{role}", user)
@@ -320,6 +319,12 @@ module VCAP::CloudController
     end
 
     def after_create(space)
+      if config.get(:perm, :enabled)
+        [:developer, :manager, :auditor].each do |role|
+          @perm_client.create_role("space-#{role}-#{space.guid}")
+        end
+      end
+
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
       @space_event_repository.record_space_create(space, user_audit_info, request_attrs)

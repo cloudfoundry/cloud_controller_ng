@@ -1,6 +1,7 @@
 GIT
   remote: https://github.com/cloudfoundry-incubator/perm-rb.git
-  revision: db7d4a210a52019b5db07306036f782df344c8b3
+  revision: 01e906525584212814afbedf49ec399ad215729a
+  branch: master
   specs:
     cf-perm (0.0.0)
       grpc (~> 1.0)
