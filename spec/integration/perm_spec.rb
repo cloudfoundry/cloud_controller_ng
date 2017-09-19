@@ -24,7 +24,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     set_current_user_as_admin(iss: uaa_target)
   end
 
-  describe 'creating an organization with the V2 API' do
+  describe 'POST /v2/organizations' do
     [:user, :manager, :auditor, :billing_manager].each do |role|
       it "creates the org-#{role}-<org_id> role" do
         post '/v2/organizations', { name: 'v2-org' }.to_json
@@ -42,71 +42,32 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     end
   end
 
-  describe 'assigning organization roles' do
+  describe 'PUT /v2/ogranizations/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
 
-    describe 'PUT /v2/organizations/:guid/managers/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the org manager role' do
-          expect(client.list_actor_roles(actor)).to be_empty
+    [:user, :manager, :auditor, :billing_manager].each do |role|
+      describe "PUT /v2/organizations/:guid/#{role}s/:user_guid" do
+        let(:role_name) { "org-#{role}-#{org.guid}" }
 
-          put "/v2/organizations/#{org.guid}/managers/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "org-manager-#{org.guid}"
+        before do
+          client.create_role role_name
         end
-      end
-    end
 
-    describe 'PUT /v2/organizations/:guid/auditors/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the org auditor role' do
+        it "assigns the specifier user to the org #{role} role" do
           expect(client.list_actor_roles(actor)).to be_empty
 
-          put "/v2/organizations/#{org.guid}/auditors/#{assignee.guid}"
+          put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
           roles = client.list_actor_roles(actor)
           expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "org-auditor-#{org.guid}"
-        end
-      end
-    end
-
-    describe 'PUT /v2/organizations/:guid/billing_managers/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the org billing manager role' do
-          expect(client.list_actor_roles(actor)).to be_empty
-
-          put "/v2/organizations/#{org.guid}/billing_managers/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "org-billing_manager-#{org.guid}"
-        end
-      end
-    end
-
-    describe 'PUT /v2/organizations/:guid/users/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the org user role' do
-          expect(client.list_actor_roles(actor)).to be_empty
-
-          put "/v2/organizations/#{org.guid}/users/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "org-user-#{org.guid}"
+          expect(roles[0].name).to eq role_name
         end
       end
     end
   end
 
-  describe 'creating a space with the V2 API' do
+  describe 'POST /v2/spaces' do
     let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
 
     [:developer, :manager, :auditor].each do |role|
@@ -129,7 +90,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     end
   end
 
-  describe 'assigning space roles' do
+  describe 'PUT /v2/spaces/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
     let(:space) {
       VCAP::CloudController::Space.make(
@@ -137,47 +98,23 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
       )
     }
 
-    describe 'PUT /v2/spaces/:guid/managers/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the space manager role' do
+    [:developer, :manager, :auditor].each do |role|
+      describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
+        let(:role_name) { "space-#{role}-#{space.guid}" }
+
+        before do
+          client.create_role(role_name)
+        end
+
+        it "assigns the specified user to the space #{role} role" do
           expect(client.list_actor_roles(actor)).to be_empty
 
-          put "/v2/spaces/#{space.guid}/managers/#{assignee.guid}"
+          put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
           roles = client.list_actor_roles(actor)
           expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "space-manager-#{space.guid}"
-        end
-      end
-    end
-
-    describe 'PUT /v2/spaces/:guid/auditors/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the space auditor role' do
-          expect(client.list_actor_roles(actor)).to be_empty
-
-          put "/v2/spaces/#{space.guid}/auditors/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "space-auditor-#{space.guid}"
-        end
-      end
-    end
-
-    describe 'PUT /v2/spaces/:guid/developers/:user_guid' do
-      context 'as an admin' do
-        it 'assigns the specified user to the space developer role' do
-          expect(client.list_actor_roles(actor)).to be_empty
-
-          put "/v2/spaces/#{space.guid}/developers/#{assignee.guid}"
-          expect(last_response.status).to eq(201), last_response.body
-
-          roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq "space-developer-#{space.guid}"
+          expect(roles[0].name).to eq role_name
         end
       end
     end
