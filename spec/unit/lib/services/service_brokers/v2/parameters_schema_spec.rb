@@ -6,7 +6,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe 'validations' do
       context 'schema' do
-        let(:parameters) { { 'parameters' => { 'type' => 'object' } } }
+        let(:parameters) { { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } } }
 
         it 'should be valid' do
           expect(parameters_schema).to be_valid

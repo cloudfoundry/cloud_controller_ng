@@ -8,7 +8,9 @@ module VCAP::Services::ServiceBrokers::V2
     MAX_SCHEMA_SIZE = 65_536
 
     validates_length_of :to_json, maximum: MAX_SCHEMA_SIZE, message: 'Must not be larger than 64KB'
-    validate :validate_metaschema_conforms_to_json_draft, :validate_open_service_broker_restrictions
+    validate :validate_metaschema_provided,
+      :validate_metaschema_conforms_to_json_draft,
+      :validate_open_service_broker_restrictions
 
     def initialize(schema)
       @schema = schema
@@ -19,6 +21,11 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def validate_metaschema_provided
+      return unless errors.blank?
+      add_schema_error_msg('Schema must have $schema key but was not present') unless @schema['$schema']
+    end
 
     def validate_metaschema_conforms_to_json_draft
       return unless errors.blank?
