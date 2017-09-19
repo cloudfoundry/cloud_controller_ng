@@ -39,6 +39,20 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
         expect(role.name).to eq(role_name)
         expect(role.id).not_to be_nil
       end
+
+      it 'does not allow the user to create an org that already exists' do
+        body = {name: 'v2-org'}.to_json
+        post '/v2/organizations', body
+
+        expect(last_response.status).to eq(201)
+
+        post '/v2/organizations', body
+
+        expect(last_response.status).to eq(400)
+
+        json_body = JSON.parse(last_response.body)
+        expect(json_body['error_code']).to eq('CF-OrganizationNameTaken')
+      end
     end
   end
 
@@ -53,15 +67,29 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
           client.create_role role_name
         end
 
-        it "assigns the specifier user to the org #{role} role" do
+        it "assigns the specified user to the org #{role} role" do
           expect(client.list_actor_roles(actor)).to be_empty
 
           put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
+          expect(client.has_role?(actor, role_name)).to be(true)
           roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq role_name
+          expect(roles.length).to be(1)
+        end
+
+        it 'does nothing when the user is assigned to the role a second time' do
+          expect(client.list_actor_roles(actor)).to be_empty
+
+          put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(201)
+
+          put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(201)
+
+          expect(client.has_role?(actor, role_name)).to be(true)
+          roles = client.list_actor_roles(actor)
+          expect(roles.length).to be(1)
         end
       end
     end
@@ -86,6 +114,25 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
         role = client.get_role(role_name)
         expect(role.name).to eq(role_name)
         expect(role.id).not_to be_nil
+      end
+
+      it 'does not allow user to create space that already exists' do
+        post '/v2/spaces', {
+          name: 'v2-space',
+          organization_guid: org.guid
+        }.to_json
+
+        expect(last_response.status).to eq(201)
+
+        post '/v2/spaces', {
+          name: 'v2-space',
+          organization_guid: org.guid
+        }.to_json
+
+        expect(last_response.status).to eq(400)
+
+        json_body = JSON.parse(last_response.body)
+        expect(json_body['error_code']).to eq('CF-SpaceNameTaken')
       end
     end
   end
@@ -112,9 +159,23 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
           put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
+          expect(client.has_role?(actor, role_name)).to be(true)
           roles = client.list_actor_roles(actor)
-          expect(roles).not_to be_empty
-          expect(roles[0].name).to eq role_name
+          expect(roles.length).to be(1)
+        end
+
+        it 'does nothing when the user is assigned to the role a second time' do
+          expect(client.list_actor_roles(actor)).to be_empty
+
+          put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(201)
+
+          put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(201)
+
+          expect(client.has_role?(actor, role_name)).to be(true)
+          roles = client.list_actor_roles(actor)
+          expect(roles.length).to be(1)
         end
       end
     end

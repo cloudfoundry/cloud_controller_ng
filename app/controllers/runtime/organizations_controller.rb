@@ -1,5 +1,6 @@
 require 'actions/organization_delete'
 require 'fetchers/organization_user_roles_fetcher'
+require 'grpc'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
@@ -328,7 +329,11 @@ module VCAP::CloudController
       if config.get(:perm, :enabled)
         actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
 
-        @perm_client.assign_role(actor, "org-#{role}-#{guid}")
+        begin
+          @perm_client.assign_role(actor, "org-#{role}-#{guid}")
+        rescue GRPC::AlreadyExists
+          # ignored
+        end
       end
 
       org.send("add_#{role}", user)

@@ -298,7 +298,11 @@ module VCAP::CloudController
       if config.get(:perm, :enabled)
         actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
 
-        @perm_client.assign_role(actor, "space-#{role}-#{guid}")
+        begin
+          @perm_client.assign_role(actor, "space-#{role}-#{guid}")
+        rescue GRPC::AlreadyExists
+          # ignored
+        end
       end
 
       space.send("add_#{role}", user)
