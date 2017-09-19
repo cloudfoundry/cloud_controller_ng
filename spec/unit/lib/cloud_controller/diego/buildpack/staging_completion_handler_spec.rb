@@ -252,6 +252,12 @@ module VCAP::CloudController
                 expect(runner).to have_received(:start)
               end
 
+              it 'updates the start command to the value from the buildpack receipt' do
+                expect {
+                  subject.staging_complete(success_response, true)
+                }.to change { app.web_process.reload.command }.to('some command')
+              end
+
               it 'records a buildpack set event for all processes' do
                 ProcessModel.make(app: app, type: 'other')
                 expect {

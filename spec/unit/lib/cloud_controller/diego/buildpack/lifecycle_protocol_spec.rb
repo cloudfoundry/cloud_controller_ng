@@ -187,18 +187,6 @@ module VCAP
                 expect(droplet_hash).to eq({ 'type' => 'sha1', 'value' => 'droplet-sha1-checksum' })
               end
             end
-
-            context 'when process does not have a start command set' do
-              before do
-                droplet.update(process_types: { other: 'command from droplet' })
-                process.update(command: '', type: 'other')
-              end
-
-              it 'uses the droplet detected start command' do
-                start_command = lifecycle_protocol.desired_app_message(process)['start_command']
-                expect(start_command).to eq('command from droplet')
-              end
-            end
           end
 
           describe '#staging_action_builder' do
@@ -315,22 +303,6 @@ module VCAP
 
               it 'uses it' do
                 builder_opts.merge!(checksum_algorithm: 'sha256', checksum_value: 'droplet-sha256-checksum')
-                expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
-                  config,
-                  builder_opts,
-                )
-                lifecycle_protocol.desired_lrp_builder(config, process)
-              end
-            end
-
-            context 'when a start command is not set' do
-              before do
-                process.update(command: nil)
-                allow(process).to receive(:detected_start_command).and_return('/usr/bin/nc')
-              end
-
-              it 'uses the deteceted start command' do
-                builder_opts[:start_command] = '/usr/bin/nc'
                 expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                   config,
                   builder_opts,

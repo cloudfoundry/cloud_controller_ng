@@ -82,7 +82,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if build.in_final_state?
 
         app = droplet.app
-        requires_start_command = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
+        requires_start_command = requires_start_command?(app, payload, with_start)
 
         if payload[:result][:process_types].blank? && !with_start
           payload[:error] = { message: 'No process types returned from stager', id: DEFAULT_STAGING_ERROR }
@@ -109,6 +109,10 @@ module VCAP::CloudController
         end
       end
 
+      def requires_start_command?(app, payload, with_start)
+        with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
+      end
+
       def handle_missing_droplet!(payload)
         raise NotImplementedError
       end
@@ -123,6 +127,9 @@ module VCAP::CloudController
           app.lock!
 
           app.update(droplet: droplet)
+
+          command = droplet.process_types[VCAP::CloudController::ProcessTypes::WEB]
+          web_process.update(command: command)
 
           app.processes.each do |p|
             p.lock!
