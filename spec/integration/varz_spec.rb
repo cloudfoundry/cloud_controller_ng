@@ -11,7 +11,7 @@ RSpec.describe 'Cloud Controller', type: :integration do
 
   it 'responds to /varz with the expected keys' do
     varz_headers = {
-      'Authorization' => "Basic #{Base64.encode64('varz:password')}"
+      'Authorization' => "Basic #{Base64.strict_encode64('varz:password')}"
     }
 
     make_get_request('/varz', varz_headers, 7800).tap do |response|
