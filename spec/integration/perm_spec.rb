@@ -56,6 +56,45 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     end
   end
 
+  describe 'DELETE /v2/organizations/:guid' do
+    let(:worker) { Delayed::Worker.new }
+
+    [:user, :manager, :auditor, :billing_manager].each do |role|
+      it "deletes the org-#{role}-<org_id> role" do
+        post '/v2/organizations', { name: 'v2-org' }.to_json
+        expect(last_response.status).to eq(201)
+
+        json_body = JSON.parse(last_response.body)
+        org_id = json_body['metadata']['guid']
+        role_name = "org-#{role}-#{org_id}"
+
+        delete "/v2/organizations/#{org_id}"
+
+        expect(last_response.status).to eq(204)
+
+        worker.work_off
+
+        expect {
+          client.get_role(role_name)
+        }.to raise_error GRPC::NotFound
+      end
+
+      it 'alerts the user if the org does not exist' do
+        post '/v2/organizations', { name: 'v2-org' }.to_json
+        expect(last_response.status).to eq(201)
+
+        json_body = JSON.parse(last_response.body)
+        org_id = json_body['metadata']['guid']
+
+        delete "/v2/organizations/#{org_id}"
+        expect(last_response.status).to eq(204)
+
+        delete "/v2/organizations/#{org_id}"
+        expect(last_response.status).to eq(404)
+      end
+    end
+  end
+
   describe 'PUT /v2/organizations/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
 

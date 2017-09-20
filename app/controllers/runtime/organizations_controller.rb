@@ -1,9 +1,13 @@
 require 'actions/organization_delete'
+require 'actions/space_delete'
+require 'actions/perm_roles_delete'
 require 'fetchers/organization_user_roles_fetcher'
 require 'grpc'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
+    ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
+
     def self.dependencies
       [
         :username_and_roles_populating_collection_renderer,
@@ -165,7 +169,7 @@ module VCAP::CloudController
       [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: org.memory_used })]
     end
 
-    [:user, :manager, :billing_manager, :auditor].each do |role|
+    ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       put "/v2/organizations/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
@@ -193,7 +197,7 @@ module VCAP::CloudController
       end
     end
 
-    [:user, :manager, :billing_manager, :auditor].each do |role|
+    ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       delete "/v2/organizations/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
@@ -249,7 +253,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      delete_action = OrganizationDelete.new(SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository))
+      org_delete_action = OrganizationDelete.new(SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository))
+      perm_role_names = ROLE_NAMES.map { |role| "org-#{role}" }
+      delete_action = PermRolesDelete.new(
+        @perm_client, config.get(:perm, :enabled), org_delete_action, perm_role_names
+      )
+
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       response = enqueue_deletion_job(deletion_job)
 
@@ -363,7 +372,7 @@ module VCAP::CloudController
 
     def after_create(organization)
       if config.get(:perm, :enabled)
-        [:user, :manager, :auditor, :billing_manager].each do |role|
+        ROLE_NAMES.each do |role|
           @perm_client.create_role("org-#{role}-#{organization.guid}")
         end
       end
@@ -401,7 +410,7 @@ module VCAP::CloudController
     def get_current_role_guids(org)
       current_role_guids = {}
 
-      %w(user manager billing_manager auditor).each do |role|
+      ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         if request_attrs[key]
@@ -418,7 +427,7 @@ module VCAP::CloudController
     def generate_role_events_on_update(organization, current_role_guids)
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
-      %w(manager auditor user billing_manager).each do |role|
+      ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         user_guids_removed = []
