@@ -56,7 +56,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     end
   end
 
-  describe 'PUT /v2/ogranizations/:guid/:role/:user_guid' do
+  describe 'PUT /v2/organizations/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
 
     [:user, :manager, :auditor, :billing_manager].each do |role|
@@ -90,6 +90,36 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
           expect(client.has_role?(actor, role_name)).to be(true)
           roles = client.list_actor_roles(actor)
           expect(roles.length).to be(1)
+        end
+      end
+    end
+  end
+
+  describe 'DELETE /v2/organizations/:guid/:role/:user_guid' do
+    let(:org) { VCAP::CloudController::Organization.make }
+
+    [:user, :manager, :auditor, :billing_manager].each do |role|
+      describe "DELETE /v2/organizations/:guid/#{role}s/:user_guid" do
+        let(:role_name) { "org-#{role}-#{org.guid}" }
+
+        before do
+          client.create_role role_name
+        end
+
+        it "removes the user from the org #{role} role" do
+          client.assign_role(actor, role_name)
+
+          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(204)
+
+          expect(client.has_role?(actor, role_name)).to be(false)
+          roles = client.list_actor_roles(actor)
+          expect(roles).to be_empty
+        end
+
+        it "does nothing if the user does not have the org #{role} role" do
+          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(204)
         end
       end
     end
@@ -176,6 +206,41 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
           expect(client.has_role?(actor, role_name)).to be(true)
           roles = client.list_actor_roles(actor)
           expect(roles.length).to be(1)
+        end
+      end
+    end
+  end
+
+  describe 'DELETE /v2/spaces/:guid/:role/:user_guid' do
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) {
+      VCAP::CloudController::Space.make(
+        organization: org,
+      )
+    }
+
+    [:developer, :manager, :auditor].each do |role|
+      describe "DELETE /v2/spaces/:guid/#{role}s/:user_guid" do
+        let(:role_name) { "space-#{role}-#{space.guid}" }
+
+        before do
+          client.create_role role_name
+        end
+
+        it "removes the user from the space #{role} role" do
+          client.assign_role(actor, role_name)
+
+          delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(204)
+
+          expect(client.has_role?(actor, role_name)).to be(false)
+          roles = client.list_actor_roles(actor)
+          expect(roles).to be_empty
+        end
+
+        it "does nothing if the user does not have the space #{role} role" do
+          delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(204)
         end
       end
     end

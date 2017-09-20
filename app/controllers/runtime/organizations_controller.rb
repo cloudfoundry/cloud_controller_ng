@@ -239,6 +239,16 @@ module VCAP::CloudController
       define_method("remove_#{role}_by_user_id") do |guid, user_id|
         response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
 
+        if config.get(:perm, :enabled)
+          actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
+
+          begin
+            @perm_client.unassign_role(actor, "org-#{role}-#{guid}")
+          rescue GRPC::NotFound
+            # ignored
+          end
+        end
+
         user = User.first(guid: user_id)
         user.username = '' unless user.username
 

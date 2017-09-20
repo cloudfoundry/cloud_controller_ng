@@ -317,6 +317,16 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "User with guid #{user_id} not found") unless user
       user.username = username
 
+      if config.get(:perm, :enabled)
+        actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
+
+        begin
+          @perm_client.unassign_role(actor, "space-#{role}-#{space[:guid]}")
+        rescue GRPC::NotFound
+          # ignored
+        end
+      end
+
       space.send("remove_#{role}", user)
 
       @user_event_repository.record_space_role_remove(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
