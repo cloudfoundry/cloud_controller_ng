@@ -237,30 +237,7 @@ module VCAP::CloudController
       end
 
       define_method("remove_#{role}_by_user_id") do |guid, user_id|
-        response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
-
-        if config.get(:perm, :enabled)
-          actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
-
-          begin
-            @perm_client.unassign_role(actor, "org-#{role}-#{guid}")
-          rescue GRPC::NotFound
-            # ignored
-          end
-        end
-
-        user = User.first(guid: user_id)
-        user.username = '' unless user.username
-
-        @user_event_repository.record_organization_role_remove(
-          Organization.first(guid: guid),
-          user,
-          role.to_s,
-          UserAuditInfo.from_context(SecurityContext),
-          {}
-        )
-
-        response
+        remove_role(guid, role, user_id)
       end
     end
 
@@ -351,6 +328,33 @@ module VCAP::CloudController
       @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
+    end
+
+    def remove_role(guid, role, user_id)
+      response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
+
+      if config.get(:perm, :enabled)
+        actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
+
+        begin
+          @perm_client.unassign_role(actor, "org-#{role}-#{guid}")
+        rescue GRPC::NotFound
+          # ignored
+        end
+      end
+
+      user = User.first(guid: user_id)
+      user.username = '' unless user.username
+
+      @user_event_repository.record_organization_role_remove(
+        Organization.first(guid: guid),
+        user,
+        role.to_s,
+        UserAuditInfo.from_context(SecurityContext),
+        {}
+      )
+
+      response
     end
 
     def user_guid_parameter

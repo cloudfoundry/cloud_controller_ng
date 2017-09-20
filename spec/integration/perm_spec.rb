@@ -41,7 +41,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
       end
 
       it 'does not allow the user to create an org that already exists' do
-        body = {name: 'v2-org'}.to_json
+        body = { name: 'v2-org' }.to_json
         post '/v2/organizations', body
 
         expect(last_response.status).to eq(201)
