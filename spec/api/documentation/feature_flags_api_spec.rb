@@ -7,15 +7,6 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
 
   authenticated_request
 
-  shared_context 'name_parameter' do
-    parameter :name, 'The name of the feature flag',
-      valid_values: ['user_org_creation', 'app_bits_upload', 'private_domain_creation', 'app_scaling',
-                     'route_creation', 'service_instance_creation', 'diego_docker', 'set_roles_by_username',
-                     'unset_roles_by_username', 'task_creation (experimental)',
-                     'space_scoped_private_broker_creation (experimental)',
-                     'space_developer_env_var_visibility (experimental)']
-  end
-
   shared_context 'updatable_fields' do
     field :enabled, 'The state of the feature flag.', required: true, valid_values: [true, false]
     field :error_message, 'The custom error message for the feature flag.', example_values: ['error message']
@@ -28,7 +19,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(13)
+      expect(parsed_response.length).to eq(14)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -119,6 +110,13 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
            'enabled' => true,
            'error_message' => nil,
            'url' => '/v2/config/feature_flags/env_var_visibility'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'service_instance_sharing',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/service_instance_sharing'
         })
     end
   end
@@ -348,8 +346,24 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
     end
   end
 
+  get '/v2/config/feature_flags/service_instance_sharing' do
+    example 'Get the Service Instance Sharing feature flag (experimental)' do
+      explanation 'When enabled, space developers can share service instances with other spaces.
+                   When disabled, space developers can not share service instances with other spaces.'
+      client.get '/v2/config/feature_flags/service_instance_sharing', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'service_instance_sharing',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/service_instance_sharing'
+        })
+    end
+  end
+
   put '/v2/config/feature_flags/:name' do
-    include_context 'name_parameter'
     include_context 'updatable_fields'
 
     example 'Set a feature flag' do
