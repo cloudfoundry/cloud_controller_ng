@@ -3,6 +3,8 @@ require 'fetchers/space_user_roles_fetcher'
 
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
+    ROLE_NAMES = [:manager, :developer, :auditor].freeze
+
     def self.dependencies
       [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client,
        :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository, :perm_client]
@@ -165,12 +167,16 @@ module VCAP::CloudController
 
       @space_event_repository.record_space_delete_request(space, UserAuditInfo.from_context(SecurityContext), recursive_delete?)
 
-      delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
+      space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
+      perm_role_names = ROLE_NAMES.map { |role| "space-#{role}" }
+      delete_action =
+        PermRolesDelete.new(@perm_client, config.get(:perm, :enabled), space_delete_action, perm_role_names)
+
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
 
-    [:manager, :developer, :auditor].each do |role|
+    ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       put "/v2/spaces/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
@@ -200,7 +206,7 @@ module VCAP::CloudController
       end
     end
 
-    [:manager, :developer, :auditor].each do |role|
+    ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       delete "/v2/spaces/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
@@ -334,7 +340,7 @@ module VCAP::CloudController
 
     def after_create(space)
       if config.get(:perm, :enabled)
-        [:developer, :manager, :auditor].each do |role|
+        ROLE_NAMES.each do |role|
           @perm_client.create_role("space-#{role}-#{space.guid}")
         end
       end
@@ -376,7 +382,7 @@ module VCAP::CloudController
     def get_current_role_guids(space)
       current_role_guids = {}
 
-      %w(developer manager auditor).each do |role|
+      ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         if request_attrs[key]
@@ -393,7 +399,7 @@ module VCAP::CloudController
     def generate_role_events_on_update(space, current_role_guids)
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
-      %w(manager auditor developer).each do |role|
+      ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         user_guids_removed = []
