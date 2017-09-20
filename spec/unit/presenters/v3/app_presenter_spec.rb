@@ -48,6 +48,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
         expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo', 'limabean'])
+        expect(result[:relationships][:space][:data][:guid]).to eq(app.space.guid)
       end
     end
   end

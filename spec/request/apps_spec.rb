@@ -53,6 +53,13 @@ RSpec.describe 'Apps' do
               'stack'      => VCAP::CloudController::Stack.default.name,
             }
           },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
           'links'                   => {
@@ -114,6 +121,13 @@ RSpec.describe 'Apps' do
           'lifecycle' => {
             'type' => 'docker',
             'data' => {}
+          },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
           },
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
@@ -199,6 +213,13 @@ RSpec.describe 'Apps' do
                   'stack'      => 'stack-name',
                 }
               },
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => space.guid
+                  }
+                }
+              },
               'created_at'              => iso8601,
               'updated_at'              => iso8601,
               'links' => {
@@ -222,6 +243,13 @@ RSpec.describe 'Apps' do
               'lifecycle' => {
                 'type' => 'docker',
                 'data' => {}
+              },
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => space.guid
+                  }
+                }
               },
               'created_at'              => iso8601,
               'updated_at'              => iso8601,
@@ -406,6 +434,13 @@ RSpec.describe 'Apps' do
               'stack'      => 'stack-name',
             }
           },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
           'links' => {
             'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
             'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
@@ -581,6 +616,13 @@ RSpec.describe 'Apps' do
               'stack' => stack.name,
             }
           },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
           'created_at'              => iso8601,
           'updated_at'              => iso8601,
           'links'                   => {
@@ -654,6 +696,13 @@ RSpec.describe 'Apps' do
             'stack'      => 'stack-name',
           }
         },
+        'relationships' => {
+          'space' => {
+            'data' => {
+              'guid' => space.guid
+            }
+          }
+        },
         'links' => {
           'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
@@ -719,6 +768,13 @@ RSpec.describe 'Apps' do
             'data' => {
               'buildpacks' => ['http://example.com/git'],
               'stack'      => 'stack-name',
+            }
+          },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
             }
           },
           'links' => {
