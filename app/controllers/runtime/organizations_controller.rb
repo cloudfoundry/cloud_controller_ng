@@ -253,10 +253,13 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      org_delete_action = OrganizationDelete.new(SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository))
-      perm_role_names = ROLE_NAMES.map { |role| "org-#{role}" }
+      perm_org_role_names = ROLE_NAMES.map { |role| "org-#{role}" }
+      perm_space_role_names = SpacesController::ROLE_NAMES.map { |role| "space-#{role}" }
+
+      space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
+      org_delete_action = OrganizationDelete.new(PermRolesDelete.new(@perm_client, config.get(:perm, :enabled), space_delete_action, perm_space_role_names))
       delete_action = PermRolesDelete.new(
-        @perm_client, config.get(:perm, :enabled), org_delete_action, perm_role_names
+        @perm_client, config.get(:perm, :enabled), org_delete_action, perm_org_role_names
       )
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)

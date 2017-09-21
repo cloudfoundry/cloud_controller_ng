@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/BlockLength
 require 'spec_helper'
 require 'perm'
 
@@ -63,23 +64,100 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     let(:worker) { Delayed::Worker.new }
 
     ORG_ROLES.each do |role|
-      it "deletes the org-#{role}-<org_id> role" do
-        post '/v2/organizations', { name: 'v2-org' }.to_json
-        expect(last_response.status).to eq(201)
+      describe 'when the org does not have spaces' do
+        it "deletes the org-#{role}-<org_id> role" do
+          post '/v2/organizations', { name: 'v2-org' }.to_json
 
-        json_body = JSON.parse(last_response.body)
-        org_id = json_body['metadata']['guid']
-        role_name = "org-#{role}-#{org_id}"
+          expect(last_response.status).to eq(201)
 
-        delete "/v2/organizations/#{org_id}"
+          json_body = JSON.parse(last_response.body)
+          org_id = json_body['metadata']['guid']
+          role_name = "org-#{role}-#{org_id}"
 
-        expect(last_response.status).to eq(204)
+          delete "/v2/organizations/#{org_id}"
 
-        worker.work_off
+          expect(last_response.status).to eq(204)
 
-        expect {
-          client.get_role(role_name)
-        }.to raise_error GRPC::NotFound
+          worker.work_off
+
+          expect {
+            client.get_role(role_name)
+          }.to raise_error GRPC::NotFound
+        end
+      end
+
+      describe 'when the org has spaces' do
+        describe 'without "recursive" param' do
+          it 'alerts the user without deleting any roles' do
+            post '/v2/organizations', { name: 'v2-org' }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+            org_role_name = "org-#{role}-#{org_id}"
+
+            post '/v2/spaces', {
+              name: 'v2-space',
+              organization_guid: org_id
+            }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            space_id = json_body['metadata']['guid']
+            space_role_name = "space-developer-#{space_id}"
+
+            delete "/v2/organizations/#{org_id}?recursive=false"
+
+            expect(last_response.status).to eq(400)
+
+            worker.work_off
+
+            expect {
+              client.get_role(org_role_name)
+            }.not_to raise_error
+            expect {
+              client.get_role(space_role_name)
+            }.not_to raise_error
+          end
+        end
+
+        describe 'with "recursive" param' do
+          it 'deletes the roles recursively' do
+            post '/v2/organizations', { name: 'v2-org' }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+            org_role_name = "org-#{role}-#{org_id}"
+
+            post '/v2/spaces', {
+              name: 'v2-space',
+              organization_guid: org_id
+            }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            space_id = json_body['metadata']['guid']
+            space_role_name = "space-developer-#{space_id}"
+
+            delete "/v2/organizations/#{org_id}?recursive=true"
+
+            expect(last_response.status).to eq(204)
+
+            worker.work_off
+
+            expect {
+              client.get_role(org_role_name)
+            }.to raise_error GRPC::NotFound
+            expect {
+              client.get_role(space_role_name)
+            }.to raise_error GRPC::NotFound
+          end
+        end
       end
 
       it 'alerts the user if the org does not exist' do
