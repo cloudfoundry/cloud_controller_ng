@@ -661,7 +661,6 @@ properties:
 
   uaa.clients.cc_service_key_client.secret:
     description: "Used for fetching service key values from CredHub"
-    default: cc-service-key-client-secret
 
   uaa.clients.cc_routing.secret:
     description: "Used for fetching routing information from the Routing API"
