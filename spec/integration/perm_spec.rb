@@ -1,4 +1,3 @@
-# rubocop:disable Metrics/BlockLength
 require 'spec_helper'
 require 'perm'
 
