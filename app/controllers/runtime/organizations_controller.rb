@@ -1,5 +1,6 @@
 require 'actions/organization_delete'
 require 'fetchers/organization_user_roles_fetcher'
+require 'grpc'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
@@ -236,20 +237,7 @@ module VCAP::CloudController
       end
 
       define_method("remove_#{role}_by_user_id") do |guid, user_id|
-        response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
-
-        user = User.first(guid: user_id)
-        user.username = '' unless user.username
-
-        @user_event_repository.record_organization_role_remove(
-          Organization.first(guid: guid),
-          user,
-          role.to_s,
-          UserAuditInfo.from_context(SecurityContext),
-          {}
-        )
-
-        response
+        remove_role(guid, role, user_id)
       end
     end
 
@@ -326,10 +314,13 @@ module VCAP::CloudController
       org = find_guid_and_validate_access(:update, guid)
 
       if config.get(:perm, :enabled)
-        r = @perm_client.create_role("org-#{role}-#{guid}")
         actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
 
-        @perm_client.assign_role(actor, r.id)
+        begin
+          @perm_client.assign_role(actor, "org-#{role}-#{guid}")
+        rescue GRPC::AlreadyExists
+          # ignored
+        end
       end
 
       org.send("add_#{role}", user)
@@ -339,11 +330,44 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
     end
 
+    def remove_role(guid, role, user_id)
+      response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
+
+      if config.get(:perm, :enabled)
+        actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
+
+        begin
+          @perm_client.unassign_role(actor, "org-#{role}-#{guid}")
+        rescue GRPC::NotFound
+          # ignored
+        end
+      end
+
+      user = User.first(guid: user_id)
+      user.username = '' unless user.username
+
+      @user_event_repository.record_organization_role_remove(
+        Organization.first(guid: guid),
+        user,
+        role.to_s,
+        UserAuditInfo.from_context(SecurityContext),
+        {}
+      )
+
+      response
+    end
+
     def user_guid_parameter
       @opts[:q][0].split(':')[1] if @opts[:q]
     end
 
     def after_create(organization)
+      if config.get(:perm, :enabled)
+        [:user, :manager, :auditor, :billing_manager].each do |role|
+          @perm_client.create_role("org-#{role}-#{organization.guid}")
+        end
+      end
+
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
       @organization_event_repository.record_organization_create(organization, user_audit_info, request_attrs)

@@ -296,10 +296,13 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:update, guid)
 
       if config.get(:perm, :enabled)
-        r = @perm_client.create_role("space-#{role}-#{guid}")
         actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
 
-        @perm_client.assign_role(actor, r.id)
+        begin
+          @perm_client.assign_role(actor, "space-#{role}-#{guid}")
+        rescue GRPC::AlreadyExists
+          # ignored
+        end
       end
 
       space.send("add_#{role}", user)
@@ -314,12 +317,28 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "User with guid #{user_id} not found") unless user
       user.username = username
 
+      if config.get(:perm, :enabled)
+        actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
+
+        begin
+          @perm_client.unassign_role(actor, "space-#{role}-#{space[:guid]}")
+        rescue GRPC::NotFound
+          # ignored
+        end
+      end
+
       space.send("remove_#{role}", user)
 
       @user_event_repository.record_space_role_remove(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def after_create(space)
+      if config.get(:perm, :enabled)
+        [:developer, :manager, :auditor].each do |role|
+          @perm_client.create_role("space-#{role}-#{space.guid}")
+        end
+      end
+
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
       @space_event_repository.record_space_create(space, user_audit_info, request_attrs)
