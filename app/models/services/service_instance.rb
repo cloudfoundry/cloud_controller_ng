@@ -25,6 +25,15 @@ module VCAP::CloudController
 
     one_to_many :service_bindings, before_add: :validate_service_binding, key: :service_instance_guid, primary_key: :guid
     one_to_many :service_keys
+
+    many_to_many :shared_spaces,
+          left_key:          :service_instance_guid,
+          left_primary_key:  :guid,
+          right_key:         :target_space_guid,
+          right_primary_key: :guid,
+          join_table:        :service_instance_shares,
+          class: VCAP::CloudController::Space
+
     many_to_many :routes, join_table: :route_bindings
 
     many_to_one :space, after_set: :validate_space
