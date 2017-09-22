@@ -127,7 +127,7 @@ RSpec.describe 'Service Broker' do
                   schemas: {
                     service_instance: {
                       create: {
-                        parameters: { type: 'object', properties: true }
+                        parameters: { '$schema': 'http://json-schema.org/draft-04/schema#', properties: true }
                       }
                     }
                   }
@@ -329,7 +329,26 @@ RSpec.describe 'Service Broker' do
             end
           end
 
-          context "of type #{test[:type]} and action #{schema_action} has an invalid type" do
+          context "of type #{test[:type]} and action #{schema_action} has a valid schema" do
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', 'type': 'object' } } } } }
+
+            before do
+              stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+            end
+
+            it 'succeeds' do
+              post('/v2/service_brokers', {
+                name: 'some-guid',
+                broker_url: 'http://broker-url',
+                auth_username: 'username',
+                auth_password: 'password'
+              }.to_json, admin_headers)
+
+              expect(last_response.status).to eql(201)
+            end
+          end
+
+          context "of type #{test[:type]} and action #{schema_action} is not a JSON object" do
             {
               "#{test[:type]}.#{schema_action}": { (test[:type]).to_s => { schema_action => true } },
               "#{test[:type]}.#{schema_action}.parameters": { (test[:type]).to_s => { schema_action => { 'parameters' => true } } },
@@ -362,7 +381,7 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions)" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object', 'properties': true } } } } }
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', 'properties': true } } } } }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -390,7 +409,18 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} does not conform to JSON Schema Draft 04 (experimental support for later versions) with multiple problems" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object', 'properties': true, 'anyOf': true } } } } }
+            let(:schema) {
+              {
+                (test[:type]).to_s => {
+                schema_action => {
+                  'parameters' => {
+                    '$schema': 'http://json-schema.org/draft-04/schema#',
+                    'properties': true,
+                    'anyOf': true }
+                  }
+                }
+              }
+            }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -447,7 +477,18 @@ RSpec.describe 'Service Broker' do
 
           context "of type #{test[:type]} and action #{schema_action} has an external uri reference" do
             let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
-            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/ref' } } } } }
+            let(:schema) {
+              {
+                (test[:type]).to_s => {
+                  schema_action => {
+                    'parameters' => {
+                      '$schema': 'http://json-schema.org/draft-04/schema#',
+                      '$ref': 'http://example.com/ref'
+                    }
+                  }
+                }
+              }
+            }
 
             before do
               stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
@@ -471,6 +512,34 @@ RSpec.describe 'Service Broker' do
               )
             end
           end
+
+          context "of type #{test[:type]} and action #{schema_action} has no $schema" do
+            let(:path) { "#{test[:type]}.#{schema_action}.parameters" }
+            let(:schema) { { (test[:type]).to_s => { schema_action => { 'parameters' => { 'type': 'object' } } } } }
+
+            before do
+              stub_catalog_fetch(200, default_catalog(plan_schemas: schema))
+            end
+
+            it 'responds with invalid' do
+              post('/v2/service_brokers', {
+                name: 'some-guid',
+                broker_url: 'http://broker-url',
+                auth_username: 'username',
+                auth_password: 'password'
+              }.to_json, admin_headers)
+
+              expect(last_response.status).to eql(502)
+              expect(decoded_response['code']).to eql(270012)
+              expect(decoded_response['description']).to eql(
+                "Service broker catalog is invalid: \n" \
+                "Service MySQL\n" \
+                "  Plan small\n" \
+                "    Schemas\n" \
+                "      Schema #{path} is not valid. Schema must have $schema key but was not present\n"
+              )
+            end
+          end
         end
       end
     end
@@ -479,11 +548,11 @@ RSpec.describe 'Service Broker' do
       let(:schema) {
         {
           'service_instance' => {
-            'create' => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/create' } },
-            'update' => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/update' } }
+            'create' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/create' } },
+            'update' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/update' } }
           },
           'service_binding' => {
-            'create' => { 'parameters' => { 'type': 'object', '$ref': 'http://example.com/binding' } },
+            'create' => { 'parameters' => { '$schema': 'http://json-schema.org/draft-04/schema#', '$ref': 'http://example.com/binding' } },
           }
         }
       }
@@ -518,11 +587,11 @@ RSpec.describe 'Service Broker' do
       let(:schema) {
         {
           'service_instance' => {
-            'create' => { 'parameters' => { 'type' => 'object' } },
-            'update' => { 'parameters' => { 'type' => 'object' } }
+            'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } },
+            'update' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } }
           },
           'service_binding' => {
-            'create' => { 'parameters' => { 'type' => 'object' } },
+            'create' => { 'parameters' => { '$schema' => 'http://json-schema.org/draft-04/schema#' } },
           }
         }
       }
@@ -585,50 +654,6 @@ RSpec.describe 'Service Broker' do
 
         resources.each do |plan|
           expect(plan['entity']['schemas']).to eq(schema)
-        end
-      end
-
-      context 'when the schemas are invalid' do
-        let(:schema) {
-          {
-            'service_instance' => {
-              'create' => { 'parameters' => { 'type' => 'string' } },
-              'update' => { 'parameters' => { 'type' => 'string' } }
-            },
-            'service_binding' => {
-              'create' => { 'parameters' => { 'type' => 'string' } },
-            }
-          }
-        }
-
-        it 'reponds with validation errors' do
-          expect(last_response.status).to eq(502)
-          expect(decoded_response['code']).to eql(270012)
-          expect(decoded_response['description']).to eql(
-            "Service broker catalog is invalid: \n" \
-            "Service MySQL\n" \
-            "  Plan plan1\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "  Plan plan2\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "Service MySQL-2\n" \
-            "  Plan plan3\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "  Plan plan4\n" \
-            "    Schemas\n" \
-            "      Schema service_instance.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_instance.update.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-            "      Schema service_binding.create.parameters is not valid. must have field \"type\", with value \"object\"\n" \
-          )
         end
       end
     end
