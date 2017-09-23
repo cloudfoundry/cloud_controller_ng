@@ -41,17 +41,19 @@ module VCAP::CloudController
       }
     end
 
+    let(:basic_auth) { [body_hash[:auth_username], body_hash[:auth_password]] }
+
     let(:broker_catalog_url) do
       build_broker_url_from_params(
         body_hash[:url] || body_hash[:broker_url],
-        body_hash[:auth_username],
-        body_hash[:auth_password],
         '/v2/catalog')
     end
 
-    def stub_catalog(broker_url: nil)
+    def stub_catalog(broker_url: nil, username: nil, password: nil)
       url = broker_url || broker_catalog_url
+      auth = (username && password) ? [username, password] : basic_auth
       stub_request(:get, url).
+        with(basic_auth: auth).
         to_return(status: 200, body: catalog_json.to_json)
     end
 
@@ -208,7 +210,7 @@ module VCAP::CloudController
         post '/v2/service_brokers', body
 
         expect(last_response).to have_status_code(201)
-        expect(a_request(:get, broker_catalog_url)).to have_been_made
+        expect(a_request(:get, broker_catalog_url).with(basic_auth: basic_auth)).to have_been_made
       end
 
       it 'returns the serialized broker' do
@@ -273,7 +275,7 @@ module VCAP::CloudController
         end
 
         it 'returns a 400 if a another broker (private or public) exists with that name' do
-          stub_catalog broker_url: 'http://me:abc123@cf-service-broker.example-2.com/v2/catalog'
+          stub_catalog(broker_url: 'http://cf-service-broker.example-2.com/v2/catalog', username: 'me', password: 'abc123')
 
           public_body = {
             name:          name,
@@ -685,7 +687,8 @@ module VCAP::CloudController
           auth_username: 'new-username',
           auth_password: 'new-password',
         }
-        stub_request(:get, build_broker_url_from_params(attrs[:url], attrs[:auth_username], attrs[:auth_password], '/v2/catalog')).
+        stub_request(:get, build_broker_url_from_params(attrs[:url], '/v2/catalog')).
+          with(basic_auth: [attrs[:auth_username], attrs[:auth_password]]).
           to_return(status: 200, body: catalog_json.to_json)
         set_current_user_as_admin
       end

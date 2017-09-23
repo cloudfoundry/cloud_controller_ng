@@ -125,7 +125,7 @@ module VCAP::CloudController
         errors.add(:path, :missing_beginning_slash)
       end
 
-      if path =~ /\?/
+      if path.match?(/\?/)
         errors.add(:path, :path_contains_question)
       end
 

@@ -1255,10 +1255,11 @@ RSpec.describe 'Apps' do
       service_broker = service_binding.service.service_broker
       uri            = URI(service_broker.broker_url)
       broker_url     = uri.host + uri.path
-      broker_auth    = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+      broker_auth    = [service_broker.auth_username, service_broker.auth_password]
       stub_request(
         :delete,
-        %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}).
+        %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}/service_bindings/#{service_binding.guid}}).
+        with(basic_auth: broker_auth).
         to_return(status: 200, body: '{}')
     end
 

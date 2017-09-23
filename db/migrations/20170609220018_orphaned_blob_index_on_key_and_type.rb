@@ -1,11 +1,11 @@
 Sequel.migration do
   change do
     # blob_key unique constraint was added without a name, so mysql and postgres will name them differently
-    if self.class.name =~ /mysql/i
+    if self.class.name.match?(/mysql/i)
       alter_table :orphaned_blobs do
         drop_index :blob_key, name: :blob_key, type: :unique
       end
-    elsif self.class.name =~ /postgres/i
+    elsif self.class.name.match?(/postgres/i)
       alter_table :orphaned_blobs do
         drop_constraint :blob_key, name: :orphaned_blobs_blob_key_key, type: :unique
       end

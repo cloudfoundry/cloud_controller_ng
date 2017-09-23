@@ -35,9 +35,10 @@ RSpec.describe 'Service Broker API integration' do
       let(:broker_response_body) { { state: 'succeeded' }.to_json }
       let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
       let(:operation_data) { nil }
+      let(:basic_auth) { [stubbed_broker_username, stubbed_broker_password] }
 
       let(:expected_request) {
-        url = "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}" \
+        url = "http://#{stubbed_broker_host}" \
         "/v2/service_instances/#{service_instance.guid}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
         if !operation_data.nil?
           url += "&operation=#{operation_data}"
@@ -59,7 +60,7 @@ RSpec.describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect(a_request(:get, expected_request)).
+          expect(a_request(:get, expected_request).with(basic_auth: basic_auth)).
             to have_been_made.once
         end
       end
@@ -75,7 +76,7 @@ RSpec.describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect(a_request(:get, expected_request)).to have_been_made.once
+          expect(a_request(:get, expected_request).with(basic_auth: basic_auth)).to have_been_made.once
         end
 
         it 'calls the endpoint with state that was returned in update' do
@@ -86,7 +87,7 @@ RSpec.describe 'Service Broker API integration' do
 
           Delayed::Worker.new.work_off
 
-          expect(a_request(:get, expected_request)).to have_been_made.once
+          expect(a_request(:get, expected_request).with(basic_auth: basic_auth)).to have_been_made.once
         end
       end
     end

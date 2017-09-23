@@ -9,7 +9,8 @@ module VCAP::Services::ServiceBrokers::V2
     let(:service_id) { Sham.guid }
     let(:instance_id) { Sham.guid }
     let(:url) { 'http://broker.example.com' }
-    let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
+    let(:full_url) { "http://broker.example.com#{path}" }
+    let(:basic_auth) { [auth_username, auth_password] }
     let(:path) { '/the/path' }
     let(:fake_logger) { nil }
 
@@ -41,6 +42,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets X-Broker-Api-Version header correctly' do
         make_request
         expect(a_request(http_method, full_url).
+          with(basic_auth: basic_auth).
           with(query: hash_including({})).
           with(headers: { 'X-Broker-Api-Version' => '2.13' })).
           to have_been_made
@@ -49,6 +51,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets the X-Vcap-Request-Id header to the current request id' do
         make_request
         expect(a_request(http_method, full_url).
+          with(basic_auth: basic_auth).
           with(query: hash_including({})).
           with(headers: { 'X-Vcap-Request-Id' => request_id })).
           to have_been_made
@@ -57,6 +60,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets the Accept header to application/json' do
         make_request
         expect(a_request(http_method, full_url).
+          with(basic_auth: basic_auth).
           with(query: hash_including({})).
           with(headers: { 'Accept' => 'application/json' })).
           to have_been_made
@@ -65,6 +69,7 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets the X-Api-Info-Location header to the /v2/info endpoint at the external address' do
         make_request
         expect(a_request(http_method, full_url).
+          with(basic_auth: basic_auth).
           with(query: hash_including({})).
           with(headers: { 'X-Api-Info-Location' => "#{TestConfig.config[:external_domain]}/v2/info" })).
           to have_been_made
@@ -80,11 +85,12 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when an https URL is used' do
         let(:url) { 'https://broker.example.com' }
-        let(:full_url) { "https://#{auth_username}:#{auth_password}@broker.example.com#{path}" }
+        let(:full_url) { "https://broker.example.com#{path}" }
 
         it 'uses SSL' do
           make_request
-          expect(a_request(http_method, 'https://me:abc123@broker.example.com/the/path').
+          expect(a_request(http_method, 'https://broker.example.com/the/path').
+            with(basic_auth: ['me', 'abc123']).
             with(query: hash_including({}))).
             to have_been_made
         end
@@ -92,14 +98,14 @@ module VCAP::Services::ServiceBrokers::V2
         describe 'ssl cert verification' do
           let(:http_client) do
             double(:http_client,
-                   :connect_timeout= => nil,
-                   :receive_timeout= => nil,
-                   :send_timeout= => nil,
-                   :set_auth => nil,
-                   :default_header= => nil,
-                   :default_header => {},
-                   :ssl_config => ssl_config,
-                   :request => response)
+              :connect_timeout= => nil,
+              :receive_timeout= => nil,
+              :send_timeout= => nil,
+              :set_auth => nil,
+              :default_header= => nil,
+              :default_header => {},
+              :ssl_config => ssl_config,
+              :request => response)
           end
 
           let(:response) { double(:response, code: nil, reason: nil, body: {}.to_json, headers: nil) }
@@ -147,6 +153,7 @@ module VCAP::Services::ServiceBrokers::V2
             expected_header = Base64.strict_encode64('{"user_id":"some-user-id"}')
 
             expect(a_request(http_method, full_url).
+              with(basic_auth: basic_auth).
               with(query: hash_including({})).
               with(headers: { 'X-Broker-Api-Originating-Identity' => "cloudfoundry #{expected_header}" })).
               to have_been_made
@@ -162,6 +169,7 @@ module VCAP::Services::ServiceBrokers::V2
             }
 
             expect(a_request(http_method, full_url).
+              with(basic_auth: basic_auth).
               with(query: hash_including({})).
               with(&no_user_guid)).to have_been_made
           end
@@ -217,14 +225,14 @@ module VCAP::Services::ServiceBrokers::V2
 
       let(:http_client) do
         double(:http_client,
-               :connect_timeout= => nil,
-               :receive_timeout= => nil,
-               :send_timeout= => nil,
-               :set_auth => nil,
-               :default_header= => nil,
-               :default_header => {},
-               :ssl_config => ssl_config,
-               :request => response)
+          :connect_timeout= => nil,
+          :receive_timeout= => nil,
+          :send_timeout= => nil,
+          :set_auth => nil,
+          :default_header= => nil,
+          :default_header => {},
+          :ssl_config => ssl_config,
+          :request => response)
       end
 
       let(:response) { double(:response, code: 200, reason: 'OK', body: {}.to_json, headers: {}) }
@@ -279,6 +287,7 @@ module VCAP::Services::ServiceBrokers::V2
     shared_examples 'client that maps status codes to status code messages' do
       before do
         stub_request(http_method, full_url).
+          with(basic_auth: basic_auth).
           to_return(status: [status_code, 'custom message'], body: {}.to_json)
       end
 
@@ -367,12 +376,14 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:get, full_url).to_return(status: 200, body: response_body)
+          stub_request(:get, full_url).
+            with(basic_auth: basic_auth).
+            to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct GET http request' do
           make_request
-          expect(a_request(:get, 'http://me:abc123@broker.example.com/the/path')).to have_been_made
+          expect(a_request(:get, 'http://broker.example.com/the/path').with(basic_auth: basic_auth)).to have_been_made
         end
 
         it 'does not set a Content-Type header' do
@@ -382,12 +393,16 @@ module VCAP::Services::ServiceBrokers::V2
             true
           }
 
-          expect(a_request(:get, full_url).with(&no_content_type)).to have_been_made
+          expect(a_request(:get, full_url).
+            with(basic_auth: basic_auth).
+            with(&no_content_type)).to have_been_made
         end
 
         it 'does not have a content body' do
           make_request
           expect(a_request(:get, full_url).
+            with(basic_auth: basic_auth).
+
             with { |req| expect(req.body).to be_empty }).
             to have_been_made
         end
@@ -432,7 +447,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'makes the correct PUT http request' do
           make_request
-          expect(a_request(:put, 'http://me:abc123@broker.example.com/the/path')).to have_been_made
+          expect(a_request(:put, 'http://broker.example.com/the/path').with(basic_auth: basic_auth)).to have_been_made
         end
 
         it 'sets the Content-Type header to application/json' do
@@ -450,6 +465,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'has a content body' do
           make_request
           expect(a_request(:put, full_url).
+            with(basic_auth: basic_auth).
             with(body: {
               'key1' => 'value1',
               'key2' => 'value2'
@@ -499,17 +515,20 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:patch, full_url).to_return(status: 200, body: response_body)
+          stub_request(:patch, full_url).
+            with(basic_auth: basic_auth).
+            to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct PATCH http request' do
           make_request
-          expect(a_request(:patch, 'http://me:abc123@broker.example.com/the/path')).to have_been_made
+          expect(a_request(:patch, 'http://broker.example.com/the/path').with(basic_auth: basic_auth)).to have_been_made
         end
 
         it 'sets the Content-Type header to application/json' do
           make_request
           expect(a_request(:patch, full_url).
+            with(basic_auth: basic_auth).
             with(headers: { 'Content-Type' => 'application/json' })).
             to have_been_made
         end
@@ -522,6 +541,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'has a content body' do
           make_request
           expect(a_request(:patch, full_url).
+            with(basic_auth: basic_auth).
             with(body: {
               'key1' => 'value1',
               'key2' => 'value2'
@@ -563,12 +583,13 @@ module VCAP::Services::ServiceBrokers::V2
         let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: response_body)
+          stub_request(:delete, full_url).
+            with(basic_auth: basic_auth).with(query: message).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct DELETE http request' do
           make_request
-          expect(a_request(:delete, 'http://me:abc123@broker.example.com/the/path?key1=value1&key2=value2')).to have_been_made
+          expect(a_request(:delete, 'http://broker.example.com/the/path?key1=value1&key2=value2').with(basic_auth: basic_auth)).to have_been_made
         end
 
         it 'does not set a Content-Type header' do
@@ -578,12 +599,14 @@ module VCAP::Services::ServiceBrokers::V2
             true
           }
 
-          expect(a_request(:delete, full_url).with(query: message, &no_content_type)).to have_been_made
+          expect(a_request(:delete, full_url).
+            with(basic_auth: basic_auth).with(query: message, &no_content_type)).to have_been_made
         end
 
         it 'does not have a content body' do
           make_request
           expect(a_request(:delete, full_url).
+            with(basic_auth: basic_auth).
             with(query: message).
             with { |req| expect(req.body).to be_empty }).
             to have_been_made
@@ -596,7 +619,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'handling errors' do
         include_examples 'broker communication errors' do
-          let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}?#{message.to_query}" }
+          let(:full_url) { "http://broker.example.com#{path}?#{message.to_query}" }
           let(:request) { client.delete(path, message) }
         end
       end
@@ -606,7 +629,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it_behaves_like 'client that maps status codes to status code messages' do
-        let(:full_url) { "http://#{auth_username}:#{auth_password}@broker.example.com#{path}?#{message.to_query}" }
+        let(:full_url) { "http://broker.example.com#{path}?#{message.to_query}" }
         let(:request) { client.delete(path, message) }
       end
     end

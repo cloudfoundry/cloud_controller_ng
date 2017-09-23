@@ -3,7 +3,7 @@ require:
 - ./spec/linters/migration/include_string_size.rb
 
 AllCops:
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.4
   Include:
     - '**/Gemfile'
     - '**/Rakefile'

@@ -36,7 +36,7 @@ module VCAP
 
             lifecycle_data.message
           rescue Membrane::SchemaValidationError => e
-            if e.message =~ /app_bits_download_uri/
+            if e.message.match?(/app_bits_download_uri/)
               logger.error "app_bits_download_uri is nil for package #{staging_details.package.guid}"
               raise InvalidDownloadUri.new("Failed to get blobstore download url for package #{staging_details.package.guid}")
             else

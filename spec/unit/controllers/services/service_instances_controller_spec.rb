@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceInstancesController, :services do
-    let(:service_broker_url_regex) { %r{http://auth_username:auth_password@example.com/v2/service_instances/(.*)} }
+    let(:service_broker_url_regex) { %r{http://example.com/v2/service_instances/(.*)} }
     let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
     let(:logger) { double(:logger) }
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
         let(:service_broker_url_regex) do
           uri = URI(broker.broker_url)
           broker_url = uri.host + uri.path
-          %r{https://#{broker.auth_username}:#{broker.auth_password}@#{broker_url}/v2/service_instances/(.*)}
+          %r{https://#{broker_url}/v2/service_instances/(.*)}
         end
 
         describe 'plans from a private broker' do
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
           before do
             stub_request(:put, service_broker_url_regex).
-              with(headers: { 'Accept' => 'application/json' }).
+              with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: private_broker)).
               to_return(
                 status: 201,
                 body: { dashboard_url: 'url.com', state: 'succeeded', state_description: '100%' }.to_json,
@@ -137,7 +137,7 @@ module VCAP::CloudController
 
           before do
             stub_request(:put, service_broker_url_regex).
-              with(headers: { 'Accept' => 'application/json' }).
+              with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: broker)).
               to_return(
                 status: 201,
                 body: { dashboard_url: 'url.com', state: 'succeeded', state_description: '100%' }.to_json,
@@ -181,7 +181,7 @@ module VCAP::CloudController
             let(:service_broker_url_regex) do
               uri = URI(broker.broker_url)
               broker_url = uri.host + uri.path
-              %r{https://#{broker.auth_username}:#{broker.auth_password}@#{broker_url}/v2/service_instances/(.*)}
+              %r{https://#{broker_url}/v2/service_instances/(.*)}
             end
 
             it 'allows user to create a service instance in a privileged organization' do
@@ -270,7 +270,7 @@ module VCAP::CloudController
 
     describe 'POST /v2/service_instances' do
       context 'with a v2 service' do
-        let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}" }
+        let(:service_broker_url) { "http://example.com/v2/service_instances/#{ServiceInstance.last.guid}" }
         let(:service_broker_url_with_accepts_incomplete) { "#{service_broker_url}?accepts_incomplete=true" }
         let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
         let(:service) { Service.make(service_broker: service_broker) }
@@ -286,13 +286,13 @@ module VCAP::CloudController
 
         def stub_delete_and_return(status, body)
           stub_request(:delete, service_broker_url_regex).
-            with(headers: { 'Accept' => 'application/json' }).
+            with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
             to_return(status: status, body: body, headers: { 'Content-Type' => 'application/json' })
         end
 
         before do
           stub_request(:put, service_broker_url_regex).
-            with(headers: { 'Accept' => 'application/json' }).
+            with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
             to_return(status: response_code, body: response_body, headers: { 'Content-Type' => 'application/json' })
           set_current_user(developer)
         end
@@ -540,7 +540,7 @@ module VCAP::CloudController
           context 'but the broker rejects synchronous provisioning' do
             before do
               stub_request(:put, service_broker_url_regex).
-                with(headers: { 'Accept' => 'application/json' }).
+                with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 422, body: { error: 'AsyncRequired' }.to_json, headers: { 'Content-Type' => 'application/json' })
               allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
               allow(logger).to receive(:error)
@@ -622,11 +622,11 @@ module VCAP::CloudController
           end
 
           context 'and the worker processes the request successfully' do
-            let(:service_broker_last_operation_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{ServiceInstance.last.guid}/last_operation" }
+            let(:service_broker_last_operation_url) { "http://example.com/v2/service_instances/#{ServiceInstance.last.guid}/last_operation" }
 
             before do
               stub_request(:get, service_broker_url_regex).
-                with(headers: { 'Accept' => 'application/json' }).
+                with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 200, body: {
                   state: 'succeeded',
                   description: 'new description'
@@ -689,7 +689,7 @@ module VCAP::CloudController
 
             before do
               stub_request(:get, service_broker_url_regex).
-                with(headers: { 'Accept' => 'application/json' }).
+                with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 200, body: {
                   state: 'in progress',
                   description: 'new description'
@@ -1310,7 +1310,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_instances/:service_instance_guid' do
-      let(:service_broker_url) { "http://auth_username:auth_password@example.com/v2/service_instances/#{service_instance.guid}" }
+      let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
       let(:old_service_plan)  { ServicePlan.make(:v2, service: service) }
@@ -1333,6 +1333,7 @@ module VCAP::CloudController
       context 'when the request is synchronous' do
         before do
           stub_request(:patch, service_broker_url).
+            with(basic_auth: basic_auth(service_instance: service_instance)).
             to_return(status: status, body: response_body)
         end
 
@@ -1653,7 +1654,7 @@ module VCAP::CloudController
 
             before do
               stub_request(:patch, service_broker_url).
-                with(headers: { 'Accept' => 'application/json' }).
+                with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
             end
 
@@ -2041,7 +2042,7 @@ module VCAP::CloudController
 
             before do
               stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").
-                with(headers: { 'Accept' => 'application/json' }).
+                with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 500, body: response_body, headers: { 'Content-Type' => 'application/json' })
             end
 
@@ -2501,7 +2502,7 @@ module VCAP::CloudController
 
             before do
               stub_request(:delete, service_broker_url_regex).
-                with(headers: { 'Accept' => 'application/json' }).
+                with(headers: { 'Accept' => 'application/json', basic_auth: basic_auth(service_instance: service_instance) }).
                 to_raise(HTTPClient::TimeoutError)
             end
 

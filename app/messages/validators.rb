@@ -69,11 +69,11 @@ module VCAP::CloudController::Validators
         value.each_key do |key|
           if key.length < 1
             record.errors.add(attribute, 'key must be a minimum length of 1')
-          elsif key =~ /\AVCAP_/i
+          elsif key.match?(/\AVCAP_/i)
             record.errors.add(attribute, 'cannot start with VCAP_')
-          elsif key =~ /\AVMC/i
+          elsif key.match?(/\AVMC/i)
             record.errors.add(attribute, 'cannot start with VMC_')
-          elsif key =~ /\APORT\z/i
+          elsif key.match?(/\APORT\z/i)
             record.errors.add(attribute, 'cannot set PORT')
           end
         end

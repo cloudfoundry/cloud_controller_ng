@@ -74,7 +74,7 @@ group :test do
   gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
   gem 'rubocop'
   gem 'timecop'
-  gem 'webmock'
+  gem 'webmock', '> 2.3.1'
 end
 
 group :development do

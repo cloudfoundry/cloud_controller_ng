@@ -10,7 +10,7 @@ Sequel.migration do
     end
 
     collate_opts = {}
-    if self.class.name =~ /mysql/i
+    if self.class.name.match?(/mysql/i)
       collate_opts[:collate] = :utf8_bin
     end
 

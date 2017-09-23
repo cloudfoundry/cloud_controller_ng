@@ -52,7 +52,7 @@ packages:
   - nginx_newrelic_plugin
   - libpq
   - mariadb_connector_c
-  - ruby-2.3
+  - ruby-2.4
 
 provides:
 - name: cloud_controller

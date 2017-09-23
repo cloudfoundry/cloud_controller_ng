@@ -31,11 +31,10 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
     end
 
     before do
-      uri         = URI(service_broker.broker_url)
-      broker_url  = uri.host + uri.path
-      broker_auth = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+      broker_url = service_broker.broker_url
       stub_request(:delete,
-        %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{service_instance.guid}}).
+        %r{https://#{broker_url}/v2/service_instances/#{service_instance.guid}}).
+        with(basic_auth: basic_auth(service_broker: service_broker)).
         to_return(status: 202, body: broker_response_body.to_json)
     end
 
@@ -81,11 +80,10 @@ EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       before do
-        uri          = URI(service_broker.broker_url)
-        uri.user     = service_broker.auth_username
-        uri.password = service_broker.auth_password
+        uri = URI(service_broker.broker_url)
         uri.path += '/v2/service_instances/'
-        stub_request(:put, /#{uri}.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {})
+        stub_request(:put, /#{uri}.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
+          with(basic_auth: basic_auth(service_broker: service_broker))
       end
 
       example 'Creating a Service Instance' do
@@ -124,12 +122,11 @@ EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       before do
-        uri          = URI(service_broker.broker_url)
-        uri.user     = service_broker.auth_username
-        uri.password = service_broker.auth_password
+        uri = URI(service_broker.broker_url)
         uri.path += "/v2/service_instances/#{service_instance.guid}"
         uri.query = 'accepts_incomplete=true'
-        stub_request(:patch, uri.to_s).to_return(status: 202, body: broker_response_body.to_json, headers: {})
+        stub_request(:patch, uri.to_s).to_return(status: 202, body: broker_response_body.to_json, headers: {}).
+          with(basic_auth: basic_auth(service_broker: service_broker))
       end
 
       example 'Update a Service Instance' do
@@ -168,11 +165,9 @@ EOF
       parameter :async, async_description, valid_values: [true, false]
 
       before do
-        uri          = URI(service_broker.broker_url)
-        uri.user     = service_broker.auth_username
-        uri.password = service_broker.auth_password
+        uri = URI(service_broker.broker_url)
         uri.path += "/v2/service_instances/#{service_instance.guid}"
-        stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {})
+        stub_request(:delete, /#{uri}?.*/).to_return(status: 202, body: broker_response_body.to_json, headers: {}).with(basic_auth: basic_auth(service_broker: service_broker))
       end
 
       example 'Delete a Service Instance' do

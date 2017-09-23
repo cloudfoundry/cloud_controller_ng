@@ -52,11 +52,25 @@ module ServiceBrokerHelpers
     end
   end
 
+  def basic_auth(service_binding: nil, service_instance: nil, service_broker: nil)
+    broker = if service_binding
+               service_binding.service_instance.service_broker
+             elsif service_instance
+               service_instance.service_broker
+             else
+               service_broker
+             end
+    username = broker.auth_username
+    password = broker.auth_password
+    [username, password]
+  end
+
   def stub_unbind(service_binding, opts={})
     status = opts[:status] || 200
     body = opts[:body] || '{}'
 
     stub_request(:delete, unbind_url(service_binding)).
+      with(basic_auth: basic_auth(service_binding: service_binding)).
       to_return(status: status, body: body)
   end
 
@@ -143,10 +157,8 @@ module ServiceBrokerHelpers
     '[[:alnum:]-]+'
   end
 
-  def build_broker_url_from_params(url, username, password, relative_path=nil, query=nil)
+  def build_broker_url_from_params(url, relative_path=nil, query=nil)
     uri = URI(url)
-    uri.user = username
-    uri.password = password
     uri.path += relative_path if relative_path
     uri.query = query if query
     uri.to_s
@@ -154,8 +166,6 @@ module ServiceBrokerHelpers
 
   def build_broker_url(broker, relative_path=nil, query=nil)
     uri = URI(broker.broker_url)
-    uri.user = broker.auth_username
-    uri.password = broker.auth_password
     uri.path += relative_path if relative_path
     uri.query = query if query
     uri.to_s

@@ -10,10 +10,8 @@ bundler_args: --deployment --without development
 cache: bundler
 sudo: required
 
-# Travis cannot find the binary for Ruby 2.3, so we specifically choose 2.3.1
-# instead of using the .ruby-version file
 rvm:
-  - 2.3.1
+  - 2.4.2
 
 before_install:
   - gem update --system

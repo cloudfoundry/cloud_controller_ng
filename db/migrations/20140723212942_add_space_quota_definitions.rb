@@ -8,7 +8,7 @@ Sequel.migration do
       Integer :total_services, null: false
       Integer :memory_limit, null: false
       Integer :total_routes, null: false
-      Fixnum :instance_memory_limit, null: false, default: -1
+      Integer :instance_memory_limit, null: false, default: -1
       Integer :organization_id, null: false
 
       foreign_key [:organization_id], :organizations, name: :fk_sqd_organization_id

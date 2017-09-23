@@ -22,9 +22,11 @@ module VCAP::CloudController::BrokerApiHelper
   def stub_catalog_fetch(broker_response_status=200, catalog=nil, broker_host=stubbed_broker_host)
     catalog ||= default_catalog
 
-    stub_request(:get, "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{broker_host}/v2/catalog").to_return(
-      status: broker_response_status,
-      body: catalog.to_json)
+    stub_request(:get, "http://#{broker_host}/v2/catalog").
+      with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
+      to_return(
+        status: broker_response_status,
+        body: catalog.to_json)
   end
 
   def default_catalog(plan_updateable: false, requires: [], plan_schemas: {})
@@ -176,13 +178,14 @@ module VCAP::CloudController::BrokerApiHelper
       state: state
     }
 
-    url = "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation"
+    url = "http://#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation"
     if !operation_data.nil?
       url += "\\?operation=#{operation_data}"
     end
 
     stub_request(:get,
-                 Regexp.new(url)).
+      Regexp.new(url)).
+      with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
       to_return(
         status: 200,
         body: fetch_body.to_json)

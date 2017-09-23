@@ -42,7 +42,7 @@ module VCAP::CloudController
         object_renderer.render_json(self.class, process, @opts)
       ]
     rescue AppStart::InvalidApp => e
-      raise CloudController::Errors::ApiError.new_from_details('DockerDisabled') if e.message =~ /docker_disabled/
+      raise CloudController::Errors::ApiError.new_from_details('DockerDisabled') if e.message.match?(/docker_disabled/)
       raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
     rescue AppStop::InvalidApp => e
       raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)

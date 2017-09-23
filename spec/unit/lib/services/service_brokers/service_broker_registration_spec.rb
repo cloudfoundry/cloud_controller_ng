@@ -8,6 +8,7 @@ module VCAP::Services::ServiceBrokers
     let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
     let(:service_manager) { instance_double(VCAP::Services::ServiceBrokers::ServiceManager, sync_services_and_plans: true, has_warnings?: false) }
     let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::ServiceEventRepository) }
+    let(:basic_auth) { ['cc', 'auth1234'] }
 
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -28,7 +29,7 @@ module VCAP::Services::ServiceBrokers
       end
 
       before do
-        stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(body: '{}')
+        stub_request(:get, 'http://broker.example.com/v2/catalog').with(basic_auth: basic_auth).to_return(body: '{}')
         allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(catalog).to receive(:services).and_return([])
@@ -58,7 +59,7 @@ module VCAP::Services::ServiceBrokers
       it 'fetches the catalog' do
         registration.create
 
-        expect(a_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog')).to have_been_requested
+        expect(a_request(:get, 'http://broker.example.com/v2/catalog').with(basic_auth: basic_auth)).to have_been_requested
       end
 
       it 'resets errors before saving' do
@@ -159,7 +160,7 @@ module VCAP::Services::ServiceBrokers
 
         context 'because the catalog fetch failed' do
           before do
-            stub_request(:get, 'http://cc:auth1234@broker.example.com/v2/catalog').to_return(status: 500)
+            stub_request(:get, 'http://broker.example.com/v2/catalog').with(basic_auth: basic_auth).to_return(status: 500)
           end
 
           it "raises an error, even though we'd rather it not" do
@@ -330,7 +331,7 @@ module VCAP::Services::ServiceBrokers
       let(:body) { '{}' }
 
       before do
-        stub_request(:get, "http://cc:auth1234@#{new_broker_host}/v2/catalog").to_return(status: status, body: body)
+        stub_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth: basic_auth).to_return(status: status, body: body)
         allow(VCAP::Services::SSO::DashboardClientManager).to receive(:new).and_return(client_manager)
         allow(V2::Catalog).to receive(:new).and_return(catalog)
         allow(catalog).to receive(:services).and_return([])
@@ -370,14 +371,14 @@ module VCAP::Services::ServiceBrokers
           registration.update
 
           expect(broker.name).to eq new_name
-          expect(a_request(:get, "http://cc:auth1234@#{old_broker_host}/v2/catalog")).to_not have_been_requested
-          expect(a_request(:get, "http://cc:auth1234@#{new_broker_host}/v2/catalog")).to_not have_been_requested
+          expect(a_request(:get, "http://#{old_broker_host}/v2/catalog").with(basic_auth: basic_auth)).to_not have_been_requested
+          expect(a_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth: basic_auth)).to_not have_been_requested
         end
       end
 
       context 'when the name and another field is updated' do
         before do
-          stub_request(:get, 'http://cc:auth1234@something-url.com/v2/catalog').to_return(body: '{}')
+          stub_request(:get, 'http://something-url.com/v2/catalog').with(basic_auth: basic_auth).to_return(body: '{}')
         end
 
         it 'fetches the catalog' do
@@ -385,14 +386,14 @@ module VCAP::Services::ServiceBrokers
           broker.broker_url = 'http://something-url.com'
           registration.update
 
-          expect(a_request(:get, 'http://cc:auth1234@something-url.com/v2/catalog')).to have_been_requested
+          expect(a_request(:get, 'http://something-url.com/v2/catalog').with(basic_auth: basic_auth)).to have_been_requested
         end
       end
 
       it 'fetches the catalog' do
         registration.update
 
-        expect(a_request(:get, "http://cc:auth1234@#{new_broker_host}/v2/catalog")).to have_been_requested
+        expect(a_request(:get, "http://#{new_broker_host}/v2/catalog").with(basic_auth: basic_auth)).to have_been_requested
       end
 
       it 'syncs services and plans' do

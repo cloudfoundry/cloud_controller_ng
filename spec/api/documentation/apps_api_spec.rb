@@ -191,10 +191,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
         binding_guid   = associated_service_binding.guid
         uri            = URI(service_broker.broker_url)
         broker_url     = uri.host + uri.path
-        broker_auth    = "#{service_broker.auth_username}:#{service_broker.auth_password}"
+        broker_auth    = [service_broker.auth_username, service_broker.auth_password]
         stub_request(
           :delete,
-          %r{https://#{broker_auth}@#{broker_url}/v2/service_instances/#{instance_guid}/service_bindings/#{binding_guid}}).
+          %r{https://#{broker_url}/v2/service_instances/#{instance_guid}/service_bindings/#{binding_guid}}).
+          with(basic_auth: broker_auth).
           to_return(status: 200, body: '{}')
       end
 

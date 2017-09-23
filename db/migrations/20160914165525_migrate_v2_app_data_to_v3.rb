@@ -1,10 +1,10 @@
 Sequel.migration do
   up do
     collate_opts = {}
-    dbtype = if self.class.name =~ /mysql/i
+    dbtype = if self.class.name.match?(/mysql/i)
                collate_opts[:collate] = :utf8_bin
                'mysql'
-             elsif self.class.name =~ /postgres/i
+             elsif self.class.name.match?(/postgres/i)
                'postgres'
              else
                raise 'unknown database'
@@ -160,7 +160,7 @@ Sequel.migration do
       String :droplet_guid, null: false
       foreign_key [:droplet_guid], :droplets, key: :guid, name: :fk_tasks_droplet_guid
 
-      if self.class.name =~ /mysql/i
+      if self.class.name.match?(/mysql/i)
         table_name = tables.find { |t| t =~ /tasks/ }
         run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
       end
@@ -362,9 +362,9 @@ Sequel.migration do
       ## Fill in guids for buildpack_lifecycle_data inserts done for apps and droplets
       ####
 
-      if self.class.name =~ /mysql/i
+      if self.class.name.match?(/mysql/i)
         run 'update buildpack_lifecycle_data set guid=UUID();'
-      elsif self.class.name =~ /postgres/i
+      elsif self.class.name.match?(/postgres/i)
         run 'update buildpack_lifecycle_data set guid=get_uuid();'
       end
 
@@ -383,9 +383,9 @@ Sequel.migration do
         UPDATE apps_routes SET app_port=8080 WHERE app_port IS NULL AND EXISTS (SELECT 1 FROM processes WHERE processes.docker_image IS NULL AND processes.id = apps_routes.app_id)
       SQL
 
-      if self.class.name =~ /mysql/i
+      if self.class.name.match?(/mysql/i)
         run 'update apps_routes set guid=UUID() where guid is NULL;'
-      elsif self.class.name =~ /postgres/i
+      elsif self.class.name.match?(/postgres/i)
         run 'update apps_routes set guid=get_uuid() where guid is NULL;'
       end
 

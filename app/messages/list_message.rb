@@ -24,7 +24,7 @@ module VCAP::CloudController
         columns_allowed = record.valid_order_by_values.join('|')
         matcher = /\A(\+|\-)?(#{columns_allowed})\z/
 
-        unless order_by =~ matcher
+        unless order_by.match?(matcher)
           valid_values_message = record.valid_order_by_values.map { |value| "'#{value}'" }.join(', ')
           record.errors.add(:order_by, "can only be: #{valid_values_message}")
         end

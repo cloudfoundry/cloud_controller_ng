@@ -25,7 +25,7 @@ module VCAP::CloudController::Encryptor
     private
 
     def make_cipher
-      OpenSSL::Cipher::Cipher.new(ALGORITHM)
+      OpenSSL::Cipher.new(ALGORITHM)
     end
 
     def run_cipher(cipher, input, salt)

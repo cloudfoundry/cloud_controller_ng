@@ -5,6 +5,7 @@ module VCAP::CloudController
     include VCAP::CloudController::BrokerApiHelper
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
+    let(:basic_auth) { ['username', 'password'] }
 
     before do
       setup_cc
@@ -36,11 +37,11 @@ module VCAP::CloudController
       end
 
       it 'makes the request to the broker and deprovisions' do
-        expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
+        expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: basic_auth)).to have_been_made
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        expect(a_request(:delete, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
+        expect(a_request(:delete, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: basic_auth)).to have_been_made
       end
 
       it 'responds to user with 504' do
@@ -69,12 +70,12 @@ module VCAP::CloudController
       end
 
       it 'makes the request to the broker and deprovisions' do
-        expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}})).
+        expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).with(basic_auth: basic_auth)).
           to have_been_made
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-        expect(a_request(:delete, %r{http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}})).
+        expect(a_request(:delete, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}})).
           to have_been_made
       end
 

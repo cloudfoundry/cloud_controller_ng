@@ -21,9 +21,11 @@ RSpec.describe 'Service Broker API integration' do
     let(:guid_pattern) { '[[:alnum:]-]+' }
 
     def request_has_version_header(method, url)
-      expect(a_request(method, url).
-          with { |request| expect(request.headers[api_header]).to match(api_accepted_version) }).
-        to have_been_made
+      expect(
+        a_request(method, url).
+          with { |request| expect(request.headers[api_header]).to match(api_accepted_version) }.
+          with(basic_auth: ['username', 'password'])
+      ).to have_been_made
     end
 
     shared_examples 'broker errors' do
@@ -73,20 +75,13 @@ RSpec.describe 'Service Broker API integration' do
 
     describe 'Catalog Management' do
       describe 'fetching the catalog' do
-        let(:username_pattern) { '[[:alnum:]-]+' }
-        let(:password_pattern) { '[[:alnum:]-]+' }
-
         shared_examples 'a catalog fetch request' do
-          it 'makes request to correct endpoint' do
-            expect(a_request(:get, 'http://username:password@broker-url/v2/catalog')).to have_been_made
-          end
-
-          it 'sends basic auth info' do
-            expect(a_request(:get, %r{http://#{username_pattern}:#{password_pattern}@broker-url/v2/catalog})).to have_been_made
+          it 'makes request to correct endpoint with basic auth' do
+            expect(a_request(:get, 'http://broker-url/v2/catalog').with(basic_auth: ['username', 'password'])).to have_been_made
           end
 
           it 'uses correct version header' do
-            request_has_version_header(:get, 'http://username:password@broker-url/v2/catalog')
+            request_has_version_header(:get, 'http://broker-url/v2/catalog')
           end
         end
 
@@ -182,7 +177,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'sends request with basic auth' do
-          expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
+          expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: ['username', 'password'])).to have_been_made
         end
 
         context 'when the response from broker does not contain a dashboard_url' do
@@ -205,7 +200,7 @@ RSpec.describe 'Service Broker API integration' do
           let(:broker_response_status) { 409 }
 
           it 'makes the request to the broker' do
-            expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
+            expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{guid_pattern}}).with(basic_auth: ['username', 'password'])).to have_been_made
           end
 
           it 'responds to user with 409' do
@@ -265,7 +260,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'sends request with basic auth' do
-          expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$})).
+          expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}$}).with(basic_auth: ['username', 'password'])).
             to have_been_made
         end
 

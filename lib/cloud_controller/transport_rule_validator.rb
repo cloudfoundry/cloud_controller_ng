@@ -14,7 +14,7 @@ module CloudController
     end
 
     def self.validate_port(port)
-      return false if /[^\d\s\-,]/ =~ port
+      return false if /[^\d\s\-,]/.match?(port)
 
       port_range = /\A\s*(\d+)\s*-\s*(\d+)\s*\z/.match(port)
       if port_range

@@ -85,10 +85,8 @@ module VCAP::CloudController
 
         describe '#perform' do
           before do
-            uri = URI(broker.broker_url)
-            uri.user = broker.auth_username
-            uri.password = broker.auth_password
-            stub_request(:get, %r{#{uri}/v2/service_instances/#{service_instance.guid}/last_operation}).to_return(
+            basic_auth = [broker.auth_username, broker.auth_password]
+            stub_request(:get, %r{#{broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation}).with(basic_auth: basic_auth).to_return(
               status: status,
               body: response.to_json
             )
@@ -292,10 +290,9 @@ module VCAP::CloudController
 
             context 'due to an HttpRequestError' do
               before do
-                uri = URI(broker.broker_url)
-                uri.user = broker.auth_username
-                uri.password = broker.auth_password
-                stub_request(:get, %r{#{uri}/v2/service_instances/#{service_instance.guid}/last_operation}).to_raise(HTTPClient::TimeoutError.new)
+                basic_auth = [broker.auth_username, broker.auth_password]
+                stub_request(:get, %r{#{broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation}).
+                  with(basic_auth: basic_auth).to_raise(HTTPClient::TimeoutError.new)
               end
 
               it 'should enqueue another fetch job' do
@@ -426,12 +423,10 @@ module VCAP::CloudController
               updated_username = 'new-username'
               updated_password = 'new-password'
 
-              uri = URI(updated_url)
-              uri.user = updated_username
-              uri.password = updated_password
-              expected_url_pattern = %r{#{uri}/v2/service_instances/#{service_instance.guid}/last_operation}
+              basic_auth = [updated_username, updated_password]
+              expected_url_pattern = %r{#{updated_url}/v2/service_instances/#{service_instance.guid}/last_operation}
 
-              stub_request(:get, expected_url_pattern).to_return(
+              stub_request(:get, expected_url_pattern).with(basic_auth: basic_auth).to_return(
                 status: status,
                 body: response.to_json
               )

@@ -21,16 +21,15 @@ module VCAP::CloudController
     let(:unbind_body) { {} }
 
     def broker_url(broker)
-      base_broker_uri = URI.parse(broker.broker_url)
-      base_broker_uri.user = broker.auth_username
-      base_broker_uri.password = broker.auth_password
-      base_broker_uri.to_s
+      broker.broker_url
     end
 
     def stub_requests(broker)
       stub_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+        with(basic_auth: basic_auth(service_broker: broker)).
         to_return(status: bind_status, body: bind_body.to_json)
       stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+        with(basic_auth: basic_auth(service_broker: broker)).
         to_return(status: unbind_status, body: unbind_body.to_json)
     end
 

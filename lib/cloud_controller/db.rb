@@ -46,9 +46,9 @@ module VCAP::CloudController
 
       connection_options[:after_connect] = proc do |conn|
         # time zone is a per connection setting, ensure it is set for each connection in the pool
-        if conn.class.to_s =~ /mysql/i
+        if conn.class.to_s.match?(/mysql/i)
           conn.query("SET time_zone = '+0:00'")
-        elsif conn.class.to_s =~ /postgres/i
+        elsif conn.class.to_s.match?(/postgres/i)
           conn.exec("SET time zone 'UTC'")
         end
       end
