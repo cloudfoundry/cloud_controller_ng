@@ -2,6 +2,9 @@ require 'spec_helper'
 require 'perm'
 
 RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') { 'false' } != 'true' do
+  ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
+  SPACE_ROLES = [:developer, :manager, :auditor].freeze
+
   include ControllerHelpers
 
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
@@ -25,7 +28,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
   end
 
   describe 'POST /v2/organizations' do
-    [:user, :manager, :auditor, :billing_manager].each do |role|
+    ORG_ROLES.each do |role|
       it "creates the org-#{role}-<org_id> role" do
         post '/v2/organizations', { name: 'v2-org' }.to_json
 
@@ -56,10 +59,126 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     end
   end
 
+  describe 'DELETE /v2/organizations/:guid' do
+    let(:worker) { Delayed::Worker.new }
+
+    ORG_ROLES.each do |role|
+      describe 'when the org does not have spaces' do
+        it "deletes the org-#{role}-<org_id> role" do
+          post '/v2/organizations', { name: 'v2-org' }.to_json
+
+          expect(last_response.status).to eq(201)
+
+          json_body = JSON.parse(last_response.body)
+          org_id = json_body['metadata']['guid']
+          role_name = "org-#{role}-#{org_id}"
+
+          delete "/v2/organizations/#{org_id}"
+
+          expect(last_response.status).to eq(204)
+
+          worker.work_off
+
+          expect {
+            client.get_role(role_name)
+          }.to raise_error GRPC::NotFound
+        end
+      end
+
+      describe 'when the org has spaces' do
+        describe 'without "recursive" param' do
+          it 'alerts the user without deleting any roles' do
+            post '/v2/organizations', { name: 'v2-org' }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+            org_role_name = "org-#{role}-#{org_id}"
+
+            post '/v2/spaces', {
+              name: 'v2-space',
+              organization_guid: org_id
+            }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            space_id = json_body['metadata']['guid']
+            space_role_name = "space-developer-#{space_id}"
+
+            delete "/v2/organizations/#{org_id}?recursive=false"
+
+            expect(last_response.status).to eq(400)
+
+            worker.work_off
+
+            expect {
+              client.get_role(org_role_name)
+            }.not_to raise_error
+            expect {
+              client.get_role(space_role_name)
+            }.not_to raise_error
+          end
+        end
+
+        describe 'with "recursive" param' do
+          it 'deletes the roles recursively' do
+            post '/v2/organizations', { name: 'v2-org' }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+            org_role_name = "org-#{role}-#{org_id}"
+
+            post '/v2/spaces', {
+              name: 'v2-space',
+              organization_guid: org_id
+            }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            space_id = json_body['metadata']['guid']
+            space_role_name = "space-developer-#{space_id}"
+
+            delete "/v2/organizations/#{org_id}?recursive=true"
+
+            expect(last_response.status).to eq(204)
+
+            worker.work_off
+
+            expect {
+              client.get_role(org_role_name)
+            }.to raise_error GRPC::NotFound
+            expect {
+              client.get_role(space_role_name)
+            }.to raise_error GRPC::NotFound
+          end
+        end
+      end
+
+      it 'alerts the user if the org does not exist' do
+        post '/v2/organizations', { name: 'v2-org' }.to_json
+        expect(last_response.status).to eq(201)
+
+        json_body = JSON.parse(last_response.body)
+        org_id = json_body['metadata']['guid']
+
+        delete "/v2/organizations/#{org_id}"
+        expect(last_response.status).to eq(204)
+
+        delete "/v2/organizations/#{org_id}"
+        expect(last_response.status).to eq(404)
+      end
+    end
+  end
+
   describe 'PUT /v2/organizations/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
 
-    [:user, :manager, :auditor, :billing_manager].each do |role|
+    ORG_ROLES.each do |role|
       describe "PUT /v2/organizations/:guid/#{role}s/:user_guid" do
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
@@ -98,7 +217,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
   describe 'DELETE /v2/organizations/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
 
-    [:user, :manager, :auditor, :billing_manager].each do |role|
+    ORG_ROLES.each do |role|
       describe "DELETE /v2/organizations/:guid/#{role}s/:user_guid" do
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
@@ -128,7 +247,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
   describe 'POST /v2/spaces' do
     let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
 
-    [:developer, :manager, :auditor].each do |role|
+    SPACE_ROLES.each do |role|
       it "creates the space-#{role}-<space_id> role" do
         post '/v2/spaces', {
           name: 'v2-space',
@@ -167,6 +286,55 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     end
   end
 
+  describe 'DELETE /v2/spaces/:guid' do
+    let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+
+    let(:worker) { Delayed::Worker.new }
+
+    SPACE_ROLES.each do |role|
+      it "deletes the space-#{role}-<space_id> role" do
+        post '/v2/spaces', {
+          name: 'v2-space',
+          organization_guid: org.guid
+        }.to_json
+
+        expect(last_response.status).to eq(201)
+
+        json_body = JSON.parse(last_response.body)
+        space_id = json_body['metadata']['guid']
+        role_name = "space-#{role}-#{space_id}"
+
+        delete "/v2/spaces/#{space_id}"
+
+        expect(last_response.status).to eq(204)
+
+        worker.work_off
+
+        expect {
+          client.get_role(role_name)
+        }.to raise_error GRPC::NotFound
+      end
+
+      it 'alerts the user if the space does not exist' do
+        post '/v2/spaces', {
+          name: 'v2-space',
+          organization_guid: org.guid
+        }.to_json
+
+        expect(last_response.status).to eq(201)
+
+        json_body = JSON.parse(last_response.body)
+        space_id = json_body['metadata']['guid']
+
+        delete "/v2/spaces/#{space_id}"
+        expect(last_response.status).to eq(204)
+
+        delete "/v2/spaces/#{space_id}"
+        expect(last_response.status).to eq(404)
+      end
+    end
+  end
+
   describe 'PUT /v2/spaces/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
     let(:space) {
@@ -175,7 +343,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
       )
     }
 
-    [:developer, :manager, :auditor].each do |role|
+    SPACE_ROLES.each do |role|
       describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
         let(:role_name) { "space-#{role}-#{space.guid}" }
 
@@ -219,7 +387,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
       )
     }
 
-    [:developer, :manager, :auditor].each do |role|
+    SPACE_ROLES.each do |role|
       describe "DELETE /v2/spaces/:guid/#{role}s/:user_guid" do
         let(:role_name) { "space-#{role}-#{space.guid}" }
 
