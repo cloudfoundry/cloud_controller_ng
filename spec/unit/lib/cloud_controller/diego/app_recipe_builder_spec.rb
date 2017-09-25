@@ -520,6 +520,11 @@ module VCAP::CloudController
                     'external_port'     => 789,
                     'container_port'    => 987
                   },
+                ],
+                'internal_routes' => [
+                  {
+                    'hostname' => 'app-guid.sd-local',
+                  }
                 ]
               }
 
@@ -562,6 +567,14 @@ module VCAP::CloudController
                         'container_port'    => 987
                       }
                     ].to_json
+                  ),
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                    key:   'internal-router',
+                    value: [
+                      {
+                        'hostname' => 'app-guid.sd-local',
+                      }
+                    ].to_json
                   )
                 ]
               )
@@ -585,6 +598,11 @@ module VCAP::CloudController
                       'external_port'     => 789,
                       'container_port'    => 987
                     },
+                  ],
+                  'internal_routes' => [
+                    {
+                      'hostname' => 'app-guid.sd-local',
+                    }
                   ]
                 }
 
@@ -614,6 +632,14 @@ module VCAP::CloudController
                           'container_port'    => 987
                         }
                       ].to_json
+                    ),
+                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                      key: 'internal-router',
+                      value: [
+                        {
+                          'hostname' => 'app-guid.sd-local',
+                        }
+                      ].to_json
                     )
                   ]
                 )
@@ -637,6 +663,12 @@ module VCAP::CloudController
                       'port'              => 8080,
                       'route_service_url' => 'https://potatosarebetter.example.com'
                     }
+
+                  ],
+                  'internal_routes' => [
+                    {
+                      'hostname' => 'app-guid.sd-local',
+                    }
                   ]
                 }
 
@@ -652,11 +684,11 @@ module VCAP::CloudController
                       key:   'cf-router',
                       value: [
                         {
-                                 'hostnames'         => ['potato.example.com'],
-                                 'port'              => 8080,
-                                 'route_service_url' => nil,
-                                 'isolation_segment' => 'placement-tag',
-                               },
+                          'hostnames'         => ['potato.example.com'],
+                          'port'              => 8080,
+                          'route_service_url' => nil,
+                          'isolation_segment' => 'placement-tag',
+                        },
                         {
                           'hostnames'         => ['tomato.example.com'],
                           'port'              => 8080,
@@ -668,6 +700,14 @@ module VCAP::CloudController
                     ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                       key:   'tcp-router',
                       value: [].to_json
+                    ),
+                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                      key: 'internal-router',
+                      value: [
+                        {
+                          'hostname' => 'app-guid.sd-local',
+                        }
+                      ].to_json
                     )
                   ]
                 )
@@ -1061,6 +1101,11 @@ module VCAP::CloudController
                   'external_port'     => 789,
                   'container_port'    => 987
                 },
+              ],
+              'internal_routes' => [
+                {
+                  'hostname' => 'app-guid.sd-local',
+                }
               ]
             }
 
@@ -1103,6 +1148,14 @@ module VCAP::CloudController
                       'container_port'    => 987
                     }
                   ].to_json
+                ),
+                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                  key:   'internal-router',
+                  value: [
+                    {
+                      'hostname' => 'app-guid.sd-local',
+                    }
+                  ].to_json
                 )
               ]
             )
@@ -1126,6 +1179,11 @@ module VCAP::CloudController
                     'external_port'     => 789,
                     'container_port'    => 987
                   },
+                ],
+                'internal_routes' => [
+                  {
+                    'hostname' => 'app-guid.sd-local',
+                  }
                 ]
               }
 
@@ -1155,6 +1213,14 @@ module VCAP::CloudController
                         'container_port'    => 987
                       }
                     ].to_json
+                  ),
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                    key:   'internal-router',
+                    value: [
+                      {
+                        'hostname' => 'app-guid.sd-local',
+                      }
+                    ].to_json
                   )
                 ]
               )
@@ -1177,6 +1243,11 @@ module VCAP::CloudController
                     'hostname'          => 'tomato.example.com',
                     'port'              => 8080,
                     'route_service_url' => 'https://potatosarebetter.example.com'
+                  }
+                ],
+                'internal_routes' => [
+                  {
+                    'hostname' => 'app-guid.sd-local',
                   }
                 ]
               }
@@ -1209,6 +1280,14 @@ module VCAP::CloudController
                   ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
                     key:   'tcp-router',
                     value: [].to_json
+                  ),
+                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+                    key:   'internal-router',
+                    value: [
+                      {
+                        'hostname' => 'app-guid.sd-local',
+                      }
+                    ].to_json
                   )
                 ]
               )

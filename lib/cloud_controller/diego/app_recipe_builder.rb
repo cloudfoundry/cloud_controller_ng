@@ -121,6 +121,10 @@ module VCAP::CloudController
           ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
             key:   TCP_ROUTES_KEY,
             value: MultiJson.dump((info['tcp_routes'] || []))
+          ),
+          ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
+            key:   INTERNAL_ROUTES_KEY,
+            value: MultiJson.dump((info['internal_routes'] || []))
           )
         ]
       end

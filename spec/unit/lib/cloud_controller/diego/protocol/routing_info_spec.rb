@@ -51,7 +51,7 @@ module VCAP::CloudController
                     { 'hostname' => route_without_service.uri, 'port' => 8080 }
                   ]
 
-                  expect(ri.keys).to match_array ['http_routes']
+                  expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                   expect(ri['http_routes']).to match_array expected_http
                 end
               end
@@ -65,7 +65,7 @@ module VCAP::CloudController
                     { 'hostname' => route_without_service.uri, 'port' => 7890 }
                   ]
 
-                  expect(ri.keys).to match_array ['http_routes']
+                  expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                   expect(ri['http_routes']).to match_array expected_http
                 end
               end
@@ -97,7 +97,7 @@ module VCAP::CloudController
                       { 'hostname' => route_without_service.uri, 'port' => 8080 }
                     ]
 
-                    expect(ri.keys).to match_array ['http_routes']
+                    expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                     expect(ri['http_routes']).to match_array expected_http
                   end
                 end
@@ -111,7 +111,7 @@ module VCAP::CloudController
                       { 'hostname' => route_without_service.uri, 'port' => 1024 }
                     ]
 
-                    expect(ri.keys).to match_array ['http_routes']
+                    expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                     expect(ri['http_routes']).to match_array expected_http
                   end
                 end
@@ -127,7 +127,7 @@ module VCAP::CloudController
                   { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
                 ]
 
-                expect(ri.keys).to match_array ['http_routes']
+                expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                 expect(ri['http_routes']).to match_array expected_http
               end
             end
@@ -143,7 +143,7 @@ module VCAP::CloudController
                   { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
                 ]
 
-                expect(ri.keys).to match_array ['http_routes']
+                expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                 expect(ri['http_routes']).to match_array expected_http
               end
             end
@@ -159,7 +159,7 @@ module VCAP::CloudController
                   { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
                 ]
 
-                expect(ri.keys).to match_array ['http_routes']
+                expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                 expect(ri['http_routes']).to match_array expected_http
               end
             end
@@ -174,7 +174,7 @@ module VCAP::CloudController
                   { 'hostname' => route_without_service.uri, 'port' => 8080 },
                   { 'hostname' => route_with_service.uri, 'route_service_url' => route_with_service.route_service_url, 'port' => 9090 },
                 ]
-                expect(ri.keys).to match_array ['http_routes']
+                expect(ri.keys).to match_array ['http_routes', 'internal_routes']
                 expect(ri['http_routes']).to match_array expected_http
               end
             end
@@ -186,7 +186,7 @@ module VCAP::CloudController
               let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: http_route) }
 
               it 'returns the router group guid in the http routing info' do
-                expect(ri.keys).to contain_exactly('http_routes')
+                expect(ri.keys).to contain_exactly('http_routes', 'internal_routes')
                 hr = ri['http_routes'][0]
                 expect(hr.keys).to contain_exactly('router_group_guid', 'port', 'hostname')
                 expect(hr['router_group_guid']).to eql(domain.router_group_guid)
@@ -209,7 +209,7 @@ module VCAP::CloudController
                   { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 9090 },
                 ]
 
-                expect(ri.keys).to match_array ['tcp_routes']
+                expect(ri.keys).to match_array ['tcp_routes', 'internal_routes']
                 expect(ri['tcp_routes']).to match_array expected_tcp
               end
             end
@@ -225,7 +225,7 @@ module VCAP::CloudController
                   { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
                 ]
 
-                expect(ri.keys).to match_array ['tcp_routes']
+                expect(ri.keys).to match_array ['tcp_routes', 'internal_routes']
                 expect(ri['tcp_routes']).to match_array expected_tcp
               end
             end
@@ -242,7 +242,7 @@ module VCAP::CloudController
                   { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 9090 },
                 ]
 
-                expect(ri.keys).to match_array ['tcp_routes']
+                expect(ri.keys).to match_array ['tcp_routes', 'internal_routes']
                 expect(ri['tcp_routes']).to match_array expected_routes
               end
             end
@@ -260,9 +260,20 @@ module VCAP::CloudController
                   { 'router_group_guid' => domain.router_group_guid, 'external_port' => tcp_route_2.port, 'container_port' => 5555 },
                 ]
 
-                expect(ri.keys).to match_array ['tcp_routes']
+                expect(ri.keys).to match_array ['tcp_routes', 'internal_routes']
                 expect(ri['tcp_routes']).to match_array expected_routes
               end
+            end
+          end
+
+          context 'internal routes' do
+            it 'returns the internal route hostname' do
+              expected_routes = [
+                { 'hostname' => process.guid + '.sd-local' },
+              ]
+
+              expect(ri.keys).to match_array ['internal_routes']
+              expect(ri['internal_routes']).to match_array expected_routes
             end
           end
 
@@ -305,7 +316,7 @@ module VCAP::CloudController
                 { 'router_group_guid' => tcp_domain.router_group_guid, 'external_port' => tcp_route.port, 'container_port' => 5555 },
               ]
 
-              expect(ri.keys).to match_array ['tcp_routes', 'http_routes']
+              expect(ri.keys).to match_array ['tcp_routes', 'http_routes', 'internal_routes']
               expect(ri['tcp_routes']).to match_array expected_tcp
               http_ports = ri['http_routes'].map { |hr| hr['port'] }
               expect(http_ports).to contain_exactly(8080, 9090)
