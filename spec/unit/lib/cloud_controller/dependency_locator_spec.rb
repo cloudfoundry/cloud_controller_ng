@@ -409,6 +409,25 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#credhub_client' do
+    it 'returns a credhub_client' do
+      token_info = instance_double(CF::UAA::TokenInfo, auth_header: 'bearer my-token')
+      uaa_client = instance_double(VCAP::CloudController::UaaClient, token_info: token_info)
+      expect(VCAP::CloudController::UaaClient).to receive(:new).with(
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: config.get(:cc_service_key_client_name),
+        secret: config.get(:cc_service_key_client_secret),
+        ca_file: config.get(:uaa, :ca_file),
+      ).and_return(uaa_client)
+
+      client = locator.credhub_client
+
+      expect(client).to be_an_instance_of(Credhub::Client)
+      expect(client.send(:credhub_url)).to eq(config.get(:credhub_api, :url))
+      expect(client.send(:auth_header)).to eq(token_info.auth_header)
+    end
+  end
+
   describe '#missing_blob_handler' do
     it 'returns the correct handler' do
       handler = double('a missing blob handler')

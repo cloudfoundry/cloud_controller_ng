@@ -22,6 +22,14 @@ module VCAP::CloudController
       super(opts)
     end
 
+    def credhub_reference?
+      !!credhub_reference
+    end
+
+    def credhub_reference
+      credentials.present? ? credentials['credhub-ref'] : nil
+    end
+
     def in_suspended_org?
       space.in_suspended_org?
     end

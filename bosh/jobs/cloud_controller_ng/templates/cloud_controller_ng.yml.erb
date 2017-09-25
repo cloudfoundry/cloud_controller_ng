@@ -159,6 +159,11 @@ routing_api:
   routing_client_secret: <%= p("uaa.clients.cc_routing.secret") %>
 <% end %>
 
+credhub_api:
+  # TODO: This should come from credhub internal consul route
+  # TODO: This should come from the credhub-release link
+  url: <%= "https://credhub.#{system_domain}:#{p("credhub_api.port")}" %>
+
 # App staging parameters
 staging:
   timeout_in_seconds: <%= p("cc.staging_timeout_in_seconds") %>

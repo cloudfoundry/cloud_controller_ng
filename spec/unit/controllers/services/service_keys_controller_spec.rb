@@ -472,10 +472,32 @@ module VCAP::CloudController
         end
       end
 
-      it 'returns the specific service key' do
-        get "/v2/service_keys/#{service_key.guid}"
-        expect(last_response.status).to eql(200)
-        expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_key.guid)
+      context 'when the key is a CredHub reference' do
+        let(:service_key) { ServiceKey.make(:credhub_reference, name: 'fake-key', service_instance: instance) }
+        let(:credentials) { { 'username' => 'admin_annie', 'password' => 'realsecur3' } }
+
+        before do
+          fake_credhub_client = instance_double(Credhub::Client)
+          allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_key.credhub_reference).and_return(credentials)
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:credhub_client).and_return(fake_credhub_client)
+        end
+
+        it 'fetches the credential value from CredHub' do
+          get "/v2/service_keys/#{service_key.guid}"
+
+          expect(last_response.status).to eql(200), last_response.body
+          expect(metadata.fetch('guid')).to eq(service_key.guid)
+          expect(entity.fetch('credentials')).to eq(credentials)
+        end
+      end
+
+      context 'when the key is not a CredHub reference' do
+        it 'returns the specific service key' do
+          get "/v2/service_keys/#{service_key.guid}"
+          expect(last_response.status).to eql(200)
+          expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_key.guid)
+          expect(entity.fetch('credentials')).to eq(service_key.credentials)
+        end
       end
 
       it 'returns empty result if no service key found' do

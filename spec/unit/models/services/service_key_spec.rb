@@ -86,6 +86,57 @@ module VCAP::CloudController
       let(:attr_salt) { :salt }
     end
 
+    describe '#credhub_reference?' do
+      context 'when it is not a credhub reference' do
+        let(:service_key) { ServiceKey.make }
+
+        it 'returns true' do
+          expect(service_key.credhub_reference?).to eq(false)
+        end
+      end
+
+      context 'when it is a credhub reference' do
+        let(:credhub_ref) do
+          {
+            'credhub-ref' => '((/c/my-service-broker/my-service/faa677f5-25cd-4f1e-8921-14a9d5ab48b8/credentials))'
+          }
+        end
+        let(:service_key) { ServiceKey.make(credentials: credhub_ref) }
+
+        it 'returns false' do
+          expect(service_key.credhub_reference?).to eq(true)
+        end
+      end
+    end
+
+    describe '#credhub_reference' do
+      context 'when the service key has no credentials' do
+        let(:service_key) { ServiceKey.make(credentials: nil) }
+
+        it 'returns nil' do
+          expect(service_key.credhub_reference).to be_nil
+        end
+      end
+
+      context 'when it does not have a credhub reference' do
+        let(:service_key) { ServiceKey.make }
+
+        it 'returns nil' do
+          expect(service_key.credhub_reference).to be_nil
+        end
+      end
+
+      context 'when it has a credhub reference' do
+        let(:credential_name) { '((/c/my-service-broker/my-service/faa677f5-25cd-4f1e-8921-14a9d5ab48b8/credentials))' }
+        let(:credhub_ref) { { 'credhub-ref' => credential_name } }
+        let(:service_key) { ServiceKey.make(credentials: credhub_ref) }
+
+        it 'returns false' do
+          expect(service_key.credhub_reference).to eq(credential_name)
+        end
+      end
+    end
+
     describe '#to_hash' do
       let(:service_key) { ServiceKey.make }
       let(:developer) { make_developer_for_space(service_key.service_instance.space) }

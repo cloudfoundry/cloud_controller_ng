@@ -17,12 +17,13 @@ module VCAP::CloudController
     end
 
     def self.dependencies
-      [:services_event_repository]
+      [:services_event_repository, :service_key_credential_object_renderer]
     end
 
     def inject_dependencies(dependencies)
       super
       @services_event_repository = dependencies.fetch(:services_event_repository)
+      @object_renderer = dependencies[:service_key_credential_object_renderer]
     end
 
     post path, :create

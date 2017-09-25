@@ -25,6 +25,7 @@ require 'cloud_controller/resource_pool_wrapper'
 require 'cloud_controller/bits_service_resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'cloud_controller/packager/bits_service_packer'
+require 'credhub/client'
 
 require 'bits_service_client'
 
@@ -243,6 +244,10 @@ module CloudController
       create_object_renderer(object_transformer: UsernamePopulator.new(uaa_client))
     end
 
+    def service_key_credential_object_renderer
+      create_object_renderer(object_transformer: CredhubCredentialPopulator.new(credhub_client))
+    end
+
     def paginated_collection_renderer
       create_paginated_collection_renderer
     end
@@ -285,6 +290,17 @@ module CloudController
       skip_cert_verify = config.get(:skip_cert_verify)
       routing_api_url = config.get(:routing_api, :url)
       RoutingApi::Client.new(routing_api_url, uaa_client, skip_cert_verify)
+    end
+
+    def credhub_client
+      uaa_client = UaaClient.new(
+        uaa_target: config.get(:uaa, :internal_url),
+        client_id: config.get(:cc_service_key_client_name),
+        secret: config.get(:cc_service_key_client_secret),
+        ca_file: config.get(:uaa, :ca_file),
+      )
+
+      Credhub::Client.new(config.get(:credhub_api, :url), uaa_client)
     end
 
     def missing_blob_handler

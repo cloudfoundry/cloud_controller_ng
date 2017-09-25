@@ -171,6 +171,10 @@ module VCAP::CloudController
           cc_service_key_client_name: String,
           cc_service_key_client_secret: String,
 
+          credhub_api: {
+            url: String,
+          },
+
           renderer: {
             max_results_per_page: Integer,
             default_results_per_page: Integer,

@@ -836,3 +836,7 @@ properties:
   perm.enabled:
     description: "Enable CF Permissions external service. Requires perm link to take effect"
     default: false
+
+  credhub_api.port:
+    description: "Temporary property until credhub-release exposes port as a link"
+    default: 8844

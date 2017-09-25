@@ -321,6 +321,12 @@ module VCAP::CloudController
     name { Sham.name }
   end
 
+  ServiceKey.blueprint(:credhub_reference) do
+    credentials       { { 'credhub-ref' => Sham.name } }
+    service_instance  { ManagedServiceInstance.make }
+    name { Sham.name }
+  end
+
   ServiceBroker.blueprint do
     name              { Sham.name }
     broker_url        { Sham.url }

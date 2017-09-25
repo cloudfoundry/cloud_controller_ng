@@ -343,3 +343,6 @@ pending_builds:
 perm:
   enabled: false
   host: perm.service.cf.internal
+
+credhub_api:
+  url: https://credhub.vcap.me:8844
