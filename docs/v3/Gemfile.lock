@@ -42,7 +42,7 @@ GEM
     hooks (0.4.1)
       uber (~> 0.0.14)
     i18n (0.7.0)
-    json (1.8.3)
+    json (1.8.6)
     kramdown (1.9.0)
     libv8 (3.16.14.15)
     listen (3.0.5)
@@ -138,6 +138,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  json (>= 1.8.6)
   middleman
   middleman-autoprefixer
   middleman-gh-pages
@@ -148,4 +149,4 @@ DEPENDENCIES
   therubyracer
 
 BUNDLED WITH
-   1.11.2
+   1.15.3
