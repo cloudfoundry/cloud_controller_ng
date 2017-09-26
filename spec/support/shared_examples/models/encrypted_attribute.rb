@@ -65,7 +65,7 @@ module VCAP::CloudController
     end
 
     it 'must have a salt of length 8' do
-      expect(model.reload.send(attr_salt).length).to eq 8
+      expect(model.reload.send(attr_salt).length).to eq 16
     end
   end
 end

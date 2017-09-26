@@ -101,6 +101,11 @@ module VCAP::CloudController
 
           db_encryption_key: String,
 
+          optional(:database_encryption_keys) => {
+              keys: Hash,
+              current_key_label: String
+          },
+
           uaa_client_name: String,
           uaa_client_secret: String,
           uaa_client_scope: String,
