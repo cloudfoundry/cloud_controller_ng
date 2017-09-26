@@ -19,21 +19,33 @@ module VCAP::CloudController
 
       subject { CredhubCredentialPopulator.new(fake_credhub_client) }
 
-      before do
-        allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_keys[0].credhub_reference).and_return(credhub_cred_1)
-        allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_keys[2].credhub_reference).and_return(credhub_cred_2)
+      context 'when credhub responds successfully' do
+        before do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_keys[0].credhub_reference).and_return(credhub_cred_1)
+          allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_keys[2].credhub_reference).and_return(credhub_cred_2)
+        end
+
+        it 'fills in any credhub credentials with their values from CredHub' do
+          transformed_keys = subject.transform(service_keys)
+          credhub_key_1 = transformed_keys.find { |key| key.name == 'credhub-key-1' }
+          expect(credhub_key_1.credentials).to eq(credhub_cred_1)
+
+          credhub_key_2 = transformed_keys.find { |key| key.name == 'credhub-key-2' }
+          expect(credhub_key_2.credentials).to eq(credhub_cred_2)
+
+          non_credhub_key = transformed_keys.find { |key| key.name == 'non-credhub-key-1' }
+          expect(non_credhub_key.credentials).to eq(non_credhub_creds)
+        end
       end
 
-      it 'fills in any credhub credentials with their values from CredHub' do
-        transformed_keys = subject.transform(service_keys)
-        credhub_key_1 = transformed_keys.find { |key| key.name == 'credhub-key-1' }
-        expect(credhub_key_1.credentials).to eq(credhub_cred_1)
+      context 'when credhub errors' do
+        before do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).and_raise(Credhub::Error)
+        end
 
-        credhub_key_2 = transformed_keys.find { |key| key.name == 'credhub-key-2' }
-        expect(credhub_key_2.credentials).to eq(credhub_cred_2)
-
-        non_credhub_key = transformed_keys.find { |key| key.name == 'non-credhub-key-1' }
-        expect(non_credhub_key.credentials).to eq(non_credhub_creds)
+        it 'raises ServiceKeyCredentialStoreUnavailable when Credhub::Error is raised' do
+          expect { subject.transform(service_keys) }.to raise_error(CloudController::Errors::ApiError, /Credential store is unavailable/)
+        end
       end
     end
   end

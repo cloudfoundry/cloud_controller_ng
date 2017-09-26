@@ -475,19 +475,29 @@ module VCAP::CloudController
       context 'when the key is a CredHub reference' do
         let(:service_key) { ServiceKey.make(:credhub_reference, name: 'fake-key', service_instance: instance) }
         let(:credentials) { { 'username' => 'admin_annie', 'password' => 'realsecur3' } }
+        let(:fake_credhub_client) { instance_double(Credhub::Client) }
 
         before do
-          fake_credhub_client = instance_double(Credhub::Client)
-          allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_key.credhub_reference).and_return(credentials)
           allow_any_instance_of(CloudController::DependencyLocator).to receive(:credhub_client).and_return(fake_credhub_client)
         end
 
         it 'fetches the credential value from CredHub' do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_key.credhub_reference).and_return(credentials)
+
           get "/v2/service_keys/#{service_key.guid}"
 
-          expect(last_response.status).to eql(200), last_response.body
+          expect(last_response.status).to eql(200)
           expect(metadata.fetch('guid')).to eq(service_key.guid)
           expect(entity.fetch('credentials')).to eq(credentials)
+        end
+
+        it 'returns 503 when credhub is unavailable' do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).and_raise(Credhub::Error)
+
+          get "/v2/service_keys/#{service_key.guid}"
+
+          expect(last_response.status).to eq(503)
+          expect(decoded_response['description']).to eq('Credential store is unavailable')
         end
       end
 

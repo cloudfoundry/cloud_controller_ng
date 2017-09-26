@@ -1049,6 +1049,11 @@
   http_code: 400
   message: "%s"
 
+360005:
+  name: ServiceKeyCredentialStoreUnavailable
+  http_code: 503
+  message: "Credential store is unavailable"
+
 370001:
   name: RoutingApiUnavailable
   http_code: 503
