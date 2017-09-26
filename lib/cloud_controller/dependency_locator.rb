@@ -260,6 +260,10 @@ module CloudController
       create_paginated_collection_renderer(collection_transformer: UsernamePopulator.new(uaa_client))
     end
 
+    def service_key_credential_collection_renderer
+      create_paginated_collection_renderer(collection_transformer: CredhubCredentialPopulator.new(credhub_client))
+    end
+
     def username_and_roles_populating_collection_renderer
       create_paginated_collection_renderer(collection_transformer: UsernamesAndRolesPopulator.new(uaa_client))
     end

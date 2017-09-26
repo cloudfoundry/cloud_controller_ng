@@ -3491,14 +3491,16 @@ module VCAP::CloudController
       context 'when the user is a member of the space this instance exists in' do
         let(:instance_a)  { ManagedServiceInstance.make(space: space) }
         let(:instance_b)  { ManagedServiceInstance.make(space: space) }
-        let(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
-        let(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
-        let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
+        let!(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
+        let!(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
+        let!(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
+        let!(:service_key_credhub_ref) { ServiceKey.make(:credhub_reference, name: 'credhub-ref-service-key', service_instance: instance_b) }
+        let(:credhub_credentials) { { 'username' => 'admin_annie', 'password' => 'realsecur3' } }
 
         before do
-          service_key_a.save
-          service_key_b.save
-          service_key_c.save
+          fake_credhub_client = instance_double(Credhub::Client)
+          allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_key_credhub_ref.credhub_reference).and_return(credhub_credentials)
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:credhub_client).and_return(fake_credhub_client)
         end
 
         context 'when the user is not of developer role' do
@@ -3522,22 +3524,36 @@ module VCAP::CloudController
 
           it 'returns the service keys that belong to the service instance' do
             get "/v2/service_instances/#{instance_a.guid}/service_keys"
-            expect(last_response.status).to eql(200)
+            expect(last_response.status).to eql(200), last_response.body
             expect(decoded_response.fetch('total_results')).to eq(2)
             expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
             expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
 
             get "/v2/service_instances/#{instance_b.guid}/service_keys"
             expect(last_response.status).to eql(200)
-            expect(decoded_response.fetch('total_results')).to eq(1)
-            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
+            expect(decoded_response.fetch('total_results')).to eq(2)
+
+            resources = decoded_response.fetch('resources')
+            service_key_c_response = resources.find { |resource| resource['metadata']['guid'] == service_key_c.guid }
+            service_key_credhub_ref_response = resources.find { |resource| resource['metadata']['guid'] == service_key_credhub_ref.guid }
+
+            expect(service_key_c_response.fetch('entity').fetch('credentials')).to eq(service_key_c.credentials)
+            expect(service_key_credhub_ref_response.fetch('entity').fetch('credentials')).to eq(credhub_credentials)
           end
 
           it 'returns the service keys filtered by key name' do
             get "/v2/service_instances/#{instance_a.guid}/service_keys?q=name:fake-key-a"
             expect(last_response.status).to eql(200)
             expect(decoded_response.fetch('total_results')).to eq(1)
-            expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+            resources = decoded_response.fetch('resources')
+            expect(resources.first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
+            expect(resources.first.fetch('entity').fetch('credentials')).to eq(service_key_a.credentials)
+
+            get "/v2/service_instances/#{instance_b.guid}/service_keys?q=name:credhub-ref-service-key"
+            expect(last_response.status).to eql(200)
+            expect(decoded_response.fetch('total_results')).to eq(1)
+            resources = decoded_response.fetch('resources')
+            expect(resources.first.fetch('entity').fetch('credentials')).to eq(credhub_credentials)
 
             get "/v2/service_instances/#{instance_b.guid}/service_keys?q=name:non-exist-key-name"
             expect(last_response.status).to eql(200)
