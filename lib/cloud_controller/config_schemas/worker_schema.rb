@@ -90,9 +90,9 @@ module VCAP::CloudController
           optional(:broker_client_timeout_seconds) => Integer,
           optional(:broker_client_default_async_poll_interval_seconds) => Integer,
           broker_client_max_async_poll_duration_minutes: Integer,
-          uaa_client_name: String,
-          uaa_client_secret: String,
-          uaa_client_scope: String,
+          optional(:uaa_client_name) => String,
+          optional(:uaa_client_secret) => String,
+          optional(:uaa_client_scope) => String,
 
           loggregator: {
             router: String,
