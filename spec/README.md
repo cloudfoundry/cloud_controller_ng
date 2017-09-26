@@ -57,3 +57,4 @@ Used to test integration with [NATs](https://github.com/cloudfoundry/nats-releas
 #### V2 API Doc Tests
 
 Previously used to both generate the v2 API docs and test the user facing JSON response for the v2 API. Instead, write a request spec.
+To view the docs locally, cd into the `docs/v2` folder, run `python -mSimpleHTTPServer`, and navigate to `http://localhost:8000`.
