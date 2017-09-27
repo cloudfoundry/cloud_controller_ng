@@ -629,7 +629,7 @@ module VCAP::CloudController
     end
 
     describe '#specified_or_detected_command' do
-      subject(:process) { ProcessModelFactory.make}
+      subject(:process) { ProcessModelFactory.make }
 
       before do
         process.current_droplet.update(process_types: { web: 'detected-start-command' })
@@ -655,7 +655,6 @@ module VCAP::CloudController
         end
       end
     end
-
 
     describe '#detected_start_command' do
       subject(:process) { ProcessModelFactory.make }
