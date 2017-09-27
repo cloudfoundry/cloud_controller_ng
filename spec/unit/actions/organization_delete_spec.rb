@@ -72,7 +72,8 @@ module VCAP::CloudController
           let(:errs) { [CloudController::Errors::ApiError.new_from_details('OrganizationRolesDeletionFailed', org_1.name)] }
 
           before do
-            allow(org_roles_deleter).to receive(:delete).and_return(errs)
+            allow(org_roles_deleter).to receive(:delete).with(org_1).and_return(errs)
+            allow(org_roles_deleter).to receive(:delete).with(org_2)
           end
 
           it 'returns an OrganizationDeleteFailed error' do
