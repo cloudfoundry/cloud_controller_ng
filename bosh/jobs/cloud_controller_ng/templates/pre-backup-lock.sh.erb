@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+
+<% if p('cloud_controller.release_level_backup') %>
+		<% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
+    # TODO: should we use unmonitor instead to avoid sleep?
+		sudo /var/vcap/bosh/bin/monit stop cloud_controller_worker_local_<%= index %>
+		<% end %>
+    sudo /var/vcap/bosh/bin/monit stop cloud_controller_ng
+    sleep 30
+<% end %>

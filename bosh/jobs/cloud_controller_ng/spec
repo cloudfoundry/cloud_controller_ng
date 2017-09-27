@@ -8,6 +8,10 @@ templates:
   bin/local_worker.erb: bin/local_worker
   bin/nginx_newrelic_plugin.erb: bin/nginx_newrelic_plugin
   bpm.yml.erb: config/bpm.yml
+  pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
+  post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
+  pre-restore-lock.sh.erb: bin/bbr/pre-restore-lock
+  post-restore-unlock.sh.erb: bin/bbr/post-restore-unlock
 
   cloud_controller_ng.yml.erb: config/cloud_controller_ng.yml
   blobstore_waiter.sh.erb: bin/blobstore_waiter.sh
@@ -846,3 +850,7 @@ properties:
     default: "credhub.service.cf.internal"
   credhub_api.ca_cert:
     description: "The certificate authority being used by CredHub"
+
+  cloud_controller.release_level_backup:
+    default: false
+    description: "Include cloud_controller DB in backup and restore operations"
