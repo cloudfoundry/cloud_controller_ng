@@ -73,7 +73,7 @@ module VCAP::CloudController
 
           before do
             allow(org_roles_deleter).to receive(:delete).with(org_1).and_return(errs)
-            allow(org_roles_deleter).to receive(:delete).with(org_2)
+            allow(org_roles_deleter).to receive(:delete).with(org_2).and_return([])
           end
 
           it 'returns an OrganizationDeleteFailed error' do
