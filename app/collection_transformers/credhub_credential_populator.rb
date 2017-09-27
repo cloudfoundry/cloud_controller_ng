@@ -16,6 +16,8 @@ module VCAP::CloudController
       end
     rescue Credhub::Error
       raise CloudController::Errors::ApiError.new_from_details('ServiceKeyCredentialStoreUnavailable')
+    rescue UaaUnavailable
+      raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
     end
   end
 end

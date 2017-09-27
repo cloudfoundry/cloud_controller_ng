@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       subject { CredhubCredentialPopulator.new(fake_credhub_client) }
 
-      context 'when credhub responds successfully' do
+      context 'when CredHub responds successfully' do
         before do
           allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_keys[0].credhub_reference).and_return(credhub_cred_1)
           allow(fake_credhub_client).to receive(:get_credential_by_name).with(service_keys[2].credhub_reference).and_return(credhub_cred_2)
@@ -38,13 +38,23 @@ module VCAP::CloudController
         end
       end
 
-      context 'when credhub errors' do
+      context 'when any Credhub::Error occurs' do
         before do
           allow(fake_credhub_client).to receive(:get_credential_by_name).and_raise(Credhub::Error)
         end
 
         it 'raises ServiceKeyCredentialStoreUnavailable when Credhub::Error is raised' do
           expect { subject.transform(service_keys) }.to raise_error(CloudController::Errors::ApiError, /Credential store is unavailable/)
+        end
+      end
+
+      context 'when a VCAP::CloudController::UaaUnavailable error occurs' do
+        before do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).and_raise(UaaUnavailable)
+        end
+
+        it 'raises CloudController::Errors::ApiError "UaaUnavailable"' do
+          expect { subject.transform(service_keys) }.to raise_error(CloudController::Errors::ApiError, /UAA service is currently unavailable/)
         end
       end
     end

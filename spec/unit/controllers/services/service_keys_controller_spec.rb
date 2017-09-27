@@ -499,6 +499,15 @@ module VCAP::CloudController
           expect(last_response.status).to eq(503)
           expect(decoded_response['description']).to eq('Credential store is unavailable')
         end
+
+        it 'returns 503 when uaa is unavailable' do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).and_raise(UaaUnavailable)
+
+          get "/v2/service_keys/#{service_key.guid}"
+
+          expect(last_response.status).to eq(503)
+          expect(decoded_response['description']).to eq('The UAA service is currently unavailable')
+        end
       end
 
       context 'when the key is not a CredHub reference' do
