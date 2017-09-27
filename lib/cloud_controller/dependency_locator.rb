@@ -430,7 +430,7 @@ module CloudController
     end
 
     def build_perm_client
-      CloudFoundry::Perm::V1::Client.new(config.get(:perm, :host))
+      CloudFoundry::Perm::V1::Client.new(url: config.get(:perm, :host))
     end
   end
 end

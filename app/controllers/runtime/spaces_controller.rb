@@ -302,10 +302,8 @@ module VCAP::CloudController
       space = find_guid_and_validate_access(:update, guid)
 
       if config.get(:perm, :enabled)
-        actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
-
         begin
-          @perm_client.assign_role(actor, "space-#{role}-#{guid}")
+          @perm_client.assign_role(role_name: "space-#{role}-#{guid}", actor_id: user_id, issuer: SecurityContext.token['iss'])
         rescue GRPC::AlreadyExists
           # ignored
         end
@@ -324,10 +322,8 @@ module VCAP::CloudController
       user.username = username
 
       if config.get(:perm, :enabled)
-        actor = CloudFoundry::Perm::V1::Models::Actor.new(id: user_id, issuer: SecurityContext.token['iss'])
-
         begin
-          @perm_client.unassign_role(actor, "space-#{role}-#{space[:guid]}")
+          @perm_client.unassign_role(role_name: "space-#{role}-#{space[:guid]}", actor_id: user_id, issuer: SecurityContext.token['iss'])
         rescue GRPC::NotFound
           # ignored
         end
