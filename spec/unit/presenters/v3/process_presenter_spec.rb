@@ -35,6 +35,21 @@ module VCAP::CloudController::Presenters::V3
         process.updated_at = Time.at(2)
       end
 
+      context 'when the process does not have a start command' do
+        let(:droplet) do
+          VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'detected-start-command' })
+        end
+
+        before do
+          app_model.update(droplet: droplet)
+          process.update(command: nil)
+        end
+
+        it 'shows the detected_start_command' do
+          expect(result[:command]).to eq('detected-start-command')
+        end
+      end
+
       context('when health_check_type is http') do
         it 'presents the process as a hash' do
           expect(result[:guid]).to eq(process.guid)

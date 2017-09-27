@@ -628,6 +628,35 @@ module VCAP::CloudController
       end
     end
 
+    describe '#specified_or_detected_command' do
+      subject(:process) { ProcessModelFactory.make}
+
+      before do
+        process.current_droplet.update(process_types: { web: 'detected-start-command' })
+      end
+
+      context 'when the process has a command' do
+        before do
+          process.update(command: 'user-specified')
+        end
+
+        it 'uses the command on the process' do
+          expect(process.specified_or_detected_command).to eq('user-specified')
+        end
+      end
+
+      context 'when the process does not have a command' do
+        before do
+          process.update(command: nil)
+        end
+
+        it 'returns the detected start command' do
+          expect(process.specified_or_detected_command).to eq('detected-start-command')
+        end
+      end
+    end
+
+
     describe '#detected_start_command' do
       subject(:process) { ProcessModelFactory.make }
 

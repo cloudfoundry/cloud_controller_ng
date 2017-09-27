@@ -364,8 +364,7 @@ module VCAP::CloudController
     alias_method_chain :metadata, :command
 
     def command_with_fallback
-      cmd = command_without_fallback
-      cmd = (cmd.nil? || cmd.empty?) ? nil : cmd
+      cmd = command_without_fallback.presence
       cmd || metadata_without_command && metadata_without_command['command']
     end
 
@@ -373,6 +372,10 @@ module VCAP::CloudController
 
     def execution_metadata
       current_droplet.try(:execution_metadata) || ''
+    end
+
+    def specified_or_detected_command
+      command || detected_start_command
     end
 
     def detected_start_command

@@ -11,7 +11,7 @@ module VCAP::CloudController
           {
             guid:         process.guid,
             type:         process.type,
-            command:      redact(process.command),
+            command:      redact(process.specified_or_detected_command),
             instances:    process.instances,
             memory_in_mb: process.memory,
             disk_in_mb:   process.disk_quota,
