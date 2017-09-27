@@ -159,10 +159,11 @@ routing_api:
   routing_client_secret: <%= p("uaa.clients.cc_routing.secret") %>
 <% end %>
 
+<% if_link("credhub") do |credhub| %>
 credhub_api:
-  # TODO: This should come from credhub internal consul route
-  # TODO: This should come from the credhub-release link
-  url: <%= "https://credhub.#{system_domain}:#{p("credhub_api.port")}" %>
+  url: <%= "https://#{p("credhub_api.hostname")}:#{credhub.p("credhub.port")}" %>
+  ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/credhub_ca.crt"
+<% end %>
 
 # App staging parameters
 staging:

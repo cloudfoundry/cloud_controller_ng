@@ -43,6 +43,7 @@ templates:
   stacks.yml.erb: config/stacks.yml
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   db_ca.crt.erb: config/certs/db_ca.crt
+  credhub_ca.crt.erb: config/certs/credhub_ca.crt
 
 
 packages:
@@ -74,6 +75,9 @@ consumes:
   optional: true
 - name: perm
   type: perm
+  optional: true
+- name: credhub
+  type: credhub
   optional: true
 
 properties:
@@ -837,6 +841,8 @@ properties:
     description: "Enable CF Permissions external service. Requires perm link to take effect"
     default: false
 
-  credhub_api.port:
-    description: "Temporary property until credhub-release exposes port as a link"
-    default: 8844
+  credhub_api.hostname:
+    description: "Hostname used to resolve the address of CredHub"
+    default: "credhub.service.cf.internal"
+  credhub_api.ca_cert:
+    description: "The certificate authority being used by CredHub"

@@ -39,7 +39,9 @@ module Credhub
     end
 
     def build_client
-      HTTPClient.new(base_url: credhub_url)
+      client = HTTPClient.new(base_url: credhub_url)
+      client.ssl_config.set_trust_ca(VCAP::CloudController::Config.config.get(:credhub_api, :ca_cert_path))
+      client
     end
 
     def auth_header

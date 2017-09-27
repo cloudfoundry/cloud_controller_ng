@@ -346,3 +346,4 @@ perm:
 
 credhub_api:
   url: https://credhub.vcap.me:8844
+  ca_cert_path: "spec/fixtures/certs/credhub_ca.crt"

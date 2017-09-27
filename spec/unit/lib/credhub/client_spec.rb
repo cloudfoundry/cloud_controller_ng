@@ -11,6 +11,15 @@ module Credhub
 
     subject { Credhub::Client.new(credhub_url, uaa_client) }
 
+    describe '#client' do
+      describe 'ssl_config' do
+        it 'uses the configured credhub_ca.crt' do
+          expect(subject.send(:client).ssl_config.cert_store_items).
+            to include(TestConfig.config_instance.get(:credhub_api, :ca_cert_path))
+        end
+      end
+    end
+
     describe '#get_credential_by_name' do
       before do
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{credhub_reference}&current=true").
