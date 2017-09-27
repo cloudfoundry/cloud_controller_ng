@@ -23,24 +23,23 @@ before_script:
   - bundle exec rake db:create
   - DB=mysql bundle exec rake parallel:create
   - DB=postgres bundle exec rake parallel:create
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 script:
   - bundle exec rake $TASKS
 
 after_script:
-  - codeclimate-test-reporter
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 services:
   - mysql
   - postgresql
 
-addons:
-  code_climate:
-    repo_token: 870bc78f6d6257a97e7a2150c787294062775852f2608e132226d0d2a936bd05
-
 env:
   global:
-    - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
+    - CC_TEST_REPORTER_ID=301facccb751b8f202e8a382e9f74bda51055f738691cf2ee9a9b853ac807304
     - CF_RUN_PERM_SPECS=false
 
   matrix:
