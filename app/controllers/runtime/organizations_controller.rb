@@ -1,8 +1,8 @@
 require 'actions/organization_delete'
 require 'actions/space_delete'
-require 'actions/perm_roles_delete'
+require 'actions/perm_org_roles_delete'
+require 'actions/perm_space_roles_delete'
 require 'fetchers/organization_user_roles_fetcher'
-require 'grpc'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
@@ -253,14 +253,10 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      perm_org_role_names = ROLE_NAMES.map { |role| "org-#{role}" }
-      perm_space_role_names = SpacesController::ROLE_NAMES.map { |role| "space-#{role}" }
-
-      space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
-      org_delete_action = OrganizationDelete.new(PermRolesDelete.new(@perm_client, config.get(:perm, :enabled), space_delete_action, perm_space_role_names))
-      delete_action = PermRolesDelete.new(
-        @perm_client, config.get(:perm, :enabled), org_delete_action, perm_org_role_names
-      )
+      space_roles_delete_action = PermSpaceRolesDelete.new(@perm_client)
+      space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository, space_roles_delete_action)
+      org_roles_delete_action = PermOrgRolesDelete.new(@perm_client)
+      delete_action = OrganizationDelete.new(org_roles_delete_action, space_delete_action)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       response = enqueue_deletion_job(deletion_job)
@@ -325,14 +321,7 @@ module VCAP::CloudController
 
       org = find_guid_and_validate_access(:update, guid)
 
-      if config.get(:perm, :enabled)
-        begin
-          @perm_client.assign_role(role_name: "org-#{role}-#{guid}", actor_id: user_id, issuer: SecurityContext.token['iss'])
-        rescue GRPC::AlreadyExists
-          # ignored
-        end
-      end
-
+      @perm_client.assign_org_role(role: role, org_id: org.guid, user_id: user_id, issuer: SecurityContext.token['iss'])
       org.send("add_#{role}", user)
 
       @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
@@ -343,13 +332,7 @@ module VCAP::CloudController
     def remove_role(guid, role, user_id)
       response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
 
-      if config.get(:perm, :enabled)
-        begin
-          @perm_client.unassign_role(role_name: "org-#{role}-#{guid}", actor_id: user_id, issuer: SecurityContext.token['iss'])
-        rescue GRPC::NotFound
-          # ignored
-        end
-      end
+      @perm_client.unassign_org_role(role: role, org_id: guid, user_id: user_id, issuer: SecurityContext.token['iss'])
 
       user = User.first(guid: user_id)
       user.username = '' unless user.username
@@ -370,10 +353,8 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
-      if config.get(:perm, :enabled)
-        ROLE_NAMES.each do |role|
-          @perm_client.create_role("org-#{role}-#{organization.guid}")
-        end
+      ROLE_NAMES.each do |role|
+        @perm_client.create_org_role(role: role, org_id: organization.guid)
       end
 
       user_audit_info = UserAuditInfo.from_context(SecurityContext)

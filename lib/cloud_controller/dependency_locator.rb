@@ -430,7 +430,7 @@ module CloudController
     end
 
     def build_perm_client
-      CloudFoundry::Perm::V1::Client.new(url: config.get(:perm, :host))
+      VCAP::CloudController::Perm::Client.new(url: config.get(:perm, :host), enabled: config.get(:perm, :enabled))
     end
   end
 end
