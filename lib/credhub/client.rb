@@ -24,14 +24,24 @@ module Credhub
       when 200
         response
       when 401
+        logger.error('Unable to authenticate with CredHub')
         raise UnauthenticatedError.from_response(response)
       when 403
+        logger.error('Not authorized to retrieve the credential')
         raise ForbiddenError.from_response(response)
       when 404
+        logger.error('Credential not found in CredHub')
         raise CredentialNotFoundError.from_response(response)
       else
+        logger.error("CredHub returned status code #{response.status}")
         raise BadResponseError.new("Server error, status: #{response.status}")
       end
+    rescue SocketError, HTTPClient::BadResponseError => e
+      logger.error("Unable to open connection with CredHub: #{e.class} - #{e.message}")
+      raise BadResponseError.new('Server error, CredHub unreachable')
+    rescue OpenSSL::OpenSSLError => e
+      logger.error("OpenSSLError occurred while communicating with CredHub: #{e.class} - #{e.message}")
+      raise Error.new('SSL error communicating with CredHub')
     end
 
     def client
@@ -47,29 +57,25 @@ module Credhub
     def auth_header
       @_uaa_auth_header ||= uaa_client.token_info.auth_header
     end
+
+    def logger
+      @logger ||= Steno.logger('cc.credhub_client')
+    end
   end
 
-  class Error < StandardError; end
+  class Error < StandardError
+    def self.from_response(response)
+      response_body = JSON.parse(response.body)
+      error_message = response_body['error']
+      if response_body['error_description']
+        error_message += ": #{response_body['error_description']}"
+      end
+      new(error_message)
+    end
+  end
+
   class BadResponseError < Error; end
-
-  class CredentialNotFoundError < Error
-    def self.from_response(response)
-      response_body = JSON.parse(response.body)
-      new(response_body['error'])
-    end
-  end
-
-  class ForbiddenError < Error
-    def self.from_response(response)
-      response_body = JSON.parse(response.body)
-      new(response_body['error'])
-    end
-  end
-
-  class UnauthenticatedError < Error
-    def self.from_response(response)
-      response_body = JSON.parse(response.body)
-      new("#{response_body['error']}: #{response_body['error_description']}")
-    end
-  end
+  class CredentialNotFoundError < Error; end
+  class ForbiddenError < Error; end
+  class UnauthenticatedError < Error; end
 end

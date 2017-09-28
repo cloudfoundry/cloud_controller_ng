@@ -21,6 +21,9 @@ module Credhub
     end
 
     describe '#get_credential_by_name' do
+      let(:status) { 200 }
+      let(:credhub_response) { '{}' }
+
       before do
         stub_request(:get, "#{credhub_url}/api/v1/data?name=#{credhub_reference}&current=true").
           with(headers: {
@@ -98,6 +101,41 @@ module Credhub
         it 'raises a Credhub::BadResponseError' do
           expect { subject.get_credential_by_name(credhub_reference) }.
             to raise_error(Credhub::BadResponseError, /Server error/)
+        end
+      end
+
+      context 'when a SocketError occurs' do
+        let(:status) { 0 }
+
+        before do
+          allow_any_instance_of(HTTPClient).to receive(:get).and_raise(SocketError)
+        end
+
+        it 'raises a Credhub::BadResponseError' do
+          expect { subject.get_credential_by_name(credhub_reference) }.
+            to raise_error(Credhub::BadResponseError, /Server error/)
+        end
+      end
+
+      context 'when a HTTPClient::BadResponseError occurs' do
+        before do
+          allow_any_instance_of(HTTPClient).to receive(:get).and_raise(HTTPClient::BadResponseError.new('broke'))
+        end
+
+        it 'raises a Credhub::BadResponseError' do
+          expect { subject.get_credential_by_name(credhub_reference) }.
+            to raise_error(Credhub::BadResponseError, /Server error/)
+        end
+      end
+
+      context 'when a OpenSSL::OpenSSLError occurs' do
+        before do
+          allow_any_instance_of(HTTPClient).to receive(:get).and_raise(OpenSSL::OpenSSLError)
+        end
+
+        it 'raises a Credhub::Error' do
+          expect { subject.get_credential_by_name(credhub_reference) }.
+            to raise_error(Credhub::Error, /SSL error communicating with CredHub/)
         end
       end
     end
