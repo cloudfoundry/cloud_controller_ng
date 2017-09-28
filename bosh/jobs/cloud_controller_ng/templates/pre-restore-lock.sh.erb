@@ -1,12 +1,29 @@
 #!/bin/bash
 set -e
 
+function wait_for_server_to_become_unavailable() {
+  local url=$1
+  local timeout=$2
+  for _ in $(seq "${timeout}"); do
+    set +e
+    curl -f --connect-timeout 1 "${url}" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+      return 0
+    fi
+    set -e
+    sleep 1
+  done
+
+  echo "Endpoint ${url} did not go down after ${timeout} seconds"
+  return 1
+}
 
 <% if p('cloud_controller.release_level_backup') %>
 		<% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
-    # TODO: should we use unmonitor instead to avoid sleep?
-		sudo /var/vcap/bosh/bin/monit stop cloud_controller_worker_local_<%= index %>
+    sudo /var/vcap/bosh/bin/monit unmonitor cloud_controller_worker_local_<%= index %>
+    sudo su vcap -c /var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_worker_ctl stop <%= index %>
 		<% end %>
+
     sudo /var/vcap/bosh/bin/monit stop cloud_controller_ng
-    sleep 30
+    wait_for_server_to_become_unavailable <%= "http://localhost:#{p('cc.external_port')}/" %> 60
 <% end %>

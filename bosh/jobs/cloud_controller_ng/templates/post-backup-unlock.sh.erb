@@ -1,12 +1,28 @@
 #!/bin/bash
 set -e
 
+function wait_for_server_to_become_healthy() {
+  local url=$1
+  local timeout=$2
+  for _ in $(seq "${timeout}"); do
+    set +e
+    curl -f --connect-timeout 1 "${url}" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      return 0
+    fi
+    set -e
+    sleep 1
+  done
+
+  echo "Endpoint ${url} failed to become healthy after ${timeout} seconds"
+  return 1
+}
+
 <% if p('cloud_controller.release_level_backup') %>
     sudo /var/vcap/bosh/bin/monit start cloud_controller_ng
+    wait_for_server_to_become_healthy <%= "http://localhost:#{p('cc.external_port')}/" %> 60
+
     <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
-    # TODO: should we use unmonitor instead to avoid sleep?
     sudo /var/vcap/bosh/bin/monit start cloud_controller_worker_local_<%= index %>
     <% end %>
-
-    sleep 30
 <% end %>
