@@ -211,11 +211,11 @@ properties:
 
   cc.db_logging_level:
     default: "debug2"
-    description: "Log level for cc database operations"
+    description: "Level at which cc database operations will be logged, based on cc.logging_level"
 
   cc.logging_level:
     default: "info"
-    description: "Log level for cc"
+    description: "Log level for cc. If you want to print database logs, set to the same level as cc.db_logging_level."
   cc.logging_max_retries:
     default: 1
     description: "Passthru value for Steno logger"
