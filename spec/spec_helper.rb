@@ -1,6 +1,6 @@
 require File.expand_path('../../config/boot', __FILE__)
 
-if ENV['CODECLIMATE_REPO_TOKEN'] && ENV['COVERAGE']
+if ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start do
     add_filter '/spec/'
