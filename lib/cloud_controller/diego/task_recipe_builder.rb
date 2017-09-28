@@ -59,6 +59,7 @@ module VCAP::CloudController
           log_guid:                         staging_details.package.app_guid,
           log_source:                       STAGING_LOG_SOURCE,
           memory_mb:                        staging_details.staging_memory_in_mb,
+          network:                          generate_network(staging_details.package),
           privileged:                       config.get(:diego, :use_privileged_containers_for_staging),
           result_file:                      STAGING_RESULT_FILE,
           trusted_system_certificates_path: STAGING_TRUSTED_SYSTEM_CERT_PATH,

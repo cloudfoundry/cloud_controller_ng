@@ -29,6 +29,16 @@ module VCAP::CloudController
           }
         end
         let(:package) { PackageModel.make(app: app) }
+        let(:expected_network) do
+          ::Diego::Bbs::Models::Network.new(
+            properties: [
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
+            ]
+          )
+        end
         let(:config) do
           Config.new({
             tls_port: tls_port,
@@ -244,6 +254,11 @@ module VCAP::CloudController
           it 'sets the disk' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.disk_mb).to eq(51)
+          end
+
+          it 'sets the network information' do
+            result = task_recipe_builder.build_staging_task(config, staging_details)
+            expect(result.network). to eq(expected_network)
           end
 
           it 'sets the egress rules' do
