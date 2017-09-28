@@ -2,7 +2,8 @@ require 'actions/space_delete'
 
 module VCAP::CloudController
   class OrganizationDelete
-    def initialize(space_deleter)
+    def initialize(org_roles_deleter, space_deleter)
+      @org_roles_deleter = org_roles_deleter
       @space_deleter = space_deleter
     end
 
@@ -13,6 +14,13 @@ module VCAP::CloudController
           error_message = errs.map(&:message).join("\n\n")
           return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
         end
+
+        errs = @org_roles_deleter.delete(org)
+        unless errs.empty?
+          error_message = errs.map(&:message).join("\n\n")
+          return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
+        end
+
         org.destroy
         []
       end

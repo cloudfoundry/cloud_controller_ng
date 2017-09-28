@@ -888,6 +888,26 @@
   http_code: 500
   message: "The bits service returned an error: %s"
 
+290013:
+  name: OrganizationRolesDeletionTimeout
+  http_code: 524
+  message: "Deletion of roles for organization %s timed out before all roles could be deleted"
+
+290014:
+  name: OrganizationRolesDeletionFailed
+  http_code: 502
+  message: "Failed to delete one or more roles for organization %s"
+
+290013:
+  name: SpaceRolesDeletionTimeout
+  http_code: 524
+  message: "Deletion of roles for space %s timed out before all roles could be deleted"
+
+290016:
+  name: SpaceRolesDeletionFailed
+  http_code: 502
+  message: "Failed to delete one or more roles for space %s"
+
 300001:
   name: SecurityGroupInvalid
   http_code: 400

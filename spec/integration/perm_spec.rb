@@ -10,10 +10,10 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
   let(:assignee) { VCAP::CloudController::User.make }
   let(:uaa_target) { 'test.example.com' }
-  let(:actor) { CloudFoundry::Perm::V1::Models::Actor.new(id: assignee.guid, issuer: uaa_target) }
 
   let(:perm_host) { ENV.fetch('PERM_RPC_HOST') { 'localhost:6283' } }
-  let(:client) { CloudFoundry::Perm::V1::Client.new(perm_host) }
+  let(:client) { CloudFoundry::Perm::V1::Client.new(url: perm_host) }
+  let(:issuer) { 'https://auth.example.com/oauth/token' }
 
   before do
     TestConfig.config[:perm] = {
@@ -22,9 +22,9 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
     }
 
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })
-    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(uaa_target)
+    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
 
-    set_current_user_as_admin(iss: uaa_target)
+    set_current_user_as_admin(iss: issuer)
   end
 
   describe 'POST /v2/organizations' do
@@ -187,18 +187,18 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
         end
 
         it "assigns the specified user to the org #{role} role" do
-          expect(client.list_actor_roles(actor)).to be_empty
+          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
 
           put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          expect(client.has_role?(actor, role_name)).to be(true)
-          roles = client.list_actor_roles(actor)
+          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
           expect(roles.length).to be(1)
         end
 
         it 'does nothing when the user is assigned to the role a second time' do
-          expect(client.list_actor_roles(actor)).to be_empty
+          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
 
           put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
@@ -206,8 +206,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
           put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          expect(client.has_role?(actor, role_name)).to be(true)
-          roles = client.list_actor_roles(actor)
+          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
           expect(roles.length).to be(1)
         end
       end
@@ -226,13 +226,13 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
         end
 
         it "removes the user from the org #{role} role" do
-          client.assign_role(actor, role_name)
+          client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
 
           delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(204)
 
-          expect(client.has_role?(actor, role_name)).to be(false)
-          roles = client.list_actor_roles(actor)
+          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(false)
+          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
           expect(roles).to be_empty
         end
 
@@ -352,18 +352,18 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
         end
 
         it "assigns the specified user to the space #{role} role" do
-          expect(client.list_actor_roles(actor)).to be_empty
+          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
 
           put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          expect(client.has_role?(actor, role_name)).to be(true)
-          roles = client.list_actor_roles(actor)
+          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
           expect(roles.length).to be(1)
         end
 
         it 'does nothing when the user is assigned to the role a second time' do
-          expect(client.list_actor_roles(actor)).to be_empty
+          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
 
           put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
@@ -371,8 +371,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
           put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          expect(client.has_role?(actor, role_name)).to be(true)
-          roles = client.list_actor_roles(actor)
+          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
           expect(roles.length).to be(1)
         end
       end
@@ -396,13 +396,13 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
         end
 
         it "removes the user from the space #{role} role" do
-          client.assign_role(actor, role_name)
+          client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
 
           delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(204)
 
-          expect(client.has_role?(actor, role_name)).to be(false)
-          roles = client.list_actor_roles(actor)
+          expect(client.has_role?(actor_id: assignee.guid, issuer: issuer, role_name: role_name)).to be(false)
+          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
           expect(roles).to be_empty
         end
 
