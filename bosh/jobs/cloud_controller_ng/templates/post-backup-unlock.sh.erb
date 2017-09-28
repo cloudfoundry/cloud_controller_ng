@@ -6,7 +6,7 @@ function wait_for_server_to_become_healthy() {
   local timeout=$2
   for _ in $(seq "${timeout}"); do
     set +e
-    curl -f --connect-timeout 1 "${url}" > /dev/null 2>&1
+    curl -k -f --connect-timeout 1 "${url}" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
       return 0
     fi
@@ -19,10 +19,10 @@ function wait_for_server_to_become_healthy() {
 }
 
 <% if p('cloud_controller.release_level_backup') %>
-    sudo /var/vcap/bosh/bin/monit start cloud_controller_ng
-    wait_for_server_to_become_healthy <%= "http://localhost:#{p('cc.external_port')}/" %> 60
+  sudo /var/vcap/bosh/bin/monit start cloud_controller_ng
+  wait_for_server_to_become_healthy <%= "#{p("cc.external_protocol")}://#{p("cc.external_host")}.#{p("system_domain")}/" %> 60
 
-    <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
-    sudo /var/vcap/bosh/bin/monit start cloud_controller_worker_local_<%= index %>
-    <% end %>
+  <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
+  sudo /var/vcap/bosh/bin/monit start cloud_controller_worker_local_<%= index %>
+  <% end %>
 <% end %>
