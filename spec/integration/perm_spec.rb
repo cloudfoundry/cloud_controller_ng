@@ -1,7 +1,10 @@
 require 'spec_helper'
 require 'perm'
+require 'perm_test_helpers'
 
-RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') { 'false' } != 'true' do
+RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'true' do
+  perm_server = nil
+
   ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
   SPACE_ROLES = [:developer, :manager, :auditor].freeze
 
@@ -11,14 +14,31 @@ RSpec.describe 'Perm', type: :integration, skip: ENV.fetch('CF_RUN_PERM_SPECS') 
   let(:assignee) { VCAP::CloudController::User.make }
   let(:uaa_target) { 'test.example.com' }
 
-  let(:perm_host) { ENV.fetch('PERM_RPC_HOST') { 'localhost:6283' } }
-  let(:client) { CloudFoundry::Perm::V1::Client.new(url: perm_host) }
+  let(:perm_hostname) { perm_server.hostname.clone }
+  let(:perm_port) { perm_server.port.clone }
+
+  let(:ca_certs) { [perm_server.tls_ca.clone] }
+
+  let(:client) { CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs) }
   let(:issuer) { 'https://auth.example.com/oauth/token' }
+
+  if ENV['CF_RUN_PERM_SPECS'] == 'true'
+    before(:all) do
+      perm_server = CloudFoundry::PermTestHelpers::ServerRunner.new
+      perm_server.start
+    end
+
+    after(:all) do
+      perm_server.stop
+    end
+  end
 
   before do
     TestConfig.config[:perm] = {
       enabled: true,
-      host: perm_host
+      hostname: perm_hostname,
+      port: perm_port,
+      ca_cert_path: perm_server.tls_ca_path
     }
 
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })

@@ -3,18 +3,21 @@ require 'spec_helper'
 
 module VCAP::CloudController::Perm
   RSpec.describe Client do
-    let(:url) { 'https://perm.example.com' }
+    let(:hostname) { 'https://perm.example.com' }
+    let(:port) { 5678 }
     let(:client) { spy(CloudFoundry::Perm::V1::Client) }
     let(:org_id) { SecureRandom.uuid }
     let(:space_id) { SecureRandom.uuid }
     let(:user_id) { SecureRandom.uuid }
     let(:issuer) { 'https://issuer.example.com/oauth/token' }
+    let(:ca_cert_path) { File.join(Paths::FIXTURES, 'certs/perm_ca.crt') }
+    let(:trusted_cas) { [File.open(ca_cert_path).read] }
 
-    let(:disabled_subject) { Client.new(url: url, enabled: false) }
-    subject(:subject) { Client.new(url: url, enabled: true) }
+    let(:disabled_subject) { Client.new(hostname: hostname, port: port, enabled: false, ca_cert_path: '') }
+    subject(:subject) { Client.new(hostname: hostname, port: port, enabled: true, ca_cert_path: ca_cert_path) }
 
     before do
-      allow(CloudFoundry::Perm::V1::Client).to receive(:new).with(url: url).and_return(client)
+      allow(CloudFoundry::Perm::V1::Client).to receive(:new).with(hostname: hostname, port: port, trusted_cas: trusted_cas).and_return(client)
     end
 
     describe '#create_org_role' do

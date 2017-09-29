@@ -60,6 +60,7 @@ group :operations do
 end
 
 group :test do
+  gem 'cf-perm-test-helpers', git: 'https://github.com/cloudfoundry-incubator/perm-rb.git', branch: 'master'
   gem 'codeclimate-test-reporter', require: false
   gem 'fakefs', require: 'fakefs/safe'
   gem 'hashdiff'
