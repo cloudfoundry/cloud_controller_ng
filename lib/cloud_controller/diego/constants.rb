@@ -25,9 +25,10 @@ module VCAP::CloudController
     TASKS_DOMAIN     = 'cf-tasks'.freeze
     TASKS_DOMAIN_TTL = 2.minutes
 
-    CF_ROUTES_KEY  = 'cf-router'.freeze
-    TCP_ROUTES_KEY = 'tcp-router'.freeze
-    SSH_ROUTES_KEY = 'diego-ssh'.freeze
+    CF_ROUTES_KEY       = 'cf-router'.freeze
+    TCP_ROUTES_KEY      = 'tcp-router'.freeze
+    SSH_ROUTES_KEY      = 'diego-ssh'.freeze
+    INTERNAL_ROUTES_KEY = 'internal-router'.freeze
 
     BULKER_TASK_FAILURE = 'Unable to determine completion status'.freeze
 

@@ -181,6 +181,9 @@ module VCAP::CloudController
                   'route_service_url' => route_with_service.route_binding.route_service_url,
                   'port' => 2222,
                 }
+              ],
+              'internal_routes' => [
+                { 'hostname' => "#{process.guid}.sd-local" }
               ]
             },
             'egress_rules' => ['running_egress_rule'],
