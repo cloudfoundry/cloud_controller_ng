@@ -853,4 +853,4 @@ properties:
 
   cloud_controller.release_level_backup:
     default: false
-    description: "Include cloud_controller DB in backup and restore operations"
+    description: "Include cloud_controller jobs in backup and restore operations"

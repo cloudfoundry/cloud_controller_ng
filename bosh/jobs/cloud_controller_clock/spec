@@ -6,6 +6,10 @@ description: "The Cloud Controller clock periodically schedules Cloud Controller
 templates:
   bpm.yml.erb: config/bpm.yml
   bin/cloud_controller_clock.erb: bin/cloud_controller_clock
+  pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
+  post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
+  pre-restore-lock.sh.erb: bin/bbr/pre-restore-lock
+  post-restore-unlock.sh.erb: bin/bbr/post-restore-unlock
 
   cloud_controller_ng.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_clock_ctl.erb: bin/cloud_controller_clock_ctl
@@ -505,3 +509,7 @@ properties:
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024
+
+  cloud_controller.release_level_backup:
+    default: false
+    description: "Include cloud_controller jobs in backup and restore operations"

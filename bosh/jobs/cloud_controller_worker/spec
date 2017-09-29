@@ -6,6 +6,10 @@ description: "Cloud Controller worker processes background tasks submitted via t
 templates:
   bpm.yml.erb: config/bpm.yml
   bin/cloud_controller_worker.erb: bin/cloud_controller_worker
+  pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
+  post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
+  pre-restore-lock.sh.erb: bin/bbr/pre-restore-lock
+  post-restore-unlock.sh.erb: bin/bbr/post-restore-unlock
 
   cloud_controller_ng.yml.erb: config/cloud_controller_ng.yml
   cloud_controller_worker_ctl.erb: bin/cloud_controller_worker_ctl
@@ -512,3 +516,7 @@ properties:
   cc.perform_blob_cleanup:
     description: "Whether or not to perform the blob cleanup job"
     default: true
+
+  cloud_controller.release_level_backup:
+    default: false
+    description: "Include cloud_controller jobs in backup and restore operations"
