@@ -667,6 +667,14 @@ module VCAP::CloudController
           expect(decoded_response['entity']['guid']).to be
           expect(decoded_response['entity']['status']).to eq 'queued'
         end
+
+        it "passes the invoking user's identity to the service broker client" do
+          delete "/v2/service_bindings/#{service_binding.guid}?async=true"
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          expect(a_request(:delete, bind_url_regex(service_binding: service_binding)).with { |request|
+                   request.headers['X-Broker-Api-Originating-Identity'].match(/^cloudfoundry [a-zA-Z0-9]+={0,3}$/)
+                 }).to have_been_made
+        end
       end
 
       context 'when the instance operation is in progress' do

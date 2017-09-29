@@ -15,7 +15,7 @@ module VCAP::Services
       end
     end
 
-    def unbind(_); end
+    def unbind(*); end
 
     def deprovision(_, _={})
       {

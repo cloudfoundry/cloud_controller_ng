@@ -278,10 +278,8 @@ module VCAP::CloudController::BrokerApiHelper
       to_return(status: 204, body: {}.to_json)
 
     headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
-    delete("/v2/service_bindings/#{@binding_id}",
-           '{}',
-           headers
-    )
+    params = opts[:async] ? { async: true } : '{}'
+    delete("/v2/service_bindings/#{@binding_id}", params, headers)
   end
 
   def create_service_key(opts={})

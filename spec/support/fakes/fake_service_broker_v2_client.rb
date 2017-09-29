@@ -54,5 +54,5 @@ class FakeServiceBrokerV2Client
     }
   end
 
-  def unbind(_binding); end
+  def unbind(*); end
 end

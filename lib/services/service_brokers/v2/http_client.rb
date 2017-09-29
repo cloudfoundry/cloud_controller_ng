@@ -2,6 +2,12 @@ require 'httpclient'
 
 module VCAP::Services
   module ServiceBrokers::V2
+    module IdentityEncoder
+      def self.encode(user_guid)
+        "cloudfoundry #{Base64.strict_encode64({ user_id: user_guid }.to_json)}"
+      end
+    end
+
     class HttpResponse
       attr_reader :code, :message, :body
 
@@ -86,22 +92,22 @@ module VCAP::Services
       end
 
       def get(path)
-        make_request(:get, uri_for(path), nil, nil)
+        make_request(:get, uri_for(path))
       end
 
       def put(path, message)
-        make_request(:put, uri_for(path), message.to_json, 'application/json')
+        make_request(:put, uri_for(path), message.to_json, content_type: 'application/json')
       end
 
       def patch(path, message)
-        make_request(:patch, uri_for(path), message.to_json, 'application/json')
+        make_request(:patch, uri_for(path), message.to_json, content_type: 'application/json')
       end
 
-      def delete(path, message)
+      def delete(path, message, user_guid=nil)
         uri = uri_for(path)
         uri.query = message.to_query
 
-        make_request(:delete, uri, nil, nil)
+        make_request(:delete, uri, nil, user_guid: user_guid)
       end
 
       private
@@ -112,7 +118,7 @@ module VCAP::Services
         URI(url + path)
       end
 
-      def make_request(method, uri, body, content_type)
+      def make_request(method, uri, body=nil, options={})
         client = HTTPClient.new(force_basic_auth: true)
         client.set_auth(uri, auth_username, auth_password)
         client.ssl_config.set_default_paths
@@ -125,10 +131,11 @@ module VCAP::Services
         opts = { body: body, header: {} }
 
         client.default_header = default_headers
-        opts[:header]['Content-Type'] = content_type if content_type
+        opts[:header]['Content-Type'] = options[:content_type] if options[:content_type]
 
-        user_guid = VCAP::CloudController::SecurityContext.current_user_guid
-        opts[:header][VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY] = originating_identity(user_guid) if user_guid
+        user_guid = user_guid(options)
+        opts[:header][VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY] = IdentityEncoder.encode(user_guid) if user_guid
+
         headers = default_headers.merge(opts[:header])
 
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
@@ -162,12 +169,16 @@ module VCAP::Services
         }
       end
 
-      def originating_identity(user_guid)
-        "cloudfoundry #{Base64.strict_encode64({ user_id: user_guid }.to_json)}"
-      end
-
       def verify_certs?
         !VCAP::CloudController::Config.config.get(:skip_cert_verify)
+      end
+
+      def user_guid(options)
+        if options[:user_guid]
+          options[:user_guid]
+        else
+          VCAP::CloudController::SecurityContext.current_user_guid
+        end
       end
     end
   end

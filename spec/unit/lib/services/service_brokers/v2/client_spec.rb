@@ -1167,7 +1167,7 @@ module VCAP::Services::ServiceBrokers::V2
         client.unbind(binding)
 
         expect(http_client).to have_received(:delete).
-          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything)
+          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything, nil)
       end
 
       it 'makes a delete request with correct message' do
@@ -1178,8 +1178,17 @@ module VCAP::Services::ServiceBrokers::V2
             {
               plan_id:    binding.service_plan.broker_provided_id,
               service_id: binding.service.broker_provided_id,
-            }
+            },
+            nil
           )
+      end
+
+      context 'with a user_guid' do
+        let(:user_guid) { 'some-guid' }
+        it 'makes a delete request with the correct user_guid' do
+          client.unbind(binding, user_guid)
+          expect(http_client).to have_received(:delete).with(anything, anything, user_guid)
+        end
       end
 
       context 'when the broker returns a 204 NO CONTENT' do

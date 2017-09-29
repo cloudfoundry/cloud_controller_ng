@@ -320,12 +320,15 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service unbind request' do
         let(:user) { VCAP::CloudController::User.make }
+        let(:async) { false }
 
         before do
           provision_service
           create_app
           bind_service
-          unbind_service(user: user)
+          unbind_service(user: user, async: async)
+          VCAP::CloudController::SecurityContext.clear
+          Delayed::Worker.new.work_off
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -336,6 +339,27 @@ RSpec.describe 'Service Broker API integration' do
               req.headers['X-Broker-Api-Originating-Identity'] == "cloudfoundry #{base64_encoded_user_id}"
             end
           ).to have_been_made
+        end
+
+        context 'called with async=true' do
+          let(:async) { true }
+
+          it 'reports the request as enqueued' do
+            parsed_body = MultiJson.load(last_response.body)
+            expect(parsed_body).to_not be_empty
+            expect(parsed_body).to include('entity')
+            expect(parsed_body['entity']).to include('status' => 'queued')
+          end
+
+          it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
+            base64_encoded_user_id = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+
+            expect(
+              a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
+                req.headers['X-Broker-Api-Originating-Identity'] == "cloudfoundry #{base64_encoded_user_id}"
+              end
+            ).to have_been_made
+          end
         end
       end
 
