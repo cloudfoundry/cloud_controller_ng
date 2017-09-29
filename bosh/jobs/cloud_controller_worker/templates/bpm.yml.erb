@@ -1,9 +1,10 @@
 <%=
 
-config = { "processes" => {} }
+config = { "processes" => [] }
 
 (1..(p("cc.jobs.generic.number_of_workers"))).each do |index|
   worker_config = {
+    "name" => "worker_#{index}",
     "executable" => "/var/vcap/jobs/cloud_controller_worker/bin/cloud_controller_worker",
     "limits" => {"memory" => "#{p("cc.thresholds.worker.restart_if_above_mb")}M"},
     "env" => {
@@ -23,7 +24,7 @@ config = { "processes" => {} }
    worker_config["env"]["NEWRELIC_ENABLE"] = true
   end
 
-  config["processes"]["worker_#{index}"] = worker_config
+  config["processes"] << worker_config
 end
 
 YAML.dump(config)
