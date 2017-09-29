@@ -1,6 +1,7 @@
 <%=
 
 cloud_controller_ng_config = {
+  "name" => "cloud_controller_ng",
   "executable" => "/var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_ng",
   "limits" => {"memory" => "#{p("cc.thresholds.api.restart_if_above_mb")}M"},
   "env" => {
@@ -37,24 +38,27 @@ if properties.env
 end
 
 nginx_config = {
+  "name" => "nginx",
   "executable" => "/var/vcap/packages/nginx/sbin/nginx",
   "args" => ["-c", "/var/vcap/jobs/cloud_controller_ng/config/nginx.conf"],
 }
 
 nginx_newrelic_plugin_config = {
+  "name" => "nginx_newrelic_plugin",
   "executable" => "/var/vcap/jobs/cloud_controller_ng/bin/nginx_newrelic_plugin",
 }
 
 config = {
-  "processes" => {
-    "cloud_controller_ng" => cloud_controller_ng_config,
-    "nginx" => nginx_config,
-    "nginx_newrelic_plugin" => nginx_newrelic_plugin_config,
-  }
+  "processes" => [
+    cloud_controller_ng_config,
+    nginx_config,
+    nginx_newrelic_plugin_config,
+  ]
 }
 
 (1..(p("cc.jobs.local.number_of_workers"))).each do |index|
   local_worker_config = {
+    "name" => "local_worker_#{index}",
     "executable" => "/var/vcap/jobs/cloud_controller_ng/bin/local_worker",
     "limits" => {"memory" => "#{p("cc.thresholds.api.restart_if_above_mb")}M"},
     "env" => {
@@ -74,7 +78,7 @@ config = {
    local_worker_config["env"]["NEWRELIC_ENABLE"] = true
   end
 
-  config["processes"]["local_worker_#{index}"] = local_worker_config
+  config["processes"] << local_worker_config
 end
 
 YAML.dump(config)
