@@ -215,7 +215,7 @@ properties:
 
   cc.db_logging_level:
     default: "debug2"
-    description: "Level at which cc database operations will be logged, based on cc.logging_level"
+    description: "Level at which cc database operations will be logged"
 
   cc.logging_level:
     default: "info"
