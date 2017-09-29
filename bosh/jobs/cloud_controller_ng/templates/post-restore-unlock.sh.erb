@@ -1,29 +1,13 @@
 #!/bin/bash
 set -e
 
-# TODO: extract this function
-function wait_for_server_to_become_healthy() {
-  local url=$1
-  local timeout=$2
-  for _ in $(seq "${timeout}"); do
-    set +e
-    curl -k -f --connect-timeout 1 "${url}" > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-      return 0
-    fi
-    set -e
-    sleep 1
-  done
-
-  echo "Endpoint ${url} failed to become healthy after ${timeout} seconds"
-  return 1
-}
+source /var/vcap/packages/capi_utils/monit_utils.sh
 
 <% if p('cloud_controller.release_level_backup') %>
-  sudo /var/vcap/bosh/bin/monit start cloud_controller_ng
+  monit_start_job cloud_controller_ng
   wait_for_server_to_become_healthy <%= "#{p("cc.external_protocol")}://#{p("cc.external_host")}.#{p("system_domain")}/" %> 60
 
   <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
-  sudo /var/vcap/bosh/bin/monit start cloud_controller_worker_local_<%= index %>
+  monit_start_job cloud_controller_worker_local_<%= index %>
   <% end %>
 <% end %>

@@ -1,35 +1,20 @@
 #!/bin/bash
 set -e
 
-function wait_for_server_to_become_unavailable() {
-  local url=$1
-  local timeout=$2
-  for _ in $(seq "${timeout}"); do
-    set +e
-    curl -k -f --connect-timeout 1 "${url}" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      return 0
-    fi
-    set -e
-    sleep 1
-  done
-
-  echo "Endpoint ${url} did not go down after ${timeout} seconds"
-  return 1
-}
+source /var/vcap/packages/capi_utils/monit_utils.sh
 
 <% if p('cloud_controller.release_level_backup') %>
   <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
-  sudo /var/vcap/bosh/bin/monit unmonitor cloud_controller_worker_local_<%= index %>
+  monit_unmonitor_job cloud_controller_worker_local_<%= index %>
   <% end %>
-  sudo /var/vcap/bosh/bin/monit unmonitor cloud_controller_ng
+  monit_unmonitor_job cloud_controller_ng
 
-  /var/vcap/jobs/cloud_controller_ng/bin/drain
+  drain_job cloud_controller_ng
 
   <% (1..(p("cc.jobs.local.number_of_workers"))).each do |index| %>
-  sudo su vcap -c /var/vcap/jobs/cloud_controller_ng/bin/cloud_controller_worker_ctl stop <%= index %>
+  monit_stop_job cloud_controller_worker_local_<%= index %>
   <% end %>
-  sudo /var/vcap/bosh/bin/monit stop cloud_controller_ng
+  monit_stop_job cloud_controller_ng
 
   wait_for_server_to_become_unavailable <%= "#{p("cc.external_protocol")}://#{p("cc.external_host")}.#{p("system_domain")}/" %> 60
 <% end %>
