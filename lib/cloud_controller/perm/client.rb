@@ -40,6 +40,20 @@ module VCAP::CloudController
         unassign_role(role: space_role(role, space_id), user_id: user_id, issuer: issuer)
       end
 
+      def unassign_roles(org_ids: [], space_ids: [], user_id:, issuer:)
+        space_ids.each do |space_id|
+          VCAP::CloudController::SpacesController::ROLE_NAMES.each do |role|
+            unassign_space_role(role: role, space_id: space_id, user_id: user_id, issuer: issuer)
+          end
+        end
+
+        org_ids.each do |org_id|
+          VCAP::CloudController::OrganizationsController::ROLE_NAMES.each do |role|
+            unassign_org_role(role: role, org_id: org_id, user_id: user_id, issuer: issuer)
+          end
+        end
+      end
+
       private
 
       attr_reader :client, :enabled

@@ -225,8 +225,11 @@ module VCAP::CloudController
 
         if recursive_delete? && role == :user
           org.send("remove_#{role}_recursive", user)
+          space_ids = org.spaces.map(&:guid)
+          @perm_client.unassign_roles(org_ids: [guid], space_ids: space_ids, user_id: user_id, issuer: SecurityContext.token['iss'])
         else
           org.send("remove_#{role}", user)
+          @perm_client.unassign_org_role(role: role, org_id: guid, user_id: user_id, issuer: SecurityContext.token['iss'])
         end
 
         @user_event_repository.record_organization_role_remove(

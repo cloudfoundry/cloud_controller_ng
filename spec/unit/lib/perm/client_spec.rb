@@ -111,6 +111,43 @@ module VCAP::CloudController::Perm
       end
     end
 
+    describe '#unassign_roles' do
+      let(:org_id2) { SecureRandom.uuid }
+      let(:space_id2) { SecureRandom.uuid }
+
+      it 'unassigns the user from all roles for the org and spaces' do
+        subject.unassign_roles(org_ids: [org_id, org_id2], space_ids: [space_id, space_id2], user_id: user_id, issuer: issuer)
+
+        [:user, :manager, :billing_manager, :auditor].each do |role|
+          expect(client).to have_received(:unassign_role).
+            with(role_name: "org-#{role}-#{org_id}", actor_id: user_id, issuer: issuer)
+          expect(client).to have_received(:unassign_role).
+            with(role_name: "org-#{role}-#{org_id2}", actor_id: user_id, issuer: issuer)
+        end
+
+        [:developer, :manager, :auditor].each do |role|
+          expect(client).to have_received(:unassign_role).
+            with(role_name: "space-#{role}-#{space_id}", actor_id: user_id, issuer: issuer)
+          expect(client).to have_received(:unassign_role).
+            with(role_name: "space-#{role}-#{space_id2}", actor_id: user_id, issuer: issuer)
+        end
+      end
+
+      it 'does not fail if something does not exist' do
+        allow(client).to receive(:unassign_role).and_raise(GRPC::NotFound)
+
+        expect {
+          subject.unassign_roles(org_ids: [org_id], space_ids: [space_id], user_id: user_id, issuer: issuer)
+        }.not_to raise_error
+      end
+
+      it 'does nothing when disabled' do
+        disabled_subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
+
+        expect(client).not_to have_received(:unassign_role)
+      end
+    end
+
     describe '#create_space_role' do
       it 'creates the correct role' do
         subject.create_space_role(role: 'developer', space_id: space_id)
