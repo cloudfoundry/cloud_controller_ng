@@ -173,6 +173,7 @@ module VCAP::CloudController
 
           optional(:credhub_api) => {
             url: String,
+            internal_url: String,
             ca_cert_path: String,
           },
 

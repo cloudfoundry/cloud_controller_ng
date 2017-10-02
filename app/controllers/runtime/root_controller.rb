@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       response = {
         links: {
-          self: {
+          self:                {
             href: api_url_builder.build_url
           },
 
@@ -29,27 +29,29 @@ module VCAP::CloudController
             }
           },
 
-          network_policy_v0: {
+          network_policy_v0:   {
             href: api_url_builder.build_url(path: '/networking/v0/external'),
           },
 
-          network_policy_v1: {
+          network_policy_v1:   {
             href: api_url_builder.build_url(path: '/networking/v1/external'),
           },
 
-          uaa: {
+          uaa:                 {
             href: VCAP::CloudController::Config.config.get(:uaa, :url)
           },
 
-          logging: {
+          credhub:             credhub_link,
+
+          logging:             {
             href: VCAP::CloudController::Config.config.get(:doppler, :url)
           },
 
-          app_ssh: {
+          app_ssh:             {
             href: VCAP::CloudController::Config.config.get(:info, :app_ssh_endpoint),
             meta: {
               host_key_fingerprint: VCAP::CloudController::Config.config.get(:info, :app_ssh_host_key_fingerprint),
-              oauth_client: VCAP::CloudController::Config.config.get(:info, :app_ssh_oauth_client)
+              oauth_client:         VCAP::CloudController::Config.config.get(:info, :app_ssh_oauth_client)
             }
           },
 
@@ -57,6 +59,13 @@ module VCAP::CloudController
       }
 
       [200, MultiJson.dump(response, pretty: true)]
+    end
+
+    private
+
+    def credhub_link
+      return unless VCAP::CloudController::Config.config.get(:credhub_api).present?
+      { href: VCAP::CloudController::Config.config.get(:credhub_api, :url) }
     end
   end
 end

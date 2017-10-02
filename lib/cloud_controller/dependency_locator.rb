@@ -304,7 +304,7 @@ module CloudController
         ca_file: config.get(:uaa, :ca_file),
       )
 
-      Credhub::Client.new(config.get(:credhub_api, :url), uaa_client)
+      Credhub::Client.new(config.get(:credhub_api, :internal_url), uaa_client)
     end
 
     def missing_blob_handler

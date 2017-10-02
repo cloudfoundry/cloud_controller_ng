@@ -423,7 +423,7 @@ RSpec.describe CloudController::DependencyLocator do
       client = locator.credhub_client
 
       expect(client).to be_an_instance_of(Credhub::Client)
-      expect(client.send(:credhub_url)).to eq(config.get(:credhub_api, :url))
+      expect(client.send(:credhub_url)).to eq(config.get(:credhub_api, :internal_url))
       expect(client.send(:auth_header)).to eq(token_info.auth_header)
     end
   end

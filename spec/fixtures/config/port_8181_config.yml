@@ -229,4 +229,4 @@ perm:
   ca_cert_path: spec/fixtures/certs/perm_ca.crt
 
 credhub_api:
-  url: https://credhub.capi.me:8844
+  internal_url: https://credhub.capi.me:8844

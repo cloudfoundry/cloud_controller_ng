@@ -44,6 +44,28 @@ module VCAP::CloudController
         expect(hash['links']['uaa']['href']).to eq(TestConfig.config[:uaa][:url])
       end
 
+      describe 'credhub link' do
+        context 'credhub is configured' do
+          it 'returns a link' do
+            get '/'
+            hash = MultiJson.load(last_response.body)
+            expect(hash['links']['credhub']['href']).to eq(TestConfig.config[:credhub_api][:url])
+          end
+        end
+
+        context 'credhub is not configured' do
+          before do
+            TestConfig.override(credhub_api: nil)
+          end
+
+          it 'does not return a link' do
+            get '/'
+            hash = MultiJson.load(last_response.body)
+            expect(hash['links']['credhub']).to eq(nil)
+          end
+        end
+      end
+
       it 'returns a link to network-policy v0 API' do
         get '/'
         hash = MultiJson.load(last_response.body)
