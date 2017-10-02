@@ -1,10 +1,12 @@
 GIT
   remote: https://github.com/cloudfoundry-incubator/perm-rb.git
-  revision: f1893eba5aab28bbb8c095234ece170171a3b71d
+  revision: 21553f380ccebbd670fc264e0edfca45341405be
   branch: master
   specs:
     cf-perm (0.0.0)
       grpc (~> 1.0)
+    cf-perm-test-helpers (0.0.1)
+      subprocess (~> 1)
 
 GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
@@ -190,6 +192,8 @@ GEM
     google-protobuf (3.4.1.1)
     google-protobuf (3.4.1.1-universal-darwin)
     google-protobuf (3.4.1.1-x86_64-linux)
+    googleapis-common-protos-types (1.0.0)
+      google-protobuf (~> 3.0)
     googleauth (0.5.3)
       faraday (~> 0.12)
       jwt (~> 1.4)
@@ -198,14 +202,17 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
-    grpc (1.6.0)
+    grpc (1.6.2)
       google-protobuf (~> 3.1)
+      googleapis-common-protos-types (~> 1.0.0)
       googleauth (~> 0.5.1)
-    grpc (1.6.0-universal-darwin)
+    grpc (1.6.2-universal-darwin)
       google-protobuf (~> 3.1)
+      googleapis-common-protos-types (~> 1.0.0)
       googleauth (~> 0.5.1)
-    grpc (1.6.0-x86_64-linux)
+    grpc (1.6.2-x86_64-linux)
       google-protobuf (~> 3.1)
+      googleapis-common-protos-types (~> 1.0.0)
       googleauth (~> 0.5.1)
     hashdiff (0.3.4)
     http-cookie (1.0.3)
@@ -383,6 +390,7 @@ GEM
     steno (1.3.4)
       fluent-logger
       yajl-ruby (~> 1.0)
+    subprocess (1.3.2)
     talentbox-delayed_job_sequel (4.2.2)
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 5.0)
@@ -444,6 +452,7 @@ DEPENDENCIES
   bits_service_client
   byebug
   cf-perm!
+  cf-perm-test-helpers!
   cf-uaa-lib (~> 3.11.0)
   clockwork
   cloudfront-signer

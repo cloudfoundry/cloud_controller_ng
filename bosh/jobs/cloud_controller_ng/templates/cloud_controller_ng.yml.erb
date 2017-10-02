@@ -386,11 +386,12 @@ diego:
   use_privileged_containers_for_running: <%= p("cc.diego.use_privileged_containers_for_running") %>
   use_privileged_containers_for_staging: <%= p("cc.diego.use_privileged_containers_for_staging") %>
 
+perm:
+  ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/perm_ca.crt"
 <% if_link("perm") do |perm| %>
-perm:
   enabled: <%= p("perm.enabled") %>
-  host: <%= "#{perm.instances[0].address}:#{perm.p("listen_port")}" %>
+  hostname: <%= p("perm.hostname") %>
+  port: <%= perm.p("listen_port") %>
 <% end.else do %>
-perm:
   enabled: false
 <% end %>

@@ -292,7 +292,9 @@ module VCAP::CloudController
 
           perm: {
             enabled: bool,
-            optional(:host) => String
+            optional(:hostname) => String,
+            optional(:port) => Integer,
+            ca_cert_path: String,
           }
         }
       end

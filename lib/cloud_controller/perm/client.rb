@@ -3,9 +3,12 @@ require 'perm'
 module VCAP::CloudController
   module Perm
     class Client
-      def initialize(url:, enabled:)
-        @client = CloudFoundry::Perm::V1::Client.new(url: url)
+      def initialize(hostname:, port:, enabled:, ca_cert_path:)
         @enabled = enabled
+        if enabled
+          trusted_cas = [File.open(ca_cert_path).read]
+          @client = CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas)
+        end
       end
 
       def create_org_role(role:, org_id:)

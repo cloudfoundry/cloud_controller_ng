@@ -342,7 +342,9 @@ pending_builds:
 
 perm:
   enabled: false
-  host: perm.service.cf.internal
+  hostname: perm.service.cf.internal
+  port: 6283
+  ca_cert_path: "spec/fixtures/certs/perm_ca.crt"
 
 credhub_api:
   url: https://credhub.vcap.me:8844

@@ -430,7 +430,12 @@ module CloudController
     end
 
     def build_perm_client
-      VCAP::CloudController::Perm::Client.new(url: config.get(:perm, :host), enabled: config.get(:perm, :enabled))
+      hostname = config.get(:perm, :hostname)
+      port = config.get(:perm, :port)
+      enabled = config.get(:perm, :enabled)
+      ca_cert_path = config.get(:perm, :ca_cert_path)
+
+      VCAP::CloudController::Perm::Client.new(hostname: hostname, port: port, enabled: enabled, ca_cert_path: ca_cert_path)
     end
   end
 end

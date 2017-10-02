@@ -48,6 +48,7 @@ templates:
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   db_ca.crt.erb: config/certs/db_ca.crt
   credhub_ca.crt.erb: config/certs/credhub_ca.crt
+  perm_ca.crt.erb: config/certs/perm_ca.crt
 
 
 packages:
@@ -844,6 +845,12 @@ properties:
   perm.enabled:
     description: "Enable CF Permissions external service. Requires perm link to take effect"
     default: false
+  perm.hostname:
+    description: "Hostname used to resolve the address of Perm"
+    default: "perm.service.cf.internal"
+  perm.ca_certs:
+    description: "An array of certificate authorities being used by Perm. Allows multiple in case of rotation."
+    default: []
 
   credhub_api.hostname:
     description: "Hostname used to resolve the address of CredHub"
