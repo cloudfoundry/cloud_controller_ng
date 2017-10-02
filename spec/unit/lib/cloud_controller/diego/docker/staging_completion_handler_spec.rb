@@ -63,7 +63,7 @@ module VCAP::CloudController
                 handler.staging_complete(payload)
 
                 droplet = build.reload.droplet
-                data = {
+                data    = {
                   'web'      => 'start me',
                   'worker'   => 'hello',
                   'anything' => 'hi hi hi'
@@ -119,9 +119,11 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.docker.saving-staging-result-failed',
-                  staging_guid: build.guid,
-                  response:     payload,
-                  error:        'save-error',
+                  hash_including(
+                    staging_guid: build.guid,
+                    response:     payload,
+                    error:        'save-error',
+                  )
                 )
               end
             end
@@ -324,9 +326,11 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.docker.saving-staging-result-failed',
-                  staging_guid: build.guid,
-                  response:     payload,
-                  error:        'save-error',
+                  hash_including(
+                    staging_guid: build.guid,
+                    response:     payload,
+                    error:        'save-error',
+                  )
                 )
               end
             end

@@ -60,7 +60,13 @@ module VCAP::CloudController
             end
           end
         rescue => e
-          logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: build.guid, response: payload, error: e.message)
+          logger.error(logger_prefix + 'saving-staging-result-failed',
+            staging_guid: build.guid,
+            response:     payload,
+            error:        e.message,
+            build:        build.inspect,
+            droplet:      droplet.inspect
+          )
         end
 
         Loggregator.emit_error(build.guid, "Failed to stage build: #{payload[:error][:message]}")
@@ -81,7 +87,7 @@ module VCAP::CloudController
 
         raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') if build.in_final_state?
 
-        app = droplet.app
+        app                    = droplet.app
         requires_start_command = with_start && payload[:result][:process_types].blank? && app.processes.first.command.blank?
 
         if payload[:result][:process_types].blank? && !with_start
@@ -94,7 +100,13 @@ module VCAP::CloudController
           begin
             save_staging_result(payload)
           rescue => e
-            logger.error(logger_prefix + 'saving-staging-result-failed', staging_guid: build.guid, response: payload, error: e.message)
+            logger.error(logger_prefix + 'saving-staging-result-failed',
+              staging_guid: build.guid,
+              response:     payload,
+              error:        e.message,
+              build:        build.inspect,
+              droplet:      droplet.inspect
+            )
             return
           end
 
@@ -137,7 +149,7 @@ module VCAP::CloudController
         @error_schema ||= Membrane::SchemaParser.parse do
           {
             error: {
-              id: String,
+              id:      String,
               message: String,
             },
           }

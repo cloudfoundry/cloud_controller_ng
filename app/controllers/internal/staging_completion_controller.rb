@@ -25,7 +25,7 @@ module VCAP::CloudController
       @stagers = dependencies.fetch(:stagers)
     end
 
-    post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed
+    post '/internal/v3/staging/:staging_guid/droplet_completed', :droplet_completed # NOT USED, only for rolling deploys
     def droplet_completed(staging_guid)
       staging_response = read_body
       droplet          = DropletModel.find(guid: staging_guid)

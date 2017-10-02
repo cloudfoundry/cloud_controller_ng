@@ -213,9 +213,11 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.saving-staging-result-failed',
-                  staging_guid: build.guid,
-                  response:     success_response,
-                  error:        'save-error',
+                  hash_including(
+                    staging_guid: build.guid,
+                    response:     success_response,
+                    error:        'save-error',
+                  )
                 )
               end
 
@@ -416,9 +418,11 @@ module VCAP::CloudController
 
                 expect(logger).to have_received(:error).with(
                   'diego.staging.buildpack.saving-staging-result-failed',
-                  staging_guid: build.guid,
-                  response:     fail_response,
-                  error:        'save-error',
+                  hash_including(
+                    staging_guid: build.guid,
+                    response:     fail_response,
+                    error:        'save-error',
+                  )
                 )
               end
             end
