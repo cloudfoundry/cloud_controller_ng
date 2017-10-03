@@ -52,7 +52,13 @@ module VCAP::CloudController::Perm
 
         expect { subject.create_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('create-role.bad-status', status: 'GRPC::Unavailable', role: "org-developer-#{org_id}", code: anything, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'create-role.bad-status',
+          role: "org-developer-#{org_id}",
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
       end
     end
 
@@ -82,7 +88,13 @@ module VCAP::CloudController::Perm
 
         expect { subject.delete_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('delete-role.bad-status', status: 'GRPC::Unavailable', role: "org-developer-#{org_id}", code: anything, metadata: anything, details: anything)
+        expect(logger).to have_received(:error).with(
+          'delete-role.bad-status',
+          role: "org-developer-#{org_id}",
+          status: 'GRPC::Unavailable',
+          code: anything,
+          metadata: anything,
+          details: anything)
       end
     end
 
@@ -127,7 +139,15 @@ module VCAP::CloudController::Perm
           subject.assign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('assign-role.bad-status', role: "org-developer-#{org_id}", user_id: user_id, issuer: issuer, status: 'GRPC::Unavailable', code: anything, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'assign-role.bad-status',
+          role: "org-developer-#{org_id}",
+          user_id: user_id,
+          issuer: issuer,
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
       end
     end
 
@@ -146,7 +166,13 @@ module VCAP::CloudController::Perm
           subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('unassign-role.resource-not-found', role: "org-developer-#{org_id}", user_id: user_id, issuer: issuer, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'unassign-role.resource-not-found',
+          role: "org-developer-#{org_id}",
+          user_id: user_id,
+          issuer: issuer,
+          details: anything,
+          metadata: anything)
       end
 
       it 'does nothing when disabled' do
@@ -162,7 +188,15 @@ module VCAP::CloudController::Perm
           subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('unassign-role.bad-status', role: "org-developer-#{org_id}", user_id: user_id, issuer: issuer, status: 'GRPC::Unavailable', code: anything, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'unassign-role.bad-status',
+          role: "org-developer-#{org_id}",
+          user_id: user_id,
+          issuer: issuer,
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
       end
     end
 
@@ -228,8 +262,14 @@ module VCAP::CloudController::Perm
         allow(client).to receive(:create_role).and_raise(GRPC::Unavailable)
 
         expect { subject.create_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
-
-        expect(logger).to have_received(:error).with('create-role.bad-status', status: 'GRPC::Unavailable', role: "space-developer-#{space_id}", code: anything, details: anything, metadata: anything)      end
+        expect(logger).to have_received(:error).with(
+          'create-role.bad-status',
+          role: "space-developer-#{space_id}",
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
+      end
     end
 
     describe '#delete_space_role' do
@@ -258,7 +298,13 @@ module VCAP::CloudController::Perm
 
         expect { subject.delete_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('delete-role.bad-status', status: 'GRPC::Unavailable', role: "space-developer-#{space_id}", code: anything, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'delete-role.bad-status',
+          role: "space-developer-#{space_id}",
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
       end
     end
 
@@ -277,7 +323,11 @@ module VCAP::CloudController::Perm
           subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:debug).with('assign-role.assignment-already-exists', role: "space-developer-#{space_id}", user_id: user_id, issuer: issuer)
+        expect(logger).to have_received(:debug).with(
+          'assign-role.assignment-already-exists',
+          role: "space-developer-#{space_id}",
+          user_id: user_id,
+          issuer: issuer)
       end
 
       it 'does not fail if the role does not exist' do
@@ -287,7 +337,11 @@ module VCAP::CloudController::Perm
           subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('assign-role.role-does-not-exist', role: "space-developer-#{space_id}", user_id: user_id, issuer: issuer)
+        expect(logger).to have_received(:error).with(
+          'assign-role.role-does-not-exist',
+          role: "space-developer-#{space_id}",
+          user_id: user_id,
+          issuer: issuer)
       end
 
       it 'does nothing when disabled' do
@@ -303,7 +357,15 @@ module VCAP::CloudController::Perm
           subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('assign-role.bad-status', role: "space-developer-#{space_id}", user_id: user_id, issuer: issuer, status: 'GRPC::Unavailable', code: anything, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'assign-role.bad-status',
+          role: "space-developer-#{space_id}",
+          user_id: user_id,
+          issuer: issuer,
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
       end
     end
 
@@ -322,7 +384,13 @@ module VCAP::CloudController::Perm
           subject.unassign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('unassign-role.resource-not-found', role: "space-developer-#{space_id}", user_id: user_id, issuer: issuer, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'unassign-role.resource-not-found',
+          role: "space-developer-#{space_id}",
+          user_id: user_id,
+          issuer: issuer,
+          details: anything,
+          metadata: anything)
       end
 
       it 'does nothing when disabled' do
@@ -338,7 +406,15 @@ module VCAP::CloudController::Perm
           subject.unassign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
         }.not_to raise_error
 
-        expect(logger).to have_received(:error).with('unassign-role.bad-status', role: "space-developer-#{space_id}", user_id: user_id, issuer: issuer, status: 'GRPC::Unavailable', code: anything, details: anything, metadata: anything)
+        expect(logger).to have_received(:error).with(
+          'unassign-role.bad-status',
+          role: "space-developer-#{space_id}",
+          user_id: user_id,
+          issuer: issuer,
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
       end
     end
   end
