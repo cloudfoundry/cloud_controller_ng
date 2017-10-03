@@ -19,7 +19,7 @@ module VCAP::CloudController::Perm
     subject(:subject) { Client.new(hostname: hostname, port: port, enabled: true, ca_cert_path: ca_cert_path, logger: logger) }
 
     before do
-      allow(CloudFoundry::Perm::V1::Client).to receive(:new).with(hostname: hostname, port: port, trusted_cas: trusted_cas).and_return(client)
+      allow(CloudFoundry::Perm::V1::Client).to receive(:new).with(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: anything).and_return(client)
 
       allow(logger).to receive(:info)
       allow(logger).to receive(:debug)

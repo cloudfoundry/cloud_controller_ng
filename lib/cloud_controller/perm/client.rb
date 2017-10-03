@@ -8,7 +8,7 @@ module VCAP::CloudController
         @logger = logger
         if enabled
           trusted_cas = [File.open(ca_cert_path).read]
-          @client = CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas)
+          @client = CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
         end
       end
 
