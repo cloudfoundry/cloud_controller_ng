@@ -57,6 +57,16 @@ module VCAP::CloudController
           expect { subject.transform(service_keys) }.to raise_error(CloudController::Errors::ApiError, /UAA service is currently unavailable/)
         end
       end
+
+      context 'when a CF::UAA::UAAError error occurs' do
+        before do
+          allow(fake_credhub_client).to receive(:get_credential_by_name).and_raise(CF::UAA::UAAError)
+        end
+
+        it 'raises CloudController::Errors::ApiError "UaaUnavailable"' do
+          expect { subject.transform(service_keys) }.to raise_error(CloudController::Errors::ApiError, /UAA service is currently unavailable/)
+        end
+      end
     end
   end
 end

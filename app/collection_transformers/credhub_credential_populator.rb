@@ -16,8 +16,13 @@ module VCAP::CloudController
       end
     rescue Credhub::Error
       raise CloudController::Errors::ApiError.new_from_details('ServiceKeyCredentialStoreUnavailable')
-    rescue UaaUnavailable
+    rescue UaaUnavailable, CF::UAA::UAAError => e
+      logger.error("UAA error occurred while communicating with CredHub: #{e.class} - #{e.message}")
       raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
+    end
+
+    def logger
+      @logger ||= Steno.logger('cc.credhub_credential_populator')
     end
   end
 end
