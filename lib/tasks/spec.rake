@@ -10,7 +10,7 @@ namespace :spec do
     run_specs('spec')
   end
 
-  task integraton: ['db:pick', 'db:recreate'] do
+  task integration: ['db:pick', 'db:recreate'] do
     run_specs('spec/integration')
   end
 

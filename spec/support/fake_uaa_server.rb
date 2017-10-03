@@ -16,13 +16,17 @@ class FakeUAAServer
 
   def start
     @thread = Thread.new do
-      server.start
+      begin
+        server.start
+      ensure
+        server.shutdown
+      end
     end
   end
 
   def stop
     server.shutdown
-    Thread.kill(thread)
+    thread.join
   end
 end
 
