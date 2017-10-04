@@ -3,11 +3,12 @@ require 'perm'
 module VCAP::CloudController
   module Perm
     class Client
-      def initialize(hostname:, port:, enabled:, ca_cert_path:)
+      def initialize(hostname:, port:, enabled:, ca_cert_path:, logger: Steno.logger('perm.client'))
         @enabled = enabled
+        @logger = logger
         if enabled
           trusted_cas = [File.open(ca_cert_path).read]
-          @client = CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas)
+          @client = CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
         end
       end
 
@@ -59,7 +60,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :client, :enabled
+      attr_reader :client, :enabled, :logger
 
       def org_role(role, org_id)
         "org-#{role}-#{org_id}"
@@ -74,7 +75,9 @@ module VCAP::CloudController
           begin
             client.create_role(role)
           rescue GRPC::AlreadyExists
-            # ignored
+            logger.debug('create-role.role-already-exists', role: role)
+          rescue GRPC::BadStatus => e
+            logger.error('create-role.bad-status', role: role, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
           end
         end
       end
@@ -84,7 +87,9 @@ module VCAP::CloudController
           begin
             client.delete_role(role)
           rescue GRPC::NotFound
-            # ignored
+            logger.debug('delete-role.role-does-not-exist', role: role)
+          rescue GRPC::BadStatus => e
+            logger.error('delete-role.bad-status', role: role, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
           end
         end
       end
@@ -93,8 +98,12 @@ module VCAP::CloudController
         if enabled
           begin
             client.assign_role(role_name: role, actor_id: user_id, issuer: issuer)
-          rescue GRPC::AlreadyExists, GRPC::NotFound
-            # ignored
+          rescue GRPC::AlreadyExists
+            logger.debug('assign-role.assignment-already-exists', role: role, user_id: user_id, issuer: issuer)
+          rescue GRPC::NotFound
+            logger.error('assign-role.role-does-not-exist', role: role, user_id: user_id, issuer: issuer)
+          rescue GRPC::BadStatus => e
+            logger.error('assign-role.bad-status', role: role, user_id: user_id, issuer: issuer, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
           end
         end
       end
@@ -103,8 +112,10 @@ module VCAP::CloudController
         if enabled
           begin
             client.unassign_role(role_name: role, actor_id: user_id, issuer: issuer)
-          rescue GRPC::NotFound
-            # ignored
+          rescue GRPC::NotFound => e
+            logger.error('unassign-role.resource-not-found', role: role, user_id: user_id, issuer: issuer, details: e.details, metadata: e.metadata)
+          rescue GRPC::BadStatus => e
+            logger.error('unassign-role.bad-status', role: role, user_id: user_id, issuer: issuer, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
           end
         end
       end
