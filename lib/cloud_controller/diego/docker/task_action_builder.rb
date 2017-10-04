@@ -13,11 +13,14 @@ module VCAP::CloudController
         end
 
         def action
+          launcher_args = ['app', task.command, '{}']
+          launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present?
+
           ::Diego::ActionBuilder.action(
             ::Diego::Bbs::Models::RunAction.new(
               user: 'root',
               path: '/tmp/lifecycle/launcher',
-              args: ['app', task.command, '{}'],
+              args: launcher_args,
               log_source: "APP/TASK/#{task.name}",
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
               env: task_environment_variables,
@@ -49,6 +52,13 @@ module VCAP::CloudController
         private
 
         attr_reader :config, :task, :lifecycle_data
+
+        def encoded_credhub_url
+          credhub_url = Config.config.get(:credhub_api, :url)
+          return unless credhub_url.present?
+
+          Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
+        end
       end
     end
   end

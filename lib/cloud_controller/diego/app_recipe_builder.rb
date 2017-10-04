@@ -156,14 +156,13 @@ module VCAP::CloudController
       end
 
       def generate_app_action(start_command, user, environment_variables)
+        launcher_args = ['app', start_command || '', process.execution_metadata]
+        launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present?
+
         action(::Diego::Bbs::Models::RunAction.new(
                  user:            user,
                  path:            '/tmp/lifecycle/launcher',
-                 args:            [
-                   'app',
-                   start_command || '',
-                   process.execution_metadata,
-                 ],
+                 args:            launcher_args,
                  env:             environment_variables,
                  log_source:      "APP/PROC/#{process.type.upcase}",
                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit),
@@ -201,7 +200,12 @@ module VCAP::CloudController
         environment_variables = generate_environment_variables(lrp_builder)
 
         actions = []
-        actions << generate_app_action(lrp_builder.start_command, lrp_builder.action_user, environment_variables)
+        actions << generate_app_action(
+          lrp_builder.start_command,
+          lrp_builder.action_user,
+          environment_variables
+        )
+
         actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
         codependent(actions)
       end
@@ -284,6 +288,13 @@ module VCAP::CloudController
 
       def file_descriptor_limit
         process.file_descriptors == 0 ? DEFAULT_FILE_DESCRIPTOR_LIMIT : process.file_descriptors
+      end
+
+      def encoded_credhub_url
+        credhub_url = Config.config.get(:credhub_api, :url)
+        return unless credhub_url.present?
+
+        Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
       end
     end
   end

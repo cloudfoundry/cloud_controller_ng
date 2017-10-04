@@ -268,3 +268,10 @@ routing_api:
   routing_client_name: "cc_routing"
   routing_client_secret: <%= p("uaa.clients.cc_routing.secret") %>
 <% end %>
+
+<% if_link("credhub") do |credhub| %>
+credhub_api:
+  internal_url: <%= "https://#{p("credhub_api.hostname")}:#{credhub.p("credhub.port")}" %>
+  url: <%= "https://credhub.#{p("system_domain")}:#{credhub.p("credhub.port")}" %>
+  ca_cert_path: "/var/vcap/jobs/cloud_controller_clock/config/certs/credhub_ca.crt"
+<% end %>

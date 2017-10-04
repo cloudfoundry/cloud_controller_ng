@@ -28,12 +28,15 @@ module VCAP::CloudController
             download_droplet_action.checksum_value = task.droplet.droplet_hash
           end
 
+          launcher_args = ['app', task.command, '']
+          launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present?
+
           serial([
             download_droplet_action,
             ::Diego::Bbs::Models::RunAction.new(
               user: 'vcap',
               path: '/tmp/lifecycle/launcher',
-              args: ['app', task.command, ''],
+              args: launcher_args,
               log_source: "APP/TASK/#{task.name}",
               resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
               env: task_environment_variables
@@ -67,6 +70,13 @@ module VCAP::CloudController
 
         def lifecycle_stack
           lifecycle_data[:stack]
+        end
+
+        def encoded_credhub_url
+          credhub_url = Config.config.get(:credhub_api, :url)
+          return unless credhub_url.present?
+
+          Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
         end
       end
     end

@@ -37,6 +37,7 @@ module VCAP::CloudController
 
         before do
           allow(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector).to receive(:for_task).and_return(generated_environment)
+          TestConfig.override(credhub_api: nil)
         end
 
         describe '#action' do
@@ -71,6 +72,55 @@ module VCAP::CloudController
             expect(actions.length).to eq(2)
             expect(actions[0].download_action).to eq(download_app_droplet_action)
             expect(actions[1].run_action).to eq(run_task_action)
+          end
+
+          describe 'credhub' do
+            context 'when credhub url is present' do
+              let(:expected_credhub_url) do
+                Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :url)}\"}")
+              end
+              let(:run_task_action) do
+                ::Diego::Bbs::Models::RunAction.new(
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', command, '', expected_credhub_url],
+                  log_source:      'APP/TASK/my-task',
+                  user:            'vcap',
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+                  env:             generated_environment,
+                )
+              end
+
+              before do
+                TestConfig.override(credhub_api: { url: 'http:credhub.capi.land:8844' })
+              end
+
+              it 'sends the base64-encoded credhub url as an argument to the launcher' do
+                actions = builder.action.serial_action.actions
+                expect(actions[1].run_action).to eq(run_task_action)
+              end
+            end
+
+            context 'when credhub url is not present' do
+              let(:run_task_action) do
+                ::Diego::Bbs::Models::RunAction.new(
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', command, ''],
+                  log_source:      'APP/TASK/my-task',
+                  user:            'vcap',
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+                  env:             generated_environment,
+                )
+              end
+
+              before do
+                TestConfig.override(credhub_api: nil)
+              end
+
+              it 'does not include the credhub url' do
+                actions = builder.action.serial_action.actions
+                expect(actions[1].run_action).to eq(run_task_action)
+              end
+            end
           end
 
           context 'when the droplet does not have a sha256 checksum calculated' do

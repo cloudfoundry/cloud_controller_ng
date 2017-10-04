@@ -24,6 +24,7 @@ templates:
   mutual_tls.key.erb: config/certs/mutual_tls.key
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   db_ca.crt.erb: config/certs/db_ca.crt
+  credhub_ca.crt.erb: config/certs/credhub_ca.crt
 
 packages:
   - capi_utils
@@ -37,6 +38,9 @@ packages:
 consumes:
 - name: database
   type: database
+  optional: true
+- name: credhub
+  type: credhub
   optional: true
 
 properties:
@@ -509,6 +513,12 @@ properties:
   cc.diego.pid_limit:
     description: "Maximum pid limit for containerized work running user-provided code"
     default: 1024
+
+  credhub_api.hostname:
+    description: "Hostname used to resolve the address of CredHub"
+    default: "credhub.service.cf.internal"
+  credhub_api.ca_cert:
+    description: "The certificate authority being used by CredHub"
 
   cloud_controller.release_level_backup:
     default: false

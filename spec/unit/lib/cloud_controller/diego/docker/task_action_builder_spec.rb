@@ -15,12 +15,14 @@ module VCAP::CloudController
             }
           })
         end
+
         let(:task) { TaskModel.make command: command, name: 'my-task' }
         let(:lifecycle_data) do
           {
             droplet_path: 'user/image',
           }
         end
+
         let(:command) { 'echo "hello"' }
         let(:generated_environment) do
           [
@@ -29,8 +31,10 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
           ]
         end
+
         before do
           allow(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector).to receive(:for_task).and_return(generated_environment)
+          TestConfig.override(credhub_api: nil)
         end
 
         describe '#action' do
@@ -48,6 +52,55 @@ module VCAP::CloudController
           it 'returns the correct run action' do
             result = task_action_builder.action
             expect(result.run_action).to eq(run_task_action)
+          end
+
+          describe 'credhub' do
+            context 'when credhub url is present' do
+              let(:expected_credhub_url) do
+                Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :url)}\"}")
+              end
+              let(:run_task_action) do
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'root',
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', command, '{}', expected_credhub_url],
+                  log_source:      'APP/TASK/my-task',
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+                  env:             generated_environment,
+                )
+              end
+
+              before do
+                TestConfig.override(credhub_api: { url: 'http:credhub.capi.land:8844' })
+              end
+
+              it 'sends the base64-encoded credhub url as an argument to the launcher' do
+                result = task_action_builder.action
+                expect(result.run_action).to eq(run_task_action)
+              end
+            end
+
+            context 'when credhub url is not present' do
+              let(:run_task_action) do
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'root',
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', command, '{}'],
+                  log_source:      'APP/TASK/my-task',
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+                  env:             generated_environment,
+                )
+              end
+
+              before do
+                TestConfig.override(credhub_api: nil)
+              end
+
+              it 'does not include the credhub url' do
+                result = task_action_builder.action
+                expect(result.run_action).to eq(run_task_action)
+              end
+            end
           end
         end
 
