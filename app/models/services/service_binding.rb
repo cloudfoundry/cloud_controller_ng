@@ -44,12 +44,13 @@ module VCAP::CloudController
 
     def validate_space_match
       return unless service_instance && app
+      return if service_instance.space == app.space
 
       if FeatureFlag.enabled?(:service_instance_sharing)
         if service_instance.shared_spaces.exclude?(app.space)
           errors.add(:service_instance, :space_mismatch)
         end
-      elsif service_instance.space != app.space
+      else
         errors.add(:service_instance, :space_mismatch)
       end
     end
