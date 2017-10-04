@@ -26,7 +26,8 @@ class FakeUAAServer
 
   def stop
     server.shutdown
-    thread.join
+    thread.join(2)
+    Thread.kill(thread)
   end
 end
 
