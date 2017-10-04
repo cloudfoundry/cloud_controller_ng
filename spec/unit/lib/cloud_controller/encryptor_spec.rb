@@ -147,6 +147,15 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the salt is only 8 bytes (legacy mode)' do
+        let(:salt) { SecureRandom.hex(4).to_s }
+
+        it 'decrypts correctly' do
+          encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
+          expect(Encryptor.decrypt(encrypted_string, salt)).to eq(unencrypted_string)
+        end
+      end
     end
   end
 
@@ -169,7 +178,7 @@ module VCAP::CloudController
 
     describe '#set_field_as_encrypted' do
       context 'model does not have the salt column' do
-        let(:columns) { [:id, :name, :size, :key_label] }
+        let(:columns) { [:id, :name, :size, :encryption_key_label] }
 
         context 'default name' do
           it 'raises an error' do
@@ -189,7 +198,7 @@ module VCAP::CloudController
       end
 
       context 'model has the salt column' do
-        let(:columns) { [:id, :name, :size, :name_salt, :key_label] }
+        let(:columns) { [:id, :name, :size, :name_salt, :encryption_key_label] }
 
         it 'does not raise an error' do
           expect {
@@ -203,7 +212,7 @@ module VCAP::CloudController
         end
 
         context 'explicit name' do
-          let(:columns) { [:id, :name, :size, :foobar, :key_label] }
+          let(:columns) { [:id, :name, :size, :foobar, :encryption_key_label] }
 
           it 'does not raise an error' do
             expect {
@@ -218,19 +227,19 @@ module VCAP::CloudController
         end
       end
 
-      context 'model does not have the "key_label" column' do
+      context 'model does not have the "encryption_key_label" column' do
         let(:columns) { [:id, :name, :name_salt, :size] }
 
         it 'raises an error' do
           expect {
             klass.send :set_field_as_encrypted, :name
-          }.to raise_error(RuntimeError, /key_label/)
+          }.to raise_error(RuntimeError, /encryption_key_label/)
         end
       end
     end
 
     describe 'field-specific methods' do
-      let(:columns) { [:sekret, :sekret_salt, :key_label] }
+      let(:columns) { [:sekret, :sekret_salt, :encryption_key_label] }
       let(:klass2) { Class.new klass }
       let(:subject) { klass2.new }
       let(:encryption_args) { {} }
@@ -322,13 +331,13 @@ module VCAP::CloudController
             expect(Encryptor.decrypt(subject.underlying_sekret, subject.sekret_salt)).to eq(unencrypted_string)
           end
 
-          context 'model has a value for key_label' do
-            let(:columns) { [:sekret, :sekret_salt, :key_label] }
+          context 'model has a value for encryption_key_label' do
+            let(:columns) { [:sekret, :sekret_salt, :encryption_key_label] }
 
             before do
               allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
               subject.sekret_salt = salt
-              subject.key_label = 'foo'
+              subject.encryption_key_label = 'foo'
               subject.sekret = unencrypted_string
               expect(subject.sekret).to eq(unencrypted_string)
             end
@@ -341,15 +350,15 @@ module VCAP::CloudController
             end
 
             context 'and the key has been rotated' do
-              it 'updates key_label in the record when encrypting' do
+              it 'updates encryption_key_label in the record when encrypting' do
                 allow(Encryptor).to receive(:current_encryption_key_label) { 'bar' }
                 subject.sekret = 'nu'
                 expect(subject.sekret).to eq('nu')
-                expect(subject.key_label).to eq(Encryptor.current_encryption_key_label)
+                expect(subject.encryption_key_label).to eq(Encryptor.current_encryption_key_label)
               end
 
               context 'and the model has another encrypted field' do
-                let(:columns) { [:sekret, :sekret_salt, :sekret2, :sekret2_salt, :key_label] }
+                let(:columns) { [:sekret, :sekret_salt, :sekret2, :sekret2_salt, :encryption_key_label] }
                 let(:unencrypted_string2) { 'announce presence with authority' }
 
                 before do
@@ -379,7 +388,7 @@ module VCAP::CloudController
       end
 
       describe 'alternative storage column is specified' do
-        let(:columns) { [:sekret, :sekret_salt, :encrypted_sekret, :key_label] }
+        let(:columns) { [:sekret, :sekret_salt, :encrypted_sekret, :encryption_key_label] }
         let(:encryption_args) { { column: :encrypted_sekret } }
 
         it 'stores the encrypted value in that column' do

@@ -55,8 +55,13 @@ module VCAP::CloudController::Encryptor
     end
 
     def run_cipher(cipher, input, salt, key)
-      cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, 2048, 32, OpenSSL::Digest::SHA256.new)
-      cipher.iv = salt
+      if salt.length.eql?(8)
+        # Backwards compatibility
+        cipher.pkcs5_keyivgen(key, salt)
+      else
+        cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, 2048, 32, OpenSSL::Digest::SHA256.new)
+        cipher.iv = salt
+      end
       cipher.update(input).tap { |result| result << cipher.final }
     end
   end
@@ -86,7 +91,7 @@ module VCAP::CloudController::Encryptor
           raise "Salt field `#{salt_name}` does not exist"
         end
 
-        raise 'Field "key_label" does not exist' unless columns.include?(:key_label)
+        raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
 
         define_method generate_salt_name do
           return unless send(salt_name).blank?
@@ -104,7 +109,7 @@ module VCAP::CloudController::Encryptor
         end
 
         define_method "#{field_name}_with_encryption" do
-          VCAP::CloudController::Encryptor.decrypt send("#{field_name}_without_encryption"), send(salt_name), send(:key_label)
+          VCAP::CloudController::Encryptor.decrypt send("#{field_name}_without_encryption"), send(salt_name), self.encryption_key_label
         end
         alias_method_chain field_name, 'encryption'
 
@@ -116,7 +121,7 @@ module VCAP::CloudController::Encryptor
           if value.blank?
             encrypted_value = nil
           else
-            if !VCAP::CloudController::Encryptor.current_encryption_key_label.nil? && send(:key_label) != VCAP::CloudController::Encryptor.current_encryption_key_label
+            if !VCAP::CloudController::Encryptor.current_encryption_key_label.nil? && self.encryption_key_label != VCAP::CloudController::Encryptor.current_encryption_key_label
               send(:db).transaction do
                 e_fields = self.class.encrypted_fields
                 if !e_fields.nil?
@@ -128,7 +133,7 @@ module VCAP::CloudController::Encryptor
                     end
                   end
                 end
-                send :key_label=, VCAP::CloudController::Encryptor.current_encryption_key_label
+                self.encryption_key_label = VCAP::CloudController::Encryptor.current_encryption_key_label
               end
             else
               # will use the current key label to encrypt

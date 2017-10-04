@@ -15,7 +15,7 @@ Sequel.migration do
     )
     tables_to_alter.each do |table|
       alter_table(table.to_sym) do
-        add_column :key_label, String
+        add_column :encryption_key_label, String, size: 255
       end
     end
   end
@@ -24,7 +24,7 @@ Sequel.migration do
     if supports_table_listing?
       tables.each do |table|
         alter_table(table) do
-          drop_column :key_label
+          drop_column :encryption_key_label
         end
       end
     end
