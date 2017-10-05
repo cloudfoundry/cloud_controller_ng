@@ -15,8 +15,8 @@ module VCAP::CloudController::Perm
 
     let(:logger) { instance_double(Steno::Logger) }
 
-    let(:disabled_subject) { Client.new(hostname: hostname, port: port, enabled: false, ca_cert_path: '', logger: logger) }
-    subject(:subject) { Client.new(hostname: hostname, port: port, enabled: true, ca_cert_path: ca_cert_path, logger: logger) }
+    let(:disabled_subject) { Client.new(hostname: hostname, port: port, enabled: false, trusted_cas: [], logger_name: 'perm') }
+    subject(:subject) { Client.new(hostname: hostname, port: port, enabled: true, trusted_cas: trusted_cas, logger_name: 'perm') }
 
     before do
       allow(CloudFoundry::Perm::V1::Client).to receive(:new).with(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: anything).and_return(client)
@@ -24,6 +24,10 @@ module VCAP::CloudController::Perm
       allow(logger).to receive(:info)
       allow(logger).to receive(:debug)
       allow(logger).to receive(:error)
+
+      allow(subject).to receive(:logger).and_return(logger)
+      allow(disabled_subject).to receive(:logger).and_return(logger)
+      allow(client).to receive(:logger).and_return(logger)
     end
 
     describe '#create_org_role' do

@@ -434,8 +434,12 @@ module CloudController
       port = config.get(:perm, :port)
       enabled = config.get(:perm, :enabled)
       ca_cert_path = config.get(:perm, :ca_cert_path)
+      trusted_cas = []
+      if enabled
+        trusted_cas << File.open(ca_cert_path).read
+      end
 
-      VCAP::CloudController::Perm::Client.new(hostname: hostname, port: port, enabled: enabled, ca_cert_path: ca_cert_path)
+      VCAP::CloudController::Perm::Client.new(hostname: hostname, port: port, enabled: enabled, trusted_cas: trusted_cas, logger_name: 'perm.client')
     end
   end
 end

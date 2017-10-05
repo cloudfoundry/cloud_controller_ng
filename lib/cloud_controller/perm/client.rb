@@ -3,13 +3,12 @@ require 'perm'
 module VCAP::CloudController
   module Perm
     class Client
-      def initialize(hostname:, port:, enabled:, ca_cert_path:, logger: Steno.logger('perm.client'))
+      def initialize(hostname:, port:, enabled:, trusted_cas:, logger_name:)
+        @hostname = hostname
+        @port = port
+        @trusted_cas = trusted_cas
         @enabled = enabled
-        @logger = logger
-        if enabled
-          trusted_cas = [File.open(ca_cert_path).read]
-          @client = CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
-        end
+        @logger_name = logger_name
       end
 
       def create_org_role(role:, org_id:)
@@ -60,7 +59,11 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :client, :enabled, :logger
+      attr_reader :hostname, :port, :enabled, :trusted_cas, :logger_name
+
+      def client
+        @client ||= CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
+      end
 
       def org_role(role, org_id)
         "org-#{role}-#{org_id}"
@@ -118,6 +121,10 @@ module VCAP::CloudController
             logger.error('unassign-role.bad-status', role: role, user_id: user_id, issuer: issuer, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
           end
         end
+      end
+
+      def logger
+        @logger ||= Steno.logger(logger_name)
       end
     end
   end
