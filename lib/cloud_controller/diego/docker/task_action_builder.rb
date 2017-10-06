@@ -54,7 +54,7 @@ module VCAP::CloudController
         attr_reader :config, :task, :lifecycle_data
 
         def encoded_credhub_url
-          credhub_url = Config.config.get(:credhub_api, :url)
+          credhub_url = Config.config.get(:credhub_api, :internal_url)
           return unless credhub_url.present?
 
           Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)

@@ -5,10 +5,12 @@ require 'cloud_controller/diego/buildpack/desired_lrp_builder'
 require 'cloud_controller/diego/docker/desired_lrp_builder'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
+require 'credhub/helpers'
 
 module VCAP::CloudController
   module Diego
     class AppRecipeBuilder
+      include ::Credhub::Helpers
       include ::Diego::ActionBuilder
 
       MONITORED_HEALTH_CHECK_TYPES = ['port', 'http', ''].map(&:freeze).freeze
@@ -288,13 +290,6 @@ module VCAP::CloudController
 
       def file_descriptor_limit
         process.file_descriptors == 0 ? DEFAULT_FILE_DESCRIPTOR_LIMIT : process.file_descriptors
-      end
-
-      def encoded_credhub_url
-        credhub_url = Config.config.get(:credhub_api, :url)
-        return unless credhub_url.present?
-
-        Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
       end
     end
   end

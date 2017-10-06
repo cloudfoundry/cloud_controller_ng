@@ -784,7 +784,7 @@ module VCAP::CloudController
             context 'when credhub url is present' do
               let(:expected_credhub_url) do
                 Base64.encode64(
-                  "{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :url)}\"}"
+                  "{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}"
                 )
               end
 
@@ -802,7 +802,7 @@ module VCAP::CloudController
               end
 
               before do
-                TestConfig.override(credhub_api: { url: 'http:credhub.capi.land:8844' })
+                TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
               end
 
               it 'sends the base64-encoded credhub url as an argument to the launcher' do
@@ -1105,7 +1105,7 @@ module VCAP::CloudController
           describe 'credhub' do
             context 'when credhub url is present' do
               let(:expected_credhub_url) do
-                Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :url)}\"}")
+                Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}")
               end
 
               let(:expected_app_run_action) do
@@ -1122,7 +1122,7 @@ module VCAP::CloudController
               end
 
               before do
-                TestConfig.override(credhub_api: { url: 'http:credhub.capi.land:8844' })
+                TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
               end
 
               it 'sends the base64-encoded credhub url as an argument to the launcher' do

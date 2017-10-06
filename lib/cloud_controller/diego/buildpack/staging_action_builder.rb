@@ -1,7 +1,10 @@
+require 'credhub/helpers'
+
 module VCAP::CloudController
   module Diego
     module Buildpack
       class StagingActionBuilder
+        include ::Credhub::Helpers
         include ::Diego::ActionBuilder
 
         attr_reader :config, :lifecycle_data, :staging_details
@@ -156,13 +159,6 @@ module VCAP::CloudController
             'timeout'               => config.get(:staging, :timeout_in_seconds),
           }.to_param
           upload_droplet_uri.to_s
-        end
-
-        def encoded_credhub_url
-          credhub_url = Config.config.get(:credhub_api, :url)
-          return unless credhub_url.present?
-
-          Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
         end
       end
     end

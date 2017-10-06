@@ -1,10 +1,12 @@
 require 'diego/action_builder'
 require 'cloud_controller/diego/task_environment_variable_collector'
+require 'credhub/helpers'
 
 module VCAP::CloudController
   module Diego
     module Buildpack
       class TaskActionBuilder
+        include ::Credhub::Helpers
         include ::Diego::ActionBuilder
 
         def initialize(config, task, lifecycle_data)
@@ -70,13 +72,6 @@ module VCAP::CloudController
 
         def lifecycle_stack
           lifecycle_data[:stack]
-        end
-
-        def encoded_credhub_url
-          credhub_url = Config.config.get(:credhub_api, :url)
-          return unless credhub_url.present?
-
-          Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
         end
       end
     end
