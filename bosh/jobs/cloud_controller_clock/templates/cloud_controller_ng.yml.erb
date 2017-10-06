@@ -275,3 +275,6 @@ credhub_api:
   url: <%= "https://credhub.#{p("system_domain")}:#{credhub.p("credhub.port")}" %>
   ca_cert_path: "/var/vcap/jobs/cloud_controller_clock/config/certs/credhub_ca.crt"
 <% end %>
+
+credential_references:
+  interpolate_service_bindings: <%= p("cc.credential_references.interpolate_service_bindings") %>

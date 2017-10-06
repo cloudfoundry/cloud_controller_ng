@@ -79,24 +79,53 @@ module VCAP::CloudController
               let(:expected_credhub_url) do
                 Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}")
               end
-              let(:run_task_action) do
-                ::Diego::Bbs::Models::RunAction.new(
-                  path:            '/tmp/lifecycle/launcher',
-                  args:            ['app', command, '', expected_credhub_url],
-                  log_source:      'APP/TASK/my-task',
-                  user:            'vcap',
-                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-                  env:             generated_environment,
-                )
-              end
 
               before do
                 TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
               end
 
-              it 'sends the base64-encoded credhub url as an argument to the launcher' do
-                actions = builder.action.serial_action.actions
-                expect(actions[1].run_action).to eq(run_task_action)
+              context 'when the interpolation of service bindings is enabled' do
+                let(:run_task_action) do
+                  ::Diego::Bbs::Models::RunAction.new(
+                    path:            '/tmp/lifecycle/launcher',
+                    args:            ['app', command, '', expected_credhub_url],
+                    log_source:      'APP/TASK/my-task',
+                    user:            'vcap',
+                    resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+                    env:             generated_environment,
+                  )
+                end
+
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: true })
+                end
+
+                it 'sends the base64-encoded credhub url as an argument to the launcher' do
+                  actions = builder.action.serial_action.actions
+                  expect(actions[1].run_action).to eq(run_task_action)
+                end
+              end
+
+              context 'when the interpolation of service bindings is disabled' do
+                let(:run_task_action) do
+                  ::Diego::Bbs::Models::RunAction.new(
+                    path:            '/tmp/lifecycle/launcher',
+                    args:            ['app', command, ''],
+                    log_source:      'APP/TASK/my-task',
+                    user:            'vcap',
+                    resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+                    env:             generated_environment,
+                  )
+                end
+
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: false })
+                end
+
+                it 'does not include the credhub url' do
+                  actions = builder.action.serial_action.actions
+                  expect(actions[1].run_action).to eq(run_task_action)
+                end
               end
             end
 

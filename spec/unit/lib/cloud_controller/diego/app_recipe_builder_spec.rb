@@ -1108,26 +1108,56 @@ module VCAP::CloudController
                 Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}")
               end
 
-              let(:expected_app_run_action) do
-                ::Diego::Bbs::Models::Action.new(
-                  run_action: ::Diego::Bbs::Models::RunAction.new(
-                    path:            '/tmp/lifecycle/launcher',
-                    args:            ['app', command, execution_metadata, expected_credhub_url],
-                    log_source:      'APP/PROC/WEB',
-                    resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                    env:             expected_action_environment_variables,
-                    user:            'lrp-action-user',
-                  )
-                )
-              end
-
               before do
                 TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
               end
 
-              it 'sends the base64-encoded credhub url as an argument to the launcher' do
-                lrp = builder.build_app_lrp
-                expect(lrp.action).to eq(expected_action)
+              context 'when the interpolation of service bindings is enabled' do
+                let(:expected_app_run_action) do
+                  ::Diego::Bbs::Models::Action.new(
+                    run_action: ::Diego::Bbs::Models::RunAction.new(
+                      path:            '/tmp/lifecycle/launcher',
+                      args:            ['app', command, execution_metadata, expected_credhub_url],
+                      log_source:      'APP/PROC/WEB',
+                      resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                      env:             expected_action_environment_variables,
+                      user:            'lrp-action-user',
+                    )
+                  )
+                end
+
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: true })
+                end
+
+                it 'sends the base64-encoded credhub url as an argument to the launcher' do
+                  lrp = builder.build_app_lrp
+                  expect(lrp.action).to eq(expected_action)
+                end
+              end
+
+              context 'when the interpolation of service bindings is disabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: false })
+                end
+
+                let(:expected_app_run_action) do
+                  ::Diego::Bbs::Models::Action.new(
+                    run_action: ::Diego::Bbs::Models::RunAction.new(
+                      path:            '/tmp/lifecycle/launcher',
+                      args:            ['app', command, execution_metadata],
+                      log_source:      'APP/PROC/WEB',
+                      resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                      env:             expected_action_environment_variables,
+                      user:            'lrp-action-user',
+                    )
+                  )
+                end
+
+                it 'does not include the credhub url' do
+                  lrp = builder.build_app_lrp
+                  expect(lrp.action).to eq(expected_action)
+                end
               end
             end
 

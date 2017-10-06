@@ -350,3 +350,6 @@ credhub_api:
   internal_url: https://credhub.vcap.me:8844
   url: https://credhub.some-domain:8844
   ca_cert_path: "spec/fixtures/certs/credhub_ca.crt"
+
+credential_references:
+  interpolate_service_bindings: true

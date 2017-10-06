@@ -523,3 +523,7 @@ properties:
   cloud_controller.release_level_backup:
     default: true
     description: "Include cloud_controller jobs in backup and restore operations"
+
+  cc.credential_references.interpolate_service_bindings:
+    description: "Controls whether CredHub credentials are automatically interpolated in VCAP_SERVICES"
+    default: true

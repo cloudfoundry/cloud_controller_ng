@@ -5,12 +5,12 @@ require 'cloud_controller/diego/buildpack/desired_lrp_builder'
 require 'cloud_controller/diego/docker/desired_lrp_builder'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
-require 'credhub/helpers'
+require 'credhub/config_helpers'
 
 module VCAP::CloudController
   module Diego
     class AppRecipeBuilder
-      include ::Credhub::Helpers
+      include ::Credhub::ConfigHelpers
       include ::Diego::ActionBuilder
 
       MONITORED_HEALTH_CHECK_TYPES = ['port', 'http', ''].map(&:freeze).freeze
@@ -159,7 +159,7 @@ module VCAP::CloudController
 
       def generate_app_action(start_command, user, environment_variables)
         launcher_args = ['app', start_command || '', process.execution_metadata]
-        launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present?
+        launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present? && cred_interpolation_enabled?
 
         action(::Diego::Bbs::Models::RunAction.new(
                  user:            user,

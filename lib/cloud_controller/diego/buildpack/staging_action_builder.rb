@@ -1,10 +1,10 @@
-require 'credhub/helpers'
+require 'credhub/config_helpers'
 
 module VCAP::CloudController
   module Diego
     module Buildpack
       class StagingActionBuilder
-        include ::Credhub::Helpers
+        include ::Credhub::ConfigHelpers
         include ::Diego::ActionBuilder
 
         attr_reader :config, :lifecycle_data, :staging_details
@@ -104,7 +104,10 @@ module VCAP::CloudController
             '-buildpacksDir=/tmp/buildpacks',
             '-buildArtifactsCacheDir=/tmp/cache',
           ]
-          builder_args.push("-platformOptions=#{encoded_credhub_url}") if encoded_credhub_url.present?
+
+          if encoded_credhub_url.present? && cred_interpolation_enabled?
+            builder_args.push("-platformOptions=#{encoded_credhub_url}")
+          end
 
           ::Diego::Bbs::Models::RunAction.new(
             path:            '/tmp/lifecycle/builder',

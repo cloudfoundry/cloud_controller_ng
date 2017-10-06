@@ -166,6 +166,9 @@ credhub_api:
   ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/credhub_ca.crt"
 <% end %>
 
+credential_references:
+  interpolate_service_bindings: <%= p("cc.credential_references.interpolate_service_bindings") %>
+
 # App staging parameters
 staging:
   timeout_in_seconds: <%= p("cc.staging_timeout_in_seconds") %>

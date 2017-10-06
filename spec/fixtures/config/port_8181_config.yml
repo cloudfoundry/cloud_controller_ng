@@ -230,3 +230,6 @@ perm:
 
 credhub_api:
   internal_url: https://credhub.capi.me:8844
+
+credential_references:
+  interpolate_service_bindings: true

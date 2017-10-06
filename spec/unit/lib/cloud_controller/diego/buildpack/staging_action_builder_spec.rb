@@ -204,60 +204,38 @@ module VCAP::CloudController
             end
 
             context 'when credhub url is present' do
-              let(:run_staging_action) do
-                ::Diego::Bbs::Models::RunAction.new(
-                  path:            '/tmp/lifecycle/builder',
-                  args:            [
-                    '-buildpackOrder=buildpack-1-key,buildpack-2-key',
-                    '-skipCertVerify=false',
-                    '-skipDetect=false',
-                    '-buildDir=/tmp/app',
-                    '-outputDroplet=/tmp/droplet',
-                    '-outputMetadata=/tmp/result.json',
-                    '-outputBuildArtifactsCache=/tmp/output-cache',
-                    '-buildpacksDir=/tmp/buildpacks',
-                    '-buildArtifactsCacheDir=/tmp/cache',
-                    expected_credhub_arg
-                  ],
-                  user:            'vcap',
-                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 4),
-                  env:             generated_environment,
-                )
-              end
-
               before do
                 TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
               end
 
-              it 'sends the base64-encoded credhub url as an argument to the builder' do
-                result = builder.action
-                actions = result.serial_action.actions
+              context 'when the interpolation of service bindings is enabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: true })
+                end
 
-                expect(actions[1].run_action.args).to include(expected_credhub_arg)
+                it 'sends the base64-encoded credhub url as an argument to the builder' do
+                  result = builder.action
+                  actions = result.serial_action.actions
+
+                  expect(actions[1].run_action.args).to include(expected_credhub_arg)
+                end
+              end
+
+              context 'when the interpolation of service bindings is disabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: false })
+                end
+
+                it 'does not include the credhub url' do
+                  result = builder.action
+                  actions = result.serial_action.actions
+
+                  expect(actions[1].run_action.args).not_to include(expected_credhub_arg)
+                end
               end
             end
 
             context 'when credhub url is not present' do
-              let(:run_staging_action) do
-                ::Diego::Bbs::Models::RunAction.new(
-                  path:            '/tmp/lifecycle/builder',
-                  args:            [
-                    '-buildpackOrder=buildpack-1-key,buildpack-2-key',
-                    '-skipCertVerify=false',
-                    '-skipDetect=false',
-                    '-buildDir=/tmp/app',
-                    '-outputDroplet=/tmp/droplet',
-                    '-outputMetadata=/tmp/result.json',
-                    '-outputBuildArtifactsCache=/tmp/output-cache',
-                    '-buildpacksDir=/tmp/buildpacks',
-                    '-buildArtifactsCacheDir=/tmp/cache',
-                  ],
-                  user:            'vcap',
-                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: 4),
-                  env:             generated_environment,
-                )
-              end
-
               before do
                 TestConfig.override(credhub_api: nil)
               end
