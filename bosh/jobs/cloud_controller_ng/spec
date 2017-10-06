@@ -859,5 +859,5 @@ properties:
     description: "The certificate authority being used by CredHub"
 
   cloud_controller.release_level_backup:
-    default: false
+    default: true
     description: "Include cloud_controller jobs in backup and restore operations"
