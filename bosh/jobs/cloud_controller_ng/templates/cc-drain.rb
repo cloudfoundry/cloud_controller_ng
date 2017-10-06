@@ -9,4 +9,6 @@ require 'cloud_controller/drain'
 @drain.log_invocation(ARGV)
 @drain.shutdown_nginx('/var/vcap/sys/run/nginx_cc/nginx.pid')
 
+$stdout.sync = true
 puts 0 # tell bosh the drain script succeeded
+$stdout.flush

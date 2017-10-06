@@ -7,13 +7,20 @@ exit 0
 <% else %>
 RUN_DIR="/var/vcap/sys/run/cloud_controller_clock"
 PIDFILE="${RUN_DIR}/cloud_controller_clock.pid"
+LOG_DIR="/var/vcap/sys/log/cloud_controller_clock/drain"
 
 source /var/vcap/packages/capi_utils/pid_utils.sh
+mkdir -p $LOG_DIR
 
 if [ -f "${PIDFILE}" ]; then
-  kill_and_wait "$PIDFILE" 30 &> /dev/null
+  if ! ( kill_and_wait "$PIDFILE" 30 &>> "$LOG_DIR/drain.log" ); then
+    exit $?
+  fi
+else
+  echo "$PIDFILE not found" &>> "$LOG_DIR/drain.log"
 fi
 
-echo 0 # tell bosh not wait for anything
-exit 0
+echo "killed the clock" &>> "$LOG_DIR/drain.log"
+
+echo 0 # tell bosh the drain script succeeded
 <% end %>
