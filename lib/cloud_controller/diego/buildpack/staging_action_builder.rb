@@ -90,20 +90,23 @@ module VCAP::CloudController
         end
 
         def stage_action
+          builder_args = [
+            "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
+            "-skipCertVerify=#{config.get(:skip_cert_verify)}",
+            "-skipDetect=#{skip_detect?}",
+            '-buildDir=/tmp/app',
+            '-outputDroplet=/tmp/droplet',
+            '-outputMetadata=/tmp/result.json',
+            '-outputBuildArtifactsCache=/tmp/output-cache',
+            '-buildpacksDir=/tmp/buildpacks',
+            '-buildArtifactsCacheDir=/tmp/cache',
+          ]
+          builder_args.push("-platformOptions=#{encoded_credhub_url}") if encoded_credhub_url.present?
+
           ::Diego::Bbs::Models::RunAction.new(
             path:            '/tmp/lifecycle/builder',
             user:            'vcap',
-            args:            [
-              "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
-              "-skipCertVerify=#{config.get(:skip_cert_verify)}",
-              "-skipDetect=#{skip_detect?}",
-              '-buildDir=/tmp/app',
-              '-outputDroplet=/tmp/droplet',
-              '-outputMetadata=/tmp/result.json',
-              '-outputBuildArtifactsCache=/tmp/output-cache',
-              '-buildpacksDir=/tmp/buildpacks',
-              '-buildArtifactsCacheDir=/tmp/cache',
-            ],
+            args:            builder_args,
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
             env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
           )
@@ -153,6 +156,13 @@ module VCAP::CloudController
             'timeout'               => config.get(:staging, :timeout_in_seconds),
           }.to_param
           upload_droplet_uri.to_s
+        end
+
+        def encoded_credhub_url
+          credhub_url = Config.config.get(:credhub_api, :url)
+          return unless credhub_url.present?
+
+          Base64.encode64({ 'credhub-uri' => credhub_url }.to_json)
         end
       end
     end
