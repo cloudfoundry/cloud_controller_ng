@@ -213,16 +213,6 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq 10002
           end
 
-          context 'when the dea returns percent-encoded staging credentials' do
-            it 'successfully authenticates' do
-              authorize 'username', encoded_password
-
-              get '/test_basic_auth'
-              expect(last_response.status).to eq 200
-              expect(last_response.body).to eq 'basic_auth_response'
-            end
-          end
-
           context 'when diego returns percent-decoded staging credentials' do
             it 'successfully authenticates' do
               authorize 'username', unencoded_password

@@ -3,7 +3,6 @@ require 'cloud_controller/rest_controller/messages'
 require 'cloud_controller/rest_controller/routes'
 require 'cloud_controller/security/access_context'
 require 'cloud_controller/basic_auth/basic_auth_authenticator'
-require 'cloud_controller/basic_auth/dea_basic_auth_authenticator'
 
 module VCAP::CloudController::RestController
   # The base class for all api endpoints.
@@ -283,8 +282,7 @@ module VCAP::CloudController::RestController
         controller.before path do
           credentials = yield
 
-          unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials) ||
-                  CloudController::BasicAuth::DeaBasicAuthAuthenticator.valid?(env, credentials)
+          unless CloudController::BasicAuth::BasicAuthAuthenticator.valid?(env, credentials)
             raise CloudController::Errors::NotAuthenticated
           end
         end
