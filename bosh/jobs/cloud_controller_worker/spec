@@ -517,6 +517,6 @@ properties:
     description: "Whether or not to perform the blob cleanup job"
     default: true
 
-  cloud_controller.release_level_backup:
+  release_level_backup:
     default: true
     description: "Include cloud_controller jobs in backup and restore operations"
