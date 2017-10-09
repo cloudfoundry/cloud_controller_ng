@@ -1,7 +1,9 @@
 require 'messages/to_many_relationship_message'
+require 'repositories/service_instance_share_event_repository'
 
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
+require 'actions/service_instance_share'
 
 class ServiceInstancesV3Controller < ApplicationController
   def share_service_instance
@@ -19,11 +21,8 @@ class ServiceInstancesV3Controller < ApplicationController
     check_spaces_exist_and_are_readable!(message.guids, spaces)
     check_spaces_are_writeable!(spaces)
 
-    service_instance.db.transaction do
-      spaces.each do |space|
-        service_instance.add_shared_space(space)
-      end
-    end
+    share = ServiceInstanceShare.new
+    share.create(service_instance, spaces, user_audit_info, message)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces')
