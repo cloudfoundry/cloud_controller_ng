@@ -2,8 +2,7 @@ module VCAP::CloudController
   module Repositories
     class ServiceInstanceShareEventRepository
       class << self
-        def record_share_event(service_instance, user_audit_info, request_attrs)
-          target_space_guids = request_attrs[:data] ? request_attrs[:data].map { |x| x[:guid] } : []
+        def record_share_event(service_instance, user_audit_info, target_space_guids)
           Event.create(
             type:              'audit.service_instance.share',
             actor:             user_audit_info.user_guid,

@@ -16,8 +16,8 @@ RSpec.describe 'Service Instances' do
 
     it 'shares the service instance with the target space' do
       share_request = {
-        data: [
-          { guid: target_space.guid }
+        'data' => [
+          { 'guid' => target_space.guid }
         ]
       }
 
@@ -51,7 +51,7 @@ RSpec.describe 'Service Instances' do
         space_guid:        service_instance.space.guid,
         organization_guid: service_instance.space.organization.guid
       })
-      expect(event.metadata['request'].to_json).to eq(share_request.to_json)
+      expect(event.metadata['target_space_guids']).to eq([target_space.guid])
     end
   end
 end

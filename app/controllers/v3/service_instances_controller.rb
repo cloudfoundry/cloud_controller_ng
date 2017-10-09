@@ -22,7 +22,7 @@ class ServiceInstancesV3Controller < ApplicationController
     check_spaces_are_writeable!(spaces)
 
     share = ServiceInstanceShare.new
-    share.create(service_instance, spaces, user_audit_info, message)
+    share.create(service_instance, spaces, user_audit_info, message.guids)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces')

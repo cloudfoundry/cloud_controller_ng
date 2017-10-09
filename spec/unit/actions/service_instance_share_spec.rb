@@ -6,13 +6,13 @@ module VCAP::CloudController
     let(:service_instance_share) { ServiceInstanceShare.new }
     let(:service_instance) { ManagedServiceInstance.make }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
-    let(:message) { instance_double(BaseMessage, audit_hash: {}) }
+    let(:target_space_guids) { ['space-guid'] }
     let(:target_space1) { Space.make }
     let(:target_space2) { Space.make }
 
     describe '#create' do
       it 'creates share' do
-        shared_instance = service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info, message)
+        shared_instance = service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info, target_space_guids)
 
         expect(shared_instance.shared_spaces.length).to eq 2
 
@@ -26,9 +26,9 @@ module VCAP::CloudController
       it 'records a share event' do
         allow(Repositories::ServiceInstanceShareEventRepository).to receive(:record_share_event)
 
-        service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info, message)
+        service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info, target_space_guids)
         expect(Repositories::ServiceInstanceShareEventRepository).to have_received(:record_share_event).with(
-          service_instance, user_audit_info, message.audit_hash)
+          service_instance, user_audit_info, target_space_guids)
       end
     end
   end
