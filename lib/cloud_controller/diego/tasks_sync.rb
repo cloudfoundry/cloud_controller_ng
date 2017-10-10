@@ -40,7 +40,7 @@ module VCAP::CloudController
           end
         end
 
-        diego_tasks.keys.each do |task_guid|
+        diego_tasks.each_key do |task_guid|
           @workpool.submit(task_guid) do |guid|
             bbs_task_client.cancel_task(guid)
             logger.info('missing-cc-task', task_guid: guid)

@@ -1,4 +1,5 @@
 Sequel.migration do
+  # rubocop:disable Lint/BooleanSymbol
   change do
     create_table :isolation_segments do
       VCAP::Migration.common(self)

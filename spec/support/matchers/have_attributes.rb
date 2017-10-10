@@ -49,7 +49,7 @@ class AttributeValidator
         @missing_attributes << attribute_name
       end
     end
-    fields.each do |attribute_name, details|
+    fields.each_key do |attribute_name|
       @unexpected_attributes << attribute_name unless attributes.key? attribute_name
     end
 

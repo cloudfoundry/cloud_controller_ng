@@ -48,7 +48,7 @@ Sequel::Mysql2::Database.class_eval do
 end
 
 Sequel::Schema::CreateTableGenerator.class_eval do
-  # rubocop:disable Style/MethodName
+  # rubocop:disable Naming/MethodName
   def String(name, opts={})
     if opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
@@ -64,7 +64,7 @@ Sequel::Schema::CreateTableGenerator.class_eval do
       column(name, String, opts)
     end
   end
-  # rubocop:enable Style/MethodName
+  # rubocop:enable Naming/MethodName
 end
 
 Sequel::Schema::AlterTableGenerator.class_eval do

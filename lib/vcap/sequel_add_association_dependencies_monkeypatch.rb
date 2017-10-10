@@ -13,8 +13,6 @@ require 'sequel'
 Sequel::Plugins::AssociationDependencies::ClassMethods.class_eval do
   alias_method :add_association_dependencies_original, :add_association_dependencies
 
-  attr_reader :association_dependencies_hash
-
   def add_association_dependencies(hash)
     association_dependencies_hash.merge!(hash)
     add_association_dependencies_original(hash)

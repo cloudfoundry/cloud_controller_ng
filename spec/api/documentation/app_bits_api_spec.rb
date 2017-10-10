@@ -45,21 +45,21 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   end
 
   put '/v2/apps/:guid/bits' do
-    async_description = <<-eos
+    async_description = <<-EOS
       If true, a new asynchronous job is submitted to persist the bits and the job id is included in the response.
       The client will need to poll the job's status until persistence is completed successfully.
       If false, the request will block until the bits are persisted synchronously.
       Defaults to false.
-    eos
+    EOS
     parameter :async, async_description
 
-    resources_desc = <<-eos
+    resources_desc = <<-EOS
       Fingerprints of the application bits that have previously been pushed to Cloud Foundry.
       Each fingerprint must include the file path, sha1 hash, and file size in bytes.
       Each fingerprint may include the file mode, which must be an octal string with at least read and write permissions for owners.
       If a mode is not provided, the default mode of 0744 will be used.
       Fingerprinted bits MUST exist in the Cloud Foundry resource cache or the request (or job, if async) will fail.
-    eos
+    EOS
     field :resources, resources_desc,
           required: true,
           example_values: [
@@ -73,15 +73,15 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     field :application, 'A binary zip file containing the application bits.', required: true
 
     example 'Uploads the bits for an App' do |example|
-      explanation <<-eos
+      explanation <<-EOS
         Defines and uploads the bits (artifacts and dependencies) that this application needs to run, using a multipart PUT request.
         Bits that have already been uploaded can be referenced by their resource fingerprint(s).
         Bits that have not already been uploaded to Cloud Foundry must be included as a zipped binary file named "application".
         File mode bits are only presevered for applications run on a Diego backend. If left blank, mode will default to 749, which
         are also the default bits for a DEA backend. File mode bits are required to have at least the minimum permissions of 0600.
-      eos
+      EOS
 
-      request_body_example = <<-eos.gsub(/^ */, '')
+      request_body_example = <<-EOS.gsub(/^ */, '')
         --AaB03x
         Content-Disposition: form-data; name="async"
 
@@ -98,7 +98,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
 
         &lt;&lt;binary artifact bytes&gt;&gt;
         --AaB03x
-      eos
+      EOS
 
       client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|
@@ -113,11 +113,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     let(:async) { false }
 
     example 'Downloads the bits for an App' do
-      explanation <<-eos
+      explanation <<-EOS
         When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
         If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request.
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
-      eos
+      EOS
 
       no_doc { client.put "/v2/apps/#{process.guid}/bits", app_bits_put_params, headers }
       client.get "/v2/apps/#{process.guid}/download", {}, headers
@@ -141,11 +141,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     end
 
     example 'Downloads the staged droplet for an App' do
-      explanation <<-eos
+      explanation <<-EOS
         When using a remote blobstore, such as AWS, the response is a redirect to the actual location of the bits.
         If the client is automatically following redirects, then the OAuth token that was used to communicate with Cloud Controller will be replayed on the new redirect request.
         Some blobstores may reject the request in that case. Clients may need to follow the redirect without including the OAuth token.
-      eos
+      EOS
 
       client.get "/v2/apps/#{process.guid}/droplet/download", {}, headers
       expect(status).to eq(302)
@@ -163,11 +163,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     let(:raw_post) { body_parameters }
 
     example 'Copy the app bits for an App' do
-      explanation <<-eos
+      explanation <<-EOS
         This endpoint will copy the package bits in the blobstore from the source app to the destination app.
         It will always return a job which you can query for success or failure.
         This operation will require the app to restart in order for the changes to take effect.
-      eos
+      EOS
 
       blobstore = double(:blobstore, cp_file_between_keys: nil)
       stub_const('CloudController::Blobstore::Client', double(:blobstore_client, new: blobstore))

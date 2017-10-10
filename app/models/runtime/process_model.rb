@@ -197,7 +197,7 @@ module VCAP::CloudController
       return unless app&.lifecycle_data
       return if app.lifecycle_data.valid?
 
-      app.lifecycle_data.errors.each do |_, errs|
+      app.lifecycle_data.errors.each_value do |errs|
         errs.each do |err|
           errors.add(:buildpack, err)
         end

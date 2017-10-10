@@ -35,7 +35,7 @@ module VCAP::CloudController
     def format_keys(validation_hash)
       uaa_keys = { keys: [] }
 
-      validation_hash.each do |_, key|
+      validation_hash.each_value do |key|
         uaa_keys[:keys] << key['value']
       end
 

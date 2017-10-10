@@ -21,7 +21,7 @@ module VCAP::Services::ServiceBrokers
             message += indent(2) + "#{error}\n"
           end
 
-          plan_errors.nested_errors.each do |schema, schema_errors|
+          plan_errors.nested_errors.each_value do |schema_errors|
             message += indent(2) + "Schemas\n"
             get_messages(schema_errors).flatten.each do |error|
               message += indent(3) + "#{error}\n"
@@ -39,7 +39,7 @@ module VCAP::Services::ServiceBrokers
 
       msgs = errors.messages || []
 
-      nested = errors.nested_errors.map do |object, object_errors|
+      nested = errors.nested_errors.map do |_, object_errors|
         get_messages(object_errors)
       end
 

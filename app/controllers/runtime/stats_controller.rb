@@ -19,8 +19,7 @@ module VCAP::CloudController
 
       begin
         stats = instances_reporters.stats_for_app(process)
-        # remove net_info, if it exists
-        stats.each do |_, stats_hash|
+        stats.each_value do |stats_hash|
           if stats_hash[:stats]
             stats_hash[:stats].delete_if { |key, _| key == :net_info }
           end

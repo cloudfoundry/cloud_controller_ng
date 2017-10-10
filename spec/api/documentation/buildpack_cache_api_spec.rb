@@ -40,13 +40,13 @@ RSpec.resource 'Blobstores', type: :api do
 
   delete '/v2/blobstores/buildpack_cache' do
     example 'Delete all blobs in the Buildpack cache blobstore' do
-      explanation <<-eos
+      explanation <<-EOS
         This endpoint will delete all of the existing buildpack caches in
         the blobstore. The buildpack cache is used during staging by buildpacks
         as a way to cache certain resources, e.g. downloaded Ruby gems. An admin
         who wanted to decrease the size of their blobstore could use this endpoint
         to delete unnecessary blobs.
-      eos
+      EOS
 
       Fog.unmock!
       blobstore = CloudController::DependencyLocator.instance.buildpack_cache_blobstore

@@ -56,6 +56,9 @@ Lint/AmbiguousRegexpLiteral:
 Lint/HandleExceptions:
   Enabled: false
 
+Lint/RescueWithoutErrorClass:
+  Enabled: false
+
 Lint/ShadowedException:
   Enabled: false
 
@@ -70,6 +73,9 @@ Lint/UnusedBlockArgument:
   Enabled: false
 
 Lint/UnusedMethodArgument:
+  Enabled: false
+
+Lint/UriEscapeUnescape:
   Enabled: false
 
 Metrics/AbcSize:
@@ -119,6 +125,19 @@ Migration/IncludeStringSize:
     # skip old migration files since we do not want to fix them after they are in the wild
     - !ruby/regexp /db/migrations/201([0-6]|70[1-6]|707[01]).+\.rb$/
 
+Naming/FileName:
+  Exclude:
+    - Guardfile
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+
+Naming/PredicateName:
+  Enabled: false
+
+Naming/VariableNumber:
+  Enabled: false
+
 Performance/Casecmp:
   Enabled: false
 
@@ -146,9 +165,9 @@ Style/DoubleNegation:
 Style/EachWithObject:
   Enabled: false
 
-Style/FileName:
+Style/Encoding:
   Exclude:
-    - Guardfile
+    - '**/*.pb.rb'
 
 Style/FormatString:
   EnforcedStyle: sprintf
@@ -184,9 +203,6 @@ Style/NumericPredicate:
   Enabled: false
 
 Style/PercentLiteralDelimiters:
-  Enabled: false
-
-Style/PredicateName:
   Enabled: false
 
 Style/RaiseArgs:
@@ -226,9 +242,6 @@ Style/TrailingUnderscoreVariable:
   Enabled: false
 
 Style/TrivialAccessors:
-  Enabled: false
-
-Style/VariableNumber:
   Enabled: false
 
 Style/WordArray:

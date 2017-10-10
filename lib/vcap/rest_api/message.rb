@@ -31,7 +31,7 @@ module VCAP
       URL = readable_regexp(URI.regexp(%w(http https)),
                                   'String /URL_REGEX/',
                                   'must be a valid URL')
-      HTTPS_URL = readable_regexp(URI.regexp('https'),
+      HTTPS_URL = readable_regexp(URI::DEFAULT_PARSER.make_regexp('https'),
                                   'String /HTTPS_URL_REGEX/',
                                   'must be a valid HTTPS URL')
       EMAIL = readable_regexp(RFC822::EMAIL_REGEXP_WHOLE,

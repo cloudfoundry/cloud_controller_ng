@@ -13,12 +13,12 @@ namespace :db do
     FileUtils.mkdir_p(migrations_dir)
 
     open(File.join(migrations_dir, filename), 'w') do |f|
-      f.write <<~Ruby
+      f.write <<~RUBY
         Sequel.migration do
           change do
           end
         end
-      Ruby
+      RUBY
       puts'*' * 134
       puts''
       puts "The migration is in #{File.join(migrations_dir, filename)}"

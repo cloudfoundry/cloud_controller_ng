@@ -87,7 +87,7 @@ module VCAP::CloudController
 
         ds.all do |domain|
           if domain.shared?
-            id_map.each { |_, org| org.associations[:domains] << domain }
+            id_map.each_value { |org| org.associations[:domains] << domain }
           else
             id_map[domain.owning_organization_id].associations[:domains] << domain
           end

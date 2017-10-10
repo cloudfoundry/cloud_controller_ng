@@ -29,7 +29,7 @@ module VCAP::Services::ServiceBrokers::V2
     private
 
     def add_schema_validation_errors(schema_errors)
-      schema_errors.messages.each do |_, error_list|
+      schema_errors.messages.each_value do |error_list|
         error_list.each do |error_msg|
           errors.add("Schema #{@path.join('.')} is not valid. #{error_msg}")
         end

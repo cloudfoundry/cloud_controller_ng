@@ -43,7 +43,7 @@ module VCAP::CloudController
           end
         end
 
-        diego_lrps.keys.each do |process_guid_to_delete|
+        diego_lrps.each_key do |process_guid_to_delete|
           @workpool.submit(process_guid_to_delete) do |guid|
             bbs_apps_client.stop_app(guid)
             logger.info('delete-lrp', process_guid: guid)

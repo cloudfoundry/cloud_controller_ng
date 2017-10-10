@@ -216,7 +216,7 @@ module VCAP::CloudController
           new_results = decoded_results.dup
 
           expect(new_results.size).to eq(2)
-          saved_results.each do |guid, drains|
+          saved_results.each_key do |guid|
             expect(new_results).not_to have_key(guid)
           end
         end

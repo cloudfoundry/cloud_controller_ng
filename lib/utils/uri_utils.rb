@@ -3,7 +3,7 @@ module UriUtils
   GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x
 
   def self.is_uri?(candidate)
-    !!(candidate.is_a?(String) && /\A#{URI.regexp}\Z/ =~ candidate && URI(candidate))
+    !!(candidate.is_a?(String) && /\A#{URI::DEFAULT_PARSER.make_regexp}\Z/ =~ candidate && URI(candidate))
   rescue
     false
   end

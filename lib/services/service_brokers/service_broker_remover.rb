@@ -30,7 +30,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def record_service_and_plan_deletion_events(cached_services_and_plans)
-      cached_services_and_plans.each do |_, hash|
+      cached_services_and_plans.each_value do |hash|
         service = hash[:service]
         plans = hash[:plans]
         plans.each do |plan|

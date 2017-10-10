@@ -1,4 +1,4 @@
-# rubocop:disable Style/AccessorMethodName
+# rubocop:disable Naming/AccessorMethodName
 module CloudController
   module Blobstore
     class IdempotentDirectory
@@ -12,4 +12,4 @@ module CloudController
     end
   end
 end
-# rubocop:enable Style/AccessorMethodName
+# rubocop:enable Naming/AccessorMethodName

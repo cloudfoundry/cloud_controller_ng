@@ -28,7 +28,7 @@ RSpec.describe 'DB Schema' do
       end
 
       if connection.supports_index_parsing?
-        connection.indexes(table).each do |name, index|
+        connection.indexes(table).each_key do |name|
           it "the index #{table}.#{name}'s name should not be longer than 60 characters" do
             expect(name.length).to be <= 60
           end

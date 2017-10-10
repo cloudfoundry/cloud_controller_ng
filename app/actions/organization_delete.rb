@@ -22,7 +22,6 @@ module VCAP::CloudController
         end
 
         org.destroy
-        []
       end
     end
 

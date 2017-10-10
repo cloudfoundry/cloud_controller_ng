@@ -135,22 +135,22 @@ module VCAP::CloudController
         create_event('audit.service.delete', user_actor, actee, metadata)
       end
 
-      def with_service_event(service, &saveBlock)
+      def with_service_event(service, &save_block)
         actee = {
           actee_type: 'service',
           actee_name: service.label,
         }
         actor = broker_actor(service.service_broker)
-        with_audit_event(service, actor, actee, &saveBlock)
+        with_audit_event(service, actor, actee, &save_block)
       end
 
-      def with_service_plan_event(plan, &saveBlock)
+      def with_service_plan_event(plan, &save_block)
         actee = {
           actee_type: 'service_plan',
           actee_name: plan.name,
         }
         actor = broker_actor(plan.service_broker)
-        with_audit_event(plan, actor, actee, &saveBlock)
+        with_audit_event(plan, actor, actee, &save_block)
       end
 
       private
@@ -227,12 +227,10 @@ module VCAP::CloudController
           metadata:  metadata
         }
 
-        unless space_data
-          space_data = {
+        space_data ||= {
             space_guid:        '',
             organization_guid: ''
           }
-        end
 
         data = base_data.merge(actor_data).merge(actee_data).merge(space_data)
 
