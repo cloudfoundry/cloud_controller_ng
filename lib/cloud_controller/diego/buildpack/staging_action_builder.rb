@@ -93,26 +93,20 @@ module VCAP::CloudController
         end
 
         def stage_action
-          builder_args = [
-            "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
-            "-skipCertVerify=#{config.get(:skip_cert_verify)}",
-            "-skipDetect=#{skip_detect?}",
-            '-buildDir=/tmp/app',
-            '-outputDroplet=/tmp/droplet',
-            '-outputMetadata=/tmp/result.json',
-            '-outputBuildArtifactsCache=/tmp/output-cache',
-            '-buildpacksDir=/tmp/buildpacks',
-            '-buildArtifactsCacheDir=/tmp/cache',
-          ]
-
-          if encoded_credhub_url.present? && cred_interpolation_enabled?
-            builder_args.push("-platformOptions=#{encoded_credhub_url}")
-          end
-
           ::Diego::Bbs::Models::RunAction.new(
             path:            '/tmp/lifecycle/builder',
             user:            'vcap',
-            args:            builder_args,
+            args:            [
+              "-buildpackOrder=#{lifecycle_data[:buildpacks].map { |i| i[:key] }.join(',')}",
+              "-skipCertVerify=#{config.get(:skip_cert_verify)}",
+              "-skipDetect=#{skip_detect?}",
+              '-buildDir=/tmp/app',
+              '-outputDroplet=/tmp/droplet',
+              '-outputMetadata=/tmp/result.json',
+              '-outputBuildArtifactsCache=/tmp/output-cache',
+              '-buildpacksDir=/tmp/buildpacks',
+              '-buildArtifactsCacheDir=/tmp/cache',
+            ],
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
             env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
           )
