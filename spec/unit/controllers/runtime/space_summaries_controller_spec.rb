@@ -73,6 +73,17 @@ module VCAP::CloudController
         expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
       end
 
+      it 'returns service summary for the space, including shared service instances' do
+        originating_space = Space.make
+        service_instance = ManagedServiceInstance.make(space: originating_space)
+        service_instance.add_shared_space(space)
+
+        get "/v2/spaces/#{space.guid}/summary"
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+      end
+
       it 'does not return private services from other spaces' do
         other_space = Space.make
         private_broker2 = ServiceBroker.make(space: other_space)
