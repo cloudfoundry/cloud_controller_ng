@@ -18,6 +18,7 @@ module VCAP::CloudController
             sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_path(@local_path)
             blobstore_key = Presenters::V3::CacheKeyPresenter.cache_key(guid: @app_guid, stack_name: @stack_name)
 
+            FileUtils.chmod('u=wr', @local_path) if blobstore.local?
             blobstore.cp_to_blobstore(@local_path, blobstore_key)
 
             app.update(buildpack_cache_sha256_checksum: sha256_digest)

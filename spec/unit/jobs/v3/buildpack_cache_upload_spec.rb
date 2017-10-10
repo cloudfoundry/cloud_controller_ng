@@ -9,10 +9,12 @@ module VCAP::CloudController
 
       let(:file_content) { 'some_file_content' }
       let(:local_file) do
-        Tempfile.new('local_file').tap do |f|
+        file = Tempfile.new('local_file').tap do |f|
           f.write(file_content)
           f.flush
         end
+        FileUtils.chmod('u=r', file.path)
+        file
       end
 
       let!(:blobstore) do
@@ -51,6 +53,38 @@ module VCAP::CloudController
 
         it 'knows its job name' do
           expect(job.job_name_in_configuration).to equal(:buildpack_cache_upload)
+        end
+
+        context 'when the blobstore is local' do
+          before do
+            allow(blobstore).to receive(:local?).and_return(true)
+          end
+
+          it 'makes the file writable before copying it' do
+            file_writeable = nil
+
+            allow(blobstore).to receive(:cp_to_blobstore) do |local_path|
+              file_writeable = File.stat(local_path).writable?
+            end
+
+            expect {
+              job.perform
+            }.to change { file_writeable }.to(true)
+          end
+        end
+
+        context 'when the blobstore is not local' do
+          it 'does not change the permissions of the file' do
+            file_writeable = nil
+
+            allow(blobstore).to receive(:cp_to_blobstore) do |local_path|
+              file_writeable = File.stat(local_path).writable?
+            end
+
+            expect {
+              job.perform
+            }.to change { file_writeable }.to(false)
+          end
         end
 
         context 'when the app record no longer exists' do
