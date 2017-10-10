@@ -16,5 +16,5 @@ source /var/vcap/packages/capi_utils/monit_utils.sh
   <% end %>
   monit_stop_job cloud_controller_ng
 
-  wait_for_server_to_become_unavailable <%= "#{p("cc.external_protocol")}://#{p("cc.external_host")}.#{p("system_domain")}/" %> 60
+  wait_for_server_to_become_unavailable <%= "localhost:#{p("cc.external_port")}/" %> 60
 <% end %>
