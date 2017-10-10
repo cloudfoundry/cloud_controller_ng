@@ -34,6 +34,14 @@ module VCAP::CloudController
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances
     one_to_many :managed_service_instances
+    many_to_many :service_instances_shared_from_other_spaces,
+          left_key:          :target_space_guid,
+          left_primary_key:  :guid,
+          right_key:         :service_instance_guid,
+          right_primary_key: :guid,
+          join_table:        :service_instance_shares,
+          class: 'VCAP::CloudController::ServiceInstance'
+
     one_to_many :service_brokers
     one_to_many :routes
     one_to_many :tasks,
