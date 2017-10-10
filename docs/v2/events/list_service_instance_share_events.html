@@ -66,12 +66,12 @@
   <h1>Events API</h1>
 
   <div class="article">
-    <h2>List App SSH Unauthorized Events</h2>
+    <h2>List Service Instance Share Events</h2>
     <h3>GET /v2/events</h3>
 
       <h3>Request</h3>
       <h4>Route</h4>
-      <pre class="request route highlight">GET /v2/events?q=type:audit.app.ssh-unauthorized</pre>
+      <pre class="request route highlight">GET /v2/events?q=type:audit.service_instance.share</pre>
 
         <h4>Parameters</h4>
         <table class="parameters table table-striped table-bordered table-condensed">
@@ -236,18 +236,18 @@
           </tbody>
         </table>
 
-        <pre class="request query_parameters highlight">q: type:audit.app.ssh-unauthorized</pre>
+        <pre class="request query_parameters highlight">q: type:audit.service_instance.share</pre>
 
 
 
       <h4>Headers</h4>
-      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEwOCIsImVtYWlsIjoiZW1haWwtNjhAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4N30.T63RKoAMlvNKUF5VyON59VdI9s1duvFK36xAFskAQLI
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEwNiIsImVtYWlsIjoiZW1haWwtNjdAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4N30.CojdOjIrEhiZ6DfYSxCMCWpowZjZF5I9age-VcM0quM
 Host: example.org
 Cookie: </pre>
 
         <h4>cURL</h4>
-        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/events?q=type:audit.app.ssh-unauthorized&quot; -X GET \
-	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEwOCIsImVtYWlsIjoiZW1haWwtNjhAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4N30.T63RKoAMlvNKUF5VyON59VdI9s1duvFK36xAFskAQLI&quot; \
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/events?q=type:audit.service_instance.share&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTEwNiIsImVtYWlsIjoiZW1haWwtNjdAc29tZWRvbWFpbi5jb20iLCJzY29wZSI6WyJjbG91ZF9jb250cm9sbGVyLmFkbWluIl0sImF1ZCI6WyJjbG91ZF9jb250cm9sbGVyIl0sImV4cCI6MTQ2NjAwODg4N30.CojdOjIrEhiZ6DfYSxCMCWpowZjZF5I9age-VcM0quM&quot; \
 	-H &quot;Host: example.org&quot; \
 	-H &quot;Cookie: &quot;</pre>
 
@@ -296,7 +296,7 @@ Cookie: </pre>
                       <li>audit.app.copy-bits</li>
                       <li>audit.app.create</li>
                       <li>audit.app.delete-request</li>
-                      <li>audit.app.droplet.mapped</li>
+                      <li>audit.app.droplet_mapped</li>
                       <li>audit.app.map-route</li>
                       <li>audit.app.package.create</li>
                       <li>audit.app.package.delete</li>
@@ -568,25 +568,27 @@ Cookie: </pre>
   "resources": [
     {
       "metadata": {
-        "guid": "ccd2dbe9-356a-46b7-8c15-9946b16ff467",
-        "url": "/v2/events/ccd2dbe9-356a-46b7-8c15-9946b16ff467",
+        "guid": "024c4b96-1d30-4ef2-a998-55ea3003a244",
+        "url": "/v2/events/024c4b96-1d30-4ef2-a998-55ea3003a244",
         "created_at": "2016-06-08T16:41:27Z",
         "updated_at": "2016-06-08T16:41:26Z"
       },
       "entity": {
-        "type": "audit.app.ssh-unauthorized",
-        "actor": "uaa-id-107",
+        "type": "audit.service_instance.share",
+        "actor": "uaa-id-105",
         "actor_type": "user",
         "actor_name": "user@example.com",
-        "actee": "b7acfab0-f241-49bc-9562-0d801d47aa52",
-        "actee_type": "app",
-        "actee_name": "name-1221",
+        "actee": "2c2562e3-b4de-4ebf-bfbd-36c7969280cd",
+        "actee_type": "service_instance",
+        "actee_name": "name-1191",
         "timestamp": "2016-06-08T16:41:27Z",
         "metadata": {
-          "index": 1
-        },
-        "space_guid": "95cbac34-c6ee-4efc-a963-9f6194044a4d",
-        "organization_guid": "48e7ab86-b057-4e82-84c9-8c43766fae34"
+          "target_space_guids": [
+            "guid-1",
+            "guid-2"
+          ]
+        "space_guid": "2948f032-eb7a-4540-8a0f-1ca44141f9a7",
+        "organization_guid": "4b820477-dcd7-4003-adbc-f4cb1d7462d8"
       }
     }
   ]
@@ -594,8 +596,8 @@ Cookie: </pre>
 
         <h4>Headers</h4>
         <pre class="response headers">Content-Type: application/json;charset=utf-8
-X-VCAP-Request-ID: f67d9500-0c18-429c-b8fe-c7739ebd87bc
-Content-Length: 867
+X-VCAP-Request-ID: 162a7a01-be05-4300-849b-4085989d31c1
+Content-Length: 947
 X-Content-Type-Options: nosniff</pre>
 
   </div>
