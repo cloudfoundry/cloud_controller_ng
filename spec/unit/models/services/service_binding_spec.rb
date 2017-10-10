@@ -83,6 +83,29 @@ module VCAP::CloudController
           expect { ServiceBinding.make(service_instance: service_instance, app: app)
           }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
         end
+
+        context 'when the service_instance_sharing feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
+          end
+
+          context 'when the service instance has not been shared into the app space' do
+            it 'is not valid' do
+              expect { ServiceBinding.make(service_instance: service_instance, app: app)
+              }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
+            end
+          end
+
+          context 'when the service instance has been shared into the app space' do
+            before do
+              service_instance.add_shared_space(app.space)
+            end
+
+            it 'it is valid' do
+              expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
+            end
+          end
+        end
       end
     end
 
