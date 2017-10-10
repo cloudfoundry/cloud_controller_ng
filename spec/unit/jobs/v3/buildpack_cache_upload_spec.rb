@@ -9,12 +9,11 @@ module VCAP::CloudController
 
       let(:file_content) { 'some_file_content' }
       let(:local_file) do
-        file = Tempfile.new('local_file').tap do |f|
+        Tempfile.new('local_file').tap do |f|
           f.write(file_content)
+          f.chmod(400)
           f.flush
         end
-        FileUtils.chmod('u=r', file.path)
-        file
       end
 
       let!(:blobstore) do
@@ -58,32 +57,26 @@ module VCAP::CloudController
         context 'when the blobstore is local' do
           before do
             allow(blobstore).to receive(:local?).and_return(true)
+            allow(FileUtils).to receive(:chmod).and_call_original
           end
 
           it 'makes the file writable before copying it' do
-            file_writeable = nil
+            job.perform
 
-            allow(blobstore).to receive(:cp_to_blobstore) do |local_path|
-              file_writeable = File.stat(local_path).writable?
-            end
-
-            expect {
-              job.perform
-            }.to change { file_writeable }.to(true)
+            expect(FileUtils).to have_received(:chmod).with('u=wr', local_file.path)
           end
         end
 
         context 'when the blobstore is not local' do
+          before do
+            allow(blobstore).to receive(:local?).and_return(false)
+            allow(FileUtils).to receive(:chmod).and_call_original
+          end
+
           it 'does not change the permissions of the file' do
-            file_writeable = nil
+            job.perform
 
-            allow(blobstore).to receive(:cp_to_blobstore) do |local_path|
-              file_writeable = File.stat(local_path).writable?
-            end
-
-            expect {
-              job.perform
-            }.to change { file_writeable }.to(false)
+            expect(FileUtils).not_to have_received(:chmod)
           end
         end
 
