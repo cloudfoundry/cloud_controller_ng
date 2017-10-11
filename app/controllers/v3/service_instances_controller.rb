@@ -28,7 +28,32 @@ class ServiceInstancesV3Controller < ApplicationController
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces')
   end
 
+  def unshare_service_instance
+    FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
+
+    service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
+
+    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+    unauthorized! unless can_write_space?(service_instance.space)
+
+    target_space = Space.first(guid: params[:space_guid])
+    unprocessable!('Target space invalid') unless target_space && can_read_space?(target_space)
+    unauthorized! unless can_write_space?(target_space)
+
+    # if service instance still bound to an app in target space
+    unprocessable!('Service instance still bound to apps in target space!') if bound_apps_in_target_space?(service_instance, target_space)
+
+    render status: :no_content, json: {}
+  end
+
   private
+
+  def bound_apps_in_target_space?(service_instance, target_space)
+    active_bindings = ServiceBinding.where(service_instance_guid: service_instance.guid)
+    bound_app_space_guids = active_bindings.map { |b| b.app.space_guid }
+
+    bound_app_space_guids.include?(target_space.guid)
+  end
 
   def check_spaces_are_writeable!(spaces)
     unwriteable_spaces = spaces.reject do |space|

@@ -195,4 +195,100 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
   end
+
+  describe '#unshare_service_instance' do
+    let(:service_instance) { VCAP::CloudController::ServiceInstance.make }
+    let(:target_space) { VCAP::CloudController::Space.make }
+    let(:source_space) { service_instance.space }
+
+    let(:req_body) do
+      {
+        data: [
+          { guid: target_space.guid }
+        ]
+      }
+    end
+
+    before do
+      set_current_user_as_admin
+    end
+
+    context 'when feature flag is enabled' do
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 200
+      end
+
+      it 'unshares the service instance from the target space' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq 204
+      end
+
+      context 'unsharing will fail if' do
+        it 'service instance does not exist' do
+          delete :unshare_service_instance, service_instance_guid: 'not a service instance guid', space_guid: target_space.guid
+          expect(response.status).to eq(404)
+        end
+
+        it 'service instance is in source space that user cannot read' do
+          # User is SpaceDeveloper but not in source space
+          set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(404)
+        end
+
+        it 'service instance is in source space that user cannot write' do
+          # User is SpaceAuditor in source space
+          set_current_user_as_role(role: 'space_auditor', org: source_space.organization, space: source_space, user: user)
+
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(403)
+        end
+
+        it 'target space does not exist' do
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: 'foo'
+          expect(response.status).to eq(422)
+        end
+
+        it 'user is a SpaceDeveloper in source space but has no role in target space' do
+          set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
+
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(422)
+        end
+
+        it 'user is a SpaceDeveloper in source space but only SpaceAuditor in target space' do
+          set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
+          set_current_user_as_role(role: 'space_auditor', org: target_space.organization, space: target_space, user: user)
+
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(403)
+        end
+
+        it 'an application in the target space is bound to the service instance' do
+          test_app = VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea')
+          VCAP::CloudController::ServiceBinding.make(service_instance: service_instance,
+                                                     app: test_app,
+                                                     credentials: { 'amelia' => 'apples' }
+          )
+
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(422)
+        end
+      end
+    end
+
+    context 'when feature flag is disabled (by default)' do
+      it 'cannot unshare if the feature flag is disabled' do
+        VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil)
+
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq(403)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('service_instance_sharing')
+      end
+    end
+  end
 end
