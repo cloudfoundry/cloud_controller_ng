@@ -62,7 +62,7 @@ module VCAP::CloudController
       attr_reader :hostname, :port, :enabled, :trusted_cas, :logger_name
 
       def client
-        @client ||= CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
+        CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
       end
 
       def org_role(role, org_id)
@@ -124,7 +124,7 @@ module VCAP::CloudController
       end
 
       def logger
-        @logger ||= Steno.logger(logger_name)
+        Steno.logger(logger_name)
       end
     end
   end
