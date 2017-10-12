@@ -36,14 +36,20 @@ class ServiceInstancesV3Controller < ApplicationController
     resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
     unauthorized! unless can_write_space?(service_instance.space)
 
-    target_space = Space.first(guid: params[:space_guid])
-    unprocessable!('Target space invalid') unless target_space && can_read_space?(target_space)
-    unauthorized! unless can_write_space?(target_space)
+    space_guid = params[:space_guid]
+    target_space = Space.first(guid: space_guid)
 
-    # if service instance still bound to an app in target space
-    unprocessable!('Service instance still bound to apps in target space!') if bound_apps_in_target_space?(service_instance, target_space)
+    unless target_space && service_instance.shared_spaces.include?(target_space)
+      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the spaces exist and it has been shared.")
+    end
 
-    render status: :no_content, json: {}
+    if bound_apps_in_target_space?(service_instance, target_space)
+      unprocessable!('Service instance still bound to apps in target space!')
+    end
+
+    service_instance.remove_shared_space(target_space)
+
+    head :no_content
   end
 
   private

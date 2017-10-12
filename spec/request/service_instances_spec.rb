@@ -66,9 +66,7 @@ RSpec.describe 'Service Instances' do
 
     before do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
-    end
 
-    it 'unshares the service instance from the target space' do
       share_request = {
         'data' => [
           { 'guid' => target_space.guid }
@@ -77,8 +75,10 @@ RSpec.describe 'Service Instances' do
 
       post "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", share_request.to_json, user_header
       expect(last_response.status).to eq(200)
+    end
 
-      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", user_header
+    it 'unshares the service instance from the target space' do
+      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, user_header
       expect(last_response.status).to eq(204)
     end
   end
