@@ -1,6 +1,8 @@
 module VCAP::CloudController
   module Diego
     class TaskEnvironment
+      include ::Credhub::ConfigHelpers
+
       def initialize(app, task, space, initial_envs={})
         @app          = app
         @task         = task
@@ -16,6 +18,8 @@ module VCAP::CloudController
           merge(app_env).
           merge('VCAP_APPLICATION' => vcap_application, 'MEMORY_LIMIT' => "#{task.memory_in_mb}m").
           merge(SystemEnvPresenter.new(app.service_bindings).system_env.stringify_keys)
+
+        task_env = task_env.merge('VCAP_PLATFORM_OPTIONS' => credhub_url) if credhub_url.present? && cred_interpolation_enabled?
 
         task_env = task_env.merge('LANG' => DEFAULT_LANG) if app.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
         task_env = task_env.merge('DATABASE_URL' => app.database_uri) if app.database_uri

@@ -6,7 +6,6 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       class TaskActionBuilder
-        include ::Credhub::ConfigHelpers
         include ::Diego::ActionBuilder
 
         def initialize(config, task, lifecycle_data)
@@ -31,7 +30,6 @@ module VCAP::CloudController
           end
 
           launcher_args = ['app', task.command, '']
-          launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present? && cred_interpolation_enabled?
 
           serial([
             download_droplet_action,

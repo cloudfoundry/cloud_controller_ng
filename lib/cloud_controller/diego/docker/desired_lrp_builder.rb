@@ -2,6 +2,7 @@ module VCAP::CloudController
   module Diego
     module Docker
       class DesiredLrpBuilder
+        include ::Credhub::ConfigHelpers
         attr_reader :start_command
 
         def initialize(config, opts)
@@ -50,6 +51,15 @@ module VCAP::CloudController
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: ports.first.to_s),
           ]
+        end
+
+        def platform_options
+          arr = []
+          if credhub_url.present? && cred_interpolation_enabled?
+            arr << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: credhub_url)
+          end
+
+          arr
         end
 
         def privileged?

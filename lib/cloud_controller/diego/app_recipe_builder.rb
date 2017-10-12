@@ -10,7 +10,6 @@ require 'credhub/config_helpers'
 module VCAP::CloudController
   module Diego
     class AppRecipeBuilder
-      include ::Credhub::ConfigHelpers
       include ::Diego::ActionBuilder
 
       MONITORED_HEALTH_CHECK_TYPES = ['port', 'http', ''].map(&:freeze).freeze
@@ -159,7 +158,6 @@ module VCAP::CloudController
 
       def generate_app_action(start_command, user, environment_variables)
         launcher_args = ['app', start_command || '', process.execution_metadata]
-        launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present? && cred_interpolation_enabled?
 
         action(::Diego::Bbs::Models::RunAction.new(
                  user:            user,
@@ -189,13 +187,12 @@ module VCAP::CloudController
       end
 
       def generate_environment_variables(lrp_builder)
-        environment_variables = lrp_builder.port_environment_variables.clone
+        running_env_vars = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
 
-        env = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
-        env.each do |i|
-          environment_variables << ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
+        env_vars = (running_env_vars + lrp_builder.platform_options).map do |i|
+          ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
         end
-        environment_variables
+        lrp_builder.port_environment_variables + env_vars
       end
 
       def generate_run_action(lrp_builder)

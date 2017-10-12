@@ -31,6 +31,8 @@ module VCAP::CloudController
           ]
         end
 
+        let(:platform_options) { [] }
+
         let(:lifecycle_type) { nil }
         let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
@@ -236,6 +238,7 @@ module VCAP::CloudController
               privileged?:                  false,
               ports:                        lrp_builder_ports,
               port_environment_variables:   port_environment_variables,
+              platform_options:             platform_options,
               action_user:                  'lrp-action-user',
               start_command:                command,
             )
@@ -544,11 +547,11 @@ module VCAP::CloudController
                     key:   'cf-router',
                     value: [
                       {
-                               'hostnames'         => ['potato.example.com'],
-                               'port'              => 8080,
-                               'route_service_url' => nil,
-                               'isolation_segment' => 'placement-tag',
-                             },
+                        'hostnames'         => ['potato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => nil,
+                        'isolation_segment' => 'placement-tag',
+                      },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,
@@ -780,59 +783,38 @@ module VCAP::CloudController
             end
           end
 
-          describe 'credhub' do
-            context 'when credhub url is present' do
-              let(:expected_credhub_url) do
-                Base64.encode64(
-                  "{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}"
-                )
-              end
-
-              let(:expected_app_run_action) do
-                ::Diego::Bbs::Models::Action.new(
-                  run_action: ::Diego::Bbs::Models::RunAction.new(
-                    path:            '/tmp/lifecycle/launcher',
-                    args:            ['app', command, execution_metadata, expected_credhub_url],
-                    log_source:      'APP/PROC/WEB',
-                    resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                    env:             expected_action_environment_variables,
-                    user:            'lrp-action-user',
-                  )
-                )
-              end
-
-              before do
-                TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
-              end
-
-              it 'sends the base64-encoded credhub url as an argument to the launcher' do
-                lrp = builder.build_app_lrp
-                expect(lrp.action).to eq(expected_action)
-              end
+          describe 'platform options' do
+            let(:platform_options) do
+              [
+                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: '{"credhub-uri":"credhub.place:port"}')
+              ]
             end
 
-            context 'when credhub url is not present' do
-              let(:expected_app_run_action) do
-                ::Diego::Bbs::Models::Action.new(
-                  run_action: ::Diego::Bbs::Models::RunAction.new(
-                    path:            '/tmp/lifecycle/launcher',
-                    args:            ['app', command, execution_metadata],
-                    log_source:      'APP/PROC/WEB',
-                    resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                    env:             expected_action_environment_variables,
-                    user:            'lrp-action-user',
-                  )
+            let(:expected_action_environment_variables) do
+              [
+                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
+                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_value'),
+                ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: '{"credhub-uri":"credhub.place:port"}'),
+              ]
+            end
+
+            let(:expected_app_run_action) do
+              ::Diego::Bbs::Models::Action.new(
+                run_action: ::Diego::Bbs::Models::RunAction.new(
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', command, execution_metadata],
+                  log_source:      'APP/PROC/WEB',
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                  env:             expected_action_environment_variables,
+                  user:            'lrp-action-user',
                 )
-              end
+              )
+            end
 
-              before do
-                TestConfig.override(credhub_api: nil)
-              end
+            it 'passes the VCAP_PLATFORM_OPTIONS environment variable to the launcher' do
+              lrp = builder.build_app_lrp
 
-              it 'does not include the credhub url' do
-                lrp = builder.build_app_lrp
-                expect(lrp.action).to eq(expected_action)
-              end
+              expect(lrp.action).to eq(expected_action)
             end
           end
         end
@@ -876,6 +858,7 @@ module VCAP::CloudController
               privileged?:                  false,
               ports:                        lrp_builder_ports,
               port_environment_variables:   port_environment_variables,
+              platform_options:             platform_options,
               action_user:                  'lrp-action-user',
               start_command:                command,
             )
@@ -1102,66 +1085,56 @@ module VCAP::CloudController
             end
           end
 
-          describe 'credhub' do
-            context 'when credhub url is present' do
-              let(:expected_credhub_url) do
-                Base64.encode64("{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}")
+          describe 'platform options' do
+            context 'when platform options are present' do
+              let(:platform_options) do
+                [
+                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: '{"credhub-uri":"credhub.place:port"}')
+                ]
+              end
+
+              let(:expected_action_environment_variables) do
+                [
+                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
+                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_value'),
+                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: '{"credhub-uri":"credhub.place:port"}')
+                ]
+              end
+
+              let(:expected_app_run_action) do
+                ::Diego::Bbs::Models::Action.new(
+                  run_action: ::Diego::Bbs::Models::RunAction.new(
+                    path:            '/tmp/lifecycle/launcher',
+                    args:            ['app', command, execution_metadata],
+                    log_source:      'APP/PROC/WEB',
+                    resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                    env:             expected_action_environment_variables,
+                    user:            'lrp-action-user',
+                  )
+                )
               end
 
               before do
                 TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
               end
 
-              context 'when the interpolation of service bindings is enabled' do
-                let(:expected_app_run_action) do
-                  ::Diego::Bbs::Models::Action.new(
-                    run_action: ::Diego::Bbs::Models::RunAction.new(
-                      path:            '/tmp/lifecycle/launcher',
-                      args:            ['app', command, execution_metadata, expected_credhub_url],
-                      log_source:      'APP/PROC/WEB',
-                      resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                      env:             expected_action_environment_variables,
-                      user:            'lrp-action-user',
-                    )
-                  )
-                end
+              it 'passes the VCAP_PLATFORM_OPTIONS environment variable to the launcher' do
+                lrp = builder.build_app_lrp
 
-                before do
-                  TestConfig.override(credential_references: { interpolate_service_bindings: true })
-                end
-
-                it 'sends the base64-encoded credhub url as an argument to the launcher' do
-                  lrp = builder.build_app_lrp
-                  expect(lrp.action).to eq(expected_action)
-                end
-              end
-
-              context 'when the interpolation of service bindings is disabled' do
-                before do
-                  TestConfig.override(credential_references: { interpolate_service_bindings: false })
-                end
-
-                let(:expected_app_run_action) do
-                  ::Diego::Bbs::Models::Action.new(
-                    run_action: ::Diego::Bbs::Models::RunAction.new(
-                      path:            '/tmp/lifecycle/launcher',
-                      args:            ['app', command, execution_metadata],
-                      log_source:      'APP/PROC/WEB',
-                      resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                      env:             expected_action_environment_variables,
-                      user:            'lrp-action-user',
-                    )
-                  )
-                end
-
-                it 'does not include the credhub url' do
-                  lrp = builder.build_app_lrp
-                  expect(lrp.action).to eq(expected_action)
-                end
+                expect(lrp.action).to eq(expected_action)
               end
             end
 
-            context 'when credhub url is not present' do
+            context 'when platform options are not present' do
+              let(:platform_options) { [] }
+
+              let(:expected_action_environment_variables) do
+                [
+                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
+                  ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_value'),
+                ]
+              end
+
               let(:expected_app_run_action) do
                 ::Diego::Bbs::Models::Action.new(
                   run_action: ::Diego::Bbs::Models::RunAction.new(
@@ -1179,7 +1152,7 @@ module VCAP::CloudController
                 TestConfig.override(credhub_api: nil)
               end
 
-              it 'does not include the credhub url' do
+              it 'passes the VCAP_PLATFORM_OPTIONS environment variable to the launcher' do
                 lrp = builder.build_app_lrp
                 expect(lrp.action).to eq(expected_action)
               end
@@ -1265,11 +1238,11 @@ module VCAP::CloudController
                   key:   'cf-router',
                   value: [
                     {
-                             'hostnames'         => ['potato.example.com'],
-                             'port'              => 8080,
-                             'route_service_url' => nil,
-                             'isolation_segment' => 'placement-tag',
-                           },
+                      'hostnames'         => ['potato.example.com'],
+                      'port'              => 8080,
+                      'route_service_url' => nil,
+                      'isolation_segment' => 'placement-tag',
+                    },
                     {
                       'hostnames'         => ['tomato.example.com'],
                       'port'              => 8080,
@@ -1408,11 +1381,11 @@ module VCAP::CloudController
                     key:   'cf-router',
                     value: [
                       {
-                               'hostnames'         => ['potato.example.com'],
-                               'port'              => 8080,
-                               'route_service_url' => nil,
-                               'isolation_segment' => 'placement-tag',
-                             },
+                        'hostnames'         => ['potato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => nil,
+                        'isolation_segment' => 'placement-tag',
+                      },
                       {
                         'hostnames'         => ['tomato.example.com'],
                         'port'              => 8080,

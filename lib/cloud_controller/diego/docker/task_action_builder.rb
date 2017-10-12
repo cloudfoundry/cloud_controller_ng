@@ -7,8 +7,6 @@ module VCAP::CloudController
   module Diego
     module Docker
       class TaskActionBuilder
-        include ::Credhub::ConfigHelpers
-
         def initialize(config, task, lifecycle_data)
           @task = task
           @lifecycle_data = lifecycle_data
@@ -17,7 +15,6 @@ module VCAP::CloudController
 
         def action
           launcher_args = ['app', task.command, '{}']
-          launcher_args.push(encoded_credhub_url) if encoded_credhub_url.present? && cred_interpolation_enabled?
 
           ::Diego::ActionBuilder.action(
             ::Diego::Bbs::Models::RunAction.new(

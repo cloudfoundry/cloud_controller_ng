@@ -150,6 +150,49 @@ module VCAP::CloudController::Diego
           expect(constructed_envs).to include({ 'DATABASE_URL' => 'cool-db' })
         end
       end
+
+      context 'when the app has a credhub url' do
+        let(:expected_credhub_url) do
+          "{\"credhub-uri\":\"#{TestConfig.config_instance.get(:credhub_api, :internal_url)}\"}"
+        end
+
+        before do
+          TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
+        end
+
+        context 'when the interpolation of service bindings is enabled' do
+          before do
+            TestConfig.override(credential_references: { interpolate_service_bindings: true })
+          end
+
+          it 'includes the credhub uri as part of the VCAP_PLATFORM_OPTIONS variable' do
+            constructed_envs = TaskEnvironment.new(app, task, space).build
+            expect(constructed_envs).to include('VCAP_PLATFORM_OPTIONS' => expected_credhub_url)
+          end
+        end
+
+        context 'when the interpolation of service bindings is disabled' do
+          before do
+            TestConfig.override(credential_references: { interpolate_service_bindings: false })
+          end
+
+          it 'does not include the VCAP_PLATFORM_OPTIONS' do
+            constructed_envs = TaskEnvironment.new(app, task, space).build
+            expect(constructed_envs).not_to have_key('VCAP_PLATFORM_OPTIONS')
+          end
+        end
+      end
+
+      context 'when the app does not have a credhub url' do
+        before do
+          TestConfig.override(credhub_api: nil)
+        end
+
+        it 'does not include the VCAP_PLATFORM_OPTIONS' do
+          constructed_envs = TaskEnvironment.new(app, task, space).build
+          expect(constructed_envs).not_to have_key('VCAP_PLATFORM_OPTIONS')
+        end
+      end
     end
   end
 end
