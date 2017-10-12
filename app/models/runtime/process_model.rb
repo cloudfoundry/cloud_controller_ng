@@ -337,7 +337,7 @@ module VCAP::CloudController
     end
 
     def scaling_operation?
-      new? || !being_stopped?
+      started?
     end
 
     def desired_instances
