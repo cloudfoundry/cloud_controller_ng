@@ -48,6 +48,7 @@ module VCAP::CloudController
         before do
           allow(LifecycleBundleUriGenerator).to receive(:uri).with('the-buildpack-bundle').and_return('generated-uri')
           allow(BbsEnvironmentBuilder).to receive(:build).with(env).and_return(generated_environment)
+          TestConfig.override(credhub_api: nil)
         end
 
         describe '#action' do
@@ -142,6 +143,65 @@ module VCAP::CloudController
             upload_actions = parallel_upload_action.parallel_action.actions
             expect(upload_actions[0].upload_action).to eq(upload_droplet_action)
             expect(upload_actions[1].upload_action).to eq(upload_build_artifacts_cache_action)
+          end
+
+          describe 'credhub' do
+            let(:credhub_url) { TestConfig.config_instance.get(:credhub_api, :internal_url) }
+            let(:expected_platform_options) do
+              [
+                ::Diego::Bbs::Models::EnvironmentVariable.new(
+                  name: 'VCAP_PLATFORM_OPTIONS',
+                  value: '{"credhub-uri":"https://credhub.vcap.me:8844"}'
+                )
+              ]
+            end
+            let(:expected_credhub_arg) do
+              { 'VCAP_PLATFORM_OPTIONS' => { 'credhub-uri' => credhub_url } }
+            end
+
+            context 'when credhub url is present' do
+              before do
+                TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
+              end
+
+              context 'when the interpolation of service bindings is enabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: true })
+                end
+
+                it 'sends the credhub_url in the environment variables' do
+                  result = builder.action
+                  actions = result.serial_action.actions
+
+                  expect(actions[1].run_action.env).to eq(generated_environment + expected_platform_options)
+                end
+              end
+
+              context 'when the interpolation of service bindings is disabled' do
+                before do
+                  TestConfig.override(credential_references: { interpolate_service_bindings: false })
+                end
+
+                it 'does not send the credhub_url in the environment variables' do
+                  result = builder.action
+                  actions = result.serial_action.actions
+
+                  expect(actions[1].run_action.env).to eq(generated_environment)
+                end
+              end
+            end
+
+            context 'when credhub url is not present' do
+              before do
+                TestConfig.override(credhub_api: nil)
+              end
+
+              it 'does not send the credhub_url in the environment variables' do
+                result = builder.action
+                actions = result.serial_action.actions
+                expect(actions[1].run_action.env).to eq(generated_environment)
+              end
+            end
           end
 
           context 'when there is no buildpack cache' do

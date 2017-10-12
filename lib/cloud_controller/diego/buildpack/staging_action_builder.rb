@@ -93,6 +93,8 @@ module VCAP::CloudController
         end
 
         def stage_action
+          staging_details_env = BbsEnvironmentBuilder.build(staging_details.environment_variables)
+
           ::Diego::Bbs::Models::RunAction.new(
             path:            '/tmp/lifecycle/builder',
             user:            'vcap',
@@ -108,7 +110,7 @@ module VCAP::CloudController
               '-buildArtifactsCacheDir=/tmp/cache',
             ],
             resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: config.get(:staging, :minimum_staging_file_descriptor_limit)),
-            env:             BbsEnvironmentBuilder.build(staging_details.environment_variables)
+            env: staging_details_env + platform_options_env
           )
         end
 
@@ -156,6 +158,15 @@ module VCAP::CloudController
             'timeout'               => config.get(:staging, :timeout_in_seconds),
           }.to_param
           upload_droplet_uri.to_s
+        end
+
+        def platform_options_env
+          arr = []
+          if credhub_url.present? && cred_interpolation_enabled?
+            arr << ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: credhub_url)
+          end
+
+          arr
         end
       end
     end
