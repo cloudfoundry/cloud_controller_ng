@@ -33,8 +33,7 @@ module VCAP::CloudController
         end
 
         if config.get(:security_event_logging, :enabled)
-          program_name = config.get(:logging, :syslog) || 'vcap.cloud_controller_ng' # TODO: default in config.rb, spec, or template
-          use CloudFoundry::Middleware::CefLogs, Syslog::Logger.new(program_name), config.get(:local_route)
+          use CloudFoundry::Middleware::CefLogs, Logger.new(config.get(:security_event_logging, :file)), config.get(:local_route)
         end
         use Rack::CommonLogger, logger if logger
 

@@ -285,6 +285,7 @@ skip_cert_verify: true
 app_bits_upload_grace_period_in_seconds: 500
 security_event_logging:
   enabled: false
+  file: /tmp/cef.log
 
 staging:
   timeout_in_seconds: 42
