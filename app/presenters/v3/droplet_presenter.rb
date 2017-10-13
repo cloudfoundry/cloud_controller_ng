@@ -41,7 +41,6 @@ module VCAP::CloudController
             assign_current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}/relationships/current_droplet"), method: 'PATCH' },
           }.tap do |links|
             links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?
-            links.merge!(links_for_lifecyle(url_builder))
           end
         end
 
@@ -60,18 +59,6 @@ module VCAP::CloudController
             name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
             detect_output: droplet.buildpack_receipt_detect_output
           }]
-        end
-
-        def links_for_lifecyle(url_builder)
-          links = {}
-
-          if droplet.lifecycle_type == Lifecycles::BUILDPACK
-            if droplet.buildpack_receipt_buildpack_guid
-              links[:buildpack] = { href: url_builder.build_url(path: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}") }
-            end
-          end
-
-          links
         end
       end
     end

@@ -232,7 +232,6 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-              'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -543,7 +542,6 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-              'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]
@@ -675,7 +673,6 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-              'buildpack'              => { 'href' => "#{link_prefix}/v2/buildpacks/#{buildpack.guid}" }
             }
           }
         ]

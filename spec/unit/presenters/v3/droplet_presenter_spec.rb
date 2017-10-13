@@ -95,22 +95,6 @@ module VCAP::CloudController::Presenters::V3
         end
 
         describe 'links' do
-          context 'when the buildpack is an admin buildpack' do
-            let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, buildpack_receipt_buildpack_guid: 'some-guid') }
-
-            it 'links to the buildpack' do
-              expect(result[:links][:buildpack][:href]).to eq("#{link_prefix}/v2/buildpacks/some-guid")
-            end
-          end
-
-          context 'when the buildpack is not an admin buildpack' do
-            let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack) }
-
-            it 'links to nil' do
-              expect(result[:links][:buildpack]).to be_nil
-            end
-          end
-
           context 'when there is no package guid' do
             let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: nil) }
 
