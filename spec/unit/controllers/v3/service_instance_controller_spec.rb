@@ -236,8 +236,11 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'target space does not exist' do
       it 'returns 422' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: 'foo'
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: 'non-existent-target-space-guid'
         expect(response.status).to eq(422)
+        error_message = 'Unable to unshare service instance from space non-existent-target-space-guid. '\
+          'Ensure the space exists and the service instance has been shared to this space.'
+        expect(response.body).to include(error_message)
       end
     end
 
@@ -252,6 +255,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'returns 422' do
         delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
         expect(response.status).to eq(422)
+        expect(response.body).to include("Unable to unshare service instance from space #{target_space.guid}. Ensure no bindings exist in the target space")
       end
     end
 
@@ -288,6 +292,9 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'returns 422' do
         delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space2.guid
         expect(response.status).to eq(422)
+        error_message = "Unable to unshare service instance from space #{target_space2.guid}. "\
+          'Ensure the space exists and the service instance has been shared to this space.'
+        expect(response.body).to include(error_message)
       end
     end
 

@@ -40,11 +40,11 @@ class ServiceInstancesV3Controller < ApplicationController
     target_space = Space.first(guid: space_guid)
 
     unless target_space && service_instance.shared_spaces.include?(target_space)
-      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the spaces exist and it has been shared.")
+      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the space exists and the service instance has been shared to this space.")
     end
 
     if bound_apps_in_target_space?(service_instance, target_space)
-      unprocessable!('Service instance still bound to apps in target space!')
+      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure no bindings exist in the target space")
     end
 
     service_instance.remove_shared_space(target_space)
