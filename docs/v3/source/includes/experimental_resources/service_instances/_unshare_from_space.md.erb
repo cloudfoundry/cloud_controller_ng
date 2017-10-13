@@ -1,0 +1,30 @@
+### Unshare a service instance from another space
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces/[space_guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+This endpoint unshares the service instance with the specified space.
+
+#### Definition
+`DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer|
+Admin|
