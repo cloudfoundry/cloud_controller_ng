@@ -110,12 +110,9 @@ module VCAP::CloudController
         end
 
         it 'includes Cef Middleware when security_event_logging is enabled' do
-          fake_logger = instance_double(Logger)
-          allow(Logger).to receive(:new).with(TestConfig.config_instance.get(:security_event_logging, :file)).and_return(fake_logger)
-          enabled_config = TestConfig.config_instance.get(:security_event_logging).merge(enabled: true)
-          builder.build(TestConfig.override(security_event_logging: enabled_config), request_metrics).to_app
+          builder.build(TestConfig.override(security_event_logging: { enabled: true }), request_metrics).to_app
 
-          expect(CloudFoundry::Middleware::CefLogs).to have_received(:new).with(anything, fake_logger, TestConfig.config_instance.get(:local_route))
+          expect(CloudFoundry::Middleware::CefLogs).to have_received(:new)
         end
       end
     end
