@@ -1456,6 +1456,27 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.body).to include 'PORT'
       end
     end
+
+    context 'when given a non-string value' do
+      let(:request_body) do
+        {
+            'var' => {
+                'hashes_not_allowed' => { 'var' => 'value' }
+            }
+        }
+      end
+
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      it 'returns a validation error' do
+        patch :update_environment_variables, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include "Non-string value in environment variable for key 'hashes_not_allowed'"
+      end
+    end
   end
 
   describe '#assign_current_droplet' do

@@ -11,6 +11,7 @@ module VCAP::CloudController
     end
 
     validates_with NoAdditionalKeysValidator
+    validates_with StringValuesOnlyValidator
 
     validates :var, environment_variables: true
 

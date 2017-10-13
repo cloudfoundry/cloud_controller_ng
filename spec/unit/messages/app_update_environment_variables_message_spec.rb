@@ -75,6 +75,53 @@ module VCAP::CloudController
         expect(message).not_to be_valid
         expect(message.errors_on(:var)[0]).to include('VCAP_')
       end
+
+      it 'returns a validation error when a value is a hash' do
+        invalid_body = {
+          var: {
+            hashes_are: { not: 'allowed' }
+          }
+        }
+        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'hashes_are'")
+      end
+
+      it 'returns a validation error when a value is an array' do
+        invalid_body = {
+          var: {
+            arrays_are: ['not', 'allowed']
+          }
+        }
+        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'arrays_are'")
+      end
+
+      it 'returns a validation error when a value is a number' do
+        invalid_body = {
+            var: {
+                some_number: 123
+            }
+        }
+        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'some_number'")
+      end
+
+      it 'returns successfully when a value is nil' do
+        body = {
+          var: {
+            some_nil_value: nil
+          }
+        }
+        message = AppUpdateEnvironmentVariablesMessage.new(body)
+
+        expect(message).to be_valid
+      end
     end
   end
 end

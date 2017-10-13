@@ -52,6 +52,16 @@ module VCAP::CloudController
       end
     end
 
+    class StringValuesOnlyValidator < ActiveModel::Validator
+      def validate(record)
+        record.var.each do |key, value|
+          if ![String, NilClass].include?(value.class)
+            record.errors[:base] << "Non-string value in environment variable for key '#{key}', value '#{value}'"
+          end
+        end
+      end
+    end
+
     class NoAdditionalParamsValidator < ActiveModel::Validator
       def validate(record)
         if record.extra_keys.any?
