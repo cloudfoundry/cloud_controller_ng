@@ -44,11 +44,6 @@ module VCAP::CloudController
       }
     end
 
-    it 'ensures that blank provider values will be treated as nil' do
-      service = Service.make_unsaved(provider: '', service_broker: nil).save
-      expect(service.provider).to be_nil
-    end
-
     describe '#user_visibility_filter' do
       let(:private_service) { Service.make }
       let(:public_service) { Service.make }

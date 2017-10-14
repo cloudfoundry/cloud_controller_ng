@@ -259,7 +259,7 @@ module VCAP::CloudController
     end
 
     describe '#as_summary_json' do
-      let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', provider: 'Bill Gates', version: '1.2.3') }
+      let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
       subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
       let(:developer)       { make_developer_for_space(service_instance.space) }
@@ -291,8 +291,8 @@ module VCAP::CloudController
               'service' => {
                 'guid' => '9876XZ',
                 'label' => 'YourSQL',
-                'provider' => 'Bill Gates',
-                'version' => '1.2.3',
+                'provider' => nil,
+                'version' => nil,
               }
             }
           })
@@ -333,8 +333,8 @@ module VCAP::CloudController
                   'service' => {
                     'guid' => '9876XZ',
                     'label' => 'YourSQL',
-                    'provider' => 'Bill Gates',
-                    'version' => '1.2.3',
+                    'provider' => nil,
+                    'version' => nil,
                   }
                 }
               })

@@ -16,7 +16,7 @@ module VCAP::CloudController
       context 'when there are services' do
         let(:space) { Space.make }
         let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
-        let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
+        let(:service) { Service.make(label: 'elephantsql-n/a') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
         let(:service_plan) { ServicePlan.make(service: service) }
         let(:service_plan_alt) { ServicePlan.make(service: service_alt) }

@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:memory_limit) { 12340 }
       let(:staging_disk_in_mb) { 32100 }
       let(:lifecycle) { instance_double(BuildpackLifecycle, staging_environment_variables: { 'CF_STACK' => stack }) }
-      let(:service) { Service.make(label: 'elephantsql-n/a', provider: 'cool-provider') }
+      let(:service) { Service.make(label: 'elephantsql-n/a') }
       let(:service_plan) { ServicePlan.make(service: service) }
       let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan, name: 'elephantsql-vip-uat', tags: ['excellent']) }
       let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance, syslog_drain_url: 'logs.go-here.com') }

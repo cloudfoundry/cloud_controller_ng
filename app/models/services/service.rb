@@ -17,24 +17,6 @@ module VCAP::CloudController
 
     strip_attributes :label
 
-    def validate
-      validates_presence :label,                message: Sequel.lit('Service name is required')
-      validates_presence :description,          message: 'is required'
-      validates_presence :bindable,             message: 'is required'
-      validates_url :info_url,                  message: 'must be a valid url'
-      validates_unique :unique_id,              message: Sequel.lit('Service ids must be unique')
-      validates_max_length 2048, :tag_contents, message: Sequel.lit("Service tags for service #{label} must be 2048 characters or less.")
-
-      validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
-        ds.exclude(service_broker_id: nil)
-      end
-    end
-
-    serialize_attributes :json, :tags, :requires
-
-    alias_method :bindable?, :bindable
-    alias_method :active?, :active
-
     class << self
       def public_visible
         public_active_plans = ServicePlan.where(active: true, public: true).all
@@ -84,10 +66,23 @@ module VCAP::CloudController
       end
     end
 
-    def provider
-      provider = self[:provider]
-      provider.blank? ? nil : provider
+    def validate
+      validates_presence :label, message: Sequel.lit('Service name is required')
+      validates_presence :description, message: 'is required'
+      validates_presence :bindable, message: 'is required'
+      validates_url :info_url, message: 'must be a valid url'
+      validates_unique :unique_id, message: Sequel.lit('Service ids must be unique')
+      validates_max_length 2048, :tag_contents, message: Sequel.lit("Service tags for service #{label} must be 2048 characters or less.")
+
+      validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
+        ds.exclude(service_broker_id: nil)
+      end
     end
+
+    serialize_attributes :json, :tags, :requires
+
+    alias_method :bindable?, :bindable
+    alias_method :active?, :active
 
     def tags
       super || []
@@ -137,5 +132,13 @@ module VCAP::CloudController
     def volume_service?
       requires.include?('volume_mount')
     end
+
+    def deleted_field
+      nil
+    end
+
+    alias_method :provider, :deleted_field
+    alias_method :url, :deleted_field
+    alias_method :version, :deleted_field
   end
 end
