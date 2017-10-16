@@ -11,9 +11,9 @@ module VCAP
         let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_name: user_name, user_email: user_email) }
         let(:target_space_guids) { ['space-guid', 'another-guid'] }
 
-        describe '#record_share_create' do
+        describe '#record_share_event' do
           it 'records the event correctly' do
-            event = ServiceInstanceShareEventRepository.record_share_event(service_instance, user_audit_info, target_space_guids)
+            event = ServiceInstanceShareEventRepository.record_share_event(service_instance, target_space_guids, user_audit_info)
 
             expect(event.type).to eq('audit.service_instance.share')
             expect(event.actor).to eq(user_guid)

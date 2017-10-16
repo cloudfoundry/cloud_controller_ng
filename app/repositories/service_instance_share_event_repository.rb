@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Repositories
     class ServiceInstanceShareEventRepository
       class << self
-        def record_share_event(service_instance, user_audit_info, target_space_guids)
+        def record_share_event(service_instance, target_space_guids, user_audit_info)
           Event.create(
             type:              'audit.service_instance.share',
             actor:             user_audit_info.user_guid,
