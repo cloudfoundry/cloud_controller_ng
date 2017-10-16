@@ -227,7 +227,8 @@ module VCAP::CloudController
           optional(:reserved_private_domains) => enum(String, NilClass),
 
           security_event_logging: {
-            enabled: bool
+            enabled: bool,
+            file: String,
           },
 
           optional(:bits_service) => {
