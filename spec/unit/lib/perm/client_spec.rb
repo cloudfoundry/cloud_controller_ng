@@ -15,8 +15,8 @@ module VCAP::CloudController::Perm
 
     let(:logger) { instance_double(Steno::Logger) }
 
-    let(:disabled_subject) { Client.new(hostname: hostname, port: port, enabled: false, trusted_cas: [], logger_name: 'perm') }
-    subject(:subject) { Client.new(hostname: hostname, port: port, enabled: true, trusted_cas: trusted_cas, logger_name: 'perm') }
+    let(:disabled_subject) { Client.new(hostname: hostname, port: port, enabled: false, trusted_cas: [], logger_name: 'perm', timeout: 0.1) }
+    subject(:subject) { Client.new(hostname: hostname, port: port, enabled: true, trusted_cas: trusted_cas, logger_name: 'perm', timeout: 0.1) }
 
     before do
       allow(CloudFoundry::Perm::V1::Client).to receive(:new).with(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: anything).and_return(client)
