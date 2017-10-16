@@ -23,12 +23,12 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
   let(:issuer) { 'https://auth.example.com/oauth/token' }
 
   if ENV['CF_RUN_PERM_SPECS'] == 'true'
-    before(:each) do
+    before(:all) do
       perm_server = CloudFoundry::PermTestHelpers::ServerRunner.new
       perm_server.start
     end
 
-    after(:each) do
+    after(:all) do
       perm_server.stop
     end
   end
@@ -38,7 +38,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       enabled: true,
       hostname: perm_hostname,
       port: perm_port,
-      ca_cert_path: perm_server.tls_ca_path
+      ca_cert_path: perm_server.tls_ca_path,
+      timeout_in_milliseconds: 1000
     }
 
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })
@@ -125,7 +126,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
             expect {
               client.get_role(role_name)
-            }.to raise_error GRPC::NotFound
+            }.to raise_error(GRPC::NotFound), "Expected that role #{role_name} was not found"
           end
         end
       end
@@ -231,10 +232,10 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
               expect {
                 client.get_role(org_role_name)
-              }.to raise_error GRPC::NotFound
+              }.to raise_error(GRPC::NotFound), "Expected that role #{org_role_name} was not found"
               expect {
                 client.get_role(space_role_name)
-              }.to raise_error GRPC::NotFound
+              }.to raise_error(GRPC::NotFound), "Expected that role #{space_role_name} was not found"
             end
           end
         end
@@ -488,7 +489,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
           expect {
             client.get_role(role_name)
-          }.to raise_error GRPC::NotFound
+          }.to raise_error(GRPC::NotFound), "Expected that role #{role_name} was not found"
         end
       end
 

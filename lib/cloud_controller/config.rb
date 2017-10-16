@@ -56,6 +56,7 @@ module VCAP::CloudController
         config[:rate_limiter][:general_limit] ||= 2000
         config[:rate_limiter][:reset_interval_in_minutes] ||= 60
         config[:perm] ||= { enabled: false }
+        config[:perm][:timeout_in_milliseconds] ||= 100
 
         unless config.key?(:users_can_select_backend)
           config[:users_can_select_backend] = true

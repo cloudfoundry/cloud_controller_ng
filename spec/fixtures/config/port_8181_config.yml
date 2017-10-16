@@ -227,6 +227,7 @@ perm:
   hostname: perm.service.cf.internal
   port: 6283
   ca_cert_path: spec/fixtures/certs/perm_ca.crt
+  timeout_in_milliseconds: 1000
 
 credhub_api:
   internal_url: https://credhub.capi.me:8844

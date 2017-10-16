@@ -299,6 +299,7 @@ module VCAP::CloudController
             enabled: bool,
             optional(:hostname) => String,
             optional(:port) => Integer,
+            optional(:timeout_in_milliseconds) => Integer,
             ca_cert_path: String,
           }
         }
