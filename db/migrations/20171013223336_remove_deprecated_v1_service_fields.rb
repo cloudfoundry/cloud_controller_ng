@@ -9,9 +9,9 @@ Sequel.migration do
 
   down do
     alter_table :services do
-      add_column :provider, String, null: false, case_insensitive: true
-      add_column :url, String, null: false
-      add_column :version, String, null: false
+      add_column :provider, String, null: false, size: 255, case_insensitive: true
+      add_column :url, String, null: false, size: 255
+      add_column :version, String, null: false, size: 255
     end
   end
 end
