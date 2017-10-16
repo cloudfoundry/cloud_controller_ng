@@ -25,6 +25,11 @@ module CloudController
       let(:max_size) { nil }
       let(:user) { nil }
       let(:password) { nil }
+      let(:logger) { instance_double(Steno::Logger, error: nil, info: nil) }
+
+      before do
+        allow(Steno).to receive(:logger).and_return(logger)
+      end
 
       describe 'conforms to blobstore client interface' do
         let(:deletable_blob) { instance_double(DavBlob, key: nil) }
@@ -76,6 +81,7 @@ module CloudController
           allow(httpclient).to receive_messages(head: response)
 
           expect { client.exists?('foobar') }.to raise_error BlobstoreError, /Could not get object existence/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not get object existence/)
           expect(httpclient).to have_received(:head).with('http://localhost/admin/droplets/fo/ob/foobar', header: {})
         end
 
@@ -83,6 +89,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:head).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.exists?('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: /)
           end
         end
 
@@ -90,6 +97,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:head).and_raise(Errno::ECONNREFUSED.new)
             expect { client.exists?('foobar') }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with('Error with blobstore: Connection refused')
           end
         end
       end
@@ -121,6 +129,7 @@ module CloudController
           allow(httpclient).to receive_messages(get: response)
 
           expect { client.download_from_blobstore('foobar', destination_path) }.to raise_error BlobstoreError, /Could not fetch object/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not fetch object/)
           expect(httpclient).to have_received(:get).with('http://localhost/admin/droplets/fo/ob/foobar', {}, {})
         end
 
@@ -161,6 +170,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:get).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.download_from_blobstore('foobar', destination_path) }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -168,6 +178,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:get).and_raise(Errno::ECONNRESET.new)
             expect { client.download_from_blobstore('foobar', destination_path) }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: Connection reset by peer/)
           end
         end
       end
@@ -219,6 +230,7 @@ module CloudController
           allow(httpclient).to receive_messages(put: response)
 
           expect { client.cp_to_blobstore(tmpfile.path, 'foobar') }.to raise_error BlobstoreError, /Could not create object/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not create object/)
         end
 
         describe 'file size limits' do
@@ -254,6 +266,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.cp_to_blobstore(tmpfile.path, 'foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -261,6 +274,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(Errno::ENETUNREACH.new)
             expect { client.cp_to_blobstore(tmpfile.path, 'foobar') }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: Network is unreachable/)
           end
         end
       end
@@ -379,6 +393,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.cp_r_to_blobstore(source_dir) }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -386,6 +401,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:put).and_raise(Errno::EHOSTUNREACH.new)
             expect { client.cp_r_to_blobstore(source_dir) }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: No route to host/)
           end
         end
       end
@@ -422,6 +438,7 @@ module CloudController
           allow(httpclient).to receive(:request).and_return(response)
 
           expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /Could not copy object/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not copy object/)
         end
 
         it 'should raise an exception when there is an error creating the destination object' do
@@ -429,6 +446,7 @@ module CloudController
           allow(httpclient).to receive(:put).and_return(response)
 
           expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /Could not copy object/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not copy object/)
         end
 
         context 'when the source key has no file associated with it' do
@@ -448,6 +466,7 @@ module CloudController
             it 'reraises a BlobstoreError' do
               allow(httpclient).to receive(:put).and_raise(OpenSSL::SSL::SSLError.new)
               expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /SSL verification failed/
+              expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
             end
           end
 
@@ -455,6 +474,7 @@ module CloudController
             it 'raises a BlobstoreError' do
               allow(httpclient).to receive(:put).and_raise(Errno::EBADF.new)
               expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError
+              expect(logger).to have_received(:error).with(/^Error with blobstore: Bad file descriptor/)
             end
           end
 
@@ -464,6 +484,7 @@ module CloudController
               allow(httpclient).to receive(:put).and_return(response)
               allow(httpclient).to receive(:request).and_raise(OpenSSL::SSL::SSLError.new)
               expect { client.cp_file_between_keys('foobar', 'bazbar') }.to raise_error BlobstoreError, /SSL verification failed/
+              expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
             end
           end
         end
@@ -493,6 +514,7 @@ module CloudController
           expect(httpclient).to receive(:delete).and_return(response)
 
           expect { client.delete('foobar') }.to raise_error BlobstoreError, /Could not delete object/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not delete object/)
         end
 
         it 'should raise a ConflictError when there is a conflict deleting an object' do
@@ -506,6 +528,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.delete('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -513,6 +536,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(Errno::EIO.new)
             expect { client.delete('and bingo was his name-o') }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(%r(^Error with blobstore: Input/output error))
           end
         end
       end
@@ -546,6 +570,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.delete_all }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -553,6 +578,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(Errno::EHOSTUNREACH.new)
             expect { client.delete_all }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: No route to host/)
           end
         end
       end
@@ -577,6 +603,7 @@ module CloudController
           expect {
             client.delete_all_in_path('foobar')
           }.to raise_error(BlobstoreError, /Could not delete all in path/)
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not delete all in path/)
           expect(httpclient).to have_received(:delete).with('http://localhost/admin/droplets/buildpack_cache/fo/ob/foobar/', header: {})
         end
 
@@ -584,6 +611,7 @@ module CloudController
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.delete_all_in_path('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -591,6 +619,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:delete).and_raise(Errno::ECONNREFUSED.new)
             expect { client.delete_all_in_path('foobar') }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: Connection refused/)
           end
         end
       end
@@ -619,12 +648,14 @@ module CloudController
           allow(httpclient).to receive_messages(head: response)
 
           expect { client.exists?('foobar') }.to raise_error BlobstoreError, /Could not get object/
+          expect(logger).to have_received(:error).with(/^Error with blobstore: Could not get object/)
         end
 
         context 'when an OpenSSL::SSL::SSLError is raised' do
           it 'reraises a BlobstoreError' do
             allow(httpclient).to receive(:head).and_raise(OpenSSL::SSL::SSLError.new)
             expect { client.blob('foobar') }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -632,6 +663,7 @@ module CloudController
           it 'raises a BlobstoreError' do
             allow(httpclient).to receive(:head).and_raise(Errno::ECONNREFUSED.new)
             expect { client.blob('foobar') }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: Connection refused/)
           end
         end
       end
@@ -662,6 +694,7 @@ module CloudController
             allow(httpclient).to receive(:delete).and_raise(OpenSSL::SSL::SSLError.new)
 
             expect { client.delete_blob(blob) }.to raise_error BlobstoreError, /SSL verification failed/
+            expect(logger).to have_received(:error).with(/^SSL verification failed: OpenSSL::SSL::SSLError/)
           end
         end
 
@@ -671,6 +704,7 @@ module CloudController
             allow(httpclient).to receive(:delete).and_raise(Errno::ECONNREFUSED.new)
 
             expect { client.delete_blob(blob) }.to raise_error BlobstoreError
+            expect(logger).to have_received(:error).with(/^Error with blobstore: Connection refused/)
           end
         end
       end

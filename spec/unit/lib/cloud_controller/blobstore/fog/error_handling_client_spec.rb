@@ -8,6 +8,11 @@ module CloudController
     RSpec.describe ErrorHandlingClient do
       subject(:client) { ErrorHandlingClient.new(wrapped_client) }
       let(:wrapped_client) { Blobstore::NullClient.new }
+      let(:logger) { instance_double(Steno::Logger, error: nil) }
+
+      before do
+        allow(Steno).to receive(:logger).and_return(logger)
+      end
 
       describe 'conforms to blobstore client interface' do
         let(:deletable_blob) { nil }
@@ -24,6 +29,7 @@ module CloudController
           expect {
             client.delete_all
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -36,6 +42,7 @@ module CloudController
           expect {
             client.delete_all_in_path
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -48,6 +55,7 @@ module CloudController
           expect {
             client.exists?
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -60,6 +68,7 @@ module CloudController
           expect {
             client.blob
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -72,6 +81,7 @@ module CloudController
           expect {
             client.delete_blob
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -84,6 +94,7 @@ module CloudController
           expect {
             client.cp_file_between_keys
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -96,6 +107,7 @@ module CloudController
           expect {
             client.cp_r_to_blobstore
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -108,6 +120,7 @@ module CloudController
           expect {
             client.download_from_blobstore
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -120,6 +133,7 @@ module CloudController
           expect {
             client.delete
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -132,6 +146,7 @@ module CloudController
           expect {
             client.cp_to_blobstore
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
 
@@ -145,6 +160,7 @@ module CloudController
           expect {
             client.files_for(args)
           }.to raise_error(BlobstoreError, 'error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: error message')
         end
       end
     end

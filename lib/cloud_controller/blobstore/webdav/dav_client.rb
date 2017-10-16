@@ -65,7 +65,7 @@ module CloudController
         elsif response.status == 404
           false
         else
-          raise BlobstoreError.new("Could not get object existence, #{response.status}/#{response.content}")
+          raise_blobstore_error("Could not get object existence, #{response.status}/#{response.content}")
         end
       end
 
@@ -78,7 +78,7 @@ module CloudController
             end
           end
 
-          raise BlobstoreError.new("Could not fetch object, #{response.status}/#{response.content}") if response.status != 200
+          raise_blobstore_error("Could not fetch object, #{response.status}/#{response.content}") if response.status != 200
 
           file.chmod(mode) if mode
         end
@@ -98,7 +98,7 @@ module CloudController
           response = with_error_handling { @client.put(url(destination_key), file, @headers) }
 
           if response.status != 201 && response.status != 204
-            raise BlobstoreError.new("Could not create object, #{response.status}/#{response.content}")
+            raise_blobstore_error("Could not create object, #{response.status}/#{response.content}")
           end
 
           log_entry = 'cp-finish'
@@ -117,11 +117,11 @@ module CloudController
         destination_header = { 'Destination' => destination_url }
 
         response = with_error_handling { @client.put(destination_url, '', @headers) }
-        raise BlobstoreError.new("Could not copy object while creating destination, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
+        raise_blobstore_error("Could not copy object while creating destination, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
 
         response = with_error_handling { @client.request(:copy, url(source_key), header: @headers.merge(destination_header)) }
         raise FileNotFound.new("Could not find object '#{source_key}', #{response.status}/#{response.content}") if response.status == 404
-        raise BlobstoreError.new("Could not copy object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
+        raise_blobstore_error("Could not copy object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
       end
 
       def delete(key)
@@ -130,21 +130,21 @@ module CloudController
 
         raise FileNotFound.new("Could not find object '#{key}', #{response.status}/#{response.content}") if response.status == 404
         raise ConflictError.new("Conflict deleting object '#{key}', #{response.status}/#{response.content}") if response.status == 409
-        raise BlobstoreError.new("Could not delete object, #{response.status}/#{response.content}")
+        raise_blobstore_error("Could not delete object, #{response.status}/#{response.content}")
       end
 
       def blob(key)
         response = with_error_handling { @client.head(url(key), header: @headers) }
         return DavBlob.new(httpmessage: response, key: partitioned_key(key), signer: @signer) if response.status == 200
 
-        raise BlobstoreError.new("Could not get object, #{response.status}/#{response.content}") if response.status != 404
+        raise_blobstore_error("Could not get object, #{response.status}/#{response.content}") if response.status != 404
       end
 
       def delete_blob(blob)
         response = with_error_handling { @client.delete(url_from_blob_key(blob.key), header: @headers) }
         return if response.status == 404
 
-        raise BlobstoreError.new("Could not delete object, #{response.status}/#{response.content}") if response.status != 204
+        raise_blobstore_error("Could not delete object, #{response.status}/#{response.content}") if response.status != 204
       end
 
       def delete_all(_=nil)
@@ -153,7 +153,7 @@ module CloudController
         return if response.status == 204
 
         raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
-        raise BlobstoreError.new("Could not delete all, #{response.status}/#{response.content}")
+        raise_blobstore_error("Could not delete all, #{response.status}/#{response.content}")
       end
 
       def delete_all_in_path(path)
@@ -164,7 +164,7 @@ module CloudController
         # requesting to delete something which is already gone is ok
         return if response.status == 404
 
-        raise BlobstoreError.new("Could not delete all in path, #{response.status}/#{response.content}")
+        raise_blobstore_error("Could not delete all in path, #{response.status}/#{response.content}")
       end
 
       def files_for(prefix, ignored_directory_prefixes=[])
@@ -196,6 +196,11 @@ module CloudController
 
       private
 
+      def raise_blobstore_error(error_message)
+        logger.error("Error with blobstore: #{error_message}")
+        raise BlobstoreError.new(error_message)
+      end
+
       def url(key)
         [@endpoint, 'admin', @directory_key, partitioned_key(key)].compact.join('/')
       end
@@ -226,8 +231,7 @@ module CloudController
         logger.error("SSL verification failed: #{e.message}")
         raise BlobstoreError.new('SSL verification failed')
       rescue => e
-        logger.error("Error with blobstore: #{e.message}")
-        raise BlobstoreError.new('Blobstore error')
+        raise_blobstore_error(e.message)
       end
     end
   end

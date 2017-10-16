@@ -60,7 +60,12 @@ module CloudController
       def error_handling
         yield
       rescue Excon::Errors::Error => e
+        logger.error("Error with blobstore: #{e.message}")
         raise BlobstoreError.new(e.message)
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.error_handling_client')
       end
 
       attr_reader :wrapped_client
