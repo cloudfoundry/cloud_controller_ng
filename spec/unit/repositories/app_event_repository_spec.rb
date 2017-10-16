@@ -140,7 +140,7 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:process) { AppModel.make(space: space) }
 
-        it 'creates a new audit.app.droplet_mapped event' do
+        it 'creates a new audit.app.droplet.mapped event' do
           event = app_event_repository.record_app_map_droplet(process, space, user_audit_info, { a: 1 })
           event.reload
           expect(event.actor).to eq(user_guid)

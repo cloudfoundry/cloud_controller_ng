@@ -44,7 +44,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     audit.route.create
     audit.route.update
     audit.route.delete-request
-    audit.app.droplet_mapped
+    audit.app.droplet.mapped
     audit.app.map-route
     audit.app.unmap-route
     audit.app.restage
