@@ -135,8 +135,9 @@ module VCAP::CloudController
         end
       end
 
+      # Can't be cached because the Syslog logger doesn't deserialize correctly for delayed jobs :(
       def logger
-        @logger ||= Steno.logger(logger_name)
+        Steno.logger(logger_name)
       end
     end
   end
