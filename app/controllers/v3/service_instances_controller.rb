@@ -49,7 +49,7 @@ class ServiceInstancesV3Controller < ApplicationController
     end
 
     unshare = ServiceInstanceUnshare.new
-    unshare.unshare(service_instance, target_space)
+    unshare.unshare(service_instance, target_space, user_audit_info)
 
     head :no_content
   end
