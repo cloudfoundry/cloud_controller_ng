@@ -4,6 +4,7 @@ require 'repositories/service_instance_share_event_repository'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'actions/service_instance_share'
+require 'actions/service_instance_unshare'
 
 class ServiceInstancesV3Controller < ApplicationController
   def share_service_instance
@@ -47,7 +48,8 @@ class ServiceInstancesV3Controller < ApplicationController
       unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure no bindings exist in the target space")
     end
 
-    service_instance.remove_shared_space(target_space)
+    unshare = ServiceInstanceUnshare.new
+    unshare.unshare(service_instance, target_space)
 
     head :no_content
   end
