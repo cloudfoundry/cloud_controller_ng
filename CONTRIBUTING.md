@@ -36,3 +36,7 @@ Your pull request is much more likely to be accepted if:
 * Your pull request includes tests
 
 * Your pull request is small and focused with a clear message that conveys the intent of your change
+
+## PR size
+
+Whenever possible, please try to PR small, atomic units of work. As a rule of thumb, PRs with > 400 changed lines are difficult for us to review critically. We are happy to work with you to break up larger PRs into more managable chunks.
