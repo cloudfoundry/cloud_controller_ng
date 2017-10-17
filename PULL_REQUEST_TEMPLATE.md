@@ -8,10 +8,10 @@ Thanks for contributing to cloud_controller_ng. To speed up the process of revie
 
 * [ ] I have reviewed the [contributing guide](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/CONTRIBUTING.md)
 
-* [ ] I have viewed signed and have submitted the Contributor License Agreement
+* [ ] I have viewed, signed, and submitted the Contributor License Agreement
 
 * [ ] I have made this pull request to the `master` branch
 
 * [ ] I have run all the unit tests using `bundle exec rake`
 
-* [ ] I have run [CF Acceptance Tests](https://github.com/cloudfoundry/cloud_controller_ng#cf-acceptance-tests-cats) on bosh lite
+* [ ] I have run [CF Acceptance Tests](https://github.com/cloudfoundry/cloud_controller_ng#cf-acceptance-tests-cats)
