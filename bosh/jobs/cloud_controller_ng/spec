@@ -851,6 +851,9 @@ properties:
   perm.ca_certs:
     description: "An array of certificate authorities being used by Perm. Allows multiple in case of rotation."
     default: []
+  perm.timeout_in_milliseconds:
+    description: "Timeout for Perm requests in milliseconds."
+    default: 100
 
   credhub_api.hostname:
     description: "Hostname used to resolve the address of CredHub"

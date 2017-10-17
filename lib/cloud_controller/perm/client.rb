@@ -3,12 +3,24 @@ require 'perm'
 module VCAP::CloudController
   module Perm
     class Client
-      def initialize(hostname:, port:, enabled:, trusted_cas:, logger_name:)
+      def initialize(hostname:, port:, enabled:, trusted_cas:, logger_name:, timeout:)
         @hostname = hostname
         @port = port
         @trusted_cas = trusted_cas
         @enabled = enabled
         @logger_name = logger_name
+        @timeout = timeout
+      end
+
+      # When this object is passed across the boundary to DelayedJob it is serialized in the database
+      # and then automatically rehydrated on the other side
+      # This does not work in our case because
+      # a) The gRPC connection is broken
+      # b) The logger's Syslog logger cannot be serialized
+      # Instead, provide a custom rehydrate method that returns a new object
+      # and do this when performing the DelayedJob
+      def rehydrate
+        Client.new(hostname: hostname, port: port, enabled: enabled, trusted_cas: trusted_cas, logger_name: logger_name, timeout: timeout)
       end
 
       def create_org_role(role:, org_id:)
@@ -59,10 +71,10 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :hostname, :port, :enabled, :trusted_cas, :logger_name
+      attr_reader :hostname, :port, :enabled, :trusted_cas, :logger_name, :timeout
 
       def client
-        CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: 0.1)
+        @client ||= CloudFoundry::Perm::V1::Client.new(hostname: hostname, port: port, trusted_cas: trusted_cas, timeout: timeout)
       end
 
       def org_role(role, org_id)
@@ -123,6 +135,7 @@ module VCAP::CloudController
         end
       end
 
+      # Can't be cached because the Syslog logger doesn't deserialize correctly for delayed jobs :(
       def logger
         Steno.logger(logger_name)
       end
