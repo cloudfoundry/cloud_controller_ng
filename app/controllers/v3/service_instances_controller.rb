@@ -1,5 +1,4 @@
 require 'messages/to_many_relationship_message'
-require 'repositories/service_instance_share_event_repository'
 
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'

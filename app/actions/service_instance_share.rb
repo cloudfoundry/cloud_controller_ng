@@ -1,3 +1,5 @@
+require 'repositories/service_instance_share_event_repository'
+
 module VCAP::CloudController
   class ServiceInstanceShare
     def create(service_instance, target_spaces, user_audit_info)
