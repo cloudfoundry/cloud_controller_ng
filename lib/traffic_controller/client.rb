@@ -1,3 +1,4 @@
+require 'multipart_parser/reader'
 require 'traffic_controller/traffic_controller'
 require 'traffic_controller/errors'
 
@@ -76,31 +77,36 @@ module TrafficController
       end
 
       def next_part
-        # trafficcontroller does not put headers in the multipart body, so we are not
-        # going to parse part headers
-        delim, _header, body = chunks.next
-        if delim == boundary_delimiter
-          return body
-        end
-        nil
-      rescue StopIteration
+        @chunks ||= parse(@body, @boundary)
+        @chunks.next
+      rescue StopIteration, ParseError
         nil
       end
 
       private
 
-      def chunks
-        @chunks ||= @body.split(NEW_LINE).slice_before do |line|
-          line == boundary_delimiter || line == final_boundary_delimiter
+      def parse(body, boundary)
+        parts = []
+
+        reader = ::MultipartParser::Reader.new(boundary)
+
+        reader.on_part do |part|
+          p = []
+
+          part.on_data do |partial_data|
+            p << partial_data
+          end
+
+          parts << p
         end
-      end
 
-      def boundary_delimiter
-        "--#{@boundary}"
-      end
+        reader.write body
 
-      def final_boundary_delimiter
-        "--#{@boundary}--"
+        unless reader.ended?
+          raise ParseError.new('truncated multipart message')
+        end
+
+        parts.map { |p| p.join }.to_enum
       end
     end
   end

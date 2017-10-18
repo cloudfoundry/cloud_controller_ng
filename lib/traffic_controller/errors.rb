@@ -10,4 +10,7 @@ module TrafficController
 
   class DecodeError < Error
   end
+
+  class ParseError < Error
+  end
 end
