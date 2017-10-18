@@ -6,6 +6,13 @@ module VCAP::CloudController::Presenters::V3
         created_at: space.created_at,
         updated_at: space.updated_at,
         name: space.name,
+        relationships: {
+          organization: {
+            data: {
+              guid: space.organization_guid
+            }
+          }
+        },
         links: build_links,
       }
     end

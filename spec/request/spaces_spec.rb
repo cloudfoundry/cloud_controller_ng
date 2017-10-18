@@ -40,12 +40,17 @@ RSpec.describe 'Spaces' do
 
       expect(parsed_response).to be_a_response_like(
         {
-          'guid'       => created_space.guid,
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'name'       => 'space1',
-          'links'      => {
-            'self' => { 'href' => "#{link_prefix}/v3/spaces/#{created_space.guid}" },
+          'guid'          => created_space.guid,
+          'created_at'    => iso8601,
+          'updated_at'    => iso8601,
+          'name'          => 'space1',
+          'relationships' => {
+            'organization' => {
+              'data' => { 'guid' => created_space.organization_guid }
+            }
+          },
+          'links' => {
+            'self'         => { 'href' => "#{link_prefix}/v3/spaces/#{created_space.guid}" },
             'organization' => { 'href' => "#{link_prefix}/v3/organizations/#{created_space.organization_guid}" },
           }
         }
@@ -65,6 +70,11 @@ RSpec.describe 'Spaces' do
             'name' => 'Catan',
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => {
+              'organization' => {
+                'data' => { 'guid' => space1.organization_guid }
+              }
+            },
             'links' => {
               'self' => {
                 'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
@@ -72,7 +82,7 @@ RSpec.describe 'Spaces' do
               'organization' => {
                 'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
               }
-            }
+            },
         }
       )
     end
@@ -106,6 +116,11 @@ RSpec.describe 'Spaces' do
               'name' => 'Catan',
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'relationships' => {
+                'organization' => {
+                  'data' => { 'guid' => space1.organization_guid }
+                }
+              },
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
@@ -120,6 +135,11 @@ RSpec.describe 'Spaces' do
               'name' => 'Ticket to Ride',
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'relationships' => {
+                'organization' => {
+                  'data' => { 'guid' => space2.organization_guid }
+                }
+              },
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/spaces/#{space2.guid}"
