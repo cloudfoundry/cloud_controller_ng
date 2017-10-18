@@ -326,5 +326,48 @@ module VCAP::CloudController
         expect(service_instance.to_hash(opts)['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
       end
     end
+
+    describe '#user_visibility_filter' do
+      let(:developer)     { make_developer_for_space(service_instance.space) }
+      let(:auditor)       { make_auditor_for_space(service_instance.space) }
+      let(:user)          { make_user_for_space(service_instance.space) }
+      let(:org_manager)   { make_manager_for_org(service_instance.space.organization) }
+      let(:space_manager) { make_manager_for_space(service_instance.space) }
+
+      context 'when a user is an org manager where the instance was created' do
+        it 'the service instance is visible' do
+          filter = ServiceInstance.user_visibility_filter(org_manager)
+          expect(ServiceInstance.filter(filter).all.length).to eq(1)
+        end
+      end
+
+      context 'when a user is a space developer in the space the instance was created' do
+        it 'the service instance is visible' do
+          filter = ServiceInstance.user_visibility_filter(developer)
+          expect(ServiceInstance.filter(filter).all.length).to eq(1)
+        end
+      end
+
+      context 'when a user is a space auditor in the space the instance was created' do
+        it 'the service instance is visible' do
+          filter = ServiceInstance.user_visibility_filter(auditor)
+          expect(ServiceInstance.filter(filter).all.length).to eq(1)
+        end
+      end
+
+      context 'when a user is a space manager in the space the instance was created' do
+        it 'the service instance is visible' do
+          filter = ServiceInstance.user_visibility_filter(space_manager)
+          expect(ServiceInstance.filter(filter).all.length).to eq(1)
+        end
+      end
+
+      context 'when a user does not have access to the originating space' do
+        it 'the service instance is not visible' do
+          filter = ServiceInstance.user_visibility_filter(user)
+          expect(ServiceInstance.filter(filter).all.length).to eq(0)
+        end
+      end
+    end
   end
 end
