@@ -240,6 +240,39 @@ module VCAP::CloudController
         end
       end
 
+      describe 'shared service instances' do
+        context 'when a service instance has been shared from another space' do
+          let(:shared_service_instance) { ManagedServiceInstance.make(space: Space.make) }
+
+          before do
+            shared_service_instance.add_shared_space(space)
+          end
+
+          it 'returns the shared service instance' do
+            get "v2/spaces/#{space.guid}/service_instances"
+
+            guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
+            expect(guids).to include(shared_service_instance.guid)
+          end
+        end
+
+        context 'when a service instance has been shared between two spaces that are not the queried space' do
+          let(:other_space) { make_space_for_user(developer) }
+          let(:irrelevant_shared_service_instance) { ManagedServiceInstance.make(space: Space.make) }
+
+          before do
+            irrelevant_shared_service_instance.add_shared_space(other_space)
+          end
+
+          it 'does not return the irrelevant shared service instance' do
+            get "v2/spaces/#{space.guid}/service_instances"
+
+            guids = decoded_response.fetch('resources').map { |service| service.fetch('metadata').fetch('guid') }
+            expect(guids).not_to include(irrelevant_shared_service_instance.guid)
+          end
+        end
+      end
+
       context 'when there are provided service instances' do
         let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
         let!(:managed_service_instance) { ManagedServiceInstance.make(space: space) }

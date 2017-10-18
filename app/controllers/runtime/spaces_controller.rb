@@ -138,20 +138,18 @@ module VCAP::CloudController
     def enumerate_service_instances(guid)
       space = find_guid_and_validate_access(:read, guid)
 
-      if params['return_user_provided_service_instances'] == 'true'
-        model_class = ServiceInstance
-        relation_name = :service_instances
-      else
-        model_class = ManagedServiceInstance
-        relation_name = :managed_service_instances
-      end
+      model_class = params['return_user_provided_service_instances'] == 'true' ? ServiceInstance : ManagedServiceInstance
 
       service_instances = Query.filtered_dataset_from_query_params(
         model_class,
-        space.user_visible_relationship_dataset(relation_name, @access_context.user, @access_context.admin_override),
+        model_class.user_visible(@access_context.user, @access_context.admin_override),
         ServiceInstancesController.query_parameters,
         @opts)
-      service_instances.filter(space: space)
+
+      service_instances = service_instances.filter(Sequel.or([
+        [:space, space],
+        [:shared_spaces, space]
+      ]))
 
       collection_renderer.render_json(
         ServiceInstancesController,
