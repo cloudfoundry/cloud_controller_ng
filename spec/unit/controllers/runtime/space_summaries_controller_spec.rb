@@ -95,14 +95,15 @@ module VCAP::CloudController
       end
 
       context 'when a managed service has been shared into this space' do
+        let(:receiver_space) { Space.make }
         let(:originating_space) { Space.make }
         let(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
         let(:services_response) { decoded_response['services'] }
 
         before do
-          service_instance.add_shared_space(space)
+          service_instance.add_shared_space(receiver_space)
 
-          get "/v2/spaces/#{space.guid}/summary"
+          get "/v2/spaces/#{receiver_space.guid}/summary"
         end
 
         it 'includes the shared service instance' do
@@ -115,6 +116,32 @@ module VCAP::CloudController
             'space_guid' => originating_space.guid,
             'space_name' => originating_space.name,
             'organization_name' => originating_space.organization.name
+          })
+        end
+
+        it 'does not contain shared to information' do
+          expect(services_response.first['shared_to']).to be_empty
+        end
+      end
+
+      context 'when a managed service instance is shared into another space' do
+        let(:host_space) { Space.make }
+        let(:service_instance) { ManagedServiceInstance.make(space: host_space) }
+        let(:foreign_space) { Space.make }
+        let(:services_response) { decoded_response['services'] }
+
+        before(:each) do
+          service_instance.add_shared_space(foreign_space)
+
+          get "/v2/spaces/#{host_space.guid}/summary"
+        end
+
+        it 'includes shared to information' do
+          expect(services_response.first).to have_key('shared_to')
+          expect(services_response.first['shared_to'].first).to eq({
+            'space_guid' => foreign_space.guid,
+            'space_name' => foreign_space.name,
+            'organization_name' => foreign_space.organization.name
           })
         end
       end

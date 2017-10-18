@@ -55,6 +55,7 @@ module VCAP::CloudController
         'last_operation' => last_operation.try(:to_hash),
         'dashboard_url' => dashboard_url,
         'shared_from' => nil,
+        'shared_to' => [],
         'service_plan' => {
           'guid' => service_plan.guid,
           'name' => service_plan.name,

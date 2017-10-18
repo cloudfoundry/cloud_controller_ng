@@ -51,7 +51,7 @@ module VCAP::CloudController
 
     def services_summary(space)
       shared_summary = space.service_instances_shared_from_other_spaces.map { |s| shared_service_instance_summary(s) }
-      source_summary = space.service_instances.map(&:as_summary_json)
+      source_summary = space.service_instances.map { |s| source_service_instance_summary(s) }
 
       shared_summary + source_summary
     end
@@ -62,6 +62,20 @@ module VCAP::CloudController
         'space_name' => service_instance.space.name,
         'organization_name' => service_instance.space.organization.name,
       })
+    end
+
+    def source_service_instance_summary(service_instance)
+      service_instance.as_summary_json.merge('shared_to' => shared_to_summary(service_instance))
+    end
+
+    def shared_to_summary(service_instance)
+      service_instance.shared_spaces.map do |s|
+        {
+          'space_guid' => s.guid,
+          'space_name' => s.name,
+          'organization_name' => s.organization.name
+        }
+      end
     end
   end
 end

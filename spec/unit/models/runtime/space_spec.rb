@@ -66,6 +66,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
       it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { SpaceQuotaDefinition.make(organization: space.organization) } }
+      it { is_expected.to have_associated :service_instances_shared_from_other_spaces, associated_instance: ->(space) { ManagedServiceInstance.make(space: Space.make) } }
 
       describe 'space_quota_definition' do
         subject(:space) { Space.make }
@@ -78,6 +79,23 @@ module VCAP::CloudController
 
         it 'allows nil' do
           expect { space.space_quota_definition = nil }.not_to raise_error
+        end
+      end
+
+      describe 'service_instances_shared_from_other_spaces' do
+        subject(:space) { Space.make }
+
+        it 'is empty by default' do
+          expect(space.service_instances_shared_from_other_spaces).to be_empty
+        end
+
+        it 'includes the services shared from other spaces' do
+          foreign_space = Space.make
+          foreign_service = ManagedServiceInstance.make(space: foreign_space)
+
+          space.add_service_instances_shared_from_other_space(foreign_service)
+
+          expect(space.service_instances_shared_from_other_spaces).to contain_exactly(foreign_service)
         end
       end
 
