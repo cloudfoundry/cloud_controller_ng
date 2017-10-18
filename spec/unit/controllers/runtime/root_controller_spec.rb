@@ -66,6 +66,29 @@ module VCAP::CloudController
         end
       end
 
+      describe 'routing link' do
+        context 'routing_api is configured' do
+          it 'returns a link' do
+            TestConfig.override(routing_api: { url: 'some_routing_api' })
+            get '/'
+            hash = MultiJson.load(last_response.body)
+            expect(hash['links']['routing']['href']).to eq('some_routing_api')
+          end
+        end
+
+        context 'routing_api is not configured' do
+          before do
+            TestConfig.override(routing_api: nil)
+          end
+
+          it 'does not return a link' do
+            get '/'
+            hash = MultiJson.load(last_response.body)
+            expect(hash['links']['routing']).to eq(nil)
+          end
+        end
+      end
+
       it 'returns a link to network-policy v0 API' do
         get '/'
         hash = MultiJson.load(last_response.body)

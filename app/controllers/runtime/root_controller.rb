@@ -38,20 +38,21 @@ module VCAP::CloudController
           },
 
           uaa:                 {
-            href: VCAP::CloudController::Config.config.get(:uaa, :url)
+            href: config.get(:uaa, :url)
           },
 
           credhub:             credhub_link,
+          routing: routing_link,
 
           logging:             {
-            href: VCAP::CloudController::Config.config.get(:doppler, :url)
+            href: config.get(:doppler, :url)
           },
 
           app_ssh:             {
-            href: VCAP::CloudController::Config.config.get(:info, :app_ssh_endpoint),
+            href: config.get(:info, :app_ssh_endpoint),
             meta: {
-              host_key_fingerprint: VCAP::CloudController::Config.config.get(:info, :app_ssh_host_key_fingerprint),
-              oauth_client:         VCAP::CloudController::Config.config.get(:info, :app_ssh_oauth_client)
+              host_key_fingerprint: config.get(:info, :app_ssh_host_key_fingerprint),
+              oauth_client:         config.get(:info, :app_ssh_oauth_client)
             }
           },
 
@@ -63,9 +64,18 @@ module VCAP::CloudController
 
     private
 
+    def config
+      VCAP::CloudController::Config.config
+    end
+
     def credhub_link
-      return unless VCAP::CloudController::Config.config.get(:credhub_api).present?
-      { href: VCAP::CloudController::Config.config.get(:credhub_api, :url) }
+      return unless config.get(:credhub_api).present?
+      { href: config.get(:credhub_api, :url) }
+    end
+
+    def routing_link
+      return unless config.get(:routing_api).present?
+      { href: config.get(:routing_api, :url) }
     end
   end
 end
