@@ -64,7 +64,7 @@ RSpec.describe 'Service Instances' do
     let(:target_space) { VCAP::CloudController::Space.make }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
-    before do
+    before(:each) do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
 
       share_request = {
@@ -95,6 +95,19 @@ RSpec.describe 'Service Instances' do
         organization_guid: service_instance.space.organization.guid
       })
       expect(event.metadata['target_space_guid']).to eq(target_space.guid)
+    end
+
+    it 'deletes associated bindings in target space when service instance is unshared' do
+      process = VCAP::CloudController::ProcessModelFactory.make(diego: false, space: target_space)
+      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process.app, credentials: { secret: 'key' })
+      delete_binding = double(VCAP::CloudController::ServiceBindingDelete)
+
+      allow(VCAP::CloudController::ServiceBindingDelete).to receive(:new) { delete_binding }
+      allow(delete_binding).to receive(:single_delete_sync)
+
+      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, user_header
+      expect(last_response.status).to eq(204)
+      expect(delete_binding).to have_received(:single_delete_sync)
     end
   end
 end

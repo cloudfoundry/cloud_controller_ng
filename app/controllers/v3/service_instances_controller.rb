@@ -43,9 +43,7 @@ class ServiceInstancesV3Controller < ApplicationController
       unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure the space exists and the service instance has been shared to this space.")
     end
 
-    if bound_apps_in_target_space?(service_instance, target_space)
-      unprocessable!("Unable to unshare service instance from space #{space_guid}. Ensure no bindings exist in the target space")
-    end
+    delete_bindings_in_target_space!(service_instance, target_space)
 
     unshare = ServiceInstanceUnshare.new
     unshare.unshare(service_instance, target_space, user_audit_info)
@@ -55,11 +53,13 @@ class ServiceInstancesV3Controller < ApplicationController
 
   private
 
-  def bound_apps_in_target_space?(service_instance, target_space)
+  def delete_bindings_in_target_space!(service_instance, target_space)
     active_bindings = ServiceBinding.where(service_instance_guid: service_instance.guid)
-    bound_app_space_guids = active_bindings.map { |b| b.app.space_guid }
+    bindings_in_target_space = active_bindings.all.select { |b| b.app.space_guid == target_space.guid }
 
-    bound_app_space_guids.include?(target_space.guid)
+    bindings_in_target_space.each do |binding|
+      ServiceBindingDelete.new(user_audit_info).single_delete_sync(binding)
+    end
   end
 
   def check_spaces_are_writeable!(spaces)
