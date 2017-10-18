@@ -368,6 +368,30 @@ module VCAP::CloudController
           expect(ServiceInstance.filter(filter).all.length).to eq(0)
         end
       end
+
+      context 'when the service instance is shared' do
+        let(:target_space)     { VCAP::CloudController::Space.make }
+        let(:target_space_dev) { make_developer_for_space(target_space) }
+        let(:target_space_auditor) { make_auditor_for_space(target_space) }
+
+        before do
+          service_instance.add_shared_space(target_space)
+        end
+
+        context 'when a user is a space developer in the target space' do
+          it 'the service instance is visible' do
+            filter = ServiceInstance.user_visibility_filter(target_space_dev)
+            expect(ServiceInstance.filter(filter).all.length).to eq(1)
+          end
+        end
+
+        context 'when a user is a space auditor in the target space' do
+          it 'the service instance is not visible' do
+            filter = ServiceInstance.user_visibility_filter(target_space_auditor)
+            expect(ServiceInstance.filter(filter).all.length).to eq(0)
+          end
+        end
+      end
     end
   end
 end
