@@ -181,6 +181,12 @@ buildpacks:
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 
+<% if_p("cc.database_encryption_keys") do %>
+database_encryption_keys:
+  keys: <%= p("cc.database_encryption_keys.keys") %>
+  current_key_label: <%= p("cc.database_encryption_keys.current_key_label").inspect %>
+<% end %>
+
 broker_client_timeout_seconds: <%= p("cc.broker_client_timeout_seconds") %>
 broker_client_default_async_poll_interval_seconds: <%= p('cc.broker_client_default_async_poll_interval_seconds') %>
 broker_client_max_async_poll_duration_minutes: <%= p('cc.broker_client_max_async_poll_duration_minutes') %>
