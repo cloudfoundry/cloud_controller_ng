@@ -1,15 +1,14 @@
 require 'spec_helper'
 
 RSpec.describe 'Service Instances' do
+  let(:user_email) { 'user@email.example.com' }
+  let(:user_name) { 'sharer_username' }
+  let(:user) { VCAP::CloudController::User.make }
+  let(:admin_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
+  let(:target_space) { VCAP::CloudController::Space.make }
+  let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+
   describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
-    let(:user_email) { 'user@email.example.com' }
-    let(:user_name) { 'sharer_username' }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:user_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
-
-    let(:target_space) { VCAP::CloudController::Space.make }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-
     before do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
     end
@@ -21,7 +20,7 @@ RSpec.describe 'Service Instances' do
         ]
       }
 
-      post "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", share_request.to_json, user_header
+      post "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", share_request.to_json, admin_header
 
       parsed_response = MultiJson.load(last_response.body)
       expect(last_response.status).to eq(200)
@@ -56,15 +55,11 @@ RSpec.describe 'Service Instances' do
   end
 
   describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do
-    let(:user_email) { 'user@email.example.com' }
-    let(:user_name) { 'sharer_username' }
-    let(:user) { VCAP::CloudController::User.make }
-    let(:user_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
+    before do
+      allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+        FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+      end
 
-    let(:target_space) { VCAP::CloudController::Space.make }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-
-    before(:each) do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
 
       share_request = {
@@ -73,12 +68,12 @@ RSpec.describe 'Service Instances' do
         ]
       }
 
-      post "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", share_request.to_json, user_header
+      post "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", share_request.to_json, admin_header
       expect(last_response.status).to eq(200)
     end
 
     it 'unshares the service instance from the target space' do
-      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, user_header
+      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, admin_header
       expect(last_response.status).to eq(204)
 
       event = VCAP::CloudController::Event.last
@@ -99,15 +94,16 @@ RSpec.describe 'Service Instances' do
 
     it 'deletes associated bindings in target space when service instance is unshared' do
       process = VCAP::CloudController::ProcessModelFactory.make(diego: false, space: target_space)
-      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process.app, credentials: { secret: 'key' })
-      delete_binding = double(VCAP::CloudController::ServiceBindingDelete)
+      service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process.app, credentials: { secret: 'key' })
 
-      allow(VCAP::CloudController::ServiceBindingDelete).to receive(:new) { delete_binding }
-      allow(delete_binding).to receive(:single_delete_sync)
+      get "/v2/service_bindings/#{service_binding.guid}", nil, admin_header
+      expect(last_response.status).to eq(200)
 
-      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, user_header
+      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, admin_header
       expect(last_response.status).to eq(204)
-      expect(delete_binding).to have_received(:single_delete_sync)
+
+      get "/v2/service_bindings/#{service_binding.guid}", nil, admin_header
+      expect(last_response.status).to eq(404)
     end
   end
 end

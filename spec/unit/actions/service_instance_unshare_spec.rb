@@ -9,6 +9,7 @@ module VCAP::CloudController
     let(:target_space) { Space.make }
 
     before do
+      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
       service_instance.add_shared_space(target_space)
       expect(service_instance.shared_spaces).not_to be_empty
     end
@@ -25,6 +26,34 @@ module VCAP::CloudController
         service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
         expect(Repositories::ServiceInstanceShareEventRepository).to have_received(:record_unshare_event).with(
           service_instance, target_space.guid, user_audit_info)
+      end
+
+      context 'when bindings exist in the target space' do
+        let(:app) { AppModel.make(space: target_space, name: 'myapp') }
+        let(:delete_binding_action) { instance_double(VCAP::CloudController::ServiceBindingDelete) }
+        let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+
+        it 'deletes bindings and unshares' do
+          allow(VCAP::CloudController::ServiceBindingDelete).to receive(:new) { delete_binding_action }
+          allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([])
+
+          service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
+          expect(service_instance.shared_spaces).to be_empty
+        end
+      end
+
+      context 'when bindings exist in the source space' do
+        let(:app) { AppModel.make(space: service_instance.space, name: 'myapp') }
+        let(:delete_binding_action) { instance_double(VCAP::CloudController::ServiceBindingDelete) }
+        let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+
+        it 'unshares without deleting the binding' do
+          allow(VCAP::CloudController::ServiceBindingDelete).to receive(:new) { delete_binding_action }
+          allow(delete_binding_action).to receive(:delete).with([]).and_return([])
+
+          service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
+          expect(service_instance.shared_spaces).to be_empty
+        end
       end
     end
   end
