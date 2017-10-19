@@ -37,9 +37,7 @@ module VCAP::CloudController
     end
 
     def read_permissions?(service_instance)
-      return false unless service_instance.space
-      return true if admin_user? || admin_read_only_user?
-      service_instance.space.has_member?(context.user) || service_instance.space.organization.managers.include?(context.user)
+      read?(service_instance)
     end
 
     def read_permissions_with_token?(service_instance)
