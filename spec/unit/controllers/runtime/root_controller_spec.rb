@@ -47,7 +47,7 @@ module VCAP::CloudController
       describe 'credhub link' do
         context 'credhub is configured' do
           before do
-            TestConfig.override(credhub_api: {external_url: 'http://credhub.external.com'})
+            TestConfig.override(credhub_api: { external_url: 'http://credhub.external.com' })
           end
 
           it 'returns a link' do
