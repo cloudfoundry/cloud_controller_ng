@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     plugin :after_initialize
 
-    set_field_as_encrypted :credentials, salt: :salt
+    encrypt :credentials, salt: :salt
 
     def to_hash(opts={})
       access_context = VCAP::CloudController::Security::AccessContext.new
