@@ -298,18 +298,23 @@ module VCAP::CloudController
         end
 
         context 'blank value' do
+          before do
+          end
+
           it 'stores a default nil value without trying to encrypt' do
             expect(Encryptor).to_not receive(:encrypt)
             [nil, ''].each do |blank_value|
-              subject.sekret = blank_value
-              expect(subject.underlying_sekret).to eq nil
+              subject.underlying_sekret = 'notanilvalue'
+              expect {
+                subject.sekret = blank_value
+              }.to change(subject, :underlying_sekret).to(nil)
             end
           end
         end
 
         context 'non-blank value' do
-          let (:salt) { Encryptor.generate_salt }
-          let (:unencrypted_string) { 'unencrypted' }
+          let(:salt) { Encryptor.generate_salt }
+          let(:unencrypted_string) { 'unencrypted' }
 
           before do
             Encryptor.database_encryption_keys = {

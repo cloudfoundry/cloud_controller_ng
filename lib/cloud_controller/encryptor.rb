@@ -116,34 +116,31 @@ module VCAP::CloudController::Encryptor
         define_method "#{field_name}_with_encryption=" do |value|
           send generate_salt_name
 
-          encrypted_value = nil
-
           if value.blank?
-            encrypted_value = nil
-          else
-            if !VCAP::CloudController::Encryptor.current_encryption_key_label.nil? && self.encryption_key_label != VCAP::CloudController::Encryptor.current_encryption_key_label
-              send(:db).transaction do
-                e_fields = self.class.encrypted_fields
-                if !e_fields.nil?
-                  self.class.encrypted_fields.each do |field|
-                    if !field[:field_name].eql?(field_name)
-                      send "#{field[:field_name]}_without_encryption=", VCAP::CloudController::Encryptor.encrypt(send(field[:field_name]), send(field[:salt_name]))
-                    else
-                      send "#{field_name}_without_encryption=", VCAP::CloudController::Encryptor.encrypt(value, send(salt_name))
-                    end
+            send "#{field_name}_without_encryption=", nil
+          elsif !VCAP::CloudController::Encryptor.current_encryption_key_label.nil? && self.encryption_key_label != VCAP::CloudController::Encryptor.current_encryption_key_label
+            send(:db).transaction do
+              e_fields = self.class.encrypted_fields
+              if !e_fields.nil?
+                self.class.encrypted_fields.each do |field|
+                  if !field[:field_name].eql?(field_name)
+                    send "#{field[:field_name]}_without_encryption=", VCAP::CloudController::Encryptor.encrypt(send(field[:field_name]), send(field[:salt_name]))
+                  else
+                    send "#{field_name}_without_encryption=", VCAP::CloudController::Encryptor.encrypt(value, send(salt_name))
                   end
                 end
-                self.encryption_key_label = VCAP::CloudController::Encryptor.current_encryption_key_label
               end
-            else
-              # will use the current key label to encrypt
-              encrypted_value = VCAP::CloudController::Encryptor.encrypt(value, send(salt_name))
-              send "#{field_name}_without_encryption=", encrypted_value
+              self.encryption_key_label = VCAP::CloudController::Encryptor.current_encryption_key_label
             end
+          else
+            # will use the current key label to encrypt
+            encrypted_value = VCAP::CloudController::Encryptor.encrypt(value, send(salt_name))
+            send "#{field_name}_without_encryption=", encrypted_value
           end
         end
         alias_method_chain "#{field_name}=", 'encryption'
       end
+
       private :set_field_as_encrypted
     end
   end
