@@ -16,7 +16,7 @@ module VCAP::CloudController
       right_primary_key: :app_guid, right_key: :guid,
       conditions: { type: ProcessTypes::WEB }
 
-    set_field_as_encrypted :credentials, salt: :salt
+    set_field_as_encrypted :credentials
     serializes_via_json :credentials
 
     set_field_as_encrypted :volume_mounts, salt: :volume_mounts_salt

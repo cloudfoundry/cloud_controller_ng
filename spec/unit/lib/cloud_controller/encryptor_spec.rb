@@ -45,8 +45,8 @@ module VCAP::CloudController
         before(:each) do
           Encryptor.db_encryption_key = 'legacy-crypto-key'
           Encryptor.database_encryption_keys = {
-              'foo' => 'fooencryptionkey',
-              'death' => 'headbangingdeathmetalkey'
+            'foo' => 'fooencryptionkey',
+            'death' => 'headbangingdeathmetalkey'
           }
         end
 
@@ -106,8 +106,8 @@ module VCAP::CloudController
         before(:each) do
           allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
           Encryptor.database_encryption_keys = {
-              'foo' => 'fooencryptionkey',
-              'death' => 'headbangingdeathmetalkey'
+            'foo' => 'fooencryptionkey',
+            'death' => 'headbangingdeathmetalkey'
           }
         end
 
@@ -184,7 +184,7 @@ module VCAP::CloudController
           it 'raises an error' do
             expect {
               klass.send :set_field_as_encrypted, :name
-            }.to raise_error(RuntimeError, /name_salt/)
+            }.to raise_error(RuntimeError, /salt/)
           end
         end
 
@@ -198,7 +198,7 @@ module VCAP::CloudController
       end
 
       context 'model has the salt column' do
-        let(:columns) { [:id, :name, :size, :name_salt, :encryption_key_label] }
+        let(:columns) { [:id, :name, :size, :salt, :encryption_key_label] }
 
         it 'does not raise an error' do
           expect {
@@ -208,7 +208,7 @@ module VCAP::CloudController
 
         it 'creates a salt generation method' do
           klass.send :set_field_as_encrypted, :name
-          expect(klass.instance_methods).to include(:generate_name_salt)
+          expect(klass.instance_methods).to include(:generate_salt)
         end
 
         context 'explicit name' do
@@ -228,7 +228,7 @@ module VCAP::CloudController
       end
 
       context 'model does not have the "encryption_key_label" column' do
-        let(:columns) { [:id, :name, :name_salt, :size] }
+        let(:columns) { [:id, :name, :salt, :size] }
 
         it 'raises an error' do
           expect {
@@ -239,7 +239,7 @@ module VCAP::CloudController
     end
 
     describe 'field-specific methods' do
-      let(:columns) { [:sekret, :sekret_salt, :encryption_key_label] }
+      let(:columns) { [:sekret, :salt, :encryption_key_label] }
       let(:klass2) { Class.new klass }
       let(:subject) { klass2.new }
       let(:encryption_args) { {} }
@@ -266,25 +266,25 @@ module VCAP::CloudController
           it 'updates the salt using Encryptor' do
             [nil, ''].each do |unset_value|
               expect(Encryptor).to receive(:generate_salt).and_return('new salt')
-              subject.sekret_salt = unset_value
-              subject.generate_sekret_salt
-              expect(subject.sekret_salt).to eq 'new salt'
+              subject.salt = unset_value
+              subject.generate_salt
+              expect(subject.salt).to eq 'new salt'
             end
           end
         end
 
         context 'salt is set' do
           it 'does not update the salt' do
-            subject.sekret_salt = 'old salt'
-            subject.generate_sekret_salt
-            expect(subject.sekret_salt).to eq 'old salt'
+            subject.salt = 'old salt'
+            subject.generate_salt
+            expect(subject.salt).to eq 'old salt'
           end
         end
       end
 
       describe 'decryption' do
         it 'decrypts by passing the salt and the underlying value to Encryptor' do
-          subject.sekret_salt = 'asdf'
+          subject.salt = 'asdf'
           subject.underlying_sekret = 'underlying'
           expect(Encryptor).to receive(:decrypt).with('underlying', 'asdf', nil) { 'unencrypted' }
           expect(subject.sekret).to eq 'unencrypted'
@@ -293,20 +293,28 @@ module VCAP::CloudController
 
       describe 'encryption' do
         it 'calls the salt generation method' do
-          expect(subject).to receive(:generate_sekret_salt).and_call_original
+          expect(subject).to receive(:generate_salt).and_call_original
           subject.sekret = 'foobar'
         end
 
         context 'blank value' do
           before do
+            allow(Encryptor).to receive(:encrypt)
+            subject.underlying_sekret = 'notanilvalue'
           end
 
-          it 'stores a default nil value without trying to encrypt' do
-            expect(Encryptor).to_not receive(:encrypt)
-            [nil, ''].each do |blank_value|
-              subject.underlying_sekret = 'notanilvalue'
+          context 'when the value is nil' do
+            it 'stores a default nil value without trying to encrypt' do
               expect {
-                subject.sekret = blank_value
+                subject.sekret = nil
+              }.to change(subject, :underlying_sekret).to(nil)
+            end
+          end
+
+          context 'when the value is blank' do
+            it 'stores a default nil value without trying to encrypt' do
+              expect {
+                subject.sekret = ''
               }.to change(subject, :underlying_sekret).to(nil)
             end
           end
@@ -318,37 +326,37 @@ module VCAP::CloudController
 
           before do
             Encryptor.database_encryption_keys = {
-                'foo' => 'fooencryptionkey',
-                'bar' => 'headbangingdeathmetalkey'
+              'foo' => 'fooencryptionkey',
+              'bar' => 'headbangingdeathmetalkey'
             }
           end
 
           it 'encrypts by passing the value and salt to Encryptor' do
-            subject.sekret_salt = salt
+            subject.salt = salt
             expect(Encryptor).to receive(:encrypt).with('unencrypted', salt) { 'encrypted' }
             subject.sekret = unencrypted_string
             expect(subject.underlying_sekret).to eq 'encrypted'
           end
 
           it 'encrypts using the default db_encryption_key' do
-            subject.sekret_salt = salt
+            subject.salt = salt
             subject.sekret = unencrypted_string
-            expect(Encryptor.decrypt(subject.underlying_sekret, subject.sekret_salt)).to eq(unencrypted_string)
+            expect(Encryptor.decrypt(subject.underlying_sekret, subject.salt)).to eq(unencrypted_string)
           end
 
           context 'model has a value for encryption_key_label' do
-            let(:columns) { [:sekret, :sekret_salt, :encryption_key_label] }
+            let(:columns) { [:sekret, :salt, :encryption_key_label] }
 
             before do
               allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
-              subject.sekret_salt = salt
+              subject.salt = salt
               subject.encryption_key_label = 'foo'
               subject.sekret = unencrypted_string
               expect(subject.sekret).to eq(unencrypted_string)
             end
 
             it 'encrypts using the key corresponding to the label' do
-              subject.sekret_salt = salt
+              subject.salt = salt
               expect(Encryptor).to receive(:encrypt).with(unencrypted_string, salt).and_call_original
               subject.sekret = unencrypted_string
               expect(Encryptor.decrypt(subject.underlying_sekret, salt, 'foo')).to eq(unencrypted_string)
@@ -363,7 +371,7 @@ module VCAP::CloudController
               end
 
               context 'and the model has another encrypted field' do
-                let(:columns) { [:sekret, :sekret_salt, :sekret2, :sekret2_salt, :encryption_key_label] }
+                let(:columns) { [:sekret, :salt, :sekret2, :sekret2_salt, :encryption_key_label] }
                 let(:unencrypted_string2) { 'announce presence with authority' }
 
                 before do
@@ -384,7 +392,7 @@ module VCAP::CloudController
                 it 'reencrypts that field with the new key' do
                   allow(Encryptor).to receive(:current_encryption_key_label) { 'bar' }
                   subject.sekret = 'nu'
-                  expect(Encryptor.decrypt(subject.underlying_sekret2, subject.sekret2_salt, 'bar')).to eq(unencrypted_string2)
+                  expect(Encryptor.decrypt(subject.underlying_sekret2, subject.salt, 'bar')).to eq(unencrypted_string2)
                 end
               end
             end
@@ -393,7 +401,7 @@ module VCAP::CloudController
       end
 
       describe 'alternative storage column is specified' do
-        let(:columns) { [:sekret, :sekret_salt, :encrypted_sekret, :encryption_key_label] }
+        let(:columns) { [:sekret, :salt, :encrypted_sekret, :encryption_key_label] }
         let(:encryption_args) { { column: :encrypted_sekret } }
 
         it 'stores the encrypted value in that column' do

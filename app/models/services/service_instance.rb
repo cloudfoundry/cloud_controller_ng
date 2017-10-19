@@ -60,7 +60,7 @@ module VCAP::CloudController
 
     delegate :organization, to: :space
 
-    set_field_as_encrypted :credentials, salt: :salt
+    set_field_as_encrypted :credentials
 
     def self.user_visibility_filter(user)
       Sequel.or([

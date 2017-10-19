@@ -3,7 +3,7 @@ module VCAP::CloudController
     import_attributes :environment_json
     export_attributes :name, :environment_json
 
-    set_field_as_encrypted :environment_json, salt: :salt
+    set_field_as_encrypted :environment_json
 
     def self.running
       find_by_name(:running)
