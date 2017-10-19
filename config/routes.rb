@@ -116,4 +116,7 @@ Rails.application.routes.draw do
 
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
+
+  # service_instances
+  post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
 end

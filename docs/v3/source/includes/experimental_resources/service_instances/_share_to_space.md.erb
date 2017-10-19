@@ -1,0 +1,47 @@
+### Share a service instance to other spaces
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "data": [
+      { "guid":"space-guid-1" },
+      { "guid":"space-guid-2" }
+    ]
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :service_instance_shared_space_relationships %>
+```
+This endpoint shares the service instance with the specified spaces.
+In order to share into a space the requesting user must be a space developer in the target space.
+
+#### Definition
+`POST /v3/service_instances/:guid/relationships/shared_spaces`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**data** | [_to-many relationship_](#to-many-relationships) | Shared space relationships. Each space will have this service instance shared to it.
+
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer|
+Admin|
