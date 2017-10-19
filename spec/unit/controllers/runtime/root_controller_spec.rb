@@ -46,10 +46,14 @@ module VCAP::CloudController
 
       describe 'credhub link' do
         context 'credhub is configured' do
+          before do
+            TestConfig.override(credhub_api: {external_url: 'http://credhub.external.com'})
+          end
+
           it 'returns a link' do
             get '/'
             hash = MultiJson.load(last_response.body)
-            expect(hash['links']['credhub']['href']).to eq(TestConfig.config[:credhub_api][:url])
+            expect(hash['links']['credhub']['href']).to eq('http://credhub.external.com')
           end
         end
 

@@ -41,7 +41,7 @@ module VCAP::CloudController
             href: config.get(:uaa, :url)
           },
 
-          credhub:             credhub_link,
+          credhub: credhub_link,
           routing: routing_link,
 
           logging:             {
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
     def credhub_link
       return unless config.get(:credhub_api).present?
-      { href: config.get(:credhub_api, :url) }
+      { href: config.get(:credhub_api, :external_url) }
     end
 
     def routing_link

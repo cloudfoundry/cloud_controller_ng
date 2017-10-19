@@ -348,8 +348,8 @@ perm:
   ca_cert_path: "spec/fixtures/certs/perm_ca.crt"
 
 credhub_api:
-  internal_url: https://credhub.vcap.me:8844
-  url: https://credhub.some-domain:8844
+  internal_url: https://credhub.capi.internal:8844
+  external_url: https://credhub.capi.external:8844
   ca_cert_path: "spec/fixtures/certs/credhub_ca.crt"
 
 credential_references:

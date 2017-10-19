@@ -230,7 +230,9 @@ perm:
   timeout_in_milliseconds: 1000
 
 credhub_api:
-  internal_url: https://credhub.capi.me:8844
+  internal_url: https://credhub.capi.internal:8844
+  external_url: https://credhub.capi.external:8844
+  ca_cert_path: "spec/fixtures/certs/credhub_ca.crt"
 
 credential_references:
   interpolate_service_bindings: true

@@ -177,7 +177,7 @@ module VCAP::CloudController
           cc_service_key_client_secret: String,
 
           optional(:credhub_api) => {
-            url: String,
+            optional(:external_url) => String,
             internal_url: String,
             ca_cert_path: String,
           },

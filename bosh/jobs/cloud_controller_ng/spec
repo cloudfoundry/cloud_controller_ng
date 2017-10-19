@@ -866,6 +866,8 @@ properties:
   credhub_api.hostname:
     description: "Hostname used to resolve the address of CredHub"
     default: "credhub.service.cf.internal"
+  credhub_api.external_url:
+    description: "The external address of CredHub to expose at the '/' endpoint"
   credhub_api.ca_cert:
     description: "The certificate authority being used by CredHub"
 
