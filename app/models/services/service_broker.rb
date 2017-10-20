@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     many_to_many :service_plans, join_table: :services, right_key: :id, right_primary_key: :service_id
 
-    encrypt :auth_password, salt: :salt
+    set_field_as_encrypted :auth_password, salt: :salt
 
     def validate
       validates_presence :name

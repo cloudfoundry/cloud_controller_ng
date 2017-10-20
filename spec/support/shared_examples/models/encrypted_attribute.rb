@@ -64,8 +64,8 @@ module VCAP::CloudController
       expect(value_with_original_salt).not_to eql(last_row[storage_column])
     end
 
-    it 'must have a salt of length 8' do
-      expect(model.reload.send(attr_salt).length).to eq 8
+    it 'must have a salt of length 16' do
+      expect(model.reload.send(attr_salt).length).to eq 16
     end
   end
 end

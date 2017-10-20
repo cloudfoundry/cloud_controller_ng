@@ -283,6 +283,12 @@ buildpacks:
 
 db_encryption_key: <%= p("cc.db_encryption_key") %>
 
+<% if_p("cc.database_encryption_keys") do %>
+database_encryption_keys:
+  keys: <%= p("cc.database_encryption_keys.keys") %>
+  current_key_label: <%= p("cc.database_encryption_keys.current_key_label").inspect %>
+<% end %>
+
 disable_custom_buildpacks: <%= p("cc.disable_custom_buildpacks") %>
 
 broker_client_timeout_seconds: <%= p("cc.broker_client_timeout_seconds") %>

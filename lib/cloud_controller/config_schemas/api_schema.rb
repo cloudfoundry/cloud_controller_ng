@@ -157,6 +157,11 @@ module VCAP::CloudController
 
           db_encryption_key: String,
 
+          optional(:database_encryption_keys) => {
+              keys: Hash,
+              current_key_label: String
+          },
+
           disable_custom_buildpacks: bool,
           broker_client_timeout_seconds: Integer,
           broker_client_default_async_poll_interval_seconds: Integer,
