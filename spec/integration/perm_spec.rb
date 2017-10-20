@@ -62,7 +62,6 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
         role = client.get_role(role_name)
         expect(role.name).to eq(role_name)
-        expect(role.id).not_to be_nil
       end
 
       it 'does not allow the user to create an org that already exists' do
@@ -413,7 +412,6 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
         role = client.get_role(role_name)
         expect(role.name).to eq(role_name)
-        expect(role.id).not_to be_nil
       end
 
       it 'does not allow user to create space that already exists' do
