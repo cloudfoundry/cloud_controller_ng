@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:target_space) { Space.make }
 
     before do
-      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+      FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
       service_instance.add_shared_space(target_space)
       expect(service_instance.shared_spaces).not_to be_empty
     end
@@ -30,25 +30,38 @@ module VCAP::CloudController
 
       context 'when bindings exist in the target space' do
         let(:app) { AppModel.make(space: target_space, name: 'myapp') }
-        let(:delete_binding_action) { instance_double(VCAP::CloudController::ServiceBindingDelete) }
+        let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
         let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
 
+        before do
+          allow(ServiceBindingDelete).to receive(:new) { delete_binding_action }
+        end
+
         it 'deletes bindings and unshares' do
-          allow(VCAP::CloudController::ServiceBindingDelete).to receive(:new) { delete_binding_action }
           allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([])
 
           service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
           expect(service_instance.shared_spaces).to be_empty
         end
+
+        context 'when an unbind fails' do
+          it 'does not unshare' do
+            err = StandardError.new('oops')
+            allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([err])
+
+            expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.to raise_error(CloudController::Errors::ApiError)
+            expect(service_instance.shared_spaces).to_not be_empty
+          end
+        end
       end
 
       context 'when bindings exist in the source space' do
         let(:app) { AppModel.make(space: service_instance.space, name: 'myapp') }
-        let(:delete_binding_action) { instance_double(VCAP::CloudController::ServiceBindingDelete) }
+        let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
         let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
 
         it 'unshares without deleting the binding' do
-          allow(VCAP::CloudController::ServiceBindingDelete).to receive(:new) { delete_binding_action }
+          allow(ServiceBindingDelete).to receive(:new) { delete_binding_action }
           allow(delete_binding_action).to receive(:delete).with([]).and_return([])
 
           service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
