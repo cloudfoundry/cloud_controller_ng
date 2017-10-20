@@ -256,6 +256,7 @@ GEM
       ms_rest (~> 0.6.3)
     msgpack (1.1.0)
     multi_json (1.12.2)
+    multipart-parser (0.1.1)
     multipart-post (2.0.0)
     mustache (0.99.8)
     mysql2 (0.4.8)
@@ -477,6 +478,7 @@ DEPENDENCIES
   membrane (~> 1.0)
   mime-types (~> 2.6.2)
   multi_json
+  multipart-parser
   mysql2 (= 0.4.8)
   net-ssh
   netaddr
