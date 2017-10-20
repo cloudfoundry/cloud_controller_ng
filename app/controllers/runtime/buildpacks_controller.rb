@@ -13,11 +13,6 @@ module VCAP::CloudController
 
     query_parameters :name
 
-    def initialize(*args)
-      super
-      @opts.merge!(order_by: :position)
-    end
-
     def self.translate_validation_exception(e, attributes)
       buildpack_errors = e.errors.on(:name)
       if buildpack_errors && buildpack_errors.include?(:unique)

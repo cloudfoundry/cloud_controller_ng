@@ -35,6 +35,18 @@ module VCAP::CloudController
       end
     end
 
+    # we are doing a negative test to fix a bug. The rest of the endpoint is tested with meta programming
+    describe '#index' do
+      before do
+        2.times { Buildpack.make }
+      end
+
+      it 'does not include order-by in the next_url' do
+        get '/v2/buildpacks?results-per-page=1'
+        expect(parsed_response['next_url']).not_to match(/order-by=position/)
+      end
+    end
+
     describe '#create' do
       it 'can create a buildpack' do
         expect(Buildpack.count).to eq(0)
