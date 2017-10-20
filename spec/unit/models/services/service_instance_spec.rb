@@ -298,6 +298,14 @@ module VCAP::CloudController
           expect(service_instance).not_to be_in_suspended_org
         end
       end
+
+      context 'when the service instance space is not visible' do
+        let(:space) { nil }
+
+        it 'is false' do
+          expect(service_instance).not_to be_in_suspended_org
+        end
+      end
     end
 
     describe '#to_hash' do
@@ -372,7 +380,10 @@ module VCAP::CloudController
       context 'when the service instance is shared' do
         let(:target_space)     { VCAP::CloudController::Space.make }
         let(:target_space_dev) { make_developer_for_space(target_space) }
+        let(:target_org_user) { make_user_for_org(target_space.organization) }
         let(:target_space_auditor) { make_auditor_for_space(target_space) }
+        let(:target_space_manager) { make_manager_for_space(target_space) }
+        let(:target_space_org_manager) { make_manager_for_org(target_space.organization) }
 
         before do
           service_instance.add_shared_space(target_space)
@@ -385,9 +396,37 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a user is a space developer in the source space' do
+          it 'the service instance is visible' do
+            filter = ServiceInstance.user_visibility_filter(developer)
+            expect(ServiceInstance.filter(filter).all.length).to eq(1)
+          end
+        end
+
         context 'when a user is a space auditor in the target space' do
-          it 'the service instance is not visible' do
+          it 'the service instance is visible' do
             filter = ServiceInstance.user_visibility_filter(target_space_auditor)
+            expect(ServiceInstance.filter(filter).all.length).to eq(1)
+          end
+        end
+
+        context 'when a user is a space manager in the target space' do
+          it 'the service instance is visible' do
+            filter = ServiceInstance.user_visibility_filter(target_space_manager)
+            expect(ServiceInstance.filter(filter).all.length).to eq(1)
+          end
+        end
+
+        context 'when a user is a org manager in the target space' do
+          it 'the service instance is visible' do
+            filter = ServiceInstance.user_visibility_filter(target_space_org_manager)
+            expect(ServiceInstance.filter(filter).all.length).to eq(1)
+          end
+        end
+
+        context 'when a user does not have access to the target space' do
+          it 'the service instance is not visible' do
+            filter = ServiceInstance.user_visibility_filter(target_org_user)
             expect(ServiceInstance.filter(filter).all.length).to eq(0)
           end
         end

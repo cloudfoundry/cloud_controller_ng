@@ -1,18 +1,16 @@
 module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def create?(service_instance, params=nil)
-      return false unless service_instance.space
       return true if admin_user?
       FeatureFlag.raise_unless_enabled!(:service_instance_creation)
       return false if service_instance.in_suspended_org?
-      service_instance.space.has_developer?(context.user) && allowed?(service_instance)
+      service_instance.space && service_instance.space.has_developer?(context.user) && allowed?(service_instance)
     end
 
     def read_for_update?(service_instance, params=nil)
-      return false unless service_instance.space
       return true if admin_user?
       return false if service_instance.in_suspended_org?
-      service_instance.space.has_developer?(context.user)
+      service_instance.space && service_instance.space.has_developer?(context.user)
     end
 
     def update?(service_instance, params=nil)
@@ -20,16 +18,14 @@ module VCAP::CloudController
     end
 
     def delete?(service_instance)
-      return false unless service_instance.space
       return true if admin_user?
       return false if service_instance.in_suspended_org?
-      service_instance.space.has_developer?(context.user)
+      service_instance.space && service_instance.space.has_developer?(context.user)
     end
 
     def manage_permissions?(service_instance)
-      return false unless service_instance.space
       return true if admin_user?
-      service_instance.space.has_developer?(context.user)
+      service_instance.space && service_instance.space.has_developer?(context.user)
     end
 
     def manage_permissions_with_token?(service_instance)
@@ -45,9 +41,8 @@ module VCAP::CloudController
     end
 
     def read_env?(service_instance)
-      return false unless service_instance.space
       return true if admin_user? || admin_read_only_user?
-      service_instance.space.has_developer?(context.user)
+      service_instance.space && service_instance.space.has_developer?(context.user)
     end
 
     def read_env_with_token?(service_instance)
@@ -68,8 +63,7 @@ module VCAP::CloudController
     end
 
     def purge?(service_instance)
-      return false unless service_instance.space
-      admin_user? || (service_instance.space.has_developer?(context.user) && service_instance.service_broker.private?)
+      admin_user? || (service_instance.space && service_instance.space.has_developer?(context.user) && service_instance.service_broker.private?)
     end
 
     def purge_with_token?(instance)

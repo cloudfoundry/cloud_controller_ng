@@ -69,6 +69,9 @@ module VCAP::CloudController
         [:space, user.audited_spaces_dataset],
         [:space, user.managed_spaces_dataset],
         [:shared_spaces, user.spaces_dataset],
+        [:shared_spaces, user.managed_spaces_dataset],
+        [:shared_spaces, user.audited_spaces_dataset],
+        [:shared_spaces, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
       ])
     end
 
