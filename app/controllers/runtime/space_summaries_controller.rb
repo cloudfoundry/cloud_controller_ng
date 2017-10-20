@@ -50,7 +50,7 @@ module VCAP::CloudController
     end
 
     def services_summary(space)
-      space.service_instances.map(&:as_summary_json)
+      (space.service_instances + space.service_instances_shared_from_other_spaces).map(&:as_summary_json)
     end
   end
 end
