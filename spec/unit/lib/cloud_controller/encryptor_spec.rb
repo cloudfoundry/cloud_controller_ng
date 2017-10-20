@@ -91,6 +91,7 @@ module VCAP::CloudController
 
       before(:each) do
         Encryptor.db_encryption_key = 'legacy-crypto-key'
+        Encryptor.database_encryption_keys = {}
       end
 
       it 'returns the original string' do
@@ -104,7 +105,6 @@ module VCAP::CloudController
 
       context 'when database_encryption_keys is configured' do
         before(:each) do
-          allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
           Encryptor.database_encryption_keys = {
             'foo' => 'fooencryptionkey',
             'death' => 'headbangingdeathmetalkey'
@@ -124,6 +124,15 @@ module VCAP::CloudController
         end
 
         context 'when encryption was done using a labelled key' do
+          before do
+            allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
+          end
+
+          it 'decrypts using the key specified by the passed label' do
+            encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
+            expect(Encryptor.decrypt(encrypted_string, salt, 'foo')).to eq(unencrypted_string)
+          end
+
           context 'when no key label is passed for decryption' do
             it 'fails to decrypt' do
               encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
@@ -132,18 +141,10 @@ module VCAP::CloudController
           end
 
           context 'when the wrong label is passed for decryption' do
-            before(:each) do
-              allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
-            end
             it 'fails to decrypt' do
               encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
               expect { Encryptor.decrypt(encrypted_string, salt, 'death') }.to raise_error(/bad decrypt/)
             end
-          end
-
-          it 'decrypts using the key specified by the passed label' do
-            encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
-            expect(Encryptor.decrypt(encrypted_string, salt, 'foo')).to eq(unencrypted_string)
           end
         end
       end
