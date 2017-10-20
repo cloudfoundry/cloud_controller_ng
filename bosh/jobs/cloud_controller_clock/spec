@@ -115,15 +115,16 @@ properties:
   cc.internal_api_password:
     description: "Password used by Diego to access internal endpoints"
 
+  cc.db_logging_level:
+    default: "debug2"
+    description: "Log level for cc database operations"
+
   cc.logging_level:
     default: "info"
-    description: "Log level for cc. Valid levels are listed here: https://github.com/cloudfoundry/steno#log-levels."
+    description: "Log level for cc"
   cc.logging_max_retries:
     default: 1
     description: "Passthru value for Steno logger"
-  cc.db_logging_level:
-    default: "off"
-    description: "Level at which cc database operations will be logged. WARNING: Setting this to a non-off value >= cc.logging_level will log all field values, including encrypted secrets."
 
   cc.staging_timeout_in_seconds:
     default: 900
