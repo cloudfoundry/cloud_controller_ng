@@ -151,7 +151,7 @@ module VCAP::CloudController
               [
                 ::Diego::Bbs::Models::EnvironmentVariable.new(
                   name: 'VCAP_PLATFORM_OPTIONS',
-                  value: '{"credhub-uri":"https://credhub.vcap.me:8844"}'
+                  value: '{"credhub-uri":"https://credhub.capi.internal:8844"}'
                 )
               ]
             end
