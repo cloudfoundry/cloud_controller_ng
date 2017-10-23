@@ -106,7 +106,7 @@ directories:
 logging:
   file: /var/vcap/sys/log/cloud_controller_ng/cloud_controller_ng.log
   syslog: vcap.cloud_controller_ng
-  level: <%= p("cc.logging_level") %>
+  level: "<%= p("cc.logging_level") %>"
   max_retries: <%= p("cc.logging_max_retries") %>
 
 loggregator:
@@ -126,11 +126,13 @@ doppler:
     database_address = link('database').instances[0].address
   end
 %>
+
 db: &db
   database: "<%= p("ccdb.db_scheme") == "mysql" ? "mysql2" : p("ccdb.db_scheme") %>://<%= db_role["name"] %>:<%= URI.escape(db_role["password"]) %>@<%= database_address %>:<%= p("ccdb.port") %>/<%= db["name"] %>"
   max_connections: <%= p("ccdb.max_connections") %>
   pool_timeout: <%= p("ccdb.pool_timeout") %>
-  log_level: <%= p("cc.db_logging_level") %>
+  log_level: "<%= p("cc.db_logging_level") %>"
+  log_db_queries: <%= p("cc.log_db_queries") %>
   ssl_verify_hostname: <%= p("ccdb.ssl_verify_hostname") %>
 <% if_p("ccdb.ca_cert") do %>
   ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/db_ca.crt"

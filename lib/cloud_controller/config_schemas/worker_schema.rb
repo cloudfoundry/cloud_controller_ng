@@ -27,12 +27,13 @@ module VCAP::CloudController
 
           newrelic_enabled: bool,
 
-          :db => {
+          db: {
             optional(:database) => String, # db connection string for sequel
-            :max_connections => Integer, # max connections in the connection pool
-            :pool_timeout => Integer, # timeout before raising an error when connection can't be established to the db
-            :log_level => String, # debug, info, etc.
-            :ssl_verify_hostname => bool,
+            max_connections: Integer, # max connections in the connection pool
+            pool_timeout: Integer, # timeout before raising an error when connection can't be established to the db
+            log_level: String, # debug, info, etc.
+            log_db_queries:         bool,
+            ssl_verify_hostname:    bool,
             optional(:ca_cert_path) => String,
           },
 

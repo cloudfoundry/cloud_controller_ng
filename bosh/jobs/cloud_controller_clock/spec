@@ -121,9 +121,12 @@ properties:
   cc.logging_max_retries:
     default: 1
     description: "Passthru value for Steno logger"
+  cc.log_db_queries:
+    default: false
+    description: "Log database queries. WARNING: Setting this to true with cc.db_logging_level >= cc.logging_level will log all field values, including encrypted secrets."
   cc.db_logging_level:
-    default: "off"
-    description: "Level at which cc database operations will be logged. WARNING: Setting this to a non-off value >= cc.logging_level will log all field values, including encrypted secrets."
+    default: "debug2"
+    description: "Level at which cc database operations will be logged if cc.log_db_queries is set to true."
 
   cc.staging_timeout_in_seconds:
     default: 900

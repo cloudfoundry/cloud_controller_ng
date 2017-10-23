@@ -257,6 +257,7 @@ db:
   ssl_verify_hostname: false
   max_connections: 42
   pool_timeout: 60
+  log_db_queries: true
 
 staging:
   minimum_staging_file_descriptor_limit: 4200
