@@ -1,6 +1,8 @@
+require 'repositories/service_instance_share_event_repository'
+
 module VCAP::CloudController
   class ServiceInstanceShare
-    def create(service_instance, target_spaces, user_audit_info, target_space_guids)
+    def create(service_instance, target_spaces, user_audit_info)
       ServiceInstance.db.transaction do
         target_spaces.each do |space|
           service_instance.add_shared_space(space)
@@ -8,7 +10,7 @@ module VCAP::CloudController
       end
 
       Repositories::ServiceInstanceShareEventRepository.record_share_event(
-        service_instance, user_audit_info, target_space_guids)
+        service_instance, target_spaces.map(&:guid), user_audit_info)
       service_instance
     end
   end
