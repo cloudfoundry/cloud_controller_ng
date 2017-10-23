@@ -136,5 +136,6 @@ includes:
   - experimental_resources/service_bindings/list
   - experimental_resources/service_instances/header
   - experimental_resources/service_instances/share_to_space
+  - experimental_resources/service_instances/unshare_from_space
 search: true
 ---

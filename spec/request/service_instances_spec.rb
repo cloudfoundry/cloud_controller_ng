@@ -54,4 +54,32 @@ RSpec.describe 'Service Instances' do
       expect(event.metadata['target_space_guids']).to eq([target_space.guid])
     end
   end
+
+  describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do
+    let(:user_email) { 'user@email.example.com' }
+    let(:user_name) { 'sharer_username' }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:user_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
+
+    let(:target_space) { VCAP::CloudController::Space.make }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+
+    before do
+      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+
+      share_request = {
+        'data' => [
+          { 'guid' => target_space.guid }
+        ]
+      }
+
+      post "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", share_request.to_json, user_header
+      expect(last_response.status).to eq(200)
+    end
+
+    it 'unshares the service instance from the target space' do
+      delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, user_header
+      expect(last_response.status).to eq(204)
+    end
+  end
 end

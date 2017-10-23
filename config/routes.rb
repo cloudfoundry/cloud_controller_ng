@@ -119,4 +119,5 @@ Rails.application.routes.draw do
 
   # service_instances
   post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
+  delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 end

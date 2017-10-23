@@ -195,4 +195,141 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
   end
+
+  describe '#unshare_service_instance' do
+    let(:service_instance) { VCAP::CloudController::ServiceInstance.make }
+    let(:target_space) { VCAP::CloudController::Space.make }
+    let(:source_space) { service_instance.space }
+    let(:service_instance_sharing_enabled) { true }
+
+    let(:req_body) do
+      {
+        data: [
+          { guid: target_space.guid }
+        ]
+      }
+    end
+
+    before do
+      feature_flag = VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+      set_current_user_as_admin
+
+      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+      expect(response.status).to eq 200
+
+      feature_flag.enabled = service_instance_sharing_enabled
+      feature_flag.save
+    end
+
+    it 'unshares the service instance from the target space' do
+      delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+      expect(response.status).to eq 204
+      expect(service_instance.shared_spaces).to be_empty
+    end
+
+    context 'service instance does not exist' do
+      it 'returns with 404' do
+        delete :unshare_service_instance, service_instance_guid: 'not a service instance guid', space_guid: target_space.guid
+        expect(response.status).to eq(404)
+      end
+    end
+
+    context 'target space does not exist' do
+      it 'returns 422' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: 'non-existent-target-space-guid'
+        expect(response.status).to eq(422)
+        error_message = 'Unable to unshare service instance from space non-existent-target-space-guid. '\
+          'Ensure the space exists and the service instance has been shared to this space.'
+        expect(response.body).to include(error_message)
+      end
+    end
+
+    context 'an application in the target space is bound to the service instance' do
+      before do
+        test_app = VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea')
+        VCAP::CloudController::ServiceBinding.make(service_instance: service_instance,
+                                                   app: test_app,
+                                                   credentials: { 'amelia' => 'apples' })
+      end
+
+      it 'returns 422' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq(422)
+        expect(response.body).to include("Unable to unshare service instance from space #{target_space.guid}. Ensure no bindings exist in the target space")
+      end
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'               => 204,
+        'space_developer'     => 204,
+        'admin_read_only'     => 403,
+        'global_auditor'      => 403,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_manager'         => 403,
+        'org_auditor'         => 404,
+        'org_billing_manager' => 404,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "when the user is a #{role} in the source space" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: source_space.organization, space: source_space, user: user)
+
+            delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+
+            expect(response.status).to eq(expected_return_value),
+              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+          end
+        end
+      end
+    end
+
+    context 'when trying to unshare a service instance that has not been shared' do
+      let(:target_space2) { VCAP::CloudController::Space.make }
+
+      it 'returns 422' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space2.guid
+        expect(response.status).to eq(422)
+        error_message = "Unable to unshare service instance from space #{target_space2.guid}. "\
+          'Ensure the space exists and the service instance has been shared to this space.'
+        expect(response.body).to include(error_message)
+      end
+    end
+
+    context 'when there are multiple shares' do
+      let(:target_space2) { VCAP::CloudController::Space.make }
+
+      let(:req_body2) do
+        {
+          data: [
+            { guid: target_space2.guid }
+          ]
+        }
+      end
+
+      before do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body2
+        expect(response.status).to eq 200
+      end
+
+      it 'only deletes the requested share' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq(204)
+        expect(service_instance.shared_spaces).to contain_exactly(target_space2)
+      end
+    end
+
+    context 'when feature flag is disabled' do
+      let(:service_instance_sharing_enabled) { false }
+
+      it 'returns 403' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq(403)
+        expect(response.body).to include('FeatureDisabled')
+        expect(response.body).to include('service_instance_sharing')
+      end
+    end
+  end
 end
