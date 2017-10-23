@@ -2,9 +2,6 @@ require 'actions/services/locks/lock_check'
 
 module VCAP::CloudController
   class ServiceBindingDelete
-    class FailedToDelete < StandardError; end
-    class OperationInProgress < FailedToDelete; end
-
     include VCAP::CloudController::LockCheck
 
     def initialize(user_audit_info)
