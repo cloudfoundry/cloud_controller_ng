@@ -19,7 +19,7 @@ module VCAP::CloudController
     def create(app, service_instance, message, volume_mount_services_enabled)
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
-      raise SpaceMismatch if service_instance.space_guid != app.space_guid
+      raise SpaceMismatch unless bindable_in_space?(service_instance, app.space)
       raise_if_locked(service_instance)
 
       binding = ServiceBinding.new(
@@ -59,6 +59,11 @@ module VCAP::CloudController
     def mitigate_orphan(binding)
       orphan_mitigator = SynchronousOrphanMitigate.new(logger)
       orphan_mitigator.attempt_unbind(binding)
+    end
+
+    def bindable_in_space?(service_instance, app_space)
+      service_instance.space == app_space ||
+        (FeatureFlag.enabled?(:service_instance_sharing) && service_instance.shared_spaces.include?(app_space))
     end
 
     def logger

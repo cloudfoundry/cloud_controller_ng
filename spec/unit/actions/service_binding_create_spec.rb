@@ -119,6 +119,32 @@ module VCAP::CloudController
             service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
           }.to raise_error ServiceBindingCreate::SpaceMismatch
         end
+
+        context 'when the service_instance_sharing feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
+          end
+
+          context 'when the service instance has not been shared into the app space' do
+            it 'raises a SpaceMismatch error' do
+              expect {
+                service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              }.to raise_error ServiceBindingCreate::SpaceMismatch
+            end
+          end
+
+          context 'when the service instance has been shared into the app space' do
+            before do
+              service_instance.add_shared_space(app.space)
+            end
+
+            it 'creates the service binding' do
+              expect {
+                service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              }.to change { ServiceBinding.count }.by 1
+            end
+          end
+        end
       end
 
       describe 'orphan mitigation situations' do
