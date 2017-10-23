@@ -97,7 +97,7 @@ module VCAP::CloudController
                 service_instance.add_shared_space(app.space)
               end
 
-              it 'it is valid' do
+              it 'is valid' do
                 expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
               end
             end
@@ -118,13 +118,14 @@ module VCAP::CloudController
             before do
               VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
             end
-            it 'it is valid' do
+
+            it 'is valid' do
               expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
             end
           end
 
           context 'when the service_instance_sharing feature flag is not enabled' do
-            it 'it is valid' do
+            it 'is valid' do
               expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
             end
           end
