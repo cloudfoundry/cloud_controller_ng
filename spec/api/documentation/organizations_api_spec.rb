@@ -180,6 +180,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_user.guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.delete "v2/organizations/#{organization.guid}/users", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(204)
@@ -234,6 +235,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager_guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.delete "v2/organizations/#{organization.guid}/managers", MultiJson.dump({ username: 'manage@example.com' }, pretty: true), headers
             expect(status).to eq(204)
@@ -287,6 +289,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_billing_manager_guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.delete "v2/organizations/#{organization.guid}/billing_managers", MultiJson.dump({ username: 'billing_manager@example.com' }, pretty: true), headers
             expect(status).to eq(204)
@@ -340,6 +343,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor_guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.delete "v2/organizations/#{organization.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
             expect(status).to eq(204)

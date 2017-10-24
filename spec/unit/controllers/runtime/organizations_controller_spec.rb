@@ -1812,7 +1812,93 @@ module VCAP::CloudController
       end
     end
 
-    describe 'removing user roles by username' do
+    describe 'removing user roles by username with the POST action' do
+      [:user, :manager, :billing_manager, :auditor].each do |role|
+        plural_role = role.to_s.pluralize
+        describe "POST /v2/organizations/:guid/#{role}" do
+          let(:user) { User.make(username: 'larry_the_user') }
+          let(:user2) { User.make(username: 'larry_the_user') }
+          let(:origin1) { 'larry_origin' }
+          let(:origin2) { 'another_larry_origin' }
+          let(:event_type) { "audit.user.organization_#{role}_add" }
+
+          before do
+            allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['uaa'])
+            set_current_user_as_admin(email: user_email)
+          end
+
+          context 'when an origin is specified' do
+            context 'when the specified origin is not in the user\'s origins' do
+              before do
+                allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['bogus-origin'])
+              end
+
+              it 'returns a 404 when the user does not exist in UAA for the specified origin' do
+                post "/v2/organizations/#{org.guid}/#{plural_role}/remove", MultiJson.dump({ username: user.username, origin: origin1 })
+
+                expect(last_response.status).to eq(404)
+                expect(decoded_response['code']).to eq(20007)
+                expect(decoded_response['description']).to eq("The user could not be found, username: '#{user.username}', origin: '#{origin1}'")
+              end
+            end
+
+            context 'when the specified origin is in the user\'s origins' do
+              before do
+                expect(uaa_client).to receive(:id_for_username).with(user.username, origin: origin1).and_return(user.guid)
+                allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1, origin2])
+                org.send("add_#{role}", user)
+              end
+
+              it "unsets the user as an org #{role}" do
+                expect(org.send(plural_role)).to include(user)
+
+                post "/v2/organizations/#{org.guid}/#{plural_role}/remove",
+                  MultiJson.dump(username: user.username, origin: origin1)
+
+                expect(last_response.status).to eq(204)
+                expect(org.reload.send(plural_role)).to_not include(user)
+                expect(last_response.body).to be_empty
+              end
+            end
+          end
+
+          context 'when an origin is not specified' do
+            context 'when the username exists in only one UAA origin' do
+              before do
+                expect(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(user.guid)
+                allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1])
+                org.send("add_#{role}", user)
+              end
+
+              it "unsets the user as an org #{role}" do
+                expect(org.send(plural_role)).to include(user)
+
+                post "/v2/organizations/#{org.guid}/#{plural_role}/remove",
+                  MultiJson.dump(username: user.username)
+
+                expect(last_response.status).to eq(204)
+                expect(org.reload.send(plural_role)).to_not include(user)
+                expect(last_response.body).to be_empty
+              end
+            end
+
+            context 'when the username exists in multiple UAA origins' do
+              it 'returns a 400 error' do
+                expect(uaa_client).to receive(:origins_for_username).and_return(['origin1', 'origin2'])
+
+                post "/v2/organizations/#{org.guid}/#{plural_role}/remove",
+                  MultiJson.dump({ username: user.username })
+
+                expect(last_response.status).to eq(400)
+                expect(decoded_response['code']).to eq(20006)
+              end
+            end
+          end
+        end
+      end
+    end
+
+    describe 'removing user roles by username with the DELETE action' do
       [:user, :manager, :billing_manager, :auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/organizations/:guid/#{plural_role}" do
@@ -1820,7 +1906,9 @@ module VCAP::CloudController
           let(:event_type) { "audit.user.organization_#{role}_remove" }
 
           before do
-            allow(uaa_client).to receive(:id_for_username).with(user.username).and_return(user.guid)
+            allow(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(user.guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+
             org.send("add_#{role}", user)
             set_current_user_as_admin(email: user_email)
           end
@@ -1841,7 +1929,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 404 when the user does not exist in CC' do
-            expect(uaa_client).to receive(:id_for_username).with('fake@example.com').and_return('not-a-guid')
+            expect(uaa_client).to receive(:id_for_username).with('fake@example.com', origin: nil).and_return('not-a-guid')
 
             delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
 
@@ -1877,6 +1965,17 @@ module VCAP::CloudController
             expect(event).not_to be_nil
             expect(event.organization_guid).to eq(org.guid)
             expect(event.actor_name).to eq(SecurityContext.current_user_email)
+          end
+
+          context 'when the username exists in multiple UAA origins' do
+            it 'returns a 400 error' do
+              expect(uaa_client).to receive(:origins_for_username).and_return(['origin1', 'origin2'])
+
+              delete "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(20006)
+            end
           end
 
           context 'when the feature flag "set_roles_by_username" is disabled' do
