@@ -483,11 +483,6 @@ module VCAP::CloudController
           expect(route).not_to be_valid
         end
 
-        it 'should not allow _ (UNDERBAR) in the host name' do
-          route.host = 'w_nderbar'
-          expect(route).not_to be_valid
-        end
-
         it 'should not allow . in the host name' do
           route.host = 'a.b'
           expect(route).not_to be_valid

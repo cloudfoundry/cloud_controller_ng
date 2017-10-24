@@ -1766,7 +1766,7 @@ module VCAP::CloudController
       context 'with Docker app' do
         let(:space) { docker_process.space }
         let(:route) { domain.add_route(host: 'app', space: space) }
-        let(:pre_mapped_route) { domain.add_route(host: 'pre-mapped-route', space: space) }
+        let(:pre_mapped_route) { domain.add_route(host: 'pre_mapped_route', space: space) }
         let(:docker_process) do
           ProcessModelFactory.make(
             state:        'STARTED',
