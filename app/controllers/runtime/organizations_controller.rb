@@ -183,7 +183,7 @@ module VCAP::CloudController
         origin = payload['origin']
 
         origins_for_username = @uaa_client.origins_for_username(username)
-        if origin
+        if origin.present?
           if !origins_for_username.include?(origin)
             message = "username: '#{username}', origin: '#{origin}'"
             raise CloudController::Errors::ApiError.new_from_details('UserWithOriginNotFound', message)
@@ -191,12 +191,10 @@ module VCAP::CloudController
         elsif origins_for_username.size > 1
           raise CloudController::Errors::ApiError.new_from_details('UserIsInMultipleOrigins',
             origins_for_username.map { |s| "'#{s}'" })
-        else
-          origin = origins_for_username[0]
         end
 
         begin
-          user_id = @uaa_client.id_for_username(username, origin: origin)
+          user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled

@@ -99,54 +99,27 @@ module VCAP::CloudController
       let(:userid_1) { '111' }
       let(:userid_2) { '222' }
 
-      context 'with an origin is specified' do
-        it 'returns a map of the given ids to the corresponding usernames from UAA' do
-          response_body = {
-            'resources' => [
-              { 'id' => '111', 'origin' => 'ldap', 'username' => 'user_1' },
-              { 'id' => '222', 'origin' => 'ldap', 'username' => 'user_2' }
-            ],
-            'schemas'      => ['urn:scim:schemas:core:1.0'],
-            'startindex'   => 1,
-            'itemsperpage' => 100,
-            'totalresults' => 2 }
+      it 'returns a map of the given ids to the corresponding usernames from UAA' do
+        response_body = {
+          'resources' => [
+            { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+            { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+          ],
+          'schemas'      => ['urn:scim:schemas:core:1.0'],
+          'startindex'   => 1,
+          'itemsperpage' => 100,
+          'totalresults' => 2 }
 
-          WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'origin eq "ldap" and (id eq "111" or id eq "222")' }).
-            to_return(
-              status: 200,
-              headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").
+          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
 
-          mapping = uaa_client.usernames_for_ids([userid_1, userid_2], origin: 'ldap')
-          expect(mapping[userid_1]).to eq('user_1')
-          expect(mapping[userid_2]).to eq('user_2')
-        end
-      end
-
-      context 'with an origin is not specified in the filter query' do
-        it 'returns a map of the given ids to the corresponding usernames from UAA' do
-          response_body = {
-            'resources' => [
-              { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
-              { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
-            ],
-            'schemas'      => ['urn:scim:schemas:core:1.0'],
-            'startindex'   => 1,
-            'itemsperpage' => 100,
-            'totalresults' => 2 }
-
-          WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
-            to_return(
-              status: 200,
-              headers: { 'content-type' => 'application/json' },
-              body: response_body.to_json)
-
-          mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
-          expect(mapping[userid_1]).to eq('user_1')
-          expect(mapping[userid_2]).to eq('user_2')
-        end
+        mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
+        expect(mapping[userid_1]).to eq('user_1')
+        expect(mapping[userid_2]).to eq('user_2')
       end
 
       it 'returns an empty hash when given no ids' do

@@ -30,10 +30,9 @@ module VCAP::CloudController
       raise UaaUnavailable.new
     end
 
-    def usernames_for_ids(user_ids, origin: 'uaa')
+    def usernames_for_ids(user_ids)
       return {} unless user_ids.present?
       filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-      filter_string = %/origin eq "#{origin}" and (#{filter_string})/ if origin != 'uaa'
       results       = scim.query(:user_id, filter: filter_string)
 
       results['resources'].each_with_object({}) do |resource, results_hash|
@@ -45,9 +44,9 @@ module VCAP::CloudController
       {}
     end
 
-    def id_for_username(username, origin: 'uaa')
+    def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
-      filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin != 'uaa'
+      filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
       results       = scim.query(:user_id, filter: filter_string)
 
       user = results['resources'].first

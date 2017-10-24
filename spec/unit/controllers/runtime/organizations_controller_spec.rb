@@ -1665,35 +1665,38 @@ module VCAP::CloudController
           end
 
           context 'origin' do
-            let(:user) { User.make(username: 'larry_the_user', origin: 'larry_origin') }
-            let(:user2) { User.make(username: 'larry_the_user', origin: 'another_larry_origin') }
+            let(:user) { User.make(username: 'larry_the_user') }
+            let(:user2) { User.make(username: 'larry_the_user') }
+            let(:origin1) { 'larry_origin' }
+            let(:origin2) { 'another_larry_origin' }
 
             context 'when an origin is specified' do
               context 'when the specified origin is not in the user\'s origins' do
-                let(:user) { User.make(username: 'fake@example.com', origin: 'fake_origin') }
+                let(:user) { User.make(username: 'fake@example.com') }
+                let(:fake_origin) { 'fake_origin' }
                 before do
                   allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['bogus-origin'])
                 end
 
                 it 'returns a 404 when the user does not exist in UAA' do
-                  put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com', origin: user.origin })
+                  put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com', origin: origin1 })
 
                   expect(last_response.status).to eq(404), last_response.body
                   expect(decoded_response['code']).to eq(20007)
-                  expect(decoded_response['description']).to eq("The user could not be found, username: 'fake@example.com', origin: '#{user.origin}'")
+                  expect(decoded_response['description']).to eq("The user could not be found, username: 'fake@example.com', origin: '#{origin1}'")
                 end
               end
 
               context 'when the specified origin is in the user\'s origins' do
                 before do
-                  allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([user.origin])
+                  allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1])
                 end
 
                 it "makes the user an org #{role}" do
-                  expect(uaa_client).to receive(:id_for_username).with(user.username, origin: user.origin).
+                  expect(uaa_client).to receive(:id_for_username).with(user.username, origin: origin1).
                     and_return(user.guid)
 
-                  put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username, origin: user.origin })
+                  put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username, origin: origin1 })
 
                   expect(last_response.status).to eq(201)
                   expect(org.send(plural_role)).to include(user)
@@ -1704,20 +1707,20 @@ module VCAP::CloudController
 
             context 'when an origin is not specified' do
               before do
-                allow(uaa_client).to receive(:id_for_username).with(user.username, { origin: 'uaa' }).
+                allow(uaa_client).to receive(:id_for_username).with(user.username, { origin: nil }).
                   and_return(user.guid)
               end
 
               it 'returns a 400 if the user is found in multiple origins' do
                 expect(uaa_client).to receive(:origins_for_username).with('larry_the_user').
-                  and_return([user.origin, user2.origin])
+                  and_return([origin1, origin2])
 
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'larry_the_user' })
 
                 expect(last_response.status).to eq(400), " Expected 400, got #{last_response.status}: body: #{last_response.body}"
                 expect(decoded_response['code']).to eq(20006)
                 expect(decoded_response['description']).
-                  to eq("The user exists in multiple origins. Specify an origin for the requested user from: '#{user.origin}', '#{user2.origin}'")
+                  to eq("The user exists in multiple origins. Specify an origin for the requested user from: '#{origin1}', '#{origin2}'")
               end
 
               it "makes the user an org #{role}" do
@@ -1742,7 +1745,7 @@ module VCAP::CloudController
               end
 
               it 'returns a 404 when the user does not exist in UAA' do
-                allow(uaa_client).to receive(:id_for_username).with(user.username, origin: 'uaa').and_return(nil)
+                allow(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(nil)
 
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
