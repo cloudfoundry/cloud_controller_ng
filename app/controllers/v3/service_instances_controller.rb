@@ -1,11 +1,30 @@
 require 'messages/to_many_relationship_message'
+require 'messages/service_instances/service_instances_list_message'
 
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
+require 'fetchers/service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
+  def index
+    message = ServiceInstancesListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = if can_read_globally?
+                ServiceInstanceListFetcher.new.fetch_all(message: message)
+              else
+                ServiceInstanceListFetcher.new.fetch(message: message, space_guids: readable_space_guids)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      dataset: dataset,
+      path: '/v3/service_instances',
+      message: message)
+  end
+
   def share_service_instance
     FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
 
