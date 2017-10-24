@@ -1103,3 +1103,8 @@
   name: DropletUploadInvalid
   http_code: 400
   message: "The droplet upload is invalid: %s"
+
+390001:
+  name: ServiceInstanceUnshareFailed
+  http_code: 502
+  message: "Unshare of service instance failed because one or more bindings could not be deleted.\n\n%s"

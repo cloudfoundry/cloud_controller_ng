@@ -197,7 +197,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
   end
 
   describe '#unshare_service_instance' do
-    let(:service_instance) { VCAP::CloudController::ServiceInstance.make }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:target_space) { VCAP::CloudController::Space.make }
     let(:source_space) { service_instance.space }
     let(:service_instance_sharing_enabled) { true }
@@ -245,17 +245,30 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'an application in the target space is bound to the service instance' do
-      before do
-        test_app = VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea')
+      let(:test_app) { VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea') }
+      let(:service_binding) do
         VCAP::CloudController::ServiceBinding.make(service_instance: service_instance,
                                                    app: test_app,
                                                    credentials: { 'amelia' => 'apples' })
       end
 
-      it 'returns 422' do
+      it 'returns 204 and unbinds the app in the target space' do
         delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
-        expect(response.status).to eq(422)
-        expect(response.body).to include("Unable to unshare service instance from space #{target_space.guid}. Ensure no bindings exist in the target space")
+        expect(response.status).to eq(204)
+        expect(test_app.service_bindings).to be_empty
+      end
+
+      context 'and the service broker fails to unbind' do
+        before do
+          stub_unbind(service_binding, status: 500)
+        end
+
+        it 'returns 502 and does not unshare the service' do
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(502)
+          expect(response.body).to include('ServiceInstanceUnshareFailed')
+          expect(test_app.service_bindings).to_not be_empty
+        end
       end
     end
 
