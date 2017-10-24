@@ -160,9 +160,50 @@ module VCAP::CloudController
       end
     end
 
+    # rubocop:disable CyclomaticComplexity
     def package_state
-      calculator = PackageStateCalculator.new(self)
-      calculator.calculate
+      cached_latest_droplet = latest_droplet
+      cached_current_droplet = current_droplet
+      cached_latest_package = latest_package
+      cached_latest_build = latest_build
+      if cached_latest_build
+        if cached_latest_build.staging?
+          return 'PENDING'
+        end
+        if cached_latest_build.failed?
+          return 'FAILED'
+        end
+      end
+      if cached_latest_droplet
+        if cached_latest_droplet.failed?
+          return 'FAILED'
+        end
+      end
+      if cached_current_droplet
+        if cached_current_droplet != cached_latest_droplet
+          return 'PENDING'
+        end
+        if cached_latest_package
+          if cached_current_droplet.package == cached_latest_package
+            return 'STAGED'
+          elsif cached_current_droplet.created_at < cached_latest_package.created_at
+            return 'PENDING'
+          elsif cached_current_droplet.created_at > cached_latest_package.created_at
+            return 'STAGED'
+          elsif cached_latest_package.failed?
+            return 'FAILED'
+          end
+        end
+        if cached_latest_package == cached_latest_droplet.package
+          return 'STAGED'
+        end
+      end
+      if cached_latest_package
+        if cached_latest_package.failed?
+          return 'FAILED'
+        end
+      end
+      'PENDING'
     end
 
     def staging_task_id
