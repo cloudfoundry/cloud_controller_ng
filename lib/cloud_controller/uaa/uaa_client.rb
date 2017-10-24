@@ -30,9 +30,10 @@ module VCAP::CloudController
       raise UaaUnavailable.new
     end
 
-    def usernames_for_ids(user_ids)
+    def usernames_for_ids(user_ids, origin: 'uaa')
       return {} unless user_ids.present?
       filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
+      filter_string = %/origin eq "#{origin}" and (#{filter_string})/ if origin != 'uaa'
       results       = scim.query(:user_id, filter: filter_string)
 
       results['resources'].each_with_object({}) do |resource, results_hash|
@@ -44,14 +45,25 @@ module VCAP::CloudController
       {}
     end
 
-    def id_for_username(username)
+    def id_for_username(username, origin: 'uaa')
       filter_string = %(username eq "#{username}")
+      filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin != 'uaa'
       results       = scim.query(:user_id, filter: filter_string)
 
       user = results['resources'].first
       user && user['id']
     rescue CF::UAA::TargetError
       raise UaaEndpointDisabled
+    end
+
+    def origins_for_username(username)
+      filter_string = %(username eq "#{username}")
+      results       = scim.query(:user_id, filter: filter_string)
+
+      return results['resources'].map { |resource| resource['origin'] }
+    rescue UaaUnavailable, CF::UAA::UAAError => e
+      logger.error("Failed to retrieve origins from UAA: #{e.inspect}")
+      raise UaaUnavailable.new(e)
     end
 
     def info

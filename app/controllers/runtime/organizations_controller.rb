@@ -178,10 +178,25 @@ module VCAP::CloudController
       define_method("add_#{role}_by_username") do |guid|
         FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
 
-        username = parse_and_validate_json(body)['username']
+        payload = parse_and_validate_json(body)
+        username = payload['username']
+        origin = payload['origin']
+
+        origins_for_username = @uaa_client.origins_for_username(username)
+        if origin
+          if !origins_for_username.include?(origin)
+            message = "username: '#{username}', origin: '#{origin}'"
+            raise CloudController::Errors::ApiError.new_from_details('UserWithOriginNotFound', message)
+          end
+        elsif origins_for_username.size > 1
+          raise CloudController::Errors::ApiError.new_from_details('UserIsInMultipleOrigins',
+            origins_for_username.map { |s| "'#{s}'" })
+        else
+          origin = origins_for_username[0]
+        end
 
         begin
-          user_id = @uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username, origin: origin)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled

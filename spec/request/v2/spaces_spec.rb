@@ -16,7 +16,7 @@ RSpec.describe 'Spaces' do
     end
 
     context 'as admin' do
-      context 'and the organization has an ioslation segment' do
+      context 'and the organization has an isolation segment' do
         before do
           assigner.assign(isolation_segment, [org])
         end

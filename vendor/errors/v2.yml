@@ -113,6 +113,16 @@
   http_code: 501
   message: "The UAA endpoint needed is disabled"
 
+20006:
+  name: UserIsInMultipleOrigins
+  http_code: 400
+  message: "The user exists in multiple origins. Specify an origin for the requested user from: %s"
+
+20007:
+  name: UserWithOriginNotFound
+  http_code: 404
+  message: "The user could not be found, %s"
+
 30001:
   name: OrganizationInvalid
   http_code: 400

@@ -99,27 +99,54 @@ module VCAP::CloudController
       let(:userid_1) { '111' }
       let(:userid_2) { '222' }
 
-      it 'returns a map of the given ids to the corresponding usernames from UAA' do
-        response_body = {
-          'resources' => [
-            { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
-            { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
-          ],
-          'schemas'      => ['urn:scim:schemas:core:1.0'],
-          'startindex'   => 1,
-          'itemsperpage' => 100,
-          'totalresults' => 2 }
+      context 'with an origin is specified' do
+        it 'returns a map of the given ids to the corresponding usernames from UAA' do
+          response_body = {
+            'resources' => [
+              { 'id' => '111', 'origin' => 'ldap', 'username' => 'user_1' },
+              { 'id' => '222', 'origin' => 'ldap', 'username' => 'user_2' }
+            ],
+            'schemas'      => ['urn:scim:schemas:core:1.0'],
+            'startindex'   => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2 }
 
-        WebMock::API.stub_request(:get, "#{url}/ids/Users").
-          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
-          to_return(
-            status: 200,
-            headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'origin eq "ldap" and (id eq "111" or id eq "222")' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
 
-        mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
-        expect(mapping[userid_1]).to eq('user_1')
-        expect(mapping[userid_2]).to eq('user_2')
+          mapping = uaa_client.usernames_for_ids([userid_1, userid_2], origin: 'ldap')
+          expect(mapping[userid_1]).to eq('user_1')
+          expect(mapping[userid_2]).to eq('user_2')
+        end
+      end
+
+      context 'with an origin is not specified in the filter query' do
+        it 'returns a map of the given ids to the corresponding usernames from UAA' do
+          response_body = {
+            'resources' => [
+              { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+              { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+            ],
+            'schemas'      => ['urn:scim:schemas:core:1.0'],
+            'startindex'   => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2 }
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+
+          mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
+          expect(mapping[userid_1]).to eq('user_1')
+          expect(mapping[userid_2]).to eq('user_2')
+        end
       end
 
       it 'returns an empty hash when given no ids' do
@@ -161,23 +188,46 @@ module VCAP::CloudController
     describe '#id_for_username' do
       let(:username) { 'user@example.com' }
 
-      it 'returns the id for the username' do
-        response_body = {
-          'resources' => [
-            { 'id' => '123', 'origin' => 'uaa', 'username' => 'user@example.com' }],
-          'schemas' => ['urn:scim:schemas:core:1.0'],
-          'startindex' => 1,
-          'itemsperpage' => 100,
-          'totalresults' => 1 }
+      context 'with an origin is specified' do
+        it 'returns the id for the username' do
+          response_body = {
+            'resources' => [
+              { 'id' => '123', 'origin' => 'ldap', 'username' => 'user@example.com' }],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 1 }
 
-        WebMock::API.stub_request(:get, "#{url}/ids/Users").
-          with(query: { 'filter' => 'username eq "user@example.com"' }).
-          to_return(
-            status: 200,
-            headers: { 'content-type' => 'application/json' },
-            body: response_body.to_json)
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'origin eq "ldap" and username eq "user@example.com"' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
 
-        expect(uaa_client.id_for_username(username)).to eq('123')
+          expect(uaa_client.id_for_username(username, origin: 'ldap')).to eq('123')
+        end
+      end
+
+      context 'with an origin is not specified' do
+        it 'returns the id for the username' do
+          response_body = {
+            'resources' => [
+              { 'id' => '123', 'origin' => 'uaa', 'username' => 'user@example.com' }],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 1 }
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'username eq "user@example.com"' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+
+          expect(uaa_client.id_for_username(username)).to eq('123')
+        end
       end
 
       it 'returns nil when given username does not exist' do
@@ -221,6 +271,84 @@ module VCAP::CloudController
           expect {
             uaa_client.id_for_username(username)
           }.to raise_error(UaaEndpointDisabled)
+        end
+      end
+    end
+
+    describe '#origins_for_username' do
+      let(:userid_1) { '111' }
+      let(:username) { 'user_1' }
+      context 'when no exception is thrown' do
+        it 'gets the origins for the user' do
+          response_body = {
+            'resources' => [
+              { 'id' => '111', 'origin' => 'larrys_origin', 'username' => username },
+              { 'id' => '111', 'origin' => 'larrys_other_origin', 'username' => username }
+            ],
+            'schemas'      => ['urn:scim:schemas:core:1.0'],
+            'startindex'   => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2 }
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'username eq "user_1"' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+
+          origins = uaa_client.origins_for_username(username)
+          expect(origins).to contain_exactly('larrys_origin', 'larrys_other_origin')
+        end
+      end
+
+      it 'returns an empty array when the username is not in any origin' do
+        response_body = {
+          'resources' => [],
+          'schemas'      => ['urn:scim:schemas:core:1.0'],
+          'startindex'   => 1,
+          'itemsperpage' => 100,
+          'totalresults' => 0 }
+
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").
+          with(query: { 'filter' => 'username eq "user_1"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
+
+        origins = uaa_client.origins_for_username('user_1')
+        expect(origins.size).to eq(0)
+      end
+
+      context 'when UAA is unavailable' do
+        before do
+          allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
+        end
+
+        it 'raises UaaUnavailable' do
+          expect {
+            uaa_client.id_for_username(username)
+          }.to raise_error(UaaUnavailable)
+        end
+      end
+
+      context 'when the endpoint returns an error' do
+        let(:uaa_error) { CF::UAA::UAAError.new('some error') }
+        let(:mock_logger) { double(:steno_logger, error: nil) }
+
+        before do
+          scim = instance_double(CF::UAA::Scim)
+          allow(scim).to receive(:query).and_raise(uaa_error)
+          allow(uaa_client).to receive(:scim).and_return(scim)
+          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+        end
+
+        it 'raises an exception' do
+          expect {
+            uaa_client.origins_for_username(username)
+          }.to raise_error(UaaUnavailable)
+          expect(mock_logger).to have_received(:error).with("Failed to retrieve origins from UAA: #{uaa_error.inspect}")
         end
       end
     end
