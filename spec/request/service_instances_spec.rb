@@ -80,6 +80,21 @@ RSpec.describe 'Service Instances' do
     it 'unshares the service instance from the target space' do
       delete "/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces/#{target_space.guid}", nil, user_header
       expect(last_response.status).to eq(204)
+
+      event = VCAP::CloudController::Event.last
+      expect(event.values).to include({
+        type:              'audit.service_instance.unshare',
+        actor:             user.guid,
+        actor_type:        'user',
+        actor_name:        user_email,
+        actor_username:    user_name,
+        actee:             service_instance.guid,
+        actee_type:        'service_instance',
+        actee_name:        service_instance.name,
+        space_guid:        service_instance.space.guid,
+        organization_guid: service_instance.space.organization.guid
+      })
+      expect(event.metadata['target_space_guid']).to eq(target_space.guid)
     end
   end
 end
