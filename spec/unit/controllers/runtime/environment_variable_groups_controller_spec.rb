@@ -161,6 +161,28 @@ module VCAP::CloudController
               end
             end
 
+            context 'when the environment variable is not valid' do
+              let(:req_body) { '{"VCAP_SERVICES": "bar"}' }
+
+              it 'returns a 400' do
+                set_current_user_as_admin
+                put '/v2/config/environment_variable_groups/running', req_body
+                expect(last_response.status).to eq(400), last_response.body
+                expect(decoded_response['error_code']).to eq('CF-EnvironmentVariableGroupInvalid')
+                expect(decoded_response['description']).to match(/VCAP_/)
+              end
+
+              it 'does not update the group' do
+                group = EnvironmentVariableGroup.running
+                group.environment_json = { 'foo' => 'bar' }
+                group.save
+
+                set_current_user_as_admin
+                put '/v2/config/environment_variable_groups/running', req_body
+                expect(EnvironmentVariableGroup.running.environment_json).to eq({ 'foo' => 'bar' })
+              end
+            end
+
             context 'when the json is null' do
               let(:req_body) { 'null' }
 

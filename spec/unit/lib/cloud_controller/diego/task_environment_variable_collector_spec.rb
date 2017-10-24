@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe TaskEnvironmentVariableCollector do
       let(:task) { TaskModel.make command: command, name: 'my-task' }
       let(:command) { 'echo "hello"' }
-      let(:environment_json) { { RIZ: 'shirt' }.to_json }
+      let(:environment_json) { { 'RIZ' => 'shirt' } }
 
       before do
         VCAP::CloudController::EnvironmentVariableGroup.running.update(environment_json: environment_json)

@@ -13,6 +13,12 @@ module VCAP::CloudController
       find_by_name(:staging)
     end
 
+    def validate
+      return unless environment_json
+      VCAP::CloudController::Validators::EnvironmentVariablesValidator.
+        validate_each(self, :environment_json, environment_json)
+    end
+
     def environment_json_with_serialization=(env)
       self.environment_json_without_serialization = MultiJson.dump(env)
     end

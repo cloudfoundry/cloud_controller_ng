@@ -24,6 +24,10 @@ module VCAP::CloudController
       update(EnvironmentVariableGroup.running)
     end
 
+    def self.translate_validation_exception(e, _)
+      CloudController::Errors::ApiError.new_from_details('EnvironmentVariableGroupInvalid', e.errors.full_messages)
+    end
+
     private
 
     def read(group)

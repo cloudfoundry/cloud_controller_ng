@@ -9,6 +9,7 @@ module VCAP::CloudController
     it_behaves_like 'a model with an encrypted attribute' do
       let(:encrypted_attr) { :environment_json }
       let(:attr_salt) { :salt }
+      let(:value_to_encrypt) { { 'SUPER' => 'SECRET' } }
     end
 
     describe 'Serialization' do
@@ -86,6 +87,16 @@ module VCAP::CloudController
 
         it 'returns the existing object' do
           expect(EnvironmentVariableGroup.running.environment_json).to eq('abc' => 123)
+        end
+      end
+    end
+
+    describe '#validate' do
+      describe 'environment_variables' do
+        it 'validates them' do
+          expect {
+            EnvironmentVariableGroup.make(environment_json: { 'VCAP_SERVICES' => {} })
+          }.to raise_error(Sequel::ValidationFailed, /cannot start with VCAP_/)
         end
       end
     end
