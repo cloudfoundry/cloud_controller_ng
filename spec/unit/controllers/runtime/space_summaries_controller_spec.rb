@@ -69,19 +69,7 @@ module VCAP::CloudController
 
         get "/v2/spaces/#{space.guid}/summary"
 
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
-      end
-
-      it 'returns service summary for the space, including shared service instances' do
-        originating_space = Space.make
-        service_instance = ManagedServiceInstance.make(space: originating_space)
-        service_instance.add_shared_space(space)
-
-        get "/v2/spaces/#{space.guid}/summary"
-
-        parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+        expect(decoded_response['services'].map { |service_json| service_json['guid'] }).to include(service_instance.guid)
       end
 
       it 'does not return private services from other spaces' do
@@ -95,6 +83,67 @@ module VCAP::CloudController
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['services'].map { |service_json| service_json['guid'] }).to_not include service_instance2.guid
+      end
+
+      it 'does not include sharing information for not-shared service instances' do
+        space = Space.make
+        ManagedServiceInstance.make(space: space)
+
+        get "/v2/spaces/#{space.guid}/summary"
+
+        expect(decoded_response['services'].first['shared_from']).to be_nil
+      end
+
+      context 'when a managed service has been shared into this space' do
+        let(:receiver_space) { Space.make }
+        let(:originating_space) { Space.make }
+        let(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
+        let(:services_response) { decoded_response['services'] }
+
+        before do
+          service_instance.add_shared_space(receiver_space)
+
+          get "/v2/spaces/#{receiver_space.guid}/summary"
+        end
+
+        it 'includes the shared service instance' do
+          expect(services_response.map { |service_json| service_json['guid'] }).to include(service_instance.guid)
+        end
+
+        it 'includes sharing information' do
+          expect(services_response.first).to have_key('shared_from')
+          expect(services_response.first['shared_from']).to eq({
+            'space_guid' => originating_space.guid,
+            'space_name' => originating_space.name,
+            'organization_name' => originating_space.organization.name
+          })
+        end
+
+        it 'does not contain shared to information' do
+          expect(services_response.first['shared_to']).to be_empty
+        end
+      end
+
+      context 'when a managed service instance is shared into another space' do
+        let(:host_space) { Space.make }
+        let(:service_instance) { ManagedServiceInstance.make(space: host_space) }
+        let(:foreign_space) { Space.make }
+        let(:services_response) { decoded_response['services'] }
+
+        before(:each) do
+          service_instance.add_shared_space(foreign_space)
+
+          get "/v2/spaces/#{host_space.guid}/summary"
+        end
+
+        it 'includes shared to information' do
+          expect(services_response.first).to have_key('shared_to')
+          expect(services_response.first['shared_to'].first).to eq({
+            'space_guid' => foreign_space.guid,
+            'space_name' => foreign_space.name,
+            'organization_name' => foreign_space.organization.name
+          })
+        end
       end
 
       context 'when an app is deleted concurrently' do
