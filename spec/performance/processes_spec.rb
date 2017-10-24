@@ -27,7 +27,7 @@ RSpec.describe 'Processes', performance: true, isolation: :truncation do
       it 'returns results promptly' do
         3.times do
           time = Benchmark.measure { get '/v3/processes?per_page=5000', nil, developer_headers }
-          expect(time.real).to be <= 11.0
+          expect(time.real).to be <= 13.0
         end
       end
     end
@@ -38,7 +38,7 @@ RSpec.describe 'Processes', performance: true, isolation: :truncation do
       it 'returns results promptly' do
         3.times do
           time = Benchmark.measure { get '/v3/processes?per_page=5000', nil, admin_headers }
-          expect(time.real).to be <= 11.0
+          expect(time.real).to be <= 13.0
         end
       end
     end
