@@ -32,14 +32,7 @@ external_domain: <%= p("cc.external_host") %>.<%= p("system_domain") %>
 
 system_domain_organization: <%= p("system_domain_organization") %>
 system_domain: <%= p("system_domain") %>
-app_domains:
-  <%= p("app_domains").map { |domain|
-  if domain.is_a?(Hash)
-    domain
-  else
-    { 'name' => domain }
-  end
-}.to_yaml.gsub("---", "") %>
+app_domains: <%= p("app_domains").to_json %>
 
 reserved_private_domains: <%= p("cc.reserved_private_domains", nil) %>
 

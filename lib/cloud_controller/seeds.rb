@@ -147,14 +147,12 @@ module VCAP::CloudController
       end
 
       def parsed_domains(app_domains)
-        if app_domains[0].is_a?(String)
-          parsed = []
-          app_domains.each do |d|
-            parsed << { 'name' => d }
+        app_domains.map do |domain|
+          if domain.is_a?(Hash)
+            domain
+          else
+            { 'name' => domain }
           end
-          parsed
-        else
-          app_domains
         end
       end
 

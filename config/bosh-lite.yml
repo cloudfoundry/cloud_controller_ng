@@ -13,7 +13,8 @@ external_domain: api.bosh-lite.com
 
 system_domain_organization: 
 system_domain: bosh-lite.com
-app_domains: [ bosh-lite.com ]
+app_domains:
+  - name: bosh-lite.com
 
 jobs:
   global:

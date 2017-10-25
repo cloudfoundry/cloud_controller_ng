@@ -21,8 +21,8 @@ external_protocol: http
 system_domain_organization: the-system-domain-org-name
 system_domain: the-system-domain.com
 app_domains:
-  - customer-app-domain1.com
-  - customer-app-domain2.com
+  - name: customer-app-domain1.com
+  - name: customer-app-domain2.com
 
 jobs:
   global:

@@ -12,7 +12,7 @@ system_domain_organization: the-system_domain-org-name
 system_domain: vcap.me
 app_domains:
   - customer-app-domain1.com
-  - customer-app-domain2.com
+  - name: customer-app-domain2.com
 system_hostnames:
   - api
   - uaa
