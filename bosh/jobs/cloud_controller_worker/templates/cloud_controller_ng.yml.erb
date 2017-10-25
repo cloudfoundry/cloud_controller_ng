@@ -1,6 +1,6 @@
 <%
   require 'uri'
-  
+
   def discover_external_ip
     networks = spec.networks.marshal_dump
     network = networks.values.detect(&:default) || networks.values.first
@@ -207,6 +207,9 @@ bits_service:
   private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
   username: <%= p("cc.bits_service.username") %>
   password: <%= p("cc.bits_service.password") %>
+  <% if p("cc.bits_service.ca_cert") != "" && p("cc.bits_service.ca_cert") != nil %>
+  ca_cert_path: /var/vcap/jobs/cloud_controller_worker/config/certs/bits_service_ca.crt
+  <% end %>
 
 diego:
   temporary_local_staging: <%= p("cc.diego.temporary_local_staging") %>

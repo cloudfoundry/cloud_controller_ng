@@ -49,7 +49,7 @@ templates:
   db_ca.crt.erb: config/certs/db_ca.crt
   credhub_ca.crt.erb: config/certs/credhub_ca.crt
   perm_ca.crt.erb: config/certs/perm_ca.crt
-
+  bits_service_ca.crt.erb: config/certs/bits_service_ca.crt
 
 packages:
   - capi_utils
@@ -748,6 +748,9 @@ properties:
     default: ""
   cc.bits_service.password:
     description: "Password for the bits-service"
+    default: ""
+  cc.bits_service.ca_cert:
+    description: "The ca cert to use when communicating with bits-service endpoints"
     default: ""
 
   cc.rate_limiter.enabled:

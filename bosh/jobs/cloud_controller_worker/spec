@@ -30,7 +30,8 @@ templates:
   mutual_tls.key.erb: config/certs/mutual_tls.key
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   db_ca.crt.erb: config/certs/db_ca.crt
-
+  bits_service_ca.crt.erb: config/certs/bits_service_ca.crt
+  
 packages:
   - capi_utils
   - cloud_controller_ng
@@ -442,6 +443,9 @@ properties:
     default: ""
   cc.bits_service.password:
     description: "Password for the bits-service"
+    default: ""
+  cc.bits_service.ca_cert:
+    description: "The ca cert to use when communicating with bits-service endpoints"
     default: ""
 
   cc.diego.bbs.url:

@@ -325,6 +325,7 @@ module CloudController
       BitsService::ResourcePool.new(
         endpoint: bits_service_options[:private_endpoint],
         request_timeout_in_seconds: config.get(:request_timeout_in_seconds),
+        ca_cert_path: bits_service_options[:ca_cert_path]
       )
     end
 

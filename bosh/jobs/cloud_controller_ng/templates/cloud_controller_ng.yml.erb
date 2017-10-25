@@ -343,6 +343,9 @@ bits_service:
   private_endpoint: <%= p("cc.bits_service.private_endpoint") %>
   username: <%= p("cc.bits_service.username") %>
   password: <%= p("cc.bits_service.password") %>
+  <% if p("cc.bits_service.ca_cert") != "" && p("cc.bits_service.ca_cert") != nil %>
+  ca_cert_path: /var/vcap/jobs/cloud_controller_ng/config/certs/bits_service_ca.crt
+  <% end %>
 
 rate_limiter:
   enabled: <%= p("cc.rate_limiter.enabled") %>
