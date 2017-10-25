@@ -3,19 +3,15 @@ task spec: 'spec:all'
 
 namespace :spec do
   task all: ['db:pick', 'db:parallel:recreate'] do
-    run_specs_parallel('spec', test_options: '--order rand --tag ~performance')
+    run_specs_parallel('spec')
   end
 
   task serial: ['db:pick', 'db:recreate'] do
-    run_specs('spec', test_options: '--tag ~performance')
+    run_specs('spec')
   end
 
   task integration: ['db:pick', 'db:recreate'] do
     run_specs('spec/integration')
-  end
-
-  task performance: ['db:pick', 'db:recreate'] do
-    run_specs('spec/performance')
   end
 
   desc 'Run only previously failing tests'
@@ -23,12 +19,12 @@ namespace :spec do
     run_failed_specs
   end
 
-  def run_specs(path, test_options: '')
-    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail --format progress #{test_options}"
+  def run_specs(path)
+    sh "bundle exec rspec #{path} --require rspec/instafail --format RSpec::Instafail --format progress"
   end
 
-  def run_specs_parallel(path, test_options: '')
-    sh "bundle exec parallel_rspec --test-options '#{test_options}' --single spec/integration/ -- #{path}"
+  def run_specs_parallel(path)
+    sh "bundle exec parallel_rspec --test-options '--order rand' --single spec/integration/ -- #{path}"
   end
 
   def run_failed_specs
