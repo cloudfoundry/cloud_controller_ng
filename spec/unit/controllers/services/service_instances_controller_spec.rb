@@ -1600,6 +1600,42 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the new service plan is non-bindable' do
+            let(:new_service_plan) { ServicePlan.make(:v2, service: service, bindable: false) }
+
+            context 'and service bindings exist' do
+              before do
+                ServiceBinding.make(
+                  app: AppModel.make(space: service_instance.space),
+                  service_instance: service_instance
+                )
+              end
+
+              it 'does not update the service plan in the database' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(service_instance.reload.service_plan).to eq(old_service_plan)
+              end
+
+              it 'does not make an api call when the plan does not support upgrades' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+              end
+
+              it 'returns a useful error to the user' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(last_response.body).to match /cannot switch to non-bindable plan when service bindings exist/
+              end
+            end
+
+            context 'and service bindings do not exist' do
+              it 'returns a 201 and updates to the new plan' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(last_response).to have_status_code 201
+                expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+              end
+            end
+          end
+
           context 'when the user has read but not write permissions' do
             let(:auditor) { User.make }
 

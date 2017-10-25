@@ -121,7 +121,7 @@ module VCAP::CloudController
       validate_access(:update, projected_service_instance(service_instance))
 
       validate_space_update(related_objects[:space])
-      validate_plan_update(related_objects[:plan], related_objects[:service])
+      validate_plan_update(related_objects[:plan], related_objects[:service], service_instance)
 
       update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete, services_event_repository: @services_event_repository)
       update.update_service_instance(service_instance, request_attrs)
@@ -337,11 +337,15 @@ module VCAP::CloudController
       request_attrs
     end
 
-    def validate_plan_update(current_plan, service)
+    def validate_plan_update(current_plan, service, service_instance)
       requested_plan_guid = request_attrs['service_plan_guid']
       if plan_update_requested?(requested_plan_guid, current_plan)
         plan_not_updateable! if service_disallows_plan_update?(service)
-        invalid_relation!('Plan') if invalid_plan?(requested_plan_guid, service)
+
+        requested_plan = ServicePlan.find(guid: requested_plan_guid)
+        invalid_relation!('Plan') if invalid_plan?(requested_plan, service)
+
+        unable_to_update_to_nonbindable_plan! if !requested_plan.bindable? && service_instance.service_bindings.any?
       end
     end
 
@@ -373,6 +377,13 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
     end
 
+    def unable_to_update_to_nonbindable_plan!
+      raise CloudController::Errors::ApiError.new_from_details(
+        'ServicePlanInvalid',
+        'cannot switch to non-bindable plan when service bindings exist'
+      )
+    end
+
     def invalid_relation!(message)
       raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', message)
     end
@@ -398,8 +409,7 @@ module VCAP::CloudController
       ServicePlan.organization_visible(organization).filter(guid: service_plan.guid).count > 0
     end
 
-    def invalid_plan?(requested_plan_guid, service)
-      requested_plan = ServicePlan.find(guid: requested_plan_guid)
+    def invalid_plan?(requested_plan, service)
       plan_not_found?(requested_plan) || plan_in_different_service?(requested_plan, service)
     end
 
