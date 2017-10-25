@@ -809,6 +809,67 @@ RSpec.describe 'Apps' do
     end
   end
 
+  describe 'POST /v3/apps/:guid/actions/restart' do
+    it 'restart the app' do
+      stack     = VCAP::CloudController::Stack.make(name: 'stack-name')
+      app_model = VCAP::CloudController::AppModel.make(
+        :buildpack,
+        name:          'app-name',
+        space:         space,
+        desired_state: 'STARTED',
+      )
+
+      app_model.lifecycle_data.buildpacks = ['http://example.com/git']
+      app_model.lifecycle_data.stack = stack.name
+      app_model.lifecycle_data.save
+
+      droplet           = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+      app_model.droplet = droplet
+      app_model.save
+
+      post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'name'                    => 'app-name',
+          'guid'                    => app_model.guid,
+          'state' => 'STARTED',
+          'created_at'              => iso8601,
+          'updated_at'              => iso8601,
+          'lifecycle'               => {
+            'type' => 'buildpack',
+            'data' => {
+              'buildpacks' => ['http://example.com/git'],
+              'stack'      => 'stack-name',
+            }
+          },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
+          'links' => {
+            'self'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'processes'      => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+            'packages'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+            'droplets'       => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+            'tasks'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+            'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
+            'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+            'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+          }
+        }
+      )
+    end
+  end
+
   describe 'GET /v3/apps/:guid/relationships/current_droplet' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { droplet_model.guid }

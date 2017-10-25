@@ -128,6 +128,14 @@ class AppsV3Controller < ApplicationController
     unprocessable!(e.message)
   end
 
+  def restart
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
+
+    render status: :ok, json: Presenters::V3::AppPresenter.new(app)
+  end
+
   def show_env
     app, space, org = AppFetcher.new.fetch(params[:guid])
 

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   delete '/apps/:guid', to: 'apps_v3#destroy'
   post '/apps/:guid/actions/start', to: 'apps_v3#start'
   post '/apps/:guid/actions/stop', to: 'apps_v3#stop'
+  post '/apps/:guid/actions/restart', to: 'apps_v3#restart'
   get '/apps/:guid/env', to: 'apps_v3#show_env'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'

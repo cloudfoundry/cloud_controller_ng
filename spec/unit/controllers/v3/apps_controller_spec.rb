@@ -1084,6 +1084,78 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
+  describe '#restart' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+    end
+
+    context 'permissions' do
+      let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
+
+      describe 'authorization' do
+        role_to_expected_http_response = {
+          'admin' => 200,
+          'admin_read_only' => 403,
+          'global_auditor' => 403,
+          'space_developer' => 200,
+          'space_manager' => 403,
+          'space_auditor' => 403,
+          'org_manager' => 403,
+          'org_auditor' => 404,
+          'org_billing_manager' => 404,
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            it "returns #{expected_return_value}" do
+              if role == 'admin_read_only'
+                puts 'break here'
+              end
+              set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+              post :restart, guid: app_model.guid
+
+              expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+            end
+          end
+        end
+      end
+    end
+
+    context 'when the user has permission' do
+      before do
+        set_current_user(user)
+        allow_user_read_access_for(user, spaces: [space])
+        allow_user_write_access(user, space: space)
+      end
+
+      it 'returns a 200 and the app' do
+        post :restart, guid: app_model.guid
+
+        response_body = parsed_body
+
+        expect(response.status).to eq 200
+        expect(response_body['guid']).to eq(app_model.guid)
+        expect(response_body['state']).to eq('STARTED')
+      end
+
+      context 'when the app does not exist' do
+        it 'raises an API 404 error' do
+          post :restart, guid: 'thing'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+    end
+  end
+
   describe '#show_env' do
     let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
