@@ -39,8 +39,8 @@ module VCAP::CloudController
 
       context 'when database_encryption_keys has been set' do
         let(:salt) { 'FFFFFFFFFFFFFFFF' }
-        let(:encrypted_death_string) { 'NHQ+mjls1UHJBqpO0KWjTA==' }
-        let(:encrypted_legacy_string) { '1XJDJYNqWOKokyVx0WHZ/g==' }
+        let(:encrypted_death_string) { 'UsFVj9hjohvzOwlJQ4tqHA==' }
+        let(:encrypted_legacy_string) { 'a6FHdu9k3+CCSjvzIX+i7w==' }
 
         before(:each) do
           Encryptor.db_encryption_key = 'legacy-crypto-key'
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
       context 'when database_encryption_keys has not been set' do
         let(:salt) { 'FFFFFFFFFFFFFFFF' }
-        let(:encrypted_legacy_string) { '1XJDJYNqWOKokyVx0WHZ/g==' }
+        let(:encrypted_legacy_string) { 'a6FHdu9k3+CCSjvzIX+i7w==' }
 
         before(:each) do
           Encryptor.db_encryption_key = 'legacy-crypto-key'

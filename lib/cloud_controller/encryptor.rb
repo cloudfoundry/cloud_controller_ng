@@ -9,7 +9,7 @@ require 'base64'
 module VCAP::CloudController
   module Encryptor
     class << self
-      ALGORITHM = 'AES-256-CBC'.freeze
+      ALGORITHM = 'AES-128-CBC'.freeze
 
       def generate_salt
         SecureRandom.hex(8).to_s
@@ -56,7 +56,7 @@ module VCAP::CloudController
         if deprecated_short_salt?(salt)
           cipher.pkcs5_keyivgen(key, salt)
         else
-          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, 2048, 32, OpenSSL::Digest::SHA256.new)
+          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, 2048, 16, OpenSSL::Digest::SHA256.new)
           cipher.iv = salt
         end
         cipher.update(input) << cipher.final
