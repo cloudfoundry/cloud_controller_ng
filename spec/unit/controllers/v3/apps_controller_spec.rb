@@ -1096,8 +1096,6 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'permissions' do
-      let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
-
       describe 'authorization' do
         role_to_expected_http_response = {
           'admin' => 200,
@@ -1114,9 +1112,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             it "returns #{expected_return_value}" do
-              if role == 'admin_read_only'
-                puts 'break here'
-              end
               set_current_user_as_role(role: role, org: org, space: space, user: user)
 
               post :restart, guid: app_model.guid
