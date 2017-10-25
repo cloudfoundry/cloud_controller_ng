@@ -393,6 +393,7 @@ diego:
 
 perm:
   ca_cert_path: "/var/vcap/jobs/cloud_controller_ng/config/certs/perm_ca.crt"
+  timeout_in_milliseconds: <%= p("perm.timeout_in_milliseconds") %>
 <% if_link("perm") do |perm| %>
   enabled: <%= p("perm.enabled") %>
   hostname: <%= p("perm.hostname") %>
