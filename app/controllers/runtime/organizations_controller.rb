@@ -183,17 +183,7 @@ module VCAP::CloudController
         origin = payload['origin']
 
         begin
-          origins_for_username = @uaa_client.origins_for_username(username)
-          if origin.present?
-            if !origins_for_username.include?(origin)
-              message = "username: '#{username}', origin: '#{origin}'"
-              raise CloudController::Errors::ApiError.new_from_details('UserWithOriginNotFound', message)
-            end
-          elsif origins_for_username.size > 1
-            raise CloudController::Errors::ApiError.new_from_details('UserIsInMultipleOrigins',
-              origins_for_username.map { |s| "'#{s}'" })
-          end
-
+          validate_origin_for_username!(origin, username)
           user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
@@ -223,19 +213,10 @@ module VCAP::CloudController
 
         payload = parse_and_validate_json(body)
         username = payload['username']
-        origin = @sinatra.request.request_method == 'POST' ? payload['origin'] : nil
+        origin = payload['origin']
 
         begin
-          origins_for_username = @uaa_client.origins_for_username(username)
-          if origin.present?
-            if !origins_for_username.include?(origin)
-              message = "username: '#{username}', origin: '#{origin}'"
-              raise CloudController::Errors::ApiError.new_from_details('UserWithOriginNotFound', message)
-            end
-          elsif origins_for_username.size > 1
-            raise CloudController::Errors::ApiError.new_from_details('UserIsInMultipleOrigins',
-              origins_for_username.map { |s| "'#{s}'" })
-          end
+          validate_origin_for_username!(origin, username)
           user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
@@ -476,6 +457,19 @@ module VCAP::CloudController
             )
           end
         end
+      end
+    end
+
+    def validate_origin_for_username!(origin, username)
+      origins_for_username = @uaa_client.origins_for_username(username)
+      if origin.present?
+        if !origins_for_username.include?(origin)
+          message = "username: '#{username}', origin: '#{origin}'"
+          raise CloudController::Errors::ApiError.new_from_details('UserWithOriginNotFound', message)
+        end
+      elsif origins_for_username.size > 1
+        raise CloudController::Errors::ApiError.new_from_details('UserIsInMultipleOrigins',
+          origins_for_username.map { |s| "'#{s}'" })
       end
     end
   end
