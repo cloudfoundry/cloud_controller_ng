@@ -95,6 +95,21 @@ function seed_db {
   popd > /dev/null
 }
 
+function start_bosh_dns_or_consul {
+  if [ -f /var/vcap/jobs/bosh-dns/bin/is-system-resolver ]; then
+    if (/var/vcap/jobs/bosh-dns/bin/is-system-resolver); then
+      echo "waiting for bosh_dns"
+      /var/vcap/jobs/bosh-dns/bin/wait
+    else
+      echo "bosh dns is not resolver, using consul"
+      start_consul_agent
+    fi
+  else
+    echo "bosh dns is-system-resolver script not present, using consul"
+    start_consul_agent
+  fi
+}
+
 function start_consul_agent {
   # Start the consul agent so we can connect to a database url provided by consul dns
   if [ -f /var/vcap/jobs/consul_agent/bin/agent_ctl ]; then
@@ -107,7 +122,7 @@ function start_consul_agent {
 }
 
 function main {
-  start_consul_agent
+  start_bosh_dns_or_consul
   setup_directories
   <% if spec.bootstrap && p('cc.run_prestart_migrations') %>
   perform_migration
