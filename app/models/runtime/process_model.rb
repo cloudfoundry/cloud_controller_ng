@@ -1,4 +1,4 @@
-require 'cloud_controller/app_observer'
+require 'cloud_controller/process_observer'
 require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/errors/application_missing'
 require 'repositories/app_usage_event_repository'
@@ -353,7 +353,7 @@ module VCAP::CloudController
     def after_destroy
       super
       create_app_usage_event
-      db.after_commit { AppObserver.deleted(self) }
+      db.after_commit { ProcessObserver.deleted(self) }
     end
 
     def metadata_with_command
@@ -515,7 +515,7 @@ module VCAP::CloudController
     def after_save
       super
 
-      db.after_commit { AppObserver.updated(self) }
+      db.after_commit { ProcessObserver.updated(self) }
     end
 
     def to_hash(opts={})

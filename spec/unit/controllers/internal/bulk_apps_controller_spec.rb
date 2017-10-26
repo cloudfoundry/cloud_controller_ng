@@ -119,9 +119,9 @@ module VCAP::CloudController
             expect(decoded_response['apps'].size).to eq(6)
 
             last_response_app = decoded_response['apps'].last
-            last_app          = app_table_entry(6)
+            last_process = app_table_entry(6)
 
-            expect(last_response_app).to eq(runners.runner_for_app(last_app).desire_app_message.as_json)
+            expect(last_response_app).to eq(runners.runner_for_process(last_process).desire_app_message.as_json)
           end
         end
 
@@ -324,16 +324,16 @@ module VCAP::CloudController
 
           context 'with a list of process guids' do
             it 'returns a list of desire app messages that match the process guids' do
-              diego_apps = runners.diego_apps(100, 0)
+              diego_processes = runners.diego_processes(100, 0)
 
-              guids = diego_apps.map { |app| Diego::ProcessGuid.from_process(app) }
+              guids = diego_processes.map { |process| Diego::ProcessGuid.from_process(process) }
               post '/internal/bulk/apps', guids.to_json
 
               expect(last_response.status).to eq(200)
               expect(decoded_response.length).to eq(5)
 
-              diego_apps.each do |app|
-                expect(decoded_response).to include(runners.runner_for_app(app).desire_app_message.as_json)
+              diego_processes.each do |process|
+                expect(decoded_response).to include(runners.runner_for_process(process).desire_app_message.as_json)
               end
             end
 
@@ -343,7 +343,7 @@ module VCAP::CloudController
               end
 
               it 'only returns the diego apps' do
-                diego_apps = runners.diego_apps(100, 0)
+                diego_apps = runners.diego_processes(100, 0)
 
                 guids = ProcessModel.all.map { |app| Diego::ProcessGuid.from_process(app) }
                 post '/internal/bulk/apps', guids.to_json

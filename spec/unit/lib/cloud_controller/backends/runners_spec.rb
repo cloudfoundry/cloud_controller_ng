@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     describe '#runner_for_app' do
       subject(:runner) do
-        runners.runner_for_app(process)
+        runners.runner_for_process(process)
       end
 
       context 'when the app is configured to run on Diego' do
@@ -50,7 +50,7 @@ module VCAP::CloudController
       it 'returns apps that have the desired data' do
         last_process = ProcessModelFactory.make(diego: true, state: 'STARTED', version: 'app-version-6')
 
-        apps = runners.diego_apps(100, 0)
+        apps = runners.diego_processes(100, 0)
 
         expect(apps.count).to eq(6)
 
@@ -59,17 +59,17 @@ module VCAP::CloudController
 
       it 'respects the batch_size' do
         app_counts = [3, 5].map do |batch_size|
-          runners.diego_apps(batch_size, 0).count
+          runners.diego_processes(batch_size, 0).count
         end
 
         expect(app_counts).to eq([3, 5])
       end
 
       it 'returns non-intersecting apps across subsequent batches' do
-        first_batch = runners.diego_apps(3, 0)
+        first_batch = runners.diego_processes(3, 0)
         expect(first_batch.count).to eq(3)
 
-        second_batch = runners.diego_apps(3, first_batch.last.id)
+        second_batch = runners.diego_processes(3, first_batch.last.id)
         expect(second_batch.count).to eq(2)
 
         expect(second_batch & first_batch).to eq([])
@@ -79,7 +79,7 @@ module VCAP::CloudController
         unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
         unstaged_process.current_droplet.destroy
 
-        batch = runners.diego_apps(100, 0)
+        batch = runners.diego_processes(100, 0)
 
         expect(batch).not_to include(unstaged_process)
       end
@@ -87,7 +87,7 @@ module VCAP::CloudController
       it "does not return apps which aren't expected to be started" do
         stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
-        batch = runners.diego_apps(100, 0)
+        batch = runners.diego_processes(100, 0)
 
         expect(batch).not_to include(stopped_process)
       end
@@ -104,7 +104,7 @@ module VCAP::CloudController
         unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
         unstaged_process.current_droplet.destroy
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(unstaged_process))
+        batch = runners.processes_from_diego_process_guids(Diego::ProcessGuid.from_process(unstaged_process))
 
         expect(batch).not_to include(unstaged_process)
       end
@@ -112,7 +112,7 @@ module VCAP::CloudController
       it 'does not return apps that are stopped' do
         stopped_process = ProcessModelFactory.make(diego: true, state: 'STOPPED')
 
-        batch = runners.diego_apps_from_process_guids(Diego::ProcessGuid.from_process(stopped_process))
+        batch = runners.processes_from_diego_process_guids(Diego::ProcessGuid.from_process(stopped_process))
 
         expect(batch).not_to include(stopped_process)
       end
@@ -121,15 +121,15 @@ module VCAP::CloudController
         process = ProcessModel.where(diego: true).order(:id).first
         process_guid = Diego::ProcessGuid.from_process(process)
 
-        expect(runners.diego_apps_from_process_guids(process_guid)).to eq([process])
-        expect(runners.diego_apps_from_process_guids([process_guid])).to eq([process])
+        expect(runners.processes_from_diego_process_guids(process_guid)).to eq([process])
+        expect(runners.processes_from_diego_process_guids([process_guid])).to eq([process])
       end
 
       it 'returns diego apps for each requested process guid' do
         diego_apps  = ProcessModel.where(diego: true).all
         diego_guids = diego_apps.map { |process| Diego::ProcessGuid.from_process(process) }
 
-        expect(runners.diego_apps_from_process_guids(diego_guids)).to match_array(diego_apps)
+        expect(runners.processes_from_diego_process_guids(diego_guids)).to match_array(diego_apps)
       end
 
       context 'when the process guid is not found' do
@@ -141,7 +141,7 @@ module VCAP::CloudController
             process.set_new_version
             process.save
           }.to change {
-            runners.diego_apps_from_process_guids(process_guid)
+            runners.processes_from_diego_process_guids(process_guid)
           }.from([process]).to([])
         end
       end

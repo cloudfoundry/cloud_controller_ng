@@ -134,7 +134,7 @@ module VCAP::CloudController
 
                     before do
                       success_response[:result][:execution_metadata] = 'black-box-string'
-                      allow(runners).to receive(:runner_for_app).and_return(runner)
+                      allow(runners).to receive(:runner_for_process).and_return(runner)
                     end
 
                     it 'updates the droplet with the metadata' do
@@ -154,7 +154,7 @@ module VCAP::CloudController
                     let!(:web_process) { ProcessModel.make(app: app, type: 'web', state: 'STARTED', metadata: {}) }
 
                     before do
-                      allow(runners).to receive(:runner_for_app).and_return(runner)
+                      allow(runners).to receive(:runner_for_process).and_return(runner)
                     end
 
                     it 'gracefully sets process_types to an empty hash, and marks the droplet as failed' do
@@ -205,7 +205,7 @@ module VCAP::CloudController
 
               before do
                 allow_any_instance_of(DropletModel).to receive(:save_changes).and_raise(save_error)
-                allow(runners).to receive(:runner_for_app).and_return(runner)
+                allow(runners).to receive(:runner_for_process).and_return(runner)
               end
 
               it 'logs an error for the CF operator' do
@@ -236,7 +236,7 @@ module VCAP::CloudController
               let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
 
               before do
-                allow(runners).to receive(:runner_for_app).and_return(runner)
+                allow(runners).to receive(:runner_for_process).and_return(runner)
               end
 
               it 'assigns the current droplet' do
@@ -248,7 +248,7 @@ module VCAP::CloudController
               it 'runs the wep process of the app' do
                 subject.staging_complete(success_response, true)
 
-                expect(runners).to have_received(:runner_for_app) do |process|
+                expect(runners).to have_received(:runner_for_process) do |process|
                   expect(process.guid).to eq(web_process.guid)
                 end
                 expect(runner).to have_received(:start)

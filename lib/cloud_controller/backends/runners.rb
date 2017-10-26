@@ -11,11 +11,11 @@ module VCAP::CloudController
       @config = config
     end
 
-    def runner_for_app(app)
-      diego_runner(app)
+    def runner_for_process(process)
+      diego_runner(process)
     end
 
-    def diego_apps(batch_size, last_id)
+    def diego_processes(batch_size, last_id)
       ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
@@ -26,16 +26,16 @@ module VCAP::CloudController
         all
     end
 
-    def diego_apps_from_process_guids(process_guids)
-      process_guids = Array(process_guids).to_set
+    def processes_from_diego_process_guids(diego_process_guids)
+      diego_process_guids = Array(diego_process_guids).to_set
       ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
-        where("#{ProcessModel.table_name}__guid".to_sym => process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
+        where("#{ProcessModel.table_name}__guid".to_sym => diego_process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
         order("#{ProcessModel.table_name}__id".to_sym).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all.
-        select { |app| process_guids.include?(Diego::ProcessGuid.from_process(app)) }
+        select { |process| diego_process_guids.include?(Diego::ProcessGuid.from_process(process)) }
     end
 
     def diego_apps_cache_data(batch_size, last_id)
@@ -94,8 +94,8 @@ module VCAP::CloudController
 
     private
 
-    def diego_runner(app)
-      Diego::Runner.new(app, @config)
+    def diego_runner(process)
+      Diego::Runner.new(process, @config)
     end
 
     def dependency_locator

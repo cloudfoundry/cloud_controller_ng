@@ -37,8 +37,8 @@ module VCAP::CloudController
       raise ApiError.new_from_details('MessageParseError', 'Missing request body') if body.length == 0
       payload = MultiJson.load(body)
 
-      apps = runners.diego_apps_from_process_guids(payload)
-      messages = apps.map { |app| runners.runner_for_app(app).desire_app_message }
+      processes = runners.processes_from_diego_process_guids(payload)
+      messages = processes.map { |process| runners.runner_for_process(process).desire_app_message }
 
       MultiJson.dump(messages)
     rescue MultiJson::ParseError => e
@@ -48,9 +48,9 @@ module VCAP::CloudController
     private
 
     def bulk_desire_app_format(batch_size, last_id)
-      apps = runners.diego_apps(batch_size, last_id)
-      messages = apps.map { |app| runners.runner_for_app(app).desire_app_message }
-      id_for_next_token = apps.empty? ? nil : apps.last.id
+      processes = runners.diego_processes(batch_size, last_id)
+      messages = processes.map { |process| runners.runner_for_process(process).desire_app_message }
+      id_for_next_token = processes.empty? ? nil : processes.last.id
 
       MultiJson.dump(
         apps: messages,

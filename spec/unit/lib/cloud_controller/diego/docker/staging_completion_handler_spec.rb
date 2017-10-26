@@ -133,7 +133,7 @@ module VCAP::CloudController
               let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
 
               before do
-                allow(runners).to receive(:runner_for_app).and_return(runner)
+                allow(runners).to receive(:runner_for_process).and_return(runner)
               end
 
               it 'assigns the current droplet' do
@@ -144,7 +144,7 @@ module VCAP::CloudController
               it 'runs the wep process of the app' do
                 handler.staging_complete(payload, true)
 
-                expect(runners).to have_received(:runner_for_app).with(web_process)
+                expect(runners).to have_received(:runner_for_process).with(web_process)
                 expect(runner).to have_received(:start)
               end
 

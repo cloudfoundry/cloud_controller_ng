@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe IndexStopper do
-    let(:runners) { double(:runners, runner_for_app: runner) }
+    let(:runners) { double(:runners, runner_for_process: runner) }
     let(:runner) { double(:runner, stop_index: nil) }
     let(:app) { double(:app, guid: 'app-guid') }
 

@@ -1273,7 +1273,7 @@ module VCAP::CloudController
     describe 'saving' do
       it 'calls AppObserver.updated', isolation: :truncation do
         process = ProcessModelFactory.make
-        expect(AppObserver).to receive(:updated).with(process)
+        expect(ProcessObserver).to receive(:updated).with(process)
         process.update(instances: process.instances + 1)
       end
 
@@ -1370,7 +1370,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'notifies the app observer', isolation: :truncation do
-        expect(AppObserver).to receive(:deleted).with(process)
+        expect(ProcessObserver).to receive(:deleted).with(process)
         process.destroy
       end
 
@@ -1456,14 +1456,14 @@ module VCAP::CloudController
         subject!(:process) { ProcessModelFactory.make(diego: true, state: 'STARTED') }
 
         before do
-          allow(AppObserver).to receive(:updated).with(process)
+          allow(ProcessObserver).to receive(:updated).with(process)
         end
 
         it 'calls the app observer with the app', isolation: :truncation do
-          expect(AppObserver).not_to have_received(:updated).with(process)
+          expect(ProcessObserver).not_to have_received(:updated).with(process)
           process.ports = [1111, 2222]
           process.save
-          expect(AppObserver).to have_received(:updated).with(process)
+          expect(ProcessObserver).to have_received(:updated).with(process)
         end
 
         it 'updates the app version' do

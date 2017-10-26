@@ -32,7 +32,7 @@ RSpec.describe BackgroundJobEnvironment do
     end
 
     it 'configures app observer with null stager and dea pool' do
-      expect(VCAP::CloudController::AppObserver).to receive(:configure).with(
+      expect(VCAP::CloudController::ProcessObserver).to receive(:configure).with(
         instance_of(VCAP::CloudController::Stagers),
         instance_of(VCAP::CloudController::Runners)
       )

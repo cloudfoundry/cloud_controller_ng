@@ -142,7 +142,7 @@ module VCAP::CloudController
           end
         end
 
-        @runners.runner_for_app(web_process).start
+        @runners.runner_for_process(web_process).start
       end
 
       def error_parser

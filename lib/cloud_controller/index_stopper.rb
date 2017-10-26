@@ -4,8 +4,8 @@ module VCAP::CloudController
       @runners = runners
     end
 
-    def stop_index(app, index)
-      @runners.runner_for_app(app).stop_index(index)
+    def stop_index(process, index)
+      @runners.runner_for_process(process).stop_index(index)
     end
   end
 end

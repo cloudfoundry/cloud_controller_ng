@@ -123,7 +123,7 @@ module VCAP::CloudController
 
       run_initializers
 
-      AppObserver.configure(dependency_locator.stagers, dependency_locator.runners)
+      ProcessObserver.configure(dependency_locator.stagers, dependency_locator.runners)
       InternalApi.configure(self)
       @schema_class.configure_components(self)
     end

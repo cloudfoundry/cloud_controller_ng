@@ -4,7 +4,7 @@ require 'cloud_controller/process_route_handler'
 module VCAP::CloudController
   RSpec.describe ProcessRouteHandler do
     subject(:handler) { ProcessRouteHandler.new(process, runners) }
-    let(:runners) { instance_double(Runners, runner_for_app: runner) }
+    let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:runner) { instance_double(Diego::Runner, update_routes: nil) }
 
     describe '#update_route_information' do
@@ -57,7 +57,7 @@ module VCAP::CloudController
           expect(process.package_state).to eq('STAGED')
 
           handler.notify_backend_of_route_update
-          expect(runners).to have_received(:runner_for_app).with(process)
+          expect(runners).to have_received(:runner_for_process).with(process)
           expect(runner).to have_received(:update_routes)
         end
       end

@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     def notify_backend_of_route_update
-      @runners.runner_for_app(@process).update_routes if @process && @process.staged? && @process.started?
+      @runners.runner_for_process(@process).update_routes if @process && @process.staged? && @process.started?
     rescue Diego::Runner::CannotCommunicateWithDiegoError => e
       logger.error("failed communicating with diego backend: #{e.message}")
     end

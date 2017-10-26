@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe AppObserver do
+  RSpec.describe ProcessObserver do
     let(:stagers) { double(:stagers, stager_for_app: stager) }
-    let(:runners) { instance_double(Runners, runner_for_app: runner) }
+    let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:stager) { double(:stager) }
     let(:runner) { instance_double(Diego::Runner, stop: nil, start: nil) }
     let(:app_active) { true }
@@ -32,12 +32,12 @@ module VCAP::CloudController
     let(:staging?) { false }
 
     before do
-      AppObserver.configure(stagers, runners)
+      ProcessObserver.configure(stagers, runners)
     end
 
     describe '.deleted' do
       let(:key) { 'my-cache-key' }
-      subject { AppObserver.deleted(app) }
+      subject { ProcessObserver.deleted(app) }
 
       it 'stops the app' do
         expect(runner).to receive(:stop)
@@ -55,7 +55,7 @@ module VCAP::CloudController
     end
 
     describe '.updated' do
-      subject { AppObserver.updated(app) }
+      subject { ProcessObserver.updated(app) }
 
       context 'when the app state is changed' do
         let(:previous_changes) { { state: 'original-state' } }

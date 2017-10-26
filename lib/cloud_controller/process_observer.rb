@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  module AppObserver
+  module ProcessObserver
     class << self
       extend Forwardable
 
@@ -8,38 +8,38 @@ module VCAP::CloudController
         @runners = runners
       end
 
-      def deleted(app)
+      def deleted(process)
         with_diego_communication_handling do
-          @runners.runner_for_app(app).stop
+          @runners.runner_for_process(process).stop
         end
       end
 
-      def updated(app)
-        changes = app.previous_changes
+      def updated(process)
+        changes = process.previous_changes
         return unless changes
 
         with_diego_communication_handling do
           if changes.key?(:state) || changes.key?(:diego) || changes.key?(:enable_ssh) || changes.key?(:ports)
-            react_to_state_change(app)
+            react_to_state_change(process)
           elsif changes.key?(:instances)
-            react_to_instances_change(app)
+            react_to_instances_change(process)
           end
         end
       end
 
       private
 
-      def react_to_state_change(app)
-        if !app.started?
-          @runners.runner_for_app(app).stop
+      def react_to_state_change(process)
+        unless process.started?
+          @runners.runner_for_process(process).stop
           return
         end
 
-        @runners.runner_for_app(app).start unless app.needs_staging?
+        @runners.runner_for_process(process).start unless process.needs_staging?
       end
 
-      def react_to_instances_change(app)
-        @runners.runner_for_app(app).scale if app.started? && app.active?
+      def react_to_instances_change(process)
+        @runners.runner_for_process(process).scale if process.started? && process.active?
       end
 
       def with_diego_communication_handling
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       def logger
-        @logger ||= Steno.logger('cc.app_observer')
+        @logger ||= Steno.logger('cc.process_observer')
       end
     end
   end

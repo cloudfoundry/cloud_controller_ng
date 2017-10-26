@@ -10,7 +10,7 @@ RSpec.describe 'Fill in enable_ssh flags for apps from existing processes', isol
       tmp_migrations_dir,
     )
 
-    allow(VCAP::CloudController::AppObserver).to receive(:updated)
+    allow(VCAP::CloudController::ProcessObserver).to receive(:updated)
   end
 
   let!(:web_process) { VCAP::CloudController::ProcessModelFactory.make(type: 'web', guid: 'app-1') }

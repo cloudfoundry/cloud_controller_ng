@@ -387,7 +387,7 @@ module VCAP::CloudController
       end
 
       it 'sets up the app manager' do
-        expect(AppObserver).to receive(:configure).with(instance_of(Stagers), instance_of(Runners))
+        expect(ProcessObserver).to receive(:configure).with(instance_of(Stagers), instance_of(Runners))
 
         config_instance.configure_components
       end
