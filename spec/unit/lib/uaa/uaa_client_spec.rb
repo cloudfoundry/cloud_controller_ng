@@ -172,7 +172,7 @@ module VCAP::CloudController
             'totalresults' => 1 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'origin eq "ldap" and username eq "user@example.com"' }).
+            with(query: { 'includeInactive' => true, 'filter' => 'origin eq "ldap" and username eq "user@example.com"' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
@@ -193,7 +193,7 @@ module VCAP::CloudController
             'totalresults' => 1 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'username eq "user@example.com"' }).
+            with(query: { 'includeInactive' => true, 'filter' => 'username eq "user@example.com"' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
@@ -212,7 +212,7 @@ module VCAP::CloudController
           'totalresults' => 0 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
-          with(query: { 'filter' => 'username eq "user@example.com"' }).
+          with(query: { 'includeInactive' => true, 'filter' => 'username eq "user@example.com"' }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -264,7 +264,7 @@ module VCAP::CloudController
             'totalresults' => 2 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'username eq "user_1"' }).
+            with(query: { 'includeInactive' => true, 'filter' => 'username eq "user_1"' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
@@ -284,7 +284,7 @@ module VCAP::CloudController
           'totalresults' => 0 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
-          with(query: { 'filter' => 'username eq "user_1"' }).
+          with(query: { 'includeInactive' => true, 'filter' => 'username eq "user_1"' }).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },

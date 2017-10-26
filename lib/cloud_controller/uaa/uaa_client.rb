@@ -47,7 +47,7 @@ module VCAP::CloudController
     def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
       filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
-      results       = scim.query(:user_id, filter: filter_string)
+      results       = scim.query(:user_id, includeInactive: true, filter: filter_string)
 
       user = results['resources'].first
       user && user['id']
@@ -57,7 +57,7 @@ module VCAP::CloudController
 
     def origins_for_username(username)
       filter_string = %(username eq "#{username}")
-      results       = scim.query(:user_id, filter: filter_string)
+      results       = scim.query(:user_id, includeInactive: true, filter: filter_string)
 
       return results['resources'].map { |resource| resource['origin'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e

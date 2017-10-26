@@ -45,7 +45,7 @@ gem 'fog-local'
 gem 'fog-openstack'
 
 gem 'bits_service_client'
-gem 'cf-uaa-lib', '~> 3.11.0'
+gem 'cf-uaa-lib', '~> 3.13.0'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
 gem 'cf-perm', git: 'https://github.com/cloudfoundry-incubator/perm-rb.git', branch: 'master'
