@@ -1148,6 +1148,67 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response.body).to include 'ResourceNotFound'
         end
       end
+
+      context 'when the app does not have a droplet' do
+        before do
+          droplet.destroy
+        end
+
+        it 'raises an API 404 error' do
+          post :restart, guid: app_model.guid
+
+          response_body = parsed_body
+          expect(response.status).to eq 404
+          expect(response_body['errors'].first['title']).to eq 'CF-ResourceNotFound'
+          expect(response_body['errors'].first['detail']).to eq 'Droplet not found'
+        end
+      end
+
+      context 'when requesting docker lifecycle' do
+        let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
+
+        context 'and diego_docker feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          end
+
+          it 'returns 200' do
+            post :restart, guid: app_model.guid
+
+            expect(response.status).to eq(200)
+          end
+        end
+
+        context 'and diego_docker feature flag is disabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+          end
+
+          context 'admin' do
+            before do
+              set_current_user_as_admin(user: user)
+            end
+
+            it 'raises 403' do
+              post :restart, guid: app_model.guid
+
+              expect(response.status).to eq(403)
+              expect(response.body).to include('FeatureDisabled')
+              expect(response.body).to include('diego_docker')
+            end
+          end
+
+          context 'non-admin' do
+            it 'raises 403' do
+              post :restart, guid: app_model.guid
+
+              expect(response.status).to eq(403)
+              expect(response.body).to include('FeatureDisabled')
+              expect(response.body).to include('diego_docker')
+            end
+          end
+        end
+      end
     end
   end
 

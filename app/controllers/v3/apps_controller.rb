@@ -131,7 +131,11 @@ class AppsV3Controller < ApplicationController
   def restart
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
+    droplet_not_found! unless app.droplet
     unauthorized! unless can_write?(space.guid)
+    if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+      FeatureFlag.raise_unless_enabled!(:diego_docker)
+    end
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   end
