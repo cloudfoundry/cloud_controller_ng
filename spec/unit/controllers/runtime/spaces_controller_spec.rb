@@ -5,6 +5,12 @@ module VCAP::CloudController
     let(:organization_one) { Organization.make }
     let(:space_one) { Space.make(organization: organization_one) }
     let(:user_email) { Sham.email }
+    let(:uaa_client) { instance_double(UaaClient) }
+
+    before do
+      allow(UaaClient).to receive(:new).and_return(uaa_client)
+      allow(uaa_client).to receive(:get_clients).with([]).and_return([])
+    end
 
     def decoded_guids
       decoded_response['resources'].map { |r| r['metadata']['guid'] }
@@ -1069,7 +1075,7 @@ module VCAP::CloudController
       let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
       let(:space) { Space.make(organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({})
       end
 
       it 'allows space managers' do
@@ -1100,7 +1106,7 @@ module VCAP::CloudController
       let(:space_auditor_guids) { [] }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([developer.guid]).and_return({ developer.guid => developer.username })
+        allow(uaa_client).to receive(:usernames_for_ids).with([developer.guid]).and_return({ developer.guid => developer.username })
       end
 
       context 'as admin who is not a developer or manager' do
@@ -1143,7 +1149,7 @@ module VCAP::CloudController
           let(:org_user_guids) { [mgr.guid, developer.guid, dev.guid] }
 
           before do
-            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([dev.guid]).and_return({ dev.guid => dev.username })
+            allow(uaa_client).to receive(:usernames_for_ids).with([dev.guid]).and_return({ dev.guid => dev.username })
           end
 
           it 'fails with a 403' do
@@ -1187,7 +1193,7 @@ module VCAP::CloudController
       let(:space_auditor_guids) { [] }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([manager.guid]).and_return({ manager.guid => manager.username })
+        allow(uaa_client).to receive(:usernames_for_ids).with([manager.guid]).and_return({ manager.guid => manager.username })
       end
 
       context 'as admin who is not a developer or manager' do
@@ -1231,7 +1237,7 @@ module VCAP::CloudController
           let(:org_user_guids) { [manager.guid, mgr.guid, developer.guid] }
 
           before do
-            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([mgr.guid]).and_return({ mgr.guid => mgr.username })
+            allow(uaa_client).to receive(:usernames_for_ids).with([mgr.guid]).and_return({ mgr.guid => mgr.username })
           end
 
           it 'successfully removes the manager' do
@@ -1274,7 +1280,7 @@ module VCAP::CloudController
       let(:space_auditor_guids) { [auditor.guid] }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([auditor.guid]).and_return({ auditor.guid => auditor.username })
+        allow(uaa_client).to receive(:usernames_for_ids).with([auditor.guid]).and_return({ auditor.guid => auditor.username })
       end
 
       context 'as admin who is not a manager' do
@@ -1333,7 +1339,7 @@ module VCAP::CloudController
           let(:org_user_guids) { [manager.guid, auditor.guid, auditor2.guid] }
 
           before do
-            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([auditor2.guid]).and_return({ auditor2.guid => auditor2.username })
+            allow(uaa_client).to receive(:usernames_for_ids).with([auditor2.guid]).and_return({ auditor2.guid => auditor2.username })
           end
 
           it 'fails with a 403' do
@@ -2032,82 +2038,142 @@ module VCAP::CloudController
         describe "PUT /v2/spaces/:guid/#{plural_role}" do
           let(:user) { User.make(username: 'larry_the_user') }
           let(:event_type) { "audit.user.space_#{role}_add" }
+          let(:origin1) { 'larry_origin' }
+          let(:origin2) { 'another_larry_origin' }
 
           before do
-            allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return([])
+            allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1])
             organization_one.add_user(user)
             set_current_user_as_admin(email: user_email)
           end
 
-          it "makes the user a space #{role}" do
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            expect(last_response.status).to eq(201)
-            expect(space_one.send(plural_role)).to include(user)
-            expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
-          end
-
-          it 'verifies the user has update access to the space' do
-            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-          end
-
-          it 'returns a 404 when the user does not exist in UAA' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return(nil)
-
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
-
-            expect(last_response.status).to eq(404)
-            expect(decoded_response['code']).to eq(20003)
-          end
-
-          it 'returns an error when UAA is not available' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
-
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            expect(last_response.status).to eq(503)
-            expect(decoded_response['code']).to eq(20004)
-          end
-
-          it 'returns an error when UAA endpoint is disabled' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
-
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            expect(last_response.status).to eq(501)
-            expect(decoded_response['code']).to eq(20005)
-          end
-
-          it 'logs audit.space.role.add when a role is associated to a space' do
-            put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            event = Event.find(type: event_type, actee: user.guid)
-            expect(event).not_to be_nil
-            expect(event.space_guid).to eq(space_one.guid)
-            expect(event.actor_name).to eq(SecurityContext.current_user_email)
-            expect(event.organization_guid).to eq(space_one.organization.guid)
-          end
-
-          context 'when the feature flag "set_roles_by_username" is disabled' do
+          context 'when an origin is specified' do
             before do
-              FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
+              allow(uaa_client).to receive(:id_for_username).with(user.username, origin: origin1).and_return(user.guid)
             end
 
-            it 'raises a feature flag error for non-admins' do
-              set_current_user(user)
-              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+            context 'when the specified origin is not in the user\'s origins' do
+              let(:user) { User.make(username: 'fake@example.com') }
+              let(:fake_origin) { 'fake_origin' }
+              before do
+                allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['bogus-origin'])
+              end
 
-              expect(last_response.status).to eq(403)
-              expect(decoded_response['code']).to eq(330002)
+              it 'returns a 404 when the user does not exist in UAA' do
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com', origin: origin1 })
+
+                expect(last_response.status).to eq(404), last_response.body
+                expect(decoded_response['code']).to eq(20007)
+                expect(decoded_response['description']).to eq("The user could not be found, username: 'fake@example.com', origin: '#{origin1}'")
+              end
             end
 
-            it 'succeeds for admins' do
+            context 'when the specified origin is in the user\'s origins' do
+              before do
+                allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1])
+              end
+
+              it "makes the user an org #{role}" do
+                expect(uaa_client).to receive(:id_for_username).with(user.username, origin: origin1).
+                  and_return(user.guid)
+
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username, origin: origin1 })
+
+                expect(last_response.status).to eq(201)
+                expect(space_one.send(plural_role)).to include(user)
+                expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+              end
+            end
+          end
+
+          context 'origin is not specified' do
+            before do
+              allow(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(user.guid)
+            end
+
+            it 'returns a 400 if the user is found in multiple origins' do
+              expect(uaa_client).to receive(:origins_for_username).with(user.username).
+                and_return([origin1, origin2])
+
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'larry_the_user' })
+
+              expect(last_response.status).to eq(400), " Expected 400, got #{last_response.status}: body: #{last_response.body}"
+              expect(decoded_response['code']).to eq(20006)
+              expect(decoded_response['description']).
+                to eq("The user exists in multiple origins. Specify an origin for the requested user from: '#{origin1}', '#{origin2}'")
+            end
+
+            it "makes the user a space #{role}" do
               put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
               expect(last_response.status).to eq(201)
               expect(space_one.send(plural_role)).to include(user)
               expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+            end
+
+            it 'verifies the user has update access to the space' do
+              expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+            end
+
+            it 'returns a 404 when the user does not exist in UAA' do
+              expect(uaa_client).to receive(:id_for_username).with('fake@example.com', origin: nil).and_return(nil)
+
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
+
+              expect(last_response.status).to eq(404), last_response.body
+              expect(decoded_response['code']).to eq(20003)
+            end
+
+            it 'returns an error when UAA is not available' do
+              expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
+
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              expect(last_response.status).to eq(503)
+              expect(decoded_response['code']).to eq(20004)
+            end
+
+            it 'returns an error when UAA endpoint is disabled' do
+              expect(uaa_client).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              expect(last_response.status).to eq(501)
+              expect(decoded_response['code']).to eq(20005)
+            end
+
+            it 'logs audit.space.role.add when a role is associated to a space' do
+              put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              event = Event.find(type: event_type, actee: user.guid)
+              expect(event).not_to be_nil
+              expect(event.space_guid).to eq(space_one.guid)
+              expect(event.actor_name).to eq(SecurityContext.current_user_email)
+              expect(event.organization_guid).to eq(space_one.organization.guid)
+            end
+
+            context 'when the feature flag "set_roles_by_username" is disabled' do
+              before do
+                FeatureFlag.new(name: 'set_roles_by_username', enabled: false).save
+              end
+
+              it 'raises a feature flag error for non-admins' do
+                set_current_user(user)
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+                expect(last_response.status).to eq(403)
+                expect(decoded_response['code']).to eq(330002)
+              end
+
+              it 'succeeds for admins' do
+                put "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+                expect(last_response.status).to eq(201)
+                expect(space_one.send(plural_role)).to include(user)
+                expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+              end
             end
           end
         end
@@ -2122,7 +2188,7 @@ module VCAP::CloudController
           let(:event_type) { "audit.user.space_#{role}_remove" }
 
           before do
-            allow_any_instance_of(UaaClient).to receive(:id_for_username).with(user.username).and_return(user.guid)
+            allow(uaa_client).to receive(:id_for_username).with(user.username).and_return(user.guid)
             organization_one.add_user(user)
             space_one.send("add_#{role}", user)
             set_current_user_as_admin(email: user_email)
@@ -2144,7 +2210,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 404 when the user does not exist in CC' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).with('fake@example.com').and_return('not-a-real-guid')
+            expect(uaa_client).to receive(:id_for_username).with('fake@example.com').and_return('not-a-real-guid')
 
             delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
 
@@ -2153,7 +2219,7 @@ module VCAP::CloudController
           end
 
           it 'returns an error when UAA is not available' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaUnavailable)
+            expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
 
             delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
@@ -2162,7 +2228,7 @@ module VCAP::CloudController
           end
 
           it 'returns an error when UAA endpoint is disabled' do
-            expect_any_instance_of(UaaClient).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+            expect(uaa_client).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
 
             delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
@@ -2218,7 +2284,7 @@ module VCAP::CloudController
           before do
             space.organization.add_user(user)
             set_current_user_as_admin(email: user_email)
-            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ user.guid => user.username })
+            allow(uaa_client).to receive(:usernames_for_ids).and_return({ user.guid => user.username })
           end
 
           it "makes the user a space #{role}" do
@@ -2266,7 +2332,7 @@ module VCAP::CloudController
             space.organization.add_user(user)
             space.send("add_#{role}", user)
             set_current_user_as_admin(email: user_email)
-            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).with([user.guid]).and_return({ user.guid => user.username })
+            allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return({ user.guid => user.username })
           end
 
           it "unsets the user as a space #{role}" do
@@ -2284,7 +2350,7 @@ module VCAP::CloudController
           end
 
           it 'returns a 400 when the user does not exist in CC' do
-            allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
+            allow(uaa_client).to receive(:usernames_for_ids).and_return({})
             delete "/v2/spaces/#{space.guid}/#{plural_role}/bogus-user-id"
 
             expect(last_response.status).to eq(400)

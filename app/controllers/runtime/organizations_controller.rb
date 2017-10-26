@@ -3,9 +3,12 @@ require 'actions/space_delete'
 require 'actions/perm_org_roles_delete'
 require 'actions/perm_space_roles_delete'
 require 'fetchers/organization_user_roles_fetcher'
+require 'controllers/runtime/mixins/uaa_origin_validator'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
+    include UaaOriginValidator
+
     ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
 
     def self.dependencies
@@ -457,19 +460,6 @@ module VCAP::CloudController
             )
           end
         end
-      end
-    end
-
-    def validate_origin_for_username!(origin, username)
-      origins_for_username = @uaa_client.origins_for_username(username)
-      if origin.present?
-        if !origins_for_username.include?(origin)
-          message = "username: '#{username}', origin: '#{origin}'"
-          raise CloudController::Errors::ApiError.new_from_details('UserWithOriginNotFound', message)
-        end
-      elsif origins_for_username.size > 1
-        raise CloudController::Errors::ApiError.new_from_details('UserIsInMultipleOrigins',
-          origins_for_username.map { |s| "'#{s}'" })
       end
     end
   end

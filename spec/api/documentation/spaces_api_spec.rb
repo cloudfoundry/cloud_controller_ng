@@ -138,6 +138,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(201)
@@ -194,6 +195,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(201)
@@ -250,6 +252,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
             uaa_client = double(:uaa_client)
             allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
+            allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
 
             client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
             expect(status).to eq(201)

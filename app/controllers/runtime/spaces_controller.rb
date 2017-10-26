@@ -1,8 +1,11 @@
 require 'actions/space_delete'
 require 'fetchers/space_user_roles_fetcher'
+require 'controllers/runtime/mixins/uaa_origin_validator'
 
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
+    include UaaOriginValidator
+
     ROLE_NAMES = [:manager, :developer, :auditor].freeze
 
     def self.dependencies
@@ -183,10 +186,13 @@ module VCAP::CloudController
       define_method("add_#{role}_by_username") do |guid|
         FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
 
-        username = parse_and_validate_json(body)['username']
+        payload = parse_and_validate_json(body)
+        username = payload['username']
+        origin = payload['origin']
 
         begin
-          user_id = @uaa_client.id_for_username(username)
+          validate_origin_for_username!(origin, username)
+          user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled

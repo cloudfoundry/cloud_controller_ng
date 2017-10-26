@@ -1712,7 +1712,7 @@ module VCAP::CloudController
               end
 
               it 'returns a 400 if the user is found in multiple origins' do
-                expect(uaa_client).to receive(:origins_for_username).with('larry_the_user').
+                expect(uaa_client).to receive(:origins_for_username).with(user.username).
                   and_return([origin1, origin2])
 
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: 'larry_the_user' })
