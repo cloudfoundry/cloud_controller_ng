@@ -8571,7 +8571,7 @@ In order to share into a space the requesting user must be a space developer in 
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
 
-<p>This endpoint unshares the service instance with the specified space.</p>
+<p>This endpoint unshares the service instance with the specified space. This will automatically unbind any applications bound to this service instance in the specified space.</p>
 
 <h4 id="definition">Definition</h4>
 
