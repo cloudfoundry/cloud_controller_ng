@@ -2181,85 +2181,113 @@ module VCAP::CloudController
     end
 
     describe 'removing user roles by username' do
-      [:manager, :developer, :auditor].each do |role|
-        plural_role = role.to_s.pluralize
-        describe "DELETE /v2/spaces/:guid/#{plural_role}" do
-          let(:user) { User.make(username: 'larry_the_user') }
-          let(:event_type) { "audit.user.space_#{role}_remove" }
+      describe 'with the POST action' do
+        [:manager, :developer, :auditor].each do |role|
+          plural_role = role.to_s.pluralize
+          describe "POST /v2/spaces/:guid/#{role}" do
+            let(:user) { User.make(username: 'larry_the_user') }
+            let(:user2) { User.make(username: 'larry_the_user') }
+            let(:origin1) { 'larry_origin' }
+            let(:origin2) { 'another_larry_origin' }
+            let(:event_type) { "audit.user.space_#{role}_add" }
 
-          before do
-            allow(uaa_client).to receive(:id_for_username).with(user.username).and_return(user.guid)
-            organization_one.add_user(user)
-            space_one.send("add_#{role}", user)
-            set_current_user_as_admin(email: user_email)
-          end
-
-          it "unsets the user as a space #{role}" do
-            expect(space_one.send(plural_role)).to include(user)
-
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            expect(last_response.status).to eq(200)
-            expect(space_one.reload.send(plural_role)).to_not include(user)
-            expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
-          end
-
-          it 'verifies the user has update access to the space' do
-            expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-          end
-
-          it 'returns a 404 when the user does not exist in CC' do
-            expect(uaa_client).to receive(:id_for_username).with('fake@example.com').and_return('not-a-real-guid')
-
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
-
-            expect(last_response.status).to eq(404)
-            expect(decoded_response['code']).to eq(20003)
-          end
-
-          it 'returns an error when UAA is not available' do
-            expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
-
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            expect(last_response.status).to eq(503)
-            expect(decoded_response['code']).to eq(20004)
-          end
-
-          it 'returns an error when UAA endpoint is disabled' do
-            expect(uaa_client).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
-
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            expect(last_response.status).to eq(501)
-            expect(decoded_response['code']).to eq(20005)
-          end
-
-          it 'logs audit.space.role.remove when a user-role association is removed from a space' do
-            delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
-
-            event = Event.find(type: event_type, actee: user.guid)
-            expect(event).not_to be_nil
-            expect(event.space_guid).to eq(space_one.guid)
-            expect(event.actor_name).to eq(SecurityContext.current_user_email)
-            expect(event.organization_guid).to eq(space_one.organization.guid)
-          end
-
-          context 'when the feature flag "unset_roles_by_username" is disabled' do
             before do
-              FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save
+              allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['uaa'])
+              allow(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(user.guid)
+
+              organization_one.add_user(user)
+              space_one.send("add_#{role}", user)
+              set_current_user_as_admin(email: user_email)
             end
 
-            it 'raises a feature flag error for non-admins' do
-              set_current_user(user)
-              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+            context 'when an origin is specified' do
+              context 'when the specified origin is not in the user\'s origins' do
+                before do
+                  allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['bogus-origin'])
+                end
 
-              expect(last_response.status).to eq(403)
-              expect(decoded_response['code']).to eq(330002)
+                it 'returns a 404 when the user does not exist in UAA for the specified origin' do
+                  post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove", MultiJson.dump({ username: user.username, origin: origin1 })
+
+                  expect(last_response.status).to eq(404), last_response.body
+                  expect(decoded_response['code']).to eq(20007)
+                  expect(decoded_response['description']).to eq("The user could not be found, username: '#{user.username}', origin: '#{origin1}'")
+                end
+              end
+
+              context 'when the specified origin is in the user\'s origins' do
+                before do
+                  expect(uaa_client).to receive(:id_for_username).with(user.username, origin: origin1).and_return(user.guid)
+                  allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1, origin2])
+                  space_one.send("add_#{role}", user)
+                end
+
+                it "unsets the user as an space #{role}" do
+                  expect(space_one.send(plural_role)).to include(user)
+
+                  post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
+                    MultiJson.dump(username: user.username, origin: origin1)
+
+                  expect(last_response.status).to eq(200)
+                  expect(space_one.reload.send(plural_role)).to_not include(user)
+                  expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+                end
+              end
             end
 
-            it 'succeeds for admins' do
+            context 'when an origin is not specified' do
+              context 'when the username exists in only one UAA origin' do
+                before do
+                  expect(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(user.guid)
+                  allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return([origin1])
+                  space_one.send("add_#{role}", user)
+                end
+
+                it "unsets the user as an space #{role}" do
+                  expect(space_one.send(plural_role)).to include(user)
+
+                  post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
+                    MultiJson.dump(username: user.username)
+
+                  expect(last_response.status).to eq(200)
+                  expect(space_one.reload.send(plural_role)).to_not include(user)
+                  expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+                end
+              end
+
+              context 'when the username exists in multiple UAA origins' do
+                it 'returns a 400 error' do
+                  expect(uaa_client).to receive(:origins_for_username).and_return(['origin1', 'origin2'])
+
+                  post "/v2/spaces/#{space_one.guid}/#{plural_role}/remove",
+                    MultiJson.dump({ username: user.username })
+
+                  expect(last_response.status).to eq(400)
+                  expect(decoded_response['code']).to eq(20006)
+                end
+              end
+            end
+          end
+        end
+      end
+
+      describe 'with the DELETE action' do
+        [:manager, :developer, :auditor].each do |role|
+          plural_role = role.to_s.pluralize
+          describe "DELETE /v2/spaces/:guid/#{plural_role}" do
+            let(:user) { User.make(username: 'larry_the_user') }
+            let(:event_type) { "audit.user.space_#{role}_remove" }
+
+            before do
+              allow(uaa_client).to receive(:id_for_username).with(user.username, origin: nil).and_return(user.guid)
+              allow(uaa_client).to receive(:origins_for_username).and_return(['uaa'])
+
+              organization_one.add_user(user)
+              space_one.send("add_#{role}", user)
+              set_current_user_as_admin(email: user_email)
+            end
+
+            it "unsets the user as a space #{role}" do
               expect(space_one.send(plural_role)).to include(user)
 
               delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
@@ -2267,6 +2295,83 @@ module VCAP::CloudController
               expect(last_response.status).to eq(200)
               expect(space_one.reload.send(plural_role)).to_not include(user)
               expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+            end
+
+            it 'verifies the user has update access to the space' do
+              expect_any_instance_of(SpacesController).to receive(:find_guid_and_validate_access).with(:update, space_one.guid).and_call_original
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+            end
+
+            it 'returns a 404 when the user does not exist in CC' do
+              expect(uaa_client).to receive(:id_for_username).with('fake@example.com', origin: nil).and_return('not-a-real-guid')
+
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: 'fake@example.com' })
+
+              expect(last_response.status).to eq(404)
+              expect(decoded_response['code']).to eq(20003)
+            end
+
+            it 'returns an error when UAA is not available' do
+              expect(uaa_client).to receive(:id_for_username).and_raise(UaaUnavailable)
+
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              expect(last_response.status).to eq(503)
+              expect(decoded_response['code']).to eq(20004)
+            end
+
+            it 'returns an error when UAA endpoint is disabled' do
+              expect(uaa_client).to receive(:id_for_username).and_raise(UaaEndpointDisabled)
+
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              expect(last_response.status).to eq(501)
+              expect(decoded_response['code']).to eq(20005)
+            end
+
+            it 'logs audit.space.role.remove when a user-role association is removed from a space' do
+              delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+              event = Event.find(type: event_type, actee: user.guid)
+              expect(event).not_to be_nil
+              expect(event.space_guid).to eq(space_one.guid)
+              expect(event.actor_name).to eq(SecurityContext.current_user_email)
+              expect(event.organization_guid).to eq(space_one.organization.guid)
+            end
+
+            context 'when the username exists in multiple UAA origins' do
+              it 'returns a 400 error' do
+                expect(uaa_client).to receive(:origins_for_username).and_return(['origin1', 'origin2'])
+
+                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+                expect(last_response.status).to eq(400)
+                expect(decoded_response['code']).to eq(20006)
+              end
+            end
+
+            context 'when the feature flag "unset_roles_by_username" is disabled' do
+              before do
+                FeatureFlag.new(name: 'unset_roles_by_username', enabled: false).save
+              end
+
+              it 'raises a feature flag error for non-admins' do
+                set_current_user(user)
+                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+                expect(last_response.status).to eq(403)
+                expect(decoded_response['code']).to eq(330002)
+              end
+
+              it 'succeeds for admins' do
+                expect(space_one.send(plural_role)).to include(user)
+
+                delete "/v2/spaces/#{space_one.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
+
+                expect(last_response.status).to eq(200)
+                expect(space_one.reload.send(plural_role)).to_not include(user)
+                expect(decoded_response['metadata']['guid']).to eq(space_one.guid)
+              end
             end
           end
         end

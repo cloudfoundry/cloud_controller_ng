@@ -213,16 +213,21 @@ module VCAP::CloudController
     ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
-      delete "/v2/spaces/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
       delete "/v2/spaces/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
+      delete "/v2/spaces/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
+
+      post "/v2/spaces/:guid/#{plural_role}/remove", "remove_#{role}_by_username".to_sym
 
       define_method("remove_#{role}_by_username") do |guid|
         FeatureFlag.raise_unless_enabled!(:unset_roles_by_username)
 
-        username = parse_and_validate_json(body)['username']
+        payload = parse_and_validate_json(body)
+        username = payload['username']
+        origin = payload['origin']
 
         begin
-          user_id = @uaa_client.id_for_username(username)
+          validate_origin_for_username!(origin, username)
+          user_id = @uaa_client.id_for_username(username, origin: origin.presence)
         rescue UaaUnavailable
           raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
