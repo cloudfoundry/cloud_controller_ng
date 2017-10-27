@@ -4,50 +4,50 @@ module VCAP::CloudController
   RSpec.describe Config do
     let(:test_config_hash) {
       {
-        packages: {
-          fog_connection: {},
-          fog_aws_storage_options: {
-            encryption: 'AES256'
+          packages: {
+              fog_connection: {},
+              fog_aws_storage_options: {
+                  encryption: 'AES256'
+              },
+              app_package_directory_key: 'app_key',
           },
-          app_package_directory_key: 'app_key',
-        },
-        droplets: {
-          fog_connection: {},
-          droplet_directory_key: 'droplet_key',
-        },
-        buildpacks: {
-          fog_connection: {},
-          buildpack_directory_key: 'bp_key',
-        },
-        resource_pool: {
-          minimum_size: 9001,
-          maximum_size: 0,
-          fog_connection: {},
-          resource_directory_key: 'resource_key',
-        },
-        bulk_api: {},
-        external_domain: 'host',
-        external_port: 1234,
-        staging: {
-          auth: {
-            user: 'user',
-            password: 'password',
+          droplets: {
+              fog_connection: {},
+              droplet_directory_key: 'droplet_key',
           },
-        },
-        bits_service: { enabled: false },
-        reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
-        diego: {},
-        stacks_file: 'path/to/stacks/file',
-        db_encryption_key: '123-456',
-        install_buildpacks: [
-          {
-            name: 'some-buildpack',
-          }
-        ]
+          buildpacks: {
+              fog_connection: {},
+              buildpack_directory_key: 'bp_key',
+          },
+          resource_pool: {
+              minimum_size: 9001,
+              maximum_size: 0,
+              fog_connection: {},
+              resource_directory_key: 'resource_key',
+          },
+          bulk_api: {},
+          external_domain: 'host',
+          external_port: 1234,
+          staging: {
+              auth: {
+                  user: 'user',
+                  password: 'password',
+              },
+          },
+          bits_service: { enabled: false },
+          reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
+          diego: {},
+          stacks_file: 'path/to/stacks/file',
+          db_encryption_key: '123-456',
+          install_buildpacks: [
+            {
+                name: 'some-buildpack',
+            }
+          ]
       }
     }
 
-    describe '.load_from_file' do
+    describe '#load_from_file' do
       it 'raises if the file does not exist' do
         expect {
           Config.load_from_file('nonexistent.yml', context: :worker)
@@ -92,6 +92,10 @@ module VCAP::CloudController
 
           let(:config) do
             Config.load_from_file(cc_config_file, context: :worker).config_hash
+          end
+
+          it 'does not set a default for database_encryption_keys' do
+            expect(config[:database_encryption_keys]).to be_nil
           end
 
           it 'sets default stacks_file' do
@@ -164,6 +168,14 @@ module VCAP::CloudController
               config['maximum_app_disk_in_mb'] = 3072
               config['broker_client_default_async_poll_interval_seconds'] = 42
               config['broker_client_timeout_seconds'] = 70
+              config['database_encryption_keys'] = {
+                  keys: {
+                      'foo' => 'bar',
+                      'current' => 'yomama',
+                      'head' => 'banging'
+                  },
+                  current_key_label: 'foo'
+              }
 
               file = Tempfile.new('cc_config.yml')
               file.write(YAML.dump(config))
@@ -173,6 +185,10 @@ module VCAP::CloudController
 
             let(:config) do
               Config.load_from_file(cc_config_file.path, context: :worker).config_hash
+            end
+
+            it 'preserves the current_encryption_key_label value from the file' do
+              expect(config[:database_encryption_keys][:current_key_label]).to eq('foo')
             end
 
             it 'preserves the stacks_file value from the file' do
@@ -326,41 +342,41 @@ module VCAP::CloudController
 
       let(:test_config_hash) {
         {
-          packages: {
-            fog_connection: {},
-            fog_aws_storage_options: {
-              encryption: 'AES256'
+            packages: {
+                fog_connection: {},
+                fog_aws_storage_options: {
+                    encryption: 'AES256'
+                },
+                app_package_directory_key: 'app_key',
             },
-            app_package_directory_key: 'app_key',
-          },
-          droplets: {
-            fog_connection: {},
-            droplet_directory_key: 'droplet_key',
-          },
-          buildpacks: {
-            fog_connection: {},
-            buildpack_directory_key: 'bp_key',
-          },
-          resource_pool: {
-            minimum_size: 9001,
-            maximum_size: 0,
-            fog_connection: {},
-            resource_directory_key: 'resource_key',
-          },
-          bulk_api: {},
-          external_host: 'host',
-          external_port: 1234,
-          staging: {
-            auth: {
-              user: 'user',
-              password: 'password',
+            droplets: {
+                fog_connection: {},
+                droplet_directory_key: 'droplet_key',
             },
-          },
-          bits_service: { enabled: false },
-          reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
-          diego: {},
-          stacks_file: 'path/to/stacks/file',
-          db_encryption_key: '123-456'
+            buildpacks: {
+                fog_connection: {},
+                buildpack_directory_key: 'bp_key',
+            },
+            resource_pool: {
+                minimum_size: 9001,
+                maximum_size: 0,
+                fog_connection: {},
+                resource_directory_key: 'resource_key',
+            },
+            bulk_api: {},
+            external_host: 'host',
+            external_port: 1234,
+            staging: {
+                auth: {
+                    user: 'user',
+                    password: 'password',
+                },
+            },
+            bits_service: { enabled: false },
+            reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
+            diego: {},
+            stacks_file: 'path/to/stacks/file',
+            db_encryption_key: '123-456'
         }
       }
 
@@ -377,8 +393,8 @@ module VCAP::CloudController
       end
 
       it 'sets up the db encryption key' do
+        expect(Encryptor).to receive(:db_encryption_key=).with('123-456')
         config_instance.configure_components
-        expect(Encryptor.db_encryption_key).to eq('123-456')
       end
 
       it 'sets up the resource pool instance' do
@@ -425,6 +441,37 @@ module VCAP::CloudController
         end
       end
 
+      context 'when database encryption keys are used' do
+        let(:keys) do
+          {
+              keys: {
+                  'current' => 'abc-123',
+                  'previous' => 'def-456',
+                  'old' => 'ghi-789'
+              },
+              current_key_label: 'current'
+          }
+        end
+
+        let(:config_instance) do
+          Config.new(test_config_hash.merge(database_encryption_keys: keys))
+        end
+
+        before do
+          allow(Encryptor).to receive(:current_encryption_key_label=)
+        end
+
+        it 'sets up the current encryption key label' do
+          expect(Encryptor).to receive(:current_encryption_key_label=).with(keys[:current_key_label])
+          config_instance.configure_components
+        end
+
+        it 'sets up the database encryption keys' do
+          expect(Encryptor).to receive(:database_encryption_keys=).with(keys[:keys])
+          config_instance.configure_components
+        end
+      end
+
       context 'when newrelic is enabled' do
         let(:config_instance) do
           Config.new(test_config_hash.merge(newrelic_enabled: true))
@@ -461,12 +508,12 @@ module VCAP::CloudController
 
       it 'returns a hash for nested properties' do
         expect(config_instance.get(:packages)).to eq({
-          fog_connection: {},
-          fog_aws_storage_options: {
-            encryption: 'AES256'
-          },
-          app_package_directory_key: 'app_key',
-        })
+                                                         fog_connection: {},
+                                                         fog_aws_storage_options: {
+                                                             encryption: 'AES256'
+                                                         },
+                                                         app_package_directory_key: 'app_key',
+                                                     })
         expect(config_instance.get(:packages, :fog_aws_storage_options)).to eq(encryption: 'AES256')
       end
 

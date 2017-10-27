@@ -22,7 +22,7 @@ module VCAP::CloudController
                                 key: :package_guid, primary_key: :guid,
                                 order: [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
-    encrypt :docker_password, salt: :docker_password_salt, column: :encrypted_docker_password
+    set_field_as_encrypted :docker_password, salt: :docker_password_salt, column: :encrypted_docker_password
 
     def validate
       validates_max_length 1_000, :docker_password, message: 'can be up to 1,000 characters', allow_nil: true
