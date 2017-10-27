@@ -1,130 +1,88 @@
 require 'securerandom'
-require 'openssl'
 require 'openssl/cipher'
-require 'openssl/digest'
-
-# require 'openssl/ossl'
 require 'base64'
 
-module VCAP::CloudController
-  module Encryptor
-    class << self
-      ALGORITHM = 'AES-128-CBC'.freeze
+module VCAP::CloudController::Encryptor
+  class << self
+    ALGORITHM = 'AES-128-CBC'.freeze
 
-      def generate_salt
-        SecureRandom.hex(8).to_s
-      end
-
-      def encrypt(input, salt)
-        return unless input
-
-        label = current_encryption_key_label
-        key = key_to_use(label)
-
-        Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt, key))
-      end
-
-      def decrypt(encrypted_input, salt, label=nil)
-        return unless encrypted_input
-
-        key = key_to_use(label)
-
-        run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key)
-      end
-
-      attr_writer :db_encryption_key
-      attr_writer :database_encryption_keys
-      attr_accessor :current_encryption_key_label
-
-      private
-
-      attr_reader :db_encryption_key
-
-      def database_encryption_keys
-        @database_encryption_keys ||= {}
-      end
-
-      def key_to_use(label)
-        database_encryption_keys.fetch(label, db_encryption_key)
-      end
-
-      def make_cipher
-        OpenSSL::Cipher.new(ALGORITHM)
-      end
-
-      def run_cipher(cipher, input, salt, key)
-        if deprecated_short_salt?(salt)
-          cipher.pkcs5_keyivgen(key, salt)
-        else
-          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, 2048, 16, OpenSSL::Digest::SHA256.new)
-          cipher.iv = salt
-        end
-        cipher.update(input) << cipher.final
-      end
-
-      def deprecated_short_salt?(salt)
-        salt.length == 8
-      end
+    def generate_salt
+      SecureRandom.hex(4).to_s
     end
 
-    module FieldEncryptor
-      extend ActiveSupport::Concern
+    def encrypt(input, salt)
+      return nil unless input
+      Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt))
+    end
 
-      private
+    def decrypt(encrypted_input, salt)
+      return nil unless encrypted_input
+      run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt)
+    end
 
-      def update_encryption_key
-        return if Encryptor.current_encryption_key_label.nil?
-        return if encryption_key_label == Encryptor.current_encryption_key_label
+    attr_accessor :db_encryption_key
 
-        db.transaction do
-          (self.class.encrypted_fields || []).each do |field|
-            send("#{field[:field_name]}_without_encryption=", Encryptor.encrypt(send(field[:field_name]), send(field[:salt_name])))
-          end
-          self.encryption_key_label = Encryptor.current_encryption_key_label
+    private
+
+    def make_cipher
+      OpenSSL::Cipher.new(ALGORITHM)
+    end
+
+    def run_cipher(cipher, input, salt)
+      cipher.pkcs5_keyivgen(db_encryption_key, salt)
+      cipher.update(input).tap { |result| result << cipher.final }
+    end
+  end
+
+  module FieldEncryptor
+    extend ActiveSupport::Concern
+
+    module ClassMethods
+      def encrypt(field_name, options={})
+        field_name = field_name.to_sym
+        salt_name = (options[:salt] || "#{field_name}_salt").to_sym
+        generate_salt_name = "generate_#{salt_name}".to_sym
+        storage_column = options[:column]
+
+        unless columns.include?(salt_name)
+          raise "Salt field `#{salt_name}` does not exist"
         end
-      end
 
-      module ClassMethods
-        attr_accessor :encrypted_fields
+        define_method generate_salt_name do
+          return unless send(salt_name).blank?
+          send "#{salt_name}=", VCAP::CloudController::Encryptor.generate_salt
+        end
 
-        def set_field_as_encrypted(field_name, options={})
-          field_name = field_name.to_sym
-          salt_name = (options[:salt] || 'salt').to_sym
-          storage_column = options[:column]
-          raise "Salt field `#{salt_name}` does not exist" unless columns.include?(salt_name)
-          raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
-
-          self.encrypted_fields ||= []
-          encrypted_fields << { field_name: field_name, salt_name: salt_name }
-
-          define_method "generate_#{salt_name}" do
-            return if send(salt_name).present?
-            send("#{salt_name}=", Encryptor.generate_salt)
+        if storage_column
+          define_method field_name do
+            send storage_column
           end
 
-          if storage_column
-            alias_method field_name, storage_column
-            alias_method "#{field_name}=", "#{storage_column}="
+          define_method "#{field_name}=" do |value|
+            send "#{storage_column}=", value
           end
+        end
 
-          define_method "#{field_name}_with_encryption" do
-            Encryptor.decrypt(send("#{field_name}_without_encryption"), send(salt_name), encryption_key_label)
-          end
-          alias_method_chain field_name, 'encryption'
+        define_method "#{field_name}_with_encryption" do
+          VCAP::CloudController::Encryptor.decrypt send("#{field_name}_without_encryption"), send(salt_name)
+        end
+        alias_method_chain field_name, 'encryption'
 
-          define_method "#{field_name}_with_encryption=" do |value|
-            send("generate_#{salt_name}")
-            db.transaction do
-              update_encryption_key
-              encrypted_value = Encryptor.encrypt(value.presence, send(salt_name))
-              send("#{field_name}_without_encryption=", encrypted_value)
+        define_method "#{field_name}_with_encryption=" do |value|
+          send generate_salt_name
+
+          encrypted_value =
+            if value.blank?
+              nil
+            else
+              VCAP::CloudController::Encryptor.encrypt(value, send(salt_name))
             end
-          end
-          alias_method_chain "#{field_name}=", 'encryption'
-        end
 
-        private :set_field_as_encrypted
+          send "#{field_name}_without_encryption=", encrypted_value
+        end
+        alias_method_chain "#{field_name}=", 'encryption'
       end
+      private :encrypt
     end
   end
 end
