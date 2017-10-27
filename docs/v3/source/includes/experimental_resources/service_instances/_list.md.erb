@@ -1,0 +1,34 @@
+### List service instances
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_service_instances, '/v3/service_instances' %>
+```
+This endpoint retrieves the service instances the user has access to.
+
+#### Definition
+`GET /v3/service_instances`
+
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**name** | _list of strings_ | Comma-delimited list of service instance names to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
