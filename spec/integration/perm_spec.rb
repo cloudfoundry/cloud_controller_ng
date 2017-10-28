@@ -13,6 +13,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
   let(:assignee) { VCAP::CloudController::User.make(username: 'not-really-a-person') }
   let(:uaa_target) { 'test.example.com' }
+  let(:uaa_origin) { 'test-origin' }
 
   let(:perm_hostname) { perm_server.hostname.clone }
   let(:perm_port) { perm_server.port.clone }
@@ -42,8 +43,10 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       timeout_in_milliseconds: 1000
     }
 
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:origins_for_username).with(assignee.username).and_return([uaa_origin])
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(assignee.username).and_return(assignee.guid)
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(assignee.username, origin: nil).and_return(assignee.guid)
     allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
 
     set_current_user_as_admin(iss: issuer)
