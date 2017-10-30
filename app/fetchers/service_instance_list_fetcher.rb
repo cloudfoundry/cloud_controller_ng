@@ -1,8 +1,13 @@
 module VCAP::CloudController
   class ServiceInstanceListFetcher
     def fetch(message:, space_guids:)
-      dataset = ServiceInstance.select_all(ServiceInstance.table_name).
-                join(Space.table_name, id: :space_id, guid: space_guids)
+      source_space_instance_dataset = ServiceInstance.select_all(ServiceInstance.table_name).
+                                      join(Space.table_name, id: :space_id, guid: space_guids)
+
+      shared_instance_dataset = ServiceInstance.select_all(ServiceInstance.table_name).
+                                join(:service_instance_shares, service_instance_guid: :guid, target_space_guid: space_guids)
+
+      dataset = source_space_instance_dataset.union(shared_instance_dataset, alias: :service_instances)
 
       filter(dataset, message)
     end

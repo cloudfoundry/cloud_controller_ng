@@ -52,11 +52,11 @@ module VCAP::CloudController
 
       context 'filter' do
         context 'by service instance name' do
-          let(:filters) { { names: ['rabbitmq', 'redis'] } }
+          let(:filters) { { names: ['rabbitmq'] } }
 
           it 'only returns matching service instances' do
             results = fetcher.fetch(message: message, space_guids: [space_1.guid]).all
-            expect(results).to match_array([service_instance_1, service_instance_2])
+            expect(results).to match_array([service_instance_1])
           end
         end
 
@@ -67,6 +67,35 @@ module VCAP::CloudController
             results = fetcher.fetch(message: message, space_guids: [space_1.guid]).all
             expect(results).to be_empty
           end
+        end
+      end
+
+      context 'when service instances are shared' do
+        let(:shared_to_space) { Space.make }
+
+        before do
+          service_instance_2.add_shared_space(shared_to_space)
+          service_instance_1.add_shared_space(shared_to_space)
+        end
+
+        it 'returns all of the service instances shared into the specified space' do
+          results = fetcher.fetch(message: message, space_guids: [shared_to_space.guid]).all
+          expect(results).to match_array([service_instance_1, service_instance_2])
+        end
+      end
+
+      context 'when a space contains both shared and non-shared service instances' do
+        let(:shared_to_space) { Space.make }
+        let!(:service_instance_4) { ManagedServiceInstance.make(space: shared_to_space) }
+
+        before do
+          service_instance_2.add_shared_space(shared_to_space)
+          service_instance_1.add_shared_space(shared_to_space)
+        end
+
+        it 'returns all of the service instances shared into the specified space' do
+          results = fetcher.fetch(message: message, space_guids: [shared_to_space.guid]).all
+          expect(results).to match_array([service_instance_1, service_instance_2, service_instance_4])
         end
       end
     end

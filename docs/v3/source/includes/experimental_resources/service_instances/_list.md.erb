@@ -20,7 +20,7 @@ Content-Type: application/json
 
 <%= yield_content :paginated_list_of_service_instances, '/v3/service_instances' %>
 ```
-This endpoint retrieves the service instances the user has access to.
+This endpoint retrieves the service instances the user has access to. This includes access granted by service instance sharing.
 
 #### Definition
 `GET /v3/service_instances`

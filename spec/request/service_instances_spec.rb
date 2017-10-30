@@ -38,13 +38,13 @@ RSpec.describe 'Service Instances' do
           'resources' => [
             {
               'guid' => service_instance3.guid,
-              'name' => 'mysql',
+              'name' => service_instance3.name,
               'created_at' => iso8601,
               'updated_at' => iso8601,
             },
             {
               'guid' => service_instance1.guid,
-              'name' => 'rabbitmq',
+              'name' => service_instance1.name,
               'created_at' => iso8601,
               'updated_at' => iso8601,
             }
@@ -76,13 +76,51 @@ RSpec.describe 'Service Instances' do
           'resources' => [
             {
               'guid' => service_instance2.guid,
-              'name' => 'redis',
+              'name' => service_instance2.name,
               'created_at' => iso8601,
               'updated_at' => iso8601,
             }
           ]
         }
       )
+    end
+
+    context 'when a user has access to a shared service instance' do
+      before do
+        service_instance1.add_shared_space(target_space)
+      end
+
+      it 'returns a paginated list of service instances the user has access to' do
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+        get '/v3/service_instances?per_page=2&order_by=name', nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=1&per_page=2"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=1&per_page=2"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => service_instance1.guid,
+                'name' => service_instance1.name,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+              }
+            ]
+          }
+        )
+      end
     end
   end
 
