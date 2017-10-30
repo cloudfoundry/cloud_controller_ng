@@ -81,7 +81,7 @@ module VCAP::CloudController
       end
 
       context 'when the <ngnix_upload_module_dummy> param is set' do
-        let(:params) { { 'bits_path' => 'foobar', '<ngnix_upload_module_dummy>' => '' } }
+        let(:params) { { 'bits_path' => 'foobar', '<ngx_upload_module_dummy>' => '' } }
 
         it 'raises an error' do
           expect {

@@ -16,7 +16,7 @@ module VCAP::CloudController
     def self.create_from_params(params)
       opts = params.dup.symbolize_keys
 
-      if opts.key?(:'<ngnix_upload_module_dummy>')
+      if opts.key?(VCAP::CloudController::Constants::NGINX_UPLOAD_MODULE_DUMMY.to_sym)
         raise MissingFilePathError.new('File field missing path information')
       end
 

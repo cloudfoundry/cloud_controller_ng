@@ -15,7 +15,7 @@ class UploadHandler
   end
 
   def uploaded_file(params, resource_name)
-    if HashUtils.dig(params, '<ngx_upload_module_dummy>')
+    if HashUtils.dig(params, VCAP::CloudController::Constants::NGINX_UPLOAD_MODULE_DUMMY)
       raise MissingFilePathError.new('File field missing path information')
     end
 
