@@ -12,9 +12,9 @@ module VCAP::CloudController
 
     def initialize(params={})
       super(params)
-      @requested_keys << :health_check_type if HashUtils.dig(params, :health_check, :type)
-      @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data, :timeout)
-      @requested_keys << :health_check_endpoint if HashUtils.dig(params, :health_check, :data, :endpoint)
+      @requested_keys << :health_check_type if HashUtils.dig(params, :health_check)&.key?(:type)
+      @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:timeout)
+      @requested_keys << :health_check_endpoint if HashUtils.dig(params, :health_check, :data)&.key?(:endpoint)
     end
 
     def self.health_check_requested?
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
     validates :health_check_timeout,
     allow_nil: true,
-    numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+    numericality: { only_integer: true, greater_than_or_equal_to: 1 },
     if: health_check_requested?
 
     validates :health_check_endpoint,

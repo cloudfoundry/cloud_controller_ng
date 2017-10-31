@@ -18,6 +18,38 @@ module VCAP::CloudController
 
         expect(message.requested?(:command)).to be_truthy
       end
+
+      describe 'requested keys for health check' do
+        it 'does not add them if they are not requested' do
+          message = ProcessUpdateMessage.create_from_http_request(body)
+
+          expect(message.requested?(:health_check_type)).to be false
+          expect(message.requested?(:health_check_timeout)).to be false
+          expect(message.requested?(:health_check_endpoint)).to be false
+        end
+
+        it 'adds requested keys if they are requested' do
+          body = {
+            health_check: { type: 'http', data: { timeout: 5, endpoint: '/test' } }
+          }
+          message = ProcessUpdateMessage.create_from_http_request(body)
+
+          expect(message.requested?(:health_check_type)).to be true
+          expect(message.requested?(:health_check_timeout)).to be true
+          expect(message.requested?(:health_check_endpoint)).to be true
+        end
+
+        it 'adds requested keys, even if their values are nil' do
+          body = {
+            health_check: { type: nil, data: { timeout: nil, endpoint: nil } }
+          }
+          message = ProcessUpdateMessage.create_from_http_request(body)
+
+          expect(message.requested?(:health_check_type)).to be true
+          expect(message.requested?(:health_check_timeout)).to be true
+          expect(message.requested?(:health_check_endpoint)).to be true
+        end
+      end
     end
 
     describe '#requested?' do
@@ -166,13 +198,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'when health_check timeout is less than zero' do
+      context 'when health_check timeout is less than one' do
         let(:params) do
           {
             health_check: {
               type: 'port',
               data: {
-                timeout: -7
+                timeout: 0
               }
             }
           }
@@ -182,7 +214,7 @@ module VCAP::CloudController
           message = ProcessUpdateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors[:health_check_timeout]).to include('must be greater than or equal to 0')
+          expect(message.errors[:health_check_timeout]).to include('must be greater than or equal to 1')
         end
       end
 
