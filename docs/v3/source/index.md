@@ -40,6 +40,7 @@ includes:
   - resources/apps/get_current_droplet
   - resources/apps/start
   - resources/apps/stop
+  - resources/apps/restart
   - resources/apps/delete
   - resources/apps/list
   - resources/builds/header

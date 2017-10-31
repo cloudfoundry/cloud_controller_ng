@@ -138,7 +138,7 @@ module VCAP::CloudController
     HEALTH_CHECK_TYPES = %w(port none process http).map(&:freeze).freeze
 
     # Last staging response which will contain streaming log url
-    attr_accessor :last_stager_response
+    attr_accessor :last_stager_response, :skip_process_observer_on_update
 
     alias_method :diego?, :diego
 
@@ -515,7 +515,7 @@ module VCAP::CloudController
     def after_save
       super
 
-      db.after_commit { ProcessObserver.updated(self) }
+      db.after_commit { ProcessObserver.updated(self) unless skip_process_observer_on_update }
     end
 
     def to_hash(opts={})

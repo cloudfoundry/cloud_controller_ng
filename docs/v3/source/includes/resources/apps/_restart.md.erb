@@ -1,0 +1,31 @@
+### Restart an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/actions/restart" \
+  -X POST \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :app_with_state, 'STARTED' %>
+```
+
+#### Definition
+`POST /v3/apps/:guid/actions/restart`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

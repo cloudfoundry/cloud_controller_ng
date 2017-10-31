@@ -45,7 +45,7 @@ module VCAP::CloudController
       def with_diego_communication_handling
         yield
       rescue Diego::Runner::CannotCommunicateWithDiegoError => e
-        logger.error("failed communicating with diego backend: #{e.message}")
+        logger.error("Failed communicating with diego backend: #{e.message}. Continuing, sync job should eventually re-sync any desired changes to diego.")
       end
 
       def logger

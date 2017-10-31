@@ -1140,6 +1140,18 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response_body['state']).to eq('STARTED')
       end
 
+      it 'restarts the app' do
+        allow(VCAP::CloudController::AppRestart).to receive(:restart).and_call_original
+        post :restart, guid: app_model.guid
+
+        response_body = parsed_body
+
+        expect(response.status).to eq 200
+        expect(response_body['guid']).to eq(app_model.guid)
+        expect(response_body['state']).to eq('STARTED')
+        expect(VCAP::CloudController::AppRestart).to have_received(:restart).with(app: app_model, config: anything)
+      end
+
       context 'when the app does not exist' do
         it 'raises an API 404 error' do
           post :restart, guid: 'thing'
@@ -1207,6 +1219,39 @@ RSpec.describe AppsV3Controller, type: :controller do
               expect(response.body).to include('diego_docker')
             end
           end
+        end
+      end
+
+      context 'when restarting the app fails with an AppRestart::Error' do
+        before do
+          allow(VCAP::CloudController::AppRestart).to receive(:restart).
+            and_raise(VCAP::CloudController::AppRestart::Error.new('Ahhh!'))
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          post :restart, guid: app_model.guid
+
+          response_body = parsed_body
+          expect(response.status).to eq 422
+          expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
+          expect(response_body['errors'].first['detail']).to eq 'Ahhh!'
+        end
+      end
+
+      context 'when restarting the app fails with a CannotCommunicateWithDiegoError' do
+        before do
+          allow(VCAP::CloudController::AppRestart).to receive(:restart).
+            and_raise(::VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError.new('Oh no!'))
+        end
+
+        it 'returns an CannotCommunicateWithDiegoError error' do
+          post :restart, guid: app_model.guid
+
+          response_body = parsed_body
+          expect(response.status).to eq 503
+          expect(response_body['errors'].first['title']).to eq 'CF-RunnerUnavailable'
+          expect(response_body['errors'].first['detail']).
+            to eq 'Runner is unavailable: Unable to communicate with Diego'
         end
       end
     end

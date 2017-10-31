@@ -4,6 +4,7 @@ require 'actions/app_create'
 require 'actions/app_update'
 require 'actions/app_patch_environment_variables'
 require 'actions/app_delete'
+require 'actions/app_restart'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/set_current_droplet'
@@ -137,7 +138,14 @@ class AppsV3Controller < ApplicationController
       FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
+    AppRestart.restart(app: app, config: Config.config)
+
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
+  rescue AppRestart::Error => e
+    unprocessable!(e.message)
+  rescue ::VCAP::CloudController::Diego::Runner::CannotCommunicateWithDiegoError => e
+    logger.error(e.message)
+    raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'Unable to communicate with Diego')
   end
 
   def show_env

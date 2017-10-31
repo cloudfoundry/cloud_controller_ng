@@ -76,6 +76,10 @@ module VCAP::CloudController
       lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
     end
 
+    def stopped?
+      desired_state == ProcessModel::STOPPED
+    end
+
     private
 
     def update_enable_ssh
