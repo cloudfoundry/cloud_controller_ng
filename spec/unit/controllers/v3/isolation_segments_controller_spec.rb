@@ -482,43 +482,63 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     end
 
     context 'when using query params' do
-      context 'with invalid param format' do
-        it 'returns a 400' do
-          get :index, order_by: '^=%'
+      before do
+        allow_user_global_read_access(user)
+      end
 
-          expect(response.status).to eq 400
-          expect(response.body).to include 'BadQueryParameter'
-          expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
+      context 'when invalid' do
+        context 'with invalid param format' do
+          it 'returns a 400' do
+            get :index, order_by: '^=%'
+
+            expect(response.status).to eq 400
+            expect(response.body).to include 'BadQueryParameter'
+            expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
+          end
+        end
+
+        context 'with a parameter value outside the allowed values' do
+          it 'returns a 400 and a list of allowed values' do
+            get :index, order_by: 'invalid'
+
+            expect(response.status).to eq 400
+            expect(response.body).to include 'BadQueryParameter'
+            expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
+          end
+        end
+
+        context 'with an unknown query param' do
+          it 'returns 400 and a list of the unknown params' do
+            get :index, meow: 'woof', kaplow: 'zoom'
+
+            expect(response.status).to eq 400
+            expect(response.body).to include 'BadQueryParameter'
+            expect(response.body).to include("Unknown query parameter(s): 'meow', 'kaplow'")
+          end
+        end
+
+        context 'with invalid pagination params' do
+          it 'returns 400 and the allowed param range' do
+            get :index, per_page: 99999999999999999
+
+            expect(response.status).to eq 400
+            expect(response.body).to include 'BadQueryParameter'
+            expect(response.body).to include 'Per page must be between'
+          end
         end
       end
 
-      context 'with a parameter value outside the allowed values' do
-        it 'returns a 400 and a list of allowed values' do
+      context 'when valid' do
+        let!(:isolation_segment_a) { VCAP::CloudController::IsolationSegmentModel.make(name: 'a-segment') }
+        let!(:isolation_segment_b) { VCAP::CloudController::IsolationSegmentModel.make(name: 'b-segment') }
+
+        it 'returns a 200 and a list of the existing isolation segments' do
           get :index, order_by: 'name'
 
-          expect(response.status).to eq 400
-          expect(response.body).to include 'BadQueryParameter'
-          expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
-        end
-      end
-
-      context 'with an unknown query param' do
-        it 'returns 400 and a list of the unknown params' do
-          get :index, meow: 'woof', kaplow: 'zoom'
-
-          expect(response.status).to eq 400
-          expect(response.body).to include 'BadQueryParameter'
-          expect(response.body).to include("Unknown query parameter(s): 'meow', 'kaplow'")
-        end
-      end
-
-      context 'with invalid pagination params' do
-        it 'returns 400 and the allowed param range' do
-          get :index, per_page: 99999999999999999
-
-          expect(response.status).to eq 400
-          expect(response.body).to include 'BadQueryParameter'
-          expect(response.body).to include 'Per page must be between'
+          expect(response.status).to eq(200)
+          response_names = parsed_body['resources'].map { |r| r['name'] }
+          expect(response_names.length).to eq(3)
+          expect(response_names).to eq(['a-segment', 'b-segment', 'shared'])
         end
       end
     end

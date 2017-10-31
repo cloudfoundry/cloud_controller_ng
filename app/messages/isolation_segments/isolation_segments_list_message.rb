@@ -28,6 +28,10 @@ module VCAP::CloudController
       new(opts.symbolize_keys)
     end
 
+    def valid_order_by_values
+      super << :name
+    end
+
     private
 
     def allowed_keys
