@@ -844,6 +844,7 @@ module VCAP::CloudController
             post '/v2/service_instances', req
 
             expect(last_response.status).to eq(400)
+            expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
             expect(decoded_response['code']).to eq 60009
           end
         end

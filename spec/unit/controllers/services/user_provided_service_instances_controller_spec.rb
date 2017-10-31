@@ -350,6 +350,21 @@ module VCAP::CloudController
         end
       end
 
+      context 'creating a service instance with a name over 50 characters' do
+        let(:very_long_name) { 's' * 51 }
+
+        it 'returns an error if the service instance name is over 50 characters' do
+          post '/v2/user_provided_service_instances', {
+            name: very_long_name,
+            space_guid: space.guid,
+          }.to_json
+
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTooLong')
+          expect(decoded_response['code']).to eq 60009
+        end
+      end
+
       context 'when we try to access a upsi via a managed SI endpoint' do
         let(:update_req) do
           { 'uri' => 'https://user:password@service-location.com:port/db' }

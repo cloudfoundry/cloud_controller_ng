@@ -31,19 +31,22 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       space_and_name_errors = e.errors.on([:space_id, :name])
       service_instance_errors = e.errors.on(:service_instance)
+      service_instance_name_errors = e.errors.on(:name).to_a
 
-      if space_and_name_errors && space_and_name_errors.include?(:unique)
+      if space_and_name_errors&.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
-      elsif service_instance_errors && service_instance_errors.include?(:space_mismatch)
+      elsif service_instance_errors&.include?(:space_mismatch)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')
-      elsif service_instance_errors && service_instance_errors.include?(:route_binding_not_allowed)
+      elsif service_instance_errors&.include?(:route_binding_not_allowed)
         CloudController::Errors::ApiError.new_from_details('ServiceDoesNotSupportRoutes')
-      elsif service_instance_errors && service_instance_errors.include?(:route_service_url_not_https)
+      elsif service_instance_errors&.include?(:route_service_url_not_https)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'Scheme for route_service_url must be https.')
-      elsif service_instance_errors && service_instance_errors.include?(:route_service_url_invalid)
+      elsif service_instance_errors&.include?(:route_service_url_invalid)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'route_service_url is invalid.')
+      elsif service_instance_name_errors&.include?(:max_length)
+        return CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTooLong')
       else
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', e.errors.full_messages)
       end
