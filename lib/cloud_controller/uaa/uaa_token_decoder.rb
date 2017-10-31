@@ -51,6 +51,8 @@ module VCAP::CloudController
       last_error = nil
       while tries > 0
         tries -= 1
+        # If we uncover issues due to attempting to decode with every
+        # key, we can revisit: https://www.pivotaltracker.com/story/show/132270761
         asymmetric_key.value.each do |key|
           begin
             return decode_token_with_key(auth_token, pkey: key)
