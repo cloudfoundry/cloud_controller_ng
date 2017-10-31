@@ -93,7 +93,7 @@ module VCAP::CloudController
 
         clashes_with_shared_instance_names =
           ServiceInstance.select_all(ServiceInstance.table_name).
-          join(:service_instance_shares, target_space_guid: instance.space_guid).
+          join(:service_instance_shares, service_instance_guid: :guid, target_space_guid: instance.space_guid).
           where(name: instance.name)
 
         clashes_with_instance_names =
