@@ -886,30 +886,51 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(60002)
           end
 
-          it 'does not allow a managed service instance with same name as a shared service instance' do
-            source_space = Space.make(organization: space.organization)
-            source_space.add_developer(developer)
-            service_instance = create_managed_service_instance(accepts_incomplete: 'false', space: source_space)
-            expect(last_response.status).to eq(201)
+          context 'when a service instance share exists between spaces' do
+            let(:source_space) { Space.make(organization: space.organization) }
+            before do
+              source_space.add_developer(developer)
 
-            service_instance.add_shared_space(space)
+              service_instance = create_managed_service_instance(accepts_incomplete: 'false', space: source_space)
+              service_instance.add_shared_space(space)
+              expect(last_response.status).to eq(201)
+            end
 
-            create_managed_service_instance
-            expect(last_response.status).to eq(400)
-            expect(decoded_response['code']).to eq(60002)
-          end
+            it 'does not allow a managed service instance with same name as a shared service instance' do
+              create_managed_service_instance
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(60002)
+            end
 
-          it 'does not allow a user provided service instance with same name as a shared service instance' do
-            source_space = Space.make(organization: space.organization)
-            source_space.add_developer(developer)
-            service_instance = create_managed_service_instance(accepts_incomplete: 'false', space: source_space)
-            expect(last_response.status).to eq(201)
+            it 'does not allow a user provided service instance with same name as a shared service instance' do
+              create_user_provided_service_instance
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(60002)
+            end
 
-            service_instance.add_shared_space(space)
+            context 'when an unshared instance exists in the source space' do
+              before do
+                create_managed_service_instance(accepts_incomplete: 'false', space: source_space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
 
-            create_user_provided_service_instance
-            expect(last_response.status).to eq(400)
-            expect(decoded_response['code']).to eq(60002)
+              it 'allows an instance of the same name to be created in the shared to space' do
+                create_managed_service_instance(accepts_incomplete: 'false', space: space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+            end
+
+            context 'when an unshared instance exists in the shared to space' do
+              before do
+                create_managed_service_instance(accepts_incomplete: 'false', space: space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+
+              it 'allows an instance of the same name to be created in the source space' do
+                create_managed_service_instance(accepts_incomplete: 'false', space: source_space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+            end
           end
         end
 
@@ -4135,9 +4156,10 @@ module VCAP::CloudController
       accepts_incomplete = user_opts.delete(:accepts_incomplete) { |_| 'true' }
       tags = user_opts.delete(:tags)
       service_instance_space = user_opts.delete(:space) || space
+      service_instance_name = user_opts.delete(:name) || 'foo'
 
       body = {
-        name: 'foo',
+        name: service_instance_name,
         space_guid: service_instance_space.guid,
         service_plan_guid: plan.guid,
       }
