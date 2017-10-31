@@ -34,14 +34,13 @@ module VCAP::CloudController
     define_routes
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors        = e.errors.on([:space_id, :name]).to_a
       quota_errors                 = e.errors.on(:quota).to_a
       service_plan_errors          = e.errors.on(:service_plan).to_a
       service_instance_errors      = e.errors.on(:service_instance).to_a
       service_instance_name_errors = e.errors.on(:name).to_a
       service_instance_tags_errors = e.errors.on(:tags).to_a
 
-      if space_and_name_errors.include?(:unique)
+      if service_instance_name_errors.include?(:unique)
         return CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
       elsif quota_errors.include?(:service_instance_space_quota_exceeded)
         return CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceQuotaExceeded')

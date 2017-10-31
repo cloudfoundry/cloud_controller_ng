@@ -32,7 +32,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :service_plan }
       it { is_expected.to validate_presence :space }
-      it { is_expected.to validate_uniqueness [:space_id, :name] }
+      it { is_expected.to validate_uniqueness :space_id, :name, { error_key: :name } }
       it { is_expected.to strip_whitespace :name }
       let(:max_tags) { ['a' * 1024, 'b' * 1024] }
 
