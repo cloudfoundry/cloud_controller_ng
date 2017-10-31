@@ -85,7 +85,7 @@ module VCAP::CloudController
             expect {
               service_instance_foo.set(name: 'bar')
               service_instance_foo.save_changes
-            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
       end
@@ -97,13 +97,13 @@ module VCAP::CloudController
           it 'raises an exception when creating another UserProvidedServiceInstance' do
             expect {
               UserProvidedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
 
           it 'raises an exception when creating a ManagedServiceInstance' do
             expect {
               ManagedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
 
@@ -116,13 +116,37 @@ module VCAP::CloudController
           it 'raises an exception when creating another ManagedServiceInstance' do
             expect {
               ManagedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
 
           it 'raises an exception when creating a UserProvidedServiceInstance' do
             expect {
               UserProvidedServiceInstance.create(service_instance_attrs)
-            }.to raise_error(Sequel::ValidationFailed, /space_id and name unique/)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+          end
+        end
+
+        describe 'when a ManagedServiceInstance has been shared' do
+          let(:space) { Space.make }
+          let(:originating_space) { Space.make }
+          let(:service_instance) {
+            ManagedServiceInstance.make(name: 'shared-service', space: originating_space)
+          }
+
+          before do
+            service_instance.add_shared_space(space)
+          end
+
+          it 'raises an exception when creating another ManagedServiceInstance' do
+            expect {
+              ManagedServiceInstance.make(name: 'shared-service', space: space)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
+          end
+
+          it 'raises an exception when creating another UserProvidedServiceInstance' do
+            expect {
+              UserProvidedServiceInstance.make(name: 'shared-service', space: space)
+            }.to raise_error(Sequel::ValidationFailed, /name unique/)
           end
         end
       end

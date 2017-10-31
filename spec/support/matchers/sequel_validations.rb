@@ -48,7 +48,7 @@ RSpec::Matchers.define :validate_uniqueness do |*attributes|
       duplicate_object[attr] = source_obj[attr]
     end
     unless duplicate_object.valid?
-      errors_key = attributes.length > 1 ? attributes : attributes.first
+      errors_key = options[:error_key] || (attributes.length > 1 ? attributes : attributes.first)
       errors = duplicate_object.errors.on(errors_key)
       expected_error = options[:message] || :unique
       errors && errors.include?(expected_error)
