@@ -136,8 +136,11 @@ module VCAP::CloudController
 
       before_create
 
-      route = model.create_from_hash(request_attrs)
-      validate_access(:create, route, request_attrs)
+      route = nil
+      model.db.transaction do
+        route = model.create_from_hash(request_attrs)
+        validate_access(:create, route, request_attrs)
+      end
 
       after_create(route)
       [

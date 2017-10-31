@@ -18,7 +18,7 @@ module VCAP::CloudController
       ]
     end
     let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
-    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
+    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository).as_null_object }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
@@ -153,22 +153,24 @@ module VCAP::CloudController
       let(:http_domain) { SharedDomain.make }
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) { Space.make(space_quota_definition: space_quota_definition,
-                               organization:                                  space_quota_definition.organization)
+                               organization:           space_quota_definition.organization)
       }
 
       let(:routing_api_client) { double('routing_api_client', enabled?: true) }
       let(:router_group) {
         RoutingApi::RouterGroup.new({
-          'guid'             => 'tcp-guid',
-          'type'             => 'tcp',
-          'reservable_ports' => '1024-65535'
-        })
+                                      'guid'             => 'tcp-guid',
+                                      'type'             => 'tcp',
+                                      'reservable_ports' => '1024-65535'
+                                    })
       }
 
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
           and_return(routing_api_client)
         allow(routing_api_client).to receive(:router_group).and_return(router_group)
+        space.organization.add_user(user)
+        space.add_developer(user)
         set_current_user(user)
       end
 
@@ -202,6 +204,7 @@ module VCAP::CloudController
         taken_host = 'someroute'
         path       = '/%2Fsome%20path'
         post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: http_domain.guid, space_guid: space.guid, path: path)
+        expect(last_response.status).to eq(201)
 
         post '/v2/routes', MultiJson.dump(host: taken_host, domain_guid: http_domain.guid, space_guid: space.guid, path: path)
 
@@ -343,7 +346,6 @@ module VCAP::CloudController
 
       context 'with Docker app' do
         before do
-          allow(route_event_repository).to receive(:record_route_update)
           FeatureFlag.create(name: 'diego_docker', enabled: true)
         end
 
@@ -374,7 +376,6 @@ module VCAP::CloudController
       let(:route) { Route.make }
 
       before do
-        allow(route_event_repository).to receive(:record_route_delete_request)
         allow(app_event_repository).to receive(:record_unmap_route)
         developer = make_developer_for_space(route.space)
         set_current_user(developer)
@@ -459,70 +460,111 @@ module VCAP::CloudController
       } }
 
       before do
-        allow(route_event_repository).to receive(:record_route_create)
-        space.organization.add_user(user)
-        space.add_developer(user)
         set_current_user(user)
       end
 
-      context 'when the route has a system hostname and a system domain' do
-        let(:space) { Space.make(organization: system_domain.owning_organization) }
+      context 'when the user is not authorized' do
         let(:system_domain) { Domain.find(name: TestConfig.config[:system_domain]) }
-        let(:host) { 'api' }
+        let(:space) { Space.make(organization: system_domain.owning_organization) }
         let(:req) do
           { domain_guid: system_domain.guid,
             space_guid:  space.guid,
-            host:        host,
+            host:        'new-route',
             port:        nil,
             path:        '/foo' }
         end
 
-        before { TestConfig.override(system_hostnames: [host]) }
-
-        it 'fails with an RouteHostTaken' do
-          post '/v2/routes', MultiJson.dump(req)
-
-          expect(last_response).to have_status_code(400)
-          expect(decoded_response['code']).to eq(210003)
-          expect(decoded_response['description']).to eq('The host is taken: api is a system domain')
+        it 'does not create a route' do
+          expect {
+            post '/v2/routes', MultiJson.dump(req)
+          }.not_to change { Route.count }
         end
       end
 
-      context 'when the domain does not exist' do
-        let(:domain_guid) { 'not-exist' }
-
-        it 'returns a 400' do
-          post '/v2/routes?generate_port=true', MultiJson.dump(req)
-
-          expect(last_response).to have_status_code(400)
-          expect(decoded_response['description']).to eq('The domain is invalid: Domain with guid not-exist does not exist')
+      context 'when the user is authorized' do
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
         end
-      end
 
-      context 'when the domain is a HTTP Domain' do
-        context 'when the domain is a shared domain' do
-          let(:shared_domain) { SharedDomain.make }
+        context 'when the route has a system hostname and a system domain' do
+          let(:space) { Space.make(organization: system_domain.owning_organization) }
+          let(:system_domain) { Domain.find(name: TestConfig.config[:system_domain]) }
+          let(:host) { 'api' }
+          let(:req) do
+            { domain_guid: system_domain.guid,
+              space_guid:  space.guid,
+              host:        host,
+              port:        nil,
+              path:        '/foo' }
+          end
 
-          context 'and a route already exists with the same host' do
-            before do
-              Route.make(domain: shared_domain, host: host, space: space)
+          before { TestConfig.override(system_hostnames: [host]) }
+
+          it 'fails with an RouteHostTaken' do
+            post '/v2/routes', MultiJson.dump(req)
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['code']).to eq(210003)
+            expect(decoded_response['description']).to eq('The host is taken: api is a system domain')
+          end
+        end
+
+        context 'when the domain does not exist' do
+          let(:domain_guid) { 'not-exist' }
+
+          it 'returns a 400' do
+            post '/v2/routes?generate_port=true', MultiJson.dump(req)
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response['description']).to eq('The domain is invalid: Domain with guid not-exist does not exist')
+          end
+        end
+
+        context 'when the domain is a HTTP Domain' do
+          context 'when the domain is a shared domain' do
+            let(:shared_domain) { SharedDomain.make }
+
+            context 'and a route already exists with the same host' do
+              before do
+                Route.make(domain: shared_domain, host: host, space: space)
+              end
+
+              context 'and a user tries to create another route in a different space' do
+                let(:another_space) { Space.make }
+                let(:req) do
+                  {
+                    domain_guid: shared_domain.guid,
+                    space_guid:  another_space.guid,
+                    host:        host,
+                    port:        nil,
+                    path:        '/foo'
+                  }
+                end
+
+                before do
+                  another_space.organization.add_user(user)
+                  another_space.add_developer(user)
+                end
+
+                it 'fails with an RouteInvalid' do
+                  post '/v2/routes', MultiJson.dump(req)
+
+                  expect(last_response).to have_status_code(400)
+                  expect(decoded_response['description']).
+                    to include('Routes for this host and domain have been reserved for another space')
+                end
+              end
             end
 
-            context 'and a user tries to create another route in a different space' do
-              let(:another_space) { Space.make }
+            context 'and a route is too long' do
+              let(:host) { 'f' * 64 }
               let(:req) do
                 {
                   domain_guid: shared_domain.guid,
-                  space_guid:  another_space.guid,
+                  space_guid:  space.guid,
                   host:        host,
-                  port:        nil,
-                  path:        '/foo'
                 }
-              end
-
-              before do
-                another_space.organization.add_user(user)
-                another_space.add_developer(user)
               end
 
               it 'fails with an RouteInvalid' do
@@ -530,276 +572,257 @@ module VCAP::CloudController
 
                 expect(last_response).to have_status_code(400)
                 expect(decoded_response['description']).
-                  to include('Routes for this host and domain have been reserved for another space')
+                  to include('host must be no more than')
               end
             end
           end
 
-          context 'and a route is too long' do
-            let(:host) { 'f' * 64 }
-            let(:req) do
-              {
-                domain_guid: shared_domain.guid,
-                space_guid:  space.guid,
-                host:        host,
-              }
-            end
-
-            it 'fails with an RouteInvalid' do
+          context 'and the host and port is provided' do
+            it 'returns an error' do
               post '/v2/routes', MultiJson.dump(req)
 
               expect(last_response).to have_status_code(400)
-              expect(decoded_response['description']).
-                to include('host must be no more than')
+              expect(decoded_response['description']).to include('Port is supported for domains of TCP router groups only')
+              expect(decoded_response['error_code']).to eq 'CF-RouteInvalid'
             end
           end
         end
 
-        context 'and the host and port is provided' do
-          it 'returns an error' do
-            post '/v2/routes', MultiJson.dump(req)
+        context 'when the domain is a TCP Domain' do
+          let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+          let(:domain_guid) { domain.guid }
 
-            expect(last_response).to have_status_code(400)
-            expect(decoded_response['description']).to include('Port is supported for domains of TCP router groups only')
-            expect(decoded_response['error_code']).to eq 'CF-RouteInvalid'
-          end
-        end
-      end
+          context 'when the routing api client raises a UaaUnavailable error' do
+            before do
+              allow_any_instance_of(RouteValidator).to receive(:validate).and_raise(RoutingApi::UaaUnavailable)
+            end
 
-      context 'when the domain is a TCP Domain' do
-        let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-        let(:domain_guid) { domain.guid }
-
-        context 'when the routing api client raises a UaaUnavailable error' do
-          before do
-            allow_any_instance_of(RouteValidator).to receive(:validate).and_raise(RoutingApi::UaaUnavailable)
-          end
-
-          it 'returns a 503 Service Unavailable' do
-            post '/v2/routes', MultiJson.dump(req)
-
-            expect(last_response).to have_status_code(503)
-            expect(last_response.body).to include 'The UAA service is currently unavailable'
-          end
-        end
-
-        context 'when the routing api is disabled' do
-          before do
-            allow_any_instance_of(RouteValidator).to receive(:validate).and_raise(RoutingApi::RoutingApiDisabled)
-          end
-          it 'returns a 403' do
-            post '/v2/routes', MultiJson.dump(req)
-
-            expect(last_response).to have_status_code(403)
-            expect(last_response.body).to include 'Routing API is disabled'
-          end
-        end
-
-        context 'when the routing api client raises a RoutingApiUnavailable error' do
-          before do
-            allow_any_instance_of(RouteValidator).to receive(:validate).and_raise(RoutingApi::RoutingApiUnavailable)
-          end
-
-          it 'returns a 503 Service Unavailable' do
-            post '/v2/routes', MultiJson.dump(req)
-
-            expect(last_response).to have_status_code(503)
-            expect(last_response.body).to include 'Routing API is currently unavailable'
-          end
-        end
-
-        context 'when the routing api experienced data loss of router groups' do
-          let(:shared_domain) { SharedDomain.make(router_group_guid: 'abc') }
-          let(:domain_guid) { shared_domain.guid }
-
-          before do
-            allow(routing_api_client).to receive(:router_group).and_return(nil)
-          end
-
-          context 'when port is provided' do
-            let(:req) { {
-              domain_guid: shared_domain.guid,
-              space_guid:  space.guid,
-              port:        1234,
-            } }
-
-            it 'returns a 404' do
+            it 'returns a 503 Service Unavailable' do
               post '/v2/routes', MultiJson.dump(req)
 
-              expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include '"The router group could not be found: abc"'
+              expect(last_response).to have_status_code(503)
+              expect(last_response.body).to include 'The UAA service is currently unavailable'
             end
           end
 
-          context 'when random port is provided' do
-            let(:req) { {
-              domain_guid: domain_guid,
-              space_guid:  space.guid,
-            } }
-
-            it 'returns a 404' do
-              post '/v2/routes?generate_port=true', MultiJson.dump(req)
-
-              expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include '"The router group could not be found: abc"'
+          context 'when the routing api is disabled' do
+            before do
+              allow_any_instance_of(RouteValidator).to receive(:validate).and_raise(RoutingApi::RoutingApiDisabled)
             end
-          end
-
-          context 'when host and port not provided' do
-            let(:req) { {
-              domain_guid: domain_guid,
-              space_guid:  space.guid,
-            } }
-
-            it 'returns a 404' do
+            it 'returns a 403' do
               post '/v2/routes', MultiJson.dump(req)
 
-              expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include '"The router group could not be found: abc"'
+              expect(last_response).to have_status_code(403)
+              expect(last_response.body).to include 'Routing API is disabled'
             end
           end
 
-          context 'when host is provided' do
-            let(:req) { {
-              domain_guid: domain_guid,
-              space_guid:  space.guid,
-              host:        'foo',
-            } }
+          context 'when the routing api client raises a RoutingApiUnavailable error' do
+            before do
+              allow_any_instance_of(RouteValidator).to receive(:validate).and_raise(RoutingApi::RoutingApiUnavailable)
+            end
 
-            it 'returns a 404' do
+            it 'returns a 503 Service Unavailable' do
               post '/v2/routes', MultiJson.dump(req)
 
-              expect(last_response).to have_status_code(404)
-              expect(last_response.body).to include '"The router group could not be found: abc"'
+              expect(last_response).to have_status_code(503)
+              expect(last_response.body).to include 'Routing API is currently unavailable'
             end
           end
-        end
 
-        context 'when route_creation feature flag is disabled' do
-          before do
-            allow_any_instance_of(RouteValidator).to receive(:validate)
-            FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil)
+          context 'when the routing api experienced data loss of router groups' do
+            let(:shared_domain) { SharedDomain.make(router_group_guid: 'abc') }
+            let(:domain_guid) { shared_domain.guid }
+
+            before do
+              allow(routing_api_client).to receive(:router_group).and_return(nil)
+            end
+
+            context 'when port is provided' do
+              let(:req) { {
+                domain_guid: shared_domain.guid,
+                space_guid:  space.guid,
+                port:        1234,
+              } }
+
+              it 'returns a 404' do
+                post '/v2/routes', MultiJson.dump(req)
+
+                expect(last_response).to have_status_code(404)
+                expect(last_response.body).to include '"The router group could not be found: abc"'
+              end
+            end
+
+            context 'when random port is provided' do
+              let(:req) { {
+                domain_guid: domain_guid,
+                space_guid:  space.guid,
+              } }
+
+              it 'returns a 404' do
+                post '/v2/routes?generate_port=true', MultiJson.dump(req)
+
+                expect(last_response).to have_status_code(404)
+                expect(last_response.body).to include '"The router group could not be found: abc"'
+              end
+            end
+
+            context 'when host and port not provided' do
+              let(:req) { {
+                domain_guid: domain_guid,
+                space_guid:  space.guid,
+              } }
+
+              it 'returns a 404' do
+                post '/v2/routes', MultiJson.dump(req)
+
+                expect(last_response).to have_status_code(404)
+                expect(last_response.body).to include '"The router group could not be found: abc"'
+              end
+            end
+
+            context 'when host is provided' do
+              let(:req) { {
+                domain_guid: domain_guid,
+                space_guid:  space.guid,
+                host:        'foo',
+              } }
+
+              it 'returns a 404' do
+                post '/v2/routes', MultiJson.dump(req)
+
+                expect(last_response).to have_status_code(404)
+                expect(last_response.body).to include '"The router group could not be found: abc"'
+              end
+            end
           end
 
-          it 'returns FeatureDisabled for users' do
-            post '/v2/routes', MultiJson.dump(req)
+          context 'when route_creation feature flag is disabled' do
+            before do
+              allow_any_instance_of(RouteValidator).to receive(:validate)
+              FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil)
+            end
 
-            expect(last_response.status).to eq(403)
-            expect(decoded_response['error_code']).to match(/FeatureDisabled/)
-            expect(decoded_response['description']).to match(/route_creation/)
+            it 'returns FeatureDisabled for users' do
+              post '/v2/routes', MultiJson.dump(req)
+
+              expect(last_response.status).to eq(403)
+              expect(decoded_response['error_code']).to match(/FeatureDisabled/)
+              expect(decoded_response['description']).to match(/route_creation/)
+            end
           end
-        end
 
-        context 'query params' do
-          context 'generate_port' do
-            let(:port_override_warning) { 'Specified+port+ignored.+Random+port+generated.' }
+          context 'query params' do
+            context 'generate_port' do
+              let(:port_override_warning) { 'Specified+port+ignored.+Random+port+generated.' }
 
-            it 'fails with InvalidRequest when generate_port is not "true" or "false"' do
-              post '/v2/routes?generate_port=lol', MultiJson.dump(req), headers_for(user)
+              it 'fails with InvalidRequest when generate_port is not "true" or "false"' do
+                post '/v2/routes?generate_port=lol', MultiJson.dump(req), headers_for(user)
 
-              expect(last_response.status).to eq(400)
-            end
-
-            context 'when the routing api is disabled' do
-              before do
-                allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
-                  and_return(RoutingApi::DisabledClient.new)
+                expect(last_response.status).to eq(400)
               end
 
-              it 'returns a 403' do
-                post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
-
-                expect(last_response).to have_status_code(403)
-                expect(last_response.body).to include 'Routing API is disabled'
-              end
-            end
-
-            context 'when the router group runs out of ports' do
-              let(:generated_port) { -1 }
-              let(:domain) { SharedDomain.make(router_group_guid: tcp_group_3) }
-              let(:domain_guid) { domain.guid }
-
-              before do
-                allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
-              end
-
-              it 'returns 403' do
-                post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
-
-                expect(last_response.status).to eq(403)
-                expect(last_response.body).to include('There are no more ports available for router group: TCP3. Please contact your administrator for more information.')
-              end
-            end
-
-            context 'the body does not provide a port' do
-              let(:port) { nil }
-              let(:no_port_error) { 'For TCP routes you must specify a port or request a random one.' }
-
-              context 'generate_port is "true"' do
-                let(:generated_port) { 10005 }
-                let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
-                let(:domain_guid) { domain.guid }
-
+              context 'when the routing api is disabled' do
                 before do
-                  allow_any_instance_of(RouteValidator).to receive(:validate)
-                  allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
+                  allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).
+                    and_return(RoutingApi::DisabledClient.new)
                 end
 
-                it 'generates a port without warning' do
+                it 'returns a 403' do
                   post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
 
-                  expect(last_response.status).to eq(201)
-                  expect(last_response.body).to include("\"port\": #{generated_port}")
-                  expect(last_response.headers).not_to include('X-CF-Warnings')
+                  expect(last_response).to have_status_code(403)
+                  expect(last_response.body).to include 'Routing API is disabled'
                 end
               end
 
-              context 'generate_port is "false"' do
-                it 'raise a error' do
-                  post '/v2/routes?generate_port=false', MultiJson.dump(req), headers_for(user)
-
-                  expect(last_response.status).to eq(400)
-                  expect(last_response.body).to include(no_port_error)
-                end
-              end
-            end
-
-            context 'body provides a port' do
-              let(:req) do
-                {
-                  domain_guid: domain.guid,
-                  space_guid:  space.guid,
-                  host:        '',
-                  port:        port,
-                  path:        ''
-                }
-              end
-
-              context 'generate_port is "true"' do
-                let(:generated_port) { 14098 }
-                let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+              context 'when the router group runs out of ports' do
+                let(:generated_port) { -1 }
+                let(:domain) { SharedDomain.make(router_group_guid: tcp_group_3) }
                 let(:domain_guid) { domain.guid }
 
                 before do
                   allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
                 end
 
-                it 'creates a route with a generated random port with a warning' do
+                it 'returns 403' do
                   post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
 
-                  expect(last_response.status).to eq(201)
-                  expect(last_response.body).to include("\"port\": #{generated_port}")
-                  expect(last_response.headers).to include('X-CF-Warnings')
-                  expect(last_response.headers['X-CF-Warnings']).to include(port_override_warning)
+                  expect(last_response.status).to eq(403)
+                  expect(last_response.body).to include('There are no more ports available for router group: TCP3. Please contact your administrator for more information.')
                 end
               end
 
-              context 'generate_port is "false"' do
-                it 'creates a route with the requested port' do
-                  post '/v2/routes?generate_port=false', MultiJson.dump(req), headers_for(user)
+              context 'the body does not provide a port' do
+                let(:port) { nil }
+                let(:no_port_error) { 'For TCP routes you must specify a port or request a random one.' }
 
-                  expect(last_response.status).to eq(201)
-                  expect(last_response.body).to include("\"port\": #{port}")
+                context 'generate_port is "true"' do
+                  let(:generated_port) { 10005 }
+                  let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+                  let(:domain_guid) { domain.guid }
+
+                  before do
+                    allow_any_instance_of(RouteValidator).to receive(:validate)
+                    allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
+                  end
+
+                  it 'generates a port without warning' do
+                    post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
+
+                    expect(last_response.status).to eq(201)
+                    expect(last_response.body).to include("\"port\": #{generated_port}")
+                    expect(last_response.headers).not_to include('X-CF-Warnings')
+                  end
+                end
+
+                context 'generate_port is "false"' do
+                  it 'raise a error' do
+                    post '/v2/routes?generate_port=false', MultiJson.dump(req), headers_for(user)
+
+                    expect(last_response.status).to eq(400)
+                    expect(last_response.body).to include(no_port_error)
+                  end
+                end
+              end
+
+              context 'body provides a port' do
+                let(:req) do
+                  {
+                    domain_guid: domain.guid,
+                    space_guid:  space.guid,
+                    host:        '',
+                    port:        port,
+                    path:        ''
+                  }
+                end
+
+                context 'generate_port is "true"' do
+                  let(:generated_port) { 14098 }
+                  let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
+                  let(:domain_guid) { domain.guid }
+
+                  before do
+                    allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
+                  end
+
+                  it 'creates a route with a generated random port with a warning' do
+                    post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
+
+                    expect(last_response.status).to eq(201)
+                    expect(last_response.body).to include("\"port\": #{generated_port}")
+                    expect(last_response.headers).to include('X-CF-Warnings')
+                    expect(last_response.headers['X-CF-Warnings']).to include(port_override_warning)
+                  end
+                end
+
+                context 'generate_port is "false"' do
+                  it 'creates a route with the requested port' do
+                    post '/v2/routes?generate_port=false', MultiJson.dump(req), headers_for(user)
+
+                    expect(last_response.status).to eq(201)
+                    expect(last_response.body).to include("\"port\": #{port}")
+                  end
                 end
               end
             end
@@ -820,7 +843,6 @@ module VCAP::CloudController
       before do
         space.organization.add_user(user)
         space.add_developer(user)
-        allow(route_event_repository).to receive(:record_route_update)
         set_current_user(user)
       end
 
@@ -1327,7 +1349,6 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(route.space) }
 
       before do
-        allow(route_event_repository).to receive(:record_route_update)
         set_current_user(developer)
       end
 
@@ -1479,7 +1500,6 @@ module VCAP::CloudController
       let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
 
       before do
-        allow(route_event_repository).to receive(:record_route_update)
         set_current_user(developer)
       end
 
