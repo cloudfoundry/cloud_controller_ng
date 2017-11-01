@@ -23,7 +23,7 @@ module VCAP::CloudController
       self.instances        ||= db_schema[:instances][:default].to_i
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
-      self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit) if Config.config.get(:instance_file_descriptor_limit)
+      self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
     end
 
     NO_APP_PORT_SPECIFIED = -1

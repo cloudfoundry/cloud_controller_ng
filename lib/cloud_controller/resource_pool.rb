@@ -19,7 +19,7 @@ class VCAP::CloudController::ResourcePool
   end
 
   def initialize(config)
-    options = config.get(:resource_pool) || {} # TODO: move default into config object?
+    options = config.get(:resource_pool)
 
     @blobstore = CloudController::Blobstore::ClientProvider.provide(
       options: options,

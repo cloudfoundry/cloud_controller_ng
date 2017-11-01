@@ -37,7 +37,7 @@ module VCAP::CloudController
           memory_limit:       task.memory_in_mb,
           staging_disk_in_mb: default_disk_limit,
           space:              space,
-          file_descriptors:   Config.config.get(:instance_file_descriptor_limit) || 16384,
+          file_descriptors:   Config.config.get(:instance_file_descriptor_limit),
           version:            SecureRandom.uuid
         )
 

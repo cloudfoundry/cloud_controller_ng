@@ -59,6 +59,7 @@ module TestConfig
         packages: {
           app_package_directory_key: 'cc-packages',
           fog_connection: fog_connection,
+          max_valid_packages_stored: 42,
         },
         buildpacks: {
           buildpack_directory_key: 'cc-buildpacks',
@@ -67,6 +68,7 @@ module TestConfig
         droplets: {
           droplet_directory_key: 'cc-droplets',
           fog_connection: fog_connection,
+          max_staged_droplets_stored: 42,
         },
 
         db: DbConfig.new.config,

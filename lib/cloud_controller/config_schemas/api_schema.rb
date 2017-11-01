@@ -62,7 +62,7 @@ module VCAP::CloudController
             diagnostics: String,
           },
 
-          optional(:stacks_file) => String,
+          stacks_file: String,
           newrelic_enabled: bool,
 
           db: {
@@ -212,7 +212,6 @@ module VCAP::CloudController
           ],
 
           app_bits_upload_grace_period_in_seconds: Integer,
-          optional(:default_locale) => String, # TODO: never in config file, always will be en_US
           allowed_cors_domains: [String],
 
           users_can_select_backend: bool,
@@ -232,7 +231,7 @@ module VCAP::CloudController
             file: String,
           },
 
-          optional(:bits_service) => {
+          :bits_service => {
             enabled: bool,
             optional(:public_endpoint) => enum(String, NilClass),
             optional(:private_endpoint) => enum(String, NilClass),
@@ -301,7 +300,7 @@ module VCAP::CloudController
             enabled: bool,
             optional(:hostname) => String,
             optional(:port) => Integer,
-            optional(:timeout_in_milliseconds) => Integer,
+            timeout_in_milliseconds: Integer,
             ca_cert_path: String,
           }
         }

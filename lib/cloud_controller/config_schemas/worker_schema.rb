@@ -88,8 +88,8 @@ module VCAP::CloudController
 
           db_encryption_key: String,
 
-          optional(:broker_client_timeout_seconds) => Integer,
-          optional(:broker_client_default_async_poll_interval_seconds) => Integer,
+          broker_client_timeout_seconds: Integer,
+          broker_client_default_async_poll_interval_seconds: Integer,
           broker_client_max_async_poll_duration_minutes: Integer,
           optional(:uaa_client_name) => String,
           optional(:uaa_client_secret) => String,
@@ -99,7 +99,7 @@ module VCAP::CloudController
             router: String,
           },
 
-          optional(:skip_cert_verify) => bool,
+          skip_cert_verify: bool,
 
           optional(:routing_api) => {
             url: String,
@@ -107,7 +107,7 @@ module VCAP::CloudController
             routing_client_secret: String,
           },
 
-          optional(:bits_service) => {
+          bits_service: {
             enabled: bool,
             optional(:public_endpoint) => enum(String, NilClass),
             optional(:private_endpoint) => enum(String, NilClass),

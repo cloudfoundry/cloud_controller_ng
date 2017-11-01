@@ -79,25 +79,13 @@ module VCAP::CloudController
     end
 
     describe '#minimum_limit' do
-      context 'when the value is in the configuration' do
-        let(:expected_limit) { 99 }
-        before do
-          TestConfig.override(staging: { minimum_staging_memory_mb: expected_limit })
-        end
-
-        it 'returns the configured value' do
-          expect(calculator.minimum_limit).to eq(expected_limit)
-        end
+      let(:expected_limit) { 99 }
+      before do
+        TestConfig.override(staging: { minimum_staging_memory_mb: expected_limit })
       end
 
-      context 'when there is no configured value' do
-        before do
-          TestConfig.override(staging: { minimum_staging_memory_mb: nil })
-        end
-
-        it 'returns 1024' do
-          expect(calculator.minimum_limit).to eq(1024)
-        end
+      it 'returns the configured value' do
+        expect(calculator.minimum_limit).to eq(expected_limit)
       end
     end
   end

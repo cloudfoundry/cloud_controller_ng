@@ -81,7 +81,7 @@ module VCAP::Services
         @url = attrs.fetch(:url)
         @auth_username = attrs.fetch(:auth_username)
         @auth_password = attrs.fetch(:auth_password)
-        @broker_client_timeout = VCAP::CloudController::Config.config.get(:broker_client_timeout_seconds) || 60
+        @broker_client_timeout = VCAP::CloudController::Config.config.get(:broker_client_timeout_seconds)
         @logger = logger || Steno.logger('cc.service_broker.v2.http_client')
       end
 

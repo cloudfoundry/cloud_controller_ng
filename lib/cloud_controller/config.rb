@@ -34,59 +34,16 @@ module VCAP::CloudController
       private
 
       def merge_defaults(config)
-        config[:stacks_file] ||= File.join(config_dir, 'stacks.yml')
-        config[:maximum_app_disk_in_mb] ||= 2048
-        config[:request_timeout_in_seconds] ||= 900
-        config[:directories] ||= {}
-        config[:skip_cert_verify] = false if config[:skip_cert_verify].nil?
-        config[:app_bits_upload_grace_period_in_seconds] ||= 0
         config[:db] ||= {}
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
-        config[:default_locale] ||= 'en_US'
-        config[:allowed_cors_domains] ||= []
-        config[:staging][:minimum_staging_memory_mb] ||= 1024
-        config[:staging][:minimum_staging_disk_mb] ||= 4096
-        config[:staging][:minimum_staging_file_descriptor_limit] ||= 16384
-        config[:broker_client_timeout_seconds] ||= 60
-        config[:broker_client_default_async_poll_interval_seconds] ||= 60
-        config[:packages][:max_valid_packages_stored] ||= 5
-        config[:droplets][:max_staged_droplets_stored] ||= 5
-        config[:bits_service] ||= { enabled: false }
-        config[:rate_limiter] ||= { enabled: false }
-        config[:rate_limiter][:general_limit] ||= 2000
-        config[:rate_limiter][:reset_interval_in_minutes] ||= 60
-        config[:perm] ||= { enabled: false }
-        config[:perm][:timeout_in_milliseconds] ||= 100
-
-        unless config.key?(:users_can_select_backend)
-          config[:users_can_select_backend] = true
-        end
 
         sanitize(config)
       end
 
-      def config_dir
-        @config_dir ||= File.expand_path('../../config', __dir__)
-      end
-
       def sanitize(config)
-        sanitize_grace_period(config)
         sanitize_staging_auth(config)
-        sanitize_diego_properties(config)
 
         config
-      end
-
-      def sanitize_diego_properties(config)
-        pid_limit = HashUtils.dig(config, :diego, :pid_limit)
-        if pid_limit
-          config[:diego][:pid_limit] = 0 if pid_limit < 0
-        end
-      end
-
-      def sanitize_grace_period(config)
-        grace_period = config[:app_bits_upload_grace_period_in_seconds]
-        config[:app_bits_upload_grace_period_in_seconds] = 0 if grace_period < 0
       end
 
       def sanitize_staging_auth(config)

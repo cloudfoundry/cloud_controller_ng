@@ -29,7 +29,10 @@ module VCAP::CloudController
     end
 
     def setup_i18n
-      CloudController::Errors::ApiError.setup_i18n(Dir[File.expand_path('../../../vendor/errors/i18n/*.yml', __FILE__)], @config.get(:default_locale))
+      CloudController::Errors::ApiError.setup_i18n(
+        Dir[File.expand_path('../../../vendor/errors/i18n/*.yml', __FILE__)],
+        'en_US',
+      )
     end
 
     def logger
