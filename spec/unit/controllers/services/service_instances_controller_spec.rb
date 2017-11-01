@@ -2382,8 +2382,30 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code 400
             expect(last_response.body).to include 'ServiceIsShared'
-            expect(last_response.body).to include
-            'Service instances must be unshared before they can be deleted'
+            expect(last_response.body).to include(
+              'Service instances must be unshared before they can be deleted. ' \
+              "Unsharing #{service_instance.name} will automatically delete any bindings " \
+              'that have been made to applications in other spaces')
+          end
+
+          context 'and there are bindings to the shared instance' do
+            before do
+              ServiceBinding.make(
+                app: AppModel.make(space: space),
+                service_instance: service_instance
+              )
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}"
+
+              expect(last_response).to have_status_code 400
+              expect(last_response.body).to include 'ServiceIsShared'
+              expect(last_response.body).to include(
+                'Service instances must be unshared before they can be deleted. ' \
+                "Unsharing #{service_instance.name} will automatically delete any bindings " \
+                'that have been made to applications in other spaces')
+            end
           end
 
           context 'and recursive=true' do

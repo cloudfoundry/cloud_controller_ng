@@ -161,12 +161,13 @@ module VCAP::CloudController
       validate_access(:delete, service_instance)
 
       unless recursive_delete?
+        service_is_shared!(service_instance.name) if has_shares?(service_instance)
+
         has_associations = has_routes?(service_instance) ||
           has_bindings?(service_instance) ||
           has_keys?(service_instance)
 
         association_not_empty! if has_associations
-        service_is_shared!     if has_shares?(service_instance)
       end
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
@@ -462,8 +463,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations, :service_instances)
     end
 
-    def service_is_shared!
-      raise CloudController::Errors::ApiError.new_from_details('ServiceIsShared')
+    def service_is_shared!(name)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceIsShared', name)
     end
 
     def space_change_not_allowed!
