@@ -8,11 +8,11 @@ module VCAP::CloudController::Diego
     let!(:binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: VCAP::CloudController::ManagedServiceInstance.make(space: process.space)) }
     let(:environment) do
       {
-        APP_KEY1: 'APP_VAL1',
-        APP_KEY2: { nested: 'data' },
-        APP_KEY3: [1, 2, 3],
-        APP_KEY4: 1,
-        APP_KEY5: true,
+        'APP_KEY1' => 'APP_VAL1',
+        'APP_KEY2' => { 'nested' => 'data' },
+        'APP_KEY3' => [1, 2, 3],
+        'APP_KEY4' => 1,
+        'APP_KEY5' => true,
       }
     end
 
@@ -28,15 +28,24 @@ module VCAP::CloudController::Diego
 
       encoded_vcap_services_json = system_env[vcap_services_key].to_json
       expect(Environment.new(process).as_json).to eq([
-        { 'name' => 'VCAP_APPLICATION', 'value' => encoded_vcap_application_json },
-        { 'name' => 'MEMORY_LIMIT', 'value' => "#{process.memory}m" },
-        { 'name' => 'VCAP_SERVICES', 'value' => encoded_vcap_services_json },
         { 'name' => 'APP_KEY1', 'value' => 'APP_VAL1' },
         { 'name' => 'APP_KEY2', 'value' => '{"nested":"data"}' },
         { 'name' => 'APP_KEY3', 'value' => '[1,2,3]' },
         { 'name' => 'APP_KEY4', 'value' => '1' },
         { 'name' => 'APP_KEY5', 'value' => 'true' },
+        { 'name' => 'VCAP_APPLICATION', 'value' => encoded_vcap_application_json },
+        { 'name' => 'MEMORY_LIMIT', 'value' => "#{process.memory}m" },
+        { 'name' => 'VCAP_SERVICES', 'value' => encoded_vcap_services_json },
       ])
+    end
+
+    context 'when the user specifies their own MEMORY_LIMIT' do
+      it 'uses the system provided MEMORY_LIMIT' do
+        environment['MEMORY_LIMIT'] = 'i-should-not-be-usedMB'
+
+        expect(Environment.new(process).as_json).
+          to include({ 'name' => 'MEMORY_LIMIT', 'value' => "#{process.memory}m" })
+      end
     end
 
     context 'when an initial environment is provided' do

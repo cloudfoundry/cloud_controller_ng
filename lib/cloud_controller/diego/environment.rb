@@ -14,9 +14,9 @@ module VCAP::CloudController
       def as_json(_={})
         diego_env =
           @initial_env.
-          merge(VCAP_APPLICATION: vcap_application, MEMORY_LIMIT: "#{process.memory}m").
-          merge(SystemEnvPresenter.new(process.service_bindings).system_env).
-          merge(process.environment_json || {})
+          merge(process.environment_json || {}).
+          merge('VCAP_APPLICATION' => vcap_application, 'MEMORY_LIMIT' => "#{process.memory}m").
+          merge(SystemEnvPresenter.new(process.service_bindings).system_env)
 
         diego_env = diego_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
 
