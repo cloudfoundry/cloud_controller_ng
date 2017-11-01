@@ -265,7 +265,9 @@ RSpec.describe 'ServiceInstances' do
         expect(last_response.status).to eq(400)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted'
+        expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted. ' \
+          "Unsharing #{service_instance.name} will automatically delete any bindings " \
+          'that have been made to applications in other spaces'
         expect(parsed_response['error_code']).to eq 'CF-ServiceIsShared'
         expect(parsed_response['code']).to eq 10014
       end
