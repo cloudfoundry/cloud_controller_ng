@@ -46,6 +46,16 @@ class FakeServiceBrokerV2Client
     }
   end
 
+  def deprovision(_instance, arbitrary_parameters: {}, accepts_incomplete: false)
+    {
+      last_operation: {
+        type:        'delete',
+        description: '',
+        state:       'succeeded'
+      }
+    }
+  end
+
   def bind(_binding, _arbitrary_parameters)
     {
       credentials: credentials,
