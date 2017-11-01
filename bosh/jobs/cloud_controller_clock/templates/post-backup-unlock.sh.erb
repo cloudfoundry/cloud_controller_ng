@@ -1,8 +1,0 @@
-#!/bin/bash
-set -e
-
-source /var/vcap/packages/capi_utils/monit_utils.sh
-
-<% if p('release_level_backup') %>
-  monit_start_job cloud_controller_clock
-<% end %>
