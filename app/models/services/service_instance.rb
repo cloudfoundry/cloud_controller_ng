@@ -138,7 +138,7 @@ module VCAP::CloudController
     alias_method_chain :credentials, 'serialization'
 
     def in_suspended_org?
-      space && space.in_suspended_org?
+      space&.in_suspended_org?
     end
 
     def after_create
