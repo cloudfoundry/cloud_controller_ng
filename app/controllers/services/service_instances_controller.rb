@@ -159,11 +159,15 @@ module VCAP::CloudController
       end
 
       validate_access(:delete, service_instance)
-      has_assocations = has_routes?(service_instance) ||
-        has_bindings?(service_instance) ||
-        has_keys?(service_instance)
 
-      association_not_empty! if has_assocations && !recursive_delete?
+      unless recursive_delete?
+        has_associations = has_routes?(service_instance) ||
+          has_bindings?(service_instance) ||
+          has_keys?(service_instance)
+
+        association_not_empty! if has_associations
+        service_is_shared!     if has_shares?(service_instance)
+      end
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
       delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
@@ -458,6 +462,10 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations, :service_instances)
     end
 
+    def service_is_shared!
+      raise CloudController::Errors::ApiError.new_from_details('ServiceIsShared')
+    end
+
     def space_change_not_allowed!
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
     end
@@ -488,6 +496,10 @@ module VCAP::CloudController
 
     def has_keys?(service_instance)
       !service_instance.service_keys.empty?
+    end
+
+    def has_shares?(service_instance)
+      !service_instance.shared_spaces.empty?
     end
 
     def space_change_requested?(requested_space_guid, current_space)

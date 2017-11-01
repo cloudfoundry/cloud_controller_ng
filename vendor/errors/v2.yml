@@ -88,6 +88,11 @@
   http_code: 429
   message: "Rate Limit Exceeded"
 
+10014:
+  name: ServiceIsShared
+  http_code: 400
+  message: "Service instances must be unshared before they can be deleted"
+
 20001:
   name: UserInvalid
   http_code: 400

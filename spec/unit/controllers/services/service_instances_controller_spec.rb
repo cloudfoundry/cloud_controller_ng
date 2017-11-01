@@ -2362,6 +2362,42 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the service instance has been shared' do
+          let(:originating_space) { Space.make }
+          let!(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
+
+          before do
+            service_instance.add_shared_space(space)
+          end
+
+          it 'does not delete the associated shares' do
+            delete "/v2/service_instances/#{service_instance.guid}"
+
+            expect(ServiceInstance.find(guid: service_instance.guid)).to be
+            expect(ServiceInstance.find(guid: service_instance.guid).shared_spaces.length).to eq(1)
+          end
+
+          it 'should give the user an error' do
+            delete "/v2/service_instances/#{service_instance.guid}"
+
+            expect(last_response).to have_status_code 400
+            expect(last_response.body).to include 'ServiceIsShared'
+            expect(last_response.body).to include
+            'Service instances must be unshared before they can be deleted'
+          end
+
+          context 'and recursive=true' do
+            it 'deletes the associated shares' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}?recursive=true"
+              }.to change(ServiceInstance.join(:service_instance_shares, service_instance_guid: :service_instances__guid), :count).by(-1)
+
+              expect(last_response.status).to eq(204)
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+            end
+          end
+        end
+
         context 'with ?accepts_incomplete=true' do
           before do
             stub_deprovision(service_instance, body: body, status: status, accepts_incomplete: true)
