@@ -92,28 +92,6 @@ module VCAP::CloudController
       errors.add(:name, :route_conflict) if routes_match?
     end
 
-    def name_overlaps?
-      return true unless CloudController::DomainHelper.intermediate_domains(name).all? do |suffix|
-        d = Domain.find(name: suffix)
-        d.nil? || d.owning_organization == owning_organization || d.shared?
-      end
-
-      false
-    end
-
-    def routes_match?
-      return false unless name && name =~ CloudController::DomainHelper::DOMAIN_REGEX
-
-      if name.include?('.')
-        route_host = name[0, name.index('.')]
-        route_domain_name = name[name.index('.') + 1, name.length]
-        route_domain = Domain.find(name: route_domain_name)
-        return false if route_domain.nil?
-        return true if Route.dataset.filter(host: route_host, domain: route_domain).count > 0
-      end
-      false
-    end
-
     def self.user_visibility_filter(user)
       organizations_filter = dataset.db[:organizations_managers].where(user_id: user.id).select(:organization_id).union(
         dataset.db[:organizations_auditors].where(user_id: user.id).select(:organization_id)
@@ -160,6 +138,36 @@ module VCAP::CloudController
 
     def validate_add_shared_organization(organization)
       organization.cancel_action if shared? || owned_by?(organization)
+    end
+
+    def name_overlaps?
+      return true unless CloudController::DomainHelper.intermediate_domains(name).all? do |suffix|
+        d = Domain.find(name: suffix)
+        d.nil? || d.owning_organization == owning_organization || d.shared?
+      end
+
+      false
+    end
+
+    def routes_match?
+      return false unless name
+
+      return true if does_route_exist?(name)
+      _, parent_domain_name = CloudController::DomainHelper.split_domain(name)
+      does_route_exist?(parent_domain_name)
+    end
+
+    def does_route_exist?(domain)
+      return false unless domain.match?(CloudController::DomainHelper::DOMAIN_REGEX)
+
+      route_host, route_domain_name = CloudController::DomainHelper.split_domain(domain)
+
+      route_domain = Domain.find(name: [route_domain_name])
+      route_domain && matching_route(route_domain, route_host)
+    end
+
+    def matching_route(route_domain, route_host)
+      Route.dataset.filter(host: route_host, domain: route_domain).count > 0
     end
   end
 end

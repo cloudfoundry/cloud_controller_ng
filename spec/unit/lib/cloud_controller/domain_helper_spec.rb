@@ -56,5 +56,17 @@ module CloudController
           to be_falsey
       end
     end
+
+    describe '.split_domain' do
+      it 'returns the host and parent domain' do
+        expect(DomainHelper.split_domain('api.bosh-lite.com')).to eq ['api', 'bosh-lite.com']
+      end
+
+      context 'when it is a TLD' do
+        it 'returns no host and the provided domain' do
+          expect(DomainHelper.split_domain('com')).to eq [nil, 'com']
+        end
+      end
+    end
   end
 end

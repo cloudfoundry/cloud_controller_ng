@@ -18,5 +18,14 @@ module CloudController
         end
       end
     end
+
+    def self.split_domain(domain)
+      route_host, route_domain_name = domain.split('.', 2)
+      if route_domain_name
+        [route_host, route_domain_name]
+      else
+        [nil, route_host]
+      end
+    end
   end
 end

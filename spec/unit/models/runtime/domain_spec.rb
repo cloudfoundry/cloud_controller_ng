@@ -181,39 +181,5 @@ module VCAP::CloudController
         }.to have_queried_db_times(/spaces/i, 1)
       end
     end
-
-    describe '#name_overlaps?' do
-      context 'when a domain exists that exactly matches the current name' do
-        context 'when the organization is the same' do
-          let(:organization) { Organization.make }
-
-          it 'is false' do
-            Domain.make(name: 'blah.blah.com', owning_organization: organization).save
-            expect(Domain.new(name: 'blah.blah.com', owning_organization: organization).name_overlaps?).to be false
-          end
-        end
-
-        context 'when the organization is different' do
-          it 'is true' do
-            Domain.make(name: 'blah.blah.com', owning_organization: Organization.make).save
-            expect(Domain.new(name: 'blah.blah.com', owning_organization: Organization.make).name_overlaps?).to be true
-          end
-        end
-
-        context 'but the first domain has no organization' do
-          it 'is false' do
-            Domain.make(name: 'blah.blah.com', owning_organization: nil).save
-            expect(Domain.new(name: 'blah.blah.com', owning_organization: Organization.make).name_overlaps?).to be false
-          end
-        end
-      end
-
-      context 'when no other private domain matches the name' do
-        it 'is false' do
-          Domain.make(name: 'blah.example.com', owning_organization: Organization.make).save
-          expect(Domain.new(name: 'blah.blah.com', owning_organization: Organization.make).name_overlaps?).to be false
-        end
-      end
-    end
   end
 end
