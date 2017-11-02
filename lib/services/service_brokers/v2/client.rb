@@ -140,14 +140,14 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def unbind(binding)
+    def unbind(binding, user_guid=nil)
       path = service_binding_resource_path(binding.guid, binding.service_instance.guid)
 
       body = {
         service_id: binding.service.broker_provided_id,
         plan_id:    binding.service_plan.broker_provided_id,
       }
-      response = @http_client.delete(path, body)
+      response = @http_client.delete(path, body, user_guid)
 
       @response_parser.parse_unbind(path, response)
     rescue => e

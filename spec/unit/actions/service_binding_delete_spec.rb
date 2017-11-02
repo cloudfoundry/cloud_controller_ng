@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       it 'asks the broker to unbind the instance' do
-        expect(client).to receive(:unbind).with(service_binding)
+        expect(client).to receive(:unbind).with(service_binding, user_guid)
         service_binding_delete.single_delete_sync(service_binding)
       end
 

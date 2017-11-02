@@ -8,7 +8,7 @@ module Rack
         params = env[:params]
         new_env = orig_env_for(path, env)
 
-        if env[:method] == 'GET'
+        if ['GET', 'DELETE'].include?(env[:method])
           # merge :params with the query string
           uri = URI.parse(path)
 
