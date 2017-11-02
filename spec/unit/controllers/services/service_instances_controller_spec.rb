@@ -2385,7 +2385,7 @@ module VCAP::CloudController
             expect(last_response.body).to include(
               'Service instances must be unshared before they can be deleted. ' \
               "Unsharing #{service_instance.name} will automatically delete any bindings " \
-              'that have been made to applications in other spaces')
+              'that have been made to applications in other spaces.')
           end
 
           context 'and there are bindings to the shared instance' do
@@ -2404,7 +2404,7 @@ module VCAP::CloudController
               expect(last_response.body).to include(
                 'Service instances must be unshared before they can be deleted. ' \
                 "Unsharing #{service_instance.name} will automatically delete any bindings " \
-                'that have been made to applications in other spaces')
+                'that have been made to applications in other spaces.')
             end
           end
 
