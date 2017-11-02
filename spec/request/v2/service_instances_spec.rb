@@ -268,7 +268,7 @@ RSpec.describe 'ServiceInstances' do
         expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted. ' \
           "Unsharing #{service_instance.name} will automatically delete any bindings " \
           'that have been made to applications in other spaces.'
-        expect(parsed_response['error_code']).to eq 'CF-ServiceIsShared'
+        expect(parsed_response['error_code']).to eq 'CF-ServiceInstanceDeletionSharesExists'
         expect(parsed_response['code']).to eq 390002
       end
     end
