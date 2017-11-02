@@ -1,4 +1,4 @@
-require 'cloud_controller/domain_helper'
+require 'cloud_controller/domain_decorator'
 
 module VCAP::CloudController
   class Domain < Sequel::Model
@@ -84,7 +84,7 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique :name, dataset: Domain.dataset
 
-      validates_format CloudController::DomainHelper::DOMAIN_REGEX, :name,
+      validates_format CloudController::DomainDecorator::DOMAIN_REGEX, :name,
         message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
       validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name, message: "must be no more than #{MAXIMUM_FQDN_DOMAIN_LENGTH} characters"
 
@@ -141,29 +141,25 @@ module VCAP::CloudController
     end
 
     def name_overlaps?
-      return true unless CloudController::DomainHelper.intermediate_domains(name).all? do |suffix|
-        d = Domain.find(name: suffix)
-        d.nil? || d.owning_organization == owning_organization || d.shared?
+      intermediate_domain_names = CloudController::DomainDecorator.new(name).intermediate_domains
+      intermediate_domain_names.any? do |suffix|
+        domain = Domain.find(name: suffix)
+        domain && domain.owning_organization != owning_organization && !domain.shared?
       end
-
-      false
     end
 
     def routes_match?
       return false unless name
 
-      return true if does_route_exist?(name)
-      _, parent_domain_name = CloudController::DomainHelper.split_domain(name)
-      does_route_exist?(parent_domain_name)
+      domain = CloudController::DomainDecorator.new(name)
+      does_route_exist?(domain) || does_route_exist?(domain.parent_domain)
     end
 
     def does_route_exist?(domain)
-      return false unless domain.match?(CloudController::DomainHelper::DOMAIN_REGEX)
+      return false unless domain.valid_format?
 
-      route_host, route_domain_name = CloudController::DomainHelper.split_domain(domain)
-
-      route_domain = Domain.find(name: [route_domain_name])
-      route_domain && matching_route(route_domain, route_host)
+      route_domain = Domain.find(name: domain.parent_domain.name)
+      route_domain && matching_route(route_domain, domain.hostname)
     end
 
     def matching_route(route_domain, route_host)

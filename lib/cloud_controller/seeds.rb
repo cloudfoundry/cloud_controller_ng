@@ -77,7 +77,7 @@ module VCAP::CloudController
           SharedDomain.find_or_create(domain_name, router_group_guid)
         end
 
-        if CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: domains.map { |domain_hash| domain_hash['name'] })
+        if CloudController::DomainDecorator.new(system_domain).is_sub_domain?(test_domains: domains.map { |domain_hash| domain_hash['name'] })
           Config.config.get(:system_hostnames).each do |hostnames|
             domains.each do |app_domain|
               raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
