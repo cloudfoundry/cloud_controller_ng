@@ -2381,7 +2381,7 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}"
 
             expect(last_response).to have_status_code 400
-            expect(last_response.body).to include 'ServiceIsShared'
+            expect(last_response.body).to include 'ServiceInstanceDeletionSharesExists'
             expect(last_response.body).to include(
               'Service instances must be unshared before they can be deleted. ' \
               "Unsharing #{service_instance.name} will automatically delete any bindings " \
@@ -2400,7 +2400,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}"
 
               expect(last_response).to have_status_code 400
-              expect(last_response.body).to include 'ServiceIsShared'
+              expect(last_response.body).to include 'ServiceInstanceDeletionSharesExists'
               expect(last_response.body).to include(
                 'Service instances must be unshared before they can be deleted. ' \
                 "Unsharing #{service_instance.name} will automatically delete any bindings " \

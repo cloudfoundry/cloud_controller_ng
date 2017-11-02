@@ -464,7 +464,7 @@ module VCAP::CloudController
     end
 
     def service_is_shared!(name)
-      raise CloudController::Errors::ApiError.new_from_details('ServiceIsShared', name)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeletionSharesExists', name)
     end
 
     def space_change_not_allowed!
