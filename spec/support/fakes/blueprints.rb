@@ -313,6 +313,7 @@ module VCAP::CloudController
     app { AppModel.make(space: service_instance.space) }
     syslog_drain_url { nil }
     type { 'app' }
+    name { nil }
   end
 
   ServiceKey.blueprint do

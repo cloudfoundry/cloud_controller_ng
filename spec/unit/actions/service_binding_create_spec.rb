@@ -14,6 +14,7 @@ module VCAP::CloudController
       let(:request) do
         {
           'type'          => 'app',
+          'name'          => 'named-binding',
           'relationships' => {
             'app' => {
               'guid' => app.guid
@@ -50,6 +51,7 @@ module VCAP::CloudController
         expect(service_binding.app_guid).to eq(app.guid)
         expect(service_binding.service_instance_guid).to eq(service_instance.guid)
         expect(service_binding.type).to eq('app')
+        expect(service_binding.name).to eq('named-binding')
       end
 
       it 'creates an audit.service_binding.create event' do

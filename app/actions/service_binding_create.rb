@@ -26,7 +26,8 @@ module VCAP::CloudController
         service_instance: service_instance,
         app:              app,
         credentials:      {},
-        type:             message.type
+        type:             message.type,
+        name:             message.name,
       )
       raise InvalidServiceBinding unless binding.valid?
 

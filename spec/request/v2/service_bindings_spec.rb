@@ -44,6 +44,7 @@ RSpec.describe 'ServiceBindings' do
                 'app_guid' => process1.guid,
                 'service_instance_guid' => service_instance.guid,
                 'credentials' => { 'secret' => 'key' },
+                'name' => nil,
                 'binding_options' => {},
                 'gateway_data' => nil,
                 'gateway_name' => '',
@@ -65,6 +66,7 @@ RSpec.describe 'ServiceBindings' do
                 'service_instance_guid' => service_instance.guid,
                 'credentials' => { 'top' => 'secret' },
                 'binding_options' => {},
+                'name' => nil,
                 'gateway_data' => nil,
                 'gateway_name' => '',
                 'syslog_drain_url' => nil,
@@ -115,6 +117,7 @@ RSpec.describe 'ServiceBindings' do
                   'app_guid' => process1.guid,
                   'service_instance_guid' => service_instance.guid,
                   'credentials' => { 'secret' => 'key' },
+                  'name' => nil,
                   'binding_options' => {},
                   'gateway_data' => nil,
                   'gateway_name' => '',
@@ -251,6 +254,7 @@ RSpec.describe 'ServiceBindings' do
             'app_guid' => process1.guid,
             'service_instance_guid' => service_instance.guid,
             'credentials' => { 'secret' => 'key' },
+            'name' => nil,
             'binding_options' => {},
             'gateway_data' => nil,
             'gateway_name' => '',
@@ -311,6 +315,7 @@ RSpec.describe 'ServiceBindings' do
             'app_guid' => process.guid,
             'service_instance_guid' => service_instance.guid,
             'credentials' => { 'username' => 'managed_username' },
+            'name' => nil,
             'binding_options' => {},
             'gateway_data' => nil,
             'gateway_name' => '',
@@ -337,6 +342,7 @@ RSpec.describe 'ServiceBindings' do
               'data' => { 'guid' => service_instance.guid }
             },
           },
+          'name' => nil,
           'data' => 'PRIVATE DATA HIDDEN'
         }
       })

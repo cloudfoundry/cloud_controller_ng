@@ -27,6 +27,15 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness [:app_guid, :service_instance_guid] }
       it { is_expected.to validate_presence [:type] }
 
+      it 'validates max length of name' do
+        too_long = 'a' * (255 + 1)
+
+        binding = ServiceBinding.make
+        binding.name = too_long
+
+        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /name max_length/)
+      end
+
       it 'validates max length of volume_mounts' do
         too_long = 'a' * (65_535 + 1)
 
@@ -34,6 +43,25 @@ module VCAP::CloudController
         binding.volume_mounts = too_long
 
         expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
+      end
+
+      context 'validates name characters' do
+        it 'does not allow non-word non-dash characters' do
+          ['git://github.com', '$abc', 'foobar!'].each do |name|
+            service_binding = ServiceBinding.new(name: name)
+            expect(service_binding).not_to be_valid
+            expect(service_binding.errors.on(:name)).to be_present
+            expect(service_binding.errors.on(:name)).to include('Valid characters are alphanumeric, underscore, and dash.')
+          end
+        end
+
+        it 'allows word, underscore, and dash characters' do
+          ['name', 'name-with-dash', '-name-', '_squ1d_'].each do |name|
+            service_binding = ServiceBinding.new(name: name)
+            service_binding.validate
+            expect(service_binding.errors.on(:name)).not_to be_present
+          end
+        end
       end
 
       context 'when the syslog_drain_url is longer than 10,000 characters' do
@@ -44,6 +72,36 @@ module VCAP::CloudController
           binding.syslog_drain_url = overly_long_url
 
           expect { binding.save }.to raise_error Sequel::ValidationFailed, /syslog_drain_url max_length/
+        end
+      end
+
+      context 'when a binding already exists with the same app_guid and name' do
+        let(:app) { AppModel.make }
+        let(:service_instance) { ServiceInstance.make(space: app.space) }
+
+        context 'and the name is not null' do
+          let(:existing_binding) do
+            ServiceBinding.make(app: app, name: 'some-name', service_instance: service_instance, type: 'app')
+          end
+
+          it 'adds a uniqueness error' do
+            other_service_instance = ServiceInstance.make(space: existing_binding.space)
+            conflict = ServiceBinding.new(app: existing_binding.app, name: existing_binding.name, service_instance: other_service_instance, type: 'app')
+            expect(conflict.valid?).to be(false)
+            expect(conflict.errors.full_messages).to eq(['app_guid and name unique'])
+          end
+        end
+
+        context 'and the name is null' do
+          let(:existing_binding) do
+            ServiceBinding.make(app: app, name: nil, service_instance: service_instance, type: 'app')
+          end
+
+          it 'does NOT add a uniqueness error' do
+            other_service_instance = ServiceInstance.make(space: existing_binding.space)
+            conflict = ServiceBinding.new(app: existing_binding.app, name: nil, service_instance: other_service_instance, type: 'app')
+            expect(conflict.valid?).to be(true)
+          end
         end
       end
 
@@ -134,7 +192,7 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url }
+      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url, :name }
     end
 
     describe '#new' do

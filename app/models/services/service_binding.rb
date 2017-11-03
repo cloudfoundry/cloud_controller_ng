@@ -22,7 +22,7 @@ module VCAP::CloudController
     encrypt :volume_mounts, salt: :volume_mounts_salt
     serializes_via_json :volume_mounts
 
-    import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url
+    import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url, :name
 
     delegate :service, :service_plan, to: :service_instance
 
@@ -32,12 +32,16 @@ module VCAP::CloudController
       validates_presence :type
 
       validates_unique [:app_guid, :service_instance_guid]
+      validates_unique [:app_guid, :name]
 
       validate_space_match
       validate_cannot_change_binding
 
       validates_max_length 65_535, :volume_mounts if volume_mounts.present?
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
+      validates_max_length 255, :name, allow_nil: true
+
+      validates_format(/\A(\w|\-)+\z/, :name, message: 'Valid characters are alphanumeric, underscore, and dash.') if name.present?
 
       errors.add(:app, :invalid_relation) unless app.is_a?(AppModel)
     end

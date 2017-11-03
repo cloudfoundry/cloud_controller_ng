@@ -40,9 +40,29 @@ module CloudController::Presenters::V2
             'gateway_name'          => '',
             'syslog_drain_url'      => 'syslog://drain.example.com',
             'volume_mounts'         => [{ 'container_dir' => 'mount' }],
-            'relationship_url'      => 'http://relationship.example.com'
+            'relationship_url'      => 'http://relationship.example.com',
+            'name'                  => nil
           }
         )
+      end
+
+      context 'when a name is provided' do
+        let(:service_binding) do
+          VCAP::CloudController::ServiceBinding.make(
+            credentials:      { 'secret' => 'key' },
+            syslog_drain_url: 'syslog://drain.example.com',
+            volume_mounts:    volume_mount,
+            name:             'some-binding-name'
+          )
+        end
+
+        it 'returns the service binding entity' do
+          expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
+            {
+              'name' => 'some-binding-name',
+            }
+          )
+        end
       end
 
       describe 'volume mounts' do

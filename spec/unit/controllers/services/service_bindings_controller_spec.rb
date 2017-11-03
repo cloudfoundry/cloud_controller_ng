@@ -12,7 +12,8 @@ module VCAP::CloudController
         expect(ServiceBindingsController).to have_creatable_attributes({
           app_guid: { type: 'string', required: true },
           service_instance_guid: { type: 'string', required: true },
-          parameters: { type: 'hash', required: false }
+          parameters: { type: 'hash', required: false },
+          name: { type: 'string', required: false },
         })
       end
 
@@ -20,7 +21,8 @@ module VCAP::CloudController
         expect(ServiceBindingsController).to have_updatable_attributes({
           app_guid: { type: 'string' },
           service_instance_guid: { type: 'string' },
-          parameters: { type: 'hash', required: false }
+          parameters: { type: 'hash', required: false },
+          name: { type: 'string', required: false },
         })
       end
     end
@@ -166,6 +168,21 @@ module VCAP::CloudController
           expect(binding.credentials).to eq(credentials)
         end
 
+        context 'when given a valid name' do
+          before do
+            req[:name] = 'foo'
+          end
+
+          it 'binds a service instance with given name to an app' do
+            post '/v2/service_bindings', req.to_json
+            expect(last_response).to have_status_code(201)
+            expect(parsed_response['entity']).to include('name' => 'foo')
+
+            binding = ServiceBinding.last
+            expect(binding.name).to eq('foo')
+          end
+        end
+
         it 'creates an audit event upon binding' do
           email = 'email@example.com'
           set_current_user(developer, email: email)
@@ -187,6 +204,7 @@ module VCAP::CloudController
           expect(event.metadata).to include({
             'request' => {
               'type'          => 'app',
+              'name'          => nil,
               'relationships' => {
                 'app' => {
                   'data' => { 'guid' => req[:app_guid] }
@@ -767,19 +785,27 @@ module VCAP::CloudController
       it 'returns both user provided and managed service instances' do
         set_current_user(developer)
         ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
-        ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
+        ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app, name: 'service-binding-name')
 
         get '/v2/service_bindings?inline-relations-depth=1'
         expect(last_response.status).to eql(200)
 
         service_bindings = decoded_response['resources']
+
         service_instance_guids = service_bindings.map do |res|
           res['entity']['service_instance']['metadata']['guid']
         end
-
         expect(service_instance_guids).to match_array([
           managed_service_instance.guid,
           user_provided_service_instance.guid,
+        ])
+
+        service_instance_names = service_bindings.map do |res|
+          res['entity']['name']
+        end
+        expect(service_instance_names).to match_array([
+          nil,
+          'service-binding-name',
         ])
       end
     end

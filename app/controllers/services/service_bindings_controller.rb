@@ -9,6 +9,7 @@ module VCAP::CloudController
       to_one :service_instance
       attribute :binding_options, Hash, exclude_in: [:create, :update]
       attribute :parameters, Hash, default: nil
+      attribute :name, String, default: nil
     end
 
     get path, :enumerate
@@ -33,6 +34,7 @@ module VCAP::CloudController
 
       message = ServiceBindingCreateMessage.new({
         type: 'app',
+        name: request_attrs['name'],
         relationships: {
           app: {
             data: { guid: request_attrs['app_guid'] }

@@ -15,7 +15,8 @@ module CloudController
             'gateway_data'          => nil,
             'gateway_name'          => '',
             'syslog_drain_url'      => service_binding.syslog_drain_url,
-            'volume_mounts'         => ::ServiceBindingPresenter.censor_volume_mounts(service_binding.volume_mounts)
+            'volume_mounts'         => ::ServiceBindingPresenter.censor_volume_mounts(service_binding.volume_mounts),
+            'name'                  => service_binding.name,
           }.merge!(RelationsPresenter.new.to_hash(controller, service_binding, opts, depth, parents, orphans))
         end
 

@@ -7,15 +7,16 @@ module VCAP::CloudController
       let(:body) {
         {
           'type' => 'pipe',
+          'name' => 'fluid',
           'relationships' => {
             'app' => {
               'data' => {
-                'guid' => 'fluid'
+                'guid' => 'druid'
               }
             },
             'service_instance' => {
               'data' => {
-                'guid' => 'druid'
+                'guid' => 'squid'
               }
             },
           },
@@ -27,8 +28,9 @@ module VCAP::CloudController
 
         expect(message).to be_a(ServiceBindingCreateMessage)
         expect(message.type).to eq('pipe')
-        expect(message.app_guid).to eq('fluid')
-        expect(message.service_instance_guid).to eq('druid')
+        expect(message.name).to eq('fluid')
+        expect(message.app_guid).to eq('druid')
+        expect(message.service_instance_guid).to eq('squid')
       end
     end
 
@@ -39,12 +41,12 @@ module VCAP::CloudController
           relationships: {
             app: {
               data: {
-                guid: 'fluid'
+                guid: 'druid'
               }
             },
             service_instance: {
               data: {
-                guid: 'druid'
+                guid: 'squid'
               }
             },
           },
