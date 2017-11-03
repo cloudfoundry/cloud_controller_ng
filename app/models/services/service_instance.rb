@@ -184,6 +184,10 @@ module VCAP::CloudController
       false
     end
 
+    def shareable?
+      false
+    end
+
     def volume_service?
       false
     end

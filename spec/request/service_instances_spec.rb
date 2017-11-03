@@ -168,6 +168,28 @@ RSpec.describe 'Service Instances' do
       })
       expect(event.metadata['target_space_guids']).to eq([target_space.guid])
     end
+
+    context 'when the service offering has shareable false' do
+      before do
+        service_instance1.service.extra = { shareable: false }.to_json
+        service_instance1.service.save
+      end
+
+      it 'fails to share' do
+        share_request = {
+          'data' => [
+            { 'guid' => target_space.guid }
+          ]
+        }
+
+        post "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", share_request.to_json, admin_header
+
+        expect(last_response.status).to eq(400)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'].first['code']).to eq(390003)
+        expect(parsed_response['errors'].first['title']).to eq('CF-ServiceShareIsDisabled')
+      end
+    end
   end
 
   describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do

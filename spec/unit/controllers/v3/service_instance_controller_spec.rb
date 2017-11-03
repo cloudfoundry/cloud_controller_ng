@@ -111,7 +111,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
   end
 
   describe '#share_service_instance' do
-    let(:service_instance) { VCAP::CloudController::ServiceInstance.make }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:target_space) { VCAP::CloudController::Space.make }
     let(:target_space2) { VCAP::CloudController::Space.make }
     let(:service_instance_sharing_enabled) { true }
@@ -130,28 +130,39 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: service_instance_sharing_enabled, error_message: nil)
     end
 
-    it 'shares the service instance to the target space' do
-      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+    it 'calls the service instance share action' do
+      action = instance_double(VCAP::CloudController::ServiceInstanceShare)
+      allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
 
-      expect(response.status).to eq 200
-      expect(parsed_body['data'][0]['guid']).to eq(target_space.guid)
-      expect(service_instance.shared_spaces).to contain_exactly(target_space)
+      expect(action).to receive(:create).with(service_instance, [target_space], an_instance_of(VCAP::CloudController::UserAuditInfo))
+
+      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
     end
 
     it 'shares the service instance to multiple target spaces' do
+      action = instance_double(VCAP::CloudController::ServiceInstanceShare)
+      allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
+      expect(action).to receive(:create).with(service_instance, [target_space, target_space2], an_instance_of(VCAP::CloudController::UserAuditInfo))
+
       req_body[:data] << { guid: target_space2.guid }
 
       post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
-
       expect(response.status).to eq 200
+    end
 
-      target_space_guids = []
-      parsed_body['data'].each do |item|
-        target_space_guids << item['guid']
+    context 'when the service instance share action errors' do
+      before do
+        action = instance_double(VCAP::CloudController::ServiceInstanceShare)
+        allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
+
+        expect(action).to receive(:create).and_raise('boom')
       end
-      expect(target_space_guids).to contain_exactly(target_space.guid, target_space2.guid)
 
-      expect(service_instance.shared_spaces).to contain_exactly(target_space, target_space2)
+      it 'returns the error to the user' do
+        expect {
+          post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        }.to raise_error('boom')
+      end
     end
 
     context 'when the service_instance_sharing feature flag is disabled' do
@@ -203,19 +214,6 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         expect(response.body).to include('nonexistant-space-guid')
         expect(response.body).to include('nonexistant-space-guid2')
         expect(service_instance.shared_spaces).to_not include(target_space)
-      end
-    end
-
-    context 'when the service instance has already been shared with the specified space' do
-      before do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
-      end
-
-      it 'returns a 200 and leaves the existing share intact' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
-
-        expect(response.status).to eq 200
-        expect(service_instance.shared_spaces).to include(target_space)
       end
     end
 

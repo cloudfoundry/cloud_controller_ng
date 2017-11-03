@@ -258,6 +258,32 @@ module VCAP::CloudController
       end
     end
 
+    describe '#shareable?' do
+      let(:service) { Service.make }
+      let(:service_instance) { ManagedServiceInstance.make }
+
+      before do
+        allow(service).to receive(:shareable?).and_return(is_shareable)
+        allow(service_instance).to receive(:service).and_return(service)
+      end
+
+      context 'when the service instance is not a shareable' do
+        let(:is_shareable) { false }
+
+        it 'returns false' do
+          expect(service_instance).to_not be_shareable
+        end
+      end
+
+      context 'when the service instance is shareable' do
+        let(:is_shareable) { true }
+
+        it 'returns true' do
+          expect(service_instance).to be_shareable
+        end
+      end
+    end
+
     describe '#as_summary_json' do
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ') }
       let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
