@@ -1589,6 +1589,43 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the service instance is shared' do
+          let(:service_instance) { ManagedServiceInstance.make }
+          let(:shared_to_space) { Space.make }
+          let(:body) do
+            {
+              tags: []
+            }.to_json
+          end
+
+          before do
+            service_instance.add_shared_space(shared_to_space)
+          end
+
+          context 'and a developer in the originating space tries to update the instance' do
+            it 'updates successfully' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+              expect(last_response).to have_status_code 201
+            end
+          end
+
+          context 'and a developer in the shared to space tries to update the instance' do
+            let(:shared_to_user) { make_developer_for_space(shared_to_space) }
+
+            before do
+              set_current_user(shared_to_user)
+            end
+
+            it 'should give the user an error' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+
+              expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'CF-NotAuthorized'
+              expect(last_response.body).to include 'You are not authorized to perform the requested action'
+            end
+          end
+        end
+
         describe 'error cases' do
           context 'when the service instance does not exist' do
             it 'returns a ServiceInstanceNotFound error' do
@@ -2423,11 +2460,11 @@ module VCAP::CloudController
 
           context 'as a SpaceDeveloper in target space' do
             let(:target_space) { Space.make }
-            let(:tommy) { make_developer_for_space(target_space) }
+            let(:target_space_dev) { make_developer_for_space(target_space) }
 
             before do
               service_instance.add_shared_space(target_space)
-              set_current_user(tommy, email: 'tommy@example.com')
+              set_current_user(target_space_dev)
             end
 
             it 'should give the user an error' do
