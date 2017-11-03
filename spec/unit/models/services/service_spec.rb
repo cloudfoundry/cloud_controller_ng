@@ -397,6 +397,48 @@ module VCAP::CloudController
       end
     end
 
+    describe '#shareable?' do
+      context 'when the service metadata include shareable true' do
+        let(:service) { Service.make(extra: '{"shareable":true}') }
+
+        it 'returns true' do
+          expect(service).to be_shareable
+        end
+      end
+
+      context 'when the service metadata include shareable false' do
+        let(:service) { Service.make(extra: '{"shareable":false}') }
+
+        it 'returns false' do
+          expect(service).to_not be_shareable
+        end
+      end
+
+      context 'when the service does not include the shareable field in metadata' do
+        let(:service) { Service.make(extra: '{"other-key": "value"}') }
+
+        it 'returns false' do
+          expect(service).to_not be_shareable
+        end
+      end
+
+      context 'when the service metadata is nil' do
+        let(:service) { Service.make(extra: nil) }
+
+        it 'returns false' do
+          expect(service).to_not be_shareable
+        end
+      end
+
+      context 'when extra contains malformed json' do
+        let(:service) { Service.make(extra: '{"not-json"}') }
+
+        it 'returns false' do
+          expect(service).to_not be_shareable
+        end
+      end
+    end
+
     describe '#client' do
       let(:service) { Service.make(service_broker: ServiceBroker.make) }
 

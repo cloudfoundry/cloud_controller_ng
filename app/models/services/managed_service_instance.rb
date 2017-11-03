@@ -103,6 +103,10 @@ module VCAP::CloudController
       service.route_service?
     end
 
+    def shareable?
+      service.shareable?
+    end
+
     def volume_service?
       service.volume_service?
     end
