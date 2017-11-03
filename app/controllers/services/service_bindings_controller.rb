@@ -64,8 +64,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::VolumeMountServiceDisabled
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
-    rescue ServiceBindingCreate::InvalidServiceBinding
-      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', "#{app.guid} #{service_instance.guid}")
+    rescue ServiceBindingCreate::InvalidServiceBinding => e
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', e.message)
     end
 
     delete path_guid, :delete

@@ -31,17 +31,17 @@ module VCAP::CloudController
       validates_presence :service_instance
       validates_presence :type
 
-      validates_unique [:app_guid, :service_instance_guid]
-      validates_unique [:app_guid, :name]
+      validates_unique [:app_guid, :service_instance_guid], message: Sequel.lit('The app is already bound to the service.')
+      validates_unique [:app_guid, :name], message: Sequel.lit("The binding name is invalid. App binding names must be unique. The app already has a binding with name '#{name}'.")
 
       validate_space_match
       validate_cannot_change_binding
 
       validates_max_length 65_535, :volume_mounts if volume_mounts.present?
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
-      validates_max_length 255, :name, allow_nil: true
+      validates_max_length 255, :name, allow_nil: true, message: Sequel.lit('The binding name is invalid. App binding names must be less than 256 characters.')
 
-      validates_format(/\A(\w|\-)+\z/, :name, message: 'Valid characters are alphanumeric, underscore, and dash.') if name.present?
+      validates_format(/\A(\w|\-)+\z/, :name, message: Sequel.lit('The binding name is invalid. Valid characters are alphanumeric, underscore, and dash.')) if name.present?
 
       errors.add(:app, :invalid_relation) unless app.is_a?(AppModel)
     end

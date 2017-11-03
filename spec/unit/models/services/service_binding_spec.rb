@@ -24,7 +24,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :app }
       it { is_expected.to validate_presence :service_instance }
       it { is_expected.to validate_db_presence :credentials }
-      it { is_expected.to validate_uniqueness [:app_guid, :service_instance_guid] }
+      it { is_expected.to validate_uniqueness [:app_guid, :service_instance_guid], message: 'The app is already bound to the service.' }
       it { is_expected.to validate_presence [:type] }
 
       it 'validates max length of name' do
@@ -33,7 +33,7 @@ module VCAP::CloudController
         binding = ServiceBinding.make
         binding.name = too_long
 
-        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /name max_length/)
+        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /must be less than 256 characters/)
       end
 
       it 'validates max length of volume_mounts' do
@@ -51,7 +51,7 @@ module VCAP::CloudController
             service_binding = ServiceBinding.new(name: name)
             expect(service_binding).not_to be_valid
             expect(service_binding.errors.on(:name)).to be_present
-            expect(service_binding.errors.on(:name)).to include('Valid characters are alphanumeric, underscore, and dash.')
+            expect(service_binding.errors.on(:name)).to include('The binding name is invalid. Valid characters are alphanumeric, underscore, and dash.')
           end
         end
 
@@ -88,7 +88,7 @@ module VCAP::CloudController
             other_service_instance = ServiceInstance.make(space: existing_binding.space)
             conflict = ServiceBinding.new(app: existing_binding.app, name: existing_binding.name, service_instance: other_service_instance, type: 'app')
             expect(conflict.valid?).to be(false)
-            expect(conflict.errors.full_messages).to eq(['app_guid and name unique'])
+            expect(conflict.errors.full_messages).to eq(['The binding name is invalid. App binding names must be unique. The app already has a binding with name \'some-name\'.'])
           end
         end
 

@@ -29,7 +29,7 @@ module VCAP::CloudController
         type:             message.type,
         name:             message.name,
       )
-      raise InvalidServiceBinding unless binding.valid?
+      raise InvalidServiceBinding.new(binding.errors.full_messages.join(' ')) unless binding.valid?
 
       binding_result = request_binding_from_broker(service_instance, binding, message.parameters)
 
