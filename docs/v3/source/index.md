@@ -40,7 +40,6 @@ includes:
   - resources/apps/get_current_droplet
   - resources/apps/start
   - resources/apps/stop
-  - resources/apps/restart
   - resources/apps/delete
   - resources/apps/list
   - resources/builds/header
@@ -120,6 +119,8 @@ includes:
   - experimental_resources/app_features/get
   - experimental_resources/app_features/update
   - experimental_resources/app_features/list
+  - experimental_resources/app_restart/header
+  - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
   - experimental_resources/route_mappings/header
