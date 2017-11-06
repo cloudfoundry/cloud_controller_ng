@@ -74,7 +74,7 @@ module VCAP::CloudController
         it 'raises an api error' do
           expect {
             service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
-          }.to raise_error(CloudController::Errors::ApiError, /Service #{service_instance.service.label} has not enabled service instance sharing/)
+          }.to raise_error(CloudController::Errors::ApiError, /The #{service_instance.service.label} service does not support service instance sharing./)
         end
       end
     end
