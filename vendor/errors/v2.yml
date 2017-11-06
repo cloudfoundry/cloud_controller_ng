@@ -1117,4 +1117,4 @@
 390003:
   name: ServiceShareIsDisabled
   http_code: 400
-  message: "Service %s has not enabled service instance sharing."
+  message: "The %s service does not support service instance sharing."
