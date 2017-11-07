@@ -3404,7 +3404,7 @@ module VCAP::CloudController
             'org_manager'         => { manage: false, read: true },
             'admin'               => { manage: true, read: true },
             'admin_read_only'     => { manage: false, read: true },
-            'global_auditor'      => { manage: false, read: true },
+            'global_auditor'      => { manage: false, read: false },
           }.each do |role, expected_return_values|
             context "as an #{role}" do
               before do

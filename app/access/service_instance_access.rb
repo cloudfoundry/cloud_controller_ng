@@ -33,7 +33,7 @@ module VCAP::CloudController
     end
 
     def read_permissions?(service_instance)
-      read?(service_instance)
+      admin_user? || admin_read_only_user? || object_is_visible_to_user?(service_instance, context.user)
     end
 
     def read_permissions_with_token?(service_instance)
