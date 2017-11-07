@@ -142,8 +142,8 @@ module VCAP::CloudController
 
     def name_overlaps?
       intermediate_domain_names = CloudController::DomainDecorator.new(name).intermediate_domains
-      intermediate_domain_names.any? do |suffix|
-        domain = Domain.find(name: suffix)
+      intermediate_domain_names.any? do |intermediate_domain|
+        domain = Domain.find(name: intermediate_domain.name)
         domain && domain.owning_organization != owning_organization && !domain.shared?
       end
     end
@@ -152,7 +152,7 @@ module VCAP::CloudController
       return false unless name
 
       domain = CloudController::DomainDecorator.new(name)
-      does_route_exist?(domain) || does_route_exist?(domain.parent_domain)
+      domain.intermediate_domains.any? { |intermediate_domain| does_route_exist?(intermediate_domain) }
     end
 
     def does_route_exist?(domain)

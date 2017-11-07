@@ -111,6 +111,13 @@ module VCAP::CloudController
         subject.name = 'baz.bar.foo.com'
         expect(subject).to_not be_valid
       end
+
+      it 'denies creating a domain that is a distant subdomain of an existing route' do
+        shared_domain = SharedDomain.make name: 'foo.com'
+        Route.make host: 'bar', domain_guid: shared_domain.guid
+        subject.name = 'corge.quux.baz.bar.foo.com'
+        expect(subject).to_not be_valid
+      end
     end
 
     context 'domain overlapping' do
