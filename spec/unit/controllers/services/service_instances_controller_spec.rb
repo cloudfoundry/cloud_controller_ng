@@ -3603,6 +3603,119 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
+      let(:instance) { ManagedServiceInstance.make(space: space) }
+
+      it 'returns the correct body' do
+        set_current_user_as_admin
+        get "/v2/service_instances/#{instance.guid}/shared_to"
+        expect(last_response.status).to eql(200)
+        expect(JSON.parse(last_response.body)['resources']).to eq([])
+      end
+
+      context 'when the service instance is shared into multiple spaces' do
+        let(:space1) { Space.make }
+        let(:space2) { Space.make }
+
+        before do
+          FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+          instance.add_shared_space(space1)
+          instance.add_shared_space(space2)
+        end
+
+        it 'returns the correct body' do
+          set_current_user_as_admin
+          get "/v2/service_instances/#{instance.guid}/shared_to"
+          decoded_response = JSON.parse(last_response.body)
+          expect(last_response.status).to eql(200), last_response.body
+          expect(decoded_response.fetch('total_results')).to eq(2)
+          resources = decoded_response.fetch('resources')
+
+          space1_resource = resources.find { |resource| resource['space_name'] == space1.name }
+          space2_resource = resources.find { |resource| resource['space_name'] == space2.name }
+
+          expect(space1_resource.keys).to match_array(['space_name', 'organization_name'])
+          expect(space2_resource.keys).to match_array(['space_name', 'organization_name'])
+
+          expect(space1_resource.fetch('space_name')).to eq(space1.name)
+          expect(space2_resource.fetch('space_name')).to eq(space2.name)
+
+          expect(space1_resource.fetch('organization_name')).to eq(space1.organization.name)
+          expect(space2_resource.fetch('organization_name')).to eq(space2.organization.name)
+        end
+      end
+
+      describe 'permissions' do
+        let(:user) { User.make }
+
+        context 'when the user is a member of the org/space this instance exists in' do
+          {
+            'admin'               => 200,
+            'space_developer'     => 200,
+            'admin_read_only'     => 200,
+            'global_auditor'      => 200,
+            'space_manager'       => 200,
+            'space_auditor'       => 200,
+            'org_manager'         => 200,
+            'org_auditor'         => 404,
+            'org_billing_manager' => 404,
+          }.each do |role, expected_status|
+            context "as an #{role}" do
+              before do
+                set_current_user_as_role(
+                  role:   role,
+                  org:    org,
+                  space:  space,
+                  user:   user,
+                )
+              end
+
+              it "has a #{expected_status} http status code" do
+                get "/v2/service_instances/#{instance.guid}/shared_to"
+                expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}"
+              end
+            end
+          end
+        end
+
+        context 'when the user is a member of the org/space where the service instance was shared to' do
+          let(:other_org) { Organization.make }
+          let(:other_space) { Space.make(organization: other_org) }
+
+          before do
+            instance.add_shared_space(other_space)
+          end
+
+          {
+            'space_developer'     => 404,
+            'space_manager'       => 404,
+            'space_auditor'       => 404,
+            'org_manager'         => 404,
+            'org_auditor'         => 404,
+            'org_billing_manager' => 404,
+          }.each do |role, expected_status|
+            context "as an #{role}" do
+              before do
+                set_current_user_as_role(
+                  role:   role,
+                  org:    other_org,
+                  space:  other_space,
+                  user:   user,
+                )
+              end
+
+              it "has a #{expected_status} http status code" do
+                get "/v2/service_instances/#{instance.guid}/shared_to"
+                expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}"
+              end
+            end
+          end
+        end
+      end
+    end
+
     describe 'GET /v2/service_instances/:service_instance_guid/service_keys' do
       let(:space)   { Space.make }
       let(:manager) { make_manager_for_space(space) }

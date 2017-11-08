@@ -5,6 +5,7 @@ require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
 require 'fetchers/service_instance_fetcher'
+require 'presenters/v2/service_instance_shared_to_presenter'
 require 'presenters/v2/service_instance_shared_from_presenter'
 
 module VCAP::CloudController
@@ -223,6 +224,29 @@ module VCAP::CloudController
       end
     end
 
+    get '/v2/service_instances/:guid/shared_to', :enumerate_shared_to_information
+    def enumerate_shared_to_information(guid)
+      service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
+      validate_access(:read, service_instance.space)
+
+      associated_controller = VCAP::CloudController::SpacesController
+      associated_path = "#{self.class.url_for_guid(guid)}/shared_to"
+
+      create_paginated_collection_renderer.render_json(
+        associated_controller,
+        service_instance.shared_spaces_dataset,
+        associated_path,
+        @opts,
+        {},
+      )
+    rescue CloudController::Errors::ApiError => e
+      if e.name == 'NotAuthorized'
+        HTTP::NOT_FOUND
+      else
+        raise e
+      end
+    end
+
     def self.url_for_guid(guid)
       object = ServiceInstance.where(guid: guid).first
 
@@ -320,6 +344,23 @@ module VCAP::CloudController
     end
 
     private
+
+    class ServiceInstanceSharedToSerializer
+      def serialize(controller, space, opts, orphans=nil)
+        CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space)
+      end
+    end
+
+    def create_paginated_collection_renderer
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(
+        VCAP::CloudController::RestController::SecureEagerLoader.new,
+        ServiceInstanceSharedToSerializer.new,
+        {
+          max_results_per_page: config.get(:renderer, :max_results_per_page),
+          default_results_per_page: config.get(:renderer, :default_results_per_page),
+          max_inline_relations_depth: config.get(:renderer, :max_inline_relations_depth),
+        })
+    end
 
     def route_services_enabled?
       @config.get(:route_services_enabled)
