@@ -216,7 +216,7 @@ RSpec.describe 'ServiceInstances' do
       service_instance.add_shared_space(space2)
     end
 
-    it 'returns data about the source space and org' do
+    it 'returns data about the source space, org, and bound_app_count' do
       get "v2/service_instances/#{service_instance.guid}/shared_to", nil, admin_headers
 
       expect(last_response.status).to eq(200)
@@ -231,11 +231,13 @@ RSpec.describe 'ServiceInstances' do
           'resources' => [
             {
               'space_name' => space1.name,
-              'organization_name' => space1.organization.name
+              'organization_name' => space1.organization.name,
+              'bound_app_count' => 0
             },
             {
               'space_name' => space2.name,
-              'organization_name' => space2.organization.name
+              'organization_name' => space2.organization.name,
+              'bound_app_count' => 0
             }
           ]
         }
