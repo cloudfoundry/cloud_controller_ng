@@ -175,6 +175,10 @@ module VCAP::CloudController
       false
     end
 
+    def shared?
+      shared_spaces.any?
+    end
+
     def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
       VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
     end

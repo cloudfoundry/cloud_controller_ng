@@ -432,5 +432,23 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#shared?' do
+      context 'when the service instance has shared spaces' do
+        before do
+          service_instance.add_shared_space(Space.make)
+        end
+
+        it 'returns true' do
+          expect(service_instance.shared?).to be true
+        end
+      end
+
+      context 'when the service instance does not have shared spaces' do
+        it 'returns false' do
+          expect(service_instance.shared?).to be false
+        end
+      end
+    end
   end
 end

@@ -3496,6 +3496,113 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
+      let(:org) { Organization.make }
+      let(:space) { Space.make(organization: org) }
+      let(:instance) { ManagedServiceInstance.make(space: space) }
+
+      context 'when the service instance is not shared' do
+        it 'returns no content' do
+          set_current_user_as_admin
+          get "/v2/service_instances/#{instance.guid}/shared_from"
+          expect(last_response.status).to eql(204)
+          expect(JSON.parse(last_response.body)).to be nil
+        end
+      end
+
+      context 'when the service instance is shared' do
+        let(:other_org) { Organization.make }
+        let(:other_space) { Space.make(organization: other_org) }
+
+        before do
+          instance.add_shared_space(other_space)
+        end
+
+        it 'returns the correct body' do
+          set_current_user_as_admin
+          get "/v2/service_instances/#{instance.guid}/shared_from"
+          expect(last_response.status).to eql(200), last_response.body
+          parsed_response = JSON.parse(last_response.body)
+          expect(parsed_response['space_name']).to eq(space.name)
+          expect(parsed_response['organization_name']).to eq(space.organization.name)
+          expect(parsed_response.keys).to match_array(['space_name', 'organization_name'])
+        end
+
+        describe 'permissions' do
+          let(:user) { User.make }
+
+          context 'when the user is a member of the org/space this instance exists in' do
+            {
+              'admin'               => 200,
+              'space_developer'     => 200,
+              'admin_read_only'     => 200,
+              'global_auditor'      => 200,
+              'space_manager'       => 200,
+              'space_auditor'       => 200,
+              'org_manager'         => 200,
+              'org_auditor'         => 404,
+              'org_billing_manager' => 404,
+            }.each do |role, expected_status|
+              context "as an #{role}" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    org,
+                    space:  space,
+                    user:   user,
+                    scopes: ['cloud_controller.read']
+                  )
+                end
+
+                it "has a #{expected_status} http status code" do
+                  get "/v2/service_instances/#{instance.guid}/shared_from"
+                  expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}"
+                end
+              end
+            end
+          end
+
+          context 'when the user is a member of the org/space where the service instance was shared to' do
+            {
+              'space_developer'     => 200,
+              'space_manager'       => 200,
+              'space_auditor'       => 200,
+              'org_manager'         => 200,
+              'org_auditor'         => 404,
+              'org_billing_manager' => 404,
+            }.each do |role, expected_status|
+              context "as an #{role}" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    other_org,
+                    space:  other_space,
+                    user:   user,
+                    scopes: ['cloud_controller.read']
+                  )
+                end
+
+                it "has a #{expected_status} http status code" do
+                  get "/v2/service_instances/#{instance.guid}/shared_from"
+                  expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}"
+                end
+              end
+            end
+          end
+
+          context 'when the user is NOT a member of the space this instance exists in' do
+            let(:instance) { ManagedServiceInstance.make }
+
+            it 'returns a JSON payload indicating the user does not have permission to manage this instance' do
+              set_current_user(user)
+              get "/v2/service_instances/#{instance.guid}/shared_from"
+              expect(last_response.status).to eql(404)
+            end
+          end
+        end
+      end
+    end
+
     describe 'GET /v2/service_instances/:service_instance_guid/service_keys' do
       let(:space)   { Space.make }
       let(:manager) { make_manager_for_space(space) }

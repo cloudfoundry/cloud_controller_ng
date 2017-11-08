@@ -5,6 +5,7 @@ require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
 require 'fetchers/service_instance_fetcher'
+require 'presenters/v2/service_instance_shared_from_presenter'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
@@ -200,6 +201,23 @@ module VCAP::CloudController
           manage: false,
           read:   false,
         })]
+      else
+        raise e
+      end
+    end
+
+    get '/v2/service_instances/:guid/shared_from', :shared_from_information
+    def shared_from_information(guid)
+      service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
+
+      if service_instance.shared?
+        [HTTP::OK, {}, JSON.generate(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space))]
+      else
+        [HTTP::NO_CONTENT, {}, '']
+      end
+    rescue CloudController::Errors::ApiError => e
+      if e.name == 'NotAuthorized'
+        HTTP::NOT_FOUND
       else
         raise e
       end
