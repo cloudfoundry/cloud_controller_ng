@@ -387,6 +387,30 @@ module VCAP::CloudController
             expect(a_request(:put, url_regex).with(body: hash_including(expected_body))).to have_been_made
           end
         end
+
+        context 'when the service instance has been shared' do
+          let(:other_space) { Space.make }
+
+          before do
+            instance.add_shared_space(other_space)
+          end
+
+          context 'when the user is a space developer in the service instance space' do
+            it 'returns successfully' do
+              post '/v2/service_keys', req
+              expect(last_response).to have_status_code(201)
+            end
+          end
+
+          context 'when the user does not have access to the service instance space' do
+            let(:developer) { make_developer_for_space(other_space) }
+
+            it 'returns a 403' do
+              post '/v2/service_keys', req
+              expect(last_response).to have_status_code(403)
+            end
+          end
+        end
       end
 
       context 'for a user-provided service instance' do
