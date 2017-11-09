@@ -13,6 +13,10 @@ readonly VERSION=$1
 
 function build_docs() {
   pushd "${GENERATED_DOCS_DIR}" > /dev/null
+    # TODO: remove this once bundler issue is fixed
+    # https://www.pivotaltracker.com/story/show/152620147
+    export BUNDLE_GEMFILE="$PWD/Gemfile"
+
     bundle
 
     touch source/versionfile
