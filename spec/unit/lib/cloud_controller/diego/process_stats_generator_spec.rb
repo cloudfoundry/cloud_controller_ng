@@ -8,8 +8,13 @@ module VCAP::CloudController
       let(:bbs_instances_client) { instance_double(BbsInstancesClient) }
 
       before do
+        Timecop.freeze
         CloudController::DependencyLocator.instance.register(:bbs_instances_client, bbs_instances_client)
         allow(bbs_instances_client).to receive(:lrp_instances).and_return(bbs_response)
+      end
+
+      after do
+        Timecop.return
       end
 
       def make_actual_lrp_group(instance_guid, lrp_index, lrp_state, placement_error, since)
@@ -59,16 +64,14 @@ module VCAP::CloudController
         let(:seconds_since_yesterday) { 3600 * 24 }
 
         it 'returns stats' do
-          Timecop.freeze do
-            instances = generator.generate(process)
-            expect(instances.length).to eq(4)
-            expect(instances).to match([
-              { instance_guid: 'instance_guid', index: 1, since: yesterday, uptime: seconds_since_yesterday, state: 'UNCLAIMED' },
-              { instance_guid: 'instance_guid', index: 2, since: yesterday, uptime: seconds_since_yesterday, state: 'CLAIMED' },
-              { instance_guid: 'instance_guid', index: 3, since: yesterday, uptime: seconds_since_yesterday, state: 'RUNNING' },
-              { instance_guid: 'instance_guid', index: 4, since: yesterday, uptime: seconds_since_yesterday, state: 'CRASHED', details: 'instance-details' },
-            ])
-          end
+          instances = generator.generate(process)
+          expect(instances.length).to eq(4)
+          expect(instances).to match([
+            { instance_guid: 'instance_guid', index: 1, since: yesterday, uptime: seconds_since_yesterday, state: 'UNCLAIMED' },
+            { instance_guid: 'instance_guid', index: 2, since: yesterday, uptime: seconds_since_yesterday, state: 'CLAIMED' },
+            { instance_guid: 'instance_guid', index: 3, since: yesterday, uptime: seconds_since_yesterday, state: 'RUNNING' },
+            { instance_guid: 'instance_guid', index: 4, since: yesterday, uptime: seconds_since_yesterday, state: 'CRASHED', details: 'instance-details' },
+          ])
         end
       end
     end
