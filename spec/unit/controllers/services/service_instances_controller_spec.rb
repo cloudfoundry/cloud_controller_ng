@@ -3932,6 +3932,16 @@ module VCAP::CloudController
         it 'returns the forbidden code for auditors' do
           verify_forbidden auditor
         end
+
+        context 'when user is a developer in space to which the instance was shared' do
+          before do
+            instance.add_shared_space(space)
+          end
+
+          it 'returns the forbidden code' do
+            verify_forbidden developer
+          end
+        end
       end
 
       context 'when the user is a member of the space this instance exists in' do
