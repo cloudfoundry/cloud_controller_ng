@@ -142,7 +142,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     it 'shares the service instance to multiple target spaces' do
       action = instance_double(VCAP::CloudController::ServiceInstanceShare)
       allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
-      expect(action).to receive(:create).with(service_instance, [target_space, target_space2], an_instance_of(VCAP::CloudController::UserAuditInfo))
+      expect(action).to receive(:create).with(service_instance, a_collection_containing_exactly(target_space, target_space2), an_instance_of(VCAP::CloudController::UserAuditInfo))
 
       req_body[:data] << { guid: target_space2.guid }
 
