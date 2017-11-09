@@ -480,8 +480,8 @@ module VCAP::CloudController
       end
 
       context 'Not authorized to perform get operation' do
-        let(:manager) { make_manager_for_space(service_key.service_instance.space) }
-        let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
+        let(:manager) { make_manager_for_space(instance.space) }
+        let(:auditor) { make_auditor_for_space(instance.space) }
 
         it 'SpaceManager role can not get a service key' do
           set_current_user(manager)
@@ -493,6 +493,20 @@ module VCAP::CloudController
           set_current_user(auditor)
           get "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
+        end
+
+        context 'when the user is a developer in a space to which the service instance is shared' do
+          let(:other_space) { Space.make }
+          let(:developer) { make_developer_for_space(other_space) }
+
+          before do
+            instance.add_shared_space(other_space)
+          end
+
+          it 'is reports the key as not found' do
+            get "/v2/service_keys/#{service_key.guid}"
+            verify_not_found_response(service_key.guid)
+          end
         end
       end
 
