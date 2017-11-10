@@ -106,6 +106,29 @@ module VCAP::CloudController
 
         expect(executed).to be(true)
       end
+
+      context 'and a nil timeout is specified' do
+        it 'executes the block regardless to prevent missed completed timestamps from blocking all future jobs' do
+          counter = 0
+
+          expect {
+            DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: nil do
+              raise 'fake-error'
+            end
+          }.to raise_error /fake-error/
+
+          Timecop.travel(Time.now.utc + 2.minutes)
+
+          job = ClockJob.find(name: job_name)
+          job.update(last_completed_at: Time.now.utc - 5.minutes)
+
+          DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: nil do
+            counter += 1
+          end
+
+          expect(counter).to eq(1)
+        end
+      end
     end
 
     context 'when the job runs longer than its interval' do

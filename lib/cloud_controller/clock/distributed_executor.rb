@@ -53,12 +53,17 @@ module VCAP::CloudController
       last_started_at = job.last_started_at
       return true if last_started_at.nil?
 
-      last_completed_at = job.last_completed_at
       interval_has_elapsed = now >= (last_started_at + interval - fudge)
-      last_run_completed = last_completed_at && (last_completed_at >= last_started_at)
-      timeout_elapsed = timeout && (now >= (last_started_at + timeout))
+      return false if !interval_has_elapsed
 
-      interval_has_elapsed && (last_run_completed || timeout_elapsed)
+      last_completed_at = job.last_completed_at
+      last_run_completed = last_completed_at && (last_completed_at >= last_started_at)
+      return true if last_run_completed
+
+      return true if timeout.nil?
+
+      timeout_elapsed = now >= (last_started_at + timeout)
+      timeout_elapsed
     end
 
     def now
