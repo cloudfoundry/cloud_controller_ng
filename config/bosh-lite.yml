@@ -6,7 +6,6 @@ internal_service_hostname: cloud-controller-ng.service.cf.internal
 
 pid_filename: /tmp/cloud_controller.pid
 newrelic_enabled: false
-development_mode: false
 
 external_protocol: https
 external_domain: api.bosh-lite.com

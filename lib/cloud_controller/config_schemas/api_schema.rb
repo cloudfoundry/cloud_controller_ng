@@ -277,8 +277,6 @@ module VCAP::CloudController
 
           allow_app_ssh_access: bool,
 
-          development_mode: bool,
-
           optional(:external_host) => String,
 
           optional(:varz_port) => Integer,

@@ -37,11 +37,6 @@ module VCAP::CloudController
         end
         use Rack::CommonLogger, logger if logger
 
-        if config.get(:development_mode) && config.get(:newrelic_enabled)
-          require 'new_relic/rack/developer_mode'
-          use NewRelic::Rack::DeveloperMode
-        end
-
         map '/' do
           run FrontController.new(config)
         end
