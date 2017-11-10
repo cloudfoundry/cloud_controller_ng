@@ -86,6 +86,32 @@ module VCAP::CloudController
           }.to raise_error(CloudController::Errors::ApiError, /User-provided services cannot be shared/)
         end
       end
+
+      context 'when the service is a route service' do
+        context 'and is a managed instance' do
+          before do
+            allow(service_instance).to receive(:route_service?).and_return(true)
+          end
+
+          it 'raises an api error' do
+            expect {
+              service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
+            }.to raise_error(CloudController::Errors::ApiError, /Route services cannot be shared/)
+          end
+        end
+
+        context 'and is a user-provided service instance' do
+          before do
+            allow(user_provided_service_instance).to receive(:route_service?).and_return(true)
+          end
+
+          it 'raises an api error' do
+            expect {
+              service_instance_share.create(user_provided_service_instance, [target_space1, target_space2], user_audit_info)
+            }.to raise_error(CloudController::Errors::ApiError, /Route services cannot be shared/)
+          end
+        end
+      end
     end
   end
 end
