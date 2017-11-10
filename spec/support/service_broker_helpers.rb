@@ -154,7 +154,7 @@ module ServiceBrokerHelpers
   end
 
   def guid_pattern
-    '[[:alnum:]-]+'
+    '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}'
   end
 
   def build_broker_url_from_params(url, relative_path=nil, query=nil)
