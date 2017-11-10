@@ -39,6 +39,7 @@ class ServiceInstancesV3Controller < ApplicationController
     spaces = Space.where(guid: message.guids)
     check_spaces_exist_and_are_readable!(message.guids, spaces)
     check_spaces_are_writeable!(spaces)
+    ensure_not_sharing_to_self!(service_instance.space, spaces)
 
     share = ServiceInstanceShare.new
     share.create(service_instance, spaces, user_audit_info)
@@ -70,12 +71,16 @@ class ServiceInstancesV3Controller < ApplicationController
 
   private
 
+  def ensure_not_sharing_to_self!(service_instance_space, target_spaces)
+    unprocessable!('Service instances cannot be shared into the space where they were created') if target_spaces.include?(service_instance_space)
+  end
+
   def check_spaces_are_writeable!(spaces)
     unwriteable_spaces = spaces.reject do |space|
       can_write?(space.guid)
     end
 
-    unauthorized! unless unwriteable_spaces.empty?
+    unauthorized! if unwriteable_spaces.any?
   end
 
   def check_spaces_exist_and_are_readable!(request_guids, found_spaces)

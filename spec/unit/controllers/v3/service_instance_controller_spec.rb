@@ -217,6 +217,23 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
 
+    context 'when the source space is contained in the list of target spaces' do
+      before do
+        req_body[:data] = [
+          { guid: service_instance.space.guid },
+          { guid: target_space.guid }
+        ]
+      end
+
+      it 'does not share into any spaces and returns an error message' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include('Service instances cannot be shared into the space where they were created')
+        expect(service_instance.shared_spaces).to be_empty
+      end
+    end
+
     context 'when the request is malformed' do
       let(:req_body) {
         {
