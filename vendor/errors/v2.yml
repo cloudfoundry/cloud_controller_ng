@@ -1118,3 +1118,8 @@
   name: ServiceShareIsDisabled
   http_code: 400
   message: "The %s service does not support service instance sharing."
+
+390004:
+  name: UserProvidedServiceInstanceSharingNotSupported
+  http_code: 400
+  message: "User-provided services cannot be shared"

@@ -5,6 +5,7 @@ module VCAP::CloudController
   RSpec.describe ServiceInstanceShare do
     let(:service_instance_share) { ServiceInstanceShare.new }
     let(:service_instance) { ManagedServiceInstance.make }
+    let(:user_provided_service_instance) { UserProvidedServiceInstance.make }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
     let(:target_space1) { Space.make }
     let(:target_space2) { Space.make }
@@ -75,6 +76,14 @@ module VCAP::CloudController
           expect {
             service_instance_share.create(service_instance, [target_space1, target_space2], user_audit_info)
           }.to raise_error(CloudController::Errors::ApiError, /The #{service_instance.service.label} service does not support service instance sharing./)
+        end
+      end
+
+      context 'when the service is user-provided' do
+        it 'raises an api error' do
+          expect {
+            service_instance_share.create(user_provided_service_instance, [target_space1, target_space2], user_audit_info)
+          }.to raise_error(CloudController::Errors::ApiError, /User-provided services cannot be shared/)
         end
       end
     end
