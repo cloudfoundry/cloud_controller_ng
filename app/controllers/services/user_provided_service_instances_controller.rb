@@ -29,11 +29,11 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors = e.errors.on([:space_id, :name])
+      name_errors = e.errors.on(:name)
       service_instance_errors = e.errors.on(:service_instance)
       service_instance_name_errors = e.errors.on(:name).to_a
 
-      if space_and_name_errors&.include?(:unique)
+      if name_errors&.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
       elsif service_instance_errors&.include?(:space_mismatch)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteBindingSpaceMismatch')

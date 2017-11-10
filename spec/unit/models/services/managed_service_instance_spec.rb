@@ -32,7 +32,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :service_plan }
       it { is_expected.to validate_presence :space }
-      it { is_expected.to validate_uniqueness [:space_id, :name] }
+      it { is_expected.to validate_uniqueness :space_id, :name, { error_key: :name } }
       it { is_expected.to strip_whitespace :name }
       let(:max_tags) { ['a' * 1024, 'b' * 1024] }
 
@@ -254,6 +254,32 @@ module VCAP::CloudController
         let!(:service_instance) { ManagedServiceInstance.make(:routing) }
         it 'returns false' do
           expect(service_instance.route_service?).to be_truthy
+        end
+      end
+    end
+
+    describe '#shareable?' do
+      let(:service) { Service.make }
+      let(:service_instance) { ManagedServiceInstance.make }
+
+      before do
+        allow(service).to receive(:shareable?).and_return(is_shareable)
+        allow(service_instance).to receive(:service).and_return(service)
+      end
+
+      context 'when the service instance is not a shareable' do
+        let(:is_shareable) { false }
+
+        it 'returns false' do
+          expect(service_instance).to_not be_shareable
+        end
+      end
+
+      context 'when the service instance is shareable' do
+        let(:is_shareable) { true }
+
+        it 'returns true' do
+          expect(service_instance).to be_shareable
         end
       end
     end

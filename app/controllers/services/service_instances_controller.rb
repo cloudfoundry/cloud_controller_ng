@@ -5,6 +5,9 @@ require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
 require 'fetchers/service_instance_fetcher'
+require 'fetchers/service_binding_list_fetcher'
+require 'presenters/v2/service_instance_shared_to_presenter'
+require 'presenters/v2/service_instance_shared_from_presenter'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
@@ -31,14 +34,13 @@ module VCAP::CloudController
     define_routes
 
     def self.translate_validation_exception(e, attributes)
-      space_and_name_errors        = e.errors.on([:space_id, :name]).to_a
       quota_errors                 = e.errors.on(:quota).to_a
       service_plan_errors          = e.errors.on(:service_plan).to_a
       service_instance_errors      = e.errors.on(:service_instance).to_a
       service_instance_name_errors = e.errors.on(:name).to_a
       service_instance_tags_errors = e.errors.on(:tags).to_a
 
-      if space_and_name_errors.include?(:unique)
+      if service_instance_name_errors.include?(:unique)
         return CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
       elsif quota_errors.include?(:service_instance_space_quota_exceeded)
         return CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceQuotaExceeded')
@@ -157,11 +159,16 @@ module VCAP::CloudController
       end
 
       validate_access(:delete, service_instance)
-      has_assocations = has_routes?(service_instance) ||
-        has_bindings?(service_instance) ||
-        has_keys?(service_instance)
 
-      association_not_empty! if has_assocations && !recursive_delete?
+      unless recursive_delete?
+        service_is_shared!(service_instance.name) if has_shares?(service_instance)
+
+        has_associations = has_routes?(service_instance) ||
+          has_bindings?(service_instance) ||
+          has_keys?(service_instance)
+
+        association_not_empty! if has_associations
+      end
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository, self, logger)
       delete_job    = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
@@ -200,6 +207,46 @@ module VCAP::CloudController
           manage: false,
           read:   false,
         })]
+      else
+        raise e
+      end
+    end
+
+    get '/v2/service_instances/:guid/shared_from', :shared_from_information
+    def shared_from_information(guid)
+      service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
+
+      if service_instance.shared?
+        [HTTP::OK, {}, JSON.generate(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space))]
+      else
+        [HTTP::NO_CONTENT, {}, '']
+      end
+    rescue CloudController::Errors::ApiError => e
+      if e.name == 'NotAuthorized'
+        HTTP::NOT_FOUND
+      else
+        raise e
+      end
+    end
+
+    get '/v2/service_instances/:guid/shared_to', :enumerate_shared_to_information
+    def enumerate_shared_to_information(guid)
+      service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
+      validate_access(:read, service_instance.space)
+
+      associated_controller = VCAP::CloudController::SpacesController
+      associated_path = "#{self.class.url_for_guid(guid)}/shared_to"
+
+      create_paginated_collection_renderer(service_instance).render_json(
+        associated_controller,
+        service_instance.shared_spaces_dataset,
+        associated_path,
+        @opts,
+        {},
+      )
+    rescue CloudController::Errors::ApiError => e
+      if e.name == 'NotAuthorized'
+        HTTP::NOT_FOUND
       else
         raise e
       end
@@ -303,6 +350,28 @@ module VCAP::CloudController
 
     private
 
+    class ServiceInstanceSharedToSerializer
+      def initialize(service_instance)
+        @service_instance = service_instance
+      end
+
+      def serialize(controller, space, opts, orphans=nil)
+        bound_app_count = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(@service_instance.guid, space.guid).count
+        CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space, bound_app_count)
+      end
+    end
+
+    def create_paginated_collection_renderer(service_instance)
+      VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(
+        VCAP::CloudController::RestController::SecureEagerLoader.new,
+        ServiceInstanceSharedToSerializer.new(service_instance),
+        {
+          max_results_per_page: config.get(:renderer, :max_results_per_page),
+          default_results_per_page: config.get(:renderer, :default_results_per_page),
+          max_inline_relations_depth: config.get(:renderer, :max_inline_relations_depth),
+        })
+    end
+
     def route_services_enabled?
       @config.get(:route_services_enabled)
     end
@@ -397,6 +466,10 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', associations, :service_instances)
     end
 
+    def service_is_shared!(name)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeletionSharesExists', name)
+    end
+
     def space_change_not_allowed!
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
     end
@@ -427,6 +500,10 @@ module VCAP::CloudController
 
     def has_keys?(service_instance)
       !service_instance.service_keys.empty?
+    end
+
+    def has_shares?(service_instance)
+      !service_instance.shared_spaces.empty?
     end
 
     def space_change_requested?(requested_space_guid, current_space)

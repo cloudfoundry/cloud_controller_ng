@@ -205,6 +205,7 @@ module VCAP::CloudController
     active            { true }
     service_broker    { ServiceBroker.make }
     description       { Sham.description } # remove hack
+    extra             { '{"shareable": true}' }
   end
 
   Service.blueprint(:routing) do

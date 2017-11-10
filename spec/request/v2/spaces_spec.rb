@@ -132,7 +132,7 @@ RSpec.describe 'Spaces' do
         space.add_developer(user)
       end
 
-      it 'lists the isolation segment for SpaceDvelopers' do
+      it 'lists the isolation segment for SpaceDevelopers' do
         get "/v2/spaces/#{space.guid}", {}, headers_for(user)
 
         expect(last_response.status).to eq(200)
@@ -167,6 +167,63 @@ RSpec.describe 'Spaces' do
           }
         })
       end
+    end
+  end
+
+  describe 'GET /v2/spaces/:guid/service_instances' do
+    let(:originating_space) { VCAP::CloudController::Space.make }
+    let(:shared_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
+    let(:space) { VCAP::CloudController::Space.make }
+
+    before do
+      originating_space.organization.add_user(user)
+      originating_space.add_developer(user)
+      space.organization.add_user(user)
+      space.add_developer(user)
+
+      shared_service_instance.add_shared_space(space)
+    end
+
+    it 'shows the shared service instances associated with the space' do
+      get "/v2/spaces/#{space.guid}/service_instances", {}, headers_for(user)
+
+      expect(last_response.status).to eq(200)
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(parsed_response).to be_a_response_like({
+        'total_results' => 1,
+        'total_pages'   => 1,
+        'prev_url'      => nil,
+        'next_url'      => nil,
+        'resources'     => [{
+          'metadata' => {
+            'guid' => shared_service_instance.guid,
+            'url' => "/v2/service_instances/#{shared_service_instance.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+          },
+          'entity' => {
+            'name' => shared_service_instance.name,
+            'credentials' => shared_service_instance.credentials,
+            'service_plan_guid' => shared_service_instance.service_plan_guid,
+            'space_guid' => originating_space.guid,
+            'gateway_data' => nil,
+            'dashboard_url' => nil,
+            'type' => 'managed_service_instance',
+            'last_operation' => nil,
+            'tags' => [],
+            'service_guid' => shared_service_instance.service_plan.service_guid,
+            'space_url' => "/v2/spaces/#{originating_space.guid}",
+            'service_plan_url' => "/v2/service_plans/#{shared_service_instance.service_plan_guid}",
+            'service_bindings_url' => "/v2/service_instances/#{shared_service_instance.guid}/service_bindings",
+            'service_keys_url' => "/v2/service_instances/#{shared_service_instance.guid}/service_keys",
+            'routes_url' => "/v2/service_instances/#{shared_service_instance.guid}/routes",
+            'service_url' => "/v2/services/#{shared_service_instance.service_plan.service_guid}",
+            'shared_from_url' => "/v2/service_instances/#{shared_service_instance.guid}/shared_from",
+            'shared_to_url' => "/v2/service_instances/#{shared_service_instance.guid}/shared_to",
+          }
+        }]
+      })
     end
   end
 

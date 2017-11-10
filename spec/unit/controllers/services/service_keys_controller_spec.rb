@@ -387,6 +387,30 @@ module VCAP::CloudController
             expect(a_request(:put, url_regex).with(body: hash_including(expected_body))).to have_been_made
           end
         end
+
+        context 'when the service instance has been shared' do
+          let(:other_space) { Space.make }
+
+          before do
+            instance.add_shared_space(other_space)
+          end
+
+          context 'when the user is a space developer in the service instance space' do
+            it 'returns successfully' do
+              post '/v2/service_keys', req
+              expect(last_response).to have_status_code(201)
+            end
+          end
+
+          context 'when the user does not have access to the service instance space' do
+            let(:developer) { make_developer_for_space(other_space) }
+
+            it 'returns a 403' do
+              post '/v2/service_keys', req
+              expect(last_response).to have_status_code(403)
+            end
+          end
+        end
       end
 
       context 'for a user-provided service instance' do
@@ -456,8 +480,8 @@ module VCAP::CloudController
       end
 
       context 'Not authorized to perform get operation' do
-        let(:manager) { make_manager_for_space(service_key.service_instance.space) }
-        let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
+        let(:manager) { make_manager_for_space(instance.space) }
+        let(:auditor) { make_auditor_for_space(instance.space) }
 
         it 'SpaceManager role can not get a service key' do
           set_current_user(manager)
@@ -469,6 +493,20 @@ module VCAP::CloudController
           set_current_user(auditor)
           get "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
+        end
+
+        context 'when the user is a developer in a space to which the service instance is shared' do
+          let(:other_space) { Space.make }
+          let(:developer) { make_developer_for_space(other_space) }
+
+          before do
+            instance.add_shared_space(other_space)
+          end
+
+          it 'is reports the key as not found' do
+            get "/v2/service_keys/#{service_key.guid}"
+            verify_not_found_response(service_key.guid)
+          end
         end
       end
 
@@ -529,10 +567,11 @@ module VCAP::CloudController
 
     describe 'DELETE', '/v2/service_keys/:service_key_guid' do
       let(:service_key) { ServiceKey.make }
-      let(:developer) { make_developer_for_space(service_key.service_instance.space) }
+      let(:instance) { service_key.service_instance }
+      let(:developer) { make_developer_for_space(instance.space) }
 
       before do
-        stub_requests(service_key.service_instance.service.service_broker)
+        stub_requests(instance.service.service_broker)
         set_current_user(developer, email: 'example@example.com')
       end
 
@@ -543,8 +582,8 @@ module VCAP::CloudController
       end
 
       context 'Not authorized to perform delete operation' do
-        let(:manager) { make_manager_for_space(service_key.service_instance.space) }
-        let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
+        let(:manager) { make_manager_for_space(instance.space) }
+        let(:auditor) { make_auditor_for_space(instance.space) }
 
         it 'SpaceManager role can not delete a service key' do
           set_current_user(manager)
@@ -556,6 +595,20 @@ module VCAP::CloudController
           set_current_user(auditor)
           delete "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
+        end
+
+        context 'when the user is a developer in a space to which the service instance is shared' do
+          let(:other_space) { Space.make }
+          let(:developer) { make_developer_for_space(other_space) }
+
+          before do
+            instance.add_shared_space(other_space)
+          end
+
+          it 'is reports the key as not found' do
+            delete "/v2/service_keys/#{service_key.guid}"
+            verify_not_found_response(service_key.guid)
+          end
         end
       end
 

@@ -149,6 +149,63 @@ module VCAP::CloudController
       end
     end
 
+    context 'space developer in a space that the service instance has been shared into' do
+      before do
+        org.add_user(user)
+        target_space = VCAP::CloudController::Space.make(organization: org)
+        target_space.add_developer(user)
+        service_instance.add_shared_space(target_space)
+      end
+
+      context 'when the space of the service instance is visible' do
+        it_behaves_like :read_only_access do
+          let(:object) { service_instance }
+        end
+
+        it 'does NOT allow the user to have manage permissions of the service instance' do
+          expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        end
+
+        it 'allows the user to have read permissions of the service instance' do
+          expect(subject).to allow_op_on_object(:read_permissions, service_instance)
+        end
+
+        it 'does NOT allow the user to read default credentials of the service instance' do
+          expect(subject).not_to allow_op_on_object(:read_env, service_instance)
+        end
+
+        it 'returns false for purge' do
+          expect(subject).not_to allow_op_on_object(:purge, service_instance)
+        end
+      end
+
+      context 'when the space of the service instance is not visible' do
+        before do
+          service_instance.space = nil
+        end
+
+        it_behaves_like :read_only_access do
+          let(:object) { service_instance }
+        end
+
+        it 'does NOT allow the user to have manage permissions of the service instance' do
+          expect(subject).to_not allow_op_on_object(:manage_permissions, service_instance)
+        end
+
+        it 'allows the user to have read permissions of the service instance' do
+          expect(subject).to allow_op_on_object(:read_permissions, service_instance)
+        end
+
+        it 'does NOT allow the user to read default credentials of the service instance' do
+          expect(subject).not_to allow_op_on_object(:read_env, service_instance)
+        end
+
+        it 'returns false for purge' do
+          expect(subject).not_to allow_op_on_object(:purge, service_instance)
+        end
+      end
+    end
+
     context 'organization manager (defensive)' do
       before { org.add_manager(user) }
 

@@ -2,9 +2,116 @@ require 'rails_helper'
 
 RSpec.describe ServiceInstancesV3Controller, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
+  let(:space) { VCAP::CloudController::Space.make }
+  let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+  describe '#index' do
+    context 'when there are multiple service instances' do
+      let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make }
+      let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make }
+
+      context 'as an admin' do
+        before do
+          set_current_user_as_admin
+        end
+
+        it 'returns all service instances' do
+          get :index
+          expect(response.status).to eq(200), response.body
+          expect(parsed_body['resources'].length).to eq 3
+
+          response_names = parsed_body['resources'].map { |resource| resource['name'] }
+          expect(response_names).to include(service_instance.name, service_instance2.name, service_instance3.name)
+        end
+      end
+
+      context 'as a user who only has limited access' do
+        before do
+          set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+        end
+
+        it 'returns a subset of service instances' do
+          get :index
+          expect(response.status).to eq(200), response.body
+          expect(parsed_body['resources'].length).to eq 1
+
+          response_names = parsed_body['resources'].map { |resource| resource['name'] }
+          expect(response_names).to include(service_instance.name)
+        end
+      end
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'               => true,
+        'admin_read_only'     => true,
+        'global_auditor'      => true,
+        'org_manager'         => true,
+        'org_auditor'         => false,
+        'org_billing_manager' => false,
+        'space_manager'       => true,
+        'space_auditor'       => true,
+        'space_developer'     => true,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, can_see_service_instance|
+        context "as an #{role}" do
+          it "#{can_see_service_instance ? 'can' : 'cannot'} see the service instance" do
+            set_current_user_as_role(role: role, org: space.organization, space: space, user: user)
+
+            expected_service_instance_names = can_see_service_instance ? [service_instance.name] : []
+
+            get :index
+            expect(response.status).to eq(200), response.body
+            expect(parsed_body['resources'].map { |h| h['name'] }).to match_array(expected_service_instance_names)
+          end
+        end
+      end
+    end
+
+    describe 'permissions by role for shared services' do
+      let(:target_space) { VCAP::CloudController::Space.make }
+      before do
+        service_instance.add_shared_space(target_space)
+      end
+      role_to_expected_http_response = {
+        'org_manager'         => true,
+        'org_auditor'         => false,
+        'org_billing_manager' => false,
+        'space_manager'       => true,
+        'space_auditor'       => true,
+        'space_developer'     => true,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, can_see_service_instance|
+        context "as an #{role}" do
+          it "#{can_see_service_instance ? 'can' : 'cannot'} see the service instance" do
+            set_current_user_as_role(role: role, org: target_space.organization, space: target_space, user: user)
+
+            expected_service_instance_names = can_see_service_instance ? [service_instance.name] : []
+
+            get :index
+            expect(response.status).to eq(200), response.body
+            expect(parsed_body['resources'].map { |h| h['name'] }).to match_array(expected_service_instance_names)
+          end
+        end
+      end
+    end
+
+    context 'when a non-supported value is specified' do
+      it 'a bad query parameter error is returned' do
+        set_current_user_as_admin
+        get :index, { order_by: 'banana' }
+
+        expect(response.status).to eq(400)
+        expect(response.body).to include 'BadQueryParameter'
+        expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
+      end
+    end
+  end
 
   describe '#share_service_instance' do
-    let(:service_instance) { VCAP::CloudController::ServiceInstance.make }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:target_space) { VCAP::CloudController::Space.make }
     let(:target_space2) { VCAP::CloudController::Space.make }
     let(:service_instance_sharing_enabled) { true }
@@ -23,28 +130,39 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: service_instance_sharing_enabled, error_message: nil)
     end
 
-    it 'shares the service instance to the target space' do
-      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+    it 'calls the service instance share action' do
+      action = instance_double(VCAP::CloudController::ServiceInstanceShare)
+      allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
 
-      expect(response.status).to eq 200
-      expect(parsed_body['data'][0]['guid']).to eq(target_space.guid)
-      expect(service_instance.shared_spaces).to contain_exactly(target_space)
+      expect(action).to receive(:create).with(service_instance, [target_space], an_instance_of(VCAP::CloudController::UserAuditInfo))
+
+      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
     end
 
     it 'shares the service instance to multiple target spaces' do
+      action = instance_double(VCAP::CloudController::ServiceInstanceShare)
+      allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
+      expect(action).to receive(:create).with(service_instance, a_collection_containing_exactly(target_space, target_space2), an_instance_of(VCAP::CloudController::UserAuditInfo))
+
       req_body[:data] << { guid: target_space2.guid }
 
       post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
-
       expect(response.status).to eq 200
+    end
 
-      target_space_guids = []
-      parsed_body['data'].each do |item|
-        target_space_guids << item['guid']
+    context 'when the service instance share action errors' do
+      before do
+        action = instance_double(VCAP::CloudController::ServiceInstanceShare)
+        allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
+
+        expect(action).to receive(:create).and_raise('boom')
       end
-      expect(target_space_guids).to contain_exactly(target_space.guid, target_space2.guid)
 
-      expect(service_instance.shared_spaces).to contain_exactly(target_space, target_space2)
+      it 'returns the error to the user' do
+        expect {
+          post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        }.to raise_error('boom')
+      end
     end
 
     context 'when the service_instance_sharing feature flag is disabled' do
@@ -99,16 +217,20 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
 
-    context 'when the service instance has already been shared with the specified space' do
+    context 'when the source space is contained in the list of target spaces' do
       before do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        req_body[:data] = [
+          { guid: service_instance.space.guid },
+          { guid: target_space.guid }
+        ]
       end
 
-      it 'returns a 200 and leaves the existing share intact' do
+      it 'does not share into any spaces and returns an error message' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
 
-        expect(response.status).to eq 200
-        expect(service_instance.shared_spaces).to include(target_space)
+        expect(response.status).to eq 422
+        expect(response.body).to include('Service instances cannot be shared into the space where they were created')
+        expect(service_instance.shared_spaces).to be_empty
       end
     end
 
@@ -122,6 +244,25 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
+      end
+    end
+
+    context 'when the user has access to the service instance through a share' do
+      before do
+        service_instance.add_shared_space(target_space)
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+
+        outer_space = VCAP::CloudController::Space.make
+        req_body[:data] = [{ guid: outer_space.guid }]
+      end
+
+      after do
+        service_instance.remove_shared_space(target_space)
+      end
+
+      it 'cannot share the service instance into another space' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 403
       end
     end
 
@@ -269,6 +410,18 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           expect(response.body).to include('ServiceInstanceUnshareFailed')
           expect(test_app.service_bindings).to_not be_empty
         end
+      end
+    end
+
+    context 'when the user has access to the service instance through a share' do
+      before do
+        service_instance.add_shared_space(target_space)
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+      end
+
+      it 'cannot unshare the service instance from another space' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq 403
       end
     end
 

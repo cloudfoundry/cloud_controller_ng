@@ -1,17 +1,36 @@
 require 'messages/to_many_relationship_message'
+require 'messages/service_instances/service_instances_list_message'
 
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
+require 'fetchers/service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
+  def index
+    message = ServiceInstancesListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = if can_read_globally?
+                ServiceInstanceListFetcher.new.fetch_all(message: message)
+              else
+                ServiceInstanceListFetcher.new.fetch(message: message, space_guids: readable_space_guids)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      dataset: dataset,
+      path: '/v3/service_instances',
+      message: message)
+  end
+
   def share_service_instance
     FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
 
     service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
 
-    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.create_from_http_request(params[:body])
@@ -20,6 +39,7 @@ class ServiceInstancesV3Controller < ApplicationController
     spaces = Space.where(guid: message.guids)
     check_spaces_exist_and_are_readable!(message.guids, spaces)
     check_spaces_are_writeable!(spaces)
+    ensure_not_sharing_to_self!(service_instance.space, spaces)
 
     share = ServiceInstanceShare.new
     share.create(service_instance, spaces, user_audit_info)
@@ -33,7 +53,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
 
-    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
     space_guid = params[:space_guid]
@@ -51,12 +71,16 @@ class ServiceInstancesV3Controller < ApplicationController
 
   private
 
+  def ensure_not_sharing_to_self!(service_instance_space, target_spaces)
+    unprocessable!('Service instances cannot be shared into the space where they were created') if target_spaces.include?(service_instance_space)
+  end
+
   def check_spaces_are_writeable!(spaces)
     unwriteable_spaces = spaces.reject do |space|
       can_write?(space.guid)
     end
 
-    unauthorized! unless unwriteable_spaces.empty?
+    unauthorized! if unwriteable_spaces.any?
   end
 
   def check_spaces_exist_and_are_readable!(request_guids, found_spaces)
@@ -74,8 +98,16 @@ class ServiceInstancesV3Controller < ApplicationController
     end
   end
 
+  def can_read_service_instance?(service_instance)
+    readable_spaces = service_instance.shared_spaces + [service_instance.space]
+
+    readable_spaces.any? do |space|
+      can_read?(space.guid, space.organization_guid)
+    end
+  end
+
   def can_read_space?(space)
-    can_read?(space.guid, space.organization_guid)
+    can_read?(space.guid, space.organization.guid)
   end
 
   def can_write_space?(space)

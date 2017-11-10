@@ -129,6 +129,14 @@ module VCAP::CloudController
       requires.include?('route_forwarding')
     end
 
+    def shareable?
+      return false if extra.nil?
+      metadata = JSON.parse(extra)
+      metadata && metadata['shareable']
+    rescue JSON::ParserError
+      return false
+    end
+
     def volume_service?
       requires.include?('volume_mount')
     end

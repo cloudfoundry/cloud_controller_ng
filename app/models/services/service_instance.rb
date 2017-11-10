@@ -68,6 +68,10 @@ module VCAP::CloudController
         [:space, user.spaces_dataset],
         [:space, user.audited_spaces_dataset],
         [:space, user.managed_spaces_dataset],
+        [:shared_spaces, user.spaces_dataset],
+        [:shared_spaces, user.managed_spaces_dataset],
+        [:shared_spaces, user.audited_spaces_dataset],
+        [:shared_spaces, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
       ])
     end
 
@@ -83,14 +87,27 @@ module VCAP::CloudController
       !user_provided_instance?
     end
 
+    def name_clashes
+      proc do |_, instance|
+        next if instance.space_id.nil? || instance.name.nil?
+
+        clashes_with_shared_instance_names =
+          ServiceInstance.select_all(ServiceInstance.table_name).
+          join(:service_instance_shares, service_instance_guid: :guid, target_space_guid: instance.space_guid).
+          where(name: instance.name)
+
+        clashes_with_instance_names =
+          ServiceInstance.select_all(ServiceInstance.table_name).
+          where(space_id: instance.space_id, name: instance.name)
+
+        clashes_with_shared_instance_names.union(clashes_with_instance_names)
+      end
+    end
+
     def validate
       validates_presence :name
       validates_presence :space
-      validates_unique [:space_id, :name], where: (proc do |_, obj, arr|
-                                                     vals = arr.map { |x| obj.send(x) }
-                                                     next if vals.any?(&:nil?)
-                                                     ServiceInstance.where(arr.zip(vals))
-                                                   end)
+      validates_unique :name, where: name_clashes
       validates_max_length 50, :name
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
     end
@@ -134,7 +151,7 @@ module VCAP::CloudController
     alias_method_chain :credentials, 'serialization'
 
     def in_suspended_org?
-      space.in_suspended_org?
+      space&.in_suspended_org?
     end
 
     def after_create
@@ -167,8 +184,16 @@ module VCAP::CloudController
       false
     end
 
+    def shareable?
+      false
+    end
+
     def volume_service?
       false
+    end
+
+    def shared?
+      shared_spaces.any?
     end
 
     def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
