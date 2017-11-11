@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe AppFeaturesController, type: :controller do
   let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
@@ -24,35 +25,11 @@ RSpec.describe AppFeaturesController, type: :controller do
         'previous' => nil,
       }
     end
+
     describe 'authorization' do
-      role_to_expected_http_response = {
-        'admin' => 200,
-        'admin_read_only' => 200,
-        'global_auditor' => 200,
-        'space_developer' => 200,
-        'space_manager' => 200,
-        'space_auditor' => 200,
-        'org_manager' => 200,
-        'org_auditor' => 404,
-        'org_billing_manager' => 404,
-      }.freeze
-
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
-
-            get :index, app_guid: app_model.guid
-
-            expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
-            if expected_return_value == 200
-              expect(parsed_body).to eq(
-                'resources' => [app_feature_ssh_response],
-                'pagination' => pagination_hash
-              ), "failed to match parsed_body for role #{role}: got #{parsed_body}"
-            end
-          end
-        end
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) { READ_ONLY_PERMS }
+        let(:api_call) { lambda { get :index, app_guid: app_model.guid } }
       end
     end
 
@@ -72,33 +49,9 @@ RSpec.describe AppFeaturesController, type: :controller do
   end
 
   describe '#show' do
-    describe 'authorization' do
-      role_to_expected_http_response = {
-        'admin' => 200,
-        'admin_read_only' => 200,
-        'global_auditor' => 200,
-        'space_developer' => 200,
-        'space_manager' => 200,
-        'space_auditor' => 200,
-        'org_manager' => 200,
-        'org_auditor' => 404,
-        'org_billing_manager' => 404,
-      }.freeze
-
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
-
-            get :show, app_guid: app_model.guid, name: 'ssh'
-
-            expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
-            if expected_return_value == 200
-              expect(parsed_body).to eq(app_feature_ssh_response), "failed to match parsed_body for role #{role}: got #{parsed_body}"
-            end
-          end
-        end
-      end
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) { READ_ONLY_PERMS }
+      let(:api_call) { lambda { get :show, app_guid: app_model.guid, name: 'ssh' } }
     end
 
     it 'returns specific app feature' do
@@ -123,33 +76,9 @@ RSpec.describe AppFeaturesController, type: :controller do
   end
 
   describe '#update' do
-    before do
-    end
-
-    describe 'authorization' do
-      role_to_expected_http_response = {
-        'admin' => 200,
-        'admin_read_only' => 403,
-        'global_auditor' => 403,
-        'space_developer' => 200,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_manager' => 403,
-        'org_auditor' => 404,
-        'org_billing_manager' => 404,
-      }.freeze
-
-      role_to_expected_http_response.each do |role, expected_return_value|
-        describe "as an #{role}" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
-
-            patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false }
-
-            expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
-          end
-        end
-      end
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) { READ_AND_WRITE_PERMS }
+      let(:api_call) { lambda { patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false } } }
     end
 
     it 'updates a given app feature' do
@@ -195,33 +124,9 @@ RSpec.describe AppFeaturesController, type: :controller do
       }
     end
 
-    describe 'authorization' do
-      role_to_expected_http_response = {
-        'admin'               => 200,
-        'admin_read_only'     => 200,
-        'global_auditor'      => 200,
-        'space_developer'     => 200,
-        'space_manager'       => 200,
-        'space_auditor'       => 200,
-        'org_manager'         => 200,
-        'org_auditor'         => 404,
-        'org_billing_manager' => 404,
-      }.freeze
-
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
-
-            get :ssh_enabled, guid: app_model.guid
-
-            expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
-            if expected_return_value == 200
-              expect(parsed_body).to eq(ssh_enabled), "failed to match parsed_body for role #{role}: got #{parsed_body}"
-            end
-          end
-        end
-      end
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) { READ_ONLY_PERMS }
+      let(:api_call) { lambda { get :ssh_enabled, guid: app_model.guid } }
     end
 
     it 'responds 404 when the app does not exist' do
