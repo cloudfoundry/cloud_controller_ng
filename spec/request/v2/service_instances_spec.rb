@@ -54,7 +54,8 @@ RSpec.describe 'ServiceInstances' do
                 'service_plan_url'     => "/v2/service_plans/#{service_plan.guid}",
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes"
+                'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
+                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from"
               }
             }
           )
@@ -96,7 +97,8 @@ RSpec.describe 'ServiceInstances' do
                 'service_url'          => "/v2/services/#{service_instance.service.guid}",
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes"
+                'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
+                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from"
               }
             }
           )
@@ -137,11 +139,66 @@ RSpec.describe 'ServiceInstances' do
                 'service_url'          => "/v2/services/#{service_instance.service.guid}",
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes"
+                'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
+                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from"
               }
             }
           )
         end
+      end
+    end
+  end
+
+  describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+    before do
+      service_instance.add_shared_space(VCAP::CloudController::Space.make)
+    end
+
+    it 'returns data about the source space and org' do
+      get "v2/service_instances/#{service_instance.guid}/shared_from", nil, admin_headers
+
+      expect(last_response.status).to eq(200), last_response.body
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like({
+        'space_name' => space.name,
+        'organization_name' => space.organization.name
+      })
+    end
+
+    context 'when the user is a member of the space where a service instance has been shared to' do
+      let(:other_space) { VCAP::CloudController::Space.make }
+      let(:other_user) { make_developer_for_space(other_space) }
+      let(:req_body) do
+        {
+          data: [
+            { guid: other_space.guid }
+          ]
+        }.to_json
+      end
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+
+        other_space.organization.add_user(user)
+        other_space.add_developer(user)
+
+        post "v3/service_instances/#{service_instance.guid}/relationships/shared_spaces", req_body, headers_for(user)
+        expect(last_response.status).to eq(200)
+      end
+
+      it 'returns data about the source space and org' do
+        get "v2/service_instances/#{service_instance.guid}/shared_from", nil, headers_for(other_user)
+
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like({
+          'space_name' => space.name,
+          'organization_name' => space.organization.name
+        })
       end
     end
   end

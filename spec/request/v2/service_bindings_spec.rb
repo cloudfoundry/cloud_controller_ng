@@ -197,7 +197,8 @@ RSpec.describe 'ServiceBindings' do
                       'service_plan_url' => "/v2/service_plans/#{service_instance.service_plan.guid}",
                       'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                       'service_keys_url' => "/v2/service_instances/#{service_instance.guid}/service_keys",
-                      'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes"
+                      'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
+                      'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from"
                     }
                   }
                 }

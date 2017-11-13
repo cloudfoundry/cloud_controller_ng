@@ -223,6 +223,14 @@ module VCAP::CloudController
 
       before { set_current_user(developer) }
 
+      it 'returns the shared from url' do
+        space_instance = ManagedServiceInstance.make(space: space)
+
+        get "/v2/spaces/#{space.guid}/service_instances"
+        service_instance_response = decoded_response.fetch('resources').first
+        expect(service_instance_response.fetch('entity').fetch('shared_from_url')).to eq("/v2/service_instances/#{space_instance.guid}/shared_from")
+      end
+
       context 'when filtering results' do
         it 'returns only matching results' do
           user_provided_service_instance_1 = UserProvidedServiceInstance.make(space: space, name: 'provided service 1')
