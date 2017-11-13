@@ -8,6 +8,9 @@ module VCAP::CloudController
 
       let(:bbs_task_client) { instance_double(BbsTaskClient) }
       let(:bbs_tasks) { [] }
+      let(:fake_workpool) do
+        instance_double(WorkPool, exit_all!: nil, drain: nil, submit: nil, exceptions: [])
+      end
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
@@ -71,6 +74,13 @@ module VCAP::CloudController
             subject.sync
             expect(bbs_task_client).to have_received(:bump_freshness).once
           end
+
+          it 'exits the workpool threads' do
+            allow(subject).to receive(:workpool).and_return(fake_workpool)
+            subject.sync
+
+            expect(subject.send(:workpool)).to have_received(:exit_all!)
+          end
         end
 
         context 'when bbs does not know about a pending/succeeded task' do
@@ -121,6 +131,13 @@ module VCAP::CloudController
             it 'does not bump freshness' do
               expect { subject.sync }.to raise_error(TasksSync::BBSFetchError, error.message)
               expect(bbs_task_client).not_to receive(:bump_freshness)
+            end
+
+            it 'exits the workpool threads' do
+              allow(subject).to receive(:workpool).and_return(fake_workpool)
+              subject.sync
+
+              expect(subject.send(:workpool)).to have_received(:exit_all!)
             end
           end
         end
@@ -186,6 +203,13 @@ module VCAP::CloudController
           it 'does not bump freshness' do
             expect { subject.sync }.to raise_error(error)
             expect(bbs_task_client).not_to receive(:bump_freshness)
+          end
+
+          it 'exits the workpool threads' do
+            allow(subject).to receive(:workpool).and_return(fake_workpool)
+            expect { subject.sync }.to raise_error(error)
+
+            expect(subject.send(:workpool)).to have_received(:exit_all!)
           end
         end
 

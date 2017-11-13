@@ -22,19 +22,19 @@ module VCAP::CloudController
         diego_lrps     = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
         logger.info('fetched-scheduling-infos')
 
-        for_processes do |processes|
+        batched_processes do |processes|
           processes.each do |process|
             process_guid = ProcessGuid.from_process(process)
             diego_lrp    = diego_lrps.delete(process_guid)
 
             if diego_lrp.nil?
-              @workpool.submit(process) do |p|
+              workpool.submit(process) do |p|
                 recipe_builder = AppRecipeBuilder.new(config: config, process: p)
                 bbs_apps_client.desire_app(recipe_builder.build_app_lrp)
                 logger.info('desire-lrp', process_guid: p.guid)
               end
             elsif process.updated_at.to_f.to_s != diego_lrp.annotation
-              @workpool.submit(process, diego_lrp) do |p, l|
+              workpool.submit(process, diego_lrp) do |p, l|
                 recipe_builder = AppRecipeBuilder.new(config: config, process: p)
                 bbs_apps_client.update_app(process_guid, recipe_builder.build_app_lrp_update(l))
                 logger.info('update-lrp', process_guid: p.guid)
@@ -44,15 +44,15 @@ module VCAP::CloudController
         end
 
         diego_lrps.each_key do |process_guid_to_delete|
-          @workpool.submit(process_guid_to_delete) do |guid|
+          workpool.submit(process_guid_to_delete) do |guid|
             bbs_apps_client.stop_app(guid)
             logger.info('delete-lrp', process_guid: guid)
           end
         end
 
-        @workpool.drain
+        workpool.drain
 
-        process_exceptions(@workpool.exceptions)
+        process_workpool_exceptions(@workpool.exceptions)
       rescue CloudController::Errors::ApiError => e
         logger.info('sync-failed', error: e.name, error_message: e.message)
         bump_freshness = false
@@ -62,6 +62,7 @@ module VCAP::CloudController
         bump_freshness = false
         raise
       ensure
+        workpool.exit_all!
         if bump_freshness
           bbs_apps_client.bump_freshness
           logger.info('finished-process-sync')
@@ -70,9 +71,9 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :config
+      attr_reader :config, :workpool
 
-      def process_exceptions(exceptions)
+      def process_workpool_exceptions(exceptions)
         first_exception = nil
         invalid_lrps = 0
         exceptions.each do |e|
@@ -93,7 +94,7 @@ module VCAP::CloudController
         raise first_exception if first_exception
       end
 
-      def for_processes
+      def batched_processes
         last_id = 0
 
         loop do

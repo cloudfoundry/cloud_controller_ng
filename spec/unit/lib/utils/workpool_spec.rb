@@ -87,4 +87,19 @@ RSpec.describe WorkPool do
       expect(wp.exceptions.length).to be(3)
     end
   end
+
+  describe '#exit_all' do
+    it 'exits all the threads' do
+      wp = WorkPool.new(3)
+      wp.submit do
+        loop do
+        end
+      end
+
+      wp.exit_all!
+      sleep 1
+
+      expect(wp.send(:threads).none?(&:alive?)).to be true
+    end
+  end
 end

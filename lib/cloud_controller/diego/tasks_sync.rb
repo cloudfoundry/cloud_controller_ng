@@ -28,7 +28,7 @@ module VCAP::CloudController
               tasks_to_fail << cc_task.guid if diego_task_missing?(cc_task.guid) && !task_finished_while_iterating?(cc_task.guid)
               logger.info('missing-diego-task', task_guid: cc_task.guid)
             elsif cc_task.state == TaskModel::CANCELING_STATE
-              @workpool.submit(cc_task.guid) do |guid|
+              workpool.submit(cc_task.guid) do |guid|
                 bbs_task_client.cancel_task(guid)
                 logger.info('canceled-cc-task', task_guid: guid)
               end
@@ -41,21 +41,15 @@ module VCAP::CloudController
         end
 
         diego_tasks.each_key do |task_guid|
-          @workpool.submit(task_guid) do |guid|
+          workpool.submit(task_guid) do |guid|
             bbs_task_client.cancel_task(guid)
             logger.info('missing-cc-task', task_guid: guid)
           end
         end
 
-        @workpool.drain
+        workpool.drain
 
-        first_exception = nil
-        @workpool.exceptions.each do |e|
-          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message)
-          first_exception ||= e
-        end
-        raise first_exception if first_exception
-
+        process_workpool_exceptions(workpool.exceptions)
         bbs_task_client.bump_freshness
         logger.info('finished-task-sync')
       rescue CloudController::Errors::ApiError => e
@@ -64,9 +58,22 @@ module VCAP::CloudController
       rescue => e
         logger.info('sync-failed', error: e.class.name, error_message: e.message)
         raise
+      ensure
+        workpool.exit_all!
       end
 
       private
+
+      attr_reader :workpool
+
+      def process_workpool_exceptions(exceptions)
+        first_exception = nil
+        exceptions.each do |e|
+          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message)
+          first_exception ||= e
+        end
+        raise first_exception if first_exception
+      end
 
       def diego_task_missing?(task_guid)
         bbs_task_client.fetch_task(task_guid).nil?

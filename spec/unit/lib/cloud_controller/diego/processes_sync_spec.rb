@@ -21,6 +21,8 @@ module VCAP::CloudController
       end
 
       describe '#sync' do
+        let(:workpool) { instance_double(WorkPool, submit: nil, exceptions: nil, drain: nil, exit_all!: nil) }
+
         it 'bumps freshness' do
           subject.sync
           expect(bbs_apps_client).to have_received(:bump_freshness).once
@@ -105,7 +107,6 @@ module VCAP::CloudController
             context 'when the app has been deleted' do
               let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'the requested resource could not be found') }
               let(:logger) { double(:logger, info: nil, error: nil) }
-              let(:workpool) { double(:workpool, submit: nil, exceptions: nil, drain: nil) }
 
               before do
                 allow(Steno).to receive(:logger).and_return(logger)
@@ -188,7 +189,6 @@ module VCAP::CloudController
           let(:indexed_by_thing) { instance_double(Hash) }
           let(:existing_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: "#{good_process.guid}-#{good_process.version}") }
           let(:logger) { double(:logger, info: nil, error: nil) }
-          let(:workpool) { double(:workpool, submit: nil, exceptions: nil, drain: nil) }
 
           before do
             allow(existing_lrp).to receive(:nil?).and_return(true)
@@ -208,6 +208,12 @@ module VCAP::CloudController
             expect(logger).to have_received(:info).with(
               'ignore-existing-resource', error: error.name, error_message: error.message
             )
+          end
+
+          it 'exits the workpool threads' do
+            subject.sync
+
+            expect(workpool).to have_received(:exit_all!)
           end
         end
 
@@ -262,12 +268,18 @@ module VCAP::CloudController
           let(:error) { Sequel::Error.new('Generic Database Error') }
 
           before do
+            allow(WorkPool).to receive(:new).and_return(workpool)
             allow(ProcessModel).to receive(:table_name).and_raise(error)
           end
 
           it 'does not bump freshness' do
             expect { subject.sync }.to raise_error(error)
             expect(bbs_apps_client).not_to receive(:bump_freshness)
+          end
+
+          it 'exits the workpool threads' do
+            expect { subject.sync }.to raise_error(error)
+            expect(workpool).to have_received(:exit_all!)
           end
         end
 

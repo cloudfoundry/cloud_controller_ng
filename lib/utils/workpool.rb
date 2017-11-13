@@ -35,4 +35,12 @@ class WorkPool
 
     @threads.map(&:join)
   end
+
+  def exit_all!
+    @threads.map(&:exit)
+  end
+
+  private
+
+  attr_reader :threads
 end
