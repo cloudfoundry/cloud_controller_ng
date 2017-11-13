@@ -175,7 +175,6 @@ cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
 cc_service_key_client_name: 'cc_service_key_client'
 cc_service_key_client_secret: 'cc-service-key-client-super-s3cre7'
 
-users_can_select_backend: true
 allow_app_ssh_access: true
 default_app_ssh_access: true
 

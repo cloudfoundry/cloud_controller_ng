@@ -114,14 +114,6 @@ module VCAP::CloudController
           expect(subject.read_for_update?(object, { 'buildpack' => 'http://foo.git' })).to be_truthy
         end
       end
-
-      context 'when the users_can_select_backend config value is disabled' do
-        before { TestConfig.override(users_can_select_backend: false) }
-
-        it 'does not allow user to change the diego flag' do
-          expect { subject.read_for_update?(object, { 'diego' => false }) }.to raise_error(CloudController::Errors::ApiError, /backend/)
-        end
-      end
     end
 
     context 'organization manager' do

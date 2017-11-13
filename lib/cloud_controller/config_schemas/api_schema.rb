@@ -214,7 +214,6 @@ module VCAP::CloudController
           app_bits_upload_grace_period_in_seconds: Integer,
           allowed_cors_domains: [String],
 
-          users_can_select_backend: bool,
           optional(:routing_api) => {
             url: String,
             routing_client_name: String,
