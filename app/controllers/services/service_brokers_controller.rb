@@ -65,7 +65,7 @@ module VCAP::CloudController
       broker = update_action.update(guid, params)
       return HTTP::NOT_FOUND unless broker
       body = ServiceBrokerPresenter.new(broker).to_json
-      [HTTP::OK, {}, body]
+      [HTTP::OK, body]
     end
 
     def delete(guid)

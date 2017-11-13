@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       next_page_token = last_id + batch_size unless guid_to_drain_maps.empty?
 
-      [HTTP::OK, {}, MultiJson.dump({ results: drain_urls, next_id: next_page_token }, pretty: true)]
+      [HTTP::OK, MultiJson.dump({ results: drain_urls, next_id: next_page_token }, pretty: true)]
     end
 
     private

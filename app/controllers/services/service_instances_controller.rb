@@ -180,26 +180,27 @@ module VCAP::CloudController
           object_renderer.render_json(self.class, service_instance.refresh, @opts)
         ]
       else
-        [HTTP::NO_CONTENT, nil]
+        HTTP::NO_CONTENT
       end
     end
 
     get '/v2/service_instances/:guid/permissions', :permissions
+
     def permissions(guid)
       service_instance = find_guid_and_validate_access(:read_permissions, guid, ServiceInstance)
 
       manage_permissions = @access_context.can?(:manage_permissions, service_instance)
-      read_permissions   = @access_context.can?(:read_permissions, service_instance)
+      read_permissions = @access_context.can?(:read_permissions, service_instance)
 
-      [HTTP::OK, {}, JSON.generate({
+      [HTTP::OK, JSON.generate({
         manage: manage_permissions,
-        read:   read_permissions
+        read: read_permissions
       })]
     rescue CloudController::Errors::ApiError => e
       if e.name == 'NotAuthorized'
-        [HTTP::OK, {}, JSON.generate({
+        [HTTP::OK, JSON.generate({
           manage: false,
-          read:   false,
+          read: false,
         })]
       else
         raise e
@@ -207,20 +208,16 @@ module VCAP::CloudController
     end
 
     get '/v2/service_instances/:guid/shared_from', :shared_from_information
+
     def shared_from_information(guid)
       service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
 
-      if service_instance.shared?
-        [HTTP::OK, {}, JSON.generate(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space))]
-      else
-        [HTTP::NO_CONTENT, {}, '']
-      end
+      return HTTP::NO_CONTENT unless service_instance.shared?
+
+      [HTTP::OK, JSON.generate(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space))]
     rescue CloudController::Errors::ApiError => e
-      if e.name == 'NotAuthorized'
-        HTTP::NOT_FOUND
-      else
-        raise e
-      end
+      return HTTP::NOT_FOUND if e.name == 'NotAuthorized'
+      raise
     end
 
     def self.url_for_guid(guid)
@@ -310,7 +307,7 @@ module VCAP::CloudController
       binding_manager = ServiceInstanceBindingManager.new(self, logger)
       binding_manager.delete_route_service_instance_binding(route_guid, instance_guid)
 
-      [HTTP::NO_CONTENT]
+      HTTP::NO_CONTENT
     rescue ServiceInstanceBindingManager::RouteBindingNotFound
       invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.")
     rescue ServiceInstanceBindingManager::RouteNotFound

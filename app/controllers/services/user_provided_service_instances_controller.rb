@@ -85,7 +85,7 @@ module VCAP::CloudController
 
       @services_event_repository.record_user_provided_service_instance_event(:update, service_instance, request_attrs)
 
-      [HTTP::CREATED, {}, object_renderer.render_json(self.class, service_instance, @opts)]
+      [HTTP::CREATED, object_renderer.render_json(self.class, service_instance, @opts)]
     end
 
     def delete(guid)

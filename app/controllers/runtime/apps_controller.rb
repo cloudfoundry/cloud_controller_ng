@@ -64,7 +64,6 @@ module VCAP::CloudController
 
       [
         HTTP::OK,
-        {},
         MultiJson.dump({
           staging_env_json:     EnvironmentVariableGroup.staging.environment_json,
           running_env_json:     EnvironmentVariableGroup.running.environment_json,
@@ -364,7 +363,7 @@ module VCAP::CloudController
     def permissions(guid)
       find_guid_and_validate_access(:read_permissions, guid, ProcessModel)
 
-      [HTTP::OK, {}, JSON.generate({
+      [HTTP::OK, JSON.generate({
         read_sensitive_data: true,
         read_basic_data:     true
       })]
@@ -381,7 +380,7 @@ module VCAP::CloudController
 
         raise e unless membership.has_any_roles?(basic_access, process.space.guid, process.organization.guid)
 
-        [HTTP::OK, {}, JSON.generate({
+        [HTTP::OK, JSON.generate({
           read_sensitive_data: false,
           read_basic_data:     true
         })]
