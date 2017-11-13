@@ -68,6 +68,10 @@ module VCAP::CloudController
         [:space, user.spaces_dataset],
         [:space, user.audited_spaces_dataset],
         [:space, user.managed_spaces_dataset],
+        [:shared_spaces, user.spaces_dataset],
+        [:shared_spaces, user.managed_spaces_dataset],
+        [:shared_spaces, user.audited_spaces_dataset],
+        [:shared_spaces, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
       ])
     end
 
@@ -134,7 +138,7 @@ module VCAP::CloudController
     alias_method_chain :credentials, 'serialization'
 
     def in_suspended_org?
-      space.in_suspended_org?
+      space&.in_suspended_org?
     end
 
     def after_create
