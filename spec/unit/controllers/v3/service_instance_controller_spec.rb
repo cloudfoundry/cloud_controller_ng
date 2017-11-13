@@ -2,6 +2,113 @@ require 'rails_helper'
 
 RSpec.describe ServiceInstancesV3Controller, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
+  let(:space) { VCAP::CloudController::Space.make }
+  let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+  describe '#index' do
+    context 'when there are multiple service instances' do
+      let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make }
+      let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make }
+
+      context 'as an admin' do
+        before do
+          set_current_user_as_admin
+        end
+
+        it 'returns all service instances' do
+          get :index
+          expect(response.status).to eq(200), response.body
+          expect(parsed_body['resources'].length).to eq 3
+
+          response_names = parsed_body['resources'].map { |resource| resource['name'] }
+          expect(response_names).to include(service_instance.name, service_instance2.name, service_instance3.name)
+        end
+      end
+
+      context 'as a user who only has limited access' do
+        before do
+          set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+        end
+
+        it 'returns a subset of service instances' do
+          get :index
+          expect(response.status).to eq(200), response.body
+          expect(parsed_body['resources'].length).to eq 1
+
+          response_names = parsed_body['resources'].map { |resource| resource['name'] }
+          expect(response_names).to include(service_instance.name)
+        end
+      end
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'               => true,
+        'admin_read_only'     => true,
+        'global_auditor'      => true,
+        'org_manager'         => true,
+        'org_auditor'         => false,
+        'org_billing_manager' => false,
+        'space_manager'       => true,
+        'space_auditor'       => true,
+        'space_developer'     => true,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, can_see_service_instance|
+        context "as an #{role}" do
+          it "#{can_see_service_instance ? 'can' : 'cannot'} see the service instance" do
+            set_current_user_as_role(role: role, org: space.organization, space: space, user: user)
+
+            expected_service_instance_names = can_see_service_instance ? [service_instance.name] : []
+
+            get :index
+            expect(response.status).to eq(200), response.body
+            expect(parsed_body['resources'].map { |h| h['name'] }).to match_array(expected_service_instance_names)
+          end
+        end
+      end
+    end
+
+    describe 'permissions by role for shared services' do
+      let(:target_space) { VCAP::CloudController::Space.make }
+      before do
+        service_instance.add_shared_space(target_space)
+      end
+      role_to_expected_http_response = {
+        'org_manager'         => true,
+        'org_auditor'         => false,
+        'org_billing_manager' => false,
+        'space_manager'       => true,
+        'space_auditor'       => true,
+        'space_developer'     => true,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, can_see_service_instance|
+        context "as an #{role}" do
+          it "#{can_see_service_instance ? 'can' : 'cannot'} see the service instance" do
+            set_current_user_as_role(role: role, org: target_space.organization, space: target_space, user: user)
+
+            expected_service_instance_names = can_see_service_instance ? [service_instance.name] : []
+
+            get :index
+            expect(response.status).to eq(200), response.body
+            expect(parsed_body['resources'].map { |h| h['name'] }).to match_array(expected_service_instance_names)
+          end
+        end
+      end
+    end
+
+    context 'when a non-supported value is specified' do
+      it 'a bad query parameter error is returned' do
+        set_current_user_as_admin
+        get :index, { order_by: 'banana' }
+
+        expect(response.status).to eq(400)
+        expect(response.body).to include 'BadQueryParameter'
+        expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
+      end
+    end
+  end
 
   describe '#share_service_instance' do
     let(:service_instance) { VCAP::CloudController::ServiceInstance.make }
