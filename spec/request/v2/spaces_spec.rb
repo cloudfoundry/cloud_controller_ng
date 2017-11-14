@@ -219,7 +219,8 @@ RSpec.describe 'Spaces' do
             'service_keys_url' => "/v2/service_instances/#{shared_service_instance.guid}/service_keys",
             'routes_url' => "/v2/service_instances/#{shared_service_instance.guid}/routes",
             'service_url' => "/v2/services/#{shared_service_instance.service_plan.service_guid}",
-            'shared_from_url' => "/v2/service_instances/#{shared_service_instance.guid}/shared_from"
+            'shared_from_url' => "/v2/service_instances/#{shared_service_instance.guid}/shared_from",
+            'shared_to_url' => "/v2/service_instances/#{shared_service_instance.guid}/shared_to",
           }
         }]
       })

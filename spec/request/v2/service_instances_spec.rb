@@ -55,7 +55,8 @@ RSpec.describe 'ServiceInstances' do
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
                 'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
-                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from"
+                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                'shared_to_url'        => "/v2/service_instances/#{service_instance.guid}/shared_to",
               }
             }
           )
@@ -98,7 +99,8 @@ RSpec.describe 'ServiceInstances' do
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
                 'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
-                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from"
+                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                'shared_to_url'        => "/v2/service_instances/#{service_instance.guid}/shared_to",
               }
             }
           )
@@ -140,7 +142,8 @@ RSpec.describe 'ServiceInstances' do
                 'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
                 'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
                 'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
-                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from"
+                'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                'shared_to_url'        => "/v2/service_instances/#{service_instance.guid}/shared_to",
               }
             }
           )
@@ -200,6 +203,43 @@ RSpec.describe 'ServiceInstances' do
           'organization_name' => space.organization.name
         })
       end
+    end
+  end
+
+  describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:space1) { VCAP::CloudController::Space.make }
+    let(:space2) { VCAP::CloudController::Space.make }
+
+    before do
+      service_instance.add_shared_space(space1)
+      service_instance.add_shared_space(space2)
+    end
+
+    it 'returns data about the source space and org' do
+      get "v2/service_instances/#{service_instance.guid}/shared_to", nil, admin_headers
+
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'total_results' => 2,
+          'total_pages' => 1,
+          'prev_url' => nil,
+          'next_url' => nil,
+          'resources' => [
+            {
+              'space_name' => space1.name,
+              'organization_name' => space1.organization.name
+            },
+            {
+              'space_name' => space2.name,
+              'organization_name' => space2.organization.name
+            }
+          ]
+        }
+      )
     end
   end
 end
