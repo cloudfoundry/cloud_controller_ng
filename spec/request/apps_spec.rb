@@ -504,13 +504,15 @@ RSpec.describe 'Apps' do
             service_instance.service.label => [
               {
                 'name'             => 'si-name',
-                'label'            => service_instance.service.label,
-                'tags'             => ['50% off'],
-                'plan'             => service_instance.service_plan.name,
+                'instance_name'    => 'si-name',
+                'binding_name'     => nil,
                 'credentials'      => { 'password' => 'top-secret' },
                 'syslog_drain_url' => 'https://syslog.example.com/drain',
+                'volume_mounts'    => [],
+                'label'            => service_instance.service.label,
                 'provider'         => nil,
-                'volume_mounts'    => []
+                'plan'             => service_instance.service_plan.name,
+                'tags'             => ['50% off']
               }
             ]
           }
@@ -522,13 +524,13 @@ RSpec.describe 'Apps' do
               'fds' => 16384
             },
             'application_name' => 'my_app',
-            'application_id'   => app_model.guid,
             'application_uris' => [],
             'name'             => 'my_app',
             'space_name'       => space.name,
             'space_id'         => space.guid,
             'uris'             => [],
-            'users'            => nil
+            'users'            => nil,
+            'application_id'   => app_model.guid
           }
         }
       }

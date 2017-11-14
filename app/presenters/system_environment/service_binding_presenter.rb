@@ -9,8 +9,8 @@ class ServiceBindingPresenter
   end
 
   def to_hash
-    present_service_binding(@service_binding).tap do |presented|
-      presented.merge!(ServiceInstancePresenter.new(@service_binding.service_instance).to_hash) if @include_instance
+    present_service_binding(service_binding).tap do |presented|
+      presented.reverse_merge!(ServiceInstancePresenter.new(service_instance).to_hash) if include_instance
     end
   end
 
@@ -23,8 +23,17 @@ class ServiceBindingPresenter
 
   private
 
+  attr_reader :service_binding, :include_instance
+
+  def service_instance
+    service_binding.service_instance
+  end
+
   def present_service_binding(service_binding)
     {
+      name: service_binding.name.presence || service_instance.name,
+      instance_name: service_instance.name,
+      binding_name: service_binding.name,
       credentials: service_binding.credentials,
       syslog_drain_url: service_binding.syslog_drain_url,
       volume_mounts: ServiceBindingPresenter.censor_volume_mounts(service_binding.volume_mounts)

@@ -9,7 +9,7 @@ RSpec.describe 'v3 service bindings' do
 
   describe 'POST /v3/service_bindings' do
     context 'managed service instance' do
-      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-name') }
 
       before do
         allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
@@ -48,9 +48,12 @@ RSpec.describe 'v3 service bindings' do
           'guid' => guid,
           'type' => 'app',
           'data' => {
+            'binding_name' => nil,
             'credentials' => {
               'username' => 'managed_username'
             },
+            'instance_name' => 'service-instance-name',
+            'name' => 'service-instance-name',
             'syslog_drain_url' => 'syslog://mydrain.example.com',
             'volume_mounts' => [
               {
@@ -117,7 +120,8 @@ RSpec.describe 'v3 service bindings' do
         VCAP::CloudController::UserProvidedServiceInstance.make(
           space: space,
           credentials: { 'username': 'user_provided_username' },
-          syslog_drain_url: 'syslog://drain.url.com'
+          syslog_drain_url: 'syslog://drain.url.com',
+          name: 'service-instance-name'
         )
       end
 
@@ -143,9 +147,12 @@ RSpec.describe 'v3 service bindings' do
           'guid' => guid,
           'type' => 'app',
           'data' => {
+            'binding_name' => nil,
             'credentials' => {
               'username' => 'user_provided_username'
             },
+            'instance_name' => 'service-instance-name',
+            'name' => 'service-instance-name',
             'syslog_drain_url' => 'syslog://drain.url.com',
             'volume_mounts' => []
           },
@@ -240,12 +247,13 @@ RSpec.describe 'v3 service bindings' do
   end
 
   describe 'GET /v3/service_bindings/:guid' do
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-name') }
     let(:service_binding) do
       VCAP::CloudController::ServiceBinding.make(
         service_instance: service_instance,
         app: app_model,
         credentials: { 'username' => 'managed_username' },
+        name: 'binding-name',
         syslog_drain_url: 'syslog://mydrain.example.com',
         volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
       )
@@ -260,9 +268,12 @@ RSpec.describe 'v3 service bindings' do
         'guid' => service_binding.guid,
         'type' => 'app',
         'data' => {
+          'binding_name' => 'binding-name',
           'credentials' => {
             'username' => 'managed_username'
           },
+          'instance_name' => 'service-instance-name',
+          'name' => 'binding-name',
           'syslog_drain_url' => 'syslog://mydrain.example.com',
           'volume_mounts' => [{ 'container_dir' => 'some-path' }]
         },
@@ -300,25 +311,27 @@ RSpec.describe 'v3 service bindings' do
   end
 
   describe 'GET /v3/service_bindings' do
-    let(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let!(:service_binding1) { VCAP::CloudController::ServiceBinding.make(
-      service_instance: service_instance1,
-      app: app_model,
-      credentials: { 'binding1' => 'shtuff' },
-      syslog_drain_url: 'syslog://binding1.example.com',
-      volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
-    )
-    }
-    let!(:service_binding2) { VCAP::CloudController::ServiceBinding.make(
-      service_instance: service_instance2,
-      app: app_model,
-      credentials: { 'binding2' => 'things' },
-      syslog_drain_url: 'syslog://binding2.example.com',
-      volume_mounts: [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
-    )
-    }
+    let(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-1') }
+    let(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-2') }
+    let(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-3') }
+    let!(:service_binding1) do
+      VCAP::CloudController::ServiceBinding.make(
+        service_instance: service_instance1,
+        app: app_model,
+        credentials: { 'binding1' => 'shtuff' },
+        syslog_drain_url: 'syslog://binding1.example.com',
+        volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
+      )
+    end
+    let!(:service_binding2) do
+      VCAP::CloudController::ServiceBinding.make(
+        service_instance: service_instance2,
+        app: app_model,
+        credentials: { 'binding2' => 'things' },
+        syslog_drain_url: 'syslog://binding2.example.com',
+        volume_mounts: [{ 'stuff2' => 'thing2', 'container_dir' => 'some-path' }],
+      )
+    end
 
     before { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance3, app: app_model) }
 
@@ -339,6 +352,9 @@ RSpec.describe 'v3 service bindings' do
             'guid' => service_binding1.guid,
             'type' => 'app',
             'data' => {
+              'binding_name' => nil,
+              'instance_name' => 'service-instance-1',
+              'name' => 'service-instance-1',
               'credentials' => {
                 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
@@ -363,6 +379,9 @@ RSpec.describe 'v3 service bindings' do
             'guid' => service_binding2.guid,
             'type' => 'app',
             'data' => {
+              'binding_name' => nil,
+              'instance_name' => 'service-instance-2',
+              'name' => 'service-instance-2',
               'credentials' => {
                 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]'
               },
