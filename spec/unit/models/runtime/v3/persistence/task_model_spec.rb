@@ -247,12 +247,29 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed, /command presence/)
         end
 
-        it 'must have a droplet' do
-          expect { TaskModel.make(name: 'name',
-                                  droplet: nil,
-                                  app: app,
-                                  command: 'bundle exec rake db:migrate')
-          }.to raise_error(Sequel::ValidationFailed, /droplet presence/)
+        context 'droplet' do
+          context 'when creating the task' do
+            it 'must have a droplet' do
+              expect { TaskModel.make(name: 'name',
+                                      droplet: nil,
+                                      app: app,
+                                      command: 'bundle exec rake db:migrate')
+              }.to raise_error(Sequel::ValidationFailed, /droplet presence/)
+            end
+          end
+
+          context 'when updating the task' do
+            it 'does not need a droplet' do
+              task = TaskModel.make(name: 'name',
+                                    droplet: droplet,
+                                    app: app,
+                                    command: 'bundle exec rake db:migrate')
+
+              droplet.delete
+              task.reload
+              expect { task.update(state: 'FAILED') }.not_to raise_error
+            end
+          end
         end
 
         it 'must have a name' do

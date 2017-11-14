@@ -54,7 +54,7 @@ module VCAP::CloudController
       validates_max_length COMMAND_MAX_LENGTH, :command,
         message: "must be shorter than #{COMMAND_MAX_LENGTH + 1} characters"
       validate_environment_variables
-      validates_presence :droplet
+      validates_presence :droplet if new?
       validates_presence :name
       validate_org_quotas
       validate_space_quotas
