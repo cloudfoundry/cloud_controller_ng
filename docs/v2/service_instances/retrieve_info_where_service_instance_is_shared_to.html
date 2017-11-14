@@ -194,6 +194,22 @@ Cookie: </pre>
                   </ul>
                 </td>
               </tr>
+              <tr class="">
+                <td>
+                    <span class="name">bound_app_count</span>
+                </td>
+                <td>
+                  <span class="description">The number of applications bound to the service instance in the space.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -205,11 +221,13 @@ Cookie: </pre>
    "resources": [
       {
           "space_name": "target-space-1",
-          "organization_name": "org-name"
+          "organization_name": "org-name",
+          "bound_app_count": 3
       },
       {
           "space_name": "target-space-2",
-          "organization_name": "org-name"
+          "organization_name": "org-name",
+          "bound_app_count": 0
       }
    ]
 }</pre>

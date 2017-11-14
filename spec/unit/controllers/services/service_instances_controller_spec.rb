@@ -3636,14 +3636,41 @@ module VCAP::CloudController
           space1_resource = resources.find { |resource| resource['space_name'] == space1.name }
           space2_resource = resources.find { |resource| resource['space_name'] == space2.name }
 
-          expect(space1_resource.keys).to match_array(['space_name', 'organization_name'])
-          expect(space2_resource.keys).to match_array(['space_name', 'organization_name'])
+          expect(space1_resource.keys).to match_array(['space_name', 'organization_name', 'bound_app_count'])
+          expect(space2_resource.keys).to match_array(['space_name', 'organization_name', 'bound_app_count'])
 
           expect(space1_resource.fetch('space_name')).to eq(space1.name)
           expect(space2_resource.fetch('space_name')).to eq(space2.name)
 
           expect(space1_resource.fetch('organization_name')).to eq(space1.organization.name)
           expect(space2_resource.fetch('organization_name')).to eq(space2.organization.name)
+
+          expect(space1_resource.fetch('bound_app_count')).to eq(0)
+          expect(space2_resource.fetch('bound_app_count')).to eq(0)
+        end
+
+        context 'when there are apps bound to the shared service instance' do
+          before do
+            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space1))
+            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space1))
+            ServiceBinding.make(service_instance: ServiceInstance.make(space: space1), app: AppModel.make(space: space1))
+
+            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space2))
+          end
+
+          it 'returns the correct bound_app_count' do
+            set_current_user_as_admin
+            get "/v2/service_instances/#{instance.guid}/shared_to"
+            decoded_response = JSON.parse(last_response.body)
+            expect(last_response.status).to eql(200), last_response.body
+            resources = decoded_response.fetch('resources')
+
+            space1_resource = resources.find { |resource| resource['space_name'] == space1.name }
+            space2_resource = resources.find { |resource| resource['space_name'] == space2.name }
+
+            expect(space1_resource.fetch('bound_app_count')).to eq(2)
+            expect(space2_resource.fetch('bound_app_count')).to eq(1)
+          end
         end
       end
 

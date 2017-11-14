@@ -5,6 +5,7 @@ require 'actions/services/service_instance_update'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
 require 'fetchers/service_instance_fetcher'
+require 'fetchers/service_binding_list_fetcher'
 require 'presenters/v2/service_instance_shared_to_presenter'
 require 'presenters/v2/service_instance_shared_from_presenter'
 
@@ -229,7 +230,7 @@ module VCAP::CloudController
       associated_controller = VCAP::CloudController::SpacesController
       associated_path = "#{self.class.url_for_guid(guid)}/shared_to"
 
-      create_paginated_collection_renderer.render_json(
+      create_paginated_collection_renderer(service_instance).render_json(
         associated_controller,
         service_instance.shared_spaces_dataset,
         associated_path,
@@ -343,15 +344,20 @@ module VCAP::CloudController
     private
 
     class ServiceInstanceSharedToSerializer
+      def initialize(service_instance)
+        @service_instance = service_instance
+      end
+
       def serialize(controller, space, opts, orphans=nil)
-        CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space)
+        bound_app_count = ServiceBindingListFetcher.fetch_service_instance_bindings_in_space(@service_instance.guid, space.guid).count
+        CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space, bound_app_count)
       end
     end
 
-    def create_paginated_collection_renderer
+    def create_paginated_collection_renderer(service_instance)
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(
         VCAP::CloudController::RestController::SecureEagerLoader.new,
-        ServiceInstanceSharedToSerializer.new,
+        ServiceInstanceSharedToSerializer.new(service_instance),
         {
           max_results_per_page: config.get(:renderer, :max_results_per_page),
           default_results_per_page: config.get(:renderer, :default_results_per_page),
