@@ -1108,3 +1108,8 @@
   name: ServiceInstanceUnshareFailed
   http_code: 502
   message: "Unshare of service instance failed because one or more bindings could not be deleted.\n\n%s"
+
+390002:
+  name: ServiceInstanceDeletionSharesExists
+  http_code: 400
+  message: "Service instances must be unshared before they can be deleted. Unsharing %s will automatically delete any bindings that have been made to applications in other spaces."

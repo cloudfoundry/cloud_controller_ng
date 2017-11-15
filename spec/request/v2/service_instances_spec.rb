@@ -244,4 +244,33 @@ RSpec.describe 'ServiceInstances' do
       )
     end
   end
+
+  describe 'DELETE /v2/service_instance/:guid' do
+    let(:originating_space) { VCAP::CloudController::Space.make }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
+
+    context 'when the service instance has been shared' do
+      before do
+        allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+          FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+        end
+
+        set_current_user_as_admin
+        service_instance.add_shared_space(space)
+      end
+
+      it 'fails with an appropriate response' do
+        delete "v2/service_instances/#{service_instance.guid}", nil, admin_headers
+
+        expect(last_response.status).to eq(400)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted. ' \
+          "Unsharing #{service_instance.name} will automatically delete any bindings " \
+          'that have been made to applications in other spaces.'
+        expect(parsed_response['error_code']).to eq 'CF-ServiceInstanceDeletionSharesExists'
+        expect(parsed_response['code']).to eq 390002
+      end
+    end
+  end
 end
