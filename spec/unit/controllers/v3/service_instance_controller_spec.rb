@@ -198,6 +198,32 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
 
+    context 'when access to the plan is not enabled in the target org' do
+      let(:target_org) { VCAP::CloudController::Organization.make }
+      let(:target_space) { VCAP::CloudController::Space.make organization: target_org }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
+      let(:same_org_target_space) { VCAP::CloudController::Space.make organization: source_space.organization }
+
+      before do
+        req_body[:data] = [
+          { guid: target_space.guid },
+          { guid: same_org_target_space.guid }
+        ]
+
+        VCAP::CloudController::ServicePlanVisibility.make(organization: source_space.organization, service_plan: service_plan)
+      end
+
+      it 'returns an error to the user' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+
+        error_msg = "Access to service #{service_instance.service.label} and plan #{service_plan.name} is not enabled in #{target_org.name}/#{target_space.name}"
+        expect(response.status).to eq 422
+        expect(response.body).to include(error_msg)
+        expect(service_instance.shared_spaces).to_not include(target_space)
+      end
+    end
+
     context 'when multiple target spaces do not exist' do
       before do
         req_body[:data] = [
