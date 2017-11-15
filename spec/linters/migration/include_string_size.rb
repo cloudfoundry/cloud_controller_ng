@@ -25,13 +25,13 @@ module RuboCop
             has_text = node_has_hash_key?(inner_node, :text, &:truthy_literal?)
 
             if has_text
-              add_offense(inner_node, :expression, STRING_TEXT_WARNING)
+              add_offense(inner_node, location: :expression, message: STRING_TEXT_WARNING)
               next
             end
 
             has_size = node_has_hash_key?(inner_node, :size)
 
-            add_offense(inner_node, :expression, STRING_SIZE_WARNING) unless has_size
+            add_offense(inner_node, location: :expression, message: STRING_SIZE_WARNING) unless has_size
           end
         end
 

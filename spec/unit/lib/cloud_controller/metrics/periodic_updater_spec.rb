@@ -275,7 +275,7 @@ module VCAP::CloudController::Metrics
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_generic')
-        Delayed::Job.dataset.update(failed_at: DateTime.now.utc)
+        Delayed::Job.dataset.update(failed_at: Time.now.utc)
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
         Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_generic')
 

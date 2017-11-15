@@ -1,7 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe 'Sequel::Plugins::VcapRelations' do
-  def define_model(name) # we need new classes each time to reset the class level state
+  def define_model(name)
+    # we need new classes each time to reset the class level state
     model_klass = Class.new(Sequel::Model) do
       plugin :vcap_relations
       plugin :vcap_guid

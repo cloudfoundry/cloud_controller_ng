@@ -28,7 +28,7 @@ module RuboCop
               end
             end
 
-            add_offense(send_node, :expression) if missing_named_constraint
+            add_offense(send_node, location: :expression) if missing_named_constraint
           end
         end
 
