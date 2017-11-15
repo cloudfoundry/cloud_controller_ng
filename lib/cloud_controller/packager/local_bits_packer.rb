@@ -15,13 +15,14 @@ module CloudController
           if package_zip_exists?(uploaded_package_zip)
             FileUtils.chmod('u+w', uploaded_package_zip)
             FileUtils.cp(uploaded_package_zip, app_package_zip)
+            validate_size!(app_packager)
             populate_resource_cache(app_packager, root_path)
           end
 
           append_matched_resources(app_packager, matched_resources, root_path)
 
-          app_packager.fix_subdir_permissions
           validate_size!(app_packager)
+          app_packager.fix_subdir_permissions
 
           package_blobstore.cp_to_blobstore(app_package_zip, blobstore_key)
 

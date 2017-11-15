@@ -96,6 +96,16 @@ module CloudController::Packager
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
             expect(package_blobstore.exists?(blobstore_key)).to be true
           end
+
+          context 'and the combined matched resources are too large' do
+            let(:max_package_size) { 1 }
+
+            it 'raises an exception' do
+              expect {
+                packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+              }.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
+            end
+          end
         end
       end
 
@@ -140,6 +150,12 @@ module CloudController::Packager
           expect {
             packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
           }.to raise_error(CloudController::Errors::ApiError, /may not be larger than/)
+        end
+
+        it 'does not populate the cache' do
+          packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints) rescue nil
+          sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'
+          expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be false
         end
       end
 
