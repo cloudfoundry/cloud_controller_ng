@@ -87,14 +87,27 @@ module VCAP::CloudController
       !user_provided_instance?
     end
 
+    def name_clashes
+      proc do |_, instance|
+        next if instance.space_id.nil? || instance.name.nil?
+
+        clashes_with_shared_instance_names =
+          ServiceInstance.select_all(ServiceInstance.table_name).
+          join(:service_instance_shares, service_instance_guid: :guid, target_space_guid: instance.space_guid).
+          where(name: instance.name)
+
+        clashes_with_instance_names =
+          ServiceInstance.select_all(ServiceInstance.table_name).
+          where(space_id: instance.space_id, name: instance.name)
+
+        clashes_with_shared_instance_names.union(clashes_with_instance_names)
+      end
+    end
+
     def validate
       validates_presence :name
       validates_presence :space
-      validates_unique [:space_id, :name], where: (proc do |_, obj, arr|
-                                                     vals = arr.map { |x| obj.send(x) }
-                                                     next if vals.any?(&:nil?)
-                                                     ServiceInstance.where(arr.zip(vals))
-                                                   end)
+      validates_unique :name, where: name_clashes
       validates_max_length 50, :name
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
     end

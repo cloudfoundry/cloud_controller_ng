@@ -885,6 +885,53 @@ module VCAP::CloudController
             expect(last_response.status).to eq(400)
             expect(decoded_response['code']).to eq(60002)
           end
+
+          context 'when a service instance share exists between spaces' do
+            let(:source_space) { Space.make(organization: space.organization) }
+            before do
+              source_space.add_developer(developer)
+
+              service_instance = create_managed_service_instance(accepts_incomplete: 'false', space: source_space)
+              service_instance.add_shared_space(space)
+              expect(last_response.status).to eq(201)
+            end
+
+            it 'does not allow a managed service instance with same name as a shared service instance' do
+              create_managed_service_instance
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(60002)
+            end
+
+            it 'does not allow a user provided service instance with same name as a shared service instance' do
+              create_user_provided_service_instance
+              expect(last_response.status).to eq(400)
+              expect(decoded_response['code']).to eq(60002)
+            end
+
+            context 'when an unshared instance exists in the source space' do
+              before do
+                create_managed_service_instance(accepts_incomplete: 'false', space: source_space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+
+              it 'allows an instance of the same name to be created in the shared to space' do
+                create_managed_service_instance(accepts_incomplete: 'false', space: space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+            end
+
+            context 'when an unshared instance exists in the shared to space' do
+              before do
+                create_managed_service_instance(accepts_incomplete: 'false', space: space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+
+              it 'allows an instance of the same name to be created in the source space' do
+                create_managed_service_instance(accepts_incomplete: 'false', space: source_space, name: 'bar')
+                expect(last_response.status).to eq(201)
+              end
+            end
+          end
         end
 
         context 'when the service_plan does not exist' do
@@ -4003,7 +4050,6 @@ module VCAP::CloudController
       let(:errors) { instance_double(Sequel::Model::Errors) }
       let(:attributes) { {} }
 
-      let(:space_and_name_errors) { nil }
       let(:quota_errors) { nil }
       let(:service_plan_errors) { nil }
       let(:service_instance_name_errors) { nil }
@@ -4013,7 +4059,6 @@ module VCAP::CloudController
 
       before do
         allow(e).to receive(:errors).and_return(errors)
-        allow(errors).to receive(:on).with([:space_id, :name]).and_return(space_and_name_errors)
         allow(errors).to receive(:on).with(:quota).and_return(quota_errors)
         allow(errors).to receive(:on).with(:service_plan).and_return(service_plan_errors)
         allow(errors).to receive(:on).with(:name).and_return(service_instance_name_errors)
@@ -4028,7 +4073,6 @@ module VCAP::CloudController
       end
 
       context "when errors are included but aren't supported validation exceptions" do
-        let(:space_and_name_errors) { [:stuff] }
         let(:quota_errors) { [:stuff] }
         let(:service_plan_errors) { [:stuff] }
         let(:service_instance_name_errors) { [:stuff] }
@@ -4042,7 +4086,7 @@ module VCAP::CloudController
 
       context 'when there is a service instance name taken error' do
         let(:attributes) { { 'name' => 'test name' } }
-        let(:space_and_name_errors) { [:unique] }
+        let(:service_instance_name_errors) { [:unique] }
 
         it 'returns a ServiceInstanceNameTaken error' do
           expect(VCAP::CloudController::ServiceInstancesController.translate_validation_exception(e, attributes).name).to eq('ServiceInstanceNameTaken')
@@ -4111,10 +4155,12 @@ module VCAP::CloudController
       arbitrary_params = user_opts.delete(:parameters)
       accepts_incomplete = user_opts.delete(:accepts_incomplete) { |_| 'true' }
       tags = user_opts.delete(:tags)
+      service_instance_space = user_opts.delete(:space) || space
+      service_instance_name = user_opts.delete(:name) || 'foo'
 
       body = {
-        name: 'foo',
-        space_guid: space.guid,
+        name: service_instance_name,
+        space_guid: service_instance_space.guid,
         service_plan_guid: plan.guid,
       }
       body[:parameters] = arbitrary_params if arbitrary_params
