@@ -1543,6 +1543,7 @@ module VCAP::CloudController
         context 'when the service instance is shared' do
           let(:service_instance) { ManagedServiceInstance.make }
           let(:shared_to_space) { Space.make }
+          let(:shared_to_user) { make_developer_for_space(shared_to_space) }
           let(:body) do
             {
               tags: []
@@ -1561,8 +1562,6 @@ module VCAP::CloudController
           end
 
           context 'and a developer in the shared to space tries to update the instance' do
-            let(:shared_to_user) { make_developer_for_space(shared_to_space) }
-
             before do
               set_current_user(shared_to_user)
             end
@@ -1573,6 +1572,31 @@ module VCAP::CloudController
               expect(last_response).to have_status_code 403
               expect(last_response.body).to include 'CF-NotAuthorized'
               expect(last_response.body).to include 'You are not authorized to perform the requested action'
+            end
+          end
+
+          context 'and a developer in the shared_to space tries to rename a service instance' do
+            let(:service_instance) { ManagedServiceInstance.make(name: 'r1') }
+            let(:target_space_service_instance) { ManagedServiceInstance.make(name: 'r2', space: shared_to_space) }
+
+            before do
+              set_current_user(shared_to_user)
+            end
+
+            context 'when the name clashes with a shared service instance' do
+              let(:body) do
+                {
+                  name: 'r1'
+                }.to_json
+              end
+
+              it 'should give the user an error' do
+                put "/v2/service_instances/#{target_space_service_instance.guid}", body
+
+                expect(last_response).to have_status_code 400
+                expect(last_response.body).to include 'CF-ServiceInstanceNameTaken'
+                expect(last_response.body).to include "The service instance name is taken: #{service_instance.name}"
+              end
             end
           end
         end
