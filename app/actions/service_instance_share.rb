@@ -14,6 +14,10 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('ServiceShareIsDisabled', service_instance.service.label)
       end
 
+      if target_spaces.include?(service_instance.space)
+        raise CloudController::Errors::ApiError.new_from_details('InvalidServiceInstanceSharingTargetSpace')
+      end
+
       ServiceInstance.db.transaction do
         target_spaces.each do |space|
           service_instance.add_shared_space(space)
