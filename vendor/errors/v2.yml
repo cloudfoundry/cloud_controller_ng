@@ -1128,12 +1128,6 @@
   name: RouteServiceInstanceSharingNotSupported
   http_code: 400
   message: "Route services cannot be shared"
-
-390006:
-  name: SharedServiceInstanceNameTaken
-  http_code: 400
-  message: "A service instance called %s already exists in %s"
-
 390007:
   name: InvalidServiceInstanceSharingTargetSpace
   http_code: 422
