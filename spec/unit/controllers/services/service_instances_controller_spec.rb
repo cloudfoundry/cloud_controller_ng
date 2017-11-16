@@ -1540,6 +1540,43 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the service instance is shared' do
+          let(:service_instance) { ManagedServiceInstance.make }
+          let(:shared_to_space) { Space.make }
+          let(:body) do
+            {
+              tags: []
+            }.to_json
+          end
+
+          before do
+            service_instance.add_shared_space(shared_to_space)
+          end
+
+          context 'and a developer in the originating space tries to update the instance' do
+            it 'updates successfully' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+              expect(last_response).to have_status_code 201
+            end
+          end
+
+          context 'and a developer in the shared to space tries to update the instance' do
+            let(:shared_to_user) { make_developer_for_space(shared_to_space) }
+
+            before do
+              set_current_user(shared_to_user)
+            end
+
+            it 'should give the user an error' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+
+              expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'CF-NotAuthorized'
+              expect(last_response.body).to include 'You are not authorized to perform the requested action'
+            end
+          end
+        end
+
         describe 'error cases' do
           context 'when the service instance does not exist' do
             it 'returns a ServiceInstanceNotFound error' do
@@ -2321,32 +2358,7 @@ module VCAP::CloudController
             service_instance.add_shared_space(space)
           end
 
-          it 'does not delete the associated shares' do
-            delete "/v2/service_instances/#{service_instance.guid}"
-
-            expect(ServiceInstance.find(guid: service_instance.guid)).to be
-            expect(ServiceInstance.find(guid: service_instance.guid).shared_spaces.length).to eq(1)
-          end
-
-          it 'should give the user an error' do
-            delete "/v2/service_instances/#{service_instance.guid}"
-
-            expect(last_response).to have_status_code 400
-            expect(last_response.body).to include 'ServiceInstanceDeletionSharesExists'
-            expect(last_response.body).to include(
-              'Service instances must be unshared before they can be deleted. ' \
-              "Unsharing #{service_instance.name} will automatically delete any bindings " \
-              'that have been made to applications in other spaces.')
-          end
-
-          context 'and there are bindings to the shared instance' do
-            before do
-              ServiceBinding.make(
-                app: AppModel.make(space: space),
-                service_instance: service_instance
-              )
-            end
-
+          context 'as a SpaceDeveloper in source and target space' do
             it 'should give the user an error' do
               delete "/v2/service_instances/#{service_instance.guid}"
 
@@ -2357,16 +2369,61 @@ module VCAP::CloudController
                 "Unsharing #{service_instance.name} will automatically delete any bindings " \
                 'that have been made to applications in other spaces.')
             end
+
+            it 'associated shares are not deleted' do
+              delete "/v2/service_instances/#{service_instance.guid}"
+
+              expect(ServiceInstance.find(guid: service_instance.guid)).to be
+              expect(ServiceInstance.find(guid: service_instance.guid).shared_spaces.length).to eq(1)
+            end
+
+            context 'and there are bindings to the shared instance' do
+              before do
+                ServiceBinding.make(
+                  app: AppModel.make(space: space),
+                  service_instance: service_instance
+                )
+              end
+
+              it 'should give the user an error' do
+                delete "/v2/service_instances/#{service_instance.guid}"
+
+                expect(last_response).to have_status_code 400
+                expect(last_response.body).to include 'ServiceInstanceDeletionSharesExists'
+                expect(last_response.body).to include(
+                  'Service instances must be unshared before they can be deleted. ' \
+                  "Unsharing #{service_instance.name} will automatically delete any bindings " \
+                  'that have been made to applications in other spaces.')
+              end
+            end
+
+            context 'and recursive=true' do
+              it 'deletes the associated shares' do
+                expect {
+                  delete "/v2/service_instances/#{service_instance.guid}?recursive=true"
+                }.to change(ServiceInstance.join(:service_instance_shares, service_instance_guid: :service_instances__guid), :count).by(-1)
+
+                expect(last_response.status).to eq(204)
+                expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+              end
+            end
           end
 
-          context 'and recursive=true' do
-            it 'deletes the associated shares' do
-              expect {
-                delete "/v2/service_instances/#{service_instance.guid}?recursive=true"
-              }.to change(ServiceInstance.join(:service_instance_shares, service_instance_guid: :service_instances__guid), :count).by(-1)
+          context 'as a SpaceDeveloper in target space' do
+            let(:target_space) { Space.make }
+            let(:target_space_dev) { make_developer_for_space(target_space) }
 
-              expect(last_response.status).to eq(204)
-              expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+            before do
+              service_instance.add_shared_space(target_space)
+              set_current_user(target_space_dev)
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}"
+
+              expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'CF-NotAuthorized'
+              expect(last_response.body).to include 'You are not authorized to perform the requested action'
             end
           end
         end
