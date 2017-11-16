@@ -30,7 +30,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
 
-    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
     message = VCAP::CloudController::ToManyRelationshipMessage.create_from_http_request(params[:body])
@@ -52,7 +52,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
 
-    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
     space_guid = params[:space_guid]
@@ -93,8 +93,16 @@ class ServiceInstancesV3Controller < ApplicationController
     end
   end
 
+  def can_read_service_instance?(service_instance)
+    readable_spaces = service_instance.shared_spaces + [service_instance.space]
+
+    readable_spaces.any? do |space|
+      can_read?(space.guid, space.organization_guid)
+    end
+  end
+
   def can_read_space?(space)
-    can_read?(space.guid, space.organization_guid)
+    can_read?(space.guid, space.organization.guid)
   end
 
   def can_write_space?(space)

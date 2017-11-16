@@ -230,6 +230,25 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
 
+    context 'when the user has access to the service instance through a share' do
+      before do
+        service_instance.add_shared_space(target_space)
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+
+        outer_space = VCAP::CloudController::Space.make
+        req_body[:data] = [{ guid: outer_space.guid }]
+      end
+
+      after do
+        service_instance.remove_shared_space(target_space)
+      end
+
+      it 'cannot share the service instance into another space' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 403
+      end
+    end
+
     describe 'permissions by role' do
       context 'when the user is a space developer in the source space' do
         before do
@@ -374,6 +393,18 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           expect(response.body).to include('ServiceInstanceUnshareFailed')
           expect(test_app.service_bindings).to_not be_empty
         end
+      end
+    end
+
+    context 'when the user has access to the service instance through a share' do
+      before do
+        service_instance.add_shared_space(target_space)
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+      end
+
+      it 'cannot unshare the service instance from another space' do
+        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        expect(response.status).to eq 403
       end
     end
 
