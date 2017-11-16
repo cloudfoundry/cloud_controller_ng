@@ -1274,67 +1274,18 @@ module VCAP::CloudController
           service_instance.save
         end
 
+        it 'returns the dashboard url in the response' do
+          set_current_user(developer)
+          get "v2/service_instances/#{service_instance.guid}"
+          expect(last_response.status).to eq(200)
+          expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
+        end
+
         it 'returns the service instance with the given guid' do
-          set_current_user_as_admin
+          set_current_user(developer)
           get "v2/service_instances/#{service_instance.guid}"
           expect(last_response.status).to eq(200)
           expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_instance.guid)
-        end
-
-        context 'space developer' do
-          before do
-            set_current_user(developer)
-          end
-
-          it 'returns the dashboard url in the response' do
-            get "v2/service_instances/#{service_instance.guid}"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
-          end
-
-          it 'returns service_plan_guid in the response' do
-            get "v2/service_instances/#{service_instance.guid}"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response.fetch('entity').fetch('service_plan_guid')).to eq(service_plan.guid)
-          end
-        end
-
-        context 'space manager' do
-          let(:manager) { make_manager_for_space(space) }
-
-          before do
-            set_current_user(manager)
-          end
-
-          it 'returns the dashboard url in the response' do
-            get "v2/service_instances/#{service_instance.guid}"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('')
-          end
-
-          it 'returns service_plan_guid in the response' do
-            get "v2/service_instances/#{service_instance.guid}"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response.fetch('entity').fetch('service_plan_guid')).to eq(service_plan.guid)
-          end
-        end
-
-        context 'admin' do
-          before do
-            set_current_user_as_admin
-          end
-
-          it 'returns the dashboard url in the response' do
-            get "v2/service_instances/#{service_instance.guid}"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response.fetch('entity').fetch('dashboard_url')).to eq('this.should.be.visible.com')
-          end
-
-          it 'returns service_plan_guid in the response' do
-            get "v2/service_instances/#{service_instance.guid}"
-            expect(last_response.status).to eq(200)
-            expect(decoded_response.fetch('entity').fetch('service_plan_guid')).to eq(service_plan.guid)
-          end
         end
       end
 

@@ -119,12 +119,6 @@ module VCAP::CloudController
       super || []
     end
 
-    def dashboard_url
-      access_context = VCAP::CloudController::Security::AccessContext.new
-      return '' unless access_context.can?(:read_env, self)
-      super
-    end
-
     def merged_tags
       (service.tags + tags).uniq
     end
