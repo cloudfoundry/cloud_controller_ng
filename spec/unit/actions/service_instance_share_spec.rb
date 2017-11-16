@@ -101,19 +101,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a service instance already exists in the target space with the same name as the service being shared' do
-        let(:service_instance) { ManagedServiceInstance.make(name: 'banana') }
-        let!(:target_space_service_instance) { ManagedServiceInstance.make(name: 'banana', space: target_space1) }
-
-        it 'raises an api error' do
-          expect {
-            service_instance_share.create(service_instance, [target_space1], user_audit_info)
-          }.to raise_error(CloudController::Errors::ApiError,
-                           /A service instance called #{service_instance.name} already exists in #{target_space1.name}/)
-          expect(service_instance.shared_spaces).to be_empty
-        end
-      end
-
       context 'when the service is user-provided' do
         it 'raises an api error' do
           expect {
