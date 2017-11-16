@@ -289,6 +289,12 @@ module VCAP::CloudController
       it { is_expected.to be_bindable }
     end
 
+    describe '#shareable?' do
+      it 'returns false' do
+        expect(service_instance.shareable?).to be_falsey
+      end
+    end
+
     describe '#as_summary_json' do
       it 'contains name, guid, and binding count' do
         instance = VCAP::CloudController::ServiceInstance.make(
