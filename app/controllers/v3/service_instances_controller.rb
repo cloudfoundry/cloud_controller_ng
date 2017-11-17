@@ -16,7 +16,7 @@ class ServiceInstancesV3Controller < ApplicationController
     dataset = if can_read_globally?
                 ServiceInstanceListFetcher.new.fetch_all(message: message)
               else
-                ServiceInstanceListFetcher.new.fetch(message: message, space_guids: readable_space_guids)
+                ServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

@@ -2,13 +2,13 @@ require 'rails_helper'
 
 RSpec.describe ServiceInstancesV3Controller, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
-  let(:space) { VCAP::CloudController::Space.make }
-  let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+  let(:space) { VCAP::CloudController::Space.make(guid: 'space-1-guid') }
+  let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-1') }
 
   describe '#index' do
     context 'when there are multiple service instances' do
-      let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make }
-      let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make }
+      let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-2', space: VCAP::CloudController::Space.make(guid: 'space-2-guid')) }
+      let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-3', space: VCAP::CloudController::Space.make(guid: 'space-3-guid')) }
 
       context 'as an admin' do
         before do
@@ -22,6 +22,28 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
           response_names = parsed_body['resources'].map { |resource| resource['name'] }
           expect(response_names).to include(service_instance.name, service_instance2.name, service_instance3.name)
+        end
+
+        context 'when service instances are filtered by name' do
+          it 'returns only the matching service instances' do
+            get :index, names: 'service-instance-1,service-instance-2'
+            expect(response.status).to eq(200), response.body
+            expect(parsed_body['resources'].length).to eq 2
+
+            response_names = parsed_body['resources'].map { |resource| resource['name'] }
+            expect(response_names).to include(service_instance.name, service_instance2.name)
+          end
+        end
+
+        context 'when service instances are filtered by space guid' do
+          it 'returns only the matching service instances' do
+            get :index, space_guids: 'space-2-guid, space-3-guid'
+            expect(response.status).to eq(200), response.body
+            expect(parsed_body['resources'].length).to eq 2
+
+            response_names = parsed_body['resources'].map { |resource| resource['name'] }
+            expect(response_names).to include(service_instance2.name, service_instance3.name)
+          end
         end
       end
 

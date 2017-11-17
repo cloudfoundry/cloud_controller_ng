@@ -1,11 +1,11 @@
 module VCAP::CloudController
   class ServiceInstanceListFetcher
-    def fetch(message:, space_guids:)
+    def fetch(message:, readable_space_guids:)
       source_space_instance_dataset = ServiceInstance.select_all(ServiceInstance.table_name).
-                                      join(Space.table_name, id: :space_id, guid: space_guids)
+                                      join(Space.table_name, id: :space_id, guid: readable_space_guids)
 
       shared_instance_dataset = ServiceInstance.select_all(ServiceInstance.table_name).
-                                join(:service_instance_shares, service_instance_guid: :guid, target_space_guid: space_guids)
+                                join(:service_instance_shares, service_instance_guid: :guid, target_space_guid: readable_space_guids)
 
       dataset = source_space_instance_dataset.union(shared_instance_dataset, alias: :service_instances)
 
@@ -22,6 +22,11 @@ module VCAP::CloudController
     def filter(dataset, message)
       if message.requested?(:names)
         dataset = dataset.where(service_instances__name: message.names)
+      end
+
+      if message.requested?(:space_guids)
+        dataset = dataset.select_all(ServiceInstance.table_name).
+                  join_table(:inner, Space.table_name, { id: Sequel.qualify(:service_instances, :space_id), guid: message.space_guids })
       end
 
       dataset
