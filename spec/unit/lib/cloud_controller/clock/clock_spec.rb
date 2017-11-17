@@ -21,6 +21,7 @@ module VCAP::CloudController
       it 'schedules with a 1 day interval at the given time with the given name and enqueues the job' do
         job_name = 'fake'
         time     = '12:00'
+        timeout  = 4.hours
 
         scheduler = instance_double(DistributedScheduler)
         allow(DistributedScheduler).to receive(:new).and_return scheduler
@@ -30,12 +31,14 @@ module VCAP::CloudController
           name:     job_name,
           at:       time,
           fudge:    Clock::DAILY_FUDGE_FACTOR,
+          timeout:  timeout,
         ).and_yield
 
         clock_opts = {
           name:     job_name,
           at:       time,
-          priority: priority
+          priority: priority,
+          timeout:  timeout
         }
         clock.schedule_daily_job(clock_opts) { some_job_class.new }
 
@@ -50,6 +53,7 @@ module VCAP::CloudController
         it 'schedules with a 1 day interval with the given priority' do
           job_name = 'fake-2'
           time     = '1:00'
+          timeout = 4.hours
 
           scheduler = instance_double(DistributedScheduler)
           allow(DistributedScheduler).to receive(:new).and_return scheduler
@@ -59,12 +63,14 @@ module VCAP::CloudController
             name:     job_name,
             at:       time,
             fudge:    Clock::DAILY_FUDGE_FACTOR,
+            timeout:  timeout,
           ).and_yield
 
           clock_opts = {
             name:     job_name,
             at:       time,
-            priority: priority
+            priority: priority,
+            timeout:  timeout,
           }
           clock.schedule_daily_job(clock_opts) { some_job_class.new }
 
@@ -79,6 +85,7 @@ module VCAP::CloudController
       it 'schedules with the given interval with the given name and enqueues the job' do
         job_name = 'fake'
         interval = 507.seconds
+        timeout = 4.hours
 
         scheduler = instance_double(DistributedScheduler)
         allow(DistributedScheduler).to receive(:new).and_return scheduler
@@ -87,11 +94,13 @@ module VCAP::CloudController
           interval: interval,
           name:     job_name,
           fudge:    Clock::FREQUENT_FUDGE_FACTOR,
+          timeout:  timeout
         ).and_yield
 
         clock_opts = {
           name:     job_name,
           interval: interval,
+          timeout:  timeout
         }
         clock.schedule_frequent_worker_job(clock_opts) { some_job_class.new }
 
