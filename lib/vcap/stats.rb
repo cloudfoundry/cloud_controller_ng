@@ -1,4 +1,4 @@
-require 'vcap/common'
+require 'vcap/pid_file'
 require 'vmstat'
 
 module VCAP

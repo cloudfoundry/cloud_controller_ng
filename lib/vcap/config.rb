@@ -1,8 +1,5 @@
-# Copyright (c) 2009-2011 VMware, Inc.
 require 'yaml'
-
 require 'membrane'
-require 'vcap/common'
 
 module VCAP
   class Config
@@ -15,7 +12,7 @@ module VCAP
 
       def from_file(filename, symbolize_keys=true)
         config = YAML.load_file(filename)
-        config = VCAP.symbolize_keys(config) if symbolize_keys
+        config = symbolize_keys(config) if symbolize_keys
         @schema.validate(config)
         config
       end
@@ -24,6 +21,18 @@ module VCAP
         @schema.validate(config)
         File.open(out_filename, 'w+') do |f|
           YAML.dump(config, f)
+        end
+      end
+
+      private
+
+      def symbolize_keys(hash)
+        if hash.is_a? Hash
+          new_hash = {}
+          hash.each { |k, v| new_hash[k.to_sym] = symbolize_keys(v) }
+          new_hash
+        else
+          hash
         end
       end
     end

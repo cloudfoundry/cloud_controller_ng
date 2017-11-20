@@ -38,7 +38,6 @@ gem 'steno'
 gem 'talentbox-delayed_job_sequel', '~> 4.2.2'
 gem 'thin'
 gem 'unf'
-gem 'uuidtools'
 gem 'vmstat', '~> 2.0'
 gem 'yajl-ruby'
 

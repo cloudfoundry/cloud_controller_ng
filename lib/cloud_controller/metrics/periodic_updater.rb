@@ -1,4 +1,5 @@
 require 'cloud_controller/metrics/statsd_updater'
+require 'vcap/stats'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
@@ -101,7 +102,7 @@ module VCAP::CloudController::Metrics
         cpu_load_avg:   VCAP::Stats.cpu_load_average,
         mem_used_bytes: VCAP::Stats.memory_used_bytes,
         mem_free_bytes: VCAP::Stats.memory_free_bytes,
-        num_cores:      VCAP.num_cores,
+        num_cores:      VCAP::HostSystem.new.num_cores,
       }
 
       @updaters.each { |u| u.update_vitals(vitals) }

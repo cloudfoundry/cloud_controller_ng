@@ -12,7 +12,7 @@ module VCAP::CloudController
       buildpack_install_jobs = []
 
       buildpacks.each do |bpack|
-        buildpack = VCAP.symbolize_keys(bpack)
+        buildpack = bpack.deep_symbolize_keys
 
         buildpack_name = buildpack.delete(:name)
         if buildpack_name.nil?

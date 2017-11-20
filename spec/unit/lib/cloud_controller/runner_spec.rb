@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       it 'starts thin server on set up bind address' do
         allow(subject).to receive(:start_thin_server).and_call_original
-        expect(VCAP).to receive(:local_ip).and_return('some_local_ip')
+        expect_any_instance_of(VCAP::HostSystem).to receive(:local_ip).and_return('some_local_ip')
         expect(Thin::Server).to receive(:new).with('some_local_ip', 8181, { signals: false }).and_return(double(:thin_server).as_null_object)
         subject.run!
       end

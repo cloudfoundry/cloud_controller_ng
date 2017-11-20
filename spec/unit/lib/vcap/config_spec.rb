@@ -1,4 +1,3 @@
-# Copyright (c) 2009-2011 VMware, Inc.
 require 'spec_helper'
 require 'vcap/config'
 
@@ -17,11 +16,6 @@ RSpec.describe VCAP::Config do
     end
   end
 
-  def fixture_path(basename)
-    base = File.expand_path('../../../', __FILE__)
-    File.join(base, 'fixtures', 'vcap', basename)
-  end
-
   describe '.from_file' do
     let(:test_config) do
       Class.new(VCAP::Config) do
@@ -36,8 +30,7 @@ RSpec.describe VCAP::Config do
       end
     end
 
-    it 'should load and validate a config from a yaml file' do
-      # Valid config
+    it 'loads successfully when the config is valid' do
       exp_cfg = {
         name: 'test_config',
         nums: [1, 2, 3],
@@ -45,12 +38,13 @@ RSpec.describe VCAP::Config do
           float: 1.1,
         }
       }
-      cfg = test_config.from_file(fixture_path('valid_config.yml'))
+      cfg = test_config.from_file(File.join(Paths::FIXTURES, 'vcap', 'valid_config.yml'))
       expect(cfg).to eq(exp_cfg)
+    end
 
-      # Invalid config
+    it 'raises an error when the config is invalid' do
       expect {
-        test_config.from_file(fixture_path('invalid_config.yml'))
+        test_config.from_file(File.join(Paths::FIXTURES, 'vcap', 'invalid_config.yml'))
       }.to raise_error(Membrane::SchemaValidationError)
     end
   end
