@@ -64,5 +64,5 @@ module VCAP
         f.flush
       end
     end
-  end # class PidFile
+  end
 end
