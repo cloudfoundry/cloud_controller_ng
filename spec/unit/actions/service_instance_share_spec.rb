@@ -147,6 +147,61 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the service plan is private' do
+        let(:service_plan) { ServicePlan.make(public: false) }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+
+        it 'raises an api error' do
+          error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not " \
+            "enabled in #{target_space1.organization.name}/#{target_space1.name}"
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error(CloudController::Errors::ApiError, error_msg)
+        end
+
+        context 'and access has been enabled for the target org' do
+          before do
+            ServicePlanVisibility.make(organization: target_space1.organization, service_plan: service_instance.service_plan)
+          end
+
+          it 'creates the share' do
+            shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+            expect(shared_instance.shared_spaces.length).to eq 1
+          end
+        end
+
+        context 'and when the source org has service plan access disabled but the target org has service plan access enabled' do
+          let(:source_org) { Organization.make }
+          let(:space) { Space.make(organization: source_org) }
+          let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+
+          before do
+            ServicePlanVisibility.make(organization: target_space1.organization, service_plan: service_instance.service_plan)
+          end
+
+          it 'creates the share' do
+            shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+            expect(shared_instance.shared_spaces.length).to eq 1
+          end
+        end
+
+        context 'and when source org has had service plan access enabled and the target org has service plan access enabled' do
+          let(:source_org) { Organization.make }
+          let(:space) { Space.make(organization: source_org) }
+          let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+
+          before do
+            ServicePlanVisibility.make(organization: target_space1.organization, service_plan: service_instance.service_plan)
+            ServicePlanVisibility.make(organization: source_org, service_plan: service_instance.service_plan)
+          end
+
+          it 'creates the share' do
+            shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
+            expect(shared_instance.shared_spaces.length).to eq 1
+          end
+        end
+      end
     end
   end
 end

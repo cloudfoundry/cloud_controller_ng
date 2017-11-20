@@ -39,7 +39,6 @@ class ServiceInstancesV3Controller < ApplicationController
     spaces = Space.where(guid: message.guids)
     check_spaces_exist_and_are_readable!(message.guids, spaces)
     check_spaces_are_writeable!(spaces)
-    check_spaces_have_service_access_enabled!(spaces, service_instance)
 
     share = ServiceInstanceShare.new
     share.create(service_instance, spaces, user_audit_info)
@@ -70,14 +69,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   private
-
-  def check_spaces_have_service_access_enabled!(spaces, service_instance)
-    spaces.each do |space|
-      visible_plans = ServicePlan.organization_visible(space.organization)
-      error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not enabled in #{space.organization.name}/#{space.name}"
-      unprocessable!(error_msg) unless visible_plans.include?(service_instance.service_plan)
-    end
-  end
 
   def check_spaces_are_writeable!(spaces)
     unwriteable_spaces = spaces.reject do |space|
