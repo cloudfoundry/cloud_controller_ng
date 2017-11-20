@@ -240,12 +240,5 @@ module VCAP::CloudController
         expect(droplet_model_with_only_sha1.checksum).to eq('baz')
       end
     end
-
-    describe '#buildpack_receipt_stack_name' do
-      it_should_be_removed(
-        by: '2017/11/20',
-        explanation: "It's been six months since we stopped using #buildpack_receipt_stack_name... drop the column",
-      )
-    end
   end
 end
