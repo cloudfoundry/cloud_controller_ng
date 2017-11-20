@@ -74,8 +74,6 @@ module VCAP::CloudController
         begin
           start_cloud_controller
 
-          VCAP::Component.varz.threadsafe! # initialize varz
-
           request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
           gather_periodic_metrics
 
@@ -91,11 +89,6 @@ module VCAP::CloudController
     end
 
     def gather_periodic_metrics
-      logger.info('setting up metrics')
-
-      logger.info('registering with collector')
-      register_with_collector
-
       logger.info('starting periodic metrics updater')
       periodic_updater.setup_updates
     end
@@ -185,35 +178,12 @@ module VCAP::CloudController
       @thin_server.stop if @thin_server
     end
 
-    class MockNats
-      # VCAP::Component.register is owned by vcap_common, not cloud_controller_ng,
-      # and CC no longer starts up a NATs server, so give register a mock NATs server.
-      def subscribe(*args); end
-
-      def publish(*args); end
-    end
-
-    def register_with_collector
-      VCAP::Component.register(
-        type: 'CloudController',
-        host: @config.get(:external_host),
-        port: @config.get(:varz_port),
-        user: @config.get(:varz_user),
-        password: @config.get(:varz_password),
-        index: @config.get(:index),
-        nats: MockNats.new,
-        logger: logger,
-        log_counter: @log_counter
-      )
-    end
-
     def periodic_updater
       @periodic_updater ||= VCAP::CloudController::Metrics::PeriodicUpdater.new(
-        ::VCAP::Component.varz.synchronize { ::VCAP::Component.varz[:start] }, # this can become Time.now.utc after we remove varz
+        Time.now.utc,
         @log_counter,
         Steno.logger('cc.api'),
         [
-          VCAP::CloudController::Metrics::VarzUpdater.new,
           VCAP::CloudController::Metrics::StatsdUpdater.new(statsd_client)
         ])
     end
@@ -229,7 +199,7 @@ module VCAP::CloudController
     def collect_diagnostics
       @diagnostics_dir ||= @config.get(:directories, :diagnostics)
 
-      file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir, periodic_updater)
+      file = VCAP::CloudController::Diagnostics.new.collect(@diagnostics_dir)
       logger.warn("Diagnostics written to #{file}")
     rescue => e
       logger.warn("Failed to capture diagnostics: #{e}")

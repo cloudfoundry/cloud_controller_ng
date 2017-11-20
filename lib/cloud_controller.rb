@@ -6,11 +6,13 @@ require 'delayed_job'
 
 require 'allowy'
 
-require 'vcap/common'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'
 require File.expand_path('../../config/environment', __FILE__)
+
+require 'yajl'
+require 'yajl/json_gem'
 
 Sequel.default_timezone = :utc
 ActiveSupport::JSON::Encoding.time_precision = 0

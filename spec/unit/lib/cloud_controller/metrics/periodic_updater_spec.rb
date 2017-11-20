@@ -202,7 +202,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:record_user_count)
       end
 
-      it 'should include the number of users in varz' do
+      it 'should include the number of users' do
         4.times { VCAP::CloudController::User.create(guid: SecureRandom.uuid) }
 
         periodic_updater.record_user_count

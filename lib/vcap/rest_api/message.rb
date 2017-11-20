@@ -1,4 +1,4 @@
-require 'json_message'
+require 'vcap/json_message'
 require 'rfc822'
 
 module VCAP

@@ -1,4 +1,3 @@
-require 'vcap/component'
 require 'vcap/ring_buffer'
 require 'vcap/rest_api'
 require 'vcap/request'
@@ -10,10 +9,6 @@ require 'steno'
 module Sinatra
   module VCAP
     module Helpers
-      def varz
-        ::VCAP::Component.varz[:vcap_sinatra]
-      end
-
       def in_test_mode?
         ENV['CC_TEST']
       end
@@ -22,8 +17,6 @@ module Sinatra
     # Called when the caller registers the sinatra extension.  Sets up
     # the standard sinatra environment for vcap.
     def self.registered(app)
-      init_varz
-
       app.helpers VCAP::Helpers
 
       app.not_found do
@@ -51,10 +44,6 @@ module Sinatra
           logger.info(presenter.log_message)
         else
           logger.error(presenter.log_message)
-        end
-
-        ::VCAP::Component.varz.synchronize do
-          varz[:recent_errors] << presenter.to_hash
         end
 
         request.env['vcap_exception_body_set'] = true
@@ -104,13 +93,6 @@ module Sinatra
         headers['Content-Type'] = 'application/json;charset=utf-8'
         ::VCAP::CloudController::Diagnostics.new.request_complete
         nil
-      end
-    end
-
-    def self.init_varz
-      ::VCAP::Component.varz.synchronize do
-        ::VCAP::Component.varz[:vcap_sinatra] ||= {}
-        ::VCAP::Component.varz[:vcap_sinatra][:recent_errors] = ::VCAP::RingBuffer.new(50)
       end
     end
   end

@@ -1,9 +1,8 @@
-require 'cloud_controller/metrics/varz_updater'
 require 'cloud_controller/metrics/statsd_updater'
 
 module VCAP::CloudController::Metrics
   class PeriodicUpdater
-    def initialize(start_time, log_counter, logger=Steno.logger, updaters=[VarzUpdater.new, StatsdUpdater.new])
+    def initialize(start_time, log_counter, logger=Steno.logger, updaters=[StatsdUpdater.new])
       @start_time = start_time
       @updaters    = updaters
       @log_counter = log_counter

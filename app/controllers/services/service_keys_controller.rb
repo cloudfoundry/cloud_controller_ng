@@ -1,4 +1,4 @@
-require 'services/api'
+require 'vcap/services/api'
 
 module VCAP::CloudController
   class ServiceKeysController < RestController::ModelController

@@ -13,7 +13,6 @@ module VCAP::CloudController
     before do
       allow(Steno).to receive(:init)
       allow(CloudController::DependencyLocator.instance).to receive(:routing_api_client).and_return(routing_api_client)
-      allow(VCAP::Component).to receive(:register)
       allow(EM).to receive(:run).and_yield
       allow(EM).to receive(:add_timer).and_yield
       allow(VCAP::CloudController::Metrics::PeriodicUpdater).to receive(:new).and_return(periodic_updater)
@@ -43,7 +42,6 @@ module VCAP::CloudController
           expect(steno_config.sinks).to include log_counter
         end
 
-        expect(VCAP::Component).to receive(:register).with(hash_including(log_counter: log_counter))
         subject.run!
       end
 
@@ -80,13 +78,6 @@ module VCAP::CloudController
         allow(subject).to receive(:start_cloud_controller).and_raise('we have a problem')
         expect(subject.logger).to receive(:error)
         expect { subject.run! }.to raise_exception('we have a problem')
-      end
-
-      it 'initializes varz threadsafety' do
-        VCAP::Component.varz.synchronize do
-          expect(VCAP::Component.varz).to receive(:threadsafe!)
-          subject.run!
-        end
       end
 
       it 'sets up logging before creating a logger' do
@@ -254,7 +245,7 @@ module VCAP::CloudController
       it 'uses the configured directory' do
         expect(Dir).not_to receive(:mktmpdir)
         expect(subject).to receive(:collect_diagnostics).and_call_original
-        expect(diagnostics).to receive(:collect).with('diagnostics/dir', periodic_updater)
+        expect(diagnostics).to receive(:collect).with('diagnostics/dir')
 
         callback.call
       end

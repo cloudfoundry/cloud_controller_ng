@@ -58,13 +58,6 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     TestApp.new
   end
 
-  before do
-    VCAP::Component.varz.synchronize do
-      # always start with an empty list of errors so we can check size later
-      VCAP::Component.varz[:vcap_sinatra][:recent_errors].clear
-    end
-  end
-
   shared_examples 'http header content type' do
     it 'should return json content type in the header' do
       expect(last_response.headers['Content-Type']).to eql('application/json;charset=utf-8')
@@ -112,15 +105,6 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
                                        'error_code' => 'UnknownError',
                                        'description' => 'An unknown error occurred.'
                                      })
-    end
-
-    it 'should add an entry to varz recent errors' do
-      recent_errors = nil
-      VCAP::Component.varz.synchronize do
-        recent_errors = VCAP::Component.varz[:vcap_sinatra][:recent_errors]
-      end
-      expect(recent_errors.size).to eq(1)
-      expect(recent_errors[0]).to be_an_instance_of(Hash)
     end
 
     include_examples 'http header content type'

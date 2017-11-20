@@ -278,9 +278,6 @@ module VCAP::CloudController
 
           optional(:external_host) => String,
 
-          optional(:varz_port) => Integer,
-          optional(:varz_user) => String,
-          optional(:varz_password) => String,
           statsd_host: String,
           statsd_port: Integer,
           system_hostnames: [String],

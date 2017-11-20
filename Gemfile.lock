@@ -260,11 +260,6 @@ GEM
     multipart-post (2.0.0)
     mustache (0.99.8)
     mysql2 (0.4.8)
-    nats (0.5.0)
-      daemons (~> 1.1, >= 1.2.2)
-      eventmachine (~> 1.0, >= 1.0.7)
-      json_pure (~> 1.8, >= 1.8.1)
-      thin (~> 1.6, >= 1.6.3)
     net-ssh (2.9.2)
     netaddr (1.5.1)
     netrc (0.11.0)
@@ -414,22 +409,6 @@ GEM
     unf_ext (0.0.7.4)
     unicode-display_width (1.3.0)
     uuidtools (2.1.5)
-    vcap_common (4.0.4)
-      addressable (~> 2.2)
-      cookiejar (<= 0.3.0)
-      em-http-request (~> 1.0)
-      eventmachine
-      httpclient
-      membrane (~> 1.0)
-      mime-types
-      multipart-post
-      nats (>= 0.5.0.beta.16, < 0.6)
-      posix-spawn (~> 0.3.6)
-      steno
-      thin
-      uuidtools
-      vmstat (~> 2.0)
-      yajl-ruby
     vhd (0.0.4)
       bit-struct
     vmstat (2.1.0)
@@ -461,6 +440,7 @@ DEPENDENCIES
   cloudfront-signer
   codeclimate-test-reporter
   debase (>= 0.2.2.beta10)
+  em-http-request (~> 1.0)
   eventmachine (~> 1.0.9)
   fakefs
   fog-aws
@@ -473,6 +453,7 @@ DEPENDENCIES
   httpclient
   i18n
   json-schema
+  json_pure (= 1.8.6)
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
@@ -486,6 +467,7 @@ DEPENDENCIES
   nokogiri (~> 1.8.1)
   parallel_tests
   pg (= 0.19.0)
+  posix-spawn (~> 0.3.6)
   protobuf (= 3.6.12)
   pry-byebug
   public_suffix (~> 1.0)
@@ -512,8 +494,9 @@ DEPENDENCIES
   thin
   timecop
   unf
+  uuidtools
   vcap-concurrency!
-  vcap_common (~> 4.0.4)
+  vmstat (~> 2.0)
   webmock (> 2.3.1)
   yajl-ruby
 

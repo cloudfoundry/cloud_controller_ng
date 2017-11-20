@@ -1,4 +1,4 @@
-require 'services/api'
+require 'vcap/services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
 require 'models/helpers/process_types'
 

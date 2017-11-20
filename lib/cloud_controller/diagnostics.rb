@@ -1,10 +1,9 @@
 module VCAP::CloudController
   class Diagnostics
-    def collect(output_directory, updater)
+    def collect(output_directory)
       data = {
         time: Time.now.utc,
         threads: thread_data,
-        varz: varz_data(updater)
       }
 
       FileUtils.mkdir_p(output_directory)
@@ -51,11 +50,6 @@ module VCAP::CloudController
           request: thread[:current_request]
         }
       end
-    end
-
-    def varz_data(updater)
-      updater.update!
-      ::VCAP::Component.varz.synchronize { VCAP::Component.varz.clone }
     end
 
     def output_file_name

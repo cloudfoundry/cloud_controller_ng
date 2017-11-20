@@ -155,10 +155,6 @@ buildpacks:
 
 db_encryption_key: "asdfasdfasdf"
 
-varz_port: 7800
-varz_user: varz
-varz_password: password
-
 default_health_check_timeout: 60
 maximum_health_check_timeout: 180
 

@@ -15,15 +15,13 @@ module VCAP::CloudController
       })
     end
 
-    let(:updater) { instance_double(VCAP::CloudController::Metrics::PeriodicUpdater).tap { |u| allow(u).to receive(:update!) } }
-
     subject(:diagnostics) { Diagnostics.new }
 
     before do
       allow(EventMachine).to receive(:connection_count).and_return(17)
     end
 
-    describe '::request_received' do
+    describe '.request_received' do
       before do
         VCAP::Request.current_id = request_id
         diagnostics.request_received(request)
@@ -71,7 +69,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '::request_complete' do
+    describe '.request_complete' do
       before { Thread.current[:current_request] = {} }
 
       it 'clears the request info from the thread local' do
@@ -83,7 +81,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '::collect' do
+    describe '.collect' do
       let(:temp_dir) { Dir.mktmpdir }
       let(:output_dir) { File.join(temp_dir, 'diagnostics') }
 
@@ -93,12 +91,12 @@ module VCAP::CloudController
 
       it 'creates the destination directory if needed' do
         expect(File.exist?(output_dir)).to be false
-        diagnostics.collect(output_dir, updater)
+        diagnostics.collect(output_dir)
         expect(File.exist?(output_dir)).to be true
       end
 
       it 'returns the name of the output file' do
-        filename = diagnostics.collect(output_dir, updater)
+        filename = diagnostics.collect(output_dir)
         expect(filename).to_not be_nil
         expect(File.exist?(filename)).to be true
       end
@@ -106,20 +104,20 @@ module VCAP::CloudController
       describe 'file name' do
         it 'uses a file name that includes a time stamp' do
           Timecop.freeze Time.now.utc do
-            filename = diagnostics.collect(output_dir, updater)
+            filename = diagnostics.collect(output_dir)
             timestamp = Time.now.utc.strftime('%Y%m%d-%H:%M:%S.%L')
             expect(filename).to match_regex(/#{timestamp}/)
           end
         end
 
         it 'uses a file name that includes the pid' do
-          expect(diagnostics.collect(output_dir, updater)).to match_regex(/#{Process.pid}/)
+          expect(diagnostics.collect(output_dir)).to match_regex(/#{Process.pid}/)
         end
       end
 
       describe 'file contents' do
         it 'captures the data as json' do
-          filename = diagnostics.collect(output_dir, updater)
+          filename = diagnostics.collect(output_dir)
           contents = IO.read(filename)
           expect {
             JSON.parse(contents)
@@ -127,23 +125,13 @@ module VCAP::CloudController
         end
 
         def data
-          JSON.parse(IO.read(diagnostics.collect(output_dir, updater)), symbolize_names: true)
+          JSON.parse(IO.read(diagnostics.collect(output_dir)), symbolize_names: true)
         end
 
         it 'captures thread information' do
           expect(data[:threads]).to_not be_nil
           expect(data[:threads].empty?).to be false
         end
-
-        it 'captures varz information' do
-          expect(data[:varz]).to_not be_nil
-          expect(data[:varz].empty?).to be false
-        end
-      end
-
-      it 'updates varz with the latest data' do
-        expect(updater).to receive(:update!)
-        diagnostics.collect(output_dir, updater)
       end
     end
   end
