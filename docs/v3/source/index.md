@@ -137,6 +137,7 @@ includes:
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
   - experimental_resources/service_instances/header
+  - experimental_resources/service_instances/object
   - experimental_resources/service_instances/list
   - experimental_resources/service_instances/share_to_space
   - experimental_resources/service_instances/unshare_from_space
