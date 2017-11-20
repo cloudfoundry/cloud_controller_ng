@@ -7,7 +7,7 @@ Sequel.migration do
 
   down do
     alter_table :droplets do
-      add_column :buildpack_receipt_stack_name, String
+      add_column :buildpack_receipt_stack_name, String, size: 255
     end
   end
 end
