@@ -8,8 +8,6 @@ require 'vcap/stats'
 # VMware's Cloud Application Platform
 
 module VCAP
-  WINDOWS = RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
-
   def self.symbolize_keys(hash)
     if hash.is_a? Hash
       new_hash = {}
@@ -22,11 +20,7 @@ module VCAP
 
   def self.process_running?(pid)
     return false unless pid && (pid > 0)
-    output = if WINDOWS
-               `tasklist /nh /fo csv /fi "pid eq #{pid}"`
-             else
-               `ps -o rss= -p #{pid}`
-             end
+    output = `ps -o rss= -p #{pid}`
     return true if $CHILD_STATUS == 0 && !output.empty?
     # fail otherwise..
     false
@@ -39,8 +33,6 @@ module VCAP
       `sysctl -n hw.ncpu`.strip.to_i
     elsif RUBY_PLATFORM.match?(/freebsd|netbsd/)
       `sysctl hw.ncpu`.strip.to_i
-    elsif WINDOWS
-      (ENV['NUMBER_OF_PROCESSORS'] || 1).to_i
     else
       return 1 # unknown..
     end
