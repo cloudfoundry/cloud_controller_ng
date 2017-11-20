@@ -12,27 +12,18 @@ module VCAP
 
       def from_file(filename, symbolize_keys=true)
         config = YAML.load_file(filename)
-        config = symbolize_keys(config) if symbolize_keys
+        config = deep_symbolize_keys_except_in_arrays(config) if symbolize_keys
         @schema.validate(config)
         config
       end
 
-      def to_file(config, out_filename)
-        @schema.validate(config)
-        File.open(out_filename, 'w+') do |f|
-          YAML.dump(config, f)
-        end
-      end
-
       private
 
-      def symbolize_keys(hash)
-        if hash.is_a? Hash
-          new_hash = {}
-          hash.each { |k, v| new_hash[k.to_sym] = symbolize_keys(v) }
-          new_hash
-        else
-          hash
+      def deep_symbolize_keys_except_in_arrays(hash)
+        return hash unless hash.is_a? Hash
+
+        hash.each.with_object({}) do |(k, v), new_hash|
+          new_hash[k.to_sym] = deep_symbolize_keys_except_in_arrays(v)
         end
       end
     end
