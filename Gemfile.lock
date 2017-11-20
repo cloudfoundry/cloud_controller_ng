@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cloudfoundry-incubator/perm-rb.git
-  revision: 8e6ef525886073db90f416fd149c4c601b0978a5
+  revision: b2133d91039919c1820575fa8ebf10edd231ac92
   branch: master
   specs:
     cf-perm (0.0.0)
@@ -190,10 +190,10 @@ GEM
       multi_json (~> 1.10)
       retriable (~> 1.4)
       signet (~> 0.6)
-    google-protobuf (3.4.1.1)
-    google-protobuf (3.4.1.1-universal-darwin)
-    google-protobuf (3.4.1.1-x86_64-linux)
-    googleapis-common-protos-types (1.0.0)
+    google-protobuf (3.5.0)
+    google-protobuf (3.5.0-universal-darwin)
+    google-protobuf (3.5.0-x86_64-linux)
+    googleapis-common-protos-types (1.0.1)
       google-protobuf (~> 3.0)
     googleauth (0.5.3)
       faraday (~> 0.12)
@@ -203,18 +203,18 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
-    grpc (1.7.0)
+    grpc (1.7.2)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
-      googleauth (~> 0.5.1)
-    grpc (1.7.0-universal-darwin)
+      googleauth (>= 0.5.1, < 0.7)
+    grpc (1.7.2-universal-darwin)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
-      googleauth (~> 0.5.1)
-    grpc (1.7.0-x86_64-linux)
+      googleauth (>= 0.5.1, < 0.7)
+    grpc (1.7.2-x86_64-linux)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
-      googleauth (~> 0.5.1)
+      googleauth (>= 0.5.1, < 0.7)
     hashdiff (0.3.4)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -408,7 +408,6 @@ GEM
       unf_ext
     unf_ext (0.0.7.4)
     unicode-display_width (1.3.0)
-    uuidtools (2.1.5)
     vhd (0.0.4)
       bit-struct
     vmstat (2.1.0)
@@ -494,7 +493,6 @@ DEPENDENCIES
   thin
   timecop
   unf
-  uuidtools
   vcap-concurrency!
   vmstat (~> 2.0)
   webmock (> 2.3.1)
