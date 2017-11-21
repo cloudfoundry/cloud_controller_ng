@@ -44,6 +44,21 @@ module VCAP::CloudController
             expect(results).not_to include(service_instance_1)
           end
         end
+
+        context 'by all query params' do
+          let!(:service_instance_4) { ManagedServiceInstance.make(name: 'couchdb', space: service_instance_3.space) }
+          let(:filters) {
+            {
+              space_guids: ['space-3'],
+              names: ['couchdb'],
+            }
+          }
+
+          it 'only returns matching service instances' do
+            results = fetcher.fetch_all(message: message).all
+            expect(results).to match_array([service_instance_4])
+          end
+        end
       end
     end
 
@@ -78,6 +93,20 @@ module VCAP::CloudController
             results = fetcher.fetch_all(message: message).all
             expect(results).to match_array([service_instance_1, service_instance_2])
             expect(results).not_to include(service_instance_3)
+          end
+        end
+
+        context 'by all query params' do
+          let(:filters) {
+            {
+              space_guids: ['space-1'],
+              names: ['rabbitmq'],
+            }
+          }
+
+          it 'only returns matching service instances' do
+            results = fetcher.fetch_all(message: message).all
+            expect(results).to match_array([service_instance_1])
           end
         end
 
