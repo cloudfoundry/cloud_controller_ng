@@ -41,6 +41,9 @@ class OrganizationsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = Organization.create(name: message.name)
+    VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
+      perm_client.create_org_role(role: role, org_id: org.guid)
+    end
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue Sequel::ValidationFailed => e

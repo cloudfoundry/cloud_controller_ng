@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'perm'
 require 'perm_test_helpers'
+require 'rails_helper'
 require 'securerandom'
 
 RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'true' do
@@ -23,14 +24,40 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
   let(:client) { CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs) }
   let(:issuer) { 'https://auth.example.com/oauth/token' }
+  let(:admin_headers) {
+    {
+      'authorization' => "bearer #{admin_token}",
+      'accept' => 'application/json',
+      'content-type' => 'application/json'
+    }
+  }
 
   if ENV['CF_RUN_PERM_SPECS'] == 'true'
     before(:all) do
       perm_server = CloudFoundry::PermTestHelpers::ServerRunner.new
       perm_server.start
+
+      config = YAML.load_file('config/cloud_controller.yml')
+      config[:perm] = {
+        enabled: true,
+        hostname: perm_server.hostname,
+        port: perm_server.port,
+        ca_cert_path: perm_server.tls_ca_path,
+        timeout_in_milliseconds: 1000,
+      }
+      config_file = Tempfile.new('perm_config')
+      config_file.write(config.to_json)
+      config_file.flush
+
+      start_cc({ config: config_file.path })
+
+      config_file.unlink
+      config_file.close
     end
 
     after(:all) do
+      stop_cc
+
       perm_server.stop
     end
   end
@@ -51,6 +78,35 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
     allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
 
     set_current_user_as_admin(iss: issuer)
+  end
+
+  describe 'POST /v3/organizations' do
+    ORG_ROLES.each do |role|
+      it "creates the org-#{role}-<org_id> role" do
+        body = { name: SecureRandom.uuid }.to_json
+        response = make_post_request('/v3/organizations', body, admin_headers)
+
+        expect(response.code).to eq('201')
+
+        json_body = JSON.parse(response.body)
+        org_id = json_body['guid']
+        role_name = "org-#{role}-#{org_id}"
+
+        role = client.get_role(role_name)
+        expect(role.name).to eq(role_name)
+      end
+
+      it 'does not allow the user to create an org that already exists' do
+        body = { name: SecureRandom.uuid }.to_json
+        response = make_post_request('/v3/organizations', body, admin_headers)
+
+        expect(response.code).to eq('201')
+
+        response = make_post_request('/v3/organizations', body, admin_headers)
+
+        expect(response.code).to eq('422')
+      end
+    end
   end
 
   describe 'POST /v2/organizations' do
