@@ -102,7 +102,7 @@ module VCAP::CloudController
       def create_role(role)
         if enabled
           begin
-            client.create_role(role)
+            client.create_role(role_name: role)
           rescue GRPC::AlreadyExists
             logger.debug('create-role.role-already-exists', role: role)
           rescue GRPC::BadStatus => e

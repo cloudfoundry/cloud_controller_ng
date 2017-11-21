@@ -34,7 +34,7 @@ module VCAP::CloudController::Perm
       it 'creates the correct role' do
         subject.create_org_role(role: 'developer', org_id: org_id)
 
-        expect(client).to have_received(:create_role).with("org-developer-#{org_id}")
+        expect(client).to have_received(:create_role).with(role_name: "org-developer-#{org_id}")
       end
 
       it 'does not fail if the role already exists' do
@@ -245,7 +245,7 @@ module VCAP::CloudController::Perm
       it 'creates the correct role' do
         subject.create_space_role(role: 'developer', space_id: space_id)
 
-        expect(client).to have_received(:create_role).with("space-developer-#{space_id}")
+        expect(client).to have_received(:create_role).with(role_name: "space-developer-#{space_id}")
       end
 
       it 'does not fail if the role already exists' do
