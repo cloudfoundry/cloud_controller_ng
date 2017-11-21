@@ -32,6 +32,10 @@ class RootController < ActionController::Base
           },
           droplets: {
             href: build_api_uri(path: '/droplets')
+          },
+          service_instances: {
+            href: build_api_uri(path: '/service_instances'),
+            experimental: true,
           }
         }
       }, pretty: true)
