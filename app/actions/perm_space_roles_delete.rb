@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     def delete(space)
       @client = client.rehydrate
-      SpacesController::ROLE_NAMES.each do |role|
+      VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
         begin
           client.delete_space_role(role: role, space_id: space.guid)
         rescue

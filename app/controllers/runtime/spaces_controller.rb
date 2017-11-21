@@ -1,12 +1,11 @@
 require 'actions/space_delete'
 require 'fetchers/space_user_roles_fetcher'
+require 'cloud_controller/roles'
 require 'controllers/runtime/mixins/uaa_origin_validator'
 
 module VCAP::CloudController
   class SpacesController < RestController::ModelController
     include UaaOriginValidator
-
-    ROLE_NAMES = [:manager, :developer, :auditor].freeze
 
     def self.dependencies
       [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client,
@@ -175,7 +174,7 @@ module VCAP::CloudController
       enqueue_deletion_job(deletion_job)
     end
 
-    ROLE_NAMES.each do |role|
+    VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       put "/v2/spaces/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
@@ -208,7 +207,7 @@ module VCAP::CloudController
       end
     end
 
-    ROLE_NAMES.each do |role|
+    VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       delete "/v2/spaces/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
@@ -328,7 +327,7 @@ module VCAP::CloudController
     end
 
     def after_create(space)
-      ROLE_NAMES.each do |role|
+      VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
         @perm_client.create_space_role(role: role, space_id: space.guid)
       end
 
@@ -369,7 +368,7 @@ module VCAP::CloudController
     def get_current_role_guids(space)
       current_role_guids = {}
 
-      ROLE_NAMES.map(&:to_s).each do |role|
+      VCAP::CloudController::Roles::SPACE_ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         if request_attrs[key]
@@ -386,7 +385,7 @@ module VCAP::CloudController
     def generate_role_events_on_update(space, current_role_guids)
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
-      ROLE_NAMES.map(&:to_s).each do |role|
+      VCAP::CloudController::Roles::SPACE_ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         user_guids_removed = []
