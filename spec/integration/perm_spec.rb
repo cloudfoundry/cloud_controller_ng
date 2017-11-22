@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'perm'
 require 'perm_test_helpers'
+require 'securerandom'
 
 RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'true' do
   perm_server = nil
@@ -55,7 +56,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
   describe 'POST /v2/organizations' do
     ORG_ROLES.each do |role|
       it "creates the org-#{role}-<org_id> role" do
-        post '/v2/organizations', { name: 'v2-org' }.to_json
+        post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
         expect(last_response.status).to eq(201)
 
@@ -68,7 +69,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
 
       it 'does not allow the user to create an org that already exists' do
-        body = { name: 'v2-org' }.to_json
+        body = { name: SecureRandom.uuid }.to_json
         post '/v2/organizations', body
 
         expect(last_response.status).to eq(201)
@@ -90,7 +91,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       describe 'when the org does not have spaces' do
         describe 'synchronous deletion' do
           it "deletes the org-#{role}-<org_id> role" do
-            post '/v2/organizations', { name: 'v2-org' }.to_json
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
             expect(last_response.status).to eq(201)
 
@@ -110,7 +111,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
         describe 'async deletion' do
           it "deletes the org-#{role}-<org_id> role" do
-            post '/v2/organizations', { name: 'v2-org' }.to_json
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
             expect(last_response.status).to eq(201)
 
@@ -136,7 +137,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       describe 'when the org has spaces' do
         describe 'without "recursive" param' do
           it 'alerts the user without deleting any roles' do
-            post '/v2/organizations', { name: 'v2-org' }.to_json
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
             expect(last_response.status).to eq(201)
 
@@ -145,7 +146,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
             org_role_name = "org-#{role}-#{org_id}"
 
             post '/v2/spaces', {
-              name: 'v2-space',
+              name: SecureRandom.uuid,
               organization_guid: org_id
             }.to_json
 
@@ -171,7 +172,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         describe 'with "recursive" param' do
           describe 'synchronous deletion' do
             it 'deletes the roles recursively' do
-              post '/v2/organizations', { name: 'v2-org' }.to_json
+              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
               expect(last_response.status).to eq(201)
 
@@ -180,7 +181,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               org_role_name = "org-#{role}-#{org_id}"
 
               post '/v2/spaces', {
-                name: 'v2-space',
+                name: SecureRandom.uuid,
                 organization_guid: org_id
               }.to_json
 
@@ -205,7 +206,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
           describe 'async deletion' do
             it 'deletes the roles recursively' do
-              post '/v2/organizations', { name: 'v2-org' }.to_json
+              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
               expect(last_response.status).to eq(201)
 
@@ -214,7 +215,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               org_role_name = "org-#{role}-#{org_id}"
 
               post '/v2/spaces', {
-                name: 'v2-space',
+                name: SecureRandom.uuid,
                 organization_guid: org_id
               }.to_json
 
@@ -244,7 +245,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
 
       it 'alerts the user if the org does not exist' do
-        post '/v2/organizations', { name: 'v2-org' }.to_json
+        post '/v2/organizations', { name: SecureRandom.uuid }.to_json
         expect(last_response.status).to eq(201)
 
         json_body = JSON.parse(last_response.body)
@@ -403,7 +404,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
     SPACE_ROLES.each do |role|
       it "creates the space-#{role}-<space_id> role" do
         post '/v2/spaces', {
-          name: 'v2-space',
+          name: SecureRandom.uuid,
           organization_guid: org.guid
         }.to_json
 
@@ -418,15 +419,17 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
 
       it 'does not allow user to create space that already exists' do
+        space_name = SecureRandom.uuid
+
         post '/v2/spaces', {
-          name: 'v2-space',
+          name: space_name,
           organization_guid: org.guid
         }.to_json
 
         expect(last_response.status).to eq(201)
 
         post '/v2/spaces', {
-          name: 'v2-space',
+          name: space_name,
           organization_guid: org.guid
         }.to_json
 
@@ -447,7 +450,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       describe 'synchronous deletion' do
         it "deletes the space-#{role}-<space_id> role" do
           post '/v2/spaces', {
-            name: 'v2-space',
+            name: SecureRandom.uuid,
             organization_guid: org.guid
           }.to_json
 
@@ -470,7 +473,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       describe 'async deletion' do
         it "deletes the space-#{role}-<space_id> role" do
           post '/v2/spaces', {
-            name: 'v2-space',
+            name: SecureRandom.uuid,
             organization_guid: org.guid
           }.to_json
 
@@ -496,7 +499,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
       it 'alerts the user if the space does not exist' do
         post '/v2/spaces', {
-          name: 'v2-space',
+          name: SecureRandom.uuid,
           organization_guid: org.guid
         }.to_json
 
