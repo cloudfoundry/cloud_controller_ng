@@ -267,7 +267,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
         before do
-          client.create_role role_name
+          client.create_role(role_name: role_name)
         end
 
         it "assigns the specified user to the org #{role} role" do
@@ -306,7 +306,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
         before do
-          client.create_role role_name
+          client.create_role(role_name: role_name)
         end
 
         it "removes the user from the org #{role} role" do
@@ -334,16 +334,16 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
 
       before do
-        client.create_role("org-user-#{org1.guid}")
+        client.create_role(role_name: "org-user-#{org1.guid}")
         client.assign_role(role_name: "org-user-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)
-        client.create_role("org-user-#{org2.guid}")
+        client.create_role(role_name: "org-user-#{org2.guid}")
         client.assign_role(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)
 
         SPACE_ROLES.each do |role|
-          client.create_role("space-#{role}-#{org1_space.guid}")
+          client.create_role(role_name: "space-#{role}-#{org1_space.guid}")
           put "/v2/spaces/#{org1_space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
-          client.create_role("space-#{role}-#{org2_space.guid}")
+          client.create_role(role_name: "space-#{role}-#{org2_space.guid}")
           put "/v2/spaces/#{org2_space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
         end
@@ -375,7 +375,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
         before do
-          client.create_role role_name
+          client.create_role(role_name: role_name)
         end
 
         it "removes the user from the org #{role} role" do
@@ -527,7 +527,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         let(:role_name) { "space-#{role}-#{space.guid}" }
 
         before do
-          client.create_role(role_name)
+          client.create_role(role_name: role_name)
         end
 
         it "assigns the specified user to the space #{role} role" do
@@ -571,7 +571,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         let(:role_name) { "space-#{role}-#{space.guid}" }
 
         before do
-          client.create_role role_name
+          client.create_role(role_name: role_name)
         end
 
         it "removes the user from the space #{role} role" do
@@ -601,7 +601,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         let(:role_name) { "space-#{role}-#{space.guid}" }
 
         before do
-          client.create_role role_name
+          client.create_role(role_name: role_name)
         end
 
         it "removes the user from the space #{role} role" do
