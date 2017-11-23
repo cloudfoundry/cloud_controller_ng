@@ -103,7 +103,7 @@ includes:
   - resources/spaces/create
   - resources/spaces/list
   - resources/spaces/get_a_space
-  - resources/spaces/assign_isolation_segment
+  - resources/spaces/manage_isolation_segment
   - resources/spaces/get_assigned_isolation_segment
   - resources/tasks/header
   - resources/tasks/object

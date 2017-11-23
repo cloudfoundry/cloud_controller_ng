@@ -1,4 +1,4 @@
-### Assign an isolation segment
+### Manage isolation segment
 
 ```
 Example Request
@@ -28,9 +28,9 @@ Content-Type: application/json
 ```
 
 This endpoint assigns an isolation segment to the space.
-The isolatoin segment must be entitled to the space's parent organization.
+The isolation segment must be <a href="#entitle-organizations-for-an-isolation-segment">entitled</a> to the space's parent organization.
 
-<aside calss="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
+<aside class="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
 
 #### Definition
 `PATCH /v3/spaces/:guid/relationships/isolation_segment`
