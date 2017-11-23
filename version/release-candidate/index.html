@@ -6587,7 +6587,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-          <h3 id="assign-an-isolation-segment">Assign an isolation segment</h3>
+          <h3 id="manage-isolation-segment">Manage isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/relationships/isolation_segment"</span> <span class="se">\</span>
@@ -6622,9 +6622,9 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </span></code></pre>
 
 <p>This endpoint assigns an isolation segment to the space.
-The isolatoin segment must be entitled to the space&rsquo;s parent organization.</p>
+The isolation segment must be <a href="#entitle-organizations-for-an-isolation-segment">entitled</a> to the space&rsquo;s parent organization.</p>
 
-<aside calss="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
+<aside class="notice">Apps will not run in the newly assigned isolation segment until they are restarted.</aside>
 
 <h4 id="definition">Definition</h4>
 
