@@ -1,3 +1,8 @@
+if ENV['DB'] == 'postgresql'
+  warn('Resetting env var DB from postgresql to postgres...')
+  ENV['DB'] = 'postgres'
+end
+
 require File.expand_path('../config/boot', __FILE__)
 
 require 'yaml'
