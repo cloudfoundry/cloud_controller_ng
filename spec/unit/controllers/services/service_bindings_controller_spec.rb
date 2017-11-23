@@ -808,6 +808,168 @@ module VCAP::CloudController
           'service-binding-name',
         ])
       end
+
+      context 'when service-bindings have names' do
+        let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
+        let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
+        let(:process3) { ProcessModelFactory.make(space: space, name: 'process3') }
+
+        it 'can query service-bindings by name' do
+          set_current_user(developer)
+          ServiceBinding.make(service_instance: managed_service_instance, app: process1.app, name: 'potato')
+          ServiceBinding.make(service_instance: managed_service_instance, app: process2.app, name: '3-ring')
+          ServiceBinding.make(service_instance: managed_service_instance, app: process3.app, name: 'potato')
+
+          get '/v2/service_bindings?inline-relations-depth=1&q=name:3-ring'
+          expect(last_response.status).to eq(200), last_response.body
+          service_bindings = decoded_response['resources']
+          expect(service_bindings.size).to eq(1)
+          entity = service_bindings[0]['entity']
+          expect(entity['app_guid']).to eq(process2.app.guid)
+          expect(entity['service_instance_guid']).to eq(managed_service_instance.guid)
+          expect(entity['name']).to eq('3-ring')
+
+          get '/v2/service_bindings?q=name:potato'
+          expect(last_response.status).to eq(200), last_response.body
+          expect(decoded_response['prev_url']).to be_nil
+          expect(decoded_response['next_url']).to be_nil
+          service_bindings = decoded_response['resources']
+          expect(service_bindings.size).to eq(2)
+          expect(service_bindings.map { |x| x['entity']['app_guid'] }).to match_array([process1.app.guid, process3.app.guid])
+          expect(service_bindings.map { |x| x['entity']['service_instance_guid'] }).to match_array([managed_service_instance.guid, managed_service_instance.guid])
+          expect(service_bindings.map { |x| x['entity']['name'] }).to match_array(['potato', 'potato'])
+        end
+
+        context 'when there are many service-bindings per service-instance' do
+          let(:processes) { 8.times.to_a.map { |i| ProcessModelFactory.make(space: space, name: "process#{i}") } }
+          before do
+            set_current_user(developer)
+            6.times { |i| ServiceBinding.make(service_instance: managed_service_instance, app: processes[i].app, name: 'potato') }
+            ServiceBinding.make(service_instance: managed_service_instance, app: processes[6].app, name: '3-ring')
+            ServiceBinding.make(service_instance: managed_service_instance, app: processes[7].app, name: '3-ring')
+          end
+
+          it 'can set the next_url and prev_url links' do
+            get '/v2/service_bindings?results-per-page=2&page=1&q=name:potato'
+
+            expect(last_response.status).to eq(200), last_response.body
+            expect(decoded_response['prev_url']).to be(nil)
+            next_url = decoded_response['next_url']
+            expect(next_url).to match(%r{^/v2/service_bindings\?(?=.*page=2).*q=name:potato})
+            service_bindings = decoded_response['resources']
+            expect(service_bindings.size).to eq(2)
+            entity = service_bindings[0]['entity']
+            expect(entity['app_guid']).to eq(processes[0].app.guid)
+            expect(entity['name']).to eq('potato')
+            entity = service_bindings[1]['entity']
+            expect(entity['app_guid']).to eq(processes[1].app.guid)
+            expect(entity['name']).to eq('potato')
+
+            get next_url
+
+            expect(last_response.status).to eq(200), last_response.body
+            expect(decoded_response['prev_url']).to match(/(?=.*?page=1\b).*q=name:potato/)
+            next_url = decoded_response['next_url']
+            expect(next_url).to match(/(?=.*?page=3).*q=name:potato/)
+            service_bindings = decoded_response['resources']
+            expect(service_bindings.size).to eq(2)
+            entity = service_bindings[0]['entity']
+            expect(entity['app_guid']).to eq(processes[2].app.guid)
+            expect(entity['name']).to eq('potato')
+            entity = service_bindings[1]['entity']
+            expect(entity['app_guid']).to eq(processes[3].app.guid)
+            expect(entity['name']).to eq('potato')
+
+            get next_url
+
+            expect(last_response.status).to eq(200), last_response.body
+            expect(decoded_response['prev_url']).to match(/(?=.*?page=2\b).*q=name:potato/)
+            expect(decoded_response['next_url']).to be_nil
+            service_bindings = decoded_response['resources']
+            expect(service_bindings.size).to eq(2)
+            entity = service_bindings[0]['entity']
+            expect(entity['app_guid']).to eq(processes[4].app.guid)
+            expect(entity['name']).to eq('potato')
+            entity = service_bindings[1]['entity']
+            expect(entity['app_guid']).to eq(processes[5].app.guid)
+            expect(entity['name']).to eq('potato')
+
+            get '/v2/service_bindings?results-per-page=2&page=1&q=name:3-ring'
+
+            expect(last_response.status).to eq(200), last_response.body
+            expect(decoded_response['prev_url']).to be_nil
+            expect(decoded_response['next_url']).to be_nil
+            service_bindings = decoded_response['resources']
+            expect(service_bindings.size).to eq(2)
+            entity = service_bindings[0]['entity']
+            expect(entity['app_guid']).to eq(processes[6].app.guid)
+            expect(entity['name']).to eq('3-ring')
+            entity = service_bindings[1]['entity']
+            expect(entity['app_guid']).to eq(processes[7].app.guid)
+            expect(entity['name']).to eq('3-ring')
+          end
+        end
+      end
+
+      context 'when there are service-instances in multiple spaces' do
+        let(:space1) { Space.make }
+        let(:process1) { ProcessModelFactory.make(space: space1) }
+        let(:developer1) { make_developer_for_space(space1) }
+        let(:si1) { ManagedServiceInstance.make(space: space1) }
+
+        let(:space2) { Space.make }
+        let(:process2) { ProcessModelFactory.make(space: space2) }
+        let(:developer2) { make_developer_for_space(space2) }
+        let(:si2) { ManagedServiceInstance.make(space: space2) }
+
+        context 'when developer in one space tries to bind a service-instance from another space' do
+          before do
+            set_current_user(developer1)
+          end
+
+          it 'raises a SpaceMismatch error' do
+            req = {
+              app_guid:              process1.guid,
+              service_instance_guid: si2.guid,
+              name: '3-ring',
+            }
+            post '/v2/service_bindings', req.to_json
+            expect(last_response.status).to eq(400)
+            expect(decoded_response['description']).to eq('VCAP::CloudController::ServiceBindingCreate::SpaceMismatch')
+            expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
+          end
+        end
+
+        context 'when both developers bind some service-instances' do
+          before do
+            ServiceBinding.make(service_instance: si1, app: process1.app, name: 'binding')
+            ServiceBinding.make(service_instance: si2, app: process2.app, name: 'binding')
+          end
+          it 'developer1 can see only bindings in space1' do
+            set_current_user(developer1)
+            get '/v2/service_bindings?q=name:binding'
+            expect(last_response.status).to eq(200), last_response.body
+            service_bindings = decoded_response['resources']
+            expect(service_bindings.size).to eq(1)
+            entity = service_bindings[0]['entity']
+            expect(entity['app_guid']).to eq(process1.app.guid)
+            expect(entity['name']).to eq('binding')
+            expect(entity['service_instance_guid']).to eq(si1.guid)
+          end
+
+          it 'developer2 can see only bindings in space2' do
+            set_current_user(developer2)
+            get '/v2/service_bindings?q=name:binding'
+            expect(last_response.status).to eq(200), last_response.body
+            service_bindings = decoded_response['resources']
+            expect(service_bindings.size).to eq(1)
+            entity = service_bindings[0]['entity']
+            expect(entity['app_guid']).to eq(process2.app.guid)
+            expect(entity['name']).to eq('binding')
+            expect(entity['service_instance_guid']).to eq(si2.guid)
+          end
+        end
+      end
     end
   end
 end

@@ -2284,6 +2284,85 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/apps/:app_guid/service_bindings' do
+      let(:space) { Space.make }
+      let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
+      let(:developer) { make_developer_for_space(space) }
+      let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
+      let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
+      let(:process3) { ProcessModelFactory.make(space: space, name: 'process3') }
+
+      before do
+        set_current_user(developer)
+        ServiceBinding.make(service_instance: managed_service_instance, app: process1.app, name: 'guava')
+        ServiceBinding.make(service_instance: managed_service_instance, app: process2.app, name: 'peach')
+        ServiceBinding.make(service_instance: managed_service_instance, app: process3.app, name: 'cilantro')
+      end
+
+      it "queries apps' service_bindings by name" do
+        # process1 has no peach bindings
+        get "/v2/apps/#{process1.app.guid}/service_bindings?q=name:peach"
+        expect(last_response.status).to eql(200), last_response.body
+        service_bindings = decoded_response['resources']
+        expect(service_bindings.size).to eq(0)
+
+        get "/v2/apps/#{process1.app.guid}/service_bindings?q=name:guava"
+        expect(last_response.status).to eql(200), last_response.body
+        service_bindings = decoded_response['resources']
+        expect(service_bindings.size).to eq(1)
+        entity = service_bindings[0]['entity']
+        expect(entity['app_guid']).to eq(process1.app.guid)
+        expect(entity['service_instance_guid']).to eq(managed_service_instance.guid)
+        expect(entity['name']).to eq('guava')
+
+        [[process1, 'guava'], [process2, 'peach'], [process3, 'cilantro']].each do |process, fruit|
+          get "/v2/apps/#{process.app.guid}/service_bindings?q=name:#{fruit}"
+          expect(last_response.status).to eql(200)
+          service_bindings = decoded_response['resources']
+          expect(service_bindings.size).to eq(1)
+          entity = service_bindings[0]['entity']
+          expect(entity['app_guid']).to eq(process.app.guid)
+          expect(entity['service_instance_guid']).to eq(managed_service_instance.guid)
+          expect(entity['name']).to eq(fruit)
+        end
+      end
+
+      # This is why there isn't much point testing lookup by name with this endpoint --
+      # These tests show we can have at most one hit per name in the
+      # apps/APPGUID/service_bindings endpoint.
+      context 'when there are multiple services' do
+        let(:si1) { ManagedServiceInstance.make(space: space) }
+        let(:si2) { ManagedServiceInstance.make(space: space) }
+        let(:developer) { make_developer_for_space(space) }
+        let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
+        let(:process2) { ProcessModelFactory.make(space: space, name: 'process2') }
+
+        before do
+          set_current_user(developer)
+          ServiceBinding.make(service_instance: si1, app: process1.app, name: 'out')
+          ServiceBinding.make(service_instance: si2, app: process2.app, name: 'free')
+        end
+
+        it 'binding si2 to process1 with a name in use by process1 is not ok' do
+          expect {
+            ServiceBinding.make(service_instance: si2, app: process1.app, name: 'out')
+          }.to raise_error(Sequel::ValidationFailed, /App binding names must be unique\./)
+        end
+
+        it 'binding si1 to process1 with a new name is not ok' do
+          expect {
+            ServiceBinding.make(service_instance: si1, app: process1.app, name: 'gravy')
+          }.to raise_error(Sequel::ValidationFailed, 'The app is already bound to the service.')
+        end
+
+        it 'binding si2 to process1 with a name in use by process2 is ok' do
+          ServiceBinding.make(service_instance: si2, app: process1.app, name: 'free')
+          get "/v2/apps/#{process1.app.guid}/service_bindings?results-per-page=2&page=1&q=name:free"
+          expect(last_response.status).to eq(200), last_response.body
+        end
+      end
+    end
+
     describe 'DELETE /v2/apps/:app_guid/service_bindings/:service_binding_guid' do
       let(:space) { Space.make }
       let(:process) { ProcessModelFactory.make(space: space) }
