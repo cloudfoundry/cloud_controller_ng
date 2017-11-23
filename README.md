@@ -96,6 +96,12 @@ The development team typically will run the specs to a single file as (e.g.)
 
     bundle exec rubocop
 
+#### Running both unit tests and rubocop
+
+By default, `bundle exec rake` will run the unit tests first, and then `rubocop` if they pass. To run `rubocop` first, run:
+
+    RUBOCOP_FIRST=1 bundle exec rake
+
 ### CF Acceptance Tests (CATs)
 
 To ensure our changes to the Cloud Controller correctly integrate with the rest of the Cloud Foundry components like Diego,

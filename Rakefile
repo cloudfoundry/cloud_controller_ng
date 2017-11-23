@@ -14,7 +14,8 @@ rescue LoadError
   # this isn't needed in a production environment so the gem will not exist
 end
 
-task default: [:rubocop_autocorrect, 'spec:all']
+default_tasks = ['spec:all', :rubocop_autocorrect]
+task default: ENV['RUBOCOP_FIRST'] ? default_tasks.reverse : default_tasks
 
 task :rubocop_autocorrect do
   require 'rubocop'
