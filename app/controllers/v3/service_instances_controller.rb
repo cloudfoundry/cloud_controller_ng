@@ -6,7 +6,7 @@ require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
-require 'fetchers/service_instance_list_fetcher'
+require 'fetchers/managed_service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
   def index
@@ -14,9 +14,9 @@ class ServiceInstancesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if can_read_globally?
-                ServiceInstanceListFetcher.new.fetch_all(message: message)
+                ManagedServiceInstanceListFetcher.new.fetch_all(message: message)
               else
-                ServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: readable_space_guids)
+                ManagedServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
