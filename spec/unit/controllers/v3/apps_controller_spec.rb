@@ -927,12 +927,13 @@ RSpec.describe AppsV3Controller, type: :controller do
         droplet.destroy
       end
 
-      it 'raises an API 404 error' do
+      it 'raises an API 422 error' do
         put :start, guid: app_model.guid
 
         response_body = parsed_body
-        expect(response_body['errors'].first['title']).to eq 'CF-ResourceNotFound'
-        expect(response.status).to eq 404
+        expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
+        expect(response_body['errors'].first['detail']).to eq 'Assign a droplet before starting this app.'
+        expect(response.status).to eq 422
       end
     end
 
@@ -1166,13 +1167,13 @@ RSpec.describe AppsV3Controller, type: :controller do
           droplet.destroy
         end
 
-        it 'raises an API 404 error' do
+        it 'raises an API 422 error' do
           post :restart, guid: app_model.guid
 
           response_body = parsed_body
-          expect(response.status).to eq 404
-          expect(response_body['errors'].first['title']).to eq 'CF-ResourceNotFound'
-          expect(response_body['errors'].first['detail']).to eq 'Droplet not found'
+          expect(response_body['errors'].first['title']).to eq 'CF-UnprocessableEntity'
+          expect(response_body['errors'].first['detail']).to eq 'Assign a droplet before starting this app.'
+          expect(response.status).to eq 422
         end
       end
 

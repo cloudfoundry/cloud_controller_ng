@@ -104,7 +104,7 @@ class AppsV3Controller < ApplicationController
   def start
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    droplet_not_found! unless app.droplet
+    unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless can_write?(space.guid)
     if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -132,7 +132,7 @@ class AppsV3Controller < ApplicationController
   def restart
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
-    droplet_not_found! unless app.droplet
+    unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless can_write?(space.guid)
     if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
@@ -238,6 +238,10 @@ class AppsV3Controller < ApplicationController
 
   def droplet_not_found!
     resource_not_found!(:droplet)
+  end
+
+  def unprocessable_lacking_droplet!
+    unprocessable!('Assign a droplet before starting this app.')
   end
 
   def unprocessable_space!
