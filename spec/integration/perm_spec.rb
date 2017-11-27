@@ -1,10 +1,15 @@
 require 'spec_helper'
 require 'perm'
 require 'perm_test_helpers'
+require 'rails_helper'
 require 'securerandom'
 
 RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'true' do
   perm_server = nil
+  perm_hostname = nil
+  perm_port = nil
+  ca_certs = []
+  perm_config = {}
 
   ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
   SPACE_ROLES = [:developer, :manager, :auditor].freeze
@@ -16,33 +21,54 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
   let(:uaa_target) { 'test.example.com' }
   let(:uaa_origin) { 'test-origin' }
 
-  let(:perm_hostname) { perm_server.hostname.clone }
-  let(:perm_port) { perm_server.port.clone }
-
-  let(:ca_certs) { [perm_server.tls_ca.clone] }
-
   let(:client) { CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs) }
   let(:issuer) { 'https://auth.example.com/oauth/token' }
+  let(:admin_headers) {
+    {
+      'authorization' => "bearer #{admin_token}",
+      'accept' => 'application/json',
+      'content-type' => 'application/json'
+    }
+  }
 
   if ENV['CF_RUN_PERM_SPECS'] == 'true'
     before(:all) do
       perm_server = CloudFoundry::PermTestHelpers::ServerRunner.new
       perm_server.start
+
+      perm_hostname = perm_server.hostname.clone
+      perm_port = perm_server.port.clone
+      perm_config = {
+          enabled: true,
+          hostname: perm_hostname,
+          port: perm_port,
+          ca_cert_path: perm_server.tls_ca_path,
+          timeout_in_milliseconds: 1000
+      }
+
+      ca_certs = [perm_server.tls_ca.clone]
+
+      config = YAML.load_file('config/cloud_controller.yml')
+      config[:perm] = perm_config
+      config_file = Tempfile.new('perm_config')
+      config_file.write(config.to_json)
+      config_file.flush
+
+      start_cc({ config: config_file.path })
+
+      config_file.unlink
+      config_file.close
     end
 
     after(:all) do
+      stop_cc
+
       perm_server.stop
     end
   end
 
   before do
-    TestConfig.config[:perm] = {
-      enabled: true,
-      hostname: perm_hostname,
-      port: perm_port,
-      ca_cert_path: perm_server.tls_ca_path,
-      timeout_in_milliseconds: 1000
-    }
+    TestConfig.config[:perm] = perm_config
 
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:origins_for_username).with(assignee.username).and_return([uaa_origin])
     allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })
@@ -51,6 +77,35 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
     allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
 
     set_current_user_as_admin(iss: issuer)
+  end
+
+  describe 'POST /v3/organizations' do
+    ORG_ROLES.each do |role|
+      it "creates the org-#{role}-<org_id> role" do
+        body = { name: SecureRandom.uuid }.to_json
+        response = make_post_request('/v3/organizations', body, admin_headers)
+
+        expect(response.code).to eq('201')
+
+        json_body = JSON.parse(response.body)
+        org_id = json_body['guid']
+        role_name = "org-#{role}-#{org_id}"
+
+        role = client.get_role(role_name)
+        expect(role.name).to eq(role_name)
+      end
+
+      it 'does not allow the user to create an org that already exists' do
+        body = { name: SecureRandom.uuid }.to_json
+        response = make_post_request('/v3/organizations', body, admin_headers)
+
+        expect(response.code).to eq('201')
+
+        response = make_post_request('/v3/organizations', body, admin_headers)
+
+        expect(response.code).to eq('422')
+      end
+    end
   end
 
   describe 'POST /v2/organizations' do
@@ -394,6 +449,61 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
           delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(204)
         end
+      end
+    end
+  end
+
+  describe 'POST /v3/spaces' do
+    org_guid = nil
+
+    before do
+      org = org_with_default_quota(admin_headers)
+      org_guid = org.json_body['metadata']['guid']
+    end
+
+    SPACE_ROLES.each do |role|
+      it "creates the space-#{role}-<space_id> role" do
+        body = {
+          name: SecureRandom.uuid,
+          relationships: {
+            organization: {
+              data: {
+                guid: org_guid
+              }
+            }
+          }
+        }.to_json
+
+        response = make_post_request('/v3/spaces', body, admin_headers)
+        expect(response.code).to eq('201')
+
+        json_body = JSON.parse(response.body)
+        space_id = json_body['guid']
+        role_name = "space-#{role}-#{space_id}"
+
+        role = client.get_role(role_name)
+        expect(role.name).to eq(role_name)
+      end
+
+      it 'does not allow user to create space that already exists' do
+        body = {
+          name: SecureRandom.uuid,
+          relationships: {
+            organization: {
+              data: {
+                guid: org_guid
+              }
+            }
+          }
+        }.to_json
+
+        response = make_post_request('/v3/spaces', body, admin_headers)
+
+        expect(response.code).to eq('201')
+
+        response = make_post_request('/v3/spaces', body, admin_headers)
+
+        expect(response.code).to eq('422')
       end
     end
   end

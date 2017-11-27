@@ -83,6 +83,10 @@ class ApplicationController < ActionController::Base
     @logger ||= Steno.logger('cc.api')
   end
 
+  def perm_client
+    @perm_client ||= VCAP::CloudController::Perm::Client.build_from_config(configuration, File)
+  end
+
   private
 
   ###
