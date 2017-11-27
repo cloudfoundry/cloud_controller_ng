@@ -3,13 +3,12 @@ require 'actions/space_delete'
 require 'actions/perm_org_roles_delete'
 require 'actions/perm_space_roles_delete'
 require 'fetchers/organization_user_roles_fetcher'
+require 'cloud_controller/roles'
 require 'controllers/runtime/mixins/uaa_origin_validator'
 
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
     include UaaOriginValidator
-
-    ROLE_NAMES = [:user, :manager, :billing_manager, :auditor].freeze
 
     def self.dependencies
       [
@@ -172,7 +171,7 @@ module VCAP::CloudController
       [HTTP::OK, MultiJson.dump({ memory_usage_in_mb: org.memory_used })]
     end
 
-    ROLE_NAMES.each do |role|
+    VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       put "/v2/organizations/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
@@ -203,7 +202,7 @@ module VCAP::CloudController
       end
     end
 
-    ROLE_NAMES.each do |role|
+    VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
       plural_role = role.to_s.pluralize
 
       delete "/v2/organizations/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
@@ -367,7 +366,7 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
-      ROLE_NAMES.each do |role|
+      VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
         @perm_client.create_org_role(role: role, org_id: organization.guid)
       end
 
@@ -404,7 +403,7 @@ module VCAP::CloudController
     def get_current_role_guids(org)
       current_role_guids = {}
 
-      ROLE_NAMES.map(&:to_s).each do |role|
+      VCAP::CloudController::Roles::ORG_ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         if request_attrs[key]
@@ -421,7 +420,7 @@ module VCAP::CloudController
     def generate_role_events_on_update(organization, current_role_guids)
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
-      ROLE_NAMES.map(&:to_s).each do |role|
+      VCAP::CloudController::Roles::ORG_ROLE_NAMES.map(&:to_s).each do |role|
         key = "#{role}_guids"
 
         user_guids_removed = []

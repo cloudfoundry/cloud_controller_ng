@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     def delete(org)
       @client = client.rehydrate
-      OrganizationsController::ROLE_NAMES.each do |role|
+      VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
         begin
           client.delete_org_role(role: role, org_id: org.guid)
         rescue
