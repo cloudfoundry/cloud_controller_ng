@@ -211,10 +211,46 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when the service instance is user provided' do
       let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
-      it 'returns a 400' do
+      it 'returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
-        expect(response.status).to eq 400
+        expect(response.status).to eq 422
         expect(response.body).to include('User-provided services cannot be shared')
+      end
+    end
+
+    context 'when the service instance is a route service' do
+      let(:service) { VCAP::CloudController::Service.make(:routing) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include('Route services cannot be shared')
+      end
+    end
+
+    context 'when the target space has a service instance with the same name' do
+      before do
+        target_space.add_service_instance(VCAP::CloudController::ManagedServiceInstance.make(name: service_instance.name))
+      end
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include("A service instance called #{service_instance.name} already exists in #{target_space.name}")
+      end
+    end
+
+    context 'when the service is not shareable' do
+      let(:service) { VCAP::CloudController::Service.make(extra: { shareable: false }.to_json) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include("The #{service.label} service does not support service instance sharing.")
       end
     end
 

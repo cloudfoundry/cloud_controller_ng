@@ -262,7 +262,7 @@ RSpec.describe 'ServiceInstances' do
       it 'fails with an appropriate response' do
         delete "v2/service_instances/#{service_instance.guid}", nil, admin_headers
 
-        expect(last_response.status).to eq(400)
+        expect(last_response.status).to eq(422)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['description']).to eq 'Service instances must be unshared before they can be deleted. ' \

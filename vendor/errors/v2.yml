@@ -1111,27 +1111,27 @@
 
 390002:
   name: ServiceInstanceDeletionSharesExists
-  http_code: 400
+  http_code: 422
   message: "Service instances must be unshared before they can be deleted. Unsharing %s will automatically delete any bindings that have been made to applications in other spaces."
 
 390003:
   name: ServiceShareIsDisabled
-  http_code: 400
+  http_code: 422
   message: "The %s service does not support service instance sharing."
 
 390004:
   name: UserProvidedServiceInstanceSharingNotSupported
-  http_code: 400
+  http_code: 422
   message: "User-provided services cannot be shared"
 
 390005:
   name: RouteServiceInstanceSharingNotSupported
-  http_code: 400
+  http_code: 422
   message: "Route services cannot be shared"
 
 390006:
   name: SharedServiceInstanceNameTaken
-  http_code: 400
+  http_code: 422
   message: "A service instance called %s already exists in %s"
 
 390007:
