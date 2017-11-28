@@ -160,7 +160,7 @@ class ApplicationController < ActionController::Base
   end
 
   def science(name)
-    experiment = VCAP::CloudController::Perm::Experiment.new(name: name, enabled: configuration.get(:perm, :query_enabled))
+    experiment = VCAP::CloudController::Perm::Experiment.new(name: name, perm_enabled: configuration.get(:perm, :enabled), query_enabled: configuration.get(:perm, :query_enabled))
     experiment.context(current_user_guid: SecurityContext.current_user_guid)
     yield experiment
 

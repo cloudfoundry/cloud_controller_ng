@@ -5,13 +5,14 @@ module VCAP::CloudController
     class Experiment
       include Scientist::Experiment
 
-      def initialize(name:, enabled:)
+      def initialize(name:, perm_enabled:, query_enabled:)
         @name = name
-        @enabled = enabled
+        @perm_enabled = perm_enabled
+        @query_enabled = query_enabled
       end
 
       def enabled?
-        @enabled
+        @perm_enabled && @query_enabled
       end
     end
   end
