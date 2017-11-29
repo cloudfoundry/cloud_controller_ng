@@ -14,6 +14,8 @@ module VCAP::CloudController
       def enabled?
         @perm_enabled && @query_enabled
       end
+
+      def publish(result) end
     end
   end
 end

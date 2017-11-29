@@ -96,66 +96,66 @@ class ApplicationController < ActionController::Base
   def can_read?(space_guid, org_guid)
     science 'can_read_from_space?' do |e|
       e.context(space_guid: space_guid, org_guid: org_guid)
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_read_from_space?(space_guid, org_guid) }
+      e.use { db_permissions.can_read_from_space?(space_guid, org_guid) }
     end
   end
 
   def can_write_to_org?(org_guid)
     science 'can_write_to_org?' do |e|
       e.context(org_guid: org_guid)
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_write_to_org?(org_guid) }
+      e.use { db_permissions.can_write_to_org?(org_guid) }
     end
   end
 
   def can_read_from_org?(org_guid)
     science 'can_read_from_org?' do |e|
       e.context(org_guid: org_guid)
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_read_from_org?(org_guid) }
+      e.use { db_permissions.can_read_from_org?(org_guid) }
     end
   end
 
   def can_write_globally?
     science 'can_write_globally?' do |e|
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_write_globally? }
+      e.use { db_permissions.can_write_globally? }
     end
   end
 
   def can_read_globally?
     science 'can_read_globally?' do |e|
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_read_globally? }
+      e.use { db_permissions.can_read_globally? }
     end
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
     science 'can_read_from_isolation_segment?' do |e|
       e.context(isolation_segment_guid: isolation_segment.guid)
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_read_from_isolation_segment?(isolation_segment) }
+      e.use { db_permissions.can_read_from_isolation_segment?(isolation_segment) }
     end
   end
 
   def can_see_secrets?(space)
     science 'can_see_secrets_from_space?' do |e|
       e.context(space_guid: space.guid)
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_see_secrets_in_space?(space.guid, space.organization.guid) }
+      e.use { db_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
     end
   end
 
   def can_write?(space_guid)
     science 'can_write_to_space?' do |e|
       e.context(space_guid: space_guid)
-      e.use { VCAP::CloudController::Permissions.new(current_user).can_write_to_space?(space_guid) }
+      e.use { db_permissions.can_write_to_space?(space_guid) }
     end
   end
 
   def readable_space_guids
     science 'readable_space_guids' do |e|
-      e.use { VCAP::CloudController::Permissions.new(current_user).readable_space_guids }
+      e.use { db_permissions.readable_space_guids }
     end
   end
 
   def readable_org_guids
     science 'readable_org_guids' do |e|
-      e.use { VCAP::CloudController::Permissions.new(current_user).readable_org_guids }
+      e.use { db_permissions.readable_org_guids }
     end
   end
 
@@ -168,6 +168,10 @@ class ApplicationController < ActionController::Base
     yield experiment
 
     experiment.run
+  end
+
+  def db_permissions
+    VCAP::CloudController::Permissions.new(current_user)
   end
 
   ###

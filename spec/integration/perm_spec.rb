@@ -40,7 +40,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       perm_port = perm_server.port.clone
       perm_config = {
         enabled: true,
-        query_enabled: false,
+        query_enabled: true,
         hostname: perm_hostname,
         port: perm_port,
         ca_cert_path: perm_server.tls_ca_path,
