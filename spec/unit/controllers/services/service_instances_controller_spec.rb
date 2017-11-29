@@ -3848,9 +3848,11 @@ module VCAP::CloudController
           get "/v2/service_instances/#{instance.guid}/shared_from"
           expect(last_response.status).to eql(200), last_response.body
           parsed_response = JSON.parse(last_response.body)
+
+          expect(parsed_response.keys).to match_array(['space_name', 'space_guid', 'organization_name'])
           expect(parsed_response['space_name']).to eq(space.name)
+          expect(parsed_response['space_guid']).to eq(space.guid)
           expect(parsed_response['organization_name']).to eq(space.organization.name)
-          expect(parsed_response.keys).to match_array(['space_name', 'organization_name'])
         end
 
         describe 'permissions' do
@@ -3961,11 +3963,14 @@ module VCAP::CloudController
           space1_resource = resources.find { |resource| resource['space_name'] == space1.name }
           space2_resource = resources.find { |resource| resource['space_name'] == space2.name }
 
-          expect(space1_resource.keys).to match_array(['space_name', 'organization_name', 'bound_app_count'])
-          expect(space2_resource.keys).to match_array(['space_name', 'organization_name', 'bound_app_count'])
+          expect(space1_resource.keys).to match_array(['space_name', 'space_guid', 'organization_name', 'bound_app_count'])
+          expect(space2_resource.keys).to match_array(['space_name', 'space_guid', 'organization_name', 'bound_app_count'])
 
           expect(space1_resource.fetch('space_name')).to eq(space1.name)
           expect(space2_resource.fetch('space_name')).to eq(space2.name)
+
+          expect(space1_resource.fetch('space_guid')).to eq(space1.guid)
+          expect(space2_resource.fetch('space_guid')).to eq(space2.guid)
 
           expect(space1_resource.fetch('organization_name')).to eq(space1.organization.name)
           expect(space2_resource.fetch('organization_name')).to eq(space2.organization.name)

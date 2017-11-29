@@ -166,6 +166,7 @@ RSpec.describe 'ServiceInstances' do
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
+        'space_guid' => space.guid,
         'space_name' => space.name,
         'organization_name' => space.organization.name
       })
@@ -199,6 +200,7 @@ RSpec.describe 'ServiceInstances' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
+          'space_guid' => space.guid,
           'space_name' => space.name,
           'organization_name' => space.organization.name
         })
@@ -230,11 +232,13 @@ RSpec.describe 'ServiceInstances' do
           'next_url' => nil,
           'resources' => [
             {
+              'space_guid' => space1.guid,
               'space_name' => space1.name,
               'organization_name' => space1.organization.name,
               'bound_app_count' => 0
             },
             {
+              'space_guid' => space2.guid,
               'space_name' => space2.name,
               'organization_name' => space2.organization.name,
               'bound_app_count' => 0
