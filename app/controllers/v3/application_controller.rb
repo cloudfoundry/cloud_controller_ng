@@ -117,12 +117,14 @@ class ApplicationController < ActionController::Base
   def can_write_globally?
     science 'can_write_globally?' do |e|
       e.use { db_permissions.can_write_globally? }
+      e.try { perm_permissions.can_write_globally? }
     end
   end
 
   def can_read_globally?
     science 'can_read_globally?' do |e|
       e.use { db_permissions.can_read_globally? }
+      e.try { perm_permissions.can_read_globally? }
     end
   end
 
@@ -172,6 +174,14 @@ class ApplicationController < ActionController::Base
 
   def db_permissions
     VCAP::CloudController::Permissions.new(current_user)
+  end
+
+  def perm_permissions
+    VCAP::CloudController::Perm::Permissions.new(
+      perm_client: perm_client,
+      roles: VCAP::CloudController::SecurityContext.roles,
+      user: current_user
+    )
   end
 
   ###
