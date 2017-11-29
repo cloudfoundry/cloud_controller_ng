@@ -138,7 +138,7 @@ class AppsV3Controller < ApplicationController
       FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
-    AppRestart.restart(app: app, config: Config.config)
+    AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppRestart::Error => e

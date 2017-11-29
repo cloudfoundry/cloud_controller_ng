@@ -6,7 +6,7 @@ module VCAP::CloudController
     end
 
     class << self
-      def restart(app:, config:)
+      def restart(app:, config:, user_audit_info:)
         need_to_stop_in_runtime = !app.stopped?
 
         app.db.transaction do
@@ -28,6 +28,7 @@ module VCAP::CloudController
             process.update(state: ProcessModel::STARTED)
             runners(config).runner_for_process(process).start
           end
+          record_audit_event(app, user_audit_info)
         end
       rescue Sequel::ValidationFailed => e
         raise Error.new(e.message)
@@ -37,6 +38,13 @@ module VCAP::CloudController
 
       def runners(config)
         Runners.new(config)
+      end
+
+      def record_audit_event(app, user_audit_info)
+        Repositories::AppEventRepository.new.record_app_restart(
+          app,
+          user_audit_info,
+        )
       end
     end
   end

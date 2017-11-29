@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:user_guid) { 'some-guid' }
     let(:user_email) { '1@2.3' }
     let(:config) { nil }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
 
     describe '#restart' do
       let(:environment_variables) { { 'FOO' => 'bar' } }
@@ -43,17 +44,25 @@ module VCAP::CloudController
 
       it 'does NOT invoke the ProcessObserver after the transaction commits', isolation: :truncation do
         expect(ProcessObserver).not_to receive(:updated)
-        AppRestart.restart(app: app, config: config)
+        AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+      end
+
+      it 'creates an audit event' do
+        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_restart).with(
+          app,
+          user_audit_info,
+        )
+        AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
       end
 
       context 'when the app is STARTED' do
         it 'keeps the app state as STARTED' do
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           expect(app.reload.desired_state).to eq('STARTED')
         end
 
         it 'keeps process states to STARTED' do
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           expect(process1.reload.state).to eq('STARTED')
           expect(process2.reload.state).to eq('STARTED')
         end
@@ -62,25 +71,25 @@ module VCAP::CloudController
           expect(runner1).to receive(:stop).once
           expect(runner2).to receive(:stop).once
 
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
         end
 
         it 'starts running processes in the runtime' do
           expect(runner1).to receive(:start).once
           expect(runner2).to receive(:start).once
 
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
         end
 
         it 'generates a STOP usage event' do
           expect {
-            AppRestart.restart(app: app, config: config)
+            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           }.to change { AppUsageEvent.where(state: 'STOPPED').count }.by(2)
         end
 
         it 'generates a START usage event' do
           expect {
-            AppRestart.restart(app: app, config: config)
+            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(2)
         end
 
@@ -92,7 +101,7 @@ module VCAP::CloudController
 
           it 'raises an error and keeps the existing STARTED state' do
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error('some-stop-error')
 
             expect(app.reload.desired_state).to eq('STARTED')
@@ -107,7 +116,7 @@ module VCAP::CloudController
 
           it 'raises an error and keeps the existing state' do
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error('some-start-error')
 
             expect(app.reload.desired_state).to eq('STARTED')
@@ -116,7 +125,7 @@ module VCAP::CloudController
           it 'does not generate any additional usage events' do
             original_app_usage_event_count = AppUsageEvent.count
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error('some-start-error')
 
             expect(AppUsageEvent.count).to eq(original_app_usage_event_count)
@@ -128,12 +137,12 @@ module VCAP::CloudController
         let(:desired_state) { ProcessModel::STOPPED }
 
         it 'changes the app state to STARTED' do
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           expect(app.reload.desired_state).to eq('STARTED')
         end
 
         it 'changes the process states to STARTED' do
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           expect(process1.reload.reload.state).to eq('STARTED')
           expect(process2.reload.reload.state).to eq('STARTED')
         end
@@ -142,25 +151,25 @@ module VCAP::CloudController
           expect(runner1).to_not receive(:stop)
           expect(runner2).to_not receive(:stop)
 
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
         end
 
         it 'starts running processes in the runtime' do
           expect(runner1).to receive(:start).once
           expect(runner2).to receive(:start).once
 
-          AppRestart.restart(app: app, config: config)
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
         end
 
         it 'generates a START usage event' do
           expect {
-            AppRestart.restart(app: app, config: config)
+            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           }.to change { AppUsageEvent.where(state: 'STARTED').count }.by(2)
         end
 
         it 'does not generate a STOP usage event' do
           expect {
-            AppRestart.restart(app: app, config: config)
+            AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
           }.to_not change { AppUsageEvent.where(state: 'STOPPED').count }
         end
 
@@ -171,7 +180,7 @@ module VCAP::CloudController
 
           it 'raises an AppRestart::Error' do
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error(AppRestart::Error, 'some message')
           end
         end
@@ -183,7 +192,7 @@ module VCAP::CloudController
 
           it 'raises an AppRestart::Error' do
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error(AppRestart::Error, 'some message')
           end
         end
@@ -196,7 +205,7 @@ module VCAP::CloudController
 
           it 'raises an error and keeps the existing state' do
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error('some-start-error')
 
             expect(app.reload.desired_state).to eq('STOPPED')
@@ -205,7 +214,7 @@ module VCAP::CloudController
           it 'does not generate any additional usage events' do
             original_app_usage_event_count = AppUsageEvent.count
             expect {
-              AppRestart.restart(app: app, config: config)
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
             }.to raise_error('some-start-error')
 
             expect(AppUsageEvent.count).to eq(original_app_usage_event_count)

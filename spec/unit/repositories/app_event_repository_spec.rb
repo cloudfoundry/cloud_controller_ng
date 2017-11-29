@@ -500,6 +500,29 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(app.space.guid)
           end
         end
+
+        describe '#record_app_restart' do
+          let(:app) { AppModel.make }
+
+          it 'creates a new audit.app.restart event' do
+            event = app_event_repository.record_app_restart(app, user_audit_info)
+
+            expect(event.type).to eq('audit.app.restart')
+
+            expect(event.actor).to eq(user_guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_username).to eq(user_name)
+
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq app.name
+            expect(event.metadata).to eq({})
+
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.organization.guid)
+          end
+        end
       end
     end
   end

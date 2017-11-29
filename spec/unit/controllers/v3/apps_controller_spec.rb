@@ -1150,7 +1150,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq 200
         expect(response_body['guid']).to eq(app_model.guid)
         expect(response_body['state']).to eq('STARTED')
-        expect(VCAP::CloudController::AppRestart).to have_received(:restart).with(app: app_model, config: anything)
+        expect(VCAP::CloudController::AppRestart).to have_received(:restart).with(app: app_model, config: anything, user_audit_info: anything)
       end
 
       context 'when the app does not exist' do

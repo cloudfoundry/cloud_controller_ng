@@ -50,6 +50,13 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.start', app, app.space, actor, nil)
       end
 
+      def record_app_restart(app, user_audit_info)
+        Loggregator.emit(app.guid, "Restarted app with guid #{app.guid}")
+
+        actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, type: 'user', user_name: user_audit_info.user_name }
+        create_app_audit_event('audit.app.restart', app, app.space, actor, nil)
+      end
+
       def record_app_stop(app, user_audit_info)
         Loggregator.emit(app.guid, "Stopping app with guid #{app.guid}")
 
