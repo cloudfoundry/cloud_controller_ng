@@ -297,6 +297,7 @@ module VCAP::CloudController
             optional(:port) => Integer,
             timeout_in_milliseconds: Integer,
             ca_cert_path: String,
+            optional(:query_raise_on_mismatch) => bool,
           }
         }
       end

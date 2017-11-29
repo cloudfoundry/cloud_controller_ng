@@ -91,6 +91,7 @@ require 'cloud_controller/errors/instances_unavailable'
 
 require 'cloud_controller/perm/client'
 require 'cloud_controller/perm/experiment'
+require 'cloud_controller/perm/permissions'
 require 'cloud_controller/perm/errors'
 
 require 'cloud_controller/uaa/errors'

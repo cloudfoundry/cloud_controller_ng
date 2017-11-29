@@ -37,6 +37,10 @@ class VCAP::CloudController::Permissions
     roles.admin? || roles.admin_read_only? || roles.global_auditor?
   end
 
+  def can_read_secrets_globally?
+    roles.admin? || roles.admin_read_only?
+  end
+
   def can_read_from_org?(org_guid)
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_guid)
   end
@@ -56,12 +60,12 @@ class VCAP::CloudController::Permissions
   end
 
   def can_see_secrets_in_space?(space_guid, org_guid)
-    roles.admin? || roles.admin_read_only? ||
+    can_read_secrets_globally? ||
       membership.has_any_roles?(ROLES_FOR_SECRETS, space_guid, org_guid)
   end
 
   def can_write_to_space?(space_guid)
-    roles.admin? || membership.has_any_roles?(ROLES_FOR_WRITING, space_guid)
+    can_write_globally? || membership.has_any_roles?(ROLES_FOR_WRITING, space_guid)
   end
 
   def readable_space_guids
