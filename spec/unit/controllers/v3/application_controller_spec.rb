@@ -530,18 +530,50 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'asks for #can_read_from_isolation_segment? on behalf of the current user' do
       iso_seg = VCAP::CloudController::IsolationSegmentModel.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_isolation_segment?: true,
+        can_read_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_read_from_isolation_segment?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :isolation_segment_read_access, iso_seg: iso_seg.guid
 
       expect(permissions).to have_received(:can_read_from_isolation_segment?).with(iso_seg)
+      expect(perm_permissions).to have_received(:can_read_from_isolation_segment?).with(iso_seg)
+    end
+
+    it 'skips the experiment if the user is a global secrets reader' do
+      iso_seg = VCAP::CloudController::IsolationSegmentModel.make
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_isolation_segment?: true,
+        can_read_globally?: true,
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :isolation_segment_read_access, iso_seg: iso_seg.guid
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
       iso_seg = VCAP::CloudController::IsolationSegmentModel.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_isolation_segment?: 'original response',
+        can_read_globally?: false,
+      )
+
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :isolation_segment_read_access, iso_seg: iso_seg.guid
 

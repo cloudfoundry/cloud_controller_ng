@@ -145,6 +145,7 @@ class ApplicationController < ActionController::Base
     science 'can_read_from_isolation_segment?' do |e|
       e.context(isolation_segment_guid: isolation_segment.guid)
       e.use { db_permissions.can_read_from_isolation_segment?(isolation_segment) }
+      e.try { perm_permissions.can_read_from_isolation_segment?(isolation_segment) }
 
       e.run_if { !db_permissions.can_read_globally? }
     end
