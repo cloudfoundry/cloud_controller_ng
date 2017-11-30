@@ -1742,10 +1742,27 @@ module VCAP::CloudController
             service_instance.add_shared_space(shared_to_space)
           end
 
-          context 'and a developer in the originating space tries to update the instance' do
+          context 'and a developer in the originating space tries to update the instance without renaming' do
             it 'updates successfully' do
               put "/v2/service_instances/#{service_instance.guid}", body
               expect(last_response).to have_status_code 201
+            end
+          end
+
+          context 'and a developer in the originating space tries to rename the instance' do
+            let(:body) do
+              {
+                name: 'dont-rename-me',
+                tags: []
+              }.to_json
+            end
+
+            it 'fails and returns error that service instance cannot be renamed after sharing' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+
+              expect(last_response).to have_status_code(422)
+              expect(decoded_response['code']).to eq(390008)
+              expect(decoded_response['error_code']).to eq('CF-SharedServiceInstanceCannotBeRenamed')
             end
           end
 
