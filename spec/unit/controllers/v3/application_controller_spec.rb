@@ -18,28 +18,35 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def read_access
-      can_read?(params[:space_guid], params[:org_guid])
-      head 200
+      render status: 200, json: can_read?(params[:space_guid], params[:org_guid])
+    end
+
+    def write_to_org_access
+      render status: 200, json: can_write_to_org?(params[:org_guid])
+    end
+
+    def read_from_org_access
+      render status: 200, json: can_read_from_org?(params[:org_guid])
     end
 
     def secret_access
-      can_see_secrets?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
-      head 200
+      render status: 200, json: can_see_secrets?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
+    end
+
+    def write_globally_access
+      render status: 200, json: can_write_globally?
     end
 
     def read_globally_access
-      can_read_globally?
-      head 200
+      render status: 200, json: can_read_globally?
     end
 
     def isolation_segment_read_access
-      can_read_from_isolation_segment?(VCAP::CloudController::IsolationSegmentModel.find(guid: params[:iso_seg]))
-      head 200
+      render status: 200, json: can_read_from_isolation_segment?(VCAP::CloudController::IsolationSegmentModel.find(guid: params[:iso_seg]))
     end
 
     def write_access
-      can_write?(params[:space_guid])
-      head 200
+      render status: 200, json: can_write?(params[:space_guid])
     end
 
     def api_explode
@@ -223,9 +230,11 @@ RSpec.describe ApplicationController, type: :controller do
   describe '#can_read?' do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    it 'asks for #can_read_from_space? on behalf of the current user' do
+    before do
       routes.draw { get 'read_access' => 'anonymous#read_access' }
+    end
 
+    it 'asks for #can_read_from_space? on behalf of the current user' do
       permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: true)
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
 
@@ -233,14 +242,77 @@ RSpec.describe ApplicationController, type: :controller do
 
       expect(permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
     end
+
+    it 'uses the expected branch from the experiment' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(response.body).to eq 'original response'
+    end
+  end
+
+  describe '#can_write_to_org?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      routes.draw { get 'write_to_org_access' => 'anonymous#write_to_org_access' }
+    end
+
+    it 'asks for #can_write_to_org? on behalf of the current user' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_org?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :write_to_org_access, org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_write_to_org?).with('org-guid')
+    end
+
+    it 'uses the expected branch from the experiment' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_org?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :write_to_org_access, org_guid: 'org-guid'
+
+      expect(response.body).to eq 'original response'
+    end
+  end
+
+  describe '#can_read_from_org?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      routes.draw { get 'read_from_org_access' => 'anonymous#read_from_org_access' }
+    end
+
+    it 'asks for #can_read_from_org? on behalf of the current user' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_org?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :read_from_org_access, org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_read_from_org?).with('org-guid')
+    end
+
+    it 'uses the expected branch from the experiment' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_org?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :read_from_org_access, org_guid: 'org-guid'
+
+      expect(response.body).to eq 'original response'
+    end
   end
 
   describe '#can_see_secrets?' do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
+    before do
       routes.draw { get 'secret_access' => 'anonymous#secret_access' }
+    end
 
+    it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
       space = VCAP::CloudController::Space.make
       permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
@@ -249,14 +321,52 @@ RSpec.describe ApplicationController, type: :controller do
 
       expect(permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
     end
+
+    it 'uses the expected branch from the experiment' do
+      space = VCAP::CloudController::Space.make
+      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :secret_access, space_guid: space.guid
+
+      expect(response.body).to eq 'original response'
+    end
+  end
+
+  describe '#can_write_globally?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      routes.draw { get 'write_globally_access' => 'anonymous#write_globally_access' }
+    end
+
+    it 'asks for #can_write_globally? on behalf of the current user' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_globally?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :write_globally_access
+
+      expect(permissions).to have_received(:can_write_globally?)
+    end
+
+    it 'uses the expected branch from the experiment' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_globally?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :write_globally_access
+
+      expect(response.body).to eq 'original response'
+    end
   end
 
   describe '#can_read_globally?' do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    it 'asks for #can_read_globally? on behalf of the current user' do
+    before do
       routes.draw { get 'read_globally_access' => 'anonymous#read_globally_access' }
+    end
 
+    it 'asks for #can_read_globally? on behalf of the current user' do
       permissions = instance_double(VCAP::CloudController::Permissions, can_read_globally?: true)
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
 
@@ -264,14 +374,25 @@ RSpec.describe ApplicationController, type: :controller do
 
       expect(permissions).to have_received(:can_read_globally?)
     end
+
+    it 'uses the expected branch from the experiment' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_globally?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :read_globally_access
+
+      expect(response.body).to eq 'original response'
+    end
   end
 
   describe '#can_read_from_isolation_segment?' do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    it 'asks for #can_read_from_isolation_segment? on behalf of the current user' do
+    before do
       routes.draw { get 'isolation_segment_read_access' => 'anonymous#isolation_segment_read_access' }
+    end
 
+    it 'asks for #can_read_from_isolation_segment? on behalf of the current user' do
       iso_seg = VCAP::CloudController::IsolationSegmentModel.make
       permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: true)
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
@@ -280,20 +401,41 @@ RSpec.describe ApplicationController, type: :controller do
 
       expect(permissions).to have_received(:can_read_from_isolation_segment?).with(iso_seg)
     end
+
+    it 'uses the expected branch from the experiment' do
+      iso_seg = VCAP::CloudController::IsolationSegmentModel.make
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :isolation_segment_read_access, iso_seg: iso_seg.guid
+
+      expect(response.body).to eq 'original response'
+    end
   end
 
   describe '#can_write?' do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    it 'asks for #can_read_from_space? on behalf of the current user' do
+    before do
       routes.draw { get 'write_access' => 'anonymous#write_access' }
+    end
 
+    it 'asks for #can_read_from_space? on behalf of the current user' do
       permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: true)
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
 
       get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_write_to_space?).with('space-guid')
+    end
+
+    it 'uses the expected branch from the experiment' do
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: 'original response')
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      response = get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(response.body).to eq 'original response'
     end
   end
 
