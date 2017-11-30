@@ -360,17 +360,48 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'asks for #can_read_from_org? on behalf of the current user' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_org?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_org?: true,
+        can_read_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_read_from_org?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :read_from_org_access, org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_read_from_org?).with('org-guid')
+      expect(perm_permissions).to have_received(:can_read_from_org?).with('org-guid')
+    end
+
+
+    it 'skips the experiment if the user is a global reader' do
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_org?: true,
+        can_read_globally?: true
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :read_from_org_access, org_guid: 'org-guid'
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_org?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_org?: 'original response',
+        can_read_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :read_from_org_access, org_guid: 'org-guid'
 

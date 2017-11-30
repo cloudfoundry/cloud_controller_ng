@@ -117,6 +117,7 @@ class ApplicationController < ActionController::Base
     science 'can_read_from_org?' do |e|
       e.context(org_guid: org_guid)
       e.use { db_permissions.can_read_from_org?(org_guid) }
+      e.try { perm_permissions.can_read_from_org?(org_guid) }
 
       e.run_if { !db_permissions.can_read_globally? }
     end
