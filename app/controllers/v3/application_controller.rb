@@ -165,6 +165,7 @@ class ApplicationController < ActionController::Base
     science 'can_write_to_space?' do |e|
       e.context(space_guid: space_guid)
       e.use { db_permissions.can_write_to_space?(space_guid) }
+      e.try { perm_permissions.can_write_to_space?(space_guid) }
 
       e.run_if { !db_permissions.can_write_globally? }
     end
