@@ -24,11 +24,6 @@ module VCAP
           roles.admin?
         end
 
-        # Taken from lib/cloud_controller/permissions.rb
-        def can_read_secrets_globally?
-          roles.admin? || roles.admin_read_only?
-        end
-
         def can_read_from_org?(org_id)
           permissions = [
             { permission_name: 'org.manager', resource_id: org_id },

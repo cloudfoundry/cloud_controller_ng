@@ -379,7 +379,6 @@ RSpec.describe ApplicationController, type: :controller do
       expect(perm_permissions).to have_received(:can_read_from_org?).with('org-guid')
     end
 
-
     it 'skips the experiment if the user is a global reader' do
       permissions = instance_double(
         VCAP::CloudController::Permissions,
@@ -430,7 +429,6 @@ RSpec.describe ApplicationController, type: :controller do
         can_see_secrets_in_space?: false
       )
       allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
-
 
       get :secret_access, space_guid: space.guid
 

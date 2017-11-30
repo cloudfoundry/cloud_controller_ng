@@ -317,7 +317,6 @@ module VCAP::CloudController::Perm
         expect(has_permission).to equal(true)
       end
 
-
       it 'returns true when the user is a read-only admin' do
         allow(roles).to receive(:admin_read_only?).and_return(true)
 
