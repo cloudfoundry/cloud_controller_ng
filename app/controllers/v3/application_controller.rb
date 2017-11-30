@@ -154,6 +154,7 @@ class ApplicationController < ActionController::Base
     science 'can_see_secrets_from_space?' do |e|
       e.context(space_guid: space.guid)
       e.use { db_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
+      e.try { perm_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
 
       e.run_if { !db_permissions.can_read_secrets_globally? }
     end

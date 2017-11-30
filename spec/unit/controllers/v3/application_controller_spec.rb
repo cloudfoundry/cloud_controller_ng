@@ -418,18 +418,50 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
       space = VCAP::CloudController::Space.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_see_secrets_in_space?: true,
+        can_read_secrets_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_see_secrets_in_space?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
+
 
       get :secret_access, space_guid: space.guid
 
       expect(permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
+      expect(perm_permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
+    end
+
+    it 'skips the experiment if the user is a global secrets reader' do
+      space = VCAP::CloudController::Space.make
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_see_secrets_in_space?: true,
+        can_read_secrets_globally?: true,
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :secret_access, space_guid: space.guid
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
       space = VCAP::CloudController::Space.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_see_secrets_in_space?: 'original response',
+        can_read_secrets_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :secret_access, space_guid: space.guid
 
