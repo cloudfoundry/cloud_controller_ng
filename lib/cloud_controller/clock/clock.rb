@@ -20,7 +20,7 @@ module VCAP::CloudController
 
       schedule_job(job_opts) do
         job = yield
-        Jobs::Enqueuer.new(job, queue: 'cc-generic', priority: priority).enqueue
+        Jobs::Enqueuer.new(job, queue: name, priority: priority).enqueue
       end
     end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       schedule_job(job_opts) do
         job = yield
-        Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue
+        Jobs::Enqueuer.new(job, queue: name).enqueue
       end
     end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
 
       schedule_job(job_opts) do
         job = yield
-        Jobs::Enqueuer.new(job).run_inline
+        Jobs::Enqueuer.new(job, queue: name).run_inline
       end
     end
 

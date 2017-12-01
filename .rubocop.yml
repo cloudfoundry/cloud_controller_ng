@@ -88,6 +88,8 @@ Metrics/BlockLength:
     - lib/cloud_controller/config.rb
     - config/routes.rb
     - lib/tasks/db.rake
+    - lib/tasks/jobs.rake
+
   Max: 50
 
 Metrics/ClassLength:

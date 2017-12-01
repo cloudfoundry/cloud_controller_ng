@@ -19,7 +19,24 @@ namespace :jobs do
   desc 'Start a delayed_job worker.'
   task :generic, [:name] do |t, args|
     RakeConfig.context = :worker
-    CloudController::DelayedWorker.new(queues: ['cc-generic', 'sync-queue'],
+    queues = [
+      'cc-generic',
+      'diego_sync',
+      'app_usage_events',
+      'audit_events',
+      'failed_jobs',
+      'service_usage_events',
+      'completed_tasks',
+      'expired_blob_cleanup',
+      'expired_resource_cleanup',
+      'expired_orphaned_blob_cleanup',
+      'orphaned_blobs_cleanup',
+      'pollable_job_cleanup',
+      'pending_droplets',
+      'pending_builds',
+    ]
+
+    CloudController::DelayedWorker.new(queues: queues,
                                        name: args.name).start_working
   end
 
