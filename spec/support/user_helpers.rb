@@ -91,8 +91,10 @@ module UserHelpers
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
         email: opts[:email],
         scope: scopes,
-        iss: opts[:iss]
+        iss: opts[:iss],
+        jti: 'some-valid-jti',
       }
+
       encoding_opts[:user_name] = opts[:user_name] if opts[:user_name]
 
       encoding_opts[:exp] = 0 if opts[:expired]

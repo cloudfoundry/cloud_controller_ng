@@ -70,6 +70,7 @@ module VCAP::CloudController
               'payload' => 123,
               'exp'     => Time.now.utc.to_i + 10_000,
               'iss'     => token_issuer_string,
+              'jti'     => 'adb2aa5535d04a3180ec56927c859549',
             }
           end
 
@@ -162,6 +163,7 @@ module VCAP::CloudController
               'payload' => 123,
               'exp'     => Time.now.utc.to_i + 10_000,
               'iss'     => token_issuer_string,
+              'jti'     => 'adb2aa5535d04a3180ec56927c859549'
             }
           end
           let(:token_issuer_string) { 'https://uaa.my-cf.com/uaa/stuff/here' }
@@ -254,6 +256,7 @@ module VCAP::CloudController
               'payload' => 123,
               'exp'     => Time.now.utc.to_i + 10_000,
               'iss'     => uaa_issuer_string,
+              'jti'     => 'adb2aa5535d04a3180ec56927c859549',
             }
           end
 
@@ -267,7 +270,11 @@ module VCAP::CloudController
 
         context 'when token has expired' do
           let(:token_content) do
-            { 'aud' => 'resource-id', 'payload' => 123, 'exp' => Time.now.utc.to_i }
+            {
+              'aud' => 'resource-id',
+              'payload' => 123, 'exp' => Time.now.utc.to_i,
+              'jti' => 'adb2aa5535d04a3180ec56927c859549',
+            }
           end
 
           it 'raises a BadToken error' do
@@ -285,6 +292,27 @@ module VCAP::CloudController
               subject.decode_token('bearer invalid-token')
             }.to raise_error(VCAP::CloudController::UaaTokenDecoder::BadToken)
           end
+
+          context 'when token is not an access token' do
+            let(:token_content) do
+              {
+                'aud'     => 'resource-id',
+                'payload' => 123,
+                'exp'     => Time.now.utc.to_i + 10_000,
+                'iss'     => token_issuer_string,
+                'jti'     => 'adb2aa5535d04a3180ec56927c859549-r',
+              }
+            end
+            let(:token_issuer_string) { uaa_issuer_string }
+
+            it 'raises BadToken error' do
+              token = generate_token(rsa_key, token_content)
+
+              expect {
+                subject.decode_token("bearer #{token}")
+              }.to raise_error(VCAP::CloudController::UaaTokenDecoder::BadToken)
+            end
+          end
         end
 
         context 'when multiple asymmetric keys are used' do
@@ -295,6 +323,7 @@ module VCAP::CloudController
               'payload' => 123,
               'exp'     => Time.now.utc.to_i + 10_000,
               'iss'     => uaa_issuer_string,
+              'jti'     => 'adb2aa5535d04a3180ec56927c859549',
             }
           end
 
@@ -366,6 +395,7 @@ module VCAP::CloudController
               'payload' => 123,
               'exp'     => Time.now.utc.to_i,
               'iss'     => uaa_issuer_string,
+              'jti'     => 'adb2aa5535d04a3180ec56927c859549',
             }
           end
 

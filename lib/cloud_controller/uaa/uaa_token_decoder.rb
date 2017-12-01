@@ -73,6 +73,7 @@ module VCAP::CloudController
         @logger.warn("token currently expired but accepted within grace period of #{@grace_period_in_seconds} seconds")
       end
 
+      raise BadToken.new('Incorrect token') unless access_token?(token)
       raise BadToken.new('Incorrect issuer') if token['iss'] != uaa_issuer
 
       token
@@ -113,6 +114,10 @@ module VCAP::CloudController
     rescue
       retry unless (tries -= 1).zero?
       raise
+    end
+
+    def access_token?(token)
+      token['jti'] && token['jti'][-2..-1] != '-r'
     end
   end
 end

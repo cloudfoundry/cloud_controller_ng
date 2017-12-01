@@ -8,7 +8,8 @@ module IntegrationHttp
       'exp' => Time.now.utc.to_i + 10_000,
       'client_id' => Sham.guid,
       'scope' => ['cloud_controller.admin'],
-      'iss' => 'uaa_issuer'
+      'iss' => 'uaa_issuer',
+      'jti' => 'valid-jti',
     }
     CF::UAA::TokenCoder.encode(token, skey: 'tokensecret', algorithm: 'HS256')
   end
