@@ -10,13 +10,12 @@ module VCAP::CloudController
     MEDIUM_PRIORITY = 1
     LOW_PRIORITY    = 100
 
-    def schedule_daily_job(name:, at:, priority:, timeout:)
+    def schedule_daily_job(name:, at:, priority:)
       job_opts = {
         name:     name,
         interval: 1.day,
         at:       at,
         fudge:    DAILY_FUDGE_FACTOR,
-        timeout:  timeout,
       }
 
       schedule_job(job_opts) do
@@ -25,12 +24,11 @@ module VCAP::CloudController
       end
     end
 
-    def schedule_frequent_worker_job(name:, interval:, timeout:)
+    def schedule_frequent_worker_job(name:, interval:)
       job_opts = {
         name:     name,
         interval: interval,
         fudge:    FREQUENT_FUDGE_FACTOR,
-        timeout:  timeout,
       }
 
       schedule_job(job_opts) do

@@ -56,7 +56,6 @@ module VCAP::CloudController
         clock_opts = {
           name: job_config[:name],
           interval: @config.get(job_config[:name].to_sym, :frequency_in_seconds),
-          timeout: @config.get(:jobs, :global, :timeout_in_seconds),
         }
         @clock.schedule_frequent_worker_job(clock_opts) do
           klass = job_config[:class]
@@ -70,8 +69,7 @@ module VCAP::CloudController
         clock_opts = {
           name: cleanup_config[:name],
           at: cleanup_config[:time],
-          priority: cleanup_config[:priority] ? cleanup_config[:priority] : Clock::HIGH_PRIORITY,
-          timeout: @config.get(:jobs, :global, :timeout_in_seconds),
+          priority: cleanup_config[:priority] ? cleanup_config[:priority] : Clock::HIGH_PRIORITY
         }
 
         @clock.schedule_daily_job(clock_opts) do
