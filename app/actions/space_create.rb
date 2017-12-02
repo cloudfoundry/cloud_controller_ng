@@ -3,13 +3,23 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    def initialize(perm_client:)
+      @perm_client = perm_client
+    end
+
     def create(org, message)
-      VCAP::CloudController::Space.create(name: message.name, organization: org)
+      space = VCAP::CloudController::Space.create(name: message.name, organization: org)
+      VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
+        perm_client.create_space_role(role: role, space_id: space.guid)
+      end
+      space
     rescue Sequel::ValidationFailed => e
       validation_error!(e)
     end
 
     private
+
+    attr_reader :perm_client
 
     def validation_error!(error)
       if error.errors.on([:organization_id, :name])&.include?(:unique)

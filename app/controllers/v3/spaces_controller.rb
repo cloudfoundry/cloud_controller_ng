@@ -26,10 +26,7 @@ class SpacesV3Controller < ApplicationController
 
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org
-    space = SpaceCreate.new.create(org, message)
-    VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
-      perm_client.create_space_role(role: role, space_id: space.guid)
-    end
+    space = SpaceCreate.new(perm_client: perm_client).create(org, message)
 
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e

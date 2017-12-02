@@ -5,9 +5,11 @@ module VCAP::CloudController
   RSpec.describe SpaceCreate do
     describe 'create' do
       let(:org) { VCAP::CloudController::Organization.make }
+      let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
+
       it 'creates a space' do
         message = VCAP::CloudController::SpaceCreateMessage.new(name: 'my-space')
-        space = SpaceCreate.new.create(org, message)
+        space = SpaceCreate.new(perm_client: perm_client).create(org, message)
 
         expect(space.organization).to eq(org)
         expect(space.name).to eq('my-space')
@@ -22,7 +24,7 @@ module VCAP::CloudController
 
           message = VCAP::CloudController::SpaceCreateMessage.new(name: 'foobar')
           expect {
-            SpaceCreate.new.create(org, message)
+            SpaceCreate.new(perm_client: perm_client).create(org, message)
           }.to raise_error(SpaceCreate::Error, 'blork is busted')
         end
 
@@ -36,7 +38,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
             expect {
-              SpaceCreate.new.create(org, message)
+              SpaceCreate.new(perm_client: perm_client).create(org, message)
             }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end
