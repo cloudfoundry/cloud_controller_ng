@@ -276,7 +276,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         ]
       end
 
-      it 'does not share to any of the valid spaces and returns a 422' do
+      it 'does not share to any of the valid target spaces and returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
         expect(response.body).to include('Unable to share to spaces')
@@ -312,7 +312,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         service_instance.remove_shared_space(target_space)
       end
 
-      it 'cannot share the service instance into another space' do
+      it 'cannot share the service instance into another target space' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 403
       end
@@ -471,7 +471,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
       end
 
-      it 'cannot unshare the service instance from another space' do
+      it 'cannot unshare the service instance' do
         delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
         expect(response.status).to eq 403
       end
