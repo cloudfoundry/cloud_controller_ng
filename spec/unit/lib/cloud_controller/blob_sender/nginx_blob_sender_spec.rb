@@ -22,13 +22,13 @@ module CloudController
           let(:controller) { ApplicationController.new }
 
           before do
-            controller.instance_variable_set(:@_response, Rack::Response.new)
+            controller.instance_variable_set(:@_response, ActionDispatch::Response.new)
           end
 
           it 'returns the correct status and headers' do
             sender.send_blob(blob, controller)
 
-            expect(controller.response_body).to be_nil
+            expect(controller.response_body).to eq([''])
             expect(controller.status).to eq(200)
             expect(controller.response.headers).to include('X-Accel-Redirect' => 'http://url/to/blob')
           end

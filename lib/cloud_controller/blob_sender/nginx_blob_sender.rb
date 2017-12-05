@@ -6,9 +6,8 @@ module CloudController
         logger.debug "nginx redirect #{url}"
 
         if controller.is_a?(ActionController::Base)
-          controller.response_body    = nil
-          controller.status           = 200
           controller.response.headers['X-Accel-Redirect'] = url
+          controller.render status: 200, nothing: true
         else
           return [200, { 'X-Accel-Redirect' => url }, '']
         end
