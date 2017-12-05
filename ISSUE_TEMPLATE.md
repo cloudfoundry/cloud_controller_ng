@@ -20,6 +20,8 @@ Thanks for submitting an issue to `cloud_controller_ng`. We are always trying to
 
 [describe what you you currently experience from this process, and thereby explain the bug]
 
+[include relevant logs]
+
 ## Possible Fix
 
 [not obligatory, but suggest fixes or reasons for the bug]
