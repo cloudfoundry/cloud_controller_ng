@@ -17,6 +17,12 @@ module VCAP::CloudController::Jobs
       end
     end
 
+    context '#max_run_time' do
+      it 'uses the timeout' do
+        expect(timeout_job.max_run_time).to eq(timeout)
+      end
+    end
+
     context 'when the job takes longer than its timeout' do
       before do
         allow(job).to receive(:perform) { sleep(2) }

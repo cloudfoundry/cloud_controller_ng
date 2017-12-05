@@ -17,6 +17,11 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 
+      # Per DelayedJob docs: once max_run_time is reached, if a job is still locked the lock can be hijacked by another worker
+      def max_run_time
+        @timeout
+      end
+
       attr_reader :timeout
 
       def job
