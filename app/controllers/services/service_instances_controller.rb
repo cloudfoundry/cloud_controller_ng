@@ -361,6 +361,12 @@ module VCAP::CloudController
 
     private
 
+    class ServiceInstanceSharedToEagerLoader
+      def eager_load_dataset(spaces, _, _, _, _)
+        spaces.eager(:organization)
+      end
+    end
+
     class ServiceInstanceSharedToSerializer
       def initialize(service_instance)
         @service_instance = service_instance
@@ -374,7 +380,7 @@ module VCAP::CloudController
 
     def create_paginated_collection_renderer(service_instance)
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(
-        VCAP::CloudController::RestController::SecureEagerLoader.new,
+        ServiceInstanceSharedToEagerLoader.new,
         ServiceInstanceSharedToSerializer.new(service_instance),
         {
           max_results_per_page: config.get(:renderer, :max_results_per_page),
