@@ -283,12 +283,22 @@ RSpec.describe 'Service Instances' do
   end
 
   describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do
+    let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
+
+    def enable_feature_flag!
+      feature_flag.enabled = true
+      feature_flag.save
+    end
+
+    def disable_feature_flag!
+      feature_flag.enabled = false
+      feature_flag.save
+    end
+
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
         FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
       end
-
-      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
 
       share_request = {
         'data' => [
@@ -296,8 +306,11 @@ RSpec.describe 'Service Instances' do
         ]
       }
 
+      enable_feature_flag!
       post "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", share_request.to_json, admin_header
       expect(last_response.status).to eq(200)
+
+      disable_feature_flag!
     end
 
     it 'unshares the service instance from the target space' do
@@ -322,7 +335,10 @@ RSpec.describe 'Service Instances' do
 
     it 'deletes associated bindings in target space when service instance is unshared' do
       process = VCAP::CloudController::ProcessModelFactory.make(diego: false, space: target_space)
+
+      enable_feature_flag!
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: service_instance1, app: process.app, credentials: { secret: 'key' })
+      disable_feature_flag!
 
       get "/v2/service_bindings/#{service_binding.guid}", nil, admin_header
       expect(last_response.status).to eq(200)

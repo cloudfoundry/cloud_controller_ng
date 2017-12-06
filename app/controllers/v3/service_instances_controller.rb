@@ -48,8 +48,6 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unshare_service_instance
-    FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
-
     service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
