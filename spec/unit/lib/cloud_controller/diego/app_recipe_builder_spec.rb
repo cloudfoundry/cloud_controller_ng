@@ -530,7 +530,7 @@ module VCAP::CloudController
                 ],
                 'internal_routes' => [
                   {
-                    'hostname' => 'app-guid.sd-local',
+                    'hostname' => 'app-guid.apps.internal',
                   }
                 ]
               }
@@ -579,7 +579,7 @@ module VCAP::CloudController
                     key:   'internal-router',
                     value: [
                       {
-                        'hostname' => 'app-guid.sd-local',
+                        'hostname' => 'app-guid.apps.internal',
                       }
                     ].to_json
                   )
@@ -608,7 +608,7 @@ module VCAP::CloudController
                   ],
                   'internal_routes' => [
                     {
-                      'hostname' => 'app-guid.sd-local',
+                      'hostname' => 'app-guid.apps.internal',
                     }
                   ]
                 }
@@ -644,7 +644,7 @@ module VCAP::CloudController
                       key: 'internal-router',
                       value: [
                         {
-                          'hostname' => 'app-guid.sd-local',
+                          'hostname' => 'app-guid.apps.internal',
                         }
                       ].to_json
                     )
@@ -674,7 +674,7 @@ module VCAP::CloudController
                   ],
                   'internal_routes' => [
                     {
-                      'hostname' => 'app-guid.sd-local',
+                      'hostname' => 'app-guid.apps.internal',
                     }
                   ]
                 }
@@ -712,7 +712,7 @@ module VCAP::CloudController
                       key: 'internal-router',
                       value: [
                         {
-                          'hostname' => 'app-guid.sd-local',
+                          'hostname' => 'app-guid.apps.internal',
                         }
                       ].to_json
                     )
@@ -1221,7 +1221,7 @@ module VCAP::CloudController
               ],
               'internal_routes' => [
                 {
-                  'hostname' => 'app-guid.sd-local',
+                  'hostname' => 'app-guid.apps.internal',
                 }
               ]
             }
@@ -1270,7 +1270,7 @@ module VCAP::CloudController
                   key:   'internal-router',
                   value: [
                     {
-                      'hostname' => 'app-guid.sd-local',
+                      'hostname' => 'app-guid.apps.internal',
                     }
                   ].to_json
                 )
@@ -1299,7 +1299,7 @@ module VCAP::CloudController
                 ],
                 'internal_routes' => [
                   {
-                    'hostname' => 'app-guid.sd-local',
+                    'hostname' => 'app-guid.apps.internal',
                   }
                 ]
               }
@@ -1335,7 +1335,7 @@ module VCAP::CloudController
                     key:   'internal-router',
                     value: [
                       {
-                        'hostname' => 'app-guid.sd-local',
+                        'hostname' => 'app-guid.apps.internal',
                       }
                     ].to_json
                   )
@@ -1364,7 +1364,7 @@ module VCAP::CloudController
                 ],
                 'internal_routes' => [
                   {
-                    'hostname' => 'app-guid.sd-local',
+                    'hostname' => 'app-guid.apps.internal',
                   }
                 ]
               }
@@ -1402,7 +1402,7 @@ module VCAP::CloudController
                     key:   'internal-router',
                     value: [
                       {
-                        'hostname' => 'app-guid.sd-local',
+                        'hostname' => 'app-guid.apps.internal',
                       }
                     ].to_json
                   )
