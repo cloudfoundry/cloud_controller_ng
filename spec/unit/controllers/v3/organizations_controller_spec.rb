@@ -115,7 +115,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         set_current_user_as_admin(user: user)
       end
 
-      context 'when the org name is missing' do
+      context 'when there is a message validation failure' do
         it 'displays an informative error' do
           post :create, body: { name: '' }
           expect(response.status).to eq(422)
@@ -123,32 +123,17 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         end
       end
 
-      context 'when the org name is NOT unique' do
-        let(:name) { 'Olsen' }
+      context 'when there is a model validation failure' do
+        let(:name) { 'not-unique' }
 
         before do
-          VCAP::CloudController::Organization.make(name: name)
-        end
-
-        it 'displays an informative error' do
-          post :create, body: { name: name }
-          expect(response.status).to eq(422)
-          expect(response).to have_error_message('Name must be unique')
-        end
-      end
-
-      context 'when there is another validation exception' do
-        before do
-          errors = Sequel::Model::Errors.new
-          errors.add(:blork, 'is busted')
-          expect(VCAP::CloudController::Organization).to receive(:create).
-            and_raise(Sequel::ValidationFailed.new(errors))
+          VCAP::CloudController::Organization.make name: name
         end
 
         it 'responds with 422' do
-          post :create, body: { name: 'George' }
+          post :create, body: { name: name }
           expect(response.status).to eq(422)
-          expect(response).to have_error_message('blork is busted')
+          expect(response).to have_error_message('Name must be unique')
         end
       end
     end

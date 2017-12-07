@@ -1,11 +1,12 @@
-require 'presenters/v3/paginated_list_presenter'
-require 'messages/orgs/organization_create_message'
-require 'messages/orgs/orgs_list_message'
-require 'presenters/v3/to_one_relationship_presenter'
-require 'messages/orgs/orgs_default_iso_seg_update_message'
-require 'fetchers/org_list_fetcher'
+require 'actions/organization_create'
 require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
+require 'fetchers/org_list_fetcher'
+require 'messages/orgs/organization_create_message'
+require 'messages/orgs/orgs_default_iso_seg_update_message'
+require 'messages/orgs/orgs_list_message'
+require 'presenters/v3/paginated_list_presenter'
+require 'presenters/v3/to_one_relationship_presenter'
 
 class OrganizationsV3Controller < ApplicationController
   include SubResource
@@ -40,16 +41,10 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = Organization.create(name: message.name)
-    VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
-      perm_client.create_org_role(role: role, org_id: org.guid)
-    end
+    org = OrganizationCreate.new(perm_client: perm_client).create(message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
-  rescue Sequel::ValidationFailed => e
-    if e.errors.on(:name)&.include?(:unique)
-      unprocessable!('Name must be unique')
-    end
+  rescue OrganizationCreate::Error => e
     unprocessable!(e.message)
   end
 

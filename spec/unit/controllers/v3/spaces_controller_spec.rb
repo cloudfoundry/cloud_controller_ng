@@ -450,7 +450,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
     end
 
-    context 'when there is a validation failure' do
+    context 'when there is a message validation failure' do
       let(:name) { nil }
 
       it 'returns a 422 and a helpful error' do
@@ -459,6 +459,22 @@ RSpec.describe SpacesV3Controller, type: :controller do
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
         expect(response.body).to include "Name can't be blank"
+      end
+    end
+
+    context 'when there is a model validation failure' do
+      let(:name) { 'not-unique' }
+
+      before do
+        VCAP::CloudController::Space.make name: name, organization: org
+      end
+
+      it 'returns a 422 and a helpful error' do
+        post :create, body: req_body
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Name must be unique'
       end
     end
   end
