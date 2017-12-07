@@ -87,12 +87,6 @@ module CloudController
         raise FileNotFound if source_file.nil?
 
         source_file.copy(@directory_key, partitioned_key(destination_key), formatted_storage_options)
-
-        if local?
-          dest_file = file(destination_key)
-          dest_file.public = 'public-read'
-          dest_file.save
-        end
       end
 
       def delete_all(page_size=DEFAULT_BATCH_SIZE)

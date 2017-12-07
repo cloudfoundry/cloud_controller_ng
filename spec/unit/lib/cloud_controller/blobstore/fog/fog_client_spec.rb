@@ -380,24 +380,6 @@ module CloudController
             expect(directory.files).to have(2).item
           end
 
-          context 'when the source file is public' do
-            it 'copies as a public file' do
-              allow(client).to receive(:local?) { true }
-              upload_tmpfile(client, src_key)
-
-              client.cp_file_between_keys(src_key, dest_key)
-              expect(client.blob(dest_key).file.public_url).to be
-            end
-          end
-
-          context 'when the source file is private' do
-            it 'does not have a public url' do
-              upload_tmpfile(client, src_key)
-              client.cp_file_between_keys(src_key, dest_key)
-              expect(client.blob(dest_key).file.public_url).to be_nil
-            end
-          end
-
           context 'when the destination key has a package already' do
             before do
               upload_tmpfile(client, src_key)
