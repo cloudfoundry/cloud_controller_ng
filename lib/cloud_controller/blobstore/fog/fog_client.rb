@@ -86,10 +86,6 @@ module CloudController
         source_file = file(source_key)
         raise FileNotFound if source_file.nil?
 
-        if local?
-          delete(destination_key) if file(destination_key)
-        end
-
         source_file.copy(@directory_key, partitioned_key(destination_key), formatted_storage_options)
 
         if local?

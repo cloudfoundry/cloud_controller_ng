@@ -399,54 +399,22 @@ module CloudController
           end
 
           context 'when the destination key has a package already' do
-            context 'remote' do
-              before do
-                upload_tmpfile(client, src_key)
-                Tempfile.open('') do |tmpfile|
-                  tmpfile.write('This should be deleted and replaced with new file')
-                  tmpfile.close
-                  client.cp_to_blobstore(tmpfile.path, dest_key)
-                end
-              end
-
-              it 'removes the old package from the package blobstore' do
-                client.cp_file_between_keys(src_key, dest_key)
-                expect(directory.files).to have(2).item
-
-                src_file_length  = client.blob(dest_key).file.content_length
-                dest_file_length = client.blob(src_key).file.content_length
-                expect(dest_file_length).to eq(src_file_length)
+            before do
+              upload_tmpfile(client, src_key)
+              Tempfile.open('') do |tmpfile|
+                tmpfile.write('This should be deleted and replaced with new file')
+                tmpfile.close
+                client.cp_to_blobstore(tmpfile.path, dest_key)
               end
             end
 
-            context 'local' do
-              let(:connection_config) { { provider: 'Local', local_root: local_dir } }
-              before do
-                Fog.unmock!
-              end
+            it 'removes the old package from the package blobstore' do
+              client.cp_file_between_keys(src_key, dest_key)
+              expect(directory.files).to have(2).item
 
-              after do
-                Fog.mock!
-              end
-
-              before do
-                upload_tmpfile(client, src_key)
-                Tempfile.open('') do |tmpfile|
-                  tmpfile.write('This should be deleted and replaced with new file')
-                  tmpfile.close
-                  ::File.chmod(0400, tmpfile.path)
-                  client.cp_to_blobstore(tmpfile.path, dest_key)
-                end
-              end
-
-              it 'removes the old package from the package blobstore' do
-                client.cp_file_between_keys(src_key, dest_key)
-                expect(directory.files).to have(2).item
-
-                src_file_length  = client.blob(dest_key).file.content_length
-                dest_file_length = client.blob(src_key).file.content_length
-                expect(dest_file_length).to eq(src_file_length)
-              end
+              src_file_length  = client.blob(dest_key).file.content_length
+              dest_file_length = client.blob(src_key).file.content_length
+              expect(dest_file_length).to eq(src_file_length)
             end
           end
 
