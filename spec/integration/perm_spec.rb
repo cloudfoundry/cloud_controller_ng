@@ -237,8 +237,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               org_role_name = "org-#{role}-#{org_id}"
 
               post '/v2/spaces', {
-                name: SecureRandom.uuid,
-                organization_guid: org_id
+                  name: SecureRandom.uuid,
+                  organization_guid: org_id
               }.to_json
 
               expect(last_response.status).to eq(201)
@@ -247,90 +247,54 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               space_id = json_body['metadata']['guid']
               space_role_name = "space-developer-#{space_id}"
 
-              delete "/v2/organizations/#{org_id}?recursive=false"
+              delete "/v2/organizations/#{org_id}?recursive=true"
 
-              expect(last_response.status).to eq(400)
+              expect(last_response.status).to eq(204)
 
               expect {
                 client.get_role(org_role_name)
-              }.not_to raise_error
+              }.to raise_error GRPC::NotFound
               expect {
                 client.get_role(space_role_name)
-              }.not_to raise_error
+              }.to raise_error GRPC::NotFound
             end
           end
 
-          describe 'with "recursive" param' do
-            describe 'synchronous deletion' do
-              it 'deletes the roles recursively' do
-                post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+          describe 'async deletion' do
+            it 'deletes the roles recursively' do
+              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-                expect(last_response.status).to eq(201)
+              expect(last_response.status).to eq(201)
 
-                json_body = JSON.parse(last_response.body)
-                org_id = json_body['metadata']['guid']
-                org_role_name = "org-#{role}-#{org_id}"
+              json_body = JSON.parse(last_response.body)
+              org_id = json_body['metadata']['guid']
+              org_role_name = "org-#{role}-#{org_id}"
 
-                post '/v2/spaces', {
-                    name: SecureRandom.uuid,
-                    organization_guid: org_id
-                }.to_json
+              post '/v2/spaces', {
+                  name: SecureRandom.uuid,
+                  organization_guid: org_id
+              }.to_json
 
-                expect(last_response.status).to eq(201)
+              expect(last_response.status).to eq(201)
 
-                json_body = JSON.parse(last_response.body)
-                space_id = json_body['metadata']['guid']
-                space_role_name = "space-developer-#{space_id}"
+              json_body = JSON.parse(last_response.body)
+              space_id = json_body['metadata']['guid']
+              space_role_name = "space-developer-#{space_id}"
 
-                delete "/v2/organizations/#{org_id}?recursive=true"
+              delete "/v2/organizations/#{org_id}?recursive=true&async=true"
 
-                expect(last_response.status).to eq(204)
+              expect(last_response.status).to eq(202)
 
-                expect {
-                  client.get_role(org_role_name)
-                }.to raise_error GRPC::NotFound
-                expect {
-                  client.get_role(space_role_name)
-                }.to raise_error GRPC::NotFound
-              end
-            end
+              succeeded_jobs, failed_jobs = worker.work_off
+              expect(succeeded_jobs).to be > 0
+              expect(failed_jobs).to equal(0)
 
-            describe 'async deletion' do
-              it 'deletes the roles recursively' do
-                post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-
-                expect(last_response.status).to eq(201)
-
-                json_body = JSON.parse(last_response.body)
-                org_id = json_body['metadata']['guid']
-                org_role_name = "org-#{role}-#{org_id}"
-
-                post '/v2/spaces', {
-                    name: SecureRandom.uuid,
-                    organization_guid: org_id
-                }.to_json
-
-                expect(last_response.status).to eq(201)
-
-                json_body = JSON.parse(last_response.body)
-                space_id = json_body['metadata']['guid']
-                space_role_name = "space-developer-#{space_id}"
-
-                delete "/v2/organizations/#{org_id}?recursive=true&async=true"
-
-                expect(last_response.status).to eq(202)
-
-                succeeded_jobs, failed_jobs = worker.work_off
-                expect(succeeded_jobs).to be > 0
-                expect(failed_jobs).to equal(0)
-
-                expect {
-                  client.get_role(org_role_name)
-                }.to raise_error(GRPC::NotFound), "Expected that role #{org_role_name} was not found"
-                expect {
-                  client.get_role(space_role_name)
-                }.to raise_error(GRPC::NotFound), "Expected that role #{space_role_name} was not found"
-              end
+              expect {
+                client.get_role(org_role_name)
+              }.to raise_error(GRPC::NotFound), "Expected that role #{org_role_name} was not found"
+              expect {
+                client.get_role(space_role_name)
+              }.to raise_error(GRPC::NotFound), "Expected that role #{space_role_name} was not found"
             end
           end
         end
