@@ -63,7 +63,11 @@ module VCAP::CloudController
 
       before do
         @process_a = ProcessModelFactory.make(space: @space_a)
-        @service_instance_a = ManagedServiceInstance.make(space: @space_a)
+        @service_instance_a = ManagedServiceInstance.make
+
+        FeatureFlag.create(name: :service_instance_sharing, enabled: true)
+        @service_instance_a.add_shared_space(@space_a)
+
         @obj_a = ServiceBinding.make(
           app: @process_a.app,
           service_instance: @service_instance_a
@@ -148,6 +152,16 @@ module VCAP::CloudController
             name: 'service binding',
             path: '/v2/service_bindings',
             enumerate: 1
+        end
+
+        describe 'Developer in service instance space' do
+          let(:member_a) { make_developer_for_space(@service_instance_a.space) }
+          let(:member_b) { make_developer_for_space(@service_instance_b.space) }
+
+          include_examples 'permission enumeration', 'Developer in service instance space',
+            name: 'service binding',
+            path: '/v2/service_bindings',
+            enumerate: 0
         end
       end
     end

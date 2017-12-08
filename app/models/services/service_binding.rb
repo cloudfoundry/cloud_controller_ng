@@ -83,7 +83,7 @@ module VCAP::CloudController
     end
 
     def self.user_visibility_filter(user)
-      { service_instance: ServiceInstance.user_visible(user) }
+      { app: AppModel.user_visible(user) }
     end
 
     def required_parameters
