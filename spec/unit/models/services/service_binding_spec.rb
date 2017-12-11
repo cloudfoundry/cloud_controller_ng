@@ -138,33 +138,20 @@ module VCAP::CloudController
 
         context 'when the service instance and the app are in different spaces' do
           let(:service_instance) { ManagedServiceInstance.make }
-          context 'when the service_instance_sharing feature flag is enabled' do
-            before do
-              VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
-            end
-
-            context 'when the service instance has not been shared into the app space' do
-              it 'is not valid' do
-                expect { ServiceBinding.make(service_instance: service_instance, app: app)
-                }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
-              end
-            end
-
-            context 'when the service instance has been shared into the app space' do
-              before do
-                service_instance.add_shared_space(app.space)
-              end
-
-              it 'is valid' do
-                expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
-              end
-            end
-          end
-
-          context 'when the service_instance_sharing feature flag is not enabled' do
+          context 'when the service instance has not been shared into the app space' do
             it 'is not valid' do
               expect { ServiceBinding.make(service_instance: service_instance, app: app)
               }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
+            end
+          end
+
+          context 'when the service instance has been shared into the app space' do
+            before do
+              service_instance.add_shared_space(app.space)
+            end
+
+            it 'is valid' do
+              expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
             end
           end
         end
@@ -172,20 +159,8 @@ module VCAP::CloudController
         context 'when the service instance and the app are in the same space' do
           let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
 
-          context 'when the service_instance_sharing feature flag is enabled' do
-            before do
-              VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
-            end
-
-            it 'is valid' do
-              expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
-            end
-          end
-
-          context 'when the service_instance_sharing feature flag is not enabled' do
-            it 'is valid' do
-              expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
-            end
+          it 'is valid' do
+            expect(ServiceBinding.make(service_instance: service_instance, app: app)).to be_valid
           end
         end
       end
@@ -318,7 +293,6 @@ module VCAP::CloudController
       let!(:service_instance) { ManagedServiceInstance.make }
       let!(:other_binding) { ServiceBinding.make }
       let!(:service_binding) do
-        VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
         service_instance.add_shared_space(app_model.space)
         ServiceBinding.make(service_instance: service_instance, app: app_model)
       end
