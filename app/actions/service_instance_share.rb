@@ -23,10 +23,18 @@ module VCAP::CloudController
 
     def valid_target_spaces!(service_instance, target_spaces)
       no_sharing_to_self!(service_instance, target_spaces)
+      plan_active!(service_instance)
 
       target_spaces.each do |space|
         plan_visibility!(service_instance, space)
         name_uniqueness!(service_instance, space)
+      end
+    end
+
+    def plan_active!(service_instance)
+      if !service_instance.service_plan.active?
+        error_msg = "The service instance could not be shared as the plan #{service_instance.service_plan.name} is inactive."
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', error_msg)
       end
     end
 
