@@ -161,7 +161,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
             expect {
               client.get_role(role_name)
-            }.to raise_error GRPC::NotFound
+            }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
           end
         end
 
@@ -185,7 +185,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
             expect {
               client.get_role(role_name)
-            }.to raise_error(GRPC::NotFound), "Expected that role #{role_name} was not found"
+            }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
           end
         end
       end
@@ -253,10 +253,10 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
               expect {
                 client.get_role(org_role_name)
-              }.to raise_error GRPC::NotFound
+              }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
               expect {
                 client.get_role(space_role_name)
-              }.to raise_error GRPC::NotFound
+              }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
             end
           end
 
@@ -291,10 +291,10 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
               expect {
                 client.get_role(org_role_name)
-              }.to raise_error(GRPC::NotFound), "Expected that role #{org_role_name} was not found"
+              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{org_role_name} was not found"
               expect {
                 client.get_role(space_role_name)
-              }.to raise_error(GRPC::NotFound), "Expected that role #{space_role_name} was not found"
+              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{space_role_name} was not found"
             end
           end
         end
@@ -576,7 +576,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
             expect {
               client.get_role(role_name)
-            }.to raise_error GRPC::NotFound
+            }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
           end
         end
 
@@ -603,7 +603,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
             expect {
               client.get_role(role_name)
-            }.to raise_error(GRPC::NotFound), "Expected that role #{role_name} was not found"
+            }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
           end
         end
 

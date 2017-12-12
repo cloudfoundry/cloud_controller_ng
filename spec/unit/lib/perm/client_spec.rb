@@ -38,7 +38,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the role already exists' do
-        allow(client).to receive(:create_role).and_raise(GRPC::AlreadyExists)
+        allow(client).to receive(:create_role).and_raise(CloudFoundry::Perm::V1::Errors::AlreadyExists, '123')
 
         expect { subject.create_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
 
@@ -51,18 +51,28 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:create_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:create_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:create_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect { subject.create_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
 
         expect(logger).to have_received(:error).with(
           'create-role.bad-status',
           role: "org-developer-#{org_id}",
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:create_role).and_raise(StandardError)
+
+        expect { subject.create_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'create-role.failed',
+          anything)
       end
     end
 
@@ -74,7 +84,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the role does not exist' do
-        allow(client).to receive(:delete_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:delete_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect { subject.delete_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
 
@@ -87,18 +97,28 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:delete_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:delete_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:delete_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect { subject.delete_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
 
         expect(logger).to have_received(:error).with(
           'delete-role.bad-status',
           role: "org-developer-#{org_id}",
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           metadata: anything,
           details: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:delete_role).and_raise(StandardError)
+
+        expect { subject.delete_org_role(role: 'developer', org_id: org_id) }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'delete-role.failed',
+          anything)
       end
     end
 
@@ -111,7 +131,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the assignment already exists' do
-        allow(client).to receive(:assign_role).and_raise(GRPC::AlreadyExists)
+        allow(client).to receive(:assign_role).and_raise(CloudFoundry::Perm::V1::Errors::AlreadyExists, '123')
 
         expect {
           subject.assign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
@@ -121,7 +141,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the role does not exist' do
-        allow(client).to receive(:assign_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:assign_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect {
           subject.assign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
@@ -136,8 +156,8 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:assign_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:assign_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:assign_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect {
           subject.assign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
@@ -148,10 +168,22 @@ module VCAP::CloudController::Perm
           role: "org-developer-#{org_id}",
           user_id: user_id,
           issuer: issuer,
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:assign_role).and_raise(StandardError)
+
+        expect {
+          subject.assign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
+        }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'assign-role.failed',
+          anything)
       end
     end
 
@@ -164,7 +196,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if something does not exist' do
-        allow(client).to receive(:unassign_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:unassign_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect {
           subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
@@ -185,8 +217,8 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:unassign_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:unassign_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:unassign_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect {
           subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
@@ -197,10 +229,22 @@ module VCAP::CloudController::Perm
           role: "org-developer-#{org_id}",
           user_id: user_id,
           issuer: issuer,
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:unassign_role).and_raise(StandardError)
+
+        expect {
+          subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
+        }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'unassign-role.failed',
+          anything)
       end
     end
 
@@ -227,7 +271,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if something does not exist' do
-        allow(client).to receive(:unassign_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:unassign_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect {
           subject.unassign_roles(org_ids: [org_id], space_ids: [space_id], user_id: user_id, issuer: issuer)
@@ -249,7 +293,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the role already exists' do
-        allow(client).to receive(:create_role).and_raise(GRPC::AlreadyExists)
+        allow(client).to receive(:create_role).and_raise(CloudFoundry::Perm::V1::Errors::AlreadyExists, '123')
 
         expect { subject.create_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
 
@@ -262,17 +306,27 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:create_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:create_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:create_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect { subject.create_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
         expect(logger).to have_received(:error).with(
           'create-role.bad-status',
           role: "space-developer-#{space_id}",
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:create_role).and_raise(StandardError)
+
+        expect { subject.create_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'create-role.failed',
+          anything)
       end
     end
 
@@ -284,7 +338,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the role does not exist' do
-        allow(client).to receive(:delete_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:delete_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect { subject.delete_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
 
@@ -297,18 +351,28 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:delete_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:delete_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:delete_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect { subject.delete_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
 
         expect(logger).to have_received(:error).with(
           'delete-role.bad-status',
           role: "space-developer-#{space_id}",
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:delete_role).and_raise(StandardError)
+
+        expect { subject.delete_space_role(role: 'developer', space_id: space_id) }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'delete-role.failed',
+          anything)
       end
     end
 
@@ -321,7 +385,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the assignment already exists' do
-        allow(client).to receive(:assign_role).and_raise(GRPC::AlreadyExists)
+        allow(client).to receive(:assign_role).and_raise(CloudFoundry::Perm::V1::Errors::AlreadyExists, '123')
 
         expect {
           subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
@@ -335,7 +399,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if the role does not exist' do
-        allow(client).to receive(:assign_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:assign_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect {
           subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
@@ -354,8 +418,8 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:assign_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:assign_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:assign_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect {
           subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
@@ -366,10 +430,22 @@ module VCAP::CloudController::Perm
           role: "space-developer-#{space_id}",
           user_id: user_id,
           issuer: issuer,
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:assign_role).and_raise(StandardError)
+
+        expect {
+          subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
+        }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'assign-role.failed',
+          anything)
       end
     end
 
@@ -382,7 +458,7 @@ module VCAP::CloudController::Perm
       end
 
       it 'does not fail if something does not exist' do
-        allow(client).to receive(:unassign_role).and_raise(GRPC::NotFound)
+        allow(client).to receive(:unassign_role).and_raise(CloudFoundry::Perm::V1::Errors::NotFound, '123')
 
         expect {
           subject.unassign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
@@ -403,8 +479,8 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:unassign_role)
       end
 
-      it 'logs all other GRPC errors' do
-        allow(client).to receive(:unassign_role).and_raise(GRPC::Unavailable)
+      it 'logs all other Perm errors' do
+        allow(client).to receive(:unassign_role).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         expect {
           subject.unassign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
@@ -415,10 +491,22 @@ module VCAP::CloudController::Perm
           role: "space-developer-#{space_id}",
           user_id: user_id,
           issuer: issuer,
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:unassign_role).and_raise(StandardError)
+
+        expect {
+          subject.unassign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
+        }.not_to raise_error
+
+        expect(logger).to have_received(:error).with(
+          'unassign-role.failed',
+          anything)
       end
     end
 
@@ -447,8 +535,8 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:has_permission?)
       end
 
-      it 'logs GRPC errors and returns false' do
-        allow(client).to receive(:has_permission?).and_raise(GRPC::Unavailable)
+      it 'logs Perm errors and returns false' do
+        allow(client).to receive(:has_permission?).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
 
@@ -459,10 +547,22 @@ module VCAP::CloudController::Perm
           user_id: user_id,
           issuer: issuer,
           resource_id: space_id,
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:has_permission?).and_raise(StandardError)
+
+        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+
+        expect(logger).to have_received(:error).with(
+          'has-permission?.failed',
+          anything)
       end
     end
 
@@ -498,8 +598,8 @@ module VCAP::CloudController::Perm
         expect(client).not_to have_received(:has_permission?)
       end
 
-      it 'logs GRPC errors and returns false' do
-        allow(client).to receive(:has_permission?).and_raise(GRPC::Unavailable)
+      it 'logs Perm errors and returns false' do
+        allow(client).to receive(:has_permission?).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
         has_permission = subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
 
@@ -510,10 +610,32 @@ module VCAP::CloudController::Perm
           user_id: user_id,
           issuer: issuer,
           resource_id: space_id,
-          status: 'GRPC::Unavailable',
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
           metadata: anything)
+
+        expect(logger).to have_received(:error).with(
+          'has-permission?.bad-status',
+          permission_name: 'org.manager',
+          user_id: user_id,
+          issuer: issuer,
+          resource_id: org_id,
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
+          code: anything,
+          details: anything,
+          metadata: anything)
+      end
+
+      it 'logs all other errors' do
+        allow(client).to receive(:has_permission?).and_raise(StandardError)
+
+        has_permission = subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+        expect(logger).to have_received(:error).with(
+          'has-permission?.failed',
+          anything).twice
       end
     end
   end

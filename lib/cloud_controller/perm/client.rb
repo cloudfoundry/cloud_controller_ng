@@ -97,10 +97,15 @@ module VCAP::CloudController
         if enabled
           begin
             client.has_permission?(actor_id: user_id, issuer: issuer, permission_name: permission_name, resource_id: resource_id)
-          rescue GRPC::BadStatus => e
+          rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error('has-permission?.bad-status',
                 permission_name: permission_name, resource_id: resource_id, user_id: user_id, issuer: issuer,
                 status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
+            false
+          rescue StandardError => e
+            logger.error('has-permission?.failed',
+              permission_name: permission_name, resource_id: resource_id, user_id: user_id, issuer: issuer,
+              message: e.message)
             false
           end
         else
@@ -128,10 +133,12 @@ module VCAP::CloudController
         if enabled
           begin
             client.create_role(role_name: role)
-          rescue GRPC::AlreadyExists
+          rescue CloudFoundry::Perm::V1::Errors::AlreadyExists
             logger.debug('create-role.role-already-exists', role: role)
-          rescue GRPC::BadStatus => e
+          rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error('create-role.bad-status', role: role, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
+          rescue StandardError => e
+            logger.error('create-role.failed', role: role, message: e.message)
           end
         end
       end
@@ -140,10 +147,12 @@ module VCAP::CloudController
         if enabled
           begin
             client.delete_role(role)
-          rescue GRPC::NotFound
+          rescue CloudFoundry::Perm::V1::Errors::NotFound
             logger.debug('delete-role.role-does-not-exist', role: role)
-          rescue GRPC::BadStatus => e
+          rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error('delete-role.bad-status', role: role, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
+          rescue StandardError => e
+            logger.error('delete-role.failed', role: role, message: e.message)
           end
         end
       end
@@ -152,12 +161,14 @@ module VCAP::CloudController
         if enabled
           begin
             client.assign_role(role_name: role, actor_id: user_id, issuer: issuer)
-          rescue GRPC::AlreadyExists
+          rescue CloudFoundry::Perm::V1::Errors::AlreadyExists
             logger.debug('assign-role.assignment-already-exists', role: role, user_id: user_id, issuer: issuer)
-          rescue GRPC::NotFound
+          rescue CloudFoundry::Perm::V1::Errors::NotFound
             logger.error('assign-role.role-does-not-exist', role: role, user_id: user_id, issuer: issuer)
-          rescue GRPC::BadStatus => e
+          rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error('assign-role.bad-status', role: role, user_id: user_id, issuer: issuer, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
+          rescue StandardError => e
+            logger.error('assign-role.failed', role: role, message: e.message)
           end
         end
       end
@@ -166,10 +177,12 @@ module VCAP::CloudController
         if enabled
           begin
             client.unassign_role(role_name: role, actor_id: user_id, issuer: issuer)
-          rescue GRPC::NotFound => e
+          rescue CloudFoundry::Perm::V1::Errors::NotFound => e
             logger.error('unassign-role.resource-not-found', role: role, user_id: user_id, issuer: issuer, details: e.details, metadata: e.metadata)
-          rescue GRPC::BadStatus => e
+          rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error('unassign-role.bad-status', role: role, user_id: user_id, issuer: issuer, status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
+          rescue StandardError => e
+            logger.error('unassign-role.failed', role: role, message: e.message)
           end
         end
       end

@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cloudfoundry-incubator/perm-rb.git
-  revision: 3f13c692f00f7b7a3114dc97ec14bb916cc90505
+  revision: cc623e9368b6eaf132f6559fb4903bdf281bdba0
   branch: master
   specs:
     cf-perm (0.0.0)
@@ -203,15 +203,15 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
-    grpc (1.7.2)
+    grpc (1.7.3)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
       googleauth (>= 0.5.1, < 0.7)
-    grpc (1.7.2-universal-darwin)
+    grpc (1.7.3-universal-darwin)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
       googleauth (>= 0.5.1, < 0.7)
-    grpc (1.7.2-x86_64-linux)
+    grpc (1.7.3-x86_64-linux)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
       googleauth (>= 0.5.1, < 0.7)
