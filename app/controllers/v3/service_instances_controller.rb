@@ -25,6 +25,14 @@ class ServiceInstancesV3Controller < ApplicationController
       message: message)
   end
 
+  def show
+    service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
+
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
+  end
+
   def share_service_instance
     FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
 

@@ -9,6 +9,7 @@ RSpec.describe 'Service Instances' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:another_space) { VCAP::CloudController::Space.make }
   let(:target_space) { VCAP::CloudController::Space.make }
+  let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
   let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
   let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
   let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
@@ -236,6 +237,41 @@ RSpec.describe 'Service Instances' do
     end
   end
 
+  describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do
+    before do
+      share_request = {
+        'data' => [
+          { 'guid' => target_space.guid }
+        ]
+      }
+
+      enable_feature_flag!
+      post "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", share_request.to_json, admin_header
+      expect(last_response.status).to eq(200)
+
+      disable_feature_flag!
+    end
+
+    it 'returns a list of space guids where the service instance is shared to' do
+      set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+
+      get "/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces", nil, user_header
+
+      expect(last_response.status).to eq(200)
+
+      expected_response = {
+        'data' => [
+          { 'guid' => target_space.guid }
+        ],
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces" },
+        }
+      }
+
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
   describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
     before do
       VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
@@ -282,18 +318,6 @@ RSpec.describe 'Service Instances' do
   end
 
   describe 'DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space-guid' do
-    let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
-
-    def enable_feature_flag!
-      feature_flag.enabled = true
-      feature_flag.save
-    end
-
-    def disable_feature_flag!
-      feature_flag.enabled = false
-      feature_flag.save
-    end
-
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
         FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
@@ -348,5 +372,15 @@ RSpec.describe 'Service Instances' do
       get "/v2/service_bindings/#{service_binding.guid}", nil, admin_header
       expect(last_response.status).to eq(404)
     end
+  end
+
+  def enable_feature_flag!
+    feature_flag.enabled = true
+    feature_flag.save
+  end
+
+  def disable_feature_flag!
+    feature_flag.enabled = false
+    feature_flag.save
   end
 end
