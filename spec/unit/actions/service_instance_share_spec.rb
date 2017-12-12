@@ -153,7 +153,7 @@ module VCAP::CloudController
         let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
         it 'raises an api error' do
-          error_msg = 'The service instance could not be shared as the plan service-plan-name is inactive.'
+          error_msg = 'The service instance could not be shared as the service-plan-name plan is inactive.'
           expect {
             service_instance_share.create(service_instance, [target_space1], user_audit_info)
           }.to raise_error(CloudController::Errors::ApiError, error_msg)

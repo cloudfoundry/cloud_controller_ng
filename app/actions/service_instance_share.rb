@@ -33,7 +33,7 @@ module VCAP::CloudController
 
     def plan_active!(service_instance)
       if !service_instance.service_plan.active?
-        error_msg = "The service instance could not be shared as the plan #{service_instance.service_plan.name} is inactive."
+        error_msg = "The service instance could not be shared as the #{service_instance.service_plan.name} plan is inactive."
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', error_msg)
       end
     end
