@@ -237,8 +237,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               org_role_name = "org-#{role}-#{org_id}"
 
               post '/v2/spaces', {
-                name: SecureRandom.uuid,
-                organization_guid: org_id
+                  name: SecureRandom.uuid,
+                  organization_guid: org_id
               }.to_json
 
               expect(last_response.status).to eq(201)
@@ -271,8 +271,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               org_role_name = "org-#{role}-#{org_id}"
 
               post '/v2/spaces', {
-                name: SecureRandom.uuid,
-                organization_guid: org_id
+                  name: SecureRandom.uuid,
+                  organization_guid: org_id
               }.to_json
 
               expect(last_response.status).to eq(201)
@@ -298,271 +298,224 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
             end
           end
         end
-      end
 
-      it 'alerts the user if the org does not exist' do
-        post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-        expect(last_response.status).to eq(201)
-
-        json_body = JSON.parse(last_response.body)
-        org_id = json_body['metadata']['guid']
-
-        delete "/v2/organizations/#{org_id}"
-        expect(last_response.status).to eq(204)
-
-        delete "/v2/organizations/#{org_id}"
-        expect(last_response.status).to eq(404)
-      end
-    end
-  end
-
-  describe 'PUT /v2/organizations/:guid/:role/:user_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-
-    ORG_ROLES.each do |role|
-      describe "PUT /v2/organizations/:guid/#{role}s/:user_guid" do
-        let(:role_name) { "org-#{role}-#{org.guid}" }
-
-        before do
-          client.create_role(role_name: role_name)
-        end
-
-        it "assigns the specified user to the org #{role} role" do
-          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
-
-          put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+        it 'alerts the user if the org does not exist' do
+          post '/v2/organizations', { name: SecureRandom.uuid }.to_json
           expect(last_response.status).to eq(201)
 
-          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles.length).to be(1)
-        end
+          json_body = JSON.parse(last_response.body)
+          org_id = json_body['metadata']['guid']
 
-        it 'does nothing when the user is assigned to the role a second time' do
-          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
-
-          put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles.length).to be(1)
-        end
-      end
-    end
-  end
-
-  describe 'DELETE /v2/organizations/:guid/:role' do
-    let(:org) { VCAP::CloudController::Organization.make }
-
-    ORG_ROLES.each do |role|
-      describe "DELETE /v2/organizations/:guid/#{role}s" do
-        let(:role_name) { "org-#{role}-#{org.guid}" }
-
-        before do
-          client.create_role(role_name: role_name)
-        end
-
-        it "removes the user from the org #{role} role" do
-          client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
-
-          delete "/v2/organizations/#{org.guid}/#{role}s", { 'username' => assignee.username }.to_json
+          delete "/v2/organizations/#{org_id}"
           expect(last_response.status).to eq(204)
 
-          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(false)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles).to be_empty
-        end
-
-        it "does nothing if the user does not have the org #{role} role" do
-          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(204)
+          delete "/v2/organizations/#{org_id}"
+          expect(last_response.status).to eq(404)
         end
       end
     end
 
-    describe 'DELETE /v2/organizations/:guid/users?recursive=true' do
-      let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-      let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-      let!(:org1_space) { VCAP::CloudController::Space.make(organization: org1) }
-      let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
+    describe 'PUT /v2/organizations/:guid/:role/:user_guid' do
+      let(:org) { VCAP::CloudController::Organization.make }
+
+      ORG_ROLES.each do |role|
+        describe "PUT /v2/organizations/:guid/#{role}s/:user_guid" do
+          let(:role_name) { "org-#{role}-#{org.guid}" }
+
+          before do
+            client.create_role(role_name: role_name)
+          end
+
+          it "assigns the specified user to the org #{role} role" do
+            expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
+
+            put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+
+            expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles.length).to be(1)
+          end
+
+          it 'does nothing when the user is assigned to the role a second time' do
+            expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
+
+            put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+
+            put "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+
+            expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles.length).to be(1)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/organizations/:guid/:role' do
+      let(:org) { VCAP::CloudController::Organization.make }
+
+      ORG_ROLES.each do |role|
+        describe "DELETE /v2/organizations/:guid/#{role}s" do
+          let(:role_name) { "org-#{role}-#{org.guid}" }
+
+          before do
+            client.create_role(role_name: role_name)
+          end
+
+          it "removes the user from the org #{role} role" do
+            client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
+
+            delete "/v2/organizations/#{org.guid}/#{role}s", { 'username' => assignee.username }.to_json
+            expect(last_response.status).to eq(204)
+
+            expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(false)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles).to be_empty
+          end
+
+          it "does nothing if the user does not have the org #{role} role" do
+            delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+
+      describe 'DELETE /v2/organizations/:guid/users?recursive=true' do
+        let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+        let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+        let!(:org1_space) { VCAP::CloudController::Space.make(organization: org1) }
+        let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
+
+        before do
+          client.create_role(role_name: "org-user-#{org1.guid}")
+          client.assign_role(role_name: "org-user-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)
+          client.create_role(role_name: "org-user-#{org2.guid}")
+          client.assign_role(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)
+
+          SPACE_ROLES.each do |role|
+            client.create_role(role_name: "space-#{role}-#{org1_space.guid}")
+            put "/v2/spaces/#{org1_space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+            client.create_role(role_name: "space-#{role}-#{org2_space.guid}")
+            put "/v2/spaces/#{org2_space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+          end
+        end
+
+        it 'removes the user from all org and space roles for that org and no other' do
+          delete "/v2/organizations/#{org1.guid}/users?recursive=true", { 'username' => assignee.username }.to_json
+          expect(last_response.status).to eq(204)
+
+          ORG_ROLES.each do |role|
+            expect(client.has_role?(role_name: "org-#{role}-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
+          end
+
+          expect(client.has_role?(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
+
+          SPACE_ROLES.each do |role|
+            expect(client.has_role?(role_name: "space-#{role}-#{org1_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
+            expect(client.has_role?(role_name: "space-#{role}-#{org2_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/organizations/:guid/:role/:user_guid' do
+      let(:org) { VCAP::CloudController::Organization.make }
+
+      ORG_ROLES.each do |role|
+        describe "DELETE /v2/organizations/:guid/#{role}s/:user_guid" do
+          let(:role_name) { "org-#{role}-#{org.guid}" }
+
+          before do
+            client.create_role(role_name: role_name)
+          end
+
+          it "removes the user from the org #{role} role" do
+            client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
+
+            delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(204)
+
+            expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(false)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles).to be_empty
+          end
+
+          it "does nothing if the user does not have the org #{role} role" do
+            delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
+
+    describe 'POST /v3/spaces' do
+      org_guid = nil
 
       before do
-        client.create_role(role_name: "org-user-#{org1.guid}")
-        client.assign_role(role_name: "org-user-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)
-        client.create_role(role_name: "org-user-#{org2.guid}")
-        client.assign_role(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)
-
-        SPACE_ROLES.each do |role|
-          client.create_role(role_name: "space-#{role}-#{org1_space.guid}")
-          put "/v2/spaces/#{org1_space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-          client.create_role(role_name: "space-#{role}-#{org2_space.guid}")
-          put "/v2/spaces/#{org2_space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-        end
+        org = org_with_default_quota(admin_headers)
+        org_guid = org.json_body['metadata']['guid']
       end
 
-      it 'removes the user from all org and space roles for that org and no other' do
-        delete "/v2/organizations/#{org1.guid}/users?recursive=true", { 'username' => assignee.username }.to_json
-        expect(last_response.status).to eq(204)
-
-        ORG_ROLES.each do |role|
-          expect(client.has_role?(role_name: "org-#{role}-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
-        end
-
-        expect(client.has_role?(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
-
-        SPACE_ROLES.each do |role|
-          expect(client.has_role?(role_name: "space-#{role}-#{org1_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
-          expect(client.has_role?(role_name: "space-#{role}-#{org2_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
-        end
-      end
-    end
-  end
-
-  describe 'DELETE /v2/organizations/:guid/:role/:user_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-
-    ORG_ROLES.each do |role|
-      describe "DELETE /v2/organizations/:guid/#{role}s/:user_guid" do
-        let(:role_name) { "org-#{role}-#{org.guid}" }
-
-        before do
-          client.create_role(role_name: role_name)
-        end
-
-        it "removes the user from the org #{role} role" do
-          client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
-
-          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(204)
-
-          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(false)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles).to be_empty
-        end
-
-        it "does nothing if the user does not have the org #{role} role" do
-          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(204)
-        end
-      end
-    end
-  end
-
-  describe 'POST /v3/spaces' do
-    org_guid = nil
-
-    before do
-      org = org_with_default_quota(admin_headers)
-      org_guid = org.json_body['metadata']['guid']
-    end
-
-    SPACE_ROLES.each do |role|
-      it "creates the space-#{role}-<space_id> role" do
-        body = {
-          name: SecureRandom.uuid,
-          relationships: {
-            organization: {
-              data: {
-                guid: org_guid
+      SPACE_ROLES.each do |role|
+        it "creates the space-#{role}-<space_id> role" do
+          body = {
+              name: SecureRandom.uuid,
+              relationships: {
+                  organization: {
+                      data: {
+                          guid: org_guid
+                      }
+                  }
               }
-            }
-          }
-        }.to_json
+          }.to_json
 
-        response = make_post_request('/v3/spaces', body, admin_headers)
-        expect(response.code).to eq('201')
+          response = make_post_request('/v3/spaces', body, admin_headers)
+          expect(response.code).to eq('201')
 
-        json_body = JSON.parse(response.body)
-        space_id = json_body['guid']
-        role_name = "space-#{role}-#{space_id}"
+          json_body = JSON.parse(response.body)
+          space_id = json_body['guid']
+          role_name = "space-#{role}-#{space_id}"
 
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
-      end
+          role = client.get_role(role_name)
+          expect(role.name).to eq(role_name)
+        end
 
-      it 'does not allow user to create space that already exists' do
-        body = {
-          name: SecureRandom.uuid,
-          relationships: {
-            organization: {
-              data: {
-                guid: org_guid
+        it 'does not allow user to create space that already exists' do
+          body = {
+              name: SecureRandom.uuid,
+              relationships: {
+                  organization: {
+                      data: {
+                          guid: org_guid
+                      }
+                  }
               }
-            }
-          }
-        }.to_json
+          }.to_json
 
-        response = make_post_request('/v3/spaces', body, admin_headers)
+          response = make_post_request('/v3/spaces', body, admin_headers)
 
-        expect(response.code).to eq('201')
+          expect(response.code).to eq('201')
 
-        response = make_post_request('/v3/spaces', body, admin_headers)
+          response = make_post_request('/v3/spaces', body, admin_headers)
 
-        expect(response.code).to eq('422')
+          expect(response.code).to eq('422')
+        end
       end
     end
-  end
 
-  describe 'POST /v2/spaces' do
-    let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+    describe 'POST /v2/spaces' do
+      let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
 
-    SPACE_ROLES.each do |role|
-      it "creates the space-#{role}-<space_id> role" do
-        post '/v2/spaces', {
-          name: SecureRandom.uuid,
-          organization_guid: org.guid
-        }.to_json
-
-        expect(last_response.status).to eq(201)
-
-        json_body = JSON.parse(last_response.body)
-        space_id = json_body['metadata']['guid']
-        role_name = "space-#{role}-#{space_id}"
-
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
-      end
-
-      it 'does not allow user to create space that already exists' do
-        space_name = SecureRandom.uuid
-
-        post '/v2/spaces', {
-          name: space_name,
-          organization_guid: org.guid
-        }.to_json
-
-        expect(last_response.status).to eq(201)
-
-        post '/v2/spaces', {
-          name: space_name,
-          organization_guid: org.guid
-        }.to_json
-
-        expect(last_response.status).to eq(400)
-
-        json_body = JSON.parse(last_response.body)
-        expect(json_body['error_code']).to eq('CF-SpaceNameTaken')
-      end
-    end
-  end
-
-  describe 'DELETE /v2/spaces/:guid' do
-    let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-
-    let(:worker) { Delayed::Worker.new }
-
-    SPACE_ROLES.each do |role|
-      describe 'synchronous deletion' do
-        it "deletes the space-#{role}-<space_id> role" do
+      SPACE_ROLES.each do |role|
+        it "creates the space-#{role}-<space_id> role" do
           post '/v2/spaces', {
-            name: SecureRandom.uuid,
-            organization_guid: org.guid
+              name: SecureRandom.uuid,
+              organization_guid: org.guid
           }.to_json
 
           expect(last_response.status).to eq(201)
@@ -570,170 +523,270 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
           json_body = JSON.parse(last_response.body)
           space_id = json_body['metadata']['guid']
           role_name = "space-#{role}-#{space_id}"
+
+          role = client.get_role(role_name)
+          expect(role.name).to eq(role_name)
+        end
+
+        it 'does not allow user to create space that already exists' do
+          space_name = SecureRandom.uuid
+
+          post '/v2/spaces', {
+              name: space_name,
+              organization_guid: org.guid
+          }.to_json
+
+          expect(last_response.status).to eq(201)
+
+          post '/v2/spaces', {
+              name: space_name,
+              organization_guid: org.guid
+          }.to_json
+
+          expect(last_response.status).to eq(400)
+
+          json_body = JSON.parse(last_response.body)
+          expect(json_body['error_code']).to eq('CF-SpaceNameTaken')
+        end
+      end
+    end
+
+    describe 'DELETE /v2/spaces/:guid' do
+      let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+
+      let(:worker) { Delayed::Worker.new }
+
+      SPACE_ROLES.each do |role|
+        describe 'synchronous deletion' do
+          it "deletes the space-#{role}-<space_id> role" do
+            post '/v2/spaces', {
+                name: SecureRandom.uuid,
+                organization_guid: org.guid
+            }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            space_id = json_body['metadata']['guid']
+            role_name = "space-#{role}-#{space_id}"
+
+            delete "/v2/spaces/#{space_id}"
+
+            expect(last_response.status).to eq(204)
+
+            expect {
+              client.get_role(role_name)
+            }.to raise_error GRPC::NotFound
+          end
+        end
+
+        describe 'async deletion' do
+          it "deletes the space-#{role}-<space_id> role" do
+            post '/v2/spaces', {
+                name: SecureRandom.uuid,
+                organization_guid: org.guid
+            }.to_json
+
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            space_id = json_body['metadata']['guid']
+            role_name = "space-#{role}-#{space_id}"
+
+            delete "/v2/spaces/#{space_id}?async=true"
+
+            expect(last_response.status).to eq(202)
+
+            succeeded_jobs, failed_jobs = worker.work_off
+            expect(succeeded_jobs).to be > 0
+            expect(failed_jobs).to equal(0)
+
+            expect {
+              client.get_role(role_name)
+            }.to raise_error(GRPC::NotFound), "Expected that role #{role_name} was not found"
+          end
+        end
+
+        it 'alerts the user if the space does not exist' do
+          post '/v2/spaces', {
+              name: SecureRandom.uuid,
+              organization_guid: org.guid
+          }.to_json
+
+          expect(last_response.status).to eq(201)
+
+          json_body = JSON.parse(last_response.body)
+          space_id = json_body['metadata']['guid']
 
           delete "/v2/spaces/#{space_id}"
-
           expect(last_response.status).to eq(204)
 
-          expect {
-            client.get_role(role_name)
-          }.to raise_error GRPC::NotFound
+          delete "/v2/spaces/#{space_id}"
+          expect(last_response.status).to eq(404)
         end
       end
+    end
 
-      describe 'async deletion' do
-        it "deletes the space-#{role}-<space_id> role" do
-          post '/v2/spaces', {
-            name: SecureRandom.uuid,
-            organization_guid: org.guid
-          }.to_json
+    describe 'PUT /v2/spaces/:guid/:role/:user_guid' do
+      let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+      let(:space) {
+        VCAP::CloudController::Space.make(
+          organization: org,
+        )
+      }
 
-          expect(last_response.status).to eq(201)
+      SPACE_ROLES.each do |role|
+        describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
+          let(:role_name) { "space-#{role}-#{space.guid}" }
 
-          json_body = JSON.parse(last_response.body)
-          space_id = json_body['metadata']['guid']
-          role_name = "space-#{role}-#{space_id}"
+          before do
+            client.create_role(role_name: role_name)
+          end
 
-          delete "/v2/spaces/#{space_id}?async=true"
+          it "assigns the specified user to the space #{role} role" do
+            expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
 
-          expect(last_response.status).to eq(202)
+            put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
 
-          succeeded_jobs, failed_jobs = worker.work_off
-          expect(succeeded_jobs).to be > 0
-          expect(failed_jobs).to equal(0)
+            expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles.length).to be(1)
+          end
 
-          expect {
-            client.get_role(role_name)
-          }.to raise_error(GRPC::NotFound), "Expected that role #{role_name} was not found"
+          it 'does nothing when the user is assigned to the role a second time' do
+            expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
+
+            put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+
+            put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(201)
+
+            expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles.length).to be(1)
+          end
         end
       end
+    end
 
-      it 'alerts the user if the space does not exist' do
-        post '/v2/spaces', {
+    describe 'DELETE /v2/spaces/:guid/:role' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) {
+        VCAP::CloudController::Space.make(
+          organization: org,
+        )
+      }
+
+      SPACE_ROLES.each do |role|
+        describe "DELETE /v2/spaces/:guid/#{role}s" do
+          let(:role_name) { "space-#{role}-#{space.guid}" }
+
+          before do
+            client.create_role(role_name: role_name)
+          end
+
+          it "removes the user from the space #{role} role" do
+            client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
+
+            delete "/v2/spaces/#{space.guid}/#{role}s", { 'username' => assignee.username }.to_json
+            expect(last_response.status).to eq(200)
+
+            expect(client.has_role?(actor_id: assignee.guid, issuer: issuer, role_name: role_name)).to be(false)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles).to be_empty
+          end
+        end
+      end
+    end
+
+    describe 'DELETE /v2/spaces/:guid/:role/:user_guid' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) {
+        VCAP::CloudController::Space.make(
+          organization: org,
+        )
+      }
+
+      SPACE_ROLES.each do |role|
+        describe "DELETE /v2/spaces/:guid/#{role}s/:user_guid" do
+          let(:role_name) { "space-#{role}-#{space.guid}" }
+
+          before do
+            client.create_role(role_name: role_name)
+          end
+
+          it "removes the user from the space #{role} role" do
+            client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
+
+            delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(204)
+
+            expect(client.has_role?(actor_id: assignee.guid, issuer: issuer, role_name: role_name)).to be(false)
+            roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
+            expect(roles).to be_empty
+          end
+
+          it "does nothing if the user does not have the space #{role} role" do
+            delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+            expect(last_response.status).to eq(204)
+          end
+        end
+      end
+    end
+  end
+
+  describe 'Querying' do
+    before do
+      TestConfig.config[:perm] = perm_config
+
+      allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:origins_for_username).with(assignee.username).and_return([uaa_origin])
+      allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })
+      allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(assignee.username).and_return(assignee.guid)
+      allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(assignee.username, origin: nil).and_return(assignee.guid)
+      allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
+    end
+
+    describe 'can_read_from_space?' do
+      org_guid = nil
+      space_guid = nil
+      let!(:user) {}
+      before do
+        set_current_user_as_admin(iss: issuer)
+
+        org_guid = create_org
+        space_guid = create_space(org_guid)
+      end
+    end
+
+    def create_org
+      body = {
+          name: SecureRandom.uuid
+      }.to_json
+
+      response = make_post_request('/v3/organizations', body, admin_headers)
+      expect(response.code).to eq('201')
+
+      JSON.parse(response.body)['guid']
+    end
+
+    def create_space(org_guid)
+      body = {
           name: SecureRandom.uuid,
-          organization_guid: org.guid
-        }.to_json
+          relationships: {
+              organization: {
+                  data: {
+                      guid: org_guid
+                  }
+              }
+          }
+      }.to_json
 
-        expect(last_response.status).to eq(201)
+      response = make_post_request('/v3/spaces', body, admin_headers)
+      expect(response.code).to eq('201')
 
-        json_body = JSON.parse(last_response.body)
-        space_id = json_body['metadata']['guid']
-
-        delete "/v2/spaces/#{space_id}"
-        expect(last_response.status).to eq(204)
-
-        delete "/v2/spaces/#{space_id}"
-        expect(last_response.status).to eq(404)
-      end
-    end
-  end
-
-  describe 'PUT /v2/spaces/:guid/:role/:user_guid' do
-    let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-    let(:space) {
-      VCAP::CloudController::Space.make(
-        organization: org,
-      )
-    }
-
-    SPACE_ROLES.each do |role|
-      describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
-        let(:role_name) { "space-#{role}-#{space.guid}" }
-
-        before do
-          client.create_role(role_name: role_name)
-        end
-
-        it "assigns the specified user to the space #{role} role" do
-          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
-
-          put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles.length).to be(1)
-        end
-
-        it 'does nothing when the user is assigned to the role a second time' do
-          expect(client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)).to be_empty
-
-          put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          put "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(201)
-
-          expect(client.has_role?(role_name: role_name, actor_id: assignee.guid, issuer: issuer)).to be(true)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles.length).to be(1)
-        end
-      end
-    end
-  end
-
-  describe 'DELETE /v2/spaces/:guid/:role' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) {
-      VCAP::CloudController::Space.make(
-        organization: org,
-      )
-    }
-
-    SPACE_ROLES.each do |role|
-      describe "DELETE /v2/spaces/:guid/#{role}s" do
-        let(:role_name) { "space-#{role}-#{space.guid}" }
-
-        before do
-          client.create_role(role_name: role_name)
-        end
-
-        it "removes the user from the space #{role} role" do
-          client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
-
-          delete "/v2/spaces/#{space.guid}/#{role}s", { 'username' => assignee.username }.to_json
-          expect(last_response.status).to eq(200)
-
-          expect(client.has_role?(actor_id: assignee.guid, issuer: issuer, role_name: role_name)).to be(false)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles).to be_empty
-        end
-      end
-    end
-  end
-
-  describe 'DELETE /v2/spaces/:guid/:role/:user_guid' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:space) {
-      VCAP::CloudController::Space.make(
-        organization: org,
-      )
-    }
-
-    SPACE_ROLES.each do |role|
-      describe "DELETE /v2/spaces/:guid/#{role}s/:user_guid" do
-        let(:role_name) { "space-#{role}-#{space.guid}" }
-
-        before do
-          client.create_role(role_name: role_name)
-        end
-
-        it "removes the user from the space #{role} role" do
-          client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
-
-          delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(204)
-
-          expect(client.has_role?(actor_id: assignee.guid, issuer: issuer, role_name: role_name)).to be(false)
-          roles = client.list_actor_roles(actor_id: assignee.guid, issuer: issuer)
-          expect(roles).to be_empty
-        end
-
-        it "does nothing if the user does not have the space #{role} role" do
-          delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
-          expect(last_response.status).to eq(204)
-        end
-      end
+      JSON.parse(response.body)['guid']
     end
   end
 end

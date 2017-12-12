@@ -421,5 +421,100 @@ module VCAP::CloudController::Perm
           metadata: anything)
       end
     end
+
+    describe '#has_permission?' do
+      it 'returns true if the user has the permission' do
+        allow(client).to receive(:has_permission?).with(permission_name: 'space.developer', resource_id: space_id, actor_id: user_id, issuer: issuer).and_return(true)
+
+        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(true)
+      end
+
+      it 'returns false if the user does not have the permission' do
+        allow(client).to receive(:has_permission?).and_return(false)
+
+        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+      end
+
+      it 'returns false if disabled' do
+        has_permission = disabled_subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+
+        expect(client).not_to have_received(:has_permission?)
+      end
+
+      it 'logs GRPC errors and returns false' do
+        allow(client).to receive(:has_permission?).and_raise(GRPC::Unavailable)
+
+        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+        expect(logger).to have_received(:error).with(
+          'has-permission?.bad-status',
+          permission_name: 'space.developer',
+          user_id: user_id,
+          issuer: issuer,
+          resource_id: space_id,
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
+      end
+    end
+
+    describe '#has_any_permission?' do
+      let(:permissions) {
+        [
+          { permission_name: 'space.developer', resource_id: space_id },
+          { permission_name: 'org.manager', resource_id: org_id },
+        ]
+      }
+      it 'returns true if the user has any of the permission' do
+        allow(client).to receive(:has_permission?).with(permission_name: 'space.developer', resource_id: space_id, actor_id: user_id, issuer: issuer).and_return(true)
+        allow(client).to receive(:has_permission?).with(permission_name: 'org.manager', resource_id: org_id, actor_id: user_id, issuer: issuer).and_return(false)
+
+        has_permission = subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(true)
+      end
+
+      it 'returns false if the user does not have any of the permission' do
+        allow(client).to receive(:has_permission?).and_return(false)
+
+        has_permission = subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+      end
+
+      it 'returns false if disabled' do
+        has_permission = disabled_subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+
+        expect(client).not_to have_received(:has_permission?)
+      end
+
+      it 'logs GRPC errors and returns false' do
+        allow(client).to receive(:has_permission?).and_raise(GRPC::Unavailable)
+
+        has_permission = subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
+
+        expect(has_permission).to equal(false)
+        expect(logger).to have_received(:error).with(
+          'has-permission?.bad-status',
+          permission_name: 'space.developer',
+          user_id: user_id,
+          issuer: issuer,
+          resource_id: space_id,
+          status: 'GRPC::Unavailable',
+          code: anything,
+          details: anything,
+          metadata: anything)
+      end
+    end
   end
 end

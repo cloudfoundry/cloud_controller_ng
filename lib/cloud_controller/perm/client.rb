@@ -83,6 +83,31 @@ module VCAP::CloudController
         end
       end
 
+      def has_any_permission?(permissions:, user_id:, issuer:)
+        if enabled
+          permissions.any? do |p|
+            has_permission?(permission_name: p[:permission_name], resource_id: p[:resource_id], issuer: issuer, user_id: user_id)
+          end
+        else
+          false
+        end
+      end
+
+      def has_permission?(permission_name:, resource_id:, user_id:, issuer:)
+        if enabled
+          begin
+            client.has_permission?(actor_id: user_id, issuer: issuer, permission_name: permission_name, resource_id: resource_id)
+          rescue GRPC::BadStatus => e
+            logger.error('has-permission?.bad-status',
+                permission_name: permission_name, resource_id: resource_id, user_id: user_id, issuer: issuer,
+                status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
+            false
+          end
+        else
+          false
+        end
+      end
+
       private
 
       attr_reader :hostname, :port, :enabled, :trusted_cas, :logger_name, :timeout

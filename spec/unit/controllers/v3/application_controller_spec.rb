@@ -62,6 +62,19 @@ RSpec.describe ApplicationController, type: :controller do
     end
   end
 
+  let(:perm_client) { instance_double(VCAP::CloudController::Perm::Client) }
+
+  before do
+    Scientist::Observation::RESCUES.replace []
+
+    perm_config = TestConfig.config[:perm]
+    perm_config[:enabled] = true
+    perm_config[:query_enabled] = true
+    TestConfig.override(perm: perm_config)
+
+    allow(VCAP::CloudController::Perm::Client).to receive(:new).and_return(perm_client)
+  end
+
   describe '#check_read_permissions' do
     before do
       set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: [])
@@ -235,17 +248,47 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'asks for #can_read_from_space? on behalf of the current user' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_space?: true,
+        can_read_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_read_from_space?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
+      expect(perm_permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
+    end
+
+    it 'skips the experiment if the user is a global reader' do
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_space?: true,
+        can_read_globally?: true
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_space?: 'original response',
+        can_read_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('not-expected')
 
       response = get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
@@ -261,17 +304,47 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'asks for #can_write_to_org? on behalf of the current user' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_org?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_write_to_org?: true,
+        can_write_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_write_to_org?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :write_to_org_access, org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_write_to_org?).with('org-guid')
+      expect(perm_permissions).to have_received(:can_write_to_org?).with('org-guid')
+    end
+
+    it 'skips the experiment if the user is a global writer' do
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_write_to_org?: true,
+        can_write_globally?: true
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :write_to_org_access, org_guid: 'org-guid'
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_org?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_write_to_org?: 'original response',
+        can_write_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :write_to_org_access, org_guid: 'org-guid'
 
@@ -287,17 +360,47 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'asks for #can_read_from_org? on behalf of the current user' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_org?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_org?: true,
+        can_read_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_read_from_org?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :read_from_org_access, org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_read_from_org?).with('org-guid')
+      expect(perm_permissions).to have_received(:can_read_from_org?).with('org-guid')
+    end
+
+    it 'skips the experiment if the user is a global reader' do
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_org?: true,
+        can_read_globally?: true
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :read_from_org_access, org_guid: 'org-guid'
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_org?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_org?: 'original response',
+        can_read_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :read_from_org_access, org_guid: 'org-guid'
 
@@ -314,18 +417,49 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
       space = VCAP::CloudController::Space.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_see_secrets_in_space?: true,
+        can_read_secrets_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_see_secrets_in_space?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :secret_access, space_guid: space.guid
 
       expect(permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
+      expect(perm_permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
+    end
+
+    it 'skips the experiment if the user is a global secrets reader' do
+      space = VCAP::CloudController::Space.make
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_see_secrets_in_space?: true,
+        can_read_secrets_globally?: true,
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :secret_access, space_guid: space.guid
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
       space = VCAP::CloudController::Space.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_see_secrets_in_space?: 'original response',
+        can_read_secrets_globally?: false
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :secret_access, space_guid: space.guid
 
@@ -394,18 +528,50 @@ RSpec.describe ApplicationController, type: :controller do
 
     it 'asks for #can_read_from_isolation_segment? on behalf of the current user' do
       iso_seg = VCAP::CloudController::IsolationSegmentModel.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_isolation_segment?: true,
+        can_read_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_read_from_isolation_segment?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :isolation_segment_read_access, iso_seg: iso_seg.guid
 
       expect(permissions).to have_received(:can_read_from_isolation_segment?).with(iso_seg)
+      expect(perm_permissions).to have_received(:can_read_from_isolation_segment?).with(iso_seg)
+    end
+
+    it 'skips the experiment if the user is a global secrets reader' do
+      iso_seg = VCAP::CloudController::IsolationSegmentModel.make
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_isolation_segment?: true,
+        can_read_globally?: true,
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :isolation_segment_read_access, iso_seg: iso_seg.guid
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
       iso_seg = VCAP::CloudController::IsolationSegmentModel.make
-      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_isolation_segment?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_read_from_isolation_segment?: 'original response',
+        can_read_globally?: false,
+      )
+
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :isolation_segment_read_access, iso_seg: iso_seg.guid
 
@@ -421,17 +587,47 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'asks for #can_read_from_space? on behalf of the current user' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: true)
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_write_to_space?: true,
+        can_write_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      perm_permissions = instance_double(
+        VCAP::CloudController::Perm::Permissions,
+        can_write_to_space?: false
+      )
+      allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
 
       get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
       expect(permissions).to have_received(:can_write_to_space?).with('space-guid')
+      expect(perm_permissions).to have_received(:can_write_to_space?).with('space-guid')
+    end
+
+    it 'skips the experiment if the user is a global writer' do
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_write_to_space?: false,
+        can_write_globally?: true,
+      )
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?)
+
+      get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(perm_client).not_to have_received(:has_any_permission?)
     end
 
     it 'uses the expected branch from the experiment' do
-      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: 'original response')
+      permissions = instance_double(
+        VCAP::CloudController::Permissions,
+        can_write_to_space?: 'original response',
+        can_write_globally?: false,
+      )
       allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+      allow(perm_client).to receive(:has_any_permission?).and_return('unexpected')
 
       response = get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
 
