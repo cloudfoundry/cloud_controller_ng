@@ -87,6 +87,14 @@ class ApplicationController < ActionController::Base
     @perm_client ||= VCAP::CloudController::Perm::Client.build_from_config(configuration, File)
   end
 
+  def permission_queryer
+    VCAP::CloudController::Permissions::Queryer.build(
+      perm_client,
+      SecurityContext,
+      configuration.get(:perm, :enabled),
+      configuration.get(:perm, :query_enabled))
+  end
+
   private
 
   ###
@@ -94,121 +102,43 @@ class ApplicationController < ActionController::Base
   ###
 
   def can_read?(space_guid, org_guid)
-    science 'can_read_from_space?' do |e|
-      e.context(space_guid: space_guid, org_guid: org_guid)
-      e.use { db_permissions.can_read_from_space?(space_guid, org_guid) }
-      e.try { perm_permissions.can_read_from_space?(space_guid, org_guid) }
-
-      e.run_if { !db_permissions.can_read_globally? }
-    end
+    permission_queryer.can_read?(space_guid, org_guid)
   end
 
   def can_write_to_org?(org_guid)
-    science 'can_write_to_org?' do |e|
-      e.context(org_guid: org_guid)
-      e.use { db_permissions.can_write_to_org?(org_guid) }
-      e.try { perm_permissions.can_write_to_org?(org_guid) }
-
-      e.run_if { !db_permissions.can_write_globally? }
-    end
+    permission_queryer.can_write_to_org?(org_guid)
   end
 
   def can_read_from_org?(org_guid)
-    science 'can_read_from_org?' do |e|
-      e.context(org_guid: org_guid)
-      e.use { db_permissions.can_read_from_org?(org_guid) }
-      e.try { perm_permissions.can_read_from_org?(org_guid) }
-
-      e.run_if { !db_permissions.can_read_globally? }
-    end
+    permission_queryer.can_read_from_org?(org_guid)
   end
 
   def can_write_globally?
-    science 'can_write_globally?' do |e|
-      e.use { db_permissions.can_write_globally? }
-      e.try { perm_permissions.can_write_globally? }
-
-      e.run_if { false }
-    end
+    permission_queryer.can_write_globally?
   end
 
   def can_read_globally?
-    science 'can_read_globally?' do |e|
-      e.use { db_permissions.can_read_globally? }
-      e.try { perm_permissions.can_read_globally? }
-
-      e.run_if { false }
-    end
+    permission_queryer.can_read_globally?
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
-    science 'can_read_from_isolation_segment?' do |e|
-      e.context(isolation_segment_guid: isolation_segment.guid)
-      e.use { db_permissions.can_read_from_isolation_segment?(isolation_segment) }
-      e.try { perm_permissions.can_read_from_isolation_segment?(isolation_segment) }
-
-      e.run_if { !db_permissions.can_read_globally? }
-    end
+    permission_queryer.can_read_from_isolation_segment?(isolation_segment)
   end
 
   def can_see_secrets?(space)
-    science 'can_see_secrets_from_space?' do |e|
-      e.context(space_guid: space.guid)
-      e.use { db_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
-      e.try { perm_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
-
-      e.run_if { !db_permissions.can_read_secrets_globally? }
-    end
+    permission_queryer.can_see_secrets?(space)
   end
 
   def can_write?(space_guid)
-    science 'can_write_to_space?' do |e|
-      e.context(space_guid: space_guid)
-      e.use { db_permissions.can_write_to_space?(space_guid) }
-      e.try { perm_permissions.can_write_to_space?(space_guid) }
-
-      e.run_if { !db_permissions.can_write_globally? }
-    end
+    permission_queryer.can_write?(space_guid)
   end
 
   def readable_space_guids
-    science 'readable_space_guids' do |e|
-      e.use { db_permissions.readable_space_guids }
-    end
+    permission_queryer.readable_space_guids
   end
 
   def readable_org_guids
-    science 'readable_org_guids' do |e|
-      e.use { db_permissions.readable_org_guids }
-    end
-  end
-
-  def science(name)
-    perm_enabled = configuration.get(:perm, :enabled)
-    query_enabled = configuration.get(:perm, :query_enabled)
-    raise_on_mismatch = configuration.get(:perm, :query_raise_on_mismatch)
-    if raise_on_mismatch
-      VCAP::CloudController::Perm::Experiment.raise_on_mismatches = true
-    end
-
-    experiment = VCAP::CloudController::Perm::Experiment.new(name: name, perm_enabled: perm_enabled, query_enabled: query_enabled)
-    experiment.context(current_user_guid: SecurityContext.current_user_guid)
-    yield experiment
-
-    experiment.run
-  end
-
-  def db_permissions
-    VCAP::CloudController::Permissions.new(current_user)
-  end
-
-  def perm_permissions
-    VCAP::CloudController::Perm::Permissions.new(
-      perm_client: perm_client,
-      roles: VCAP::CloudController::SecurityContext.roles,
-      user_id: VCAP::CloudController::SecurityContext.current_user_guid,
-      issuer: VCAP::CloudController::SecurityContext.token['iss'],
-    )
+    permission_queryer.readable_org_guids
   end
 
   ###
