@@ -89,6 +89,8 @@ require 'cloud_controller/upload_buildpack'
 
 require 'cloud_controller/errors/instances_unavailable'
 
+require 'cloud_controller/permissions/queryer'
+
 require 'cloud_controller/perm/client'
 require 'cloud_controller/perm/experiment'
 require 'cloud_controller/perm/permissions'
