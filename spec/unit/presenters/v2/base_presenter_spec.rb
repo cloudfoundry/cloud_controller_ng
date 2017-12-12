@@ -44,7 +44,7 @@ module CloudController::Presenters::V2
           }
         )
 
-        expect(controller).to have_received(:url_for_guid).with('obj-guid')
+        expect(controller).to have_received(:url_for_guid).with('obj-guid', obj)
       end
 
       context 'when the object does not respond to updated_at' do
@@ -71,7 +71,7 @@ module CloudController::Presenters::V2
           }
         )
 
-        expect(controller).to have_received(:url_for_guid).with('obj-guid')
+        expect(controller).to have_received(:url_for_guid).with('obj-guid', obj)
       end
     end
   end

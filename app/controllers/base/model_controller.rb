@@ -124,7 +124,7 @@ module VCAP::CloudController::RestController
       associated_model = obj.class.association_reflection(name).associated_class
       validate_access(:index, associated_model, { related_obj: obj, related_model: model })
 
-      associated_path = "#{self.class.url_for_guid(guid)}/#{name}"
+      associated_path = "#{self.class.url_for_guid(guid, obj)}/#{name}"
 
       all_relationships = {}
       [self.class.to_one_relationships, self.class.to_many_relationships].each do |rel|
@@ -326,7 +326,7 @@ module VCAP::CloudController::RestController
       # Return the url for a specific guid
       #
       # @return [String] The url for a specific instance of this class.
-      def url_for_guid(guid)
+      def url_for_guid(guid, _=nil)
         "#{path}/#{guid}"
       end
 

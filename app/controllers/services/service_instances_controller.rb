@@ -232,7 +232,7 @@ module VCAP::CloudController
       validate_access(:read, service_instance.space)
 
       associated_controller = VCAP::CloudController::SpacesController
-      associated_path = "#{self.class.url_for_guid(guid)}/shared_to"
+      associated_path = "#{self.class.url_for_guid(guid, service_instance)}/shared_to"
 
       create_paginated_collection_renderer(service_instance).render_json(
         associated_controller,
@@ -249,14 +249,12 @@ module VCAP::CloudController
       end
     end
 
-    def self.url_for_guid(guid)
-      object = ServiceInstance.where(guid: guid).first
-
+    def self.url_for_guid(guid, object=nil)
       if object.class == UserProvidedServiceInstance
         user_provided_path = VCAP::CloudController::UserProvidedServiceInstancesController.path
-        return "#{user_provided_path}/#{guid}"
+        "#{user_provided_path}/#{guid}"
       else
-        return "#{path}/#{guid}"
+        "#{path}/#{guid}"
       end
     end
 
@@ -264,9 +262,10 @@ module VCAP::CloudController
       CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', guid)
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, ds_without_eager, qp, opts)
       # special case: Sequel does not support querying columns not on the current table, so
       # when filtering by org_guid we have to join tables before executing the query.
+      ds = ds_without_eager.eager_graph_with_options(:service_plan).eager_graph_with_options(:service_instance_operation)
 
       orig_query = opts[:q] && opts[:q].clone
       org_filters = []

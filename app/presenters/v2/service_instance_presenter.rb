@@ -24,7 +24,8 @@ module CloudController
           end
 
           if obj.service_plan_id
-            service_plan = VCAP::CloudController::ServicePlan.find(id: obj.service_plan_id)
+            #TODO: add eager loading to other endpoints and remove this database query
+            service_plan = obj.service_plan || VCAP::CloudController::ServicePlan.find(id: obj.service_plan_id)
             obj_hash['service_plan_guid'] = service_plan.guid
             obj_hash['service_guid'] = service_plan.service.guid
             rel_hash['service_url'] = "/v2/services/#{service_plan.service.guid}"

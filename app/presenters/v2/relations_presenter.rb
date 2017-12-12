@@ -89,7 +89,7 @@ module CloudController
               associated_url = associated_controller.url_for_guid(associated_model_instance.guid)
             end
           else
-            associated_url = "#{controller.url_for_guid(obj.guid)}/#{relationship_name}"
+            associated_url = "#{controller.url_for_guid(obj.guid, obj)}/#{relationship_name}"
           end
 
           response["#{relationship_name}_url"] = associated_url if associated_url
