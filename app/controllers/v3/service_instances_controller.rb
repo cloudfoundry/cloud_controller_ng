@@ -44,7 +44,7 @@ class ServiceInstancesV3Controller < ApplicationController
     share.create(service_instance, spaces, user_audit_info)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
-      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces')
+      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
   end
 
   def unshare_service_instance
