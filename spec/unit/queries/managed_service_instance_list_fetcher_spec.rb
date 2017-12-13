@@ -19,7 +19,7 @@ module VCAP::CloudController
         expect(results).to be_a(Sequel::Dataset)
       end
 
-      it 'includes all the managed service instances' do
+      it 'includes only the managed service instances' do
         results = fetcher.fetch_all(message: message).all
         expect(results.length).to eq 3
         expect(results).to include(service_instance_1, service_instance_2, service_instance_3)
@@ -43,6 +43,34 @@ module VCAP::CloudController
             results = fetcher.fetch_all(message: message).all
             expect(results).to match_array([service_instance_2, service_instance_3])
             expect(results).not_to include(service_instance_1)
+          end
+
+          context 'when the space contains no service instances' do
+            let(:space) { Space.make(guid: 'space-guid') }
+            let(:filters) { { space_guids: ['space-guid'] } }
+
+            it 'returns an empty list' do
+              results = fetcher.fetch_all(message: message).all
+              expect(results).to be_empty
+            end
+          end
+
+          context 'when filtering by an empty list of space guids' do
+            let(:filters) { { space_guids: [] } }
+
+            it 'returns an empty list' do
+              results = fetcher.fetch_all(message: message).all
+              expect(results).to be_empty
+            end
+          end
+
+          context 'when filtering by a non-existent space guid' do
+            let(:filters) { { space_guids: ['nonexistent-space-guid'] } }
+
+            it 'returns an empty list' do
+              results = fetcher.fetch_all(message: message).all
+              expect(results).to be_empty
+            end
           end
         end
 
@@ -72,7 +100,7 @@ module VCAP::CloudController
       let(:space_1) { Space.make(guid: 'space-1') }
       let(:space_2) { Space.make(guid: 'space-2') }
 
-      it 'returns all of the managed service instances in the specified space' do
+      it 'returns only the managed service instances in the specified space' do
         results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
 
         expect(results).to match_array([service_instance_1, service_instance_2])
@@ -92,9 +120,37 @@ module VCAP::CloudController
           let(:filters) { { space_guids: ['space-1'] } }
 
           it 'only returns matching service instances' do
-            results = fetcher.fetch_all(message: message).all
+            results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
             expect(results).to match_array([service_instance_1, service_instance_2])
             expect(results).not_to include(service_instance_3)
+          end
+
+          context 'when the space contains no service instances' do
+            let(:space) { Space.make(guid: 'space-guid') }
+            let(:filters) { { space_guids: ['space-guid'] } }
+
+            it 'returns an empty list' do
+              results = fetcher.fetch(message: message, readable_space_guids: [space.guid]).all
+              expect(results).to be_empty
+            end
+          end
+
+          context 'when filtering by an empty list of space guids' do
+            let(:filters) { { space_guids: [] } }
+
+            it 'returns an empty list' do
+              results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
+              expect(results).to be_empty
+            end
+          end
+
+          context 'when filtering by a non-existent space guid' do
+            let(:filters) { { space_guids: ['nonexistent-space-guid'] } }
+
+            it 'returns an empty list' do
+              results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
+              expect(results).to be_empty
+            end
           end
         end
 

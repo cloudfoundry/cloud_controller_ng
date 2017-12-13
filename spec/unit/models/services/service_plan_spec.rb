@@ -285,6 +285,30 @@ module VCAP::CloudController
       end
     end
 
+    describe '#visible_in_space?' do
+      it 'returns true when included in .space_visible set' do
+        visible_private_plan = ServicePlan.make(public: false)
+
+        organization = Organization.make
+        space = Space.make(organization: organization)
+        ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
+
+        visible = ServicePlan.space_visible(space).all
+        expect(visible).to include(visible_private_plan)
+        expect(visible_private_plan.visible_in_space?(space)).to be true
+      end
+
+      it 'returns false when not included in .space_visible set' do
+        hidden_private_plan = ServicePlan.make(public: false)
+        organization = Organization.make
+        space = Space.make(organization: organization)
+
+        visible = ServicePlan.space_visible(space).all
+        expect(visible).to_not include(hidden_private_plan)
+        expect(hidden_private_plan.visible_in_space?(space)).to be false
+      end
+    end
+
     describe '#bindable?' do
       let(:service_plan) { ServicePlan.make(service: service, bindable: plan_bindable) }
 
