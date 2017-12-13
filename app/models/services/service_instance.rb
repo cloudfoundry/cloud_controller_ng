@@ -63,15 +63,14 @@ module VCAP::CloudController
     encrypt :credentials, salt: :salt
 
     def self.user_visibility_filter(user)
+      visible_spaces = user.spaces_dataset.all
+                          .concat(user.audited_spaces_dataset.all)
+                          .concat(user.managed_spaces_dataset.all)
+                          .concat(managed_organizations_spaces_dataset(user.managed_organizations_dataset).all).uniq
+
       Sequel.or([
-        [:space, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
-        [:space, user.spaces_dataset],
-        [:space, user.audited_spaces_dataset],
-        [:space, user.managed_spaces_dataset],
-        [:shared_spaces, user.spaces_dataset],
-        [:shared_spaces, user.managed_spaces_dataset],
-        [:shared_spaces, user.audited_spaces_dataset],
-        [:shared_spaces, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
+        [:space, visible_spaces],
+        [:shared_spaces, visible_spaces]
       ])
     end
 
