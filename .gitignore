@@ -1,5 +1,6 @@
 *~
 .idea
+.vscode
 .yardoc
 .byebug_history
 \#*\#
