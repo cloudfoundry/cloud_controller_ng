@@ -160,7 +160,24 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the service plan is private' do
+      context 'when the service plan is from a private space-scoped broker' do
+        let(:source_org) { Organization.make(name: 'source-org') }
+        let(:source_space) { Space.make(name: 'source-space', organization: source_org) }
+        let(:broker) { ServiceBroker.make(space: source_space) }
+        let(:service) { Service.make(service_broker: broker, label: 'space-scoped-service') }
+        let(:service_plan) { ServicePlan.make(service: service, name: 'my-plan') }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+        let(:target_space1) { Space.make(name: 'target-space', organization: source_org) }
+
+        it 'raises an api error' do
+          error_msg = 'Access to service space-scoped-service and plan my-plan is not enabled in source-org/target-space'
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error(CloudController::Errors::ApiError, error_msg)
+        end
+      end
+
+      context 'when the service plan is not public' do
         let(:service_plan) { ServicePlan.make(public: false) }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
