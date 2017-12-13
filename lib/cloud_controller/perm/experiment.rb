@@ -3,6 +3,7 @@ require 'scientist'
 module VCAP::CloudController
   module Perm
     class Experiment
+      attr_reader :name
       include Scientist::Experiment
 
       def initialize(name:, perm_enabled:, query_enabled:)
@@ -16,6 +17,10 @@ module VCAP::CloudController
       end
 
       def publish(result) end
+
+      def scientist_context
+        @_scientist_context
+      end
     end
   end
 end

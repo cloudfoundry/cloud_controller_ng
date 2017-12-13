@@ -1,5 +1,5 @@
 class VCAP::CloudController::Permissions::Queryer
-  attr_reader :perm_permissions, :db_permissions, :query_enabled, :perm_enabled, :current_user_guid
+  attr_reader :perm_permissions, :db_permissions, :experiment_builder
 
   def self.build(perm_client, security_context, perm_enabled, query_enabled)
     db_permissions =
@@ -14,21 +14,24 @@ class VCAP::CloudController::Permissions::Queryer
       issuer: security_context.token['iss'],
     )
 
+    experiment_builder = ->(name) {
+      experiment = VCAP::CloudController::Perm::Experiment.new(name: name, perm_enabled: perm_enabled, query_enabled: query_enabled)
+      experiment.context(current_user_guid: security_context.current_user_guid)
+
+      return experiment
+    }
+
     self.new(
       db_permissions: db_permissions,
       perm_permissions: perm_permissions,
-      perm_enabled: perm_enabled,
-      query_enabled: query_enabled,
-      current_user_guid: security_context.current_user_guid
+      experiment_builder: experiment_builder
     )
   end
 
-  def initialize(db_permissions:, perm_permissions:, perm_enabled:, query_enabled:, current_user_guid:)
+  def initialize(db_permissions:, perm_permissions:, experiment_builder:)
     @db_permissions = db_permissions
     @perm_permissions = perm_permissions
-    @perm_enabled = perm_enabled
-    @query_enabled = query_enabled
-    @current_user_guid = current_user_guid
+    @experiment_builder = experiment_builder
   end
 
   def can_read?(space_guid, org_guid)
@@ -91,7 +94,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_see_secrets?(space)
     science 'can_see_secrets_from_space?' do |e|
-      e.context(space_guid: space.guid)
+      e.context(space_guid: space.guid, org_guid: space.organization.guid)
       e.use { db_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
       e.try { perm_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
 
@@ -124,9 +127,7 @@ class VCAP::CloudController::Permissions::Queryer
   private
 
   def science(name)
-    experiment = VCAP::CloudController::Perm::Experiment.new(name: name, perm_enabled: perm_enabled, query_enabled: query_enabled)
-    experiment.context(current_user_guid: current_user_guid)
-
+    experiment = experiment_builder.call(name)
     yield experiment
     experiment.run
   end
