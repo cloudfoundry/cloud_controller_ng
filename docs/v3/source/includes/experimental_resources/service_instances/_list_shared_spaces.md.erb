@@ -1,0 +1,37 @@
+### List shared spaces relationship
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :service_instance_shared_space_relationships %>
+```
+This endpoint lists the spaces that the service instance has been shared to.
+
+#### Definition
+`GET /v3/service_instances/:guid/relationships/shared_spaces`
+
+#### Permitted Roles (in the service instance's originating space)
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |

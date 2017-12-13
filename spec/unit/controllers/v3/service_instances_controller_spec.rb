@@ -133,7 +133,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
   end
 
-  describe 'show' do
+  describe '#relationships_shared_spaces' do
     let(:target_space) { VCAP::CloudController::Space.make(guid: 'target-space-guid') }
 
     before do
@@ -158,7 +158,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: space.organization, space: space, user: user)
 
-            get :show, service_instance_guid: service_instance.guid
+            get :relationships_shared_spaces, service_instance_guid: service_instance.guid
 
             expect(response.status).to eq(expected_return_value),
               "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
@@ -174,7 +174,16 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when invalid service instance guid is provided' do
       it 'returns a 404' do
         set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
-        get :show, service_instance_guid: 'nonexistent-guid'
+        get :relationships_shared_spaces, service_instance_guid: 'nonexistent-guid'
+
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'when the user has read access to the target space, but not to the source space' do
+      it 'returns a 404' do
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+        get :relationships_shared_spaces, service_instance_guid: service_instance.guid
 
         expect(response.status).to eq 404
       end
