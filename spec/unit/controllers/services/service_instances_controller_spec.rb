@@ -1167,6 +1167,194 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'when filtering by other query parameters' do
+            let!(:org1) { Organization.make(guid: '1') }
+            let!(:org2) { Organization.make(guid: '2') }
+            let!(:org3) { Organization.make(guid: '3') }
+            let!(:space1) { Space.make(organization: org1) }
+            let!(:space2) { Space.make(organization: org2) }
+            let!(:space3) { Space.make(organization: org3) }
+
+            let!(:instance1) { ManagedServiceInstance.make(name: 'instance-1', space: space1) }
+            let!(:instance2) { ManagedServiceInstance.make(name: 'instance-2', space: space1, gateway_name: "hall'") }
+            let!(:instance3) { ManagedServiceInstance.make(name: instance1.name, space: space2) }
+            let!(:instance4) { ManagedServiceInstance.make(name: 'instance-4', space: space3, gateway_name: 'oates') }
+
+            it 'filters by space_guid' do
+              get "v2/service_instances?q=space_guid:#{space1.guid}"
+
+              expect(last_response.status).to eq(200), last_response.body
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(2), last_response.body
+              expect(services).to match_array([instance1.guid, instance2.guid])
+            end
+
+            it 'filters by service_plan_guid' do
+              service_plan1 = ServicePlan.make(active: false)
+              instance1.service_plan_id = service_plan1.id
+              instance1.save
+              get "v2/service_instances?q=service_plan_guid:#{service_plan1.guid}"
+
+              expect(last_response.status).to eq(200), last_response.body
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(1), last_response.body
+              expect(services).to include(instance1.guid)
+            end
+
+            context 'service bindings' do
+              let!(:service_binding_1) { ServiceBinding.make(service_instance: instance1) }
+              let!(:service_binding_2) { ServiceBinding.make(service_instance: instance2) }
+
+              it 'filters by service_binding_guid' do
+                get "v2/service_instances?q=service_binding_guid:#{service_binding_1.guid}"
+
+                expect(last_response.status).to eq(200), last_response.body
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(1), last_response.body
+                expect(services).to include(instance1.guid)
+              end
+            end
+
+            context 'service keys' do
+              let!(:service_key_1) { ServiceKey.make(service_instance: instance1, name: 'hall') }
+              let!(:service_key_2) { ServiceKey.make(service_instance: instance2, name: 'oates') }
+
+              it 'filters by service_key_guid' do
+                get "v2/service_instances?q=service_key_guid:#{service_key_1.guid}"
+
+                expect(last_response.status).to eq(200), last_response.body
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(1), last_response.body
+                expect(services).to include(instance1.guid)
+              end
+            end
+
+            context 'gateway_name' do
+              let!(:instance1) { ManagedServiceInstance.make(name: 'instance-1', space: space1) }
+              let!(:instance2) { ManagedServiceInstance.make(name: 'instance-2', space: space1, gateway_name: "hall'") }
+              let!(:instance3) { ManagedServiceInstance.make(name: instance1.name, space: space2) }
+              let!(:instance4) { ManagedServiceInstance.make(name: 'instance-4', space: space3, gateway_name: 'oates') }
+
+              it 'filters by gateway_name' do
+                get 'v2/service_instances?q=gateway_name:oates'
+
+                expect(last_response.status).to eq(200), last_response.body
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(1), last_response.body
+                expect(services).to include(instance4.guid)
+              end
+            end
+
+            it 'filters by service_binding_guid' do
+              service_plan1 = ServicePlan.make(active: false)
+              instance1.service_plan_id = service_plan1.id
+              instance1.save
+              get "v2/service_instances?q=service_plan_guid:#{service_plan1.guid}"
+
+              expect(last_response.status).to eq(200), last_response.body
+              services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+              expect(services.length).to eq(1), last_response.body
+              expect(services).to include(instance1.guid)
+            end
+          end
+
+          context 'when filtering by name' do
+            let!(:org1) { Organization.make(guid: '1') }
+            let!(:org2) { Organization.make(guid: '2') }
+            let!(:org3) { Organization.make(guid: '3') }
+            let!(:space1) { Space.make(organization: org1) }
+            let!(:space2) { Space.make(organization: org2) }
+            let!(:space3) { Space.make(organization: org3) }
+            context 'when the operator is ":"' do
+              it 'successfully filters' do
+                instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
+                ManagedServiceInstance.make(name: 'instance-2', space: space1)
+                ManagedServiceInstance.make(name: instance1.name, space: space2)
+
+                get "v2/service_instances?&q=name:#{instance1.name}"
+
+                expect(last_response.status).to eq(200)
+                resources = decoded_response['resources']
+                expect(resources.length).to eq(2)
+                expect(resources[0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
+              end
+            end
+
+            context 'when the operator is "IN"' do
+              it 'successfully filters' do
+                instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
+                ManagedServiceInstance.make(name: 'instance-2', space: space1)
+                ManagedServiceInstance.make(name: instance1.name, space: space2)
+
+                get "v2/service_instances?&q=name%20IN%20#{instance1.name}"
+
+                expect(last_response.status).to eq(200)
+                resources = decoded_response['resources']
+                expect(resources.length).to eq(2)
+                expect(resources[0].fetch('metadata').fetch('guid')).to eq(instance1.guid)
+              end
+            end
+
+            context 'when the operator is a comparator' do
+              let!(:instance1) { ManagedServiceInstance.make(name: 'inst1', space: space1) }
+              let!(:instance2) { ManagedServiceInstance.make(name: 'inst2', space: space2) }
+              let!(:instance3) { ManagedServiceInstance.make(name: 'inst3', space: space3) }
+
+              it 'successfully filters on <' do
+                get "v2/service_instances?q=name<#{instance2.name}"
+
+                expect(last_response.status).to eq(200)
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(1)
+                expect(services).to include(instance1.guid)
+              end
+
+              it 'successfully filters on >' do
+                get "v2/service_instances?q=name>#{instance1.name}"
+
+                expect(last_response.status).to eq(200)
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(2)
+                expect(services).to include(instance2.guid)
+                expect(services).to include(instance3.guid)
+              end
+
+              it 'successfully filters on <=' do
+                get "v2/service_instances?q=name<=#{instance2.name}"
+
+                expect(last_response.status).to eq(200)
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(2)
+                expect(services).to include(instance1.guid)
+                expect(services).to include(instance2.guid)
+              end
+
+              it 'successfully filters on >=' do
+                get "v2/service_instances?q=name>=#{instance1.name}"
+
+                expect(last_response.status).to eq(200)
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
+                expect(services.length).to eq(3)
+                expect(services).to include(instance1.guid)
+                expect(services).to include(instance2.guid)
+                expect(services).to include(instance3.guid)
+              end
+            end
+
+            context 'when the query is missing an operator or a value' do
+              it 'filters by name = nil (to match behavior of filters other than name)' do
+                ManagedServiceInstance.make(name: 'instance-1', space: space1)
+                ManagedServiceInstance.make(name: 'instance-2', space: space2)
+
+                get 'v2/service_instances?q=name'
+
+                expect(last_response.status).to eq(200), last_response.body
+                services = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('name') }
+                expect(services.length).to eq(0)
+              end
+            end
+          end
         end
       end
 

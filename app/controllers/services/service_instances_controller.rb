@@ -269,21 +269,35 @@ module VCAP::CloudController
 
       orig_query = opts[:q] && opts[:q].clone
       org_filters = []
+      name_filters = []
+      other_filters = []
 
       opts[:q] ||= []
+      opts[:q].uniq!
       opts[:q].each do |filter|
         key, comparison, value = filter.split(/(:|>=|<=|<|>| IN )/, 2)
-        org_filters.push [key, comparison, value] if key == 'organization_guid'
+        if key == 'organization_guid'
+          org_filters.push [key, comparison, value]
+        elsif key == 'name'
+          name_filters.push [:service_instances__name, comparison, value]
+        else
+          other_filters.push(filter)
+        end
       end
 
-      opts[:q] -= org_filters.map(&:join)
-      opts.delete(:q) if opts[:q].blank?
+      opts[:q] = other_filters
+      opts.delete(:q) if opts[:q].empty?
 
-      if org_filters.empty?
-        super(model, ds, qp, opts)
+      if other_filters.empty?
+        opts.delete(:q)
       else
-        super(model, ds, qp, opts).where(space_id: select_spaces_based_on_org_filters(org_filters))
+        opts[:q] = other_filters
       end
+
+      ds = super(model, ds, qp, opts)
+      ds = ds.where(space_id: select_spaces_based_on_org_filters(org_filters)) if !org_filters.empty?
+      ds = select_service_instances_based_on_name_filters(ds, name_filters) if !name_filters.empty?
+      ds
     ensure
       opts[:q] = orig_query
     end
@@ -544,8 +558,24 @@ module VCAP::CloudController
                       space_ids.where(Sequel.lit("organizations.guid #{comparison} ?", value))
                     end
       end
-
       space_ids
+    end
+
+    def select_service_instances_based_on_name_filters(dataset, name_filters)
+      name_filters.each do |name_filter|
+        name, comparison, value = name_filter
+
+        dataset = if value.blank?
+                    dataset.where(name => nil)
+                  elsif comparison == ':'
+                    dataset.where(name => value)
+                  elsif comparison == ' IN '
+                    dataset.where(name => value.split(','))
+                  else
+                    dataset.where(Sequel.lit("service_instances.name #{comparison} ?", value))
+                  end
+      end
+      dataset
     end
 
     def projected_service_instance(service_instance)
