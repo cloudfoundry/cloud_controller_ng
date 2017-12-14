@@ -428,9 +428,10 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
-        expect(response.body).to include(
-          "Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}', '#{target_space2.guid}']. "\
-          'Write permission is required in order to share a service instance with a space.')
+        expect(response.body).to include(target_space.guid)
+        expect(response.body).to include(target_space2.guid)
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ")
+        expect(response.body).to include('Write permission is required in order to share a service instance with a space.')
       end
     end
 
