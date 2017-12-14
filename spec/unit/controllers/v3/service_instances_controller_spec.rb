@@ -334,11 +334,11 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
-        expect(response.body).to include('Unable to share to spaces')
-        expect(response.body).to include('nonexistant-space-guid')
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistant-space-guid']. ")
+        expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
+        expect(response.body).not_to include('Write permission is required in order to share a service instance with a space.')
       end
     end
-
     context 'when multiple target spaces do not exist' do
       before do
         req_body[:data] = [
@@ -351,10 +351,71 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'does not share to any of the valid target spaces and returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
-        expect(response.body).to include('Unable to share to spaces')
-        expect(response.body).to include('nonexistant-space-guid')
-        expect(response.body).to include('nonexistant-space-guid2')
-        expect(service_instance.shared_spaces).to_not include(target_space)
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistant-space-guid', 'nonexistant-space-guid2']. ")
+        expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
+        expect(response.body).not_to include('Write permission is required in order to share a service instance with a space.')
+      end
+    end
+
+    context 'when the user is a SpaceAuditor in the target space' do
+      before do
+        set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
+        set_current_user_as_role(role: 'space_auditor', org: target_space.organization, space: target_space, user: user)
+      end
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}']. ")
+        expect(response.body).to include('Write permission is required in order to share a service instance with a space.')
+        expect(response.body).not_to include('Ensure the spaces exist and that you have access to them.')
+      end
+    end
+
+    context 'when some target spaces are unreadable and some are unwriteable' do
+      before do
+        set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
+        set_current_user_as_role(role: 'space_auditor', org: target_space.organization, space: target_space, user: user)
+
+        req_body[:data] = [
+          { guid: 'nonexistant-space-guid' },
+          { guid: target_space.guid }
+        ]
+      end
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include(
+          "Unable to share service instance #{service_instance.name} with spaces ['nonexistant-space-guid']. Ensure the spaces exist and that you have access to them.\\n" \
+          "Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}']. "\
+          'Write permission is required in order to share a service instance with a space.'
+        )
+      end
+    end
+
+    context 'when the user is a SpaceAuditor in mulitple target spaces' do
+      let(:req_body) do
+        {
+          data: [
+            { guid: target_space.guid },
+            { guid: target_space2.guid }
+          ]
+        }
+      end
+
+      before do
+        set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
+        set_current_user_as_role(role: 'space_auditor', org: target_space.organization, space: target_space, user: user)
+        set_current_user_as_role(role: 'space_auditor', org: target_space2.organization, space: target_space2, user: user)
+      end
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include(
+          "Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}', '#{target_space2.guid}']. "\
+          'Write permission is required in order to share a service instance with a space.')
       end
     end
 
@@ -399,11 +460,11 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         role_to_expected_http_response = {
           'admin'               => 200,
           'space_developer'     => 200,
-          'admin_read_only'     => 403,
-          'global_auditor'      => 403,
-          'space_manager'       => 403,
-          'space_auditor'       => 403,
-          'org_manager'         => 403,
+          'admin_read_only'     => 422,
+          'global_auditor'      => 422,
+          'space_manager'       => 422,
+          'space_auditor'       => 422,
+          'org_manager'         => 422,
           'org_auditor'         => 422,
           'org_billing_manager' => 422,
         }.freeze
