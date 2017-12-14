@@ -6,28 +6,23 @@ module VCAP::CloudController
     let(:db_permissions) { instance_double(VCAP::CloudController::Permissions) }
     let(:perm_permissions) { instance_double(VCAP::CloudController::Perm::Permissions) }
 
-    let(:experiment_builder) do
-      ->(name) {
-        @experiment = VCAP::CloudController::Perm::Experiment.new(
-          name: name,
-          perm_enabled: true,
-          query_enabled: true
-        )
-
-        @experiment
-      }
-    end
+    let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil) }
+    let(:current_user_guid) { 'some-current-user' }
 
     subject(:queryer) do
       Permissions::Queryer.new(
         db_permissions: db_permissions,
         perm_permissions: perm_permissions,
-        experiment_builder: experiment_builder
+        perm_enabled: true,
+        query_enabled: true,
+        current_user_guid: current_user_guid
       )
     end
 
     before do
       @experiment = nil
+
+      allow(Steno).to receive(:logger).and_return(logger)
     end
 
     describe '.build' do
@@ -43,7 +38,6 @@ module VCAP::CloudController
         allow(security_context).to receive(:token).and_return(token)
 
         current_user = spy(:current_user)
-        current_user_guid = 'foo'
         allow(security_context).to receive(:current_user_guid).and_return(current_user_guid)
         allow(security_context).to receive(:current_user).and_return(current_user)
 
@@ -62,15 +56,6 @@ module VCAP::CloudController
 
         expect(queryer.db_permissions).to eq(db_permissions)
         expect(queryer.perm_permissions).to eq(perm_permissions)
-
-        experiment_builder = queryer.experiment_builder
-
-        experiment = experiment_builder.call('foo')
-
-        expect(experiment).to be_a(VCAP::CloudController::Perm::Experiment)
-        expect(experiment.name).to eq('foo')
-        expect(experiment.enabled?).to be_truthy
-        expect(experiment.scientist_context[:current_user_guid]).to eq(current_user_guid)
       end
     end
 
@@ -107,12 +92,54 @@ module VCAP::CloudController
         expect(response).to eq(true)
       end
 
-      it 'sets the context' do
-        queryer.can_read?('space-guid', 'org-guid')
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_from_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_from_space?).and_return(true)
 
-        context = @experiment.scientist_context
-        expect(context[:space_guid]).to eq('space-guid')
-        expect(context[:org_guid]).to eq('org-guid')
+          queryer.can_read?('space-guid', 'org-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'space-guid',
+            org_guid: 'org-guid',
+            action: 'space.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_from_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_from_space?).and_return('something wrong')
+
+          queryer.can_read?('space-guid', 'org-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'space-guid',
+            org_guid: 'org-guid',
+            action: 'space.read',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
       end
     end
 
@@ -149,11 +176,52 @@ module VCAP::CloudController
         expect(response).to eq(true)
       end
 
-      it 'sets the context' do
-        queryer.can_write?('space-guid')
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_write_to_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_write_to_space?).and_return(true)
 
-        context = @experiment.scientist_context
-        expect(context[:space_guid]).to eq('space-guid')
+          queryer.can_write?('space-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'space-guid',
+            action: 'space.write',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_write_to_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_write_to_space?).and_return('something wrong')
+
+          queryer.can_write?('space-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'space-guid',
+            action: 'space.write',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
       end
     end
 
@@ -190,11 +258,52 @@ module VCAP::CloudController
         expect(response).to eq(true)
       end
 
-      it 'sets the context' do
-        queryer.can_write_to_org?('org-guid')
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_write_to_org?).and_return(true)
+          allow(perm_permissions).to receive(:can_write_to_org?).and_return(true)
 
-        context = @experiment.scientist_context
-        expect(context[:org_guid]).to eq('org-guid')
+          queryer.can_write_to_org?('org-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            org_guid: 'org-guid',
+            action: 'org.write',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_write_to_org?).and_return(true)
+          allow(perm_permissions).to receive(:can_write_to_org?).and_return('something wrong')
+
+          queryer.can_write_to_org?('org-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            org_guid: 'org-guid',
+            action: 'org.write',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
       end
     end
 
@@ -231,11 +340,52 @@ module VCAP::CloudController
         expect(response).to eq(true)
       end
 
-      it 'sets the context' do
-        queryer.can_read_from_org?('org-guid')
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_from_org?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_from_org?).and_return(true)
 
-        context = @experiment.scientist_context
-        expect(context[:org_guid]).to eq('org-guid')
+          queryer.can_read_from_org?('org-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            org_guid: 'org-guid',
+            action: 'org.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_from_org?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_from_org?).and_return('something wrong')
+
+          queryer.can_read_from_org?('org-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            org_guid: 'org-guid',
+            action: 'org.read',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
       end
     end
 
@@ -304,7 +454,7 @@ module VCAP::CloudController
     end
 
     describe '#can_read_from_isolation_segment?' do
-      let(:isolation_segment) { spy(:isolation_segment, guid: 'some-guid') }
+      let(:isolation_segment) { spy(:isolation_segment, guid: 'some-isolation-segment-guid') }
 
       before do
         allow(perm_permissions).to receive(:can_read_from_isolation_segment?)
@@ -338,11 +488,52 @@ module VCAP::CloudController
         expect(response).to eq(true)
       end
 
-      it 'sets the context' do
-        queryer.can_read_from_isolation_segment?(isolation_segment)
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_from_isolation_segment?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_from_isolation_segment?).and_return(true)
 
-        context = @experiment.scientist_context
-        expect(context[:isolation_segment_guid]).to eq('some-guid')
+          queryer.can_read_from_isolation_segment?(isolation_segment)
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            isolation_segment_guid: 'some-isolation-segment-guid',
+            action: 'isolation_segment.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_from_isolation_segment?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_from_isolation_segment?).and_return('something wrong')
+
+          queryer.can_read_from_isolation_segment?(isolation_segment)
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            isolation_segment_guid: 'some-isolation-segment-guid',
+            action: 'isolation_segment.read',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
       end
     end
 
@@ -381,12 +572,54 @@ module VCAP::CloudController
         expect(response).to eq(true)
       end
 
-      it 'sets the context' do
-        queryer.can_see_secrets?(space)
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
 
-        context = @experiment.scientist_context
-        expect(context[:space_guid]).to eq('some-space-guid')
-        expect(context[:org_guid]).to eq('some-organization-guid')
+          queryer.can_see_secrets?(space)
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'some-space-guid',
+            org_guid: 'some-organization-guid',
+            action: 'space.read_secrets',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_see_secrets_in_space?).and_return('something wrong')
+
+          queryer.can_see_secrets?(space)
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'some-space-guid',
+            org_guid: 'some-organization-guid',
+            action: 'space.read_secrets',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
       end
     end
 
