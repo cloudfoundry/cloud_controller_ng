@@ -76,18 +76,16 @@ class ServiceInstancesV3Controller < ApplicationController
   private
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
-    unreadable_space_guids = request_guids - found_spaces.map(&:guid)
-
     unreadable_spaces = found_spaces.reject do |space|
       can_read_space?(space)
     end
 
-    unreadable_space_guids += unreadable_spaces.map(&:guid)
-
     unwriteable_spaces = found_spaces.reject do |space|
-      can_write?(space.guid)
+      can_write_space?(space) || unreadable_spaces.include?(space)
     end
 
+    unreadable_space_guids = request_guids - found_spaces.map(&:guid)
+    unreadable_space_guids += unreadable_spaces.map(&:guid)
     unwriteable_space_guids = unwriteable_spaces.map(&:guid)
 
     unless unreadable_space_guids.empty? && unwriteable_space_guids.empty?

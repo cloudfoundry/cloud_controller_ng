@@ -339,6 +339,21 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         expect(response.body).not_to include('Write permission is required in order to share a service instance with a space.')
       end
     end
+
+    context 'when the user does not have read access to the target space' do
+      before do
+        set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
+      end
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}']. ")
+        expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
+        expect(response.body).not_to include('Write permission is required in order to share a service instance with a space.')
+      end
+    end
+
     context 'when multiple target spaces do not exist' do
       before do
         req_body[:data] = [
