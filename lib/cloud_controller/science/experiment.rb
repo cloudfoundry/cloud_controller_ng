@@ -1,25 +1,23 @@
 require 'scientist'
 
 module VCAP::CloudController
-  module Perm
+  module Science
     class Experiment
-      attr_reader :name
       include Scientist::Experiment
 
-      def initialize(name:, perm_enabled:, query_enabled:)
+      def initialize(name:, enabled:)
         @name = name
-        @perm_enabled = perm_enabled
-        @query_enabled = query_enabled
+        @enabled = enabled
       end
 
       def enabled?
-        @perm_enabled && @query_enabled
+        @enabled
       end
 
       def publish(result)
         if result.matched?
           logger.debug(
-            "matched",
+            'matched',
             {
               context: @_scientist_context,
               control: observation_payload(result.control),
@@ -28,7 +26,7 @@ module VCAP::CloudController
           )
         else
           logger.info(
-            "mismatched",
+            'mismatched',
             {
               context: @_scientist_context,
               control: observation_payload(result.control),
@@ -39,6 +37,8 @@ module VCAP::CloudController
 
       private
 
+      attr_reader :name, :enabled
+
       def logger
         @logger ||= Steno.logger("science.#{name}")
       end
@@ -46,13 +46,13 @@ module VCAP::CloudController
       def observation_payload(observation)
         if observation.raised?
           {
-            :exception => observation.exception.class,
-            :message   => observation.exception.message,
-            :backtrace => observation.exception.backtrace
+            exception: observation.exception.class,
+            message: observation.exception.message,
+            backtrace: observation.exception.backtrace
           }
         else
           {
-            :value => observation.cleaned_value
+            value: observation.cleaned_value
           }
         end
       end

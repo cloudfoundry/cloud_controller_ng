@@ -26,8 +26,7 @@ class VCAP::CloudController::Permissions::Queryer
   def initialize(db_permissions:, perm_permissions:, perm_enabled:, query_enabled:, current_user_guid:)
     @db_permissions = db_permissions
     @perm_permissions = perm_permissions
-    @perm_enabled = perm_enabled
-    @query_enabled = query_enabled
+    @enabled = perm_enabled && query_enabled
     @current_user_guid = current_user_guid
   end
 
@@ -123,10 +122,10 @@ class VCAP::CloudController::Permissions::Queryer
 
   private
 
-  attr_reader :perm_enabled, :query_enabled, :current_user_guid
+  attr_reader :enabled, :current_user_guid
 
   def science(name)
-    experiment = VCAP::CloudController::Perm::Experiment.new(name: name, perm_enabled: perm_enabled, query_enabled: query_enabled)
+    experiment = VCAP::CloudController::Science::Experiment.new(name: name, enabled: enabled)
     experiment.context(current_user_guid: current_user_guid)
     yield experiment
     experiment.run
