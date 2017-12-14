@@ -78,7 +78,9 @@ module VCAP::CloudController
 
         db.transaction do
           (self.class.encrypted_fields || []).each do |field|
-            send("#{field[:field_name]}_without_encryption=", Encryptor.encrypt(send(field[:field_name]), send(field[:salt_name])))
+            current_value = send("#{field[:field_name]}_with_encryption")
+            updated_encrypted_value = Encryptor.encrypt(current_value, send(field[:salt_name]))
+            send("#{field[:field_name]}_without_encryption=", updated_encrypted_value)
           end
           self.encryption_key_label = Encryptor.current_encryption_key_label
         end

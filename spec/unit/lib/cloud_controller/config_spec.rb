@@ -87,6 +87,13 @@ module VCAP::CloudController
             let(:cc_config_file) do
               config = YAML.load_file('config/cloud_controller.yml')
               config['stacks_file'] = '/tmp/foo'
+              config['database_encryption_keys'] = {
+                keys: {
+                  foo: 'bar',
+                  head: 'banging'
+                },
+                current_key_label: 'foo'
+              }
 
               file = Tempfile.new('cc_config.yml')
               file.write(YAML.dump(config))

@@ -364,11 +364,43 @@ module VCAP::CloudController
             end
 
             context 'and the key has been rotated' do
-              it 'updates encryption_key_label in the record when encrypting' do
+              before do
                 allow(Encryptor).to receive(:current_encryption_key_label) { 'bar' }
+              end
+
+              it 'updates encryption_key_label in the record when encrypting' do
                 subject.sekret = 'nu'
                 expect(subject.sekret).to eq('nu')
                 expect(subject.encryption_key_label).to eq(Encryptor.current_encryption_key_label)
+              end
+
+              context 'and the field is serialized (and/or has other alias method chains)' do
+                let(:klass3) do
+                  Class.new(klass2) do
+                    set_field_as_encrypted :sekret
+
+                    def sekret_with_serialization
+                      MultiJson.load(sekret_without_serialization)
+                    end
+
+                    def sekret_with_serialization=(sekret)
+                      self.sekret_without_serialization = MultiJson.dump(sekret)
+                    end
+
+                    alias_method_chain :sekret, 'serialization'
+                    alias_method_chain :sekret=, 'serialization'
+                  end
+                end
+
+                let(:subject) { klass3.new }
+                let(:unencrypted_string) { { 'foo' => 'bar' } }
+
+                it 're-encrypts the field after it has been serialized (the encryptor only works for strings, not hashes)' do
+                  subject.sekret = { 'foo' => 'bar' }
+                  expect(subject.sekret_without_serialization).to eq(%({\"foo\":\"bar\"}))
+                  expect(subject.sekret).to eq({ 'foo' => 'bar' })
+                  expect(subject.encryption_key_label).to eq(Encryptor.current_encryption_key_label)
+                end
               end
 
               context 'and the model has another encrypted field' do
