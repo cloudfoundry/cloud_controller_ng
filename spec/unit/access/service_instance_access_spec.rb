@@ -177,6 +177,10 @@ module VCAP::CloudController
         it 'returns false for purge' do
           expect(subject).not_to allow_op_on_object(:purge, service_instance)
         end
+
+        it 'does not allow the user to update the service' do
+          expect(subject).not_to allow_op_on_object(:update, service_instance)
+        end
       end
 
       context 'when the space of the service instance is not visible' do
@@ -202,6 +206,10 @@ module VCAP::CloudController
 
         it 'returns false for purge' do
           expect(subject).not_to allow_op_on_object(:purge, service_instance)
+        end
+
+        it 'does not allow the user to update the service' do
+          expect(subject).not_to allow_op_on_object(:update, service_instance)
         end
       end
     end

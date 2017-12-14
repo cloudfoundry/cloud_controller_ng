@@ -119,6 +119,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UserProvidedServiceInstanceHandlerNeeded')
       end
 
+      validate_shared_space_updateable(service_instance)
       validate_access(:read_for_update, service_instance)
       validate_access(:update, projected_service_instance(service_instance))
 
@@ -446,6 +447,12 @@ module VCAP::CloudController
 
       if request_attrs['name'] != service_instance.name
         raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceCannotBeRenamed')
+      end
+    end
+
+    def validate_shared_space_updateable(service_instance)
+      if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
+        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdateableInTargetSpace')
       end
     end
 
