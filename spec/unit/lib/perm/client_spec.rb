@@ -31,10 +31,18 @@ module VCAP::CloudController::Perm
     end
 
     describe '#create_org_role' do
-      it 'creates the correct role' do
+      it 'creates the correct role and creates associated permission' do
         subject.create_org_role(role: 'developer', org_id: org_id)
 
-        expect(client).to have_received(:create_role).with(role_name: "org-developer-#{org_id}")
+        expect(client).to have_received(:create_role).with(
+          role_name: "org-developer-#{org_id}",
+          permissions: [
+            CloudFoundry::Perm::V1::Models::Permission.new(
+              name: 'org.developer',
+              resource_pattern: org_id.to_s
+            )
+          ]
+        )
       end
 
       it 'does not fail if the role already exists' do
@@ -289,7 +297,15 @@ module VCAP::CloudController::Perm
       it 'creates the correct role' do
         subject.create_space_role(role: 'developer', space_id: space_id)
 
-        expect(client).to have_received(:create_role).with(role_name: "space-developer-#{space_id}")
+        expect(client).to have_received(:create_role).with(
+          role_name: "space-developer-#{space_id}",
+          permissions: [
+            CloudFoundry::Perm::V1::Models::Permission.new(
+              name: 'space.developer',
+              resource_pattern: space_id.to_s
+            )
+          ]
+        )
       end
 
       it 'does not fail if the role already exists' do

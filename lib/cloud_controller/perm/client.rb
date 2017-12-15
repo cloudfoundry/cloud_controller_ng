@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
 
       def create_org_role(role:, org_id:)
-        create_role(org_role(role, org_id))
+        create_role(org_role(role, org_id), [org_role_to_permission(role, org_id)])
       end
 
       def delete_org_role(role:, org_id:)
@@ -54,7 +54,7 @@ module VCAP::CloudController
       end
 
       def create_space_role(role:, space_id:)
-        create_role(space_role(role, space_id))
+        create_role(space_role(role, space_id), [space_role_to_permission(role, space_id)])
       end
 
       def delete_space_role(role:, space_id:)
@@ -129,10 +129,24 @@ module VCAP::CloudController
         "space-#{role}-#{space_id}"
       end
 
-      def create_role(role)
+      def org_role_to_permission(role, org_id)
+        CloudFoundry::Perm::V1::Models::Permission.new(
+          name: "org.#{role}",
+          resource_pattern: org_id.to_s
+        )
+      end
+
+      def space_role_to_permission(role, space_id)
+        CloudFoundry::Perm::V1::Models::Permission.new(
+          name: "space.#{role}",
+          resource_pattern: space_id.to_s
+        )
+      end
+
+      def create_role(role, permissions=[])
         if enabled
           begin
-            client.create_role(role_name: role)
+            client.create_role(role_name: role, permissions: permissions)
           rescue CloudFoundry::Perm::V1::Errors::AlreadyExists
             logger.debug('create-role.role-already-exists', role: role)
           rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
