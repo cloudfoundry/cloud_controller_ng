@@ -1,24 +1,25 @@
 require 'spec_helper'
-require 'fetchers/service_instance_list_fetcher'
+require 'fetchers/managed_service_instance_list_fetcher'
 require 'messages/service_instances/service_instances_list_message'
 
 module VCAP::CloudController
-  RSpec.describe ServiceInstanceListFetcher do
+  RSpec.describe ManagedServiceInstanceListFetcher do
     let(:filters) { {} }
     let(:message) { ServiceInstancesListMessage.new(filters) }
-    let(:fetcher) { ServiceInstanceListFetcher.new }
+    let(:fetcher) { ManagedServiceInstanceListFetcher.new }
 
     describe '#fetch_all' do
       let!(:service_instance_1) { ManagedServiceInstance.make(name: 'rabbitmq', space: Space.make(guid: 'space-1')) }
       let!(:service_instance_2) { ManagedServiceInstance.make(name: 'redis', space: Space.make(guid: 'space-2')) }
       let!(:service_instance_3) { ManagedServiceInstance.make(name: 'mysql', space: Space.make(guid: 'space-3')) }
+      let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(name: 'my-thing') }
 
       it 'returns a Sequel::Dataset' do
         results = fetcher.fetch_all(message: message)
         expect(results).to be_a(Sequel::Dataset)
       end
 
-      it 'includes all the V3 Service Instances' do
+      it 'includes all the managed service instances' do
         results = fetcher.fetch_all(message: message).all
         expect(results.length).to eq 3
         expect(results).to include(service_instance_1, service_instance_2, service_instance_3)
@@ -28,7 +29,7 @@ module VCAP::CloudController
         context 'by service instance name' do
           let(:filters) { { names: ['rabbitmq', 'redis'] } }
 
-          it 'only returns matching service instances' do
+          it 'only returns matching managed service instances' do
             results = fetcher.fetch_all(message: message).all
             expect(results).to match_array([service_instance_1, service_instance_2])
             expect(results).not_to include(service_instance_3)
@@ -66,11 +67,12 @@ module VCAP::CloudController
       let!(:service_instance_1) { ManagedServiceInstance.make(name: 'rabbitmq', space: space_1) }
       let!(:service_instance_2) { ManagedServiceInstance.make(name: 'redis', space: space_1) }
       let!(:service_instance_3) { ManagedServiceInstance.make(name: 'mysql', space: space_2) }
+      let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(name: 'my-thing', space: space_1) }
 
       let(:space_1) { Space.make(guid: 'space-1') }
       let(:space_2) { Space.make(guid: 'space-2') }
 
-      it 'returns all of the service instances in the specified space' do
+      it 'returns all of the managed service instances in the specified space' do
         results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
 
         expect(results).to match_array([service_instance_1, service_instance_2])
@@ -104,8 +106,8 @@ module VCAP::CloudController
             }
           }
 
-          it 'only returns matching service instances' do
-            results = fetcher.fetch_all(message: message).all
+          it 'only returns matching managed service instances' do
+            results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
             expect(results).to match_array([service_instance_1])
           end
         end
@@ -129,7 +131,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when service instances are shared' do
+      context 'when managed service instances are shared' do
         let(:shared_to_space) { Space.make }
 
         before do

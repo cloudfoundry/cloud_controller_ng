@@ -9,13 +9,14 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when there are multiple service instances' do
       let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-2', space: VCAP::CloudController::Space.make(guid: 'space-2-guid')) }
       let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-3', space: VCAP::CloudController::Space.make(guid: 'space-3-guid')) }
+      let!(:user_provided_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
       context 'as an admin' do
         before do
           set_current_user_as_admin
         end
 
-        it 'returns all service instances' do
+        it 'returns all managed service instances' do
           get :index
           expect(response.status).to eq(200), response.body
           expect(parsed_body['resources'].length).to eq 3
@@ -52,7 +53,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
         end
 
-        it 'returns a subset of service instances' do
+        it 'returns a subset of managed service instances' do
           get :index
           expect(response.status).to eq(200), response.body
           expect(parsed_body['resources'].length).to eq 1
@@ -204,6 +205,16 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         post :share_service_instance, service_instance_guid: 'nonexistant-service-instance-guid', body: req_body
         expect(response.status).to eq 404
         expect(response.body).to include('Service instance not found')
+      end
+    end
+
+    context 'when the service instance is user provided' do
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+
+      it 'returns a 400' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 400
+        expect(response.body).to include('User-provided services cannot be shared')
       end
     end
 
