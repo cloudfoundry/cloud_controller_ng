@@ -2574,7 +2574,7 @@ module VCAP::CloudController
             it 'should give the user an error' do
               delete "/v2/service_instances/#{service_instance.guid}"
 
-              expect(last_response).to have_status_code 400
+              expect(last_response).to have_status_code 422
               expect(last_response.body).to include 'ServiceInstanceDeletionSharesExists'
               expect(last_response.body).to include(
                 'Service instances must be unshared before they can be deleted. ' \
@@ -2600,7 +2600,7 @@ module VCAP::CloudController
               it 'should give the user an error' do
                 delete "/v2/service_instances/#{service_instance.guid}"
 
-                expect(last_response).to have_status_code 400
+                expect(last_response).to have_status_code 422
                 expect(last_response.body).to include 'ServiceInstanceDeletionSharesExists'
                 expect(last_response.body).to include(
                   'Service instances must be unshared before they can be deleted. ' \
