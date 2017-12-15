@@ -886,7 +886,7 @@ module VCAP::CloudController
             expect(decoded_response['code']).to eq(60002)
           end
 
-          context 'when a service instance share exists between spaces' do
+          context 'when a service instance has been shared into a target space' do
             let(:source_space) { Space.make(organization: space.organization) }
             before do
               source_space.add_developer(developer)
@@ -896,31 +896,31 @@ module VCAP::CloudController
               expect(last_response.status).to eq(201)
             end
 
-            it 'does not allow a managed service instance with same name as a shared service instance' do
+            it 'does not allow a managed service instance to be created in the source space with same name as the shared service instance' do
               create_managed_service_instance
               expect(last_response.status).to eq(400)
               expect(decoded_response['code']).to eq(60002)
             end
 
-            it 'does not allow a user provided service instance with same name as a shared service instance' do
+            it 'does not allow a user provided service instance to be created in the source space with same name as the shared service instance' do
               create_user_provided_service_instance
               expect(last_response.status).to eq(400)
               expect(decoded_response['code']).to eq(60002)
             end
 
-            context 'when an unshared instance exists in the source space' do
+            context 'when another service instance exists in the source space but is not shared' do
               before do
                 create_managed_service_instance(accepts_incomplete: 'false', space: source_space, name: 'bar')
                 expect(last_response.status).to eq(201)
               end
 
-              it 'allows an instance of the same name to be created in the shared to space' do
+              it 'allows an instance of the same name to be created in the target space' do
                 create_managed_service_instance(accepts_incomplete: 'false', space: space, name: 'bar')
                 expect(last_response.status).to eq(201)
               end
             end
 
-            context 'when an unshared instance exists in the shared to space' do
+            context 'when another service instance exists in the target space but is not shared' do
               before do
                 create_managed_service_instance(accepts_incomplete: 'false', space: space, name: 'bar')
                 expect(last_response.status).to eq(201)
@@ -1730,8 +1730,8 @@ module VCAP::CloudController
 
         context 'when the service instance is shared' do
           let(:service_instance) { ManagedServiceInstance.make }
-          let(:shared_to_space) { Space.make }
-          let(:shared_to_user) { make_developer_for_space(shared_to_space) }
+          let(:target_space) { Space.make }
+          let(:target_space_developer) { make_developer_for_space(target_space) }
           let(:body) do
             {
               tags: []
@@ -1739,17 +1739,17 @@ module VCAP::CloudController
           end
 
           before do
-            service_instance.add_shared_space(shared_to_space)
+            service_instance.add_shared_space(target_space)
           end
 
-          context 'and a developer in the originating space tries to update the instance without renaming' do
+          context 'and a developer in the source space tries to update the instance without renaming' do
             it 'updates successfully' do
               put "/v2/service_instances/#{service_instance.guid}", body
               expect(last_response).to have_status_code 201
             end
           end
 
-          context 'and a developer in the originating space tries to rename the instance' do
+          context 'and a developer in the source space tries to rename the instance' do
             let(:body) do
               {
                 name: 'dont-rename-me',
@@ -1766,9 +1766,9 @@ module VCAP::CloudController
             end
           end
 
-          context 'and a developer in the shared to space tries to update the instance' do
+          context 'and a developer in the target space tries to update the instance' do
             before do
-              set_current_user(shared_to_user)
+              set_current_user(target_space_developer)
             end
 
             it 'should give the user an error' do
@@ -1780,15 +1780,15 @@ module VCAP::CloudController
             end
           end
 
-          context 'and a developer in the shared_to space tries to rename a service instance' do
+          context 'and a developer in the target space tries to rename a service instance in the target space' do
             let(:service_instance) { ManagedServiceInstance.make(name: 'r1') }
-            let(:target_space_service_instance) { ManagedServiceInstance.make(name: 'r2', space: shared_to_space) }
+            let(:target_space_service_instance) { ManagedServiceInstance.make(name: 'r2', space: target_space) }
 
             before do
-              set_current_user(shared_to_user)
+              set_current_user(target_space_developer)
             end
 
-            context 'when the name clashes with a shared service instance' do
+            context 'and the name clashes with the service instance that has been shared into the target space' do
               let(:body) do
                 {
                   name: 'r1'
