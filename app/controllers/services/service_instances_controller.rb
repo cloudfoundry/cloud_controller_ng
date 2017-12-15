@@ -122,6 +122,7 @@ module VCAP::CloudController
       validate_access(:read_for_update, service_instance)
       validate_access(:update, projected_service_instance(service_instance))
 
+      validate_name_update(service_instance)
       validate_space_update(related_objects[:space])
       validate_plan_update(related_objects[:plan], related_objects[:service], service_instance)
 
@@ -430,6 +431,14 @@ module VCAP::CloudController
 
     def validate_space_update(space)
       space_change_not_allowed! if space_change_requested?(request_attrs['space_guid'], space)
+    end
+
+    def validate_name_update(service_instance)
+      return unless request_attrs['name'] && service_instance.shared?
+
+      if request_attrs['name'] != service_instance.name
+        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceCannotBeRenamed')
+      end
     end
 
     def invalid_service_instance!(service_instance)

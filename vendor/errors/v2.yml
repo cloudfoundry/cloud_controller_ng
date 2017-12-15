@@ -1138,3 +1138,8 @@
   name: InvalidServiceInstanceSharingTargetSpace
   http_code: 422
   message: 'Service instances cannot be shared into the space where they were created'
+
+390008:
+  name: SharedServiceInstanceCannotBeRenamed
+  http_code: 422
+  message: 'Service instances that have been shared cannot be renamed'
