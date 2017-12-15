@@ -14,6 +14,11 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(service_instance.created_at)
         expect(result[:updated_at]).to eq(service_instance.updated_at)
         expect(result[:name]).to eq('denise-db')
+        expect(result[:relationships][:space][:data][:guid]).to equal(service_instance.space.guid)
+      end
+
+      it 'has a links hash with a space url' do
+        expect(result[:links][:space][:href]).to eq "#{link_prefix}/v3/spaces/#{service_instance.space.guid}"
       end
     end
   end

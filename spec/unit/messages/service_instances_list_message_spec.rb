@@ -9,7 +9,8 @@ module VCAP::CloudController
           'page'      => 1,
           'per_page'  => 5,
           'order_by'  => 'name',
-          'names' => 'rabbitmq, redis,mysql'
+          'names' => 'rabbitmq, redis,mysql',
+          'space_guids' => 'space-1, space-2, space-3',
         }
       end
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('name')
         expect(message.names).to match_array(['mysql', 'rabbitmq', 'redis'])
+        expect(message.space_guids).to match_array(['space-1', 'space-2', 'space-3'])
       end
 
       it 'converts requested keys to symbols' do
@@ -30,6 +32,7 @@ module VCAP::CloudController
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
+        expect(message.requested?(:space_guids)).to be_truthy
       end
     end
 
@@ -39,7 +42,8 @@ module VCAP::CloudController
             page: 1,
             per_page: 5,
             order_by: 'created_at',
-            names: ['rabbitmq', 'redis']
+            names: ['rabbitmq', 'redis'],
+            space_guids: ['space-1', 'space-2'],
           })
         expect(message).to be_valid
       end
@@ -54,6 +58,24 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+      end
+    end
+
+    describe 'validations' do
+      context 'names' do
+        it 'validates names is an array' do
+          message = ServiceInstancesListMessage.new names: 'tricked you, not an array'
+          expect(message).to be_invalid
+          expect(message.errors[:names]).to include('must be an array')
+        end
+      end
+
+      context 'space guids' do
+        it 'validates app_guids is an array' do
+          message = ServiceInstancesListMessage.new space_guids: 'tricked you, not an array'
+          expect(message).to be_invalid
+          expect(message.errors[:space_guids]).to include('must be an array')
+        end
       end
     end
   end

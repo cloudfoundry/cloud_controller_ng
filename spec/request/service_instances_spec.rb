@@ -7,14 +7,16 @@ RSpec.describe 'Service Instances' do
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:another_space) { VCAP::CloudController::Space.make }
   let(:target_space) { VCAP::CloudController::Space.make }
   let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
   let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
-  let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'mysql') }
+  let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
 
   describe 'GET /v3/service_instances' do
     it 'returns a paginated list of service instances the user has access to' do
       set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+      set_current_user_as_role(role: 'space_developer', org: another_space.organization, space: another_space, user: user)
       get '/v3/service_instances?per_page=2&order_by=name', nil, user_header
       expect(last_response.status).to eq(200)
 
@@ -41,12 +43,36 @@ RSpec.describe 'Service Instances' do
               'name' => service_instance3.name,
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => service_instance3.space.guid
+                  }
+                }
+              },
+              'links' => {
+                'space' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{service_instance3.space.guid}"
+                }
+              }
             },
             {
               'guid' => service_instance1.guid,
               'name' => service_instance1.name,
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => service_instance1.space.guid
+                  }
+                }
+              },
+              'links' => {
+                'space' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
+                }
+              }
             }
           ]
         }
@@ -79,6 +105,80 @@ RSpec.describe 'Service Instances' do
               'name' => service_instance2.name,
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => service_instance2.space.guid
+                  }
+                }
+              },
+              'links' => {
+                'space' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{service_instance2.space.guid}"
+                }
+              }
+            }
+          ]
+        }
+      )
+    end
+
+    it 'returns a paginated list of service instances filtered by space guid' do
+      set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+      get "/v3/service_instances?per_page=2&space_guids=#{space.guid}", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => {
+              'href' => "#{link_prefix}/v3/service_instances?page=1&per_page=2&space_guids=#{space.guid}"
+            },
+            'last' => {
+              'href' => "#{link_prefix}/v3/service_instances?page=1&per_page=2&space_guids=#{space.guid}"
+            },
+            'next' => nil,
+            'previous' => nil
+          },
+          'resources' => [
+            {
+              'guid' => service_instance1.guid,
+              'name' => service_instance1.name,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                   'guid' => service_instance1.space.guid
+                  }
+                }
+              },
+              'links' => {
+                'space' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
+                }
+              }
+            },
+            {
+              'guid' => service_instance2.guid,
+              'name' => service_instance2.name,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => service_instance2.space.guid
+                  }
+                }
+              },
+              'links' => {
+                'space' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{service_instance2.space.guid}"
+                }
+              }
             }
           ]
         }
@@ -116,6 +216,18 @@ RSpec.describe 'Service Instances' do
                 'name' => service_instance1.name,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
+                'relationships' => {
+                  'space' => {
+                    'data' => {
+                      'guid' => service_instance1.space.guid
+                    }
+                  }
+                },
+                'links' => {
+                  'space' => {
+                    'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
+                  }
+                }
               }
             ]
           }
