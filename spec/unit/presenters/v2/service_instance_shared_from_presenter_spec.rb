@@ -8,6 +8,7 @@ module CloudController::Presenters::V2
         presenter = ServiceInstanceSharedFromPresenter.new
         expect(presenter.to_hash(space)).to eq(
           {
+            'space_guid' => space.guid,
             'space_name' => space.name,
             'organization_name' => space.organization.name,
           }
