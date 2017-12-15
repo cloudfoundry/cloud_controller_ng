@@ -1,5 +1,5 @@
 class VCAP::CloudController::Permissions::Queryer
-  attr_reader :perm_permissions, :db_permissions, :experiment_builder
+  attr_reader :perm_permissions, :db_permissions
 
   def self.build(perm_client, security_context, perm_enabled, query_enabled)
     db_permissions =
@@ -14,29 +14,25 @@ class VCAP::CloudController::Permissions::Queryer
       issuer: security_context.token['iss'],
     )
 
-    experiment_builder = ->(name) {
-      experiment = VCAP::CloudController::Perm::Experiment.new(name: name, perm_enabled: perm_enabled, query_enabled: query_enabled)
-      experiment.context(current_user_guid: security_context.current_user_guid)
-
-      return experiment
-    }
-
     self.new(
       db_permissions: db_permissions,
       perm_permissions: perm_permissions,
-      experiment_builder: experiment_builder
+      perm_enabled: perm_enabled,
+      query_enabled: query_enabled,
+      current_user_guid: security_context.current_user_guid
     )
   end
 
-  def initialize(db_permissions:, perm_permissions:, experiment_builder:)
+  def initialize(db_permissions:, perm_permissions:, perm_enabled:, query_enabled:, current_user_guid:)
     @db_permissions = db_permissions
     @perm_permissions = perm_permissions
-    @experiment_builder = experiment_builder
+    @enabled = perm_enabled && query_enabled
+    @current_user_guid = current_user_guid
   end
 
   def can_read?(space_guid, org_guid)
     science 'can_read_from_space?' do |e|
-      e.context(space_guid: space_guid, org_guid: org_guid)
+      e.context(space_guid: space_guid, org_guid: org_guid, action: 'space.read')
       e.use { db_permissions.can_read_from_space?(space_guid, org_guid) }
       e.try { perm_permissions.can_read_from_space?(space_guid, org_guid) }
 
@@ -46,7 +42,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_write_to_org?(org_guid)
     science 'can_write_to_org?' do |e|
-      e.context(org_guid: org_guid)
+      e.context(org_guid: org_guid, action: 'org.write')
       e.use { db_permissions.can_write_to_org?(org_guid) }
       e.try { perm_permissions.can_write_to_org?(org_guid) }
 
@@ -56,7 +52,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_read_from_org?(org_guid)
     science 'can_read_from_org?' do |e|
-      e.context(org_guid: org_guid)
+      e.context(org_guid: org_guid, action: 'org.read')
       e.use { db_permissions.can_read_from_org?(org_guid) }
       e.try { perm_permissions.can_read_from_org?(org_guid) }
 
@@ -84,7 +80,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_read_from_isolation_segment?(isolation_segment)
     science 'can_read_from_isolation_segment?' do |e|
-      e.context(isolation_segment_guid: isolation_segment.guid)
+      e.context(isolation_segment_guid: isolation_segment.guid, action: 'isolation_segment.read')
       e.use { db_permissions.can_read_from_isolation_segment?(isolation_segment) }
       e.try { perm_permissions.can_read_from_isolation_segment?(isolation_segment) }
 
@@ -93,8 +89,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_see_secrets?(space)
-    science 'can_see_secrets_from_space?' do |e|
-      e.context(space_guid: space.guid, org_guid: space.organization.guid)
+    science 'can_see_secrets_in_space?' do |e|
+      e.context(space_guid: space.guid, org_guid: space.organization.guid, action: 'space.read_secrets')
       e.use { db_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
       e.try { perm_permissions.can_see_secrets_in_space?(space.guid, space.organization.guid) }
 
@@ -104,7 +100,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_write?(space_guid)
     science 'can_write_to_space?' do |e|
-      e.context(space_guid: space_guid)
+      e.context(space_guid: space_guid, action: 'space.write')
       e.use { db_permissions.can_write_to_space?(space_guid) }
       e.try { perm_permissions.can_write_to_space?(space_guid) }
 
@@ -126,8 +122,11 @@ class VCAP::CloudController::Permissions::Queryer
 
   private
 
+  attr_reader :enabled, :current_user_guid
+
   def science(name)
-    experiment = experiment_builder.call(name)
+    experiment = VCAP::CloudController::Science::Experiment.new(name: name, enabled: enabled)
+    experiment.context(current_user_guid: current_user_guid)
     yield experiment
     experiment.run
   end
