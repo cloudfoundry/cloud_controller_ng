@@ -8576,6 +8576,47 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p>An instantiation of a service offering.</p>
 
+          <h3 id="the-service_instance-object">The service_instance object</h3>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the service instance.</td>
+</tr>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the service instance.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+<tr>
+<td><strong>space</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The space the service instance is contained in.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-service-instances">List service instances</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -8603,10 +8644,22 @@ excluded in the response based on the user&rsquo;s role.</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d4c91047-7b29-4fda-b7f9-04033e5c9c9f"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_instance"</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85ccdcad-d725-4109-bca4-fd6ba062b5c8"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_instance"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -8634,6 +8687,11 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td><strong>names</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of service instance names to filter by.</td>
+</tr>
+<tr>
+<td><strong>space_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of space guids to filter by.</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
