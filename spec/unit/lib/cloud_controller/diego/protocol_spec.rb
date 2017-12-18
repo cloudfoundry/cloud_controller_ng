@@ -183,7 +183,7 @@ module VCAP::CloudController
                 }
               ],
               'internal_routes' => [
-                { 'hostname' => "#{process.guid}.sd-local" }
+                { 'hostname' => "#{process.guid}.apps.internal" }
               ]
             },
             'egress_rules' => ['running_egress_rule'],

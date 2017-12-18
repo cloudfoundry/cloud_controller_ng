@@ -39,7 +39,7 @@ module VCAP::CloudController
           route_info = {}
           route_info['http_routes'] = http_info unless http_info.blank?
           route_info['tcp_routes'] = tcp_info unless tcp_info.blank?
-          route_info['internal_routes'] = [{ 'hostname' => "#{process.guid}.sd-local" }]
+          route_info['internal_routes'] = [{ 'hostname' => "#{process.guid}.apps.internal" }]
           route_info
         rescue RoutingApi::RoutingApiDisabled
           raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')

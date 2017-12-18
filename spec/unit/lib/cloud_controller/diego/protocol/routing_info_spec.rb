@@ -269,7 +269,7 @@ module VCAP::CloudController
           context 'internal routes' do
             it 'returns the internal route hostname' do
               expected_routes = [
-                { 'hostname' => process.guid + '.sd-local' },
+                { 'hostname' => process.guid + '.apps.internal' },
               ]
 
               expect(ri.keys).to match_array ['internal_routes']
