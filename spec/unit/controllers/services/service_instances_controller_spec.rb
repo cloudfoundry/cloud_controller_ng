@@ -4103,11 +4103,11 @@ module VCAP::CloudController
 
       describe 'permissions' do
         let(:user) { User.make }
-        let(:other_org) { Organization.make }
-        let(:other_space) { Space.make(organization: other_org) }
+        let(:target_org) { Organization.make }
+        let(:target_space) { Space.make(organization: target_org) }
 
         before do
-          instance.add_shared_space(other_space)
+          instance.add_shared_space(target_space)
         end
 
         context 'when the user is a member of the org/space this instance exists in' do
@@ -4134,7 +4134,7 @@ module VCAP::CloudController
 
               it "has a #{expected_status} http status code" do
                 get "/v2/service_instances/#{instance.guid}/shared_to"
-                expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}, response: #{last_response.body}"
+                expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}"
               end
             end
           end
@@ -4153,8 +4153,8 @@ module VCAP::CloudController
               before do
                 set_current_user_as_role(
                   role:   role,
-                  org:    other_org,
-                  space:  other_space,
+                  org:    target_org,
+                  space:  target_space,
                   user:   user,
                 )
               end
