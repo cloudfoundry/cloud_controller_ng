@@ -393,25 +393,12 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:target_space) { VCAP::CloudController::Space.make }
     let(:source_space) { service_instance.space }
-    let(:service_instance_sharing_enabled) { true }
-
-    let(:req_body) do
-      {
-        data: [
-          { guid: target_space.guid }
-        ]
-      }
-    end
 
     before do
-      feature_flag = VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
       set_current_user_as_admin
 
-      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
-      expect(response.status).to eq 200
-
-      feature_flag.enabled = service_instance_sharing_enabled
-      feature_flag.save
+      service_instance.add_shared_space(target_space)
+      service_instance.reload
     end
 
     it 'unshares the service instance from the target space' do
@@ -439,16 +426,26 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'an application in the target space is bound to the service instance' do
       let(:test_app) { VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea') }
-      let(:service_binding) do
-        VCAP::CloudController::ServiceBinding.make(service_instance: service_instance,
-                                                   app: test_app,
-                                                   credentials: { 'amelia' => 'apples' })
+      let!(:service_binding) do
+        feature_flag = VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+        binding = VCAP::CloudController::ServiceBinding.make(service_instance: service_instance,
+                                                             app: test_app,
+                                                             credentials: { 'amelia' => 'apples' })
+        feature_flag.enabled = false
+        feature_flag.save
+        binding
       end
 
-      it 'returns 204 and unbinds the app in the target space' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
-        expect(response.status).to eq(204)
-        expect(test_app.service_bindings).to be_empty
+      context 'and the service broker successfully unbinds' do
+        before do
+          stub_unbind(service_binding, status: 200)
+        end
+
+        it 'returns 204 and unbinds the app in the target space' do
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.status).to eq(204)
+          expect(test_app.service_bindings).to be_empty
+        end
       end
 
       context 'and the service broker fails to unbind' do
@@ -519,34 +516,15 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when there are multiple shares' do
       let(:target_space2) { VCAP::CloudController::Space.make }
 
-      let(:req_body2) do
-        {
-          data: [
-            { guid: target_space2.guid }
-          ]
-        }
-      end
-
       before do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body2
-        expect(response.status).to eq 200
+        service_instance.add_shared_space(target_space2)
+        service_instance.reload
       end
 
       it 'only deletes the requested share' do
         delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
         expect(response.status).to eq(204)
         expect(service_instance.shared_spaces).to contain_exactly(target_space2)
-      end
-    end
-
-    context 'when feature flag is disabled' do
-      let(:service_instance_sharing_enabled) { false }
-
-      it 'returns 403' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
-        expect(response.status).to eq(403)
-        expect(response.body).to include('FeatureDisabled')
-        expect(response.body).to include('service_instance_sharing')
       end
     end
   end
