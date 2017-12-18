@@ -512,17 +512,11 @@ Cookie: </pre>
           "extra": null,
           "unique_id": "guid",
           "public": true,
-          "active": true,
           "bindable": true,
-          "schemas": {
-            "service_instance": {
-              "create": {},
-              "update": {}
-            },
-            "service_binding": {
-              "create": {}
-            }
-          }
+          "active": true,
+          "create_instance_schema": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"additionalProperties\":false,\"type\":\"object\",\"properties\":{\"lang\":{\"type\":\"string\",\"default\":\"de-DE\"}}}",
+          "update_instance_schema": null,
+          "create_binding_schema": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"account\":{\"type\":\"string\"}},\"required\":[\"account\"]}"
         },
         "space_guid": "",
         "organization_guid": ""
