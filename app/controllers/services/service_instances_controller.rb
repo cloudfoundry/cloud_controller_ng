@@ -160,6 +160,7 @@ module VCAP::CloudController
         return [HTTP::NO_CONTENT, nil]
       end
 
+      validate_shared_space_deleteable(service_instance)
       validate_access(:delete, service_instance)
 
       unless recursive_delete?
@@ -453,6 +454,12 @@ module VCAP::CloudController
     def validate_shared_space_updateable(service_instance)
       if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
         raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdateableInTargetSpace')
+      end
+    end
+
+    def validate_shared_space_deleteable(service_instance)
+      if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
+        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotDeleteableInTargetSpace')
       end
     end
 

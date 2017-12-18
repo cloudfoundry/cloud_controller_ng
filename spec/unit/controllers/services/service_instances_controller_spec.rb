@@ -1796,7 +1796,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'and an developer in the target space and a auditor in the source space tries to update the instance' do
+          context 'and a developer in the target space and an auditor in the source space tries to update the instance' do
             let(:target_developer_source_auditor) { make_developer_for_space(target_space) }
 
             before do
@@ -2631,10 +2631,11 @@ module VCAP::CloudController
 
         context 'when the service instance has been shared' do
           let(:originating_space) { Space.make }
+          let(:shared_to_space) { Space.make }
           let!(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
 
           before do
-            service_instance.add_shared_space(space)
+            service_instance.add_shared_space(shared_to_space)
           end
 
           context 'as a SpaceDeveloper in source and target space' do
@@ -2659,7 +2660,7 @@ module VCAP::CloudController
             context 'and there are bindings to the shared instance' do
               before do
                 ServiceBinding.make(
-                  app: AppModel.make(space: space),
+                  app: AppModel.make(space: shared_to_space),
                   service_instance: service_instance
                 )
               end
@@ -2688,13 +2689,12 @@ module VCAP::CloudController
             end
           end
 
-          context 'as a SpaceDeveloper in target space' do
-            let(:target_space) { Space.make }
-            let(:target_space_dev) { make_developer_for_space(target_space) }
+          context 'as a SpaceAuditor in the source space' do
+            let(:source_space_auditor) { make_auditor_for_space(originating_space) }
 
             before do
-              service_instance.add_shared_space(target_space)
-              set_current_user(target_space_dev)
+              service_instance.add_shared_space(originating_space)
+              set_current_user(source_space_auditor)
             end
 
             it 'should give the user an error' do
@@ -2702,7 +2702,38 @@ module VCAP::CloudController
 
               expect(last_response).to have_status_code 403
               expect(last_response.body).to include 'CF-NotAuthorized'
-              expect(last_response.body).to include 'You are not authorized to perform the requested action'
+            end
+          end
+
+          context 'as a SpaceDeveloper in target space' do
+            let(:target_space_dev) { make_developer_for_space(shared_to_space) }
+
+            before do
+              set_current_user(target_space_dev)
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}"
+
+              expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'SharedServiceInstanceNotDeleteableInTargetSpace'
+              expect(last_response.body).to include 'You cannot delete service instances that have been shared with you'
+            end
+          end
+
+          context 'as a SpaceAuditor in the target space' do
+            let(:target_space_auditor) { make_auditor_for_space(shared_to_space) }
+
+            before do
+              set_current_user(target_space_auditor)
+            end
+
+            it 'should give the user an error' do
+              delete "/v2/service_instances/#{service_instance.guid}"
+
+              expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'SharedServiceInstanceNotDeleteableInTargetSpace'
+              expect(last_response.body).to include 'You cannot delete service instances that have been shared with you'
             end
           end
         end
