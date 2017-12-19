@@ -10,9 +10,13 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:app) { VCAP::CloudController::AppModel.make(space: space) }
-    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
-    let(:object) { VCAP::CloudController::ServiceBinding.make(app: app, service_instance: service_instance) }
+    let(:object) do
+      FeatureFlag.create(name: :service_instance_sharing, enabled: true)
+      service_instance.add_shared_space(app.space)
+      ServiceBinding.make(service_instance: service_instance, app: app)
+    end
 
     before { set_current_user(user, scopes: scopes) }
 
@@ -129,6 +133,18 @@ module VCAP::CloudController
         it { is_expected.not_to allow_op_on_object :update, object }
         it { is_expected.to allow_op_on_object :index, object }
       end
+    end
+
+    context "space developer in service instance's space (but no read access to app's space)" do
+      before do
+        service_instance.space.organization.add_user(user)
+        service_instance.space.add_developer(user)
+      end
+
+      it { is_expected.not_to allow_op_on_object :read, object }
+      it { is_expected.not_to allow_op_on_object :read_for_update, object }
+      it { is_expected.not_to allow_op_on_object :update, object }
+      it { is_expected.not_to allow_op_on_object :read_env, object }
     end
 
     context 'any user using client without cloud_controller.write' do

@@ -313,22 +313,62 @@ module VCAP::CloudController
       end
     end
 
-    describe 'user_visibility_filter' do
+    describe '#user_visibility_filter' do
+      let(:app_model) { AppModel.make }
       let!(:service_instance) { ManagedServiceInstance.make }
-      let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
       let!(:other_binding) { ServiceBinding.make }
-      let(:developer) { make_developer_for_space(service_instance.space) }
-      let(:auditor) { make_auditor_for_space(service_instance.space) }
-      let(:other_user) { User.make }
+      let!(:service_binding) do
+        VCAP::CloudController::FeatureFlag.create(name: :service_instance_sharing, enabled: true)
+        service_instance.add_shared_space(app_model.space)
+        ServiceBinding.make(service_instance: service_instance, app: app_model)
+      end
 
-      it 'has the same rules as ServiceInstances' do
-        visible_to_developer = ServiceBinding.user_visible(developer)
-        visible_to_auditor = ServiceBinding.user_visible(auditor)
-        visible_to_other_user = ServiceBinding.user_visible(other_user)
+      context "when a user is a developer in the app's space" do
+        let(:user) { make_developer_for_space(app_model.space) }
 
-        expect(visible_to_developer.all).to eq [service_binding]
-        expect(visible_to_auditor.all).to eq [service_binding]
-        expect(visible_to_other_user.all).to be_empty
+        it 'the service binding is visible' do
+          expect(ServiceBinding.user_visible(user).all).to eq [service_binding]
+        end
+      end
+
+      context "when a user is an auditor in the app's space" do
+        let(:user) { make_auditor_for_space(app_model.space) }
+
+        it 'the service binding is visible' do
+          expect(ServiceBinding.user_visible(user).all).to eq [service_binding]
+        end
+      end
+
+      context "when a user is an org manager in the app's space" do
+        let(:user) { make_manager_for_org(app_model.space.organization) }
+
+        it 'the service binding is visible' do
+          expect(ServiceBinding.user_visible(user).all).to eq [service_binding]
+        end
+      end
+
+      context "when a user is a space manager in the app's space" do
+        let(:user) { make_manager_for_space(app_model.space) }
+
+        it 'the service binding is visible' do
+          expect(ServiceBinding.user_visible(user).all).to eq [service_binding]
+        end
+      end
+
+      context "when a user has no access to the app's space or the service instance's space" do
+        let(:user) { User.make }
+
+        it 'the service binding is not visible' do
+          expect(ServiceBinding.user_visible(user).all).to be_empty
+        end
+      end
+
+      context "when a user has read access to the service instance's space, but not the app's" do
+        let(:user) { make_developer_for_space(service_instance.space) }
+
+        it 'the service binding is not visible' do
+          expect(ServiceBinding.user_visible(user).all).to be_empty
+        end
       end
     end
 

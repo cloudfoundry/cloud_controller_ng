@@ -308,5 +308,49 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#user_visibility_filter' do
+      let!(:other_app) { AppModel.make }
+
+      context "when a user is a developer in the app's space" do
+        let(:user) { make_developer_for_space(app_model.space) }
+
+        it 'the service binding is visible' do
+          expect(AppModel.user_visible(user).all).to eq [app_model]
+        end
+      end
+
+      context "when a user is an auditor in the app's space" do
+        let(:user) { make_auditor_for_space(app_model.space) }
+
+        it 'the service binding is visible' do
+          expect(AppModel.user_visible(user).all).to eq [app_model]
+        end
+      end
+
+      context "when a user is an org manager in the app's space" do
+        let(:user) { make_manager_for_org(app_model.space.organization) }
+
+        it 'the service binding is visible' do
+          expect(AppModel.user_visible(user).all).to eq [app_model]
+        end
+      end
+
+      context "when a user is a space manager in the app's space" do
+        let(:user) { make_manager_for_space(app_model.space) }
+
+        it 'the service binding is visible' do
+          expect(AppModel.user_visible(user).all).to eq [app_model]
+        end
+      end
+
+      context "when a user has no visibility to the app's space" do
+        let(:user) { User.make }
+
+        it 'the service binding is not visible' do
+          expect(AppModel.user_visible(user).all).to be_empty
+        end
+      end
+    end
   end
 end
