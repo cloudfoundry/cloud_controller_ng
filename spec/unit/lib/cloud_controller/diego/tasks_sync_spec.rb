@@ -266,11 +266,11 @@ module VCAP::CloudController
 
         context 'when a new task is created after cc initally fetches tasks from bbs' do
           context 'and the newly started task does not complete before checking to see if it should fail' do
-            let(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
+            let!(:cc_task) { TaskModel.make(guid: 'some-task-guid', state: TaskModel::RUNNING_STATE) }
             let(:bbs_task) { ::Diego::Bbs::Models::Task.new(task_guid: 'some-task-guid', state: ::Diego::Bbs::Models::Task::State::Running) }
 
             before do
-              allow(bbs_task_client).to receive(:fetch_task).and_return(bbs_task)
+              expect(bbs_task_client).to receive(:fetch_task).and_return(bbs_task)
             end
 
             it 'does not fail the new task' do
@@ -298,7 +298,7 @@ module VCAP::CloudController
 
             before do
               # HACK: simulate a task completing while the iteration is underway
-              allow(bbs_task_client).to receive(:fetch_task) do |task_guid|
+              expect(bbs_task_client).to receive(:fetch_task) do |task_guid|
                 expect(task_guid).to eq('some-task-guid')
                 cc_task.update(state: TaskModel::SUCCEEDED_STATE)
 
