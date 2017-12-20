@@ -21,7 +21,6 @@ namespace :jobs do
     RakeConfig.context = :worker
     queues = [
       'cc-generic',
-      'diego_sync',
       'app_usage_events',
       'audit_events',
       'failed_jobs',

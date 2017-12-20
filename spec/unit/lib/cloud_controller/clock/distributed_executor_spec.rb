@@ -129,25 +129,49 @@ module VCAP::CloudController
           end
 
           context 'when the job has run before' do
-            before do
-              DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
-              Timecop.travel(Time.now.utc + 1.minute + 1.second)
-            end
-
-            it 'does NOT execute the block if the previous run has not completed yet' do
-              counter = 0
-
-              DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
+            context 'when the job is "diego_sync"' do
+              before do
+                DistributedExecutor.new.execute_job(name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
                 Timecop.travel(Time.now.utc + 1.minute + 1.second)
-                counter += 1
-
-                DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
-                  counter += 2
-                end
               end
 
-              expect(counter).to eq(1)
+              it 'does NOT execute the block if the previous run has not completed yet' do
+                counter = 0
+
+                DistributedExecutor.new.execute_job name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                  Timecop.travel(Time.now.utc + 1.minute + 1.second)
+                  counter += 1
+
+                  DistributedExecutor.new.execute_job name: 'diego_sync', interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                    counter += 2
+                  end
+                end
+
+                expect(counter).to eq(1)
+              end
+            end
+
+            context 'when the job is not "diego_sync"' do
+              before do
+                DistributedExecutor.new.execute_job(name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes) {}
+                Timecop.travel(Time.now.utc + 1.minute + 1.second)
+              end
+
+              it 'does NOT execute the block if the previous run has not completed yet' do
+                counter = 0
+
+                DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                  Delayed::Job.create!(queue: job_name, failed_at: nil, locked_at: Time.now)
+                  Timecop.travel(Time.now.utc + 1.minute + 1.second)
+                  counter += 1
+
+                  DistributedExecutor.new.execute_job name: job_name, interval: 1.minute, fudge: 1.second, timeout: 5.minutes do
+                    counter += 2
+                  end
+                end
+
+                expect(counter).to eq(1)
+              end
             end
           end
         end

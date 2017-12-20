@@ -7,20 +7,39 @@ module VCAP::CloudController
     def execute_job(name:, interval:, fudge:, timeout:)
       ensure_job_record_exists(name)
 
+      need_to_run_job = nil
+      job = nil
+
       ClockJob.db.transaction do
         job = ClockJob.find(name: name).lock!
 
-        if need_to_run_job?(job, interval, timeout, fudge)
+        need_to_run_job = need_to_run_job?(job, interval, timeout, fudge)
+
+        if need_to_run_job
           @logger.info("Queueing #{name} at #{now}")
           record_job_started(job)
-          yield
         else
-          @logger.info "Skipping enqueue for #{name}. Job last started at #{job.last_started_at}, interval: #{interval}, timeout: #{timeout}"
+          message = "Skipping enqueue for #{name}. Job last started at #{job.last_started_at}, "
+          message += "last completed at: #{job.last_completed_at}, interval: #{interval}, timeout: #{timeout}"
+          @logger.info(message)
+        end
+      end
+
+      if need_to_run_job
+        begin
+          yield
+        ensure
+          record_job_completed(job)
         end
       end
     end
 
     private
+
+    def record_job_completed(job)
+      job.reload
+      job.update(last_completed_at: now)
+    end
 
     def record_job_started(job)
       job.update(last_started_at: now)
@@ -41,7 +60,11 @@ module VCAP::CloudController
     end
 
     def job_in_progress?(job)
-      Delayed::Job.where(queue: job.name, failed_at: nil).any?
+      if job.name == 'diego_sync'
+        !(job.last_completed_at && (job.last_completed_at >= job.last_started_at))
+      else
+        Delayed::Job.where(queue: job.name, failed_at: nil).any?
+      end
     end
 
     def need_to_run_job?(job, interval, timeout, fudge=0)
