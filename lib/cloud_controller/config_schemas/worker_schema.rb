@@ -86,7 +86,12 @@ module VCAP::CloudController
             fog_aws_storage_options: Hash
           },
 
-          db_encryption_key: String,
+          db_encryption_key: enum(String, NilClass),
+
+          optional(:database_encryption) => {
+            keys: Hash,
+            current_key_label: String
+          },
 
           broker_client_timeout_seconds: Integer,
           broker_client_default_async_poll_interval_seconds: Integer,

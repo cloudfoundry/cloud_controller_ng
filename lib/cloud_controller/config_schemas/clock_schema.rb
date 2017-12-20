@@ -100,7 +100,12 @@ module VCAP::CloudController
             fog_aws_storage_options: Hash
           },
 
-          db_encryption_key: String,
+          db_encryption_key: enum(String, NilClass),
+
+          optional(:database_encryption) => {
+              keys: Hash,
+              current_key_label: String
+          },
 
           optional(:uaa_client_name) => String,
           optional(:uaa_client_secret) => String,

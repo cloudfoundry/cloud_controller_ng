@@ -15,7 +15,12 @@ module VCAP::CloudController
             optional(:ca_cert_path) => String,
           },
 
-          db_encryption_key: String,
+          db_encryption_key: enum(String, NilClass),
+
+          optional(:database_encryption) => {
+              keys: Hash,
+              current_key_label: String
+          },
 
           logging: {
             level: String, # debug, info, etc.

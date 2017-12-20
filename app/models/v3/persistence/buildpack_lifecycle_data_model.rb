@@ -5,7 +5,7 @@ module VCAP::CloudController
   class BuildpackLifecycleDataModel < Sequel::Model(:buildpack_lifecycle_data)
     LIFECYCLE_TYPE = Lifecycles::BUILDPACK
 
-    encrypt :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
+    set_field_as_encrypted :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
 
     many_to_one :droplet,
       class: '::VCAP::CloudController::DropletModel',

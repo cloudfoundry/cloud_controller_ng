@@ -75,6 +75,11 @@ module VCAP::CloudController
     def configure_components
       Encryptor.db_encryption_key = get(:db_encryption_key)
 
+      if get(:database_encryption)
+        Encryptor.database_encryption_keys = get(:database_encryption)[:keys]
+        Encryptor.current_encryption_key_label = get(:database_encryption)[:current_key_label]
+      end
+
       dependency_locator = CloudController::DependencyLocator.instance
       dependency_locator.config = self
 
