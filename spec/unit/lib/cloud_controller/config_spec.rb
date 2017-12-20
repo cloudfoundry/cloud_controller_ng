@@ -87,7 +87,7 @@ module VCAP::CloudController
             let(:cc_config_file) do
               config = YAML.load_file('config/cloud_controller.yml')
               config['stacks_file'] = '/tmp/foo'
-              config['database_encryption_keys'] = {
+              config['database_encryption'] = {
                 keys: {
                   foo: 'bar',
                   head: 'banging'
@@ -106,7 +106,7 @@ module VCAP::CloudController
             end
 
             it 'preserves the current_encryption_key_label value from the file' do
-              expect(config[:database_encryption_keys][:current_key_label]).to eq('foo')
+              expect(config[:database_encryption][:current_key_label]).to eq('foo')
             end
 
             it 'preserves the stacks_file value from the file' do
@@ -323,7 +323,7 @@ module VCAP::CloudController
         end
 
         let(:config_instance) do
-          Config.new(test_config_hash.merge(database_encryption_keys: keys))
+          Config.new(test_config_hash.merge(database_encryption: keys))
         end
 
         before do

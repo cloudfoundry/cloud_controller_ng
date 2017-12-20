@@ -102,7 +102,7 @@ module VCAP::CloudController
 
           db_encryption_key: enum(String, NilClass),
 
-          optional(:database_encryption_keys) => {
+          optional(:database_encryption) => {
               keys: Hash,
               current_key_label: String
           },
