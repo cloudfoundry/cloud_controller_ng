@@ -3,7 +3,6 @@ require 'openssl'
 require 'openssl/cipher'
 require 'openssl/digest'
 
-# require 'openssl/ossl'
 require 'base64'
 
 module VCAP::CloudController
