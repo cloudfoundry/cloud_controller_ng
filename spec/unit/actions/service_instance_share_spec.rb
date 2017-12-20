@@ -89,7 +89,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the service does is not shareable' do
+      context 'when the service instance is not shareable' do
         before do
           allow(service_instance).to receive(:shareable?).and_return(false)
         end
@@ -145,6 +145,18 @@ module VCAP::CloudController
               service_instance_share.create(user_provided_service_instance, [target_space1, target_space2], user_audit_info)
             }.to raise_error(CloudController::Errors::ApiError, /Route services cannot be shared/)
           end
+        end
+      end
+
+      context 'when the service plan is inactive' do
+        let(:service_plan) { ServicePlan.make(active: false, name: 'service-plan-name') }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+
+        it 'raises an api error' do
+          error_msg = 'The service instance could not be shared as the service-plan-name plan is inactive.'
+          expect {
+            service_instance_share.create(service_instance, [target_space1], user_audit_info)
+          }.to raise_error(CloudController::Errors::ApiError, error_msg)
         end
       end
 

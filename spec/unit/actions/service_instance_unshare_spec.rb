@@ -27,6 +27,16 @@ module VCAP::CloudController
           service_instance, target_space.guid, user_audit_info)
       end
 
+      context 'when the service plan is inactive' do
+        let(:service_plan) { ServicePlan.make(active: false) }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+
+        it 'unshares successfully' do
+          service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
+          expect(service_instance.shared_spaces).to be_empty
+        end
+      end
+
       context 'when bindings exist in the target space' do
         let(:app) { AppModel.make(space: target_space, name: 'myapp') }
         let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
