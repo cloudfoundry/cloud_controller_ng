@@ -314,9 +314,9 @@ module VCAP::CloudController
         let(:keys) do
           {
               keys: {
-                  'current' => 'abc-123',
-                  'previous' => 'def-456',
-                  'old' => 'ghi-789'
+                current: 'abc-123',
+                previous: 'def-456',
+                old: 'ghi-789'
               },
               current_key_label: 'current'
           }

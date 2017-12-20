@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       def key_to_use(label)
-        database_encryption_keys.fetch(label, db_encryption_key)
+        database_encryption_keys.fetch(label&.to_sym, db_encryption_key)
       end
 
       def make_cipher

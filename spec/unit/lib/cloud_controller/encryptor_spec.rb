@@ -45,8 +45,8 @@ module VCAP::CloudController
         before(:each) do
           Encryptor.db_encryption_key = 'legacy-crypto-key'
           Encryptor.database_encryption_keys = {
-            'foo' => 'fooencryptionkey',
-            'death' => 'headbangingdeathmetalkey'
+            foo: 'fooencryptionkey',
+            death: 'headbangingdeathmetalkey'
           }
         end
 
@@ -106,8 +106,8 @@ module VCAP::CloudController
       context 'when database_encryption_keys is configured' do
         before(:each) do
           Encryptor.database_encryption_keys = {
-            'foo' => 'fooencryptionkey',
-            'death' => 'headbangingdeathmetalkey'
+            foo: 'fooencryptionkey',
+            death: 'headbangingdeathmetalkey'
           }
         end
 
@@ -327,8 +327,8 @@ module VCAP::CloudController
 
           before do
             Encryptor.database_encryption_keys = {
-              'foo' => 'fooencryptionkey',
-              'bar' => 'headbangingdeathmetalkey'
+              foo: 'fooencryptionkey',
+              bar: 'headbangingdeathmetalkey'
             }
           end
 
