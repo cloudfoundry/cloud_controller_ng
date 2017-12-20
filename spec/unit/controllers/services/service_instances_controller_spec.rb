@@ -3964,7 +3964,6 @@ module VCAP::CloudController
         let(:space2) { Space.make }
 
         before do
-          FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
           instance.add_shared_space(space1)
           instance.add_shared_space(space2)
         end

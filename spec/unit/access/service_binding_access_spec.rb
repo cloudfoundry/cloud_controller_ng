@@ -13,7 +13,6 @@ module VCAP::CloudController
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 
     let(:object) do
-      FeatureFlag.create(name: :service_instance_sharing, enabled: true)
       service_instance.add_shared_space(app.space)
       ServiceBinding.make(service_instance: service_instance, app: app)
     end

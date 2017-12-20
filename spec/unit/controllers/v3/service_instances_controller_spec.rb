@@ -426,15 +426,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'an application in the target space is bound to the service instance' do
       let(:test_app) { VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea') }
-      let!(:service_binding) do
-        feature_flag = VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
-        binding = VCAP::CloudController::ServiceBinding.make(service_instance: service_instance,
-                                                             app: test_app,
-                                                             credentials: { 'amelia' => 'apples' })
-        feature_flag.enabled = false
-        feature_flag.save
-        binding
-      end
+      let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: test_app, credentials: { 'amelia' => 'apples' }) }
 
       context 'and the service broker successfully unbinds' do
         before do

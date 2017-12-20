@@ -65,7 +65,6 @@ module VCAP::CloudController
         @process_a = ProcessModelFactory.make(space: @space_a)
         @service_instance_a = ManagedServiceInstance.make
 
-        FeatureFlag.create(name: :service_instance_sharing, enabled: true)
         @service_instance_a.add_shared_space(@space_a)
 
         @obj_a = ServiceBinding.make(

@@ -50,7 +50,7 @@ module VCAP::CloudController
       return unless service_instance && app
       return if service_instance.space == app.space
 
-      if !FeatureFlag.enabled?(:service_instance_sharing) || service_instance.shared_spaces.exclude?(app.space)
+      if service_instance.shared_spaces.exclude?(app.space)
         errors.add(:service_instance, :space_mismatch)
       end
     end

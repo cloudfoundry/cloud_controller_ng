@@ -63,8 +63,7 @@ module VCAP::CloudController
     end
 
     def bindable_in_space?(service_instance, app_space)
-      service_instance.space == app_space ||
-        (FeatureFlag.enabled?(:service_instance_sharing) && service_instance.shared_spaces.include?(app_space))
+      service_instance.space == app_space || service_instance.shared_spaces.include?(app_space)
     end
 
     def logger
