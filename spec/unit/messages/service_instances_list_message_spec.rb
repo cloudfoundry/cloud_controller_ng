@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
 
       context 'space guids' do
-        it 'validates app_guids is an array' do
+        it 'validates space_guids is an array' do
           message = ServiceInstancesListMessage.new space_guids: 'tricked you, not an array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids]).to include('must be an array')

@@ -38,7 +38,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
         context 'when service instances are filtered by space guid' do
           it 'returns only the matching service instances' do
-            get :index, space_guids: 'space-2-guid, space-3-guid'
+            get :index, space_guids: 'space-2-guid,space-3-guid'
             expect(response.status).to eq(200), response.body
             expect(parsed_body['resources'].length).to eq 2
 

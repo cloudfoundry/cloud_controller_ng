@@ -359,13 +359,12 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', instance_guid)
     end
 
-    private
-
     class ServiceInstanceSharedToEagerLoader
       def eager_load_dataset(spaces, _, _, _, _)
         spaces.eager(:organization)
       end
     end
+    private_constant :ServiceInstanceSharedToEagerLoader
 
     class ServiceInstanceSharedToSerializer
       def initialize(service_instance)
@@ -377,6 +376,9 @@ module VCAP::CloudController
         CloudController::Presenters::V2::ServiceInstanceSharedToPresenter.new.to_hash(space, bound_app_count)
       end
     end
+    private_constant :ServiceInstanceSharedToSerializer
+
+    private
 
     def create_paginated_collection_renderer(service_instance)
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(

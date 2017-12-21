@@ -164,7 +164,7 @@ module VCAP::CloudController
         let(:service_plan) { ServicePlan.make(public: false) }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
 
-        it 'raises an api error' do
+        it 'raises an api error if service access disabled in both source and target' do
           error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not " \
             "enabled in #{target_space1.organization.name}/#{target_space1.name}"
           expect {
@@ -172,14 +172,21 @@ module VCAP::CloudController
           }.to raise_error(CloudController::Errors::ApiError, error_msg)
         end
 
-        context 'and access has been enabled for the target org' do
+        context 'and when the source org has service plan access enabled but the target org has service plan access disabled' do
+          let(:source_org) { Organization.make }
+          let(:space) { Space.make(organization: source_org) }
+          let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
+
           before do
-            ServicePlanVisibility.make(organization: target_space1.organization, service_plan: service_instance.service_plan)
+            ServicePlanVisibility.make(organization: source_org, service_plan: service_instance.service_plan)
           end
 
-          it 'creates the share' do
-            shared_instance = service_instance_share.create(service_instance, [target_space1], user_audit_info)
-            expect(shared_instance.shared_spaces.length).to eq 1
+          it 'raises an api error' do
+            error_msg = "Access to service #{service_instance.service.label} and plan #{service_instance.service_plan.name} is not " \
+              "enabled in #{target_space1.organization.name}/#{target_space1.name}"
+            expect {
+              service_instance_share.create(service_instance, [target_space1], user_audit_info)
+            }.to raise_error(CloudController::Errors::ApiError, error_msg)
           end
         end
 

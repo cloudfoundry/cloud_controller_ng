@@ -132,6 +132,11 @@ module VCAP::CloudController
       service_broker.private? if service_broker
     end
 
+    def visible_in_space?(space)
+      visible_plans = ServicePlan.space_visible(space)
+      visible_plans.include?(self)
+    end
+
     private
 
     def before_validation
