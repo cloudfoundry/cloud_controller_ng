@@ -8,16 +8,11 @@ if [ $# == 0 ]; then
     exit 1
 fi
 
-readonly CF_RELEASE_DIR=${CF_RELEASE_DIR:-~/workspace/cf-release}
-readonly CAPI_RELEASE_DIR="${CF_RELEASE_DIR}/src/capi-release"
+readonly CAPI_RELEASE_DIR="${CAPI_RELEASE_DIR:-$HOME/workspace/capi-release}"
 readonly CC_DIR="${CAPI_RELEASE_DIR}/src/cloud_controller_ng"
 readonly SEARCH_SHA=$1
 
 function update_repos {
-  pushd "${CF_RELEASE_DIR}" > /dev/null
-    git fetch
-  popd > /dev/null
-
   pushd "${CAPI_RELEASE_DIR}" > /dev/null
     git fetch
   popd > /dev/null
