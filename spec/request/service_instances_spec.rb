@@ -259,7 +259,6 @@ RSpec.describe 'Service Instances' do
         ],
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/relationships/shared_spaces" },
-          'related' => { 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}/shared_spaces" },
         }
       }
 
