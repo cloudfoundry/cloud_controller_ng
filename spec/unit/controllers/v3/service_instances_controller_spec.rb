@@ -133,6 +133,63 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
   end
 
+  describe '#relationships_shared_spaces' do
+    let(:target_space) { VCAP::CloudController::Space.make(guid: 'target-space-guid') }
+
+    before do
+      service_instance.add_shared_space(target_space)
+    end
+
+    context 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin'               => 200,
+        'space_developer'     => 200,
+        'admin_read_only'     => 200,
+        'global_auditor'      => 200,
+        'space_manager'       => 200,
+        'space_auditor'       => 200,
+        'org_manager'         => 200,
+        'org_auditor'         => 404,
+        'org_billing_manager' => 404,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "and #{role} in the target space" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: space.organization, space: space, user: user)
+
+            get :relationships_shared_spaces, service_instance_guid: service_instance.guid
+
+            expect(response.status).to eq(expected_return_value),
+              "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+            if expected_return_value == 200
+              expect(parsed_body['data'][0]['guid']).to eq(target_space.guid)
+              expect(parsed_body['links']['self']['href']).to match(%r{/v3/service_instances/#{service_instance.guid}/relationships/shared_spaces$})
+            end
+          end
+        end
+      end
+    end
+
+    context 'when invalid service instance guid is provided' do
+      it 'returns a 404' do
+        set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+        get :relationships_shared_spaces, service_instance_guid: 'nonexistent-guid'
+
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'when the user has read access to the target space, but not to the source space' do
+      it 'returns a 404' do
+        set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
+        get :relationships_shared_spaces, service_instance_guid: service_instance.guid
+
+        expect(response.status).to eq 404
+      end
+    end
+  end
+
   describe '#share_service_instance' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:target_space) { VCAP::CloudController::Space.make }

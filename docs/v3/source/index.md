@@ -141,5 +141,6 @@ includes:
   - experimental_resources/service_instances/list
   - experimental_resources/service_instances/share_to_space
   - experimental_resources/service_instances/unshare_from_space
+  - experimental_resources/service_instances/list_shared_spaces
 search: true
 ---

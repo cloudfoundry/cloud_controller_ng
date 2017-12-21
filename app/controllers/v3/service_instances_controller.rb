@@ -66,6 +66,14 @@ class ServiceInstancesV3Controller < ApplicationController
     head :no_content
   end
 
+  def relationships_shared_spaces
+    service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
+    resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
+
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
+  end
+
   private
 
   def check_spaces_are_writeable!(spaces)
