@@ -275,6 +275,21 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
     end
 
+    context 'when the service instance plan is from a private space scoped broker' do
+      let(:target_org) { VCAP::CloudController::Organization.make(name: 'target-org') }
+      let(:target_space) { VCAP::CloudController::Space.make(name: 'target-space', organization: target_org) }
+      let(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+      let(:service) { VCAP::CloudController::Service.make(service_broker: broker, label: 'space-scoped-service') }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, name: 'my-plan') }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
+
+      it 'returns a 422' do
+        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        expect(response.status).to eq 422
+        expect(response.body).to include('Access to service space-scoped-service and plan my-plan is not enabled in target-org/target-space')
+      end
+    end
+
     context 'when the service instance is a route service' do
       let(:service) { VCAP::CloudController::Service.make(:routing) }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
