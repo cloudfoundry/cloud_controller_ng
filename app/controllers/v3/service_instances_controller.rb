@@ -76,35 +76,37 @@ class ServiceInstancesV3Controller < ApplicationController
   private
 
   def check_spaces_exist_and_are_writeable!(service_instance, request_guids, found_spaces)
-    unreadable_spaces = found_spaces.reject do |space|
-      can_read_space?(space)
-    end
+    unreadable_spaces = found_spaces.reject { |s| can_read_space?(s) }
+    unwriteable_spaces = found_spaces.reject { |s| can_write_space?(s) || unreadable_spaces.include?(s) }
 
-    unwriteable_spaces = found_spaces.reject do |space|
-      can_write_space?(space) || unreadable_spaces.include?(space)
-    end
-
-    unreadable_space_guids = request_guids - found_spaces.map(&:guid)
-    unreadable_space_guids += unreadable_spaces.map(&:guid)
+    not_found_space_guids = request_guids - found_spaces.map(&:guid)
+    unreadable_space_guids = not_found_space_guids + unreadable_spaces.map(&:guid)
     unwriteable_space_guids = unwriteable_spaces.map(&:guid)
 
-    unless unreadable_space_guids.empty? && unwriteable_space_guids.empty?
-      unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
-      unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+    if unreadable_space_guids.any? || unwriteable_space_guids.any?
+      unreadable_error = unreadable_error_message(service_instance.name, unreadable_space_guids)
+      unwriteable_error = unwriteable_error_message(service_instance.name, unwriteable_space_guids)
 
-      error_msg = ''
-
-      unless unreadable_guid_list.empty?
-        error_msg += "Unable to share service instance #{service_instance.name} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
-      end
-
-      unless unwriteable_guid_list.empty?
-        error_msg += "\n" unless unreadable_guid_list.empty?
-        error_msg += "Unable to share service instance #{service_instance.name} with spaces [#{unwriteable_guid_list}]. "
-        error_msg += 'Write permission is required in order to share a service instance with a space.'
-      end
+      error_msg = [unreadable_error, unwriteable_error].map(&:presence).compact.join("\n")
 
       unprocessable!(error_msg)
+    end
+  end
+
+  def unreadable_error_message(service_instance_name, unreadable_space_guids)
+    if unreadable_space_guids.any?
+      unreadable_guid_list = unreadable_space_guids.map { |g| "'#{g}'" }.join(', ')
+
+      "Unable to share service instance #{service_instance_name} with spaces [#{unreadable_guid_list}]. Ensure the spaces exist and that you have access to them."
+    end
+  end
+
+  def unwriteable_error_message(service_instance_name, unwriteable_space_guids)
+    if unwriteable_space_guids.any?
+      unwriteable_guid_list = unwriteable_space_guids.map { |s| "'#{s}'" }.join(', ')
+
+      "Unable to share service instance #{service_instance_name} with spaces [#{unwriteable_guid_list}]. "\
+      'Write permission is required in order to share a service instance with a space.'
     end
   end
 
