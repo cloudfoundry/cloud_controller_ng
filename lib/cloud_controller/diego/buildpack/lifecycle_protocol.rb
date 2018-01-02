@@ -18,20 +18,15 @@ module VCAP
           end
 
           def lifecycle_data(staging_details)
+            stack                                             = staging_details.lifecycle.staging_stack
             lifecycle_data                                    = Diego::Buildpack::LifecycleData.new
             lifecycle_data.app_bits_download_uri              = @blobstore_url_generator.package_download_url(staging_details.package)
             lifecycle_data.app_bits_checksum                  = staging_details.package.checksum_info
             lifecycle_data.buildpack_cache_checksum           = staging_details.package.app.buildpack_cache_sha256_checksum
-            lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(
-              staging_details.package.app_guid,
-              staging_details.lifecycle.staging_stack
-            )
-            lifecycle_data.build_artifacts_cache_upload_uri = @blobstore_url_generator.buildpack_cache_upload_url(
-              staging_details.package.app_guid,
-              staging_details.lifecycle.staging_stack
-            )
+            lifecycle_data.build_artifacts_cache_download_uri = @blobstore_url_generator.buildpack_cache_download_url(staging_details.package.app_guid, stack)
+            lifecycle_data.build_artifacts_cache_upload_uri = @blobstore_url_generator.buildpack_cache_upload_url(staging_details.package.app_guid, stack)
             lifecycle_data.droplet_upload_uri                 = @blobstore_url_generator.droplet_upload_url(staging_details.staging_guid)
-            lifecycle_data.buildpacks                         = @buildpack_entry_generator.buildpack_entries(staging_details.lifecycle.buildpack_infos)
+            lifecycle_data.buildpacks                         = @buildpack_entry_generator.buildpack_entries(staging_details.lifecycle.buildpack_infos, stack)
             lifecycle_data.stack                              = staging_details.lifecycle.staging_stack
 
             lifecycle_data.message

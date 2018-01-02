@@ -3,6 +3,7 @@ require 'vcap/digester'
 module VCAP::CloudController
   class UploadBuildpack
     attr_reader :buildpack_blobstore
+    ONE_MEGABYTE = 1024 * 1024
 
     def initialize(blobstore)
       @buildpack_blobstore = blobstore
@@ -24,6 +25,8 @@ module VCAP::CloudController
 
       old_buildpack_key = nil
 
+      new_stack = determine_new_stack(buildpack, bits_file_path)
+
       begin
         Buildpack.db.transaction do
           buildpack.lock!
@@ -32,8 +35,11 @@ module VCAP::CloudController
             key: new_key,
             filename: new_filename,
             sha256_checksum: sha256,
+            stack: new_stack
           )
         end
+      rescue Sequel::ValidationFailed
+        raise_translated_api_error(buildpack)
       rescue Sequel::Error
         BuildpackBitsDelete.delete_when_safe(new_key, 0)
         return false
@@ -48,6 +54,25 @@ module VCAP::CloudController
     end
 
     private
+
+    def raise_translated_api_error(buildpack)
+      if buildpack.errors.on([:name, :stack]).try(:include?, :unique)
+        raise CloudController::Errors::ApiError.new_from_details('BuildpackNameStackTaken', buildpack.name, buildpack.stack)
+      end
+      if buildpack.errors.on(:stack).try(:include?, :buildpack_cant_change_stacks)
+        raise CloudController::Errors::ApiError.new_from_details('BuildpackStacksDontMatch', buildpack.stack, buildpack.initial_value(:stack))
+      end
+      if buildpack.errors.on(:stack).try(:include?, :buildpack_stack_does_not_exist)
+        raise CloudController::Errors::ApiError.new_from_details('BuildpackStackDoesNotExist', buildpack.stack)
+      end
+    end
+
+    def determine_new_stack(buildpack, bits_file_path)
+      extracted_stack = Buildpacks::StackNameExtractor.extract_from_file(bits_file_path)
+      [extracted_stack, buildpack.stack, Stack.default.name].find(&:present?)
+    rescue CloudController::Errors::BuildpackError => e
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackZipError', e.message)
+    end
 
     def new_bits?(buildpack, key)
       buildpack.key != key

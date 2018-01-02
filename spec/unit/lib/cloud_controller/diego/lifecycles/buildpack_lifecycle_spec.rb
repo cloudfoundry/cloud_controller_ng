@@ -146,8 +146,33 @@ module VCAP::CloudController
         end
 
         context 'and the app does not have a stack' do
-          it 'uses the default value for stack' do
-            expect(buildpack_lifecycle.staging_stack).to eq(Stack.default.name)
+          let(:request_data) do
+            {
+              buildpacks: ['cool-buildpack']
+            }
+          end
+          before do
+            Stack.create(name: 'cool-stack')
+          end
+
+          context 'and there is only one buildpack with the specified name' do
+            before do
+              Buildpack.make(name: 'cool-buildpack', stack: 'cool-stack')
+            end
+            it 'uses the stack of the buildpack' do
+              expect(buildpack_lifecycle.staging_stack).to eq('cool-stack')
+            end
+          end
+
+          context 'and there are multiple buildpacks with different stacks' do
+            before do
+              Buildpack.make(name: 'cool-buildpack', stack: 'cool-stack')
+              Buildpack.make(name: 'cool-buildpack', stack: Stack.default.name)
+            end
+
+            it 'uses the default value for stack' do
+              expect(buildpack_lifecycle.staging_stack).to eq(Stack.default.name)
+            end
           end
         end
       end

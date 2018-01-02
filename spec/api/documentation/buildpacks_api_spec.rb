@@ -19,6 +19,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
         required: opts[:required],
         example_values: ['Golang_buildpack']
 
+      field :stack, 'The name of the stack to associate this buildpack with', example_values: ['cflinuxfs2']
       field :position, 'The order in which the buildpacks are checked during buildpack auto-detection.'
       field :enabled, 'Whether or not the buildpack will be used for staging', default: true
       field :locked, 'Whether or not the buildpack is locked to prevent updates', default: false
@@ -33,7 +34,7 @@ RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
       include_context 'updatable_fields', required: true
 
       example 'Creates an admin Buildpack' do
-        client.post '/v2/buildpacks', fields_json, headers
+        client.post '/v2/buildpacks', fields_json(stack: 'cflinuxfs2'), headers
         expect(status).to eq 201
         standard_entity_response parsed_response, :buildpack, expected_values: { name: 'Golang_buildpack' }
       end

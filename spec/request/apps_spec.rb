@@ -4,6 +4,7 @@ RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
 
@@ -14,14 +15,14 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v3/apps' do
     it 'creates an app' do
-      buildpack      = VCAP::CloudController::Buildpack.make
+      buildpack      = VCAP::CloudController::Buildpack.make(stack: stack.name)
       create_request = {
         name: 'my_app',
         environment_variables: { open: 'source' },
         lifecycle: {
           type: 'buildpack',
           data: {
-            stack: nil,
+            stack: buildpack.stack,
             buildpacks: [buildpack.name]
           }
         },
@@ -50,7 +51,7 @@ RSpec.describe 'Apps' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => [buildpack.name],
-              'stack'      => VCAP::CloudController::Stack.default.name,
+              'stack'      => stack.name,
             }
           },
           'relationships' => {

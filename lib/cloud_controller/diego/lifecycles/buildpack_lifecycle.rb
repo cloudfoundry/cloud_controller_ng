@@ -36,7 +36,7 @@ module VCAP::CloudController
     end
 
     def staging_stack
-      requested_stack || app_stack || VCAP::CloudController::Stack.default.name
+      requested_stack || app_stack || buildpack_stack || VCAP::CloudController::Stack.default.name
     end
 
     private
@@ -55,6 +55,13 @@ module VCAP::CloudController
 
     def app_stack
       @package.app.buildpack_lifecycle_data.try(:stack)
+    end
+
+    def buildpack_stack
+      stacks = Buildpack.where(name: buildpacks_to_use).select(:stack).map(&:stack).uniq
+      if stacks.length == 1
+        stacks.first
+      end
     end
 
     attr_reader :validator
