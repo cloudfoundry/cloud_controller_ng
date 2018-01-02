@@ -6,8 +6,8 @@ module VCAP::CloudController
           @blobstore_url_generator = blobstore_url_generator
         end
 
-        def buildpack_entries(buildpack_infos)
-          return default_admin_buildpacks if buildpack_infos.empty?
+        def buildpack_entries(buildpack_infos, stack_name)
+          return default_admin_buildpacks(stack_name) if buildpack_infos.empty?
 
           buildpack_infos.map do |buildpack_info|
             if buildpack_info.buildpack_exists_in_db? && buildpack_info.buildpack_enabled?
@@ -26,8 +26,8 @@ module VCAP::CloudController
           { name: 'custom', key: buildpack.url, url: buildpack.url }
         end
 
-        def default_admin_buildpacks
-          VCAP::CloudController::Buildpack.list_admin_buildpacks.
+        def default_admin_buildpacks(stack_name)
+          VCAP::CloudController::Buildpack.list_admin_buildpacks(stack_name).
             select(&:enabled).
             collect { |buildpack| admin_buildpack_entry(buildpack) }
         end

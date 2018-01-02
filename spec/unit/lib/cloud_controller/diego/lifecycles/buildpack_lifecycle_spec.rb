@@ -145,7 +145,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'and the app does not have a stack' do
+        context 'when the app does not have a stack' do
           it 'uses the default value for stack' do
             expect(buildpack_lifecycle.staging_stack).to eq(Stack.default.name)
           end

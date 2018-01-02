@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
-    let!(:ruby_buildpack) { Buildpack.make(name: 'ruby') }
+    let!(:ruby_buildpack) { Buildpack.make(name: 'ruby', stack: stack.name) }
     let(:stack) { Stack.make(name: 'SUSE') }
 
     before do
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
           it 'raises an AppUpdate::InvalidApp error' do
             expect { app_update.update(app_model, message, lifecycle)
-            }.to raise_error(AppUpdate::InvalidApp, 'Stack must be an existing stack')
+            }.to raise_error(AppUpdate::InvalidApp, 'Buildpack "ruby" must be an existing admin buildpack or a valid git URI, Stack must be an existing stack')
           end
         end
 
