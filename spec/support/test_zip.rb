@@ -1,14 +1,15 @@
-module TestZip
-  def self.create(zip_name, file_count, file_size=1024)
-    files = []
-    file_count.times do |i|
-      tf = Tempfile.new("ziptest_#{i}")
-      files << tf
-      tf.write('A' * file_size)
-      tf.close
-    end
+require 'zip'
 
-    child = POSIX::Spawn::Child.new('zip', zip_name, *files.map(&:path))
-    child.status.exitstatus == 0 || raise("Failed zipping:\n#{child.err}\n#{child.out}")
+module TestZip
+  def self.create(zip_name, file_count, file_size=1024, &blk)
+    Zip::File.open(zip_name, Zip::File::CREATE) do |zipfile|
+      file_count.times do |i|
+        zipfile.get_output_stream("ziptest_#{i}") do |f|
+          f.write('A' * file_size)
+        end
+      end
+
+      blk.call(zipfile) if blk
+    end
   end
 end

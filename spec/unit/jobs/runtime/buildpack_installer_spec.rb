@@ -20,30 +20,132 @@ module VCAP::CloudController
         context 'when the buildpack is enabled and unlocked' do
           let(:options) { { locked: true } }
 
-          it 'creates a new buildpack' do
-            expect {
-              job.perform
-            }.to change { Buildpack.count }.from(0).to(1)
+          context 'buildpack zip does not specify stack' do
+            it 'creates a new buildpack with default stack' do
+              expect {
+                job.perform
+              }.to change { Buildpack.count }.from(0).to(1)
 
-            buildpack = Buildpack.find(name: buildpack_name)
-            expect(buildpack).to_not be_nil
-            expect(buildpack.name).to eq(buildpack_name)
-            expect(buildpack.key).to start_with(buildpack.guid)
-            expect(buildpack.filename).to end_with(File.basename(zipfile))
-            expect(buildpack).to be_locked
+              buildpack = Buildpack.first
+              expect(buildpack).to_not be_nil
+              expect(buildpack.name).to eq(buildpack_name)
+              expect(buildpack.stack).to eq(Stack.default.name)
+              expect(buildpack.key).to start_with(buildpack.guid)
+              expect(buildpack.filename).to end_with(File.basename(zipfile))
+              expect(buildpack).to be_locked
+            end
+
+            it 'updates an existing buildpack' do
+              buildpack1 = Buildpack.make(name: buildpack_name, key: 'new_key')
+
+              update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false })
+              update_job.perform
+
+              buildpack2 = Buildpack.find(name: buildpack_name)
+              expect(buildpack2).to_not be_nil
+              expect(buildpack2.enabled).to be false
+              expect(buildpack2.filename).to end_with(File.basename(zipfile2))
+              expect(buildpack2.key).to_not eql(buildpack1.key)
+            end
+
+            it 'does nothing if multiple buildpacks with same name' do
+              Stack.make(name: 'stack-1')
+              Stack.make(name: 'stack-2')
+              Buildpack.make(name: buildpack_name, stack: 'stack-1', filename: nil)
+              Buildpack.make(name: buildpack_name, stack: 'stack-2', filename: nil)
+
+              update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false })
+              expect {
+                update_job.perform
+              }.to_not change { Buildpack.count }
+
+              buildpack1 = Buildpack.find(name: buildpack_name, stack: 'stack-1')
+              expect(buildpack1).to_not be_nil
+              expect(buildpack1.filename).to be_nil
+
+              buildpack2 = Buildpack.find(name: buildpack_name, stack: 'stack-2')
+              expect(buildpack2).to_not be_nil
+              expect(buildpack2.filename).to be_nil
+            end
           end
 
-          it 'updates an existing buildpack' do
-            buildpack1 = Buildpack.make(name: buildpack_name, key: 'new_key')
+          context 'buildpack zip specifies stack' do
+            before { Stack.make(name: 'manifest-stack') }
+            let(:zipfile) do
+              path = Tempfile.new('bp-zip-with-stack').path
+              TestZip.create(path, 1, 1024) do |zipfile|
+                zipfile.get_output_stream('manifest.yml') do |f|
+                  f.write("---\nstack: manifest-stack\n")
+                end
+              end
+              path
+            end
+            after { FileUtils.rm(zipfile) }
 
-            update_job = BuildpackInstaller.new(buildpack_name, zipfile2, { enabled: false })
-            update_job.perform
+            it 'creates a new buildpack with that stack' do
+              expect {
+                job.perform
+              }.to change { Buildpack.count }.from(0).to(1)
 
-            buildpack2 = Buildpack.find(name: buildpack_name)
-            expect(buildpack2).to_not be_nil
-            expect(buildpack2.enabled).to be false
-            expect(buildpack2.filename).to end_with(File.basename(zipfile2))
-            expect(buildpack2.key).to_not eql(buildpack1.key)
+              buildpack = Buildpack.first
+              expect(buildpack).to_not be_nil
+              expect(buildpack.name).to eq(buildpack_name)
+              expect(buildpack.stack).to eq('manifest-stack')
+              expect(buildpack.key).to start_with(buildpack.guid)
+              expect(buildpack.filename).to end_with(File.basename(zipfile))
+              expect(buildpack).to be_locked
+            end
+
+            it 'updates an existing buildpack' do
+              buildpack1 = Buildpack.make(name: buildpack_name, stack: 'manifest-stack', key: 'new_key')
+
+              update_job = BuildpackInstaller.new(buildpack_name, zipfile, { enabled: false })
+              update_job.perform
+
+              buildpack2 = Buildpack.find(name: buildpack_name)
+              expect(buildpack2).to_not be_nil
+              expect(buildpack2.enabled).to be false
+              expect(buildpack2.filename).to end_with(File.basename(zipfile))
+              expect(buildpack2.key).to_not eql(buildpack1.key)
+            end
+
+            it 'updates an existing buildpack with nil stack' do
+              buildpack1 = Buildpack.make(name: buildpack_name, stack: nil, key: 'new_key')
+
+              update_job = BuildpackInstaller.new(buildpack_name, zipfile, { enabled: false })
+              update_job.perform
+
+              buildpack2 = Buildpack.find(name: buildpack_name)
+              expect(buildpack2).to_not be_nil
+              expect(buildpack2.enabled).to be false
+              expect(buildpack2.filename).to end_with(File.basename(zipfile))
+              expect(buildpack2.key).to_not eql(buildpack1.key)
+              expect(buildpack2.stack).to eql('manifest-stack')
+            end
+
+            it 'creates a new buildpack if existing buildpacks have different stacks' do
+              Stack.make(name: 'stack-1')
+              Stack.make(name: 'stack-2')
+              Buildpack.make(name: buildpack_name, stack: 'stack-1', filename: nil)
+              Buildpack.make(name: buildpack_name, stack: 'stack-2', filename: nil)
+
+              update_job = BuildpackInstaller.new(buildpack_name, zipfile, { enabled: false })
+              expect {
+                update_job.perform
+              }.to change { Buildpack.count }.by(1)
+
+              buildpack1 = Buildpack.find(name: buildpack_name, stack: 'stack-1')
+              expect(buildpack1).to_not be_nil
+              expect(buildpack1.filename).to be_nil
+
+              buildpack2 = Buildpack.find(name: buildpack_name, stack: 'stack-2')
+              expect(buildpack2).to_not be_nil
+              expect(buildpack2.filename).to be_nil
+
+              buildpack3 = Buildpack.find(name: buildpack_name, stack: 'manifest-stack')
+              expect(buildpack3).to_not be_nil
+              expect(buildpack3.filename).to_not be_nil
+            end
           end
         end
 

@@ -858,6 +858,11 @@
   http_code: 502
   message: "Service broker returned dashboard client configuration without a dashboard URL"
 
+290000:
+  name: BuildpackNameStackTaken
+  http_code: 422
+  message: "The buildpack name %s is already in use for the stack %s"
+
 290001:
   name: BuildpackNameTaken
   http_code: 400
@@ -1148,3 +1153,18 @@
   name: SharedServiceInstanceNotDeletableInTargetSpace
   http_code: 403
   message: 'You cannot delete service instances that have been shared with you'
+
+390011:
+  name: BuildpackStacksDontMatch
+  http_code: 422
+  message: 'Uploaded buildpack stack (%s) does not match %s'
+
+390012:
+  name: BuildpackStackDoesNotExist
+  http_code: 422
+  message: 'Uploaded buildpack stack (%s) does not exist'
+
+390013:
+  name: BuildpackZipError
+  http_code: 422
+  message: 'Buildpack zip error: %s'

@@ -25,7 +25,7 @@ RSpec.describe 'App Manifests' do
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
             'buildpack' => buildpack.name,
-            'stack' => 'cflinuxfs2',
+            'stack' => buildpack.stack,
             'command' => 'new-command',
             'health_check_type' => 'http',
             'health_check_http_endpoint' => '/health',
@@ -69,7 +69,7 @@ RSpec.describe 'App Manifests' do
       app_model.reload
       lifecycle_data = app_model.lifecycle_data
       expect(lifecycle_data.buildpacks).to include(buildpack.name)
-      expect(lifecycle_data.stack).to eq('cflinuxfs2')
+      expect(lifecycle_data.stack).to eq(buildpack.stack)
       expect(app_model.environment_variables).to match(
         'k1' => 'mangos',
         'k2' => 'pears',
