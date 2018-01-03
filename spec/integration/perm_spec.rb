@@ -22,14 +22,20 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
   let(:uaa_origin) { 'test-origin' }
 
   let(:client) { CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs) }
-  let(:issuer) { 'https://auth.example.com/oauth/token' }
-  let(:admin_headers) {
+
+  let(:issuer) { UAAIssuer::ISSUER }
+
+  def http_headers(token)
     {
-      'authorization' => "bearer #{admin_token}",
+      'authorization' => "bearer #{token}",
       'accept' => 'application/json',
       'content-type' => 'application/json'
     }
-  }
+  end
+
+  def admin_headers
+    http_headers(admin_token)
+  end
 
   if ENV['CF_RUN_PERM_SPECS'] == 'true'
     before(:all) do
@@ -44,7 +50,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         hostname: perm_hostname,
         port: perm_port,
         ca_cert_path: perm_server.tls_ca_path,
-        timeout_in_milliseconds: 1000
+        timeout_in_milliseconds: 1000,
+        query_raise_on_mismatch: true, # Gives us 500s in Querying tests when perm and DB return different answers
       }
 
       ca_certs = [perm_server.tls_ca.clone]
@@ -737,7 +744,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
     end
   end
 
-  describe 'Querying' do
+  describe 'Querying v3 endpoints' do
     before do
       TestConfig.config[:perm] = perm_config
 
@@ -748,15 +755,42 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
     end
 
-    describe 'can_read_from_space?' do
+    describe 'GET /v3/spaces/:guid (can_read_from_space?)' do
       org_guid = nil
       space_guid = nil
-      let!(:user) {}
+      let!(:user) { VCAP::CloudController::User.make }
       before do
         set_current_user_as_admin(iss: issuer)
 
         org_guid = create_org
         space_guid = create_space(org_guid)
+      end
+
+      it 'is satisfied by making someone a space-developer' do
+        make_org_user(user, org_guid)
+
+        response = make_put_request("/v2/spaces/#{space_guid}/developers/#{user.guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        set_current_user(user, iss: issuer)
+
+        opts = {
+          user_id: user.guid,
+          scope: ['cloud_controller.read', 'cloud_controller.write'],
+        }
+        response = make_get_request("/v3/spaces/#{space_guid}", http_headers(auth_token(opts)))
+        expect(response.code).to eq('200')
+
+        expect(JSON.parse(response.body)['guid']).to eq(space_guid)
+      end
+
+      it 'is satisfied by making someone a space-manager' do
+      end
+
+      it 'is satisfied by making someone a space-auditor' do
+      end
+
+      it 'is satisfied by making someone an org-manager' do
       end
     end
 
@@ -787,6 +821,11 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       expect(response.code).to eq('201')
 
       JSON.parse(response.body)['guid']
+    end
+
+    def make_org_user(user, org_guid)
+      response = make_put_request("/v2/organizations/#{org_guid}/users/#{user.guid}", {}.to_json, admin_headers)
+      expect(response.code).to eq('201')
     end
   end
 end

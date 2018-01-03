@@ -38,7 +38,9 @@ module VCAP::CloudController
       end
 
       def create_org_role(role:, org_id:)
-        create_role(org_role(role, org_id), [org_role_to_permission(role, org_id)])
+        create_role(org_role(role, org_id), [
+          org_role_to_permission(role, org_id)
+        ])
       end
 
       def delete_org_role(role:, org_id:)
@@ -54,7 +56,9 @@ module VCAP::CloudController
       end
 
       def create_space_role(role:, space_id:)
-        create_role(space_role(role, space_id), [space_role_to_permission(role, space_id)])
+        create_role(space_role(role, space_id), [
+          space_role_to_permission(role, space_id)
+        ])
       end
 
       def delete_space_role(role:, space_id:)

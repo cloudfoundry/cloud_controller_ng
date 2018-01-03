@@ -2,16 +2,23 @@ require 'net/http'
 require 'uri'
 
 module IntegrationHttp
-  def admin_token
+  def auth_token(opts)
     token = {
+      'user_id' => opts[:user_id],
       'aud' => 'cloud_controller',
       'exp' => Time.now.utc.to_i + 10_000,
-      'client_id' => Sham.guid,
-      'scope' => ['cloud_controller.admin'],
-      'iss' => 'uaa_issuer',
+      'scope' => opts[:scope],
+      'iss' => UAAIssuer::ISSUER,
       'jti' => 'valid-jti',
     }
     CF::UAA::TokenCoder.encode(token, skey: 'tokensecret', algorithm: 'HS256')
+  end
+
+  def admin_token
+    auth_token(
+      user_id: Sham.guid,
+      scope: ['cloud_controller.admin', 'cloud_controller.read', 'cloud_controller.write'],
+    )
   end
 
   module JsonBody
@@ -42,7 +49,7 @@ module IntegrationHttp
     response
   end
 
-  def make_put_request(path, data, headers={})
+  def make_put_request(path, data='{}', headers={})
     http = Net::HTTP.new('localhost', '8181')
     response = http.put(path, data, headers)
     response.extend(JsonBody)

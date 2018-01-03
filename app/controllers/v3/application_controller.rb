@@ -92,7 +92,9 @@ class ApplicationController < ActionController::Base
       perm_client,
       SecurityContext,
       configuration.get(:perm, :enabled),
-      configuration.get(:perm, :query_enabled))
+      configuration.get(:perm, :query_enabled),
+      configuration.get(:perm, :query_raise_on_mismatch)
+    )
   end
 
   private
