@@ -56,6 +56,13 @@ module IntegrationHttp
     response
   end
 
+  def make_patch_request(path, data='{}', headers={})
+    http = Net::HTTP.new('localhost', '8181')
+    response = http.patch(path, data, headers)
+    response.extend(JsonBody)
+    response
+  end
+
   def make_delete_request(path, headers={})
     http = Net::HTTP.new('localhost', '8181')
     response = http.delete(path, headers)
