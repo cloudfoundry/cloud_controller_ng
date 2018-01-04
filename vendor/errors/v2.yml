@@ -1148,3 +1148,8 @@
   name: SharedServiceInstanceNotUpdateableInTargetSpace
   http_code: 403
   message: 'You cannot update service instances that have been shared with you'
+
+390010:
+  name: SharedServiceInstanceNotDeleteableInTargetSpace
+  http_code: 403
+  message: 'You cannot delete service instances that have been shared with you'
