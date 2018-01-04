@@ -768,6 +768,32 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
     end
 
+    RSpec.shared_examples "org writer" do
+      it 'can create a space in the org (can_write_to_org?)' do
+        opts = {
+          user_id: user.guid,
+          scope: ['cloud_controller.read', 'cloud_controller.write'],
+        }
+
+        space_name = SecureRandom.uuid
+        body = {
+          name: space_name,
+          relationships: {
+            organization: {
+              data: {
+                guid: org_guid
+              }
+            }
+          }
+        }.to_json
+
+        response = make_post_request("/v3/spaces", body, http_headers(auth_token(opts)))
+        expect(response.code).to eq('201')
+
+        expect(JSON.parse(response.body)['name']).to eq(space_name)
+      end
+    end
+
     RSpec.shared_examples "space reader" do
       it 'can read from space (can_read_from_space?)' do
         opts = {
@@ -781,6 +807,62 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
     end
 
+    RSpec.shared_examples "space writer" do
+      it 'can create an app in the space (can_write_to_space?)' do
+        opts = {
+          user_id: user.guid,
+          scope: ['cloud_controller.read', 'cloud_controller.write'],
+        }
+
+        app_name = SecureRandom.uuid
+        body = {
+          name: app_name,
+          relationships: {
+            space: {
+              data: {
+                guid: space_guid
+              }
+            }
+          }
+        }.to_json
+
+        response = make_post_request("/v3/apps", body, http_headers(auth_token(opts)))
+        expect(response.code).to eq('201')
+
+        expect(JSON.parse(response.body)['name']).to eq(app_name)
+      end
+    end
+
+    RSpec.shared_examples "isolation segment reader" do
+      it 'can read from isolation segment (can_read_from_isolation_segment?)' do
+        body = {
+          name: SecureRandom.uuid
+        }.to_json
+
+        response = make_post_request("/v3/isolation_segments", body, admin_headers)
+        expect(response.code).to eq('201')
+        isolation_segment_guid = JSON.parse(response.body)['guid']
+
+        body = {
+          data:
+            [
+              { guid: org_guid }
+            ]
+        }.to_json
+
+        response = make_post_request("/v3/isolation_segments/#{isolation_segment_guid}/relationships/organizations", body, admin_headers)
+        expect(response.code).to eq('200')
+
+        opts = {
+          user_id: user.guid,
+          scope: ['cloud_controller.read', 'cloud_controller.write'],
+        }
+        response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
+        expect(response.code).to eq('200')
+
+        expect(JSON.parse(response.body)['guid']).to eq(isolation_segment_guid)
+      end
+    end
 
     describe 'org manager' do
       setup = ->() {
@@ -801,7 +883,9 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       }
 
       it_behaves_like "org reader", &setup
+      it_behaves_like "org writer", &setup
       it_behaves_like "space reader", &setup
+      it_behaves_like "isolation segment reader", &setup
     end
 
     describe 'org auditor' do
@@ -823,6 +907,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       }
 
       it_behaves_like "org reader", &setup
+      it_behaves_like "isolation segment reader", &setup
     end
 
     describe 'org billing manager' do
@@ -844,6 +929,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       }
 
       it_behaves_like "org reader", &setup
+      it_behaves_like "isolation segment reader", &setup
     end
 
     describe 'org user' do
@@ -861,6 +947,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       }
 
       it_behaves_like "org reader", &setup
+      it_behaves_like "isolation segment reader", &setup
     end
 
     describe 'space developer' do
@@ -882,6 +969,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       }
 
       it_behaves_like "space reader", &setup
+      it_behaves_like "space writer", &setup
     end
 
 
