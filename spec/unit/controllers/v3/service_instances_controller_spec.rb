@@ -259,7 +259,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'when the service instance does not exist' do
       it 'returns a 404' do
-        post :share_service_instance, service_instance_guid: 'nonexistant-service-instance-guid', body: req_body
+        post :share_service_instance, service_instance_guid: 'nonexistent-service-instance-guid', body: req_body
         expect(response.status).to eq 404
         expect(response.body).to include('Service instance not found')
       end
@@ -328,13 +328,13 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'when the target space does not exist' do
       before do
-        req_body[:data] = [{ guid: 'nonexistant-space-guid' }]
+        req_body[:data] = [{ guid: 'nonexistent-space-guid' }]
       end
 
       it 'returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
-        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistant-space-guid']. ")
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistent-space-guid']. ")
         expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
         expect(response.body).not_to include('Write permission is required in order to share a service instance with a space.')
       end
@@ -357,8 +357,8 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when multiple target spaces do not exist' do
       before do
         req_body[:data] = [
-          { guid: 'nonexistant-space-guid' },
-          { guid: 'nonexistant-space-guid2' },
+          { guid: 'nonexistent-space-guid' },
+          { guid: 'nonexistent-space-guid2' },
           { guid: target_space.guid }
         ]
       end
@@ -366,7 +366,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       it 'does not share to any of the valid target spaces and returns a 422' do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
-        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistant-space-guid', 'nonexistant-space-guid2']. ")
+        expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistent-space-guid', 'nonexistent-space-guid2']. ")
         expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
         expect(response.body).not_to include('Write permission is required in order to share a service instance with a space.')
       end
@@ -393,7 +393,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         set_current_user_as_role(role: 'space_auditor', org: target_space.organization, space: target_space, user: user)
 
         req_body[:data] = [
-          { guid: 'nonexistant-space-guid' },
+          { guid: 'nonexistent-space-guid' },
           { guid: target_space.guid }
         ]
       end
@@ -402,14 +402,14 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
         expect(response.status).to eq 422
         expect(response.body).to include(
-          "Unable to share service instance #{service_instance.name} with spaces ['nonexistant-space-guid']. Ensure the spaces exist and that you have access to them.\\n" \
+          "Unable to share service instance #{service_instance.name} with spaces ['nonexistent-space-guid']. Ensure the spaces exist and that you have access to them.\\n" \
           "Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}']. "\
           'Write permission is required in order to share a service instance with a space.'
         )
       end
     end
 
-    context 'when the user is a SpaceAuditor in mulitple target spaces' do
+    context 'when the user is a SpaceAuditor in multiple target spaces' do
       let(:req_body) do
         {
           data: [
