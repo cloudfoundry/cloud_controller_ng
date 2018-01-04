@@ -755,25 +755,21 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
     end
 
-    describe 'GET /v3/spaces/:guid (can_read_from_space?)' do
-      org_guid = nil
-      space_guid = nil
-      let!(:user) { VCAP::CloudController::User.make }
-      before do
-        set_current_user_as_admin(iss: issuer)
+    RSpec.shared_examples "org reader" do
+      it 'can read from org (can_read_from_org?)' do
+        opts = {
+          user_id: user.guid,
+          scope: ['cloud_controller.read', 'cloud_controller.write'],
+        }
+        response = make_get_request("/v3/organizations/#{org_guid}", http_headers(auth_token(opts)))
+        expect(response.code).to eq('200')
 
-        org_guid = create_org
-        space_guid = create_space(org_guid)
+        expect(JSON.parse(response.body)['guid']).to eq(org_guid)
       end
+    end
 
-      it 'is satisfied by making someone a space-developer' do
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/developers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-
+    RSpec.shared_examples "space reader" do
+      it 'can read from space (can_read_from_space?)' do
         opts = {
           user_id: user.guid,
           scope: ['cloud_controller.read', 'cloud_controller.write'],
@@ -783,15 +779,152 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
         expect(JSON.parse(response.body)['guid']).to eq(space_guid)
       end
+    end
 
-      it 'is satisfied by making someone a space-manager' do
-      end
 
-      it 'is satisfied by making someone a space-auditor' do
-      end
+    describe 'org manager' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
 
-      it 'is satisfied by making someone an org-manager' do
-      end
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+
+          response = make_put_request("/v2/organizations/#{org_guid}/managers/#{user.guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "org reader", &setup
+      it_behaves_like "space reader", &setup
+    end
+
+    describe 'org auditor' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
+
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+
+          response = make_put_request("/v2/organizations/#{org_guid}/auditors/#{user.guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "org reader", &setup
+    end
+
+    describe 'org billing manager' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
+
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+
+          response = make_put_request("/v2/organizations/#{org_guid}/billing_managers/#{user.guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "org reader", &setup
+    end
+
+    describe 'org user' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
+
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "org reader", &setup
+    end
+
+    describe 'space developer' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
+
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+
+          response = make_put_request("/v2/spaces/#{space_guid}/developers/#{user.guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "space reader", &setup
+    end
+
+
+    describe 'space manager' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
+
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+
+          response = make_put_request("/v2/spaces/#{space_guid}/managers/#{user.guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "space reader", &setup
+    end
+
+    describe 'space auditor' do
+      setup = ->() {
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org_guid) { create_org }
+        let(:space_guid) { create_space(org_guid) }
+
+        before do
+          set_current_user_as_admin(iss: issuer)
+
+          make_org_user(user, org_guid)
+
+          response = make_put_request("/v2/spaces/#{space_guid}/auditors/#{user.guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+
+          set_current_user(user, iss: issuer)
+        end
+      }
+
+      it_behaves_like "space reader", &setup
     end
 
     def create_org

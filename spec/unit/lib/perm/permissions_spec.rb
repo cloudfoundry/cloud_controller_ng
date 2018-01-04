@@ -117,7 +117,7 @@ module VCAP::CloudController::Perm
         expected_permissions = [
           { permission_name: 'org.manager', resource_id: org_id },
           { permission_name: 'org.auditor', resource_id: org_id },
-          { permission_name: 'org.member', resource_id: org_id },
+          { permission_name: 'org.user', resource_id: org_id },
           { permission_name: 'org.billing_manager', resource_id: org_id },
         ]
 
@@ -368,7 +368,7 @@ module VCAP::CloudController::Perm
         expected_permissions = [
           { permission_name: 'org.manager', resource_id: 'some-org-id' },
           { permission_name: 'org.auditor', resource_id: 'some-org-id' },
-          { permission_name: 'org.member', resource_id: 'some-org-id' },
+          { permission_name: 'org.user', resource_id: 'some-org-id' },
           { permission_name: 'org.billing_manager', resource_id: 'some-org-id' },
         ]
 

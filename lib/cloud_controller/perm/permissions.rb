@@ -28,7 +28,7 @@ module VCAP
           permissions = [
             { permission_name: 'org.manager', resource_id: org_id },
             { permission_name: 'org.auditor', resource_id: org_id },
-            { permission_name: 'org.member', resource_id: org_id },
+            { permission_name: 'org.user', resource_id: org_id },
             { permission_name: 'org.billing_manager', resource_id: org_id },
           ]
           can_read_globally? || has_any_permission?(permissions)
