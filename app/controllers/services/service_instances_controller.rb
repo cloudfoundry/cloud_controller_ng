@@ -453,13 +453,13 @@ module VCAP::CloudController
 
     def validate_shared_space_updateable(service_instance)
       if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
-        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdateableInTargetSpace')
+        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdatableInTargetSpace')
       end
     end
 
     def validate_shared_space_deleteable(service_instance)
       if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
-        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotDeleteableInTargetSpace')
+        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotDeletableInTargetSpace')
       end
     end
 
