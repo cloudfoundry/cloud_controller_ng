@@ -65,6 +65,8 @@ class ServiceInstancesV3Controller < ApplicationController
     unshare.unshare(service_instance, target_space, user_audit_info)
 
     head :no_content
+  rescue VCAP::CloudController::ServiceInstanceUnshare::Error => e
+    raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceUnshareFailed', e.message)
   end
 
   def relationships_shared_spaces
