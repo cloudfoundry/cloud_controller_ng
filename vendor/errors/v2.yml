@@ -1143,3 +1143,8 @@
   name: SharedServiceInstanceCannotBeRenamed
   http_code: 422
   message: 'Service instances that have been shared cannot be renamed'
+
+390009:
+  name: SharedServiceInstanceNotUpdateableInTargetSpace
+  http_code: 403
+  message: 'You cannot update service instances that have been shared with you'

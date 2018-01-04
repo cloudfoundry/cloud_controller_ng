@@ -1775,8 +1775,40 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}", body
 
               expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'SharedServiceInstanceNotUpdateableInTargetSpace'
+              expect(last_response.body).to include 'You cannot update service instances that have been shared with you'
+            end
+          end
+
+          context 'and an auditor in the target space tries to update the instance' do
+            let(:target_space_auditor) { make_auditor_for_space(target_space) }
+
+            before do
+              set_current_user(target_space_auditor)
+            end
+
+            it 'should give the user an error' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+
+              expect(last_response).to have_status_code 403
+              expect(last_response.body).to include 'SharedServiceInstanceNotUpdateableInTargetSpace'
+              expect(last_response.body).to include 'You cannot update service instances that have been shared with you'
+            end
+          end
+
+          context 'and an developer in the target space and a auditor in the source space tries to update the instance' do
+            let(:target_developer_source_auditor) { make_developer_for_space(target_space) }
+
+            before do
+              set_current_user(target_developer_source_auditor)
+              set_current_user_as_role(user: target_developer_source_auditor, role: 'space_auditor', org: space.organization, space: space)
+            end
+
+            it 'should give the user an error' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+
+              expect(last_response).to have_status_code 403
               expect(last_response.body).to include 'CF-NotAuthorized'
-              expect(last_response.body).to include 'You are not authorized to perform the requested action'
             end
           end
 
@@ -1901,17 +1933,35 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the user has read but not write permissions' do
-            let(:auditor) { User.make }
+          context 'when the user has no read permissions to the space' do
+            let(:org_auditor) { User.make }
 
             before do
-              service_instance.space.organization.add_auditor(auditor)
-              set_current_user(auditor)
+              service_instance.space.organization.add_auditor(org_auditor)
+              set_current_user(org_auditor)
             end
 
-            it 'does not call out to the service broker' do
+            it 'does not call out to the service broker and returns an authorization error' do
               put "/v2/service_instances/#{service_instance.guid}", body
               expect(last_response).to have_status_code 403
+              expect(decoded_response['error_code']).to eq 'CF-NotAuthorized'
+              expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+            end
+          end
+
+          context 'when the user has read but not write permissions to the space' do
+            let(:space_auditor) { User.make }
+
+            before do
+              service_instance.space.organization.add_user(space_auditor)
+              service_instance.space.add_auditor(space_auditor)
+              set_current_user(space_auditor)
+            end
+
+            it 'does not call out to the service broker and returns an authorization error' do
+              put "/v2/service_instances/#{service_instance.guid}", body
+              expect(last_response).to have_status_code 403
+              expect(decoded_response['error_code']).to eq 'CF-NotAuthorized'
               expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
             end
           end
