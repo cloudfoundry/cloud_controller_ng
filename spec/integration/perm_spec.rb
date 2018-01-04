@@ -87,208 +87,103 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
     set_current_user_as_admin(iss: issuer)
   end
 
-  describe 'POST /v3/organizations' do
-    ORG_ROLES.each do |role|
-      it "creates the org-#{role}-<org_id> role" do
-        body = { name: SecureRandom.uuid }.to_json
-        response = make_post_request('/v3/organizations', body, admin_headers)
+  describe 'Administrative tasks' do
+    describe 'POST /v3/organizations' do
+      ORG_ROLES.each do |role|
+        it "creates the org-#{role}-<org_id> role" do
+          body = { name: SecureRandom.uuid }.to_json
+          response = make_post_request('/v3/organizations', body, admin_headers)
 
-        expect(response.code).to eq('201')
+          expect(response.code).to eq('201')
 
-        json_body = JSON.parse(response.body)
-        org_id = json_body['guid']
-        role_name = "org-#{role}-#{org_id}"
+          json_body = JSON.parse(response.body)
+          org_id = json_body['guid']
+          role_name = "org-#{role}-#{org_id}"
 
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
-      end
+          role = client.get_role(role_name)
+          expect(role.name).to eq(role_name)
+        end
 
-      it 'does not allow the user to create an org that already exists' do
-        body = { name: SecureRandom.uuid }.to_json
-        response = make_post_request('/v3/organizations', body, admin_headers)
+        it 'does not allow the user to create an org that already exists' do
+          body = { name: SecureRandom.uuid }.to_json
+          response = make_post_request('/v3/organizations', body, admin_headers)
 
-        expect(response.code).to eq('201')
+          expect(response.code).to eq('201')
 
-        response = make_post_request('/v3/organizations', body, admin_headers)
+          response = make_post_request('/v3/organizations', body, admin_headers)
 
-        expect(response.code).to eq('422')
+          expect(response.code).to eq('422')
+        end
       end
     end
-  end
 
-  describe 'POST /v2/organizations' do
-    ORG_ROLES.each do |role|
-      it "creates the org-#{role}-<org_id> role" do
-        post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+    describe 'POST /v2/organizations' do
+      ORG_ROLES.each do |role|
+        it "creates the org-#{role}-<org_id> role" do
+          post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-        expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(201)
 
-        json_body = JSON.parse(last_response.body)
-        org_id = json_body['metadata']['guid']
-        role_name = "org-#{role}-#{org_id}"
+          json_body = JSON.parse(last_response.body)
+          org_id = json_body['metadata']['guid']
+          role_name = "org-#{role}-#{org_id}"
 
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
-      end
+          role = client.get_role(role_name)
+          expect(role.name).to eq(role_name)
+        end
 
-      it 'does not allow the user to create an org that already exists' do
-        body = { name: SecureRandom.uuid }.to_json
-        post '/v2/organizations', body
+        it 'does not allow the user to create an org that already exists' do
+          body = { name: SecureRandom.uuid }.to_json
+          post '/v2/organizations', body
 
-        expect(last_response.status).to eq(201)
+          expect(last_response.status).to eq(201)
 
-        post '/v2/organizations', body
+          post '/v2/organizations', body
 
-        expect(last_response.status).to eq(400)
+          expect(last_response.status).to eq(400)
 
-        json_body = JSON.parse(last_response.body)
-        expect(json_body['error_code']).to eq('CF-OrganizationNameTaken')
+          json_body = JSON.parse(last_response.body)
+          expect(json_body['error_code']).to eq('CF-OrganizationNameTaken')
+        end
       end
     end
-  end
 
-  describe 'DELETE /v2/organizations/:guid' do
-    let(:worker) { Delayed::Worker.new }
+    describe 'DELETE /v2/organizations/:guid' do
+      let(:worker) { Delayed::Worker.new }
 
-    ORG_ROLES.each do |role|
-      describe 'when the org does not have spaces' do
-        describe 'synchronous deletion' do
-          it "deletes the org-#{role}-<org_id> role" do
-            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-            org_id = json_body['metadata']['guid']
-            role_name = "org-#{role}-#{org_id}"
-
-            delete "/v2/organizations/#{org_id}"
-
-            expect(last_response.status).to eq(204)
-
-            expect {
-              client.get_role(role_name)
-            }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
-          end
-        end
-
-        describe 'async deletion' do
-          it "deletes the org-#{role}-<org_id> role" do
-            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-            org_id = json_body['metadata']['guid']
-            role_name = "org-#{role}-#{org_id}"
-
-            delete "/v2/organizations/#{org_id}?async=true"
-
-            expect(last_response.status).to eq(202)
-
-            succeeded_jobs, failed_jobs = worker.work_off
-            expect(succeeded_jobs).to be > 0
-            expect(failed_jobs).to equal(0)
-
-            expect {
-              client.get_role(role_name)
-            }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
-          end
-        end
-      end
-
-      describe 'when the org has spaces' do
-        describe 'without "recursive" param' do
-          it 'alerts the user without deleting any roles' do
-            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-            org_id = json_body['metadata']['guid']
-            org_role_name = "org-#{role}-#{org_id}"
-
-            post '/v2/spaces', {
-              name: SecureRandom.uuid,
-              organization_guid: org_id
-            }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-            space_id = json_body['metadata']['guid']
-            space_role_name = "space-developer-#{space_id}"
-
-            delete "/v2/organizations/#{org_id}?recursive=false"
-
-            expect(last_response.status).to eq(400)
-
-            expect {
-              client.get_role(org_role_name)
-            }.not_to raise_error
-            expect {
-              client.get_role(space_role_name)
-            }.not_to raise_error
-          end
-        end
-
-        describe 'with "recursive" param' do
+      ORG_ROLES.each do |role|
+        describe 'when the org does not have spaces' do
           describe 'synchronous deletion' do
-            it 'deletes the roles recursively' do
+            it "deletes the org-#{role}-<org_id> role" do
               post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
               expect(last_response.status).to eq(201)
 
               json_body = JSON.parse(last_response.body)
               org_id = json_body['metadata']['guid']
-              org_role_name = "org-#{role}-#{org_id}"
+              role_name = "org-#{role}-#{org_id}"
 
-              post '/v2/spaces', {
-                  name: SecureRandom.uuid,
-                  organization_guid: org_id
-              }.to_json
-
-              expect(last_response.status).to eq(201)
-
-              json_body = JSON.parse(last_response.body)
-              space_id = json_body['metadata']['guid']
-              space_role_name = "space-developer-#{space_id}"
-
-              delete "/v2/organizations/#{org_id}?recursive=true"
+              delete "/v2/organizations/#{org_id}"
 
               expect(last_response.status).to eq(204)
 
               expect {
-                client.get_role(org_role_name)
-              }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
-              expect {
-                client.get_role(space_role_name)
+                client.get_role(role_name)
               }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
             end
           end
 
           describe 'async deletion' do
-            it 'deletes the roles recursively' do
+            it "deletes the org-#{role}-<org_id> role" do
               post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
               expect(last_response.status).to eq(201)
 
               json_body = JSON.parse(last_response.body)
               org_id = json_body['metadata']['guid']
-              org_role_name = "org-#{role}-#{org_id}"
+              role_name = "org-#{role}-#{org_id}"
 
-              post '/v2/spaces', {
-                  name: SecureRandom.uuid,
-                  organization_guid: org_id
-              }.to_json
-
-              expect(last_response.status).to eq(201)
-
-              json_body = JSON.parse(last_response.body)
-              space_id = json_body['metadata']['guid']
-              space_role_name = "space-developer-#{space_id}"
-
-              delete "/v2/organizations/#{org_id}?recursive=true&async=true"
+              delete "/v2/organizations/#{org_id}?async=true"
 
               expect(last_response.status).to eq(202)
 
@@ -297,27 +192,134 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
               expect(failed_jobs).to equal(0)
 
               expect {
-                client.get_role(org_role_name)
-              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{org_role_name} was not found"
-              expect {
-                client.get_role(space_role_name)
-              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{space_role_name} was not found"
+                client.get_role(role_name)
+              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
             end
           end
         end
 
-        it 'alerts the user if the org does not exist' do
-          post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-          expect(last_response.status).to eq(201)
+        describe 'when the org has spaces' do
+          describe 'without "recursive" param' do
+            it 'alerts the user without deleting any roles' do
+              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-          json_body = JSON.parse(last_response.body)
-          org_id = json_body['metadata']['guid']
+              expect(last_response.status).to eq(201)
 
-          delete "/v2/organizations/#{org_id}"
-          expect(last_response.status).to eq(204)
+              json_body = JSON.parse(last_response.body)
+              org_id = json_body['metadata']['guid']
+              org_role_name = "org-#{role}-#{org_id}"
 
-          delete "/v2/organizations/#{org_id}"
-          expect(last_response.status).to eq(404)
+              post '/v2/spaces', {
+                name: SecureRandom.uuid,
+                organization_guid: org_id
+              }.to_json
+
+              expect(last_response.status).to eq(201)
+
+              json_body = JSON.parse(last_response.body)
+              space_id = json_body['metadata']['guid']
+              space_role_name = "space-developer-#{space_id}"
+
+              delete "/v2/organizations/#{org_id}?recursive=false"
+
+              expect(last_response.status).to eq(400)
+
+              expect {
+                client.get_role(org_role_name)
+              }.not_to raise_error
+              expect {
+                client.get_role(space_role_name)
+              }.not_to raise_error
+            end
+          end
+
+          describe 'with "recursive" param' do
+            describe 'synchronous deletion' do
+              it 'deletes the roles recursively' do
+                post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+
+                expect(last_response.status).to eq(201)
+
+                json_body = JSON.parse(last_response.body)
+                org_id = json_body['metadata']['guid']
+                org_role_name = "org-#{role}-#{org_id}"
+
+                post '/v2/spaces', {
+                  name: SecureRandom.uuid,
+                  organization_guid: org_id
+                }.to_json
+
+                expect(last_response.status).to eq(201)
+
+                json_body = JSON.parse(last_response.body)
+                space_id = json_body['metadata']['guid']
+                space_role_name = "space-developer-#{space_id}"
+
+                delete "/v2/organizations/#{org_id}?recursive=true"
+
+                expect(last_response.status).to eq(204)
+
+                expect {
+                  client.get_role(org_role_name)
+                }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+                expect {
+                  client.get_role(space_role_name)
+                }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+              end
+            end
+
+            describe 'async deletion' do
+              it 'deletes the roles recursively' do
+                post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+
+                expect(last_response.status).to eq(201)
+
+                json_body = JSON.parse(last_response.body)
+                org_id = json_body['metadata']['guid']
+                org_role_name = "org-#{role}-#{org_id}"
+
+                post '/v2/spaces', {
+                  name: SecureRandom.uuid,
+                  organization_guid: org_id
+                }.to_json
+
+                expect(last_response.status).to eq(201)
+
+                json_body = JSON.parse(last_response.body)
+                space_id = json_body['metadata']['guid']
+                space_role_name = "space-developer-#{space_id}"
+
+                delete "/v2/organizations/#{org_id}?recursive=true&async=true"
+
+                expect(last_response.status).to eq(202)
+
+                succeeded_jobs, failed_jobs = worker.work_off
+                expect(succeeded_jobs).to be > 0
+                expect(failed_jobs).to equal(0)
+
+                expect {
+                  client.get_role(org_role_name)
+                }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{org_role_name} was not found"
+                expect {
+                  client.get_role(space_role_name)
+                }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{space_role_name} was not found"
+              end
+            end
+          end
+
+          it 'alerts the user if the org does not exist' do
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+            expect(last_response.status).to eq(201)
+
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+
+            delete "/v2/organizations/#{org_id}"
+            expect(last_response.status).to eq(204)
+
+            delete "/v2/organizations/#{org_id}"
+            expect(last_response.status).to eq(404)
+          end
         end
       end
     end
@@ -471,14 +473,14 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       SPACE_ROLES.each do |role|
         it "creates the space-#{role}-<space_id> role" do
           body = {
-              name: SecureRandom.uuid,
-              relationships: {
-                  organization: {
-                      data: {
-                          guid: org_guid
-                      }
-                  }
+            name: SecureRandom.uuid,
+            relationships: {
+              organization: {
+                data: {
+                  guid: org_guid
+                }
               }
+            }
           }.to_json
 
           response = make_post_request('/v3/spaces', body, admin_headers)
@@ -494,14 +496,14 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
         it 'does not allow user to create space that already exists' do
           body = {
-              name: SecureRandom.uuid,
-              relationships: {
-                  organization: {
-                      data: {
-                          guid: org_guid
-                      }
-                  }
+            name: SecureRandom.uuid,
+            relationships: {
+              organization: {
+                data: {
+                  guid: org_guid
+                }
               }
+            }
           }.to_json
 
           response = make_post_request('/v3/spaces', body, admin_headers)
@@ -521,8 +523,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       SPACE_ROLES.each do |role|
         it "creates the space-#{role}-<space_id> role" do
           post '/v2/spaces', {
-              name: SecureRandom.uuid,
-              organization_guid: org.guid
+            name: SecureRandom.uuid,
+            organization_guid: org.guid
           }.to_json
 
           expect(last_response.status).to eq(201)
@@ -539,15 +541,15 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
           space_name = SecureRandom.uuid
 
           post '/v2/spaces', {
-              name: space_name,
-              organization_guid: org.guid
+            name: space_name,
+            organization_guid: org.guid
           }.to_json
 
           expect(last_response.status).to eq(201)
 
           post '/v2/spaces', {
-              name: space_name,
-              organization_guid: org.guid
+            name: space_name,
+            organization_guid: org.guid
           }.to_json
 
           expect(last_response.status).to eq(400)
@@ -567,8 +569,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         describe 'synchronous deletion' do
           it "deletes the space-#{role}-<space_id> role" do
             post '/v2/spaces', {
-                name: SecureRandom.uuid,
-                organization_guid: org.guid
+              name: SecureRandom.uuid,
+              organization_guid: org.guid
             }.to_json
 
             expect(last_response.status).to eq(201)
@@ -590,8 +592,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         describe 'async deletion' do
           it "deletes the space-#{role}-<space_id> role" do
             post '/v2/spaces', {
-                name: SecureRandom.uuid,
-                organization_guid: org.guid
+              name: SecureRandom.uuid,
+              organization_guid: org.guid
             }.to_json
 
             expect(last_response.status).to eq(201)
@@ -616,8 +618,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
 
         it 'alerts the user if the space does not exist' do
           post '/v2/spaces', {
-              name: SecureRandom.uuid,
-              organization_guid: org.guid
+            name: SecureRandom.uuid,
+            organization_guid: org.guid
           }.to_json
 
           expect(last_response.status).to eq(201)
@@ -755,7 +757,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
     end
 
-    RSpec.shared_examples "org reader" do
+    RSpec.shared_examples 'org reader' do
       it 'can read from org (can_read_from_org?)' do
         opts = {
           user_id: user.guid,
@@ -768,7 +770,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
     end
 
-    RSpec.shared_examples "org writer" do
+    RSpec.shared_examples 'org writer' do
       it 'can create a space in the org (can_write_to_org?)' do
         opts = {
           user_id: user.guid,
@@ -787,14 +789,14 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
           }
         }.to_json
 
-        response = make_post_request("/v3/spaces", body, http_headers(auth_token(opts)))
+        response = make_post_request('/v3/spaces', body, http_headers(auth_token(opts)))
         expect(response.code).to eq('201')
 
         expect(JSON.parse(response.body)['name']).to eq(space_name)
       end
     end
 
-    RSpec.shared_examples "space reader" do
+    RSpec.shared_examples 'space reader' do
       it 'can read from space (can_read_from_space?)' do
         opts = {
           user_id: user.guid,
@@ -807,7 +809,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
       end
     end
 
-    RSpec.shared_examples "space writer" do
+    RSpec.shared_examples 'space writer' do
       it 'can create an app in the space (can_write_to_space?)' do
         opts = {
           user_id: user.guid,
@@ -826,20 +828,20 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
           }
         }.to_json
 
-        response = make_post_request("/v3/apps", body, http_headers(auth_token(opts)))
+        response = make_post_request('/v3/apps', body, http_headers(auth_token(opts)))
         expect(response.code).to eq('201')
 
         expect(JSON.parse(response.body)['name']).to eq(app_name)
       end
     end
 
-    RSpec.shared_examples "isolation segment reader" do
+    RSpec.shared_examples 'isolation segment reader' do
       it 'can read from isolation segment (can_read_from_isolation_segment?)' do
         body = {
           name: SecureRandom.uuid
         }.to_json
 
-        response = make_post_request("/v3/isolation_segments", body, admin_headers)
+        response = make_post_request('/v3/isolation_segments', body, admin_headers)
         expect(response.code).to eq('201')
         isolation_segment_guid = JSON.parse(response.body)['guid']
 
@@ -882,10 +884,10 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "org reader", &setup
-      it_behaves_like "org writer", &setup
-      it_behaves_like "space reader", &setup
-      it_behaves_like "isolation segment reader", &setup
+      it_behaves_like 'org reader', &setup
+      it_behaves_like 'org writer', &setup
+      it_behaves_like 'space reader', &setup
+      it_behaves_like 'isolation segment reader', &setup
     end
 
     describe 'org auditor' do
@@ -906,8 +908,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "org reader", &setup
-      it_behaves_like "isolation segment reader", &setup
+      it_behaves_like 'org reader', &setup
+      it_behaves_like 'isolation segment reader', &setup
     end
 
     describe 'org billing manager' do
@@ -928,8 +930,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "org reader", &setup
-      it_behaves_like "isolation segment reader", &setup
+      it_behaves_like 'org reader', &setup
+      it_behaves_like 'isolation segment reader', &setup
     end
 
     describe 'org user' do
@@ -946,8 +948,8 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "org reader", &setup
-      it_behaves_like "isolation segment reader", &setup
+      it_behaves_like 'org reader', &setup
+      it_behaves_like 'isolation segment reader', &setup
     end
 
     describe 'space developer' do
@@ -968,10 +970,9 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "space reader", &setup
-      it_behaves_like "space writer", &setup
+      it_behaves_like 'space reader', &setup
+      it_behaves_like 'space writer', &setup
     end
-
 
     describe 'space manager' do
       setup = ->() {
@@ -991,7 +992,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "space reader", &setup
+      it_behaves_like 'space reader', &setup
     end
 
     describe 'space auditor' do
@@ -1012,7 +1013,7 @@ RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'tr
         end
       }
 
-      it_behaves_like "space reader", &setup
+      it_behaves_like 'space reader', &setup
     end
 
     def create_org
