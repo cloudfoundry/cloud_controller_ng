@@ -122,6 +122,8 @@ redirect_traffic_to_local_cc() {
 }
 
 print_directions() {
+  echo -e "\n${green}## Prerequisites ##${nc}"
+  echo -e "The bosh-lite must have the same migrations as on your workstation. (Otherwise you will get 'migrator is not current error')"
   echo -e "\n${green}## Instructions ##${nc}"
   echo -e "The CC API process inside your bosh-lite will now route traffic to port 9022 on your workstation."
   echo -e "\n${green}Option 1: Debug with RubyMine${nc}"
