@@ -100,6 +100,7 @@ module VCAP::CloudController
         {
             array_field:                     'state1,state2',
             array_with_comma_in_value_field: "st ate1,sta#{escaped_comma}te2",
+            array_with_plus:                  'state+state2',
             array_with_nil_field:            'state1,state2,',
             num_field:                       1.2,
             string_field:                    'stringval&',
@@ -113,6 +114,10 @@ module VCAP::CloudController
 
       it 'url query decodes individual array values' do
         expect(BaseMessage.to_array!(params, :array_with_comma_in_value_field)).to eq(['st ate1', 'sta,te2'])
+      end
+
+      it 'handles plus signs' do
+        expect(BaseMessage.to_array!(params, :array_with_plus)).to eq(['state+state2'])
       end
 
       it 'handles nil array values' do
