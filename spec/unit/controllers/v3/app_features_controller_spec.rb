@@ -82,6 +82,7 @@ RSpec.describe AppFeaturesController, type: :controller do
     end
 
     it 'updates a given app feature' do
+      expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
       expect {
         patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false }
       }.to change { app_model.reload.enable_ssh }.to(false)

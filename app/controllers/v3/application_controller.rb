@@ -88,7 +88,7 @@ class ApplicationController < ActionController::Base
   end
 
   def permission_queryer
-    VCAP::CloudController::Permissions::Queryer.build(
+    @cached_permission_queryer ||= VCAP::CloudController::Permissions::Queryer.build(
       perm_client,
       SecurityContext,
       configuration.get(:perm, :enabled),
