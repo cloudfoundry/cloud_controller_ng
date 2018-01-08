@@ -32,11 +32,13 @@ class FakeUAAServer
 end
 
 class UAAIssuer < WEBrick::HTTPServlet::AbstractServlet
+  ISSUER = 'uaa_issuer'.freeze
+
   # rubocop:disable all
   def do_GET(_, response)
     # rubocop:enable all
     response.status          = 200
     response['Content-Type'] = 'application/json'
-    response.body            = { issuer: 'uaa_issuer' }.to_json
+    response.body            = { issuer: ISSUER }.to_json
   end
 end
