@@ -151,12 +151,13 @@ module VCAP::CloudController
     alias_method(:user_provided_ports, :ports)
 
     def package_hash
-      return nil unless (cached_latest_package = latest_package)
+      package = latest_package
+      return nil if package.nil?
 
-      if cached_latest_package.bits?
-        cached_latest_package.package_hash
-      elsif cached_latest_package.docker?
-        cached_latest_package.image
+      if package.bits?
+        package.package_hash
+      elsif package.docker?
+        package.image
       end
     end
 

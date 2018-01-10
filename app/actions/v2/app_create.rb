@@ -39,7 +39,7 @@ module VCAP::CloudController
           )
 
           validate_custom_buildpack!(process)
-          validate_package_is_uploaded!(process)
+          validate_package_exists!(process, request_attrs)
 
           process.save
 
@@ -102,8 +102,8 @@ module VCAP::CloudController
         VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
       end
 
-      def validate_package_is_uploaded!(process)
-        if process.needs_package_in_current_state? && !process.package_available?
+      def validate_package_exists!(process, request_attrs)
+        if request_attrs['state'] == 'STARTED' && !process.package_available?
           raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
         end
       end

@@ -70,6 +70,45 @@ module VCAP::CloudController
         expect(app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
       end
 
+      context 'with a started bits app and no valid package or droplet' do
+        let(:process) { ProcessModel.make(state: 'STARTED') }
+        let(:app) { process.app }
+        let(:new_stack) { Stack.make }
+
+        context 'not requesting a state change' do
+          it 'updates the process' do
+            request_attrs = {
+              'instances'                  => 2,
+              'stack_guid'                 => new_stack.guid,
+            }
+
+            app_update.update(app, process, request_attrs)
+
+            expect(process.instances).to eq(2)
+            expect(process.stack_guid).to eq(new_stack.guid)
+          end
+        end
+
+        context 'requesting state other than STARTED' do
+          it 'updates the process' do
+            request_attrs = {
+              'state' => 'STOPPED'
+            }
+
+            app_update.update(app, process, request_attrs)
+            expect(process.state).to eq('STOPPED')
+          end
+        end
+
+        context 'requesting a STARTED state' do
+          it 'raises an error' do
+            expect {
+              app_update.update(process.app, process, { 'state' => 'STARTED' })
+            }.to raise_error(/bits have not been uploaded/)
+          end
+        end
+      end
+
       context 'updating buildpack' do
         context 'when custom buildpacks are disabled' do
           let(:process) { ProcessModel.make }
@@ -179,7 +218,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the app needs staged' do
+        context 'when the app needs staging' do
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do

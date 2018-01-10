@@ -22,8 +22,7 @@ module VCAP::CloudController
           update_app(app, request_attrs)
           update_lifecycle(app, process, request_attrs)
           assign_process_values(process, request_attrs)
-
-          validate_package_is_uploaded!(process)
+          validate_package_exists!(process, request_attrs)
 
           process.save
           app.reload
@@ -139,8 +138,8 @@ module VCAP::CloudController
         end
       end
 
-      def validate_package_is_uploaded!(process)
-        if process.needs_package_in_current_state? && !process.package_available?
+      def validate_package_exists!(process, request_attrs)
+        if request_attrs['state'] == 'STARTED' && !process.package_available?
           raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
         end
       end
