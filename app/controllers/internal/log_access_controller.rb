@@ -6,7 +6,7 @@ module VCAP::CloudController
     def lookup(guid)
       check_read_permissions!
 
-      if roles.admin?
+      if roles.admin? || roles.global_auditor?
         found = LogAccessFetcher.new.app_exists?(guid)
       else
         allowed_space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
