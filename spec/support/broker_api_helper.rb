@@ -39,6 +39,9 @@ module VCAP::CloudController::BrokerApiHelper
           bindable: true,
           requires: requires,
           plan_updateable: plan_updateable,
+          metadata: {
+            shareable: true
+          },
           plans: [
             {
               id: 'plan1-guid-here',
@@ -248,8 +251,8 @@ module VCAP::CloudController::BrokerApiHelper
         admin_headers)
   end
 
-  def create_app
-    process = VCAP::CloudController::ProcessModelFactory.make(space: @space)
+  def create_app(space=@space)
+    process = VCAP::CloudController::ProcessModelFactory.make(space: space)
     @app_guid = process.guid
   end
 
@@ -280,6 +283,12 @@ module VCAP::CloudController::BrokerApiHelper
     headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
     params = opts[:async] ? { async: true } : '{}'
     delete("/v2/service_bindings/#{@binding_id}", params, headers)
+  end
+
+  def share_service(service_instance_guid, space_guid, opts={})
+    headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+    body = { data: [{ guid: space_guid }] }
+    post("/v3/service_instances/#{service_instance_guid}/relationships/shared_spaces", body.to_json, headers)
   end
 
   def create_service_key(opts={})

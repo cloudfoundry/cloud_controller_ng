@@ -811,7 +811,10 @@ module VCAP::Services::ServiceBrokers::V2
             context:    {
               platform:          'cloudfoundry',
               organization_guid: key.service_instance.organization.guid,
-              space_guid:        key.service_instance.space.guid
+              space_guid:        key.service_instance.space_guid,
+              bind_resource: {
+                space_guid: key.service_instance.space_guid
+              }
             },
             bind_resource: {
               credential_client_id: cc_service_key_client_name,
@@ -950,7 +953,10 @@ module VCAP::Services::ServiceBrokers::V2
             context:       {
               platform:          'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid:        instance.space_guid
+              space_guid:        instance.space_guid,
+              bind_resource: {
+                space_guid: app.space_guid
+              }
             }
           )
       end

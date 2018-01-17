@@ -192,7 +192,10 @@ module VCAP::CloudController
             context: {
               platform: 'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid: instance.space.guid
+              space_guid: instance.space.guid,
+              bind_resource: {
+                space_guid: instance.space.guid
+              }
             }
           }.to_json
 
