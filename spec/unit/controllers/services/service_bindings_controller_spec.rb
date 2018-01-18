@@ -984,5 +984,61 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'GET', '/v2/service_bindings/:guid/parameters' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the service binding is valid' do
+        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:managed_service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:process) { ProcessModelFactory.make(space: space) }
+
+        context 'when the service has bindings_retrievable is set to false' do
+          let(:service) { Service.make(bindings_retrievable: false) }
+
+          it 'returns a 422' do
+            set_current_user(developer)
+            binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+
+            get "/v2/service_bindings/#{binding.guid}/parameters"
+            expect(last_response.status).to eql(422)
+            expect(last_response.body).to include('This service does not support fetching service binding parameters.')
+          end
+        end
+
+        context 'bindings_retrievable is set to true' do
+          let(:service) { Service.make(bindings_retrievable: true) }
+
+          it 'returns a 200' do
+            set_current_user(developer)
+            binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+
+            get "/v2/service_bindings/#{binding.guid}/parameters"
+            expect(last_response.status).to eql(200)
+          end
+        end
+      end
+
+      context 'when the binding guid is invalid' do
+        it 'returns a 404' do
+          set_current_user(developer)
+          get '/v2/service_bindings/some-bogus-guid/parameters'
+          expect(last_response.status).to eql(404)
+          expect(last_response.body).to include('The service binding could not be found: some-bogus-guid')
+        end
+      end
+
+      context 'when the requested binding is a service key' do
+        let(:service_key) { ServiceKey.make }
+
+        it 'returns a 404' do
+          set_current_user(developer)
+          get "/v2/service_bindings/#{service_key.guid}/parameters"
+          expect(last_response.status).to eql(404)
+          expect(last_response.body).to include("The service binding could not be found: #{service_key.guid}")
+        end
+      end
+    end
   end
 end
