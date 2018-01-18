@@ -14,7 +14,6 @@ module VCAP::CloudController
 
       let!(:service_binding_1) { ServiceBinding.make(service_instance: managed_service_instance) }
       let!(:service_binding_2) { ServiceBinding.make(service_instance: managed_service_instance) }
-
       let!(:service_binding_3) { ServiceBinding.make(service_instance: user_provided_service_instance) }
       let!(:service_binding_4) { ServiceBinding.make(service_instance: user_provided_service_instance) }
 
@@ -22,6 +21,8 @@ module VCAP::CloudController
       let!(:route_2) { Route.make(space: route_service_instance.space) }
       let!(:route_binding_1) { RouteBinding.make(route: route_1, service_instance: route_service_instance) }
       let!(:route_binding_2) { RouteBinding.make(route: route_2, service_instance: route_service_instance) }
+
+      let!(:service_key) { ServiceKey.make(service_instance: managed_service_instance) }
 
       let!(:service_instance_dataset) { ServiceInstance.dataset }
       let(:user) { User.make }
@@ -36,6 +37,7 @@ module VCAP::CloudController
         stub_unbind(service_binding_2)
         stub_unbind(route_binding_1)
         stub_unbind(route_binding_2)
+        stub_unbind(service_key)
       end
 
       it 'deletes all the service_instances and logs events' do
@@ -64,6 +66,12 @@ module VCAP::CloudController
         expect(errors).to be_empty
 
         expect(user_provided_instance.exists?).to be_falsey
+      end
+
+      it 'deletes service keys associated with the service instance' do
+        expect {
+          service_instance_delete.delete(service_instance_dataset)
+        }.to change { ServiceKey.count }.by(-1)
       end
 
       it 'deletes the last operation for each managed service instance' do
