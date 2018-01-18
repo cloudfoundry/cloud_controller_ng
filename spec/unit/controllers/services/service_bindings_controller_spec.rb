@@ -350,7 +350,10 @@ module VCAP::CloudController
             context: {
               platform: 'cloudfoundry',
               organization_guid: service_instance.organization.guid,
-              space_guid:        service_instance.space.guid
+              space_guid:        service_instance.space.guid,
+              bind_resource: {
+                space_guid: process.space.guid
+              }
             }
           }
 

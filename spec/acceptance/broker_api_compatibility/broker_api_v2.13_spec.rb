@@ -495,11 +495,73 @@ RSpec.describe 'Service Broker API integration' do
           ).to have_been_made
         end
 
+        context 'when service instance and application are in the same space' do
+          it 'receives the correct attributes in the context' do
+            expected_body = hash_including(context: {
+              platform: 'cloudfoundry',
+              organization_guid: @org_guid,
+              space_guid: @space_guid,
+              bind_resource: {
+                space_guid: @space_guid
+              }
+            })
+
+            expect(
+              a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            ).to have_been_made
+          end
+        end
+
+        context 'when service instance is shared from another space' do
+          let(:space) { VCAP::CloudController::Space.make }
+
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true)
+            create_app(space)
+            share_service(@service_instance_guid, space.guid)
+            bind_service
+          end
+
+          it 'receives the correct attributes in the context' do
+            expected_body = hash_including(context: {
+              platform: 'cloudfoundry',
+              organization_guid: @org_guid,
+              space_guid: @space_guid,
+              bind_resource: {
+                space_guid: space.guid
+              }
+            })
+
+            expect(
+              a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            ).to have_been_made
+          end
+        end
+      end
+
+      context 'for bind route service' do
+        let(:catalog) { default_catalog(requires: ['route_forwarding']) }
+        let(:route) { VCAP::CloudController::Route.make(space: @space) }
+        before do
+          provision_service
+          create_route_binding(route)
+        end
+
+        it 'receives a context object' do
+          expected_body = hash_including(:context)
+          expect(
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+          ).to have_been_made
+        end
+
         it 'receives the correct attributes in the context' do
           expected_body = hash_including(context: {
             platform: 'cloudfoundry',
             organization_guid: @org_guid,
             space_guid: @space_guid,
+            bind_resource: {
+              space_guid: @space_guid
+            }
           })
 
           expect(
@@ -526,34 +588,9 @@ RSpec.describe 'Service Broker API integration' do
             platform: 'cloudfoundry',
             organization_guid: @org_guid,
             space_guid: @space_guid,
-          })
-
-          expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
-          ).to have_been_made
-        end
-      end
-
-      context 'for bind route service' do
-        let(:catalog) { default_catalog(requires: ['route_forwarding']) }
-        let(:route) { VCAP::CloudController::Route.make(space: @space) }
-        before do
-          provision_service
-          create_route_binding(route)
-        end
-
-        it 'receives a context object' do
-          expected_body = hash_including(:context)
-          expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
-          ).to have_been_made
-        end
-
-        it 'receives the correct attributes in the context' do
-          expected_body = hash_including(context: {
-            platform: 'cloudfoundry',
-            organization_guid: @org_guid,
-            space_guid: @space_guid,
+            bind_resource: {
+              space_guid: @space_guid
+            }
           })
 
           expect(

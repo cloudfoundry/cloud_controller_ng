@@ -86,7 +86,7 @@ module VCAP::Services::ServiceBrokers::V2
         service_id:    key.service.broker_provided_id,
         plan_id:       key.service_plan.broker_provided_id,
         bind_resource: { credential_client_id: @config.get(:cc_service_key_client_name) },
-        context:       context_hash(key.service_instance),
+        context:       context_hash(key.service_instance).merge({ bind_resource: { space_guid: key.service_instance.space.guid } })
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -101,13 +101,16 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     def bind(binding, arbitrary_parameters)
+      resource_guid = space_guid_for_binding_resource(binding)
+      context = context_hash(binding.service_instance).merge({ bind_resource: { space_guid: resource_guid } })
+
       path              = service_binding_resource_path(binding.guid, binding.service_instance.guid)
       body              = {
         service_id:    binding.service.broker_provided_id,
         plan_id:       binding.service_plan.broker_provided_id,
         app_guid:      binding.try(:app_guid),
         bind_resource: binding.required_parameters,
-        context:       context_hash(binding.service_instance)
+        context:       context
       }
       body              = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -231,6 +234,10 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def space_guid_for_binding_resource(binding)
+      binding.try(:app).present? ? binding.app.space.guid : binding.route.space.guid
+    end
 
     def context_hash(service_instance)
       {
