@@ -5,7 +5,8 @@ module VCAP::Services::ServiceBrokers::V2
     SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding', 'volume_mount'].freeze
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
-      :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors, :plan_updateable
+      :description, :bindable, :tags, :plans, :requires, :dashboard_client,
+      :errors, :plan_updateable, :bindings_retrievable, :instances_retrievable
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -21,6 +22,8 @@ module VCAP::Services::ServiceBrokers::V2
       @plan_updateable    = attrs['plan_updateable'] || false
       @errors             = VCAP::Services::ValidationErrors.new
       @plans              = []
+      @bindings_retrievable = attrs.fetch('bindings_retrievable', false)
+      @instances_retrievable = attrs.fetch('instances_retrievable', false)
 
       build_plans
     end
@@ -58,6 +61,8 @@ module VCAP::Services::ServiceBrokers::V2
       validate_string!(:description, description, required: true)
       validate_bool!(:bindable, bindable, required: true)
       validate_bool!(:plan_updateable, plan_updateable, required: true)
+      validate_bool!(:bindings_retrievable, bindings_retrievable, required: false)
+      validate_bool!(:instances_retrievable, instances_retrievable, required: false)
 
       validate_tags!(:tags, tags)
       validate_array_of_strings!(:requires, requires)
@@ -168,7 +173,9 @@ module VCAP::Services::ServiceBrokers::V2
         dashboard_client: 'Service dashboard client attributes',
         dashboard_client_id: 'Service dashboard client id',
         dashboard_client_secret: 'Service dashboard client secret',
-        dashboard_client_redirect_uri: 'Service dashboard client redirect_uri'
+        dashboard_client_redirect_uri: 'Service dashboard client redirect_uri',
+        bindings_retrievable: 'Service "bindings_retrievable" field',
+        instances_retrievable: 'Service "instances_retrievable" field',
       }.fetch(name) { raise NotImplementedError }
     end
   end

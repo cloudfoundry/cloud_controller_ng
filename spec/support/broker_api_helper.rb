@@ -99,6 +99,8 @@ module VCAP::CloudController::BrokerApiHelper
 
     get('/v2/services?inline-relations-depth=1', '{}', admin_headers)
     response = JSON.parse(last_response.body)
+    @service_guid = response['resources'].first['metadata']['guid']
+
     service_plans = response['resources'].first['entity']['service_plans']
     @plan_guid = service_plans.find { |plan| plan['entity']['name'] == 'small' }['metadata']['guid']
 

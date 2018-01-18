@@ -37,10 +37,10 @@ module VCAP::CloudController
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :label, :provider, :url, :description, :long_description, :version, :info_url, :active, :bindable,
-                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable
+                                    :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable, :bindings_retrievable, :instances_retrievable
       }
       it { is_expected.to import_attributes :label, :description, :long_description, :info_url,
-                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable
+                                    :active, :bindable, :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable, :bindings_retrievable, :instances_retrievable
       }
     end
 

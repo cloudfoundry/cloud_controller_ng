@@ -768,6 +768,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         bindable:        true,
         service_broker:  test_broker,
         plan_updateable: false,
+        bindings_retrievable: true,
+        instances_retrievable: true,
         active:          true,
       )
       service_event_repository.with_service_event(new_service) do
@@ -801,6 +803,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'active'              => new_service.active,
           'requires'            => new_service.requires,
           'plan_updateable'     => new_service.plan_updateable,
+          'bindings_retrievable'   => new_service.bindings_retrievable,
+          'instances_retrievable'  => new_service.instances_retrievable,
         }
       }
     end

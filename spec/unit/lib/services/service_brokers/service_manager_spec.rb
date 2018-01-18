@@ -69,6 +69,8 @@ module VCAP::Services::ServiceBrokers
             'tags'        => ['mysql', 'relational'],
             'requires'    => ['ultimate', 'power'],
             'plan_updateable' => true,
+            'bindings_retrievable' => true,
+            'instances_retrievable' => true,
             'plans' => [
               {
                 'id'          => plan_id,
@@ -123,6 +125,8 @@ module VCAP::Services::ServiceBrokers
         expect(JSON.parse(service.extra)).to eq({ 'foo' => 'bar' })
         expect(service.requires).to eq(['ultimate', 'power'])
         expect(service.plan_updateable).to eq true
+        expect(service.bindings_retrievable).to eq true
+        expect(service.instances_retrievable).to eq true
       end
 
       it 'records an audit event for each service and plan' do
@@ -157,6 +161,8 @@ module VCAP::Services::ServiceBrokers
           'active' => service.active,
           'requires' => service.requires,
           'plan_updateable' => service.plan_updateable,
+          'bindings_retrievable' => service.bindings_retrievable,
+          'instances_retrievable' => service.instances_retrievable,
         })
 
         event = VCAP::CloudController::Event.first(type: 'audit.service_plan.create')

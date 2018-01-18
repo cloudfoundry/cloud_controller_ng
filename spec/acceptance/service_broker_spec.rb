@@ -119,6 +119,8 @@ RSpec.describe 'Service Broker' do
               name: 'service-1',
               description: 'A service, duh!',
               bindable: true,
+              bindings_retrievable: 'not-a-bool',
+              instances_retrievable: 'not-a-bool',
               plans: [
                 {
                   id: 'plan-1',
@@ -203,6 +205,8 @@ RSpec.describe 'Service Broker' do
           "Service dashboard_client id must be unique\n" \
           "Service service-1\n" \
           "  Service id must be a string, but has value 12345\n" \
+          "  Service \"bindings_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
+          "  Service \"instances_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
           "  Plan small\n" \
           "    Schemas\n" \
           '      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): '\
@@ -412,11 +416,11 @@ RSpec.describe 'Service Broker' do
             let(:schema) {
               {
                 (test[:type]).to_s => {
-                schema_action => {
-                  'parameters' => {
-                    '$schema': 'http://json-schema.org/draft-04/schema#',
-                    'properties': true,
-                    'anyOf': true }
+                  schema_action => {
+                    'parameters' => {
+                      '$schema': 'http://json-schema.org/draft-04/schema#',
+                      'properties': true,
+                      'anyOf': true }
                   }
                 }
               }
@@ -889,6 +893,224 @@ RSpec.describe 'Service Broker' do
 
         expect(no_longer_free_plan['entity']['free']).to be false
         expect(no_longer_not_free_plan['entity']['free']).to be true
+      end
+    end
+
+    context 'when the bindings_retrievable field for a service has changed' do
+      before do
+        stub_catalog_fetch(200, {
+          services: [{
+            id: '12345',
+            name: 'bindings-retrievable-service',
+            description: 'A service, duh!',
+            bindable: true,
+            bindings_retrievable: true,
+            plans: [{
+              id: 'plan-1',
+              name: 'random-name-1',
+              description: 'A not free plan',
+            }]
+          }, {
+            id: '123456',
+            name: 'bindings-not-retrievable-service',
+            description: 'A service, duh!',
+            bindable: true,
+            bindings_retrievable: false,
+            plans: [{
+              id: 'plan-2',
+              name: 'random-name-2',
+              description: 'A not free plan',
+            }]
+          }, {
+            id: '1234567',
+            name: 'bindings-retrievable-service-will-be-unset',
+            description: 'A service, duh!',
+            bindable: true,
+            bindings_retrievable: true,
+            plans: [{
+              id: 'plan-3',
+              name: 'random-name-2',
+              description: 'A not free plan',
+            }]
+          }]
+        })
+
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+
+        guid = VCAP::CloudController::ServiceBroker.first.guid
+
+        stub_catalog_fetch(200, {
+          services: [
+            {
+              id: '12345',
+              name: 'bindings-retrievable-service',
+              description: 'A service, duh!',
+              bindable: true,
+              bindings_retrievable: false,
+              plans: [{
+                id: 'plan-1',
+                name: 'random-name-1',
+                description: 'A not free plan',
+              }]
+            },
+            {
+              id: '123456',
+              name: 'bindings-not-retrievable-service',
+              description: 'a service, duh!',
+              bindable: true,
+              bindings_retrievable: true,
+              plans: [{
+                id: 'plan-2',
+                name: 'random-name-2',
+                description: 'a not free plan',
+              }]
+          }, {
+            id: '1234567',
+            name: 'bindings-retrievable-service-will-be-unset',
+            description: 'A service, duh!',
+            bindable: true,
+            plans: [{
+              id: 'plan-3',
+              name: 'random-name-2',
+              description: 'A not free plan',
+            }]
+          }]
+        })
+
+        put("/v2/service_brokers/#{guid}", {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+      end
+
+      it 'sets the cc service bindings_retrievable field' do
+        get('/v2/services', {}.to_json, admin_headers)
+
+        resources = JSON.parse(last_response.body)['resources']
+
+        no_longer_bindings_retrievable_service = resources.find { |service| service['entity']['label'] == 'bindings-retrievable-service' }
+        now_bindings_retrievable_service = resources.find { |service| service['entity']['label'] == 'bindings-not-retrievable-service' }
+        unset_bindings_retrievable_service = resources.find { |service| service['entity']['label'] == 'bindings-retrievable-service-will-be-unset' }
+
+        expect(no_longer_bindings_retrievable_service['entity']['bindings_retrievable']).to be false
+        expect(now_bindings_retrievable_service['entity']['bindings_retrievable']).to be true
+        expect(unset_bindings_retrievable_service['entity']['bindings_retrievable']).to be false
+      end
+    end
+
+    context 'when the instances_retrievable field for a service has changed' do
+      before do
+        stub_catalog_fetch(200, {
+          services: [{
+            id: '12345',
+            name: 'instances-retrievable-service',
+            description: 'A service, duh!',
+            bindable: true,
+            instances_retrievable: true,
+            plans: [{
+              id: 'plan-1',
+              name: 'random-name-1',
+              description: 'A not free plan',
+            }]
+          }, {
+            id: '123456',
+            name: 'instances-not-retrievable-service',
+            description: 'A service, duh!',
+            bindable: true,
+            instances_retrievable: false,
+            plans: [{
+              id: 'plan-2',
+              name: 'random-name-2',
+              description: 'A not free plan',
+            }]
+          }, {
+            id: '1234567',
+            name: 'instances-retrievable-service-will-be-unset',
+            description: 'A service, duh!',
+            bindable: true,
+            instances_retrievable: true,
+            plans: [{
+              id: 'plan-3',
+              name: 'random-name-2',
+              description: 'A not free plan',
+            }]
+          }]
+        })
+
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+
+        guid = VCAP::CloudController::ServiceBroker.first.guid
+
+        stub_catalog_fetch(200, {
+          services: [
+            {
+              id: '12345',
+              name: 'instances-retrievable-service',
+              description: 'A service, duh!',
+              bindable: true,
+              instances_retrievable: false,
+              plans: [{
+                id: 'plan-1',
+                name: 'random-name-1',
+                description: 'A not free plan',
+              }]
+            },
+            {
+              id: '123456',
+              name: 'instances-not-retrievable-service',
+              description: 'a service, duh!',
+              bindable: true,
+              instances_retrievable: true,
+              plans: [{
+                id: 'plan-2',
+                name: 'random-name-2',
+                description: 'a not free plan',
+              }]
+          }, {
+            id: '1234567',
+            name: 'instances-retrievable-service-will-be-unset',
+            description: 'A service, duh!',
+            bindable: true,
+            plans: [{
+              id: 'plan-3',
+              name: 'random-name-2',
+              description: 'A not free plan',
+            }]
+          }]
+        })
+
+        put("/v2/service_brokers/#{guid}", {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+      end
+
+      it 'sets the cc service instances_retrievable field' do
+        get('/v2/services', {}.to_json, admin_headers)
+
+        resources = JSON.parse(last_response.body)['resources']
+
+        no_longer_instances_retrievable_service = resources.find { |service| service['entity']['label'] == 'instances-retrievable-service' }
+        now_instances_retrievable_service = resources.find { |service| service['entity']['label'] == 'instances-not-retrievable-service' }
+        unset_instances_retrievable_service = resources.find { |service| service['entity']['label'] == 'instances-retrievable-service-will-be-unset' }
+
+        expect(no_longer_instances_retrievable_service['entity']['instances_retrievable']).to be false
+        expect(now_instances_retrievable_service['entity']['instances_retrievable']).to be true
+        expect(unset_instances_retrievable_service['entity']['instances_retrievable']).to be false
       end
     end
 
