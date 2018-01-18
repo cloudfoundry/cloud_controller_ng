@@ -151,6 +151,7 @@ module VCAP::CloudController
     alias_method(:user_provided_ports, :ports)
 
     def package_hash
+      # this caches latest_package for performance reasons
       package = latest_package
       return nil if package.nil?
 

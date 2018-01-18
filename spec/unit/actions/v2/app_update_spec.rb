@@ -70,41 +70,59 @@ module VCAP::CloudController
         expect(app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
       end
 
-      context 'with a started bits app and no valid package or droplet' do
-        let(:process) { ProcessModel.make(state: 'STARTED') }
+      context 'no valid package or droplet' do
+        let(:current_state) { 'STARTED' }
+        let(:process) { ProcessModel.make(state: current_state) }
         let(:app) { process.app }
         let(:new_stack) { Stack.make }
+        let(:request_attrs) do
+          {
+            'instances'                  => 2,
+            'stack_guid'                 => new_stack.guid,
+            'state' => current_state
+          }
+        end
+        context 'with a started bits app' do
+          context 'not requesting a state change' do
+            it 'updates the process' do
+              app_update.update(app, process, request_attrs)
 
-        context 'not requesting a state change' do
-          it 'updates the process' do
-            request_attrs = {
-              'instances'                  => 2,
-              'stack_guid'                 => new_stack.guid,
-            }
+              expect(process.instances).to eq(2)
+              expect(process.stack_guid).to eq(new_stack.guid)
+              expect(process.state).to eq('STARTED')
+            end
+          end
 
-            app_update.update(app, process, request_attrs)
+          context 'requesting state other than STARTED' do
+            it 'updates the process' do
+              request_attrs = {
+                'state' => 'STOPPED'
+              }
 
-            expect(process.instances).to eq(2)
-            expect(process.stack_guid).to eq(new_stack.guid)
+              app_update.update(app, process, request_attrs)
+              expect(process.state).to eq('STOPPED')
+            end
           end
         end
+        context 'with a unstarted bits app' do
+          let(:current_state) { 'STOPPED' }
 
-        context 'requesting state other than STARTED' do
-          it 'updates the process' do
-            request_attrs = {
-              'state' => 'STOPPED'
-            }
+          context 'not requesting a state change' do
+            it 'updates the process' do
+              app_update.update(app, process, request_attrs)
 
-            app_update.update(app, process, request_attrs)
-            expect(process.state).to eq('STOPPED')
+              expect(process.instances).to eq(2)
+              expect(process.stack_guid).to eq(new_stack.guid)
+              expect(process.state).to eq('STOPPED')
+            end
           end
-        end
 
-        context 'requesting a STARTED state' do
-          it 'raises an error' do
-            expect {
-              app_update.update(process.app, process, { 'state' => 'STARTED' })
-            }.to raise_error(/bits have not been uploaded/)
+          context 'requesting state change to STARTED' do
+            it 'raises an error' do
+              expect {
+                app_update.update(process.app, process, { 'state' => 'STARTED' })
+              }.to raise_error(/bits have not been uploaded/)
+            end
           end
         end
       end
