@@ -1761,7 +1761,7 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}", body
 
               expect(last_response).to have_status_code(422)
-              expect(decoded_response['code']).to eq(390008)
+              expect(decoded_response['code']).to eq(390003)
               expect(decoded_response['error_code']).to eq('CF-SharedServiceInstanceCannotBeRenamed')
             end
           end
@@ -1775,7 +1775,7 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}", body
 
               expect(last_response).to have_status_code 403
-              expect(last_response.body).to include 'SharedServiceInstanceNotUpdateableInTargetSpace'
+              expect(last_response.body).to include 'SharedServiceInstanceNotUpdatableInTargetSpace'
               expect(last_response.body).to include 'You cannot update service instances that have been shared with you'
             end
           end
@@ -1791,7 +1791,7 @@ module VCAP::CloudController
               put "/v2/service_instances/#{service_instance.guid}", body
 
               expect(last_response).to have_status_code 403
-              expect(last_response.body).to include 'SharedServiceInstanceNotUpdateableInTargetSpace'
+              expect(last_response.body).to include 'SharedServiceInstanceNotUpdatableInTargetSpace'
               expect(last_response.body).to include 'You cannot update service instances that have been shared with you'
             end
           end
@@ -2716,7 +2716,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}"
 
               expect(last_response).to have_status_code 403
-              expect(last_response.body).to include 'SharedServiceInstanceNotDeleteableInTargetSpace'
+              expect(last_response.body).to include 'SharedServiceInstanceNotDeletableInTargetSpace'
               expect(last_response.body).to include 'You cannot delete service instances that have been shared with you'
             end
           end
@@ -2732,7 +2732,7 @@ module VCAP::CloudController
               delete "/v2/service_instances/#{service_instance.guid}"
 
               expect(last_response).to have_status_code 403
-              expect(last_response.body).to include 'SharedServiceInstanceNotDeleteableInTargetSpace'
+              expect(last_response.body).to include 'SharedServiceInstanceNotDeletableInTargetSpace'
               expect(last_response.body).to include 'You cannot delete service instances that have been shared with you'
             end
           end

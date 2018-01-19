@@ -44,6 +44,8 @@ class ServiceInstancesV3Controller < ApplicationController
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "service_instances/#{service_instance.guid}", service_instance.shared_spaces, 'shared_spaces', build_related: false)
+  rescue VCAP::CloudController::ServiceInstanceShare::Error => e
+    unprocessable!(e.message)
   end
 
   def unshare_service_instance
@@ -63,6 +65,8 @@ class ServiceInstancesV3Controller < ApplicationController
     unshare.unshare(service_instance, target_space, user_audit_info)
 
     head :no_content
+  rescue VCAP::CloudController::ServiceInstanceUnshare::Error => e
+    raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceUnshareFailed', e.message)
   end
 
   def relationships_shared_spaces

@@ -1115,41 +1115,16 @@
   message: "Service instances must be unshared before they can be deleted. Unsharing %s will automatically delete any bindings that have been made to applications in other spaces."
 
 390003:
-  name: ServiceShareIsDisabled
-  http_code: 422
-  message: "The %s service does not support service instance sharing."
-
-390004:
-  name: UserProvidedServiceInstanceSharingNotSupported
-  http_code: 422
-  message: "User-provided services cannot be shared"
-
-390005:
-  name: RouteServiceInstanceSharingNotSupported
-  http_code: 422
-  message: "Route services cannot be shared"
-
-390006:
-  name: SharedServiceInstanceNameTaken
-  http_code: 422
-  message: "A service instance called %s already exists in %s"
-
-390007:
-  name: InvalidServiceInstanceSharingTargetSpace
-  http_code: 422
-  message: 'Service instances cannot be shared into the space where they were created'
-
-390008:
   name: SharedServiceInstanceCannotBeRenamed
   http_code: 422
   message: 'Service instances that have been shared cannot be renamed'
 
-390009:
-  name: SharedServiceInstanceNotUpdateableInTargetSpace
+390004:
+  name: SharedServiceInstanceNotUpdatableInTargetSpace
   http_code: 403
   message: 'You cannot update service instances that have been shared with you'
 
-390010:
-  name: SharedServiceInstanceNotDeleteableInTargetSpace
+390005:
+  name: SharedServiceInstanceNotDeletableInTargetSpace
   http_code: 403
   message: 'You cannot delete service instances that have been shared with you'
