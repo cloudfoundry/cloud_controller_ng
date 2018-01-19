@@ -51,10 +51,20 @@ module VCAP::CloudController
     def delete_service_instances(space_model)
       service_instance_deleter = ServiceInstanceDelete.new(
         accepts_incomplete: true,
-        multipart_delete: true,
         event_repository: @services_event_repository
       )
-      service_instance_deleter.delete(space_model.service_instances_dataset)
+
+      delete_instance_errors = service_instance_deleter.delete(space_model.service_instances_dataset)
+      if delete_instance_errors.empty?
+        async_deprovisioning_instances = space_model.service_instances_dataset.all.select(&:operation_in_progress?)
+        deprovision_in_progress_errors = async_deprovisioning_instances.map do |service_instance|
+          CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+        end
+
+        delete_instance_errors.concat deprovision_in_progress_errors
+      end
+
+      delete_instance_errors
     end
 
     def delete_apps(space_model)
