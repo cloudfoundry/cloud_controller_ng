@@ -31,7 +31,7 @@ module VCAP::CloudController
       binding = find_guid(guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding.v2_app.present?
 
-      unless binding.service.bindings_retrievable
+      unless binding.service_instance.managed_instance? && binding.service.bindings_retrievable
         message = 'This service does not support fetching service binding parameters.'
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
       end

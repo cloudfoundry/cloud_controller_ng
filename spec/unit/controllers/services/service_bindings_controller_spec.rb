@@ -1020,6 +1020,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the binding is for a user provided service' do
+        let(:process) { ProcessModelFactory.make(space: space) }
+        let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+
+        it 'returns a 422' do
+          set_current_user(developer)
+          binding = ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
+
+          get "/v2/service_bindings/#{binding.guid}/parameters"
+          expect(last_response.status).to eql(422)
+          expect(last_response.body).to include('This service does not support fetching service binding parameters.')
+        end
+      end
+
       context 'when the binding guid is invalid' do
         it 'returns a 404' do
           set_current_user(developer)
