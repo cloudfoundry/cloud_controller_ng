@@ -56,16 +56,16 @@ module VCAP::CloudController
         end
 
         roles = [
-            'admin',
-            'admin_read_only',
-            'global_auditor',
-            'space_developer',
-            'space_manager',
-            'space_auditor',
-            'org_manager',
-            'org_auditor',
-            'org_billing_manager',
-          ]
+          'admin',
+          'admin_read_only',
+          'global_auditor',
+          'space_developer',
+          'space_manager',
+          'space_auditor',
+          'org_manager',
+          'org_auditor',
+          'org_billing_manager',
+        ]
 
         roles.each do |role|
           describe "as an #{role}" do
