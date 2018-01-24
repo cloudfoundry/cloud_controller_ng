@@ -185,6 +185,13 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
+        def parse_fetch_service_binding(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
+
+          validator = JsonObjectValidator.new(@logger, SuccessValidator.new)
+          validator.validate(unvalidated_response.to_hash)
+        end
+
         class UnvalidatedResponse
           attr_reader :code, :uri
 

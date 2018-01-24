@@ -39,6 +39,40 @@ RSpec.describe 'Service Broker API integration' do
 
           expect(parsed_body['entity']['bindings_retrievable']).to eq true
         end
+
+        context 'and returns a parameters object' do
+          before do
+            provision_service
+            create_app
+            bind_service
+
+            stub_request(:get, %r{broker-url/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
+              to_return(status: 200, body: '{"parameters": {"foo":"bar"}}')
+          end
+
+          it 'should be retrievable' do
+            get("/v2/service_bindings/#{@binding_id}/parameters",
+              {}.to_json,
+              json_headers(admin_headers))
+            parsed_body = MultiJson.load(last_response.body)
+            expect(parsed_body['foo']).to eq 'bar'
+          end
+
+          it 'sends the broker the X-Broker-Api-Originating-Identity header' do
+            user = VCAP::CloudController::User.make
+            base64_encoded_user_id = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
+
+            get("/v2/service_bindings/#{@binding_id}/parameters",
+              {}.to_json,
+              headers_for(user))
+
+            expect(
+              a_request(:get, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
+                req.headers['X-Broker-Api-Originating-Identity'] == "cloudfoundry #{base64_encoded_user_id}"
+              end
+            ).to have_been_made
+          end
+        end
       end
 
       context 'when the brokers catalog has bindings_retrievable set to false' do
