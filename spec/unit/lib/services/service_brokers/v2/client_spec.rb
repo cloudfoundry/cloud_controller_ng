@@ -1380,6 +1380,35 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    describe 'fetch_service_binding' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
+      let(:binding) do
+        VCAP::CloudController::ServiceBinding.new(
+          service_instance: instance,
+          app:              app,
+          type:             'app'
+        )
+      end
+
+      let(:broker_response) { HttpResponse.new(code: 200, body: { foo: 'bar' }.to_json) }
+
+      before do
+        allow(http_client).to receive(:get).and_return(broker_response)
+      end
+
+      it 'makes a get request with the correct path' do
+        client.fetch_service_binding(binding)
+        expect(http_client).to have_received(:get).
+          with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}")
+      end
+
+      it 'returns the broker response' do
+        response = client.fetch_service_binding(binding)
+        expect(response).to eq({ 'foo' => 'bar' })
+      end
+    end
+
     def unwrap_delayed_job(job)
       job.payload_object.handler.handler.handler
     end

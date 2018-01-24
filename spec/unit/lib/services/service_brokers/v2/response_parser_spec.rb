@@ -27,6 +27,9 @@ module VCAP::Services
           when :fetch_catalog
             method = :parse_catalog
             path = '/v2/catalog'
+          when :fetch_service_binding
+            method = :parse_fetch_service_binding
+            path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           end
 
           [method, path]
@@ -650,6 +653,11 @@ module VCAP::Services
         test_case(:update, 422, broker_partial_json,                                            error: Errors::ServiceBrokerRequestRejected)
         test_case(:update, 422, { error: 'AsyncRequired' }.to_json,                             error: Errors::AsyncRequired)
         test_common_error_cases(:update)
+
+        test_case(:fetch_service_binding, 200, { foo: 'bar' }.to_json, result: { 'foo' => 'bar' })
+        test_case(:fetch_service_binding, 200, broker_malformed_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, binding_uri))
+        test_case(:fetch_service_binding, 200, broker_partial_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
+        test_case(:fetch_service_binding, 200, broker_empty_json, result: {})
         # rubocop:enable Metrics/LineLength
       end
     end

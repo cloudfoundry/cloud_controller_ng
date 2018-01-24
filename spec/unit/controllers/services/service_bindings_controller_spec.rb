@@ -1010,12 +1010,23 @@ module VCAP::CloudController
         context 'bindings_retrievable is set to true' do
           let(:service) { Service.make(bindings_retrievable: true) }
 
-          it 'returns a 200' do
-            set_current_user(developer)
-            binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+          context 'when the broker has nested binding parameters' do
+            let(:broker) { service.service_broker }
+            let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
 
-            get "/v2/service_bindings/#{binding.guid}/parameters"
-            expect(last_response.status).to eql(200)
+            before do
+              stub_request(:get, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+                with(basic_auth: basic_auth(service_broker: broker)).
+                to_return(status: 200, body: { 'parameters' => { 'foo' => { 'bar' => true } } }.to_json)
+
+              set_current_user(developer)
+            end
+
+            it 'returns a 200 and the parameters' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({ 'foo' => { 'bar' => true } }.to_json)
+            end
           end
         end
       end
