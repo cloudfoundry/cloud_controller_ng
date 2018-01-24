@@ -87,7 +87,9 @@ module VCAP::CloudController
     end
 
     def required_parameters
-      { app_guid: app_guid }
+      { app_guid: app_guid,
+        space_guid: space.guid
+      }
     end
   end
 end

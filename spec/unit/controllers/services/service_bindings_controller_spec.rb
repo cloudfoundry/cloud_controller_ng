@@ -337,24 +337,59 @@ module VCAP::CloudController
 
         it_behaves_like 'BindableServiceInstance'
 
-        it 'sends a bind request to the broker' do
-          post '/v2/service_bindings', req.to_json
-          expect(last_response).to have_status_code(201)
+        context 'when the app and service instance are in the same space' do
+          it 'sends a bind request to the broker' do
+            post '/v2/service_bindings', req.to_json
+            expect(last_response).to have_status_code(201)
 
-          binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
-          expected_body    = {
-            service_id: service_instance.service.broker_provided_id,
-            plan_id: service_instance.service_plan.broker_provided_id,
-            app_guid: process.guid,
-            bind_resource: { app_guid: process.guid },
-            context: {
-              platform: 'cloudfoundry',
-              organization_guid: service_instance.organization.guid,
-              space_guid:        service_instance.space.guid
+            binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+            expected_body    = {
+              service_id: service_instance.service.broker_provided_id,
+              plan_id: service_instance.service_plan.broker_provided_id,
+              app_guid: process.guid,
+              bind_resource: { app_guid: process.guid, space_guid: process.space.guid },
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: service_instance.organization.guid,
+                space_guid:        service_instance.space.guid
+              }
             }
-          }
 
-          expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
+            expect(service_instance.space.guid).to eq(process.space.guid)
+
+            expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
+          end
+        end
+
+        context 'when the app is in a space that the service instance is shared to' do
+          let(:shared_from_space) { Space.make }
+          let(:service_instance) { ManagedServiceInstance.make(space: shared_from_space) }
+
+          before do
+            service_instance.add_shared_space(space)
+          end
+
+          it 'sends a bind request to the broker' do
+            post '/v2/service_bindings', req.to_json
+            expect(last_response).to have_status_code(201)
+
+            binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
+            expected_body    = {
+              service_id: service_instance.service.broker_provided_id,
+              plan_id: service_instance.service_plan.broker_provided_id,
+              app_guid: process.guid,
+              bind_resource: { app_guid: process.guid, space_guid: process.space.guid },
+              context: {
+                platform: 'cloudfoundry',
+                organization_guid: service_instance.organization.guid,
+                space_guid:        service_instance.space.guid
+              }
+            }
+
+            expect(service_instance.space.guid).not_to eq(process.space.guid)
+
+            expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
+          end
         end
 
         context 'when the client provides arbitrary parameters' do
