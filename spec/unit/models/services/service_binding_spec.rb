@@ -353,7 +353,8 @@ module VCAP::CloudController
 
       it 'returns the required params' do
         expect(service_binding.required_parameters).to eq(
-          app_guid: app.guid
+          app_guid: app.guid,
+          space_guid: app.space.guid
         )
       end
     end
