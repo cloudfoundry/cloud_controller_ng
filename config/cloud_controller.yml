@@ -6,6 +6,7 @@ pid_filename: /tmp/cloud_controller.pid
 
 external_protocol: http
 external_domain: api2.vcap.me
+temporary_create_internal_domain: false
 internal_service_hostname: api.internal.cf
 
 system_domain_organization: the-system_domain-org-name

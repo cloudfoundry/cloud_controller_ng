@@ -1,6 +1,7 @@
 module VCAP::CloudController
   module Seeds
     class << self
+      APPS_INTERNAL = 'apps.internal'.freeze
       def write_seed_data(config)
         create_seed_quota_definitions(config)
         create_seed_stacks
@@ -10,6 +11,7 @@ module VCAP::CloudController
         create_seed_lockings
         create_seed_environment_variable_groups
         create_seed_shared_isolation_segment(config)
+        create_seed_internal_domain(config)
       end
 
       def create_seed_shared_isolation_segment(config)
@@ -143,6 +145,14 @@ module VCAP::CloudController
           EnvironmentVariableGroup.staging
         rescue Sequel::UniqueConstraintViolation
           # swallow error, nothing to seed so we have succeeded
+        end
+      end
+
+      def create_seed_internal_domain(config)
+        return unless config.get(:temporary_create_internal_domain)
+        domain = Domain.find(name: APPS_INTERNAL)
+        if !domain
+          Domain.create(name: APPS_INTERNAL, internal: true, wildcard: false)
         end
       end
 

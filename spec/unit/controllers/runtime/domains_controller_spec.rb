@@ -251,6 +251,25 @@ module VCAP::CloudController
           expect(domains[private_domain.guid]).to match /private_domains/
         end
       end
+
+      context 'internal domains' do
+        before do
+          set_current_user_as_admin
+          Domain.dataset.destroy
+        end
+
+        it 'shows the internal domain last' do
+          domain1 = Domain.make(name: 'domain1.capi.land')
+          domain_internal = Domain.make(name: 'apps.internal', internal: true)
+          domain3 = Domain.make(name: 'domain3.capi.land')
+
+          get '/v2/domains'
+          expect(last_response.status).to eq(200), last_response.body
+          domains = JSON.parse(last_response.body)['resources']
+          expect(domains.size).to be(3)
+          expect(domains.map { |x| x['entity']['name'] }).to eq([domain1.name, domain3.name, domain_internal.name])
+        end
+      end
     end
     describe 'POST /v2/domains' do
       context 'as an org manager' do

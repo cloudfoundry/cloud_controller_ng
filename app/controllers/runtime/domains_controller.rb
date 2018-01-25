@@ -22,6 +22,11 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
+    def enumerate
+      @opts[:order_by] = :internal
+      super
+    end
+
     deprecated_endpoint(path)
     define_messages
     define_routes
