@@ -188,7 +188,9 @@ module VCAP::Services
         def parse_fetch_service_binding(path, response)
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
-          validator = JsonObjectValidator.new(@logger, SuccessValidator.new)
+          validator = JsonObjectValidator.new(@logger,
+            BindParametersValidator.new(SuccessValidator.new))
+
           validator.validate(unvalidated_response.to_hash)
         end
 
@@ -493,6 +495,24 @@ module VCAP::Services
             when 500..599
               raise Errors::ServiceBrokerBadResponse.new(uri.to_s, method, response)
             end
+            @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+        end
+
+        class BindParametersValidator
+          def initialize(validator)
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+            parameters = parsed_response['parameters']
+
+            if parameters && !parameters.is_a?(Hash)
+              raise Errors::ServiceBrokerResponseMalformed. new(uri, method, response,
+                'The service broker response contained a parameters field that was not a JSON object.')
+            end
+
             @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end

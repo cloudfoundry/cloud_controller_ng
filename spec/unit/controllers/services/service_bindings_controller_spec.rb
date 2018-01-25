@@ -994,7 +994,7 @@ module VCAP::CloudController
         let(:managed_service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
         let(:process) { ProcessModelFactory.make(space: space) }
 
-        context 'when the service has bindings_retrievable is set to false' do
+        context 'when the service has bindings_retrievable set to false' do
           let(:service) { Service.make(bindings_retrievable: false) }
 
           it 'returns a 422' do
@@ -1007,25 +1007,79 @@ module VCAP::CloudController
           end
         end
 
-        context 'bindings_retrievable is set to true' do
+        context 'when the service has bindings_retrievable set to true' do
           let(:service) { Service.make(bindings_retrievable: true) }
+          let(:broker) { service.service_broker }
+
+          let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
+          let(:body) {}
+
+          before do
+            stub_request(:get, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+              with(basic_auth: basic_auth(service_broker: broker)).
+              to_return(status: 200, body: body)
+            set_current_user(developer)
+          end
 
           context 'when the broker has nested binding parameters' do
-            let(:broker) { service.service_broker }
-            let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
+            let(:body) { { 'parameters' => { 'foo' => { 'bar' => true } } }.to_json }
 
-            before do
-              stub_request(:get, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-                with(basic_auth: basic_auth(service_broker: broker)).
-                to_return(status: 200, body: { 'parameters' => { 'foo' => { 'bar' => true } } }.to_json)
-
-              set_current_user(developer)
-            end
-
-            it 'returns a 200 and the parameters' do
+            it 'returns the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
               expect(last_response.status).to eql(200)
               expect(last_response.body).to eql({ 'foo' => { 'bar' => true } }.to_json)
+            end
+          end
+
+          context 'when the broker returns empty object' do
+            let(:body) { {}.to_json }
+
+            it 'returns an empty object' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({}.to_json)
+            end
+          end
+
+          context 'when the brokers response is missing a parameters key but contains other keys' do
+            let(:body) { { 'credentials' => 'value' }.to_json }
+
+            it 'returns an empty object' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({}.to_json)
+            end
+          end
+
+          context 'when the broker returns multiple keys' do
+            let(:body) { { 'credentials' => 'value', 'parameters' => { 'foo' => 'bar' } }.to_json }
+
+            it 'returns only the parameters' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({ 'foo' => 'bar' }.to_json)
+            end
+          end
+
+          context 'when the broker returns invalid json' do
+            let(:body) { '{]' }
+
+            it 'returns 502' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when the broker parameters is not a JSON object' do
+            let(:body) { { 'parameters' => true }.to_json }
+
+            it 'returns 502' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
             end
           end
         end

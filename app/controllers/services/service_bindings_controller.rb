@@ -39,7 +39,7 @@ module VCAP::CloudController
       client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
       resp = client.fetch_service_binding(binding)
 
-      [HTTP::OK, {}, resp['parameters'].to_json]
+      [HTTP::OK, {}, resp.fetch('parameters', {}).to_json]
     end
 
     post path, :create

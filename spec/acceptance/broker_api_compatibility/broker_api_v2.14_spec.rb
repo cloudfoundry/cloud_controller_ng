@@ -11,19 +11,6 @@ RSpec.describe 'Service Broker API integration' do
     end
 
     describe 'fetching service binding configuration parameters' do
-      context 'when the brokers catalog does not set bindings_retrievable' do
-        let(:catalog) { default_catalog }
-
-        it 'defaults to false' do
-          get("/v2/services/#{@service_guid}",
-              {}.to_json,
-              json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
-
-          expect(parsed_body['entity']['bindings_retrievable']).to eq false
-        end
-      end
-
       context 'when the brokers catalog has bindings_retrievable set to true' do
         let(:catalog) do
           catalog = default_catalog
@@ -31,7 +18,7 @@ RSpec.describe 'Service Broker API integration' do
           catalog
         end
 
-        it 'returns true' do
+        it 'is set to true on the service resource' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
@@ -82,7 +69,20 @@ RSpec.describe 'Service Broker API integration' do
           catalog
         end
 
-        it 'shows the service as bindings_retrievable false' do
+        it 'is set to false on the service resource' do
+          get("/v2/services/#{@service_guid}",
+              {}.to_json,
+              json_headers(admin_headers))
+          parsed_body = MultiJson.load(last_response.body)
+
+          expect(parsed_body['entity']['bindings_retrievable']).to eq false
+        end
+      end
+
+      context 'when the brokers catalog does not set bindings_retrievable' do
+        let(:catalog) { default_catalog }
+
+        it 'defaults to false on the service resource' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
@@ -94,19 +94,6 @@ RSpec.describe 'Service Broker API integration' do
     end
 
     describe 'fetching service instance configuration parameters' do
-      context 'when the brokers catalog does not set instances_retrievable' do
-        let(:catalog) { default_catalog }
-
-        it 'defaults to false' do
-          get("/v2/services/#{@service_guid}",
-              {}.to_json,
-              json_headers(admin_headers))
-          parsed_body = MultiJson.load(last_response.body)
-
-          expect(parsed_body['entity']['instances_retrievable']).to eq false
-        end
-      end
-
       context 'when the brokers catalog has instances_retrievable set to true' do
         let(:catalog) do
           catalog = default_catalog
@@ -132,6 +119,19 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'shows the service as instances_retrievable false' do
+          get("/v2/services/#{@service_guid}",
+              {}.to_json,
+              json_headers(admin_headers))
+          parsed_body = MultiJson.load(last_response.body)
+
+          expect(parsed_body['entity']['instances_retrievable']).to eq false
+        end
+      end
+
+      context 'when the brokers catalog does not set instances_retrievable' do
+        let(:catalog) { default_catalog }
+
+        it 'defaults to false' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
               json_headers(admin_headers))
