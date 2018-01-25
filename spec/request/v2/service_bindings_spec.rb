@@ -51,7 +51,8 @@ RSpec.describe 'ServiceBindings' do
                 'syslog_drain_url' => nil,
                 'volume_mounts' => [],
                 'app_url' => "/v2/apps/#{process1.guid}",
-                'service_instance_url' => "/v2/service_instances/#{service_instance.guid}"
+                'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
+                'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters"
               }
             },
             {
@@ -72,7 +73,8 @@ RSpec.describe 'ServiceBindings' do
                 'syslog_drain_url' => nil,
                 'volume_mounts' => [],
                 'app_url' => "/v2/apps/#{process2.guid}",
-                'service_instance_url' => "/v2/service_instances/#{service_instance.guid}"
+                'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
+                'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding2.guid}/parameters"
               }
             }
           ]
@@ -173,6 +175,7 @@ RSpec.describe 'ServiceBindings' do
                       'route_mappings_url' => "/v2/apps/#{process1.guid}/route_mappings"
                     }
                   },
+                  'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters",
                   'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
                   'service_instance' => {
                     'metadata' => {
@@ -263,7 +266,8 @@ RSpec.describe 'ServiceBindings' do
             'syslog_drain_url' => nil,
             'volume_mounts' => [],
             'app_url' => "/v2/apps/#{process1.guid}",
-            'service_instance_url' => "/v2/service_instances/#{service_instance.guid}"
+            'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
+            'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters"
           }
         }
       )
@@ -324,7 +328,8 @@ RSpec.describe 'ServiceBindings' do
             'syslog_drain_url' => 'syslog://mydrain.example.com',
             'volume_mounts' => [{ 'container_dir' => 'mount' }],
             'app_url' => "/v2/apps/#{process.guid}",
-            'service_instance_url' => "/v2/service_instances/#{service_instance.guid}"
+            'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
+            'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
           }
         }
       )
