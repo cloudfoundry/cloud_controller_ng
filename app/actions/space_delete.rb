@@ -22,7 +22,13 @@ module VCAP::CloudController
           errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
         end
 
-        if instance_delete_errors.empty?
+        instance_unshare_errors = unshare_service_instances(space_model)
+        unless instance_unshare_errors.empty?
+          error_message = instance_unshare_errors.map { |error| "\t#{error.message}" }.join("\n\n")
+          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
+        end
+
+        if instance_delete_errors.empty? && instance_unshare_errors.empty?
           delete_apps(space_model)
           space_model.destroy
         end
@@ -65,6 +71,19 @@ module VCAP::CloudController
       end
 
       delete_instance_errors
+    end
+
+    def unshare_service_instances(space_model)
+      unshare = ServiceInstanceUnshare.new
+      errors = []
+      space_model.service_instances_shared_from_other_spaces.each do |service_instance|
+        begin
+          unshare.unshare(service_instance, space_model, @user_audit_info)
+        rescue => e
+          errors.push(e)
+        end
+      end
+      errors
     end
 
     def delete_apps(space_model)

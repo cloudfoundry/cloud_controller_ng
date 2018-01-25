@@ -46,6 +46,20 @@ module VCAP::CloudController
             expect { service_instance.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
 
+          context 'when a service instance is shared to the space' do
+            let(:fake_shared_service) { instance_double(ManagedServiceInstance) }
+
+            it 'an unshare event is recorded when the space is deleted' do
+              allow(fake_shared_service).to receive(:guid).and_return('some-guid')
+              allow(fake_shared_service).to receive(:remove_shared_space)
+              allow(space).to receive(:service_instances_shared_from_other_spaces).and_return([fake_shared_service])
+
+              expect(Repositories::ServiceInstanceShareEventRepository).to receive(:record_unshare_event).once
+
+              space_delete.delete([space])
+            end
+          end
+
           context 'when deletion of service instances fail' do
             let!(:space_3) { Space.make(name: 'space-3') }
             let!(:space_4) { Space.make(name: 'space-4') }
@@ -101,6 +115,35 @@ module VCAP::CloudController
                 to include("Deletion of space #{space_4.name} failed because one or more resources within could not be deleted.")
               expect(results_messages).
                 to include("\tService instance #{service_instance_4.name}: The service broker returned an invalid response for the request to #{instance_4_url}")
+            end
+          end
+
+          context 'when unsharing a service instance that has been shared to the space' do
+            let(:other_space) { Space.make }
+            let(:fake_shared_service) { instance_double(ManagedServiceInstance) }
+
+            before do
+              allow(fake_shared_service).to receive(:guid).and_return('some-guid')
+              allow(space).to receive(:service_instances_shared_from_other_spaces).and_return([fake_shared_service])
+              allow(fake_shared_service).to receive(:remove_shared_space).and_raise('Cannot unshare')
+            end
+
+            it 'returns an error message indicating that the unshare failed' do
+              errors = space_delete.delete([space])
+
+              expect(errors.length).to eq(1)
+              expect(errors.first).to be_instance_of(CloudController::Errors::ApiError)
+              expect(errors.first.message).to include 'Cannot unshare'
+            end
+
+            it 'does not record an unshare event' do
+              expect(Repositories::ServiceInstanceShareEventRepository).not_to receive(:record_unshare_event)
+              space_delete.delete([space])
+            end
+
+            it 'fails to delete the space because instances are not yet unshared' do
+              space_delete.delete([space])
+              expect { space.refresh }.not_to raise_error
             end
           end
 
