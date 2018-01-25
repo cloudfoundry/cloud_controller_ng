@@ -41,7 +41,8 @@ module CloudController::Presenters::V2
             'syslog_drain_url'      => 'syslog://drain.example.com',
             'volume_mounts'         => [{ 'container_dir' => 'mount' }],
             'relationship_url'      => 'http://relationship.example.com',
-            'name'                  => nil
+            'name'                  => nil,
+            'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
           }
         )
       end
