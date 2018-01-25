@@ -52,6 +52,7 @@ module VCAP::CloudController
 
         if attributes_to_update[:last_operation][:state] == 'succeeded'
           lock.unlock_and_destroy!
+          log_audit_event(service_instance)
         else
           lock.enqueue_unlock!(attributes_to_update, build_fetch_job(service_instance))
         end
@@ -86,6 +87,11 @@ module VCAP::CloudController
         @event_repository.user_audit_info,
         {},
       )
+    end
+
+    def log_audit_event(service_instance)
+      event_method = service_instance.managed_instance? ? :record_service_instance_event : :record_user_provided_service_instance_event
+      @event_repository.send(event_method, :delete, service_instance, {})
     end
   end
 end

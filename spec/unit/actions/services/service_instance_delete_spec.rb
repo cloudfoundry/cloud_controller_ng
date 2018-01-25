@@ -33,7 +33,8 @@ module VCAP::CloudController
         stub_unbind(route_binding_2)
       end
 
-      it 'deletes all the service_instances' do
+      it 'deletes all the service_instances and logs events' do
+        expect(event_repository).to receive(:record_service_instance_event).with(:delete, kind_of(ServiceInstance), {}).twice
         expect {
           service_instance_delete.delete(service_instance_dataset)
         }.to change { ServiceInstance.count }.by(-2)
@@ -203,7 +204,7 @@ module VCAP::CloudController
           expect(errors.second.name).to eq 'AsyncServiceInstanceOperationInProgress'
         end
 
-        it 'keeps the instance in an `in progress` state' do
+        it 'still exists and is in an `in progress` state' do
           service_instance_delete.delete(service_instance_dataset)
           expect(service_instance_1.last_operation.reload.state).to eq 'in progress'
         end
@@ -231,6 +232,11 @@ module VCAP::CloudController
         it 'fails the last operation of the service instance' do
           service_instance_delete.delete(service_instance_dataset)
           expect(service_instance_2.last_operation.state).to eq('failed')
+        end
+
+        it 'only records one delete audit event' do
+          expect(event_repository).to receive(:record_service_instance_event).with(:delete, service_instance_1, {}).once
+          service_instance_delete.delete(service_instance_dataset)
         end
       end
 
