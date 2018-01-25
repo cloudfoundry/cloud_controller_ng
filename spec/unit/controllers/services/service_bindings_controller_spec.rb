@@ -997,12 +997,12 @@ module VCAP::CloudController
         context 'when the service has bindings_retrievable set to false' do
           let(:service) { Service.make(bindings_retrievable: false) }
 
-          it 'returns a 422' do
+          it 'returns a 400' do
             set_current_user(developer)
             binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
 
             get "/v2/service_bindings/#{binding.guid}/parameters"
-            expect(last_response.status).to eql(422)
+            expect(last_response.status).to eql(400)
             expect(last_response.body).to include('This service does not support fetching service binding parameters.')
           end
         end
@@ -1089,12 +1089,12 @@ module VCAP::CloudController
         let(:process) { ProcessModelFactory.make(space: space) }
         let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
 
-        it 'returns a 422' do
+        it 'returns a 400' do
           set_current_user(developer)
           binding = ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
 
           get "/v2/service_bindings/#{binding.guid}/parameters"
-          expect(last_response.status).to eql(422)
+          expect(last_response.status).to eql(400)
           expect(last_response.body).to include('This service does not support fetching service binding parameters.')
         end
       end

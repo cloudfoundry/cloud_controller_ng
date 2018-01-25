@@ -373,6 +373,11 @@
   http_code: 502
   message: "The service is attempting to stream logs from your application, but is not registered as a logging service. Please contact the service provider."
 
+90007:
+  name: ServiceFetchBindingParametersNotSupported
+  http_code: 400
+  message: "This service does not support fetching service binding parameters."
+
 100001:
   name: AppInvalid
   http_code: 400
