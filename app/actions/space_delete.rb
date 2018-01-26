@@ -11,22 +11,16 @@ module VCAP::CloudController
     def delete(dataset)
       dataset.inject([]) do |errors, space_model|
         instance_delete_errors = delete_service_instances(space_model)
-        unless instance_delete_errors.empty?
-          error_message = instance_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
-        end
+        err = accumulate_space_deletion_error(instance_delete_errors, space_model.name)
+        errors << err unless err.nil?
 
         broker_delete_errors = delete_service_brokers(space_model)
-        unless broker_delete_errors.empty?
-          error_message = broker_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
-        end
+        err = accumulate_space_deletion_error(broker_delete_errors, space_model.name)
+        errors << err unless err.nil?
 
         instance_unshare_errors = unshare_service_instances(space_model)
-        unless instance_unshare_errors.empty?
-          error_message = instance_unshare_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
-        end
+        err = accumulate_space_deletion_error(instance_unshare_errors, space_model.name)
+        errors << err unless err.nil?
 
         if instance_delete_errors.empty? && instance_unshare_errors.empty?
           delete_apps(space_model)
@@ -34,10 +28,8 @@ module VCAP::CloudController
         end
 
         role_delete_errors = delete_roles(space_model)
-        unless role_delete_errors.empty?
-          error_message = role_delete_errors.map { |error| "\t#{error.message}" }.join("\n\n")
-          errors.push CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_model.name, error_message)
-        end
+        err = accumulate_space_deletion_error(role_delete_errors, space_model.name)
+        errors << err unless err.nil?
 
         errors
       end
@@ -52,6 +44,13 @@ module VCAP::CloudController
 
     def service_broker_remover(services_event_repository)
       VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(services_event_repository)
+    end
+
+    def accumulate_space_deletion_error(operation_errors, space_name)
+      unless operation_errors.empty?
+        error_message = operation_errors.map { |error| "\t#{error.message}" }.join("\n\n")
+        CloudController::Errors::ApiError.new_from_details('SpaceDeletionFailed', space_name, error_message)
+      end
     end
 
     def delete_service_instances(space_model)
