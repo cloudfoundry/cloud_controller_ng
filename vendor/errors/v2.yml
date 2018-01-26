@@ -482,7 +482,12 @@
   name: ServiceInstanceAlreadyBoundToSameRoute
   http_code: 400
   message: "The route and service instance are already bound."
-
+  
+130009:
+  name: InternalDomainCannotBeDeleted
+  http_code: 422
+  message: "The domain '%s' cannot be deleted. It is reserved by the platform."
+  
 140001:
   name: LegacyApiWithoutDefaultSpace
   http_code: 400

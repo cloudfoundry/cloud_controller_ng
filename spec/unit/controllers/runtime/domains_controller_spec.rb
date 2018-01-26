@@ -324,6 +324,27 @@ module VCAP::CloudController
           expect(decoded_response['description']).to match /delete the routes associations for your domains/i
         end
       end
+
+      context 'when the domain is internal' do
+          before { set_current_user_as_admin }
+
+          context 'when the domain is internal' do
+            let!(:internal_domain) { Domain.create(name: 'apps.internal', internal: true) }
+
+            it 'fails to delete' do
+              expect {
+                delete "/v2/domains/#{internal_domain.guid}"
+              }.to_not change { Domain.count }
+            end
+
+            it 'returns an error' do
+              delete "/v2/domains/#{internal_domain.guid}"
+              expect(last_response.status).to eq(422)
+              expect(decoded_response['code']).to equal(130009)
+              expect(decoded_response['description']).to match /The domain 'apps.internal' cannot be deleted. It is reserved by the platform./i
+            end
+          end
+      end
     end
 
     describe 'GET /v2/domains/:id/spaces' do

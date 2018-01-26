@@ -48,7 +48,11 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      do_delete(find_guid_and_validate_access(:delete, guid))
+      domain = find_guid_and_validate_access(:delete, guid)
+      if domain.internal
+        raise CloudController::Errors::ApiError.new_from_details('InternalDomainCannotBeDeleted', domain.name)
+      end
+      do_delete(domain)
     end
 
     get '/v2/shared_domains', :enumerate_shared_domains
