@@ -99,6 +99,7 @@ module VCAP::CloudController
         [:spaces, :guid, :organization_id]
       ]
 
+    # Nick: seems important
     many_to_many :routes,
       join_table: RouteMappingModel.table_name,
       left_primary_key: [:app_guid, :type], left_key: [:app_guid, :process_type],
@@ -112,6 +113,7 @@ module VCAP::CloudController
       left_primary_key:  :app_guid, left_key: :guid,
       right_primary_key: :guid, right_key: :droplet_guid
 
+    # Nick: seems important
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
 
     add_association_dependencies events: :delete
@@ -498,6 +500,7 @@ module VCAP::CloudController
       state == STOPPED
     end
 
+    # Nick: seems important
     def uris
       routes.map(&:uri)
     end
@@ -577,6 +580,7 @@ module VCAP::CloudController
     #
     # See:
     # https://github.com/jeremyevans/sequel/blob/7d6753da53196884e218a59a7dcd9a7803881b68/lib/sequel/model/base.rb#L1772-L1779
+    # Nick: seems important
     def update_ports(new_ports)
       self.ports   = new_ports
       self[:ports] = IntegerArraySerializer.serializer.call(self.ports)

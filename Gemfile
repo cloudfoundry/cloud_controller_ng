@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem 'cf-copilot'
+
 gem 'actionpack'
 gem 'actionview'
 gem 'activemodel'
