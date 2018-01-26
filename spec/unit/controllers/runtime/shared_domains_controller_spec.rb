@@ -35,7 +35,6 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/domains/:id' do
-
       before { set_current_user_as_admin }
 
       context 'when the domain is internal' do
