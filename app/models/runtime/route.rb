@@ -170,6 +170,10 @@ module VCAP::CloudController
       domain.shared? && domain.tcp? && port.present? && port > 0
     end
 
+    def internal?
+      domain.internal
+    end
+
     private
 
     def before_destroy

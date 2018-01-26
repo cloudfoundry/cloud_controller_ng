@@ -13,7 +13,7 @@ module VCAP::CloudController
 
           http_info = []
           tcp_info = []
-          process.routes.each do |r|
+          process.routes.reject(&:internal?).each do |r|
             route_app_port_map[r.guid].each do |app_port|
               if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?
                 if r.domain.tcp? && !route_app_port_map[r.guid].blank?
@@ -36,10 +36,17 @@ module VCAP::CloudController
               end
             end
           end
+
+          internal_routes = []
+          process.routes.select(&:internal?).each do |r|
+            internal_routes << { 'hostname' => "#{r.host}.#{r.domain.name}" }
+          end
+          internal_routes << { 'hostname' => "#{process.guid}.apps.internal" }
+
           route_info = {}
           route_info['http_routes'] = http_info unless http_info.blank?
           route_info['tcp_routes'] = tcp_info unless tcp_info.blank?
-          route_info['internal_routes'] = [{ 'hostname' => "#{process.guid}.apps.internal" }]
+          route_info['internal_routes'] = internal_routes
           route_info
         rescue RoutingApi::RoutingApiDisabled
           raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')

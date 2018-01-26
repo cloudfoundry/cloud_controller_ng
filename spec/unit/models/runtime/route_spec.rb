@@ -1215,5 +1215,23 @@ module VCAP::CloudController
         assert_valid_path('/a%20space')
       end
     end
+
+    context '#internal?' do
+      let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+      let(:internal_route) { Route.make(host: 'meow', domain: internal_domain) }
+      let(:external_private_route) { Route.make }
+
+      context 'when the route has an internal domain' do
+        it 'is true' do
+          expect(internal_route.internal?).to eq(true)
+        end
+      end
+
+      context 'when the route has a non-internal domain' do
+        it 'is false' do
+          expect(external_private_route.internal?).to eq(false)
+        end
+      end
+    end
   end
 end

@@ -194,6 +194,18 @@ module VCAP::CloudController
                 expect(hr['hostname']).to match(/host-[0-9]+\.#{domain.name}/)
               end
             end
+
+            context 'when internal routes exist' do
+              let(:shared_internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+              let!(:internal_route) { Route.make(host: 'myroute', domain: shared_internal_domain) }
+
+              before do
+                RouteMappingModel.make(app: process.app, route: internal_route, process_type: process.type)
+              end
+
+              it 'does not include the internal routes' do
+              end
+            end
           end
 
           context 'tcp routes' do
@@ -274,6 +286,30 @@ module VCAP::CloudController
 
               expect(ri.keys).to match_array ['internal_routes']
               expect(ri['internal_routes']).to match_array expected_routes
+            end
+
+            context 'when there are additional user-created internal routes' do
+              let(:shared_internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+
+              let!(:internal_route) { Route.make(host: 'myroute', domain: shared_internal_domain) }
+
+              before do
+                RouteMappingModel.make(app: process.app, route: internal_route, process_type: process.type)
+              end
+
+              it 'returns multiple internal route hostnames' do
+                expected_routes = [
+                  { 'hostname' => 'myroute.apps.internal' },
+                  { 'hostname' => process.guid + '.apps.internal' },
+                ]
+
+                expect(ri.keys).to match_array(['internal_routes'])
+                expect(ri['internal_routes']).to match_array expected_routes
+              end
+
+              it 'does not return internal route hostnames with the list of http routes' do
+                expect(ri.keys).not_to include('http_routes')
+              end
             end
           end
 
