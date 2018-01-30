@@ -307,6 +307,14 @@ module VCAP::Services
           "The service broker returned an invalid response for the request to #{uri}: #{message}"
         end
 
+        def self.broker_bad_response_error(uri, message)
+          "The service broker returned an invalid response for the request to #{uri}. #{message}"
+        end
+
+        def self.broker_timeout_error(uri)
+          "The request to the service broker timed out: #{uri}"
+        end
+
         def self.with_valid_volume_mounts
           {
             'volume_mounts' => [{ 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }]
@@ -659,6 +667,8 @@ module VCAP::Services
         test_case(:fetch_service_binding, 200, broker_partial_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
         test_case(:fetch_service_binding, 200, broker_empty_json, result: {})
         test_case(:fetch_service_binding, 200, { parameters: true }.to_json, error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(binding_uri, 'The service broker response contained a parameters field that was not a JSON object.'))
+        test_case(:fetch_service_binding, 408, {}.to_json, error: Errors::ServiceBrokerApiTimeout, description: broker_timeout_error(binding_uri))
+        test_case(:fetch_service_binding, 504, {}.to_json, error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(binding_uri, 'Status Code: 504 message, Body: {}'))
         # rubocop:enable Metrics/LineLength
       end
     end
