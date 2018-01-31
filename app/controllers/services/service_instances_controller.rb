@@ -231,7 +231,9 @@ module VCAP::CloudController
 
     get '/v2/service_instances/:guid/shared_to', :enumerate_shared_to_information
     def enumerate_shared_to_information(guid)
-      service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
+      service_instance = find_service_instance(guid)
+      validate_service_instance_access(service_instance)
+
       validate_access(:read, service_instance.space)
 
       associated_controller = VCAP::CloudController::SpacesController
@@ -244,12 +246,6 @@ module VCAP::CloudController
         @opts,
         {},
       )
-    rescue CloudController::Errors::ApiError => e
-      if e.name == 'NotAuthorized'
-        HTTP::NOT_FOUND
-      else
-        raise e
-      end
     end
 
     def self.url_for_guid(guid, object=nil)
@@ -381,6 +377,16 @@ module VCAP::CloudController
     private_constant :ServiceInstanceSharedToSerializer
 
     private
+
+    def find_service_instance(guid)
+      find_guid(guid, ManagedServiceInstance)
+    end
+
+    def validate_service_instance_access(service_instance)
+      validate_access(:read, service_instance)
+    rescue CloudController::Errors::ApiError
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', service_instance.guid)
+    end
 
     def create_paginated_collection_renderer(service_instance)
       VCAP::CloudController::RestController::PaginatedCollectionRenderer.new(
