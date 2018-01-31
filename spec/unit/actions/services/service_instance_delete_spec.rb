@@ -74,6 +74,17 @@ module VCAP::CloudController
         }.to change { ServiceKey.count }.by(-1)
       end
 
+      it 'unshares shared managed service instance and records only one unshare event' do
+        shared_to_space = Space.make
+        managed_service_instance.add_shared_space(shared_to_space)
+
+        expect(managed_service_instance).to receive(:remove_shared_space)
+        expect(route_service_instance).not_to receive(:remove_shared_space)
+        expect(Repositories::ServiceInstanceShareEventRepository).to receive(:record_unshare_event).once
+
+        service_instance_delete.delete([managed_service_instance, route_service_instance])
+      end
+
       it 'deletes the last operation for each managed service instance' do
         instance_operation_1 = ServiceInstanceOperation.make(state: 'succeeded')
         route_service_instance.service_instance_operation = instance_operation_1
@@ -296,6 +307,33 @@ module VCAP::CloudController
           broker_url_2 = deprovision_url(managed_service_instance, accepts_incomplete: nil)
           expect(a_request(:delete, broker_url_1)).to have_been_made
           expect(a_request(:delete, broker_url_2)).not_to have_been_made
+        end
+      end
+
+      context 'when unsharing fails for a shared service instance' do
+        before do
+          shared_to_space = Space.make
+          managed_service_instance.add_shared_space(shared_to_space)
+
+          allow(managed_service_instance).to receive(:remove_shared_space).and_raise('Unsharing failed')
+        end
+
+        it 'does not rollback previous deletions of service instances' do
+          expect {
+            service_instance_delete.delete([managed_service_instance, route_service_instance])
+          }.to change { ServiceInstance.count }.by(-1)
+        end
+
+        it 'returns the unbinding error' do
+          errors = service_instance_delete.delete([route_service_instance, managed_service_instance])
+          expect(errors.count).to eq(1)
+          expect(errors[0].message).to eq 'Unsharing failed'
+        end
+
+        it 'does not record an unshare event' do
+          expect(Repositories::ServiceInstanceShareEventRepository).not_to receive(:record_unshare_event)
+
+          service_instance_delete.delete([route_service_instance, managed_service_instance])
         end
       end
 

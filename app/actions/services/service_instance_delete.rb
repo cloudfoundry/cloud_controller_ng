@@ -1,6 +1,7 @@
 require 'actions/services/service_key_delete'
 require 'actions/services/route_binding_delete'
 require 'actions/services/locks/deleter_lock'
+require 'actions/service_instance_unshare'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
@@ -11,20 +12,39 @@ module VCAP::CloudController
 
     def delete(service_instance_dataset)
       service_instance_dataset.each_with_object([]) do |service_instance, errors_accumulator|
-        binding_errors = delete_service_bindings(service_instance)
-        binding_errors.concat delete_service_keys(service_instance)
-        binding_errors.concat delete_route_bindings(service_instance)
+        errors = delete_service_bindings(service_instance)
+        errors.concat delete_service_keys(service_instance)
+        errors.concat delete_route_bindings(service_instance)
 
-        errors_accumulator.concat binding_errors
+        errors.concat unshare_from_all_spaces(service_instance)
 
-        if binding_errors.empty?
+        errors_accumulator.concat(errors)
+
+        if errors.empty?
           instance_errors = delete_service_instance(service_instance)
-          errors_accumulator.concat instance_errors
+          errors_accumulator.concat(instance_errors)
         end
       end
     end
 
     private
+
+    def unshare_from_all_spaces(service_instance)
+      errors = []
+
+      if service_instance.shared?
+        unshare = ServiceInstanceUnshare.new
+        service_instance.shared_spaces.each do |target_space|
+          begin
+            unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
+          rescue => e
+            errors << e
+          end
+        end
+      end
+
+      errors
+    end
 
     def delete_service_instance(service_instance)
       errors = []
