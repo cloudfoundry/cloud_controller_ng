@@ -4361,10 +4361,59 @@ module VCAP::CloudController
 
       context 'when instances_retrievable is set to true' do
         let(:service) { Service.make(instances_retrievable: true) }
+        let(:body) {}
 
-        it 'returns a 200' do
-          get "/v2/service_instances/#{instance.guid}/parameters"
-          expect(last_response.status).to eql(200)
+        before do
+          stub_request(:get, %r{#{instance.service.service_broker.broker_url}/v2/service_instances/#{guid_pattern}}).
+            with(basic_auth: basic_auth(service_broker: instance.service.service_broker)).
+            to_return(status: 200, body: body)
+        end
+
+        context 'when there are parameters' do
+          let(:body) { { 'parameters' => { 'foo' => { 'bar' => true } } }.to_json }
+
+          it 'returns the parameters from the service broker' do
+            get "/v2/service_instances/#{instance.guid}/parameters"
+
+            expect(last_response.status).to eql(200)
+            expect(JSON.parse(last_response.body)['foo']['bar']).to eql(true)
+            expect(JSON.parse(last_response.body).length).to eql(1)
+          end
+
+          context 'when there are no parameters' do
+            let(:body) { {}.to_json }
+
+            it 'returns an empty object' do
+              get "/v2/service_instances/#{instance.guid}/parameters"
+
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({}.to_json)
+            end
+          end
+
+          context 'when the broker returns invalid parameters' do
+            let(:body) { { 'parameters' => 'blahblah' }.to_json }
+
+            it 'returns a 502 and an error' do
+              get "/v2/service_instances/#{instance.guid}/parameters"
+
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when the broker returns invalid json' do
+            let(:body) { 'blah' }
+
+            it 'returns a 502 and an error' do
+              get "/v2/service_instances/#{instance.guid}/parameters"
+
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
         end
       end
 
@@ -4421,6 +4470,10 @@ module VCAP::CloudController
                 space:  space,
                 scopes: ['cloud_controller.read']
               )
+
+              stub_request(:get, %r{#{instance.service.service_broker.broker_url}/v2/service_instances/#{guid_pattern}}).
+                with(basic_auth: basic_auth(service_broker: instance.service.service_broker)).
+                to_return(status: 200, body: '{"dashboard_url":"example.com", "parameters": {"foo": "bar"}}')
             end
 
             it "returns #{expected_return_value}" do

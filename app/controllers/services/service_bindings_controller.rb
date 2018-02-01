@@ -87,7 +87,6 @@ module VCAP::CloudController
     end
 
     get '/v2/service_bindings/:guid/parameters', :parameters
-
     def parameters(guid)
       binding = find_guid_and_validate_access(:read, guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding.v2_app.present?
@@ -99,7 +98,7 @@ module VCAP::CloudController
       client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
       resp = client.fetch_service_binding(binding)
 
-      [HTTP::OK, {}, resp.fetch('parameters', {}).to_json]
+      [HTTP::OK, resp.fetch('parameters', {}).to_json]
     end
 
     def self.translate_validation_exception(e, _attributes)

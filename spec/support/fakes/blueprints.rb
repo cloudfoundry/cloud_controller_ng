@@ -199,13 +199,15 @@ module VCAP::CloudController
   end
 
   Service.blueprint do
-    label             { Sham.label }
-    unique_id         { SecureRandom.uuid }
-    bindable          { true }
-    active            { true }
-    service_broker    { ServiceBroker.make }
-    description       { Sham.description } # remove hack
-    extra             { '{"shareable": true}' }
+    label                 { Sham.label }
+    unique_id             { SecureRandom.uuid }
+    bindable              { true }
+    active                { true }
+    service_broker        { ServiceBroker.make }
+    description           { Sham.description } # remove hack
+    extra                 { '{"shareable": true}' }
+    instances_retrievable { false }
+    bindings_retrievable  { false }
   end
 
   Service.blueprint(:routing) do

@@ -28,8 +28,11 @@ module VCAP::Services
             method = :parse_catalog
             path = '/v2/catalog'
           when :fetch_service_binding
-            method = :parse_fetch_service_binding
+            method = :parse_fetch_parameters
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
+          when :fetch_service_instance
+            method = :parse_fetch_parameters
+            path = '/v2/service_instances/GUID'
           end
 
           [method, path]
@@ -669,6 +672,12 @@ module VCAP::Services
         test_case(:fetch_service_binding, 200, { parameters: true }.to_json, error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(binding_uri, 'The service broker response contained a parameters field that was not a JSON object.'))
         test_case(:fetch_service_binding, 408, {}.to_json, error: Errors::ServiceBrokerApiTimeout, description: broker_timeout_error(binding_uri))
         test_case(:fetch_service_binding, 504, {}.to_json, error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(binding_uri, 'Status Code: 504 message, Body: {}'))
+
+        test_case(:fetch_service_instance, 200, { foo: 'bar' }.to_json, result: { 'foo' => 'bar' })
+        test_case(:fetch_service_instance, 200, broker_empty_json, result: {})
+        test_case(:fetch_service_instance, 200, broker_malformed_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, instance_uri))
+        test_case(:fetch_service_instance, 200, broker_partial_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
+        test_case(:fetch_service_instance, 200, { parameters: true }.to_json, error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained a parameters field that was not a JSON object.'))
         # rubocop:enable Metrics/LineLength
       end
     end

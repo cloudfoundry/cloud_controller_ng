@@ -5,6 +5,7 @@ class FakeServiceBrokerV2Client
   attr_accessor :service_name
   attr_accessor :plan_name
   attr_accessor :plan_schemas
+  attr_accessor :parameters
 
   def initialize(_attrs)
     @credentials = { 'username' => 'cool_user' }
@@ -13,6 +14,7 @@ class FakeServiceBrokerV2Client
     @service_name = 'service_name'
     @plan_name = 'fake_plan_name'
     @plan_schemas = nil
+    @parameters = {}
   end
 
   def catalog
@@ -75,4 +77,12 @@ class FakeServiceBrokerV2Client
   end
 
   def unbind(*); end
+
+  def fetch_service_instance(_instance)
+    parameters
+  end
+
+  def fetch_service_binding(_binding)
+    parameters
+  end
 end
