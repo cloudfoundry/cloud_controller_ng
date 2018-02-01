@@ -39,7 +39,7 @@ module VCAP::CloudController
           app_port:     port_with_defaults
         )
 
-        route_handler = ProcessRouteHandler.new(process)
+        route_handler = ProcessRouteHandler.new(process, route_mapping)
 
         RouteMappingModel.db.transaction do
           route_mapping.save
