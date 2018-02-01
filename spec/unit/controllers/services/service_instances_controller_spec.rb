@@ -4141,6 +4141,53 @@ module VCAP::CloudController
         end
 
         context 'when the user is a member of the org/space where the service instance was shared to' do
+          context 'and the user has read access to the service instance' do
+            ['space_developer', 'space_manager', 'space_auditor', 'org_manager'].each do |role|
+              context "as an #{role}" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    target_org,
+                    space:  target_space,
+                    user:   user,
+                  )
+                end
+
+                it 'has a 403 http status code' do
+                  get "/v2/service_instances/#{instance.guid}/shared_to"
+                  expect(last_response.status).to eq(403)
+                  expect(MultiJson.load(last_response.body)['description']).to eq('You are not authorized to perform the requested action')
+                end
+              end
+            end
+          end
+
+          context 'and the user does NOT have read access to the service instance' do
+            ['org_auditor', 'org_billing_manager'].each do |role|
+              context "as an #{role}" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    target_org,
+                    space:  target_space,
+                    user:   user,
+                  )
+                end
+
+                it 'returns a 404 http status code' do
+                  get "/v2/service_instances/#{instance.guid}/shared_to"
+                  expect(last_response.status).to eq(404)
+                  expect(MultiJson.load(last_response.body)['description']).to eq("The service instance could not be found: #{instance.guid}")
+                end
+              end
+            end
+          end
+        end
+
+        context 'when the user is not a member of either the shared_from or shared_to space/org' do
+          let(:random_org) { Organization.make }
+          let(:random_space) { Space.make(organization: random_org) }
+
           {
             'space_developer'     => 404,
             'space_manager'       => 404,
@@ -4153,12 +4200,11 @@ module VCAP::CloudController
               before do
                 set_current_user_as_role(
                   role:   role,
-                  org:    target_org,
-                  space:  target_space,
+                  org:    random_org,
+                  space:  random_space,
                   user:   user,
                 )
               end
-
               it "has a #{expected_status} http status code" do
                 get "/v2/service_instances/#{instance.guid}/shared_to"
                 expect(last_response.status).to eq(expected_status), "Expected #{expected_status}, got: #{last_response.status}, role: #{role}"
