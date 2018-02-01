@@ -4350,7 +4350,7 @@ module VCAP::CloudController
 
       before { set_current_user developer }
 
-      context 'when instance_retrievable is not set' do
+      context 'when instances_retrievable is not set' do
         it 'returns a 400 with error message' do
           get "/v2/service_instances/#{instance.guid}/parameters"
           expect(last_response.status).to eql(400)
@@ -4359,7 +4359,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when instance_retrievable is set to true' do
+      context 'when instances_retrievable is set to true' do
         let(:service) { Service.make(instances_retrievable: true) }
 
         it 'returns a 200' do
@@ -4368,7 +4368,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when instance_retrievable is set to false' do
+      context 'when instances_retrievable is set to false' do
         let(:service) { Service.make(instances_retrievable: false) }
 
         it 'returns a 400 with error message' do
