@@ -372,7 +372,7 @@ module CloudController
 
     def build_copilot_client
       Cloudfoundry::Copilot::Client.new(
-          host: 'istio.service.cf.internal',
+          host: 'copilot.service.cf.internal',
           port: 9001,
           client_ca: File.open(config.get(:diego, :bbs, :ca_file)).read,
           client_key: File.open(config.get(:diego, :bbs, :key_file)).read,
