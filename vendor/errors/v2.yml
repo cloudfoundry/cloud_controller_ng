@@ -448,6 +448,11 @@
   http_code: 404
   message: "The service could not be found: %s"
 
+120004:
+  name: ServiceFetchInstanceParametersNotSupported
+  http_code: 400
+  message: "This service does not support fetching service instance parameters."
+
 130001:
   name: DomainInvalid
   http_code: 400

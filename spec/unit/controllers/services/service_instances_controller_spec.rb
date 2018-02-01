@@ -4341,6 +4341,97 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/service_instances/:service_instance_guid/parameters' do
+      let(:space) { Space.make }
+      let(:service) { Service.make }
+      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+      let(:developer) { make_developer_for_space(space) }
+
+      before { set_current_user developer }
+
+      context 'when instance_retrievable is not set' do
+        it 'returns a 400 with error message' do
+          get "/v2/service_instances/#{instance.guid}/parameters"
+          expect(last_response.status).to eql(400)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+          expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+        end
+      end
+
+      context 'when instance_retrievable is set to true' do
+        let(:service) { Service.make(instances_retrievable: true) }
+
+        it 'returns a 200' do
+          get "/v2/service_instances/#{instance.guid}/parameters"
+          expect(last_response.status).to eql(200)
+        end
+      end
+
+      context 'when instance_retrievable is set to false' do
+        let(:service) { Service.make(instances_retrievable: false) }
+
+        it 'returns a 400 with error message' do
+          get "/v2/service_instances/#{instance.guid}/parameters"
+          expect(last_response.status).to eql(400)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+          expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+        end
+      end
+
+      context 'when the service is user provided' do
+        let(:instance) { UserProvidedServiceInstance.make(space: space) }
+
+        it 'returns a 400 with error message' do
+          get "/v2/service_instances/#{instance.guid}/parameters"
+          expect(last_response.status).to eql(400)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+          expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+        end
+      end
+
+      context "when the service instance doesn't exist" do
+        it 'returns a 404' do
+          get '/v2/service_instances/unknown-guid/parameters'
+          expect(last_response.status).to eql(404)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceInstanceNotFound')
+          expect(JSON.parse(last_response.body)['description']).to eql('The service instance could not be found: unknown-guid')
+        end
+      end
+
+      describe 'permissions' do
+        {
+          'space_auditor'       => 200,
+          'space_developer'     => 200,
+          'space_manager'       => 200,
+          'org_manager'         => 200,
+          'admin'               => 200,
+          'admin_read_only'     => 200,
+          'global_auditor'      => 200,
+          'org_auditor'         => 403,
+          'org_billing_manager' => 403,
+        }.each do |role, expected_return_value|
+          let(:service) { Service.make(instances_retrievable: true) }
+
+          context "as an #{role}" do
+            before do
+              set_current_user_as_role(
+                role:   role,
+                org:    space.organization,
+                space:  space,
+                scopes: ['cloud_controller.read']
+              )
+            end
+
+            it "returns #{expected_return_value}" do
+              get "/v2/service_instances/#{instance.guid}/parameters"
+              expect(last_response.status).to eq(expected_return_value), "Expected #{expected_return_value}, got: #{last_response.status}, role: #{role}"
+            end
+          end
+        end
+      end
+    end
+
     describe 'Validation messages' do
       let(:paid_quota) { QuotaDefinition.make(total_services: 1) }
       let(:free_quota_with_no_services) do

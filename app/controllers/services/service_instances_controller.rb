@@ -248,6 +248,17 @@ module VCAP::CloudController
       )
     end
 
+    get '/v2/service_instances/:guid/parameters', :parameters
+    def parameters(guid)
+      service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
+
+      if service_instance.user_provided_instance? || !service_instance.service.instances_retrievable
+        raise CloudController::Errors::ApiError.new_from_details('ServiceFetchInstanceParametersNotSupported')
+      end
+
+      HTTP::OK
+    end
+
     def self.url_for_guid(guid, object=nil)
       if object.class == UserProvidedServiceInstance
         user_provided_path = VCAP::CloudController::UserProvidedServiceInstancesController.path
