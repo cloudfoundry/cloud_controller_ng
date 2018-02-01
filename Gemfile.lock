@@ -26,6 +26,12 @@ GIT
       mustache (~> 0.99, >= 0.99.4)
       rspec (>= 3.0.0)
 
+PATH
+  remote: local_gems
+  specs:
+    cf-copilot (0.0.1)
+      grpc (~> 1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -90,8 +96,6 @@ GEM
       steno
     builder (3.2.3)
     byebug (9.0.6)
-    cf-copilot (0.0.1)
-      grpc (~> 1.0)
     cf-uaa-lib (3.13.0)
       httpclient (~> 2.8, >= 2.8.2.4)
       multi_json (~> 1.12.0, >= 1.12.1)
@@ -435,7 +439,7 @@ DEPENDENCIES
   awesome_print
   bits_service_client
   byebug
-  cf-copilot
+  cf-copilot!
   cf-perm!
   cf-perm-test-helpers!
   cf-uaa-lib (~> 3.13.0)

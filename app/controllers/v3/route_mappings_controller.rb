@@ -39,7 +39,7 @@ class RouteMappingsController < ApplicationController
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
-    # route_not_found! unless route
+    route_not_found! unless route
 
     begin
       route_mapping = RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process).add(message)
