@@ -1019,5 +1019,179 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'GET', '/v2/service_bindings/:guid/parameters' do
+      let(:space) { Space.make }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the service binding is valid' do
+        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:managed_service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+        let(:process) { ProcessModelFactory.make(space: space) }
+
+        context 'when the service has bindings_retrievable set to false' do
+          let(:service) { Service.make(bindings_retrievable: false) }
+
+          it 'returns a 400' do
+            set_current_user(developer)
+            binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+
+            get "/v2/service_bindings/#{binding.guid}/parameters"
+            expect(last_response.status).to eql(400)
+            expect(last_response.body).to include('This service does not support fetching service binding parameters.')
+          end
+        end
+
+        context 'when the service has bindings_retrievable set to true' do
+          let(:service) { Service.make(bindings_retrievable: true) }
+          let(:broker) { service.service_broker }
+          let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
+          let(:body) { {}.to_json }
+
+          before do
+            stub_request(:get, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+              with(basic_auth: basic_auth(service_broker: broker)).
+              to_return(status: 200, body: body)
+            set_current_user(developer)
+          end
+
+          context 'user permissions' do
+            let(:user) { User.make }
+
+            {
+              'admin'               => 200,
+              'space_developer'     => 200,
+              'admin_read_only'     => 200,
+              'global_auditor'      => 200,
+              'space_manager'       => 200,
+              'space_auditor'       => 200,
+              'org_manager'         => 200,
+              'org_auditor'         => 404,
+              'org_billing_manager' => 404,
+            }.each do |role, expected_status|
+              context "as a(n) #{role} in the binding space" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    space.organization,
+                    space:  space,
+                    user:   user
+                  )
+                end
+
+                it 'receives a 200 http status code' do
+                  get "/v2/service_bindings/#{binding.guid}/parameters"
+                  expect(last_response.status).to eq(expected_status)
+                end
+              end
+            end
+
+            it 'users without permission in the space see 404' do
+              random_space = Space.make
+
+              set_current_user_as_role(role: 'space_developer', org: random_space.organization, space: random_space, user: user)
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eq(404)
+            end
+          end
+
+          context 'when the broker has nested binding parameters' do
+            let(:body) { { 'parameters' => { 'foo' => { 'bar' => true } } }.to_json }
+
+            it 'returns the parameters' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({ 'foo' => { 'bar' => true } }.to_json)
+            end
+          end
+
+          context 'when the broker returns empty object' do
+            let(:body) { {}.to_json }
+
+            it 'returns an empty object' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({}.to_json)
+            end
+          end
+
+          context 'when the brokers response is missing a parameters key but contains other keys' do
+            let(:body) { { 'credentials' => 'value' }.to_json }
+
+            it 'returns an empty object' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({}.to_json)
+            end
+          end
+
+          context 'when the broker returns multiple keys' do
+            let(:body) { { 'credentials' => 'value', 'parameters' => { 'foo' => 'bar' } }.to_json }
+
+            it 'returns only the parameters' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({ 'foo' => 'bar' }.to_json)
+            end
+          end
+
+          context 'when the broker returns invalid json' do
+            let(:body) { '{]' }
+
+            it 'returns 502' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when the broker parameters is not a JSON object' do
+            let(:body) { { 'parameters' => true }.to_json }
+
+            it 'returns 502' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+        end
+      end
+
+      context 'when the binding is for a user provided service' do
+        let(:process) { ProcessModelFactory.make(space: space) }
+        let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
+
+        it 'returns a 400' do
+          set_current_user(developer)
+          binding = ServiceBinding.make(service_instance: user_provided_service_instance, app: process.app)
+
+          get "/v2/service_bindings/#{binding.guid}/parameters"
+          expect(last_response.status).to eql(400)
+          expect(last_response.body).to include('This service does not support fetching service binding parameters.')
+        end
+      end
+
+      context 'when the binding guid is invalid' do
+        it 'returns a 404' do
+          set_current_user(developer)
+          get '/v2/service_bindings/some-bogus-guid/parameters'
+          expect(last_response.status).to eql(404)
+          expect(last_response.body).to include('The service binding could not be found: some-bogus-guid')
+        end
+      end
+
+      context 'when the requested binding is a service key' do
+        let(:service_key) { ServiceKey.make }
+
+        it 'returns a 404' do
+          set_current_user(developer)
+          get "/v2/service_bindings/#{service_key.guid}/parameters"
+          expect(last_response.status).to eql(404)
+          expect(last_response.body).to include("The service binding could not be found: #{service_key.guid}")
+        end
+      end
+    end
   end
 end

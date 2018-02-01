@@ -86,6 +86,22 @@ module VCAP::CloudController
       end
     end
 
+    get '/v2/service_bindings/:guid/parameters', :parameters
+
+    def parameters(guid)
+      binding = find_guid(guid)
+      verify_binding_exists_and_is_readable!(binding)
+
+      unless binding.service_instance.managed_instance? && binding.service.bindings_retrievable
+        raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
+      end
+
+      client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+      resp = client.fetch_service_binding(binding)
+
+      [HTTP::OK, {}, resp.fetch('parameters', {}).to_json]
+    end
+
     def self.translate_validation_exception(e, _attributes)
       CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', e.errors.full_messages)
     end
@@ -93,6 +109,12 @@ module VCAP::CloudController
     define_messages
 
     private
+
+    def verify_binding_exists_and_is_readable!(binding)
+      unless binding.v2_app.present? && Permissions.new(SecurityContext.current_user).can_read_from_space?(binding.space.guid, binding.space.organization.guid)
+        raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', binding.guid)
+      end
+    end
 
     def filter_dataset(dataset)
       dataset.select_all(ServiceBinding.table_name).join(ProcessModel.table_name, app_guid: :app_guid, type: ProcessTypes::WEB)

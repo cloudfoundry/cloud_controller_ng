@@ -230,6 +230,12 @@ module VCAP::Services::ServiceBrokers::V2
       return attributes, e
     end
 
+    def fetch_service_binding(service_binding)
+      path = service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)
+      response = @http_client.get(path)
+      @response_parser.parse_fetch_service_binding(path, response)
+    end
+
     private
 
     def context_hash(service_instance)

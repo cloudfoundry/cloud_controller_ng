@@ -40,6 +40,8 @@ module VCAP::Services::ServiceBrokers
           active:      catalog_service.plans_present?,
           requires:    catalog_service.requires,
           plan_updateable: catalog_service.plan_updateable,
+          bindings_retrievable: catalog_service.bindings_retrievable,
+          instances_retrievable: catalog_service.instances_retrievable,
         )
 
         @services_event_repository.with_service_event(obj) do
