@@ -1044,13 +1044,46 @@ module VCAP::CloudController
 
         context 'bindings_retrievable is set to true' do
           let(:service) { Service.make(bindings_retrievable: true) }
+          let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
 
           it 'returns a 200' do
             set_current_user(developer)
-            binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
 
             get "/v2/service_bindings/#{binding.guid}/parameters"
             expect(last_response.status).to eql(200)
+          end
+
+          context 'user permissions' do
+            let(:user) { User.make }
+
+            {
+              'admin'               => 200,
+              'space_developer'     => 200,
+              'admin_read_only'     => 200,
+              'global_auditor'      => 200,
+              'space_manager'       => 200,
+              'space_auditor'       => 200,
+              'org_manager'         => 200,
+              'org_auditor'         => 403,
+              'org_billing_manager' => 403,
+              'org_user'            => 403,
+            }.each do |role, expected_status|
+              context "as a(n) #{role} in the binding space" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    space.organization,
+                    space:  space,
+                    user:   user
+                  )
+                end
+
+                it "receives a #{expected_status} http status code" do
+                  get "/v2/service_bindings/#{binding.guid}/parameters"
+                  expect(last_response.status).to eq(expected_status)
+                end
+              end
+            end
           end
         end
       end

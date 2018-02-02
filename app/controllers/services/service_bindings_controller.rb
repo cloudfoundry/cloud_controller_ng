@@ -28,7 +28,7 @@ module VCAP::CloudController
     get '/v2/service_bindings/:guid/parameters', :parameters
 
     def parameters(guid)
-      binding = find_guid(guid)
+      binding = find_guid_and_validate_access(:read, guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding.v2_app.present?
 
       unless binding.service_instance.managed_instance? && binding.service.bindings_retrievable
