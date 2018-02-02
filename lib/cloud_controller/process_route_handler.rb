@@ -36,15 +36,8 @@ module VCAP::CloudController
       route = @route_mapping.route
       copilot_client = CloudController::DependencyLocator.instance.copilot_client
       route_guid = route.guid
-      host = route.fqdn
       # call copilot sdk
       logger.info("got a copilot client #{copilot_client.inspect}")
-      logger.info("upserting route in copilot")
-      copilot_client.upsert_route(
-          guid: route_guid,
-          host: host,
-      )
-      logger.info("success upserting route in copilot")
       capi_process_guid = @process.guid
       diego_process_guid = Diego::ProcessGuid.from_process(@process)
       logger.info("mapping route in copilot")

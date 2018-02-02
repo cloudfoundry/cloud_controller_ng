@@ -220,6 +220,8 @@ module VCAP::CloudController
 
     def after_create(route)
       @route_event_repository.record_route_create(route, UserAuditInfo.from_context(SecurityContext), request_attrs)
+      route_handler = RouteHandler.new(route)
+      route_handler.update_route_information
     end
 
     def after_update(route)
