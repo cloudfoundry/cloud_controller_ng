@@ -110,7 +110,7 @@ module VCAP::CloudController
 
     def reserved?
       rule = PublicSuffix::List.default.find(name)
-      !rule.nil? && !rule.allow?(name)
+      !rule.nil? && rule.decompose(name).last.nil?
     end
   end
 end

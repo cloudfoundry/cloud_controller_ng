@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:url) { '/internal/buildpacks' }
 
     def create_buildpack(key, position, file)
-      blobstore.cp_to_blobstore(file, key)
+      blobstore.cp_to_blobstore(file.path, key)
       Buildpack.make(key: key, position: position)
     end
 

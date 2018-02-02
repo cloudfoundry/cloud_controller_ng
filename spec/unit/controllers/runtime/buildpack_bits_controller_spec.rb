@@ -70,7 +70,7 @@ module VCAP::CloudController
         end
 
         it 'takes a buildpack file and adds it to the custom buildpacks blobstore with the correct key' do
-          allow(CloudController::DependencyLocator.instance.upload_handler).to receive(:uploaded_file).and_return(valid_zip)
+          allow(CloudController::DependencyLocator.instance.upload_handler).to receive(:uploaded_file).and_return(valid_zip.path)
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
           expected_key = "#{test_buildpack.guid}_#{sha_valid_zip}"
 

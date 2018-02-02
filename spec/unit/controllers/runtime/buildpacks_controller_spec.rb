@@ -152,7 +152,7 @@ module VCAP::CloudController
       context 'with async false' do
         before do
           buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-          buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']), buildpack1.key)
+          buildpack_blobstore.cp_to_blobstore(Tempfile.new(['FAKE_BUILDPACK', '.zip']).path, buildpack1.key)
         end
 
         it 'destroys the buildpack entry and enqueues a job to delete the object from the blobstore' do
