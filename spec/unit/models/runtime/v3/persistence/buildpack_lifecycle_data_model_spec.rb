@@ -447,7 +447,7 @@ module VCAP::CloudController
   end
 
   def check_rolling_deploy_timebomb
-    if Time.now > Time.utc(2018, 2, 1)
+    if Time.now > Time.utc(2018, 2, 5)
       raise Exception.new('No longer supporting rolling deploys for multiple buildpacks. This legacy behavior can now be removed.')
     end
   end
