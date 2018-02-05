@@ -4,6 +4,135 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       RSpec.describe 'ResponseParser' do
+        describe 'JsonSchemaValidator' do
+          let(:json_validator) { ResponseParser::JsonSchemaValidator.new(logger, schema, inner_validator) }
+          let(:logger) { instance_double(Steno::Logger, warn: nil) }
+          let(:schema) {
+            {
+              '$schema' => 'http://json-schema.org/draft-04/schema#',
+              'type' => 'object',
+              'properties' => {},
+            }
+          }
+          let(:inner_validator) { {} }
+          let(:broker_response) {
+            ResponseParser::UnvalidatedResponse.new('GET', 'https://example.com', '/path',
+                                                    HttpResponse.new(
+                                                      code: '200',
+                                                      body: broker_response_body,
+            ))
+          }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(logger)
+            allow(inner_validator).to receive(:validate).and_return('inner-validator-result')
+          end
+
+          context 'when the broker response body is valid' do
+            let(:broker_response_body) { '{}' }
+            it 'does not raise' do
+              expect { json_validator.validate(broker_response.to_hash) }.not_to raise_error
+            end
+
+            it 'returns the inner validator result' do
+              expect(json_validator.validate(broker_response.to_hash)).to eql('inner-validator-result')
+            end
+
+            it 'calls the inner validator with the same parameters it was passed' do
+              json_validator.validate(broker_response.to_hash)
+              expect(inner_validator).to have_received(:validate).with(broker_response.to_hash)
+            end
+          end
+
+          context 'when the broker response is not a top-level JSON object' do
+            ['invalid', '[]', '"not-top-level-object"'].each do |body|
+              context "and the response body is #{body}" do
+                let(:broker_response_body) { body }
+                it 'raises' do
+                  expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                    expect(e.to_h['description']).to eq(
+                      "The service broker returned an invalid response for the request to https://example.com/path: expected valid JSON object in body, broker returned '#{body}'")
+                    expect(e.response_code).to eq(502)
+                    expect(e.to_h['http']['method']).to eq('GET')
+                    expect(e.to_h['http']['status']).to eq(200)
+                  end
+                end
+              end
+            end
+
+            context 'and the response body is not able to be parsed' do
+              let(:broker_response_body) { 'invalid' }
+              it 'logs the error' do
+                begin
+                  json_validator.validate(broker_response.to_hash)
+                rescue
+                  # this is tested above
+                end
+
+                expect(logger).to have_received(:warn).with "MultiJson parse error `\"invalid\"'"
+              end
+            end
+          end
+
+          context 'when the schema has required properties' do
+            let(:schema) {
+              {
+                'id' => 'some-id',
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object',
+                'required' => ['prop1', 'prop2'],
+                'properties' => {
+                  'prop1' => {
+                    'type' => 'boolean',
+                  },
+                  'prop2' => {
+                    'type' => 'string',
+                  }
+                }
+              }
+            }
+
+            context 'and there is a single valiation failure' do
+              let(:broker_response_body) {
+                {
+                  prop1: true
+                }.to_json
+              }
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                  description_lines = e.to_h['description'].split("\n")
+                  expect(description_lines[0]).to eq('The service broker returned an invalid response for the request to https://example.com/path: ')
+                  expect(description_lines.drop(1)).to contain_exactly("The property '#/' did not contain a required property of 'prop2'")
+                  expect(e.response_code).to eq(502)
+                  expect(e.to_h['http']['method']).to eq('GET')
+                  expect(e.to_h['http']['status']).to eq(200)
+                end
+              end
+            end
+
+            context 'and there are multiple valiation failures' do
+              let(:broker_response_body) {
+                {
+                }.to_json
+              }
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                  description_lines = e.to_h['description'].split("\n")
+                  expect(description_lines[0]).to eq('The service broker returned an invalid response for the request to https://example.com/path: ')
+                  expect(description_lines.drop(1)).to contain_exactly(
+                    "The property '#/' did not contain a required property of 'prop2'",
+                    "The property '#/' did not contain a required property of 'prop1'")
+                  expect(e.response_code).to eq(502)
+                  expect(e.to_h['http']['method']).to eq('GET')
+                  expect(e.to_h['http']['status']).to eq(200)
+                end
+              end
+            end
+          end
+        end
+
         def get_method_and_path(operation)
           case operation
           when :provision
@@ -28,7 +157,7 @@ module VCAP::Services
             method = :parse_catalog
             path = '/v2/catalog'
           when :fetch_service_binding
-            method = :parse_fetch_parameters
+            method = :parse_fetch_binding_parameters
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           when :fetch_service_instance
             method = :parse_fetch_parameters
@@ -689,6 +818,7 @@ module VCAP::Services
         test_case(:fetch_service_binding, 422, broker_malformed_json,                           error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_binding, 422, broker_empty_json,                               error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_binding, 504, {}.to_json,                                      error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(binding_uri, 'Status Code: 504 message, Body: {}'))
+        test_case(:fetch_service_binding, 200, { credentials: 'bla' }.to_json,                  error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(binding_uri, 'The service broker response contained a credentials field that was not a JSON object.'))
         test_common_error_cases(:fetch_service_binding)
 
         test_case(:fetch_service_instance, 200, { foo: 'bar' }.to_json,                         result: { 'foo' => 'bar' })

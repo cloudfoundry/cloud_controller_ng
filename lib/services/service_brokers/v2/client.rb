@@ -239,7 +239,7 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_service_binding(service_binding)
       path = service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)
       response = @http_client.get(path)
-      @response_parser.parse_fetch_parameters(path, response)
+      @response_parser.parse_fetch_binding_parameters(path, response)
     end
 
     private
