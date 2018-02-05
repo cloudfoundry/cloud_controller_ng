@@ -188,9 +188,16 @@ module VCAP::Services
         def parse_fetch_parameters(path, response)
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
-          validator = CommonErrorValidator.new(JsonObjectValidator.new(@logger,
-            ParametersValidator.new(SuccessValidator.new)))
+          validator =
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger,
+                ParametersValidator.new(SuccessValidator.new))
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
+          validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
         end
 

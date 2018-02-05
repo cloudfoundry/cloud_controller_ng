@@ -4362,11 +4362,12 @@ module VCAP::CloudController
       context 'when instances_retrievable is set to true' do
         let(:service) { Service.make(instances_retrievable: true) }
         let(:body) {}
+        let(:response_code) { 200 }
 
         before do
           stub_request(:get, %r{#{instance.service.service_broker.broker_url}/v2/service_instances/#{guid_pattern}}).
             with(basic_auth: basic_auth(service_broker: instance.service.service_broker)).
-            to_return(status: 200, body: body)
+            to_return(status: response_code, body: body)
         end
 
         context 'when there are parameters' do
@@ -4412,6 +4413,18 @@ module VCAP::CloudController
               expect(last_response.status).to eql(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when the broker returns a non-200 response code' do
+            let(:response_code) { 500 }
+
+            it 'returns a 502 and an error' do
+              get "/v2/service_instances/#{instance.guid}/parameters"
+
+              expect(last_response.status).to eql(502)
+              hash_body = JSON.parse(last_response.body)
+              expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
           end
         end
