@@ -120,10 +120,6 @@ module VCAP::CloudController
         end
 
         context 'when supporting rolling deploys' do
-          before do
-            check_rolling_deploy_timebomb
-          end
-
           context 'when the first buildpack specified is a custom url' do
             it 'persists the buildpack with legacy fields' do
               lifecycle_data.buildpacks = ['http://buildpack.example.com']
@@ -166,10 +162,6 @@ module VCAP::CloudController
         end
 
         context 'when supporting rolling deploys' do
-          before do
-            check_rolling_deploy_timebomb
-          end
-
           it 'also persists the buildpack under the legacy column' do
             lifecycle_data.buildpacks = ['ruby']
             lifecycle_data.save
@@ -232,10 +224,6 @@ module VCAP::CloudController
     end
 
     describe '#legacy_buildpack_model' do
-      before do
-        check_rolling_deploy_timebomb
-      end
-
       let!(:admin_buildpack) { Buildpack.make(name: 'bob') }
 
       context 'when the buildpack is nil' do
@@ -271,10 +259,6 @@ module VCAP::CloudController
     describe '#using_custom_buildpack?' do
       context 'when using a custom buildpack' do
         context 'when using a single-instance legacy buildpack' do
-          before do
-            check_rolling_deploy_timebomb
-          end
-
           subject(:lifecycle_data) { BuildpackLifecycleDataModel.new }
 
           it 'returns true' do
@@ -305,10 +289,6 @@ module VCAP::CloudController
 
     describe '#first_custom_buildpack_url' do
       context 'when using a single-instance legacy buildpack' do
-        before do
-          check_rolling_deploy_timebomb
-        end
-
         subject(:lifecycle_data) { BuildpackLifecycleDataModel.new }
 
         it 'returns the first url' do
@@ -443,12 +423,6 @@ module VCAP::CloudController
         lifecycle_data.save
         expect(lifecycle_data.reload.build).to eq(build)
       end
-    end
-  end
-
-  def check_rolling_deploy_timebomb
-    if Time.now > Time.utc(2018, 2, 5)
-      raise Exception.new('No longer supporting rolling deploys for multiple buildpacks. This legacy behavior can now be removed.')
     end
   end
 end
