@@ -143,6 +143,10 @@ module VCAP::CloudController
       end
 
       after_create(route)
+
+      # Are we messing up the response??
+      CopilotHandler.create_route(route) # if copilot.enabled?
+
       [
         HTTP::CREATED,
         { 'Location' => "#{self.class.path}/#{route.guid}" },
@@ -160,9 +164,17 @@ module VCAP::CloudController
 
       if async?
         job = route_delete_action.delete_async(route: route, recursive: recursive_delete?)
+
+        # Are we messing up the response??
+        CopilotHandler.delete_route(guid) # if copilot.enabled?
+
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
         route_delete_action.delete_sync(route: route, recursive: recursive_delete?)
+
+        # Are we messing up the response??
+        CopilotHandler.delete_route(guid) # if copilot.enabled?
+
         [HTTP::NO_CONTENT, nil]
       end
     rescue RouteDelete::ServiceInstanceAssociationError
@@ -220,8 +232,6 @@ module VCAP::CloudController
 
     def after_create(route)
       @route_event_repository.record_route_create(route, UserAuditInfo.from_context(SecurityContext), request_attrs)
-      route_handler = RouteHandler.new(route)
-      route_handler.update_route_information
     end
 
     def after_update(route)

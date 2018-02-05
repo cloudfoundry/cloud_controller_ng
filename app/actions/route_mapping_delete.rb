@@ -22,6 +22,7 @@ module VCAP::CloudController
 
           route_mapping.destroy
           route_handler.update_route_information
+          CopilotHandler.unmap_route(route_mapping, route_mapping.process)
         end
       end
     end

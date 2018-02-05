@@ -39,11 +39,12 @@ module VCAP::CloudController
           app_port:     port_with_defaults
         )
 
-        route_handler = ProcessRouteHandler.new(process, route_mapping)
+        route_handler = ProcessRouteHandler.new(process)
 
         RouteMappingModel.db.transaction do
           route_mapping.save
           route_handler.update_route_information
+          CopilotHandler.map_route(route_mapping, process) # if copilot.enabled?
 
           app_event_repository.record_map_route(
             app,

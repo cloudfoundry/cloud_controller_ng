@@ -3,7 +3,7 @@ require 'cloud_controller/process_route_handler'
 
 module VCAP::CloudController
   RSpec.describe ProcessRouteHandler do
-    subject(:handler) { ProcessRouteHandler.new(process, nil, runners) }
+    subject(:handler) { ProcessRouteHandler.new(process, runners) }
     let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:runner) { instance_double(Diego::Runner, update_routes: nil) }
 
