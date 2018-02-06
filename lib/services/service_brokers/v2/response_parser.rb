@@ -185,89 +185,94 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_fetch_parameters(path, response)
+        def parse_fetch_parameters(path, response, schema)
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
           validator =
             case unvalidated_response.code
             when 200
-              JsonObjectValidator.new(@logger,
-                ParametersValidator.new(SuccessValidator.new))
+              JsonSchemaValidator.new(@logger, schema, SuccessValidator.new)
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             end
 
           validator = CommonErrorValidator.new(validator)
+
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_fetch_binding_parameters(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
+        def parse_fetch_instance_parameters(path, response)
+          parse_fetch_parameters(path, response, fetch_instance_parameters_response_schema)
+        end
 
-          schema = {
-                '$schema' => 'http://json-schema.org/draft-04/schema#',
+        def parse_fetch_binding_parameters(path, response)
+          parse_fetch_parameters(path, response, fetch_binding_parameters_response_schema)
+        end
+
+        def fetch_instance_parameters_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'parameters' => {
                 'type' => 'object',
-                'properties' => {
-                  'parameters' => {
-                    'type' => 'object',
-                  },
-                  'credentials' => {
-                    'type' => 'object',
-                  },
-                  'syslog_drain_url' => {
-                    'type' => 'string',
-                  },
-                  'route_service_url' => {
-                    'type' => 'string',
-                  },
-                  'volume_mounts' => {
-                    'type' => 'array',
-                    'items' => {
+              },
+            },
+          }
+        end
+
+        def fetch_binding_parameters_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'parameters' => {
+                'type' => 'object',
+              },
+              'credentials' => {
+                'type' => 'object',
+              },
+              'syslog_drain_url' => {
+                'type' => 'string',
+              },
+              'route_service_url' => {
+                'type' => 'string',
+              },
+              'volume_mounts' => {
+                'type' => 'array',
+                'items' => {
+                  'type' => 'object',
+                  'required' => ['device', 'device_type', 'driver', 'mode', 'container_dir'],
+                  'properties' => {
+                    'device' => {
                       'type' => 'object',
-                      'required' => ['device', 'device_type', 'driver', 'mode', 'container_dir'],
+                      'required' => ['volume_id'],
                       'properties' => {
-                        'device' => {
-                          'type' => 'object',
-                          'required' => ['volume_id'],
-                          'properties' => {
-                            'volume_id' => {
-                              'type' => 'string',
-                            },
-                            'mount_config' => {
-                              'type' => ['object', 'null'],
-                            },
-                          },
-                        },
-                        'device_type' => {
+                        'volume_id' => {
                           'type' => 'string',
                         },
-                        'driver' => {
-                          'type' => 'string',
-                        },
-                        'mode' => {
-                          'enum' => ['r', 'rw'],
-                        },
-                        'container_dir' => {
-                          'type' => 'string',
+                        'mount_config' => {
+                          'type' => ['object', 'null'],
                         },
                       },
                     },
+                    'device_type' => {
+                      'type' => 'string',
+                    },
+                    'driver' => {
+                      'type' => 'string',
+                    },
+                    'mode' => {
+                      'enum' => ['r', 'rw'],
+                    },
+                    'container_dir' => {
+                      'type' => 'string',
+                    },
                   },
-                }
-              }
-
-          validator =
-            case unvalidated_response.code
-            when 200
-              JsonSchemaValidator.new(@logger,
-                                      schema, SuccessValidator.new)
-            else
-              FailingValidator.new(Errors::ServiceBrokerBadResponse)
-            end
-
-          validator = CommonErrorValidator.new(validator)
-
-          validator.validate(unvalidated_response.to_hash)
+                },
+              },
+            }
+          }
         end
 
         class UnvalidatedResponse

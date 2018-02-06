@@ -160,7 +160,7 @@ module VCAP::Services
             method = :parse_fetch_binding_parameters
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           when :fetch_service_instance
-            method = :parse_fetch_parameters
+            method = :parse_fetch_instance_parameters
             path = '/v2/service_instances/GUID'
           end
 
@@ -878,7 +878,7 @@ module VCAP::Services
         test_case(:fetch_service_instance, 200, broker_empty_json,                              result: {})
         test_case(:fetch_service_instance, 200, broker_malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:fetch_service_instance, 200, broker_partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
-        test_case(:fetch_service_instance, 200, { parameters: true }.to_json,                   error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained a parameters field that was not a JSON object.'))
+        test_case(:fetch_service_instance, 200, { parameters: true }.to_json,                   error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, "\nThe property '#/parameters' of type boolean did not match the following type: object"))
         test_case(:fetch_service_instance, 201, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_instance, 201, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_instance, 201, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
