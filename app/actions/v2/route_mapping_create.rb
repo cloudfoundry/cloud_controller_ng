@@ -44,7 +44,7 @@ module VCAP::CloudController
         RouteMappingModel.db.transaction do
           route_mapping.save
           route_handler.update_route_information
-          CopilotHandler.map_route(route_mapping, process) # if copilot.enabled?
+          CopilotHandler.map_route(route_mapping) # if copilot.enabled?
 
           app_event_repository.record_map_route(
             app,
