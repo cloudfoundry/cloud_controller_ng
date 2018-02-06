@@ -110,6 +110,10 @@ module VCAP::CloudController
           'Routes for this host and domain have been reserved for another space.')
       end
 
+      if e.errors.on(:path) == [:path_not_included_for_internal_domain]
+        return CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Path is not supported for internal domains.')
+      end
+
       path_error = e.errors.on(:path)
       if path_error
         return path_errors(path_error, attributes)

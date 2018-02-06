@@ -293,6 +293,17 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the domain is internal and path is present' do
+        let(:internal_domain) { Domain.make(internal: true) }
+
+        it 'returns RouteInvalid' do
+          post '/v2/routes', MultiJson.dump(domain_guid: internal_domain.guid, space_guid: space.guid, path: '/v2/zak', host: 'my-host')
+
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to include('Path is not supported for internal domains.')
+        end
+      end
+
       it 'returns RouteInvalid when generate_port is queried with an http domain' do
         post '/v2/routes?generate_port=true', MultiJson.dump(domain_guid: http_domain.guid, space_guid: space.guid)
 

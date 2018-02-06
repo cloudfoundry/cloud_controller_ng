@@ -34,6 +34,24 @@ module VCAP::CloudController
       end
     end
 
+    context 'when creating an internal route with a path value that is not null' do
+      let(:domain) { SharedDomain.make(internal: true) }
+      let(:path) { '/path' }
+      it 'adds an error' do
+        validator.validate
+        expect(route.errors.on(:path)).to include(:path_not_included_for_internal_domain)
+      end
+
+      context 'when the domain is nil' do
+        let(:domain) { nil }
+
+        it 'does not null point' do
+          validator.validate
+          expect(route.errors.on(:path)).to be_nil
+        end
+      end
+    end
+
     context 'when creating a route with a port value that is not null' do
       context 'with a domain without a router_group_guid' do
         let(:domain) { SharedDomain.make(router_group_guid: nil) }
