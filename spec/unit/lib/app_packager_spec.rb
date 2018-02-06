@@ -72,20 +72,50 @@ RSpec.describe AppPackager do
     end
 
     describe 'symlinks' do
-      context 'when the zip contains a symlink that does not leave the root dir' do
-        let(:input_zip) { File.join(Paths::FIXTURES, 'good_symlinks.zip') }
+      context 'when valid' do
+        context 'when the zip contains a symlink that does not leave the root dir' do
+          context 'symbolic links point downwards' do
+            let(:input_zip) { File.join(Paths::FIXTURES, 'good_symlinks.zip') }
 
-        it 'unzips them correctly without errors' do
-          app_packager.unzip(@tmpdir)
-          expect(File.symlink?("#{@tmpdir}/what")).to be true
+            it 'unzips them correctly without errors' do
+              app_packager.unzip(@tmpdir)
+              expect(File.symlink?("#{@tmpdir}/what")).to be true
+              expect(File.readlink("#{@tmpdir}/what")).to eq 'box/jack'
+            end
+          end
+
+          context 'symbolic links point upwards (start with "..")' do
+            let(:input_zip) { File.join(Paths::FIXTURES, 'multi_dot_dot_symlinks.zip') }
+
+            it 'unzips them correctly without errors' do
+              app_packager.unzip(@tmpdir)
+              expect(File.symlink?("#{@tmpdir}/a/b2/c21")).to be true
+              expect(File.symlink?("#{@tmpdir}/a/b2/c22")).to be true
+              expect(File.symlink?("#{@tmpdir}/a/b2/c33")).to be true
+              expect(File.exist?("#{@tmpdir}/a/b1/c11")).to be true
+              expect(File.exist?("#{@tmpdir}/a/b1/c11")).to be true
+            end
+          end
         end
       end
 
-      context 'when the zip contains a symlink pointing to a file out of the root dir' do
-        let(:input_zip) { File.join(Paths::FIXTURES, 'bad_symlinks.zip') }
+      context 'when invalid' do
+        context 'when the zip contains a symlink pointing to a file out of the root dir' do
+          context 'when the symlink is relative' do
+            let(:input_zip) { File.join(Paths::FIXTURES, 'bad_symlinks.zip') }
 
-        it 'raises an exception' do
-          expect { app_packager.unzip(@tmpdir) }.to raise_exception(CloudController::Errors::ApiError, /symlink.+outside/i)
+            it 'raises an exception' do
+              expect { app_packager.unzip(@tmpdir) }.to raise_exception(CloudController::Errors::ApiError, /symlink.+outside/i)
+            end
+          end
+
+          context 'when the symlink is absolute' do
+            let(:input_zip) { File.join(Paths::FIXTURES, 'absolute_symlink_out_of_parent.zip') }
+
+            it 'raises an exception' do
+              expect { app_packager.unzip(@tmpdir) }.to raise_exception(CloudController::Errors::ApiError, /symlink.+outside/i)
+            end
+          end
         end
       end
     end

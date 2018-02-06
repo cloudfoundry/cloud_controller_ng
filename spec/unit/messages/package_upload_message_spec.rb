@@ -13,6 +13,25 @@ module VCAP::CloudController
         expect(upload_message).to be_valid
       end
 
+      context 'when the path is relative' do
+        let(:opts) { { bits_path: '../tmp/mango/pear' } }
+
+        it 'is valid' do
+          upload_message = PackageUploadMessage.new(opts)
+          expect(upload_message).to be_valid
+        end
+      end
+
+      context 'when the path is relative but matches a prefix of the base dir' do
+        let(:opts) { { bits_path: '../tmp-not!/mango/pear' } }
+
+        it 'is not valid' do
+          upload_message = PackageUploadMessage.new(opts)
+          expect(upload_message).not_to be_valid
+          expect(upload_message.errors[:bits_path]).to include('is invalid')
+        end
+      end
+
       context 'when the path is not provided' do
         let(:opts) { {} }
         it 'is not valid' do

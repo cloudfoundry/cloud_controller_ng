@@ -84,7 +84,21 @@ class AppPackager
   def any_outside_symlinks?(destination_dir)
     Zip::File.open(@path) do |in_zip|
       in_zip.any? do |entry|
-        symlink?(entry) && !safe_path?(in_zip.file.read(entry.name), destination_dir)
+        if !symlink?(entry)
+          false
+        else
+          parent_dir = entry.parent_as_string
+          target_dir = in_zip.file.read(entry.name)
+          if parent_dir
+            # Link is "upwards" -- starts with a "../"
+            base_dir = File.expand_path(parent_dir, destination_dir)
+            final_dir = File.expand_path(target_dir, base_dir)
+          else
+            # Link is "downwards" or to an absolute dir
+            final_dir = File.expand_path(target_dir, destination_dir)
+          end
+          !final_dir.starts_with?(destination_dir)
+        end
       end
     end
   rescue Zip::Error
@@ -93,10 +107,6 @@ class AppPackager
 
   def symlink?(entry)
     entry.ftype == :symlink
-  end
-
-  def safe_path?(path, destination_dir)
-    VCAP::CloudController::FilePathChecker.safe_path?(path, destination_dir)
   end
 
   def empty_directory?(dir)
