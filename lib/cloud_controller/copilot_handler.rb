@@ -2,7 +2,7 @@ require 'cf-copilot'
 
 module VCAP::CloudController
   class CopilotHandler
-    def self.create_route(route)
+    def create_route(route)
       logger.info("notifying copilot of route creation...")
       route_guid = route.guid
       host = route.fqdn
@@ -15,7 +15,7 @@ module VCAP::CloudController
       logger.error("failed communicating with copilot server: #{e.message}")
     end
 
-    def self.map_route(route_mapping)
+    def map_route(route_mapping)
       logger.info("notifying copilot of route mapping...")
       route = route_mapping.route
       route_guid = route.guid
@@ -31,7 +31,7 @@ module VCAP::CloudController
       logger.error("failed communicating with copilot server: #{e.message}")
     end
 
-    def self.unmap_route(route_mapping)
+    def unmap_route(route_mapping)
       logger.info("notifying copilot of route unmapping...")
       route = route_mapping.route
       route_guid = route.guid
@@ -45,7 +45,7 @@ module VCAP::CloudController
       logger.error("failed communicating with copilot server: #{e.message}")
     end
 
-    def self.delete_route(guid)
+    def delete_route(guid)
       logger.info("notifying copilot of route deletion...")
       copilot_client.delete_route(guid: guid)
       logger.info("success deleting route in copilot")
@@ -53,11 +53,13 @@ module VCAP::CloudController
       logger.error("failed communicating with copilot server: #{e.message}")
     end
 
-    private_class_method def self.logger
+    private
+
+    def logger
       @logger ||= Steno.logger('cc.copilot_handler')
     end
 
-    private_class_method def self.copilot_client
+    def copilot_client
       CloudController::DependencyLocator.instance.copilot_client
     end
   end
