@@ -204,9 +204,68 @@ module VCAP::Services
         def parse_fetch_binding_parameters(path, response)
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
-          schema = 'foo'
+          schema = {
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object',
+                'properties' => {
+                  'parameters' => {
+                    'type' => 'object',
+                  },
+                  'credentials' => {
+                    'type' => 'object',
+                  },
+                  'syslog_drain_url' => {
+                    'type' => 'string',
+                  },
+                  'route_service_url' => {
+                    'type' => 'string',
+                  },
+                  'volume_mounts' => {
+                    'type' => 'array',
+                    'items' => {
+                      'type' => 'object',
+                      'required' => ['device', 'device_type', 'driver', 'mode', 'container_dir'],
+                      'properties' => {
+                        'device' => {
+                          'type' => 'object',
+                          'required' => ['volume_id'],
+                          'properties' => {
+                            'volume_id' => {
+                              'type' => 'string',
+                            },
+                            'mount_config' => {
+                              'type' => ['object', 'null'],
+                            },
+                          },
+                        },
+                        'device_type' => {
+                          'type' => 'string',
+                        },
+                        'driver' => {
+                          'type' => 'string',
+                        },
+                        'mode' => {
+                          'enum' => ['r', 'rw'],
+                        },
+                        'container_dir' => {
+                          'type' => 'string',
+                        },
+                      },
+                    },
+                  },
+                }
+              }
 
-          validator = CommonErrorValidator.new(JsonSchemaValidator.new(@logger, schema, SuccessValidator.new))
+          validator =
+            case unvalidated_response.code
+            when 200
+              JsonSchemaValidator.new(@logger,
+                                      schema, SuccessValidator.new)
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
+
+          validator = CommonErrorValidator.new(validator)
 
           validator.validate(unvalidated_response.to_hash)
         end

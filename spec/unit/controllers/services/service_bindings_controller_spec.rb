@@ -1077,7 +1077,7 @@ module VCAP::CloudController
           end
 
           context 'when the brokers response is missing a parameters key but contains other keys' do
-            let(:body) { { 'credentials' => 'value' }.to_json }
+            let(:body) { { 'credentials' => {} }.to_json }
 
             it 'returns an empty object' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
@@ -1087,7 +1087,7 @@ module VCAP::CloudController
           end
 
           context 'when the broker returns multiple keys' do
-            let(:body) { { 'credentials' => 'value', 'parameters' => { 'foo' => 'bar' } }.to_json }
+            let(:body) { { 'credentials' => {}, 'parameters' => { 'foo' => 'bar' } }.to_json }
 
             it 'returns only the parameters' do
               get "/v2/service_bindings/#{binding.guid}/parameters"
