@@ -14,6 +14,7 @@ module VCAP::CloudController
     def validate
       validate_router_group
       validate_path_not_included_for_internal_domain
+      validate_wildcard_host_not_included_with_internal_domain
       if is_tcp_router_group?
         validate_host_not_included
         validate_path_not_included
@@ -63,7 +64,13 @@ module VCAP::CloudController
 
     def validate_path_not_included_for_internal_domain
       if !route.domain.nil? && route.domain.internal && route.path.present?
-        route.errors.add(:path, :path_not_included_for_internal_domain)
+        route.errors.add(:path, :path_not_supported_for_internal_domain)
+      end
+    end
+
+    def validate_wildcard_host_not_included_with_internal_domain
+      if !route.domain.nil? && route.domain.internal && route.host == '*'
+        route.errors.add(:host, :wildcard_host_not_supported_for_internal_domain)
       end
     end
 

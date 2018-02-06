@@ -293,14 +293,29 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the domain is internal and path is present' do
-        let(:internal_domain) { Domain.make(internal: true) }
+      context 'when the domain is internal' do
+        let(:internal_domain) { Domain.make(internal: true, wildcard: true) }
 
-        it 'returns RouteInvalid' do
-          post '/v2/routes', MultiJson.dump(domain_guid: internal_domain.guid, space_guid: space.guid, path: '/v2/zak', host: 'my-host')
+        context 'and path is present' do
+          it 'returns RouteInvalid' do
+            post '/v2/routes', MultiJson.dump(domain_guid: internal_domain.guid, space_guid: space.guid, path: '/v2/zak', host: 'my-host')
 
-          expect(last_response.status).to eq(400)
-          expect(last_response.body).to include('Path is not supported for internal domains.')
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('Path is not supported for internal domains.')
+          end
+        end
+
+        context 'host is wildcard' do
+          before do
+            set_current_user_as_admin(user: user)
+          end
+
+          it 'returns RouteInvalid' do
+            post '/v2/routes', MultiJson.dump(domain_guid: internal_domain.guid, space_guid: space.guid, host: '*')
+
+            expect(last_response.status).to eq(400)
+            expect(last_response.body).to include('Wild card host names are not supported for internal domains.')
+          end
         end
       end
 

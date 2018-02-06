@@ -34,20 +34,31 @@ module VCAP::CloudController
       end
     end
 
-    context 'when creating an internal route with a path value that is not null' do
+    context 'when creating an internal route' do
       let(:domain) { SharedDomain.make(internal: true) }
-      let(:path) { '/path' }
-      it 'adds an error' do
-        validator.validate
-        expect(route.errors.on(:path)).to include(:path_not_included_for_internal_domain)
+
+      context 'and the path value is not null' do
+        let(:path) { '/path' }
+        it 'adds an error' do
+          validator.validate
+          expect(route.errors.on(:path)).to include(:path_not_supported_for_internal_domain)
+        end
+
+        context 'when the domain is nil' do
+          let(:domain) { nil }
+
+          it 'does not raise a null pointer exception' do
+            validator.validate
+            expect(route.errors.on(:path)).to be_nil
+          end
+        end
       end
 
-      context 'when the domain is nil' do
-        let(:domain) { nil }
-
-        it 'does not null point' do
+      context 'and the host value is a wildcard' do
+        let(:host) { '*' }
+        it 'adds an error' do
           validator.validate
-          expect(route.errors.on(:path)).to be_nil
+          expect(route.errors.on(:host)).to include(:wildcard_host_not_supported_for_internal_domain)
         end
       end
     end
