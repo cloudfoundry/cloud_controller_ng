@@ -1233,5 +1233,22 @@ module VCAP::CloudController
         end
       end
     end
+
+    context '#wildcard_host?' do
+      let!(:route) { Route.make(host: host) }
+      context 'when the host is *' do
+        let(:host) { '*' }
+        it 'returns true' do
+          expect(route.wildcard_host?).to eq(true)
+        end
+      end
+
+      context 'when the host is not *' do
+        let(:host) { 'meow' }
+        it 'returns false' do
+          expect(route.wildcard_host?).to eq(false)
+        end
+      end
+    end
   end
 end

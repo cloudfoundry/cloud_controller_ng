@@ -69,7 +69,7 @@ module VCAP::CloudController
     end
 
     def validate_wildcard_host_not_included_with_internal_domain
-      if !route.domain.nil? && route.domain.internal && route.host == '*'
+      if !route.domain.nil? && route.domain.internal && route.wildcard_host?
         route.errors.add(:host, :wildcard_host_not_supported_for_internal_domain)
       end
     end

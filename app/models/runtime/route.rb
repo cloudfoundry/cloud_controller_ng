@@ -174,6 +174,10 @@ module VCAP::CloudController
       domain.internal
     end
 
+    def wildcard_host?
+      host == '*'
+    end
+
     private
 
     def before_destroy
