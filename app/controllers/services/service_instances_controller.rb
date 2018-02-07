@@ -11,6 +11,8 @@ require 'presenters/v2/service_instance_shared_from_presenter'
 
 module VCAP::CloudController
   class ServiceInstancesController < RestController::ModelController
+    include VCAP::CloudController::LockCheck
+
     model_class_name :ManagedServiceInstance # Must do this to be backwards compatible with actions other than enumerate
     define_attributes do
       attribute :name, String
@@ -254,6 +256,8 @@ module VCAP::CloudController
       if service_instance.user_provided_instance? || !service_instance.service.instances_retrievable
         raise CloudController::Errors::ApiError.new_from_details('ServiceFetchInstanceParametersNotSupported')
       end
+
+      raise_if_locked(service_instance)
 
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
       resp = client.fetch_service_instance(service_instance)

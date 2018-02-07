@@ -4361,7 +4361,7 @@ module VCAP::CloudController
 
       context 'when instances_retrievable is set to true' do
         let(:service) { Service.make(instances_retrievable: true) }
-        let(:body) {}
+        let(:body) { {}.to_json }
         let(:response_code) { 200 }
 
         before do
@@ -4426,6 +4426,21 @@ module VCAP::CloudController
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerBadResponse')
             end
+          end
+        end
+
+        context 'when the service instance has an operation in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+
+          before do
+            instance.service_instance_operation = last_operation
+            instance.save
+          end
+
+          it 'should show an error message for get parameter operation' do
+            get "/v2/service_instances/#{instance.guid}/parameters"
+            expect(last_response).to have_status_code 409
+            expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
           end
         end
       end
