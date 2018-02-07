@@ -1119,6 +1119,7 @@ module VCAP::CloudController
 
           context 'user permissions' do
             let(:user) { User.make }
+            let(:body) { {}.to_json }
 
             {
               'admin'               => 200,

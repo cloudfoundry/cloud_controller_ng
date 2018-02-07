@@ -51,7 +51,7 @@ RSpec.describe 'Service Broker API integration' do
 
             get("/v2/service_bindings/#{@binding_id}/parameters",
               {}.to_json,
-              headers_for(user))
+              headers_for(user, scopes: %w(cloud_controller.admin)))
 
             expect(
               a_request(:get, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).with do |req|
