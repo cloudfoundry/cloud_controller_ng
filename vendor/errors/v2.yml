@@ -487,6 +487,11 @@
   name: InternalDomainCannotBeDeleted
   http_code: 422
   message: "The domain '%s' cannot be deleted. It is reserved by the platform."
+
+130010:
+  name: RouteServiceCannotBeBoundToInternalRoute
+  http_code: 400
+  message: "Route services cannot be bound to internal routes."
   
 140001:
   name: LegacyApiWithoutDefaultSpace
