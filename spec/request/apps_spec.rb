@@ -872,27 +872,6 @@ RSpec.describe 'Apps' do
     end
   end
 
-  describe 'POST /v3/apps/:guid/actions/apply_manifest' do
-    it 'applies the manifest' do
-      process = VCAP::CloudController::ProcessModel.make
-      app_model = process.app
-      app_model.update(space: space)
-
-      yml_manifest = { 'applications' => [{ 'name' => 'blah', 'instances' => 4 }] }.to_yaml
-      post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header) # , yml_headers(user_header)
-
-      expect(last_response.status).to eq(202)
-      expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{VCAP::CloudController::PollableJobModel.last.guid}))
-
-      Delayed::Worker.new.work_off
-
-      web_process = app_model.web_process
-
-      web_process.reload
-      expect(web_process.instances).to eq(4)
-    end
-  end
-
   describe 'GET /v3/apps/:guid/relationships/current_droplet' do
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { droplet_model.guid }

@@ -33,13 +33,14 @@ class ApplicationController < ActionController::Base
   UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
 
-  wrap_parameters :body, format: [:json, :yaml, :url_encoded_form, :multipart_form]
+  wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 
   before_action :set_locale
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
   before_action :null_coalesce_body
+  before_action :validate_content_type!
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
@@ -184,6 +185,14 @@ class ApplicationController < ActionController::Base
     end
 
     raise CloudController::Errors::InvalidAuthToken
+  end
+
+  def validate_content_type!
+    invalid_request!('Content-Type cannot be yaml') if request_content_type_is_yaml?
+  end
+
+  def request_content_type_is_yaml?
+    Mime::Type.lookup(request.content_type) == :yaml
   end
 
   def handle_blobstore_error(error)

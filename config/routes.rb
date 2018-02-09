@@ -10,7 +10,6 @@ Rails.application.routes.draw do
   post '/apps/:guid/actions/start', to: 'apps_v3#start'
   post '/apps/:guid/actions/stop', to: 'apps_v3#stop'
   post '/apps/:guid/actions/restart', to: 'apps_v3#restart'
-  post '/apps/:guid/actions/apply_manifest', to: 'apps_v3#apply_manifest'
   get '/apps/:guid/env', to: 'apps_v3#show_env'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
@@ -21,6 +20,9 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/features/:name', to: 'app_features#show'
   patch '/apps/:app_guid/features/:name', to: 'app_features#update'
   get '/apps/:guid/ssh_enabled', to: 'app_features#ssh_enabled'
+
+  # app manifests
+  post '/apps/:guid/actions/apply_manifest', to: 'app_manifests#apply_manifest'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'
