@@ -1,5 +1,6 @@
 require 'jobs/cc_job'
 require 'jobs/delete_action_job'
+require 'jobs/apply_manifest_action_job'
 require 'jobs/enqueuer'
 require 'jobs/local_queue'
 require 'jobs/logging_context_job'

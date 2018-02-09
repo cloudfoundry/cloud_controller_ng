@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   post '/apps/:guid/actions/start', to: 'apps_v3#start'
   post '/apps/:guid/actions/stop', to: 'apps_v3#stop'
   post '/apps/:guid/actions/restart', to: 'apps_v3#restart'
+  post '/apps/:guid/actions/apply_manifest', to: 'apps_v3#apply_manifest'
   get '/apps/:guid/env', to: 'apps_v3#show_env'
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'

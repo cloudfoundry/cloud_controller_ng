@@ -33,7 +33,7 @@ class ApplicationController < ActionController::Base
   UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
 
-  wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
+  wrap_parameters :body, format: [:json, :yaml, :url_encoded_form, :multipart_form]
 
   before_action :set_locale
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]

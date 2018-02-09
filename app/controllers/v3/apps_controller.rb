@@ -5,6 +5,7 @@ require 'actions/app_update'
 require 'actions/app_patch_environment_variables'
 require 'actions/app_delete'
 require 'actions/app_restart'
+require 'actions/app_apply_manifest'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/set_current_droplet'
@@ -12,6 +13,7 @@ require 'messages/apps/apps_list_message'
 require 'messages/apps/app_update_message'
 require 'messages/apps/app_create_message'
 require 'messages/apps/app_update_environment_variables_message'
+require 'messages/app_manifests/app_manifest_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_environment_variables_presenter'
@@ -148,6 +150,24 @@ class AppsV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'Unable to communicate with Diego')
   end
 
+  def apply_manifest
+    message = AppManifestMessage.create_from_http_request(parsed_app_manifest_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
+
+    apply_manifest_action = AppApplyManifest.new(user_audit_info)
+    apply_manifest_job = VCAP::CloudController::Jobs::ApplyManifestActionJob.new(app.guid, message, apply_manifest_action)
+
+    job = Jobs::Enqueuer.new(apply_manifest_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  end
+
   def show_env
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
@@ -235,6 +255,13 @@ class AppsV3Controller < ApplicationController
   end
 
   private
+
+  def parsed_app_manifest_params
+    parsed_application = params[:body]['applications'] && params[:body]['applications'].first
+
+    raise invalid_request!('Invalid app manifest') unless parsed_application.present?
+    parsed_application
+  end
 
   def droplet_not_found!
     resource_not_found!(:droplet)

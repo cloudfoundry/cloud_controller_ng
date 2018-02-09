@@ -38,6 +38,18 @@ module VCAP::CloudController
       end
     end
 
+    context 'when instances is not a positive integer' do
+      let(:params) { { instances: -1 } }
+
+      it 'is not valid' do
+        message = ProcessScaleMessage.new(params)
+
+        expect(message).not_to be_valid
+        expect(message.errors.count).to eq(1)
+        expect(message.errors[:instances]).to include('must be greater than or equal to 0')
+      end
+    end
+
     context 'when memory_in_mb is not an number' do
       let(:params) { { memory_in_mb: 'silly string thing' } }
 

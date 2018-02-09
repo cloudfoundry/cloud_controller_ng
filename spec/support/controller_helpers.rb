@@ -64,6 +64,10 @@ module ControllerHelpers
     headers.merge({ 'CONTENT_TYPE' => 'multipart/form-data' })
   end
 
+  def yml_headers(headers)
+    headers.merge({ 'CONTENT_TYPE' => 'application/x-yaml' })
+  end
+
   def decoded_response(options={})
     parse(last_response.body, options)
   end
