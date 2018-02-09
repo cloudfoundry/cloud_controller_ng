@@ -21,6 +21,8 @@ module VCAP::CloudController
            }
     plugin :columns_updated
 
+    serialize_attributes :json, :tags
+
     one_to_one :service_instance_operation
 
     one_to_many :service_bindings, before_add: :validate_service_binding, key: :service_instance_guid, primary_key: :guid
@@ -109,11 +111,16 @@ module VCAP::CloudController
       validates_unique :name, where: name_clashes
       validates_max_length 50, :name
       validates_max_length 10_000, :syslog_drain_url, allow_nil: true
+      validate_tags_length
     end
 
     # Make sure all derived classes use the base access class
     def self.source_class
       ServiceInstance
+    end
+
+    def tags
+      super || []
     end
 
     def bindable?
@@ -209,6 +216,12 @@ module VCAP::CloudController
 
     def validate_space(space)
       service_bindings.each { |binding| validate_service_binding(binding) }
+    end
+
+    def validate_tags_length
+      if tags.join('').length > 2048
+        @errors[:tags] = [:too_long]
+      end
     end
 
     def service_instance_usage_event_repository

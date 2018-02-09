@@ -56,6 +56,16 @@ class FakeServiceBrokerV2Client
     }
   end
 
+  def update(_instance, _plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
+    [{
+      last_operation: {
+        type:        'update',
+        description: '',
+        state:       'succeeded'
+      },
+    }, nil]
+  end
+
   def bind(_binding, _arbitrary_parameters)
     {
       credentials: credentials,

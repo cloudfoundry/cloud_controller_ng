@@ -167,13 +167,35 @@
                 </ul>
               </td>
             </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">tags</span>
+              </td>
+              <td>
+                <span class="description">A list of tags for the service instance. NOTE: Updating the tags will overwrite any old tags. Max characters: 2048</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>[&quot;db&quot;]</li>
+                      <li>[&quot;accounting&quot;, &quot;mongodb&quot;]</li>
+                </ul>
+              </td>
+            </tr>
           </tbody>
         </table>
 
         <pre class="request body">{
   "credentials": {
     "somekey": "somenewvalue"
-  }
+  },
+  "tags": ["new-tag"]
 }</pre>
 
       <h4>Headers</h4>
@@ -186,7 +208,8 @@ Cookie: </pre>
         <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23&quot; -d &#39;{
   &quot;credentials&quot;: {
     &quot;somekey&quot;: &quot;somenewvalue&quot;
-  }
+  },
+  "tags": ["new-tag"]
 }&#39; -X PUT \
 	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5MCIsImVtYWlsIjoiZW1haWwtMTQ1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.fu_vRQ0QoFrVrMUO8Z-TQPrnT2JwFPWklSgSZ5PYKeM&quot; \
 	-H &quot;Host: example.org&quot; \
@@ -216,6 +239,7 @@ Cookie: </pre>
     "type": "user_provided_service_instance",
     "syslog_drain_url": "https://foo.com/url-102",
     "route_service_url": null,
+    "tags": ["new-tag"],
     "space_url": "/v2/spaces/884c5c61-fbb8-4c89-91d2-a7a5ab27b004",
     "service_bindings_url": "/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23/service_bindings",
     "routes_url": "/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23/routes"

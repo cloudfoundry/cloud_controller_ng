@@ -30,6 +30,7 @@ module VCAP::CloudController
     end
 
     describe 'Validations' do
+      let(:max_tags) { ['a' * 1024, 'b' * 1024] }
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_presence :space }
       it { is_expected.to strip_whitespace :name }
@@ -64,11 +65,35 @@ module VCAP::CloudController
         }.
           to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
+
+      it 'accepts user-provided tags where combined length of all tags is exactly 2048 characters' do
+        expect {
+          UserProvidedServiceInstance.make tags: max_tags
+        }.not_to raise_error
+      end
+
+      it 'accepts user-provided tags where combined length of all tags is less than 2048 characters' do
+        expect {
+          UserProvidedServiceInstance.make tags: max_tags[0..50]
+        }.not_to raise_error
+      end
+
+      it 'does not accept user-provided tags with combined length of over 2048 characters' do
+        expect {
+          UserProvidedServiceInstance.make tags: max_tags + ['z']
+        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+      end
+
+      it 'does not accept a single user-provided tag of length greater than 2048 characters' do
+        expect {
+          UserProvidedServiceInstance.make tags: ['a' * 2049]
+        }.to raise_error(Sequel::ValidationFailed).with_message('tags too_long')
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url, :route_service_url }
-      it { is_expected.to import_attributes :name, :credentials, :space_guid, :syslog_drain_url, :route_service_url }
+      it { is_expected.to export_attributes :name, :credentials, :space_guid, :type, :syslog_drain_url, :route_service_url, :tags }
+      it { is_expected.to import_attributes :name, :credentials, :space_guid, :syslog_drain_url, :route_service_url, :tags }
     end
 
     describe '#create' do
@@ -111,9 +136,18 @@ module VCAP::CloudController
     end
 
     describe '#tags' do
-      it 'does not have tags' do
-        service_instance = VCAP::CloudController::UserProvidedServiceInstance.make
-        expect(service_instance.tags).to eq []
+      let(:instance_tags) { %w(a b c) }
+      let(:service_instance) { UserProvidedServiceInstance.make(tags: instance_tags) }
+
+      it 'returns the instance tags' do
+        expect(service_instance.tags).to eq instance_tags
+      end
+
+      context 'when there are no tags' do
+        let(:instance_tags) { nil }
+        it 'returns an empty array' do
+          expect(service_instance.tags).to eq []
+        end
       end
     end
 

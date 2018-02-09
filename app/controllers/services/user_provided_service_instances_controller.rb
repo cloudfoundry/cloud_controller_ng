@@ -8,6 +8,7 @@ module VCAP::CloudController
       attribute :credentials, Hash, default: {}
       attribute :syslog_drain_url, String, default: ''
       attribute :route_service_url, String, default: ''
+      attribute :tags, [String], default: []
 
       to_one :space
       to_many :service_bindings
@@ -32,6 +33,7 @@ module VCAP::CloudController
       name_errors = e.errors.on(:name)
       service_instance_errors = e.errors.on(:service_instance)
       service_instance_name_errors = e.errors.on(:name).to_a
+      service_instance_tags_errors = e.errors.on(:tags).to_a
 
       if name_errors&.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTaken', attributes['name'])
@@ -45,6 +47,8 @@ module VCAP::CloudController
       elsif service_instance_errors&.include?(:route_service_url_invalid)
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceRouteServiceURLInvalid',
                                                       'route_service_url is invalid.')
+      elsif service_instance_tags_errors.include?(:too_long)
+        return CloudController::Errors::ApiError.new_from_details('ServiceInstanceTagsTooLong', attributes['name'])
       elsif service_instance_name_errors&.include?(:max_length)
         return CloudController::Errors::ApiError.new_from_details('ServiceInstanceNameTooLong')
       else
