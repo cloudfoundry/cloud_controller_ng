@@ -2,6 +2,7 @@ require 'vcap/services/api'
 require 'jobs/audit_event_job'
 require 'actions/services/service_instance_create'
 require 'actions/services/service_instance_update'
+require 'actions/services/service_instance_read'
 require 'controllers/services/lifecycle/service_instance_deprovisioner'
 require 'controllers/services/lifecycle/service_instance_purger'
 require 'fetchers/service_instance_fetcher'
@@ -253,16 +254,15 @@ module VCAP::CloudController
     def parameters(guid)
       service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
 
-      if service_instance.user_provided_instance? || !service_instance.service.instances_retrievable
+      fetcher = ServiceInstanceRead.new
+
+      begin
+        parameters = fetcher.fetch_parameters(service_instance)
+
+        [HTTP::OK, parameters.to_json]
+      rescue ServiceInstanceRead::NotSupportedError
         raise CloudController::Errors::ApiError.new_from_details('ServiceFetchInstanceParametersNotSupported')
       end
-
-      raise_if_locked(service_instance)
-
-      client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
-      resp = client.fetch_service_instance(service_instance)
-
-      [HTTP::OK, resp.fetch('parameters', {}).to_json]
     end
 
     def self.url_for_guid(guid, object=nil)

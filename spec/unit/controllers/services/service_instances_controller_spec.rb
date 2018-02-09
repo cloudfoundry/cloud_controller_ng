@@ -4454,6 +4454,22 @@ module VCAP::CloudController
           expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
           expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
         end
+
+        context 'when the service instance has an operation in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+
+          before do
+            instance.service_instance_operation = last_operation
+            instance.save
+          end
+
+          it 'returns a 400 with error rather than a 409' do
+            get "/v2/service_instances/#{instance.guid}/parameters"
+            expect(last_response.status).to eql(400)
+            expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+            expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+          end
+        end
       end
 
       context 'when the service is user provided' do
