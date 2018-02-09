@@ -214,6 +214,15 @@ module VCAP::Services
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
+              'service_id' => {
+                'type' => 'string',
+              },
+              'plan_id' => {
+                'type' => 'string',
+              },
+              'dashboard_url' => {
+                'type' => 'string',
+              },
               'parameters' => {
                 'type' => 'object',
               },
