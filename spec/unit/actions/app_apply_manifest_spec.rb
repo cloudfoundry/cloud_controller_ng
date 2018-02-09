@@ -7,13 +7,15 @@ module VCAP::CloudController
     let(:user_audit_info) { instance_double(UserAuditInfo) }
     let(:process_scale) { instance_double(ProcessScale) }
     let(:message) { AppManifestMessage.new({ name: 'blah', instances: 4 }) }
+    let(:process_scale_message) { message.process_scale_message }
     let!(:process) { ProcessModel.make(instances: 1) }
     let!(:app) { process.app }
 
     describe '#apply' do
       describe 'scaling instances' do
         before do
-          allow(ProcessScale).to receive(:new).with(user_audit_info, process, message).and_return(process_scale)
+          allow(ProcessScale).
+            to receive(:new).with(user_audit_info, process, process_scale_message).and_return(process_scale)
           allow(process_scale).to receive(:scale)
         end
 
@@ -26,7 +28,7 @@ module VCAP::CloudController
 
           it 'calls ProcessScale with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, message)
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, process_scale_message)
             expect(process_scale).to have_received(:scale)
           end
         end

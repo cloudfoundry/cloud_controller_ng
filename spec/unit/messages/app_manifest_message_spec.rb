@@ -21,7 +21,7 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.count).to eq(1)
-        expect(message.errors[:instances]).to include('is not a number')
+        expect(message.errors.full_messages).to include('Instances is not a number')
       end
     end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.count).to eq(1)
-        expect(message.errors[:instances]).to include('must be an integer')
+        expect(message.errors.full_messages).to include('Instances must be an integer')
       end
     end
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.count).to eq(1)
-        expect(message.errors[:instances]).to include('must be greater than or equal to 0')
+        expect(message.errors.full_messages).to include('Instances must be greater than or equal to 0')
       end
     end
 

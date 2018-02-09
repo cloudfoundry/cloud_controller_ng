@@ -8,7 +8,8 @@ module VCAP::CloudController
 
     def apply(app_guid, message)
       app = AppModel.find(guid: app_guid)
-      ProcessScale.new(user_audit_info, app.web_process, message).scale
+      process_scale_message = message.process_scale_message
+      ProcessScale.new(user_audit_info, app.web_process, process_scale_message).scale
 
       app
     end
