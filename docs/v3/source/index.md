@@ -119,6 +119,9 @@ includes:
   - experimental_resources/app_features/get
   - experimental_resources/app_features/update
   - experimental_resources/app_features/list
+  - experimental_resources/app_manifest/header
+  - experimental_resources/app_manifest/object
+  - experimental_resources/app_manifest/create
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
