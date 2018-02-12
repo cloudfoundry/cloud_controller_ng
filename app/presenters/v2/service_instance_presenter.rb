@@ -31,6 +31,7 @@ module CloudController
             rel_hash['service_url'] = "/v2/services/#{service_plan.service.guid}"
             rel_hash['shared_from_url'] = "/v2/service_instances/#{obj.guid}/shared_from"
             rel_hash['shared_to_url'] = "/v2/service_instances/#{obj.guid}/shared_to"
+            rel_hash['service_instance_parameters_url'] = "/v2/service_instances/#{obj.guid}/parameters"
           end
 
           obj_hash.merge!(rel_hash)

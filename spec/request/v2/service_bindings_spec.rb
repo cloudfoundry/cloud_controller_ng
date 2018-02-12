@@ -203,6 +203,7 @@ RSpec.describe 'ServiceBindings' do
                       'routes_url' => "/v2/service_instances/#{service_instance.guid}/routes",
                       'shared_from_url' => "/v2/service_instances/#{service_instance.guid}/shared_from",
                       'shared_to_url' => "/v2/service_instances/#{service_instance.guid}/shared_to",
+                      'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
                     }
                   }
                 }
