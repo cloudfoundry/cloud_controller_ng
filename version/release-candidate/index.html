@@ -7568,6 +7568,57 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/features</code></p>
 
+          <h2 id="app-manifest">App Manifest</h2>
+
+          <h3 id="the-app-manifest">The app manifest</h3>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>instances</strong></td>
+<td>The number of instances to run.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="apply-an-app-manifest">Apply an app manifest</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/apply_manifest"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/x-yaml"</span> <span class="se">\</span>
+  -d <span class="s1">'applications:
+      - instances: 2'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/apps/:guid/actions/apply_manifest</code></p>
+
+<h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h2 id="app-restart">App Restart</h2>
 
           <h3 id="restart-an-app">Restart an app</h3>
