@@ -53,7 +53,12 @@ module VCAP::CloudController
           upload_link   = nil
           download_link = nil
           if package.type == 'bits'
-            upload_link   = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
+            if VCAP::CloudController::Config.config.get(:bits_service, :enabled)
+              upload_link   = { href: bits_service_client.blob(package.guid).public_upload_url, method: 'PUT' }
+            else
+              upload_link   = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
+            end
+
             download_link = { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/download"), method: 'GET' }
           end
 
@@ -65,6 +70,10 @@ module VCAP::CloudController
           }
 
           links.delete_if { |_, v| v.nil? }
+        end
+
+        def bits_service_client
+          CloudController::DependencyLocator.instance.package_blobstore
         end
       end
     end
