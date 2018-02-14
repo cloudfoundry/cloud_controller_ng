@@ -43,6 +43,13 @@ module CloudController
         app_contents_path = File.join(root_path, 'application_contents')
         FileUtils.mkdir(app_contents_path)
         app_packager.unzip(app_contents_path)
+
+        # Don't upload symlinks. They either point to real files that will be uploaded to the
+        # resource cache anyway, or they point to files outside the appdir that should not be cached.
+        Find.find(app_contents_path) do |path|
+          File.delete(path) if File.symlink?(path)
+        end
+
         global_app_bits_cache.cp_r_to_blobstore(app_contents_path)
       end
 

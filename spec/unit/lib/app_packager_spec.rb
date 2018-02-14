@@ -45,7 +45,7 @@ RSpec.describe AppPackager do
       it 'raises an exception' do
         expect {
           app_packager.unzip(@tmpdir)
-        }.to raise_exception(CloudController::Errors::ApiError, /zipfile is empty/)
+        }.to raise_exception(CloudController::Errors::ApiError, /Invalid zip archive/)
       end
     end
 
@@ -71,61 +71,12 @@ RSpec.describe AppPackager do
       end
     end
 
-    describe 'symlinks' do
-      context 'when valid' do
-        context 'when the zip contains a symlink that does not leave the root dir' do
-          context 'symbolic links point downwards' do
-            let(:input_zip) { File.join(Paths::FIXTURES, 'good_symlinks.zip') }
-
-            it 'unzips them correctly without errors' do
-              app_packager.unzip(@tmpdir)
-              expect(File.symlink?("#{@tmpdir}/what")).to be true
-              expect(File.readlink("#{@tmpdir}/what")).to eq 'box/jack'
-            end
-          end
-
-          context 'symbolic links point upwards (start with "..")' do
-            let(:input_zip) { File.join(Paths::FIXTURES, 'multi_dot_dot_symlinks.zip') }
-
-            it 'unzips them correctly without errors' do
-              app_packager.unzip(@tmpdir)
-              expect(File.symlink?("#{@tmpdir}/a/b2/c21")).to be true
-              expect(File.symlink?("#{@tmpdir}/a/b2/c22")).to be true
-              expect(File.symlink?("#{@tmpdir}/a/b2/c33")).to be true
-              expect(File.exist?("#{@tmpdir}/a/b1/c11")).to be true
-              expect(File.exist?("#{@tmpdir}/a/b1/c11")).to be true
-            end
-          end
-        end
-      end
-
-      context 'when invalid' do
-        context 'when the zip contains a symlink pointing to a file out of the root dir' do
-          context 'when the symlink is relative' do
-            let(:input_zip) { File.join(Paths::FIXTURES, 'bad_symlinks.zip') }
-
-            it 'raises an exception' do
-              expect { app_packager.unzip(@tmpdir) }.to raise_exception(CloudController::Errors::ApiError, /symlink.+outside/i)
-            end
-          end
-
-          context 'when the symlink is absolute' do
-            let(:input_zip) { File.join(Paths::FIXTURES, 'absolute_symlink_out_of_parent.zip') }
-
-            it 'raises an exception' do
-              expect { app_packager.unzip(@tmpdir) }.to raise_exception(CloudController::Errors::ApiError, /symlink.+outside/i)
-            end
-          end
-        end
-      end
-    end
-
     context 'when there is an error unzipping' do
       it 'raises an exception' do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
         expect {
           app_packager.unzip(@tmpdir)
-        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Unzipping had errors/)
+        }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
       end
     end
   end
@@ -190,7 +141,7 @@ RSpec.describe AppPackager do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
         expect {
           app_packager.append_dir_contents(additional_files_path)
-        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Could not zip the package/)
+        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error appending additional resources to package/)
       end
     end
   end

@@ -9,12 +9,14 @@ module CloudController::Packager
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
     let(:blobstore_dir) { Dir.mktmpdir }
     let(:local_tmp_dir) { Dir.mktmpdir }
+    let(:min_size) { 4 }
+    let(:max_size) { 8 }
     let(:global_app_bits_cache) do
       CloudController::Blobstore::FogClient.new(
         connection_config: { provider: 'Local', local_root: blobstore_dir },
         directory_key:     'global_app_bits_cache',
-        min_size:          4,
-        max_size:          8
+        min_size:          min_size,
+        max_size:          max_size
       )
     end
     let(:package_blobstore) do
@@ -166,6 +168,35 @@ module CloudController::Packager
           packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
           sha_of_bye_file_in_good_zip = 'ee9e51458f4642f48efe956962058245ee7127b1'
           expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be true
+        end
+
+        context 'when some of the files are symlinks' do
+          let(:input_zip) { File.join(Paths::FIXTURES, 'express-app.zip') }
+          let(:uploaded_files_path) { File.join(local_tmp_dir, 'express-app.zip') }
+          let(:min_size) { 0 }
+          let(:max_size) { 1_000_000 }
+
+          it 'they are not uploaded to the cache but the real files are' do
+            tempfile = Tempfile.new('external_file.txt')
+            File.open(tempfile.path, 'w') { |fd| fd.puts 'text goes here' }
+
+            symlink_path = File.join(local_tmp_dir, 'link-to-temp.txt')
+            FileUtils.ln_s(tempfile.path, symlink_path)
+
+            # Make the zipfile writable so we can dynamically insert the symlink
+            FileUtils.chmod(0600, uploaded_files_path)
+            `zip -r --symlinks "#{uploaded_files_path}" "#{symlink_path}"`
+
+            packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, [])
+            expect(global_app_bits_cache.files_for('').size).to be 2
+
+            sha_of_cli_js = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+            sha_of_target1_txt = 'f572d396fae9206628714fb2ce00f72e94f2258f'
+            absolute_link_sha1 = Digester.new.digest_path(tempfile.path)
+            expect(global_app_bits_cache.exists?(sha_of_cli_js)).to be true
+            expect(global_app_bits_cache.exists?(sha_of_target1_txt)).to be true
+            expect(global_app_bits_cache.exists?(absolute_link_sha1)).to be false
+          end
         end
 
         context 'when one of the files exceeds the configured maximum_size' do
