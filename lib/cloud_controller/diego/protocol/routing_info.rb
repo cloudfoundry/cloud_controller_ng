@@ -41,7 +41,6 @@ module VCAP::CloudController
           process.routes.select(&:internal?).each do |r|
             internal_routes << { 'hostname' => "#{r.host}.#{r.domain.name}" }
           end
-          internal_routes << { 'hostname' => "#{process.guid}.apps.internal" }
 
           route_info = {}
           route_info['http_routes'] = http_info unless http_info.blank?

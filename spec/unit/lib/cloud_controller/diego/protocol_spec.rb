@@ -182,9 +182,7 @@ module VCAP::CloudController
                   'port' => 2222,
                 }
               ],
-              'internal_routes' => [
-                { 'hostname' => "#{process.guid}.apps.internal" }
-              ]
+              'internal_routes' => []
             },
             'egress_rules' => ['running_egress_rule'],
             'etag' => process.updated_at.to_f.to_s,
