@@ -55,6 +55,15 @@ module VCAP::CloudController
           expect(::VCAP::Request.current_id).to eq random_request_id
         end
 
+        context 'when a ProcessScale::InvalidProcess  occurs' do
+          it 'wraps the error in an ApiError' do
+            allow(handler).to receive(:perform).and_raise(ProcessScale::InvalidProcess, 'maximum instance count exceeded')
+            expect {
+              logging_context_job.perform
+            }.to raise_error(CloudController::Errors::ApiError, /maximum instance count exceeded/)
+          end
+        end
+
         context 'when a BlobstoreError occurs' do
           it 'wraps the error in an ApiError' do
             allow(handler).to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError, 'oh no!')
