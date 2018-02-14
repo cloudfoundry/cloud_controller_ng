@@ -9,8 +9,7 @@ curl "https://api.example.org/v3/apps/[guid]/actions/apply_manifest" \
   -X POST \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/x-yaml" \
-  -d 'applications:
-      - instances: 2'
+  --data-binary @/path/to/manifest.yml
 ```
 
 ```
