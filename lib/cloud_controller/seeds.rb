@@ -153,6 +153,8 @@ module VCAP::CloudController
         domain = Domain.find(name: APPS_INTERNAL)
         if !domain
           Domain.create(name: APPS_INTERNAL, internal: true, wildcard: false)
+        else
+          Steno.logger('cc.seeds').error('seeds.internal-domain-collision', name: APPS_INTERNAL)
         end
       end
 
