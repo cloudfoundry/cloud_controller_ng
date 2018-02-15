@@ -253,6 +253,7 @@ module VCAP::CloudController
     get '/v2/service_instances/:guid/parameters', :parameters
     def parameters(guid)
       service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
+      validate_access(:read, service_instance.space)
 
       fetcher = ServiceInstanceRead.new
 
