@@ -14,14 +14,6 @@ module VCAP::CloudController
 
     set_field_as_encrypted :credentials
 
-    def to_hash(opts={})
-      access_context = VCAP::CloudController::Security::AccessContext.new
-      if access_context.cannot?(:read_env, self)
-        opts[:redact] = ['credentials']
-      end
-      super(opts)
-    end
-
     def credhub_reference?
       !!credhub_reference
     end

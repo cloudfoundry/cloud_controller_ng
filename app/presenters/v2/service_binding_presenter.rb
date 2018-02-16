@@ -22,15 +22,6 @@ module CloudController
             'name'                  => service_binding.name,
           }.merge!(rel_hash)
         end
-
-        private
-
-        def redact_creds_if_necessary(binding)
-          access_context = VCAP::CloudController::Security::AccessContext.new
-
-          return binding.credentials if access_context.can?(:read_env, binding)
-          { 'redacted_message' => VCAP::CloudController::Presenters::V3::BasePresenter::REDACTED_MESSAGE }
-        end
       end
     end
   end
