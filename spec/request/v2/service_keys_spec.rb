@@ -62,6 +62,35 @@ RSpec.describe 'ServiceKeys' do
     end
   end
 
+  describe 'GET /v2/service_keys/:guid' do
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let!(:service_key1) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance, credentials: { secret: 'key' }, name: 'key') }
+
+    it 'displays the service key' do
+      get "/v2/service_keys/#{service_key1.guid}", nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid' => service_key1.guid,
+            'url' => "/v2/service_keys/#{service_key1.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601
+          },
+          'entity' => {
+            'service_instance_guid' => service_instance.guid,
+            'credentials' => { 'secret' => 'key' },
+            'name' => 'key',
+            'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
+            'service_key_parameters_url' => "/v2/service_keys/#{service_key1.guid}/parameters"
+          }
+        }
+      )
+    end
+  end
+
   describe 'GET /v2/service_keys/:guid/parameters' do
     let(:service) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
