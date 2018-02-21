@@ -3378,6 +3378,18 @@ module VCAP::CloudController
         expect(a_request(:put, service_binding_uri).with(body: hash_including(expected_body))).to have_been_made
       end
 
+      context 'when the route is internal' do
+        let(:domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+        let(:route) { Route.make(domain: domain, space: space) }
+
+        it 'raises RouteServiceCannotBeBoundToInternalRoute' do
+          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
+          expect(last_response.status).to eq(400), last_response.body
+          expect(JSON.parse(last_response.body)['description']).
+            to match('Route services cannot be bound to internal routes')
+        end
+      end
+
       context 'when the body is empty string' do
         before do
           put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
