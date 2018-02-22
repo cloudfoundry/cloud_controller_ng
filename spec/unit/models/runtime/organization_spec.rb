@@ -895,5 +895,28 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#has_user?' do
+      subject(:org) { Organization.make }
+      let(:user) { User.make }
+      let(:second_user) { User.make }
+
+      before do
+        org.add_user(second_user)
+      end
+
+      it 'returns true if the given user is a user within the org' do
+        org.add_user(user)
+        expect(org.has_user?(user)).to be true
+      end
+
+      it 'returns false if the given user is not a user within the org' do
+        expect(org.has_user?(user)).to be false
+      end
+
+      it 'returns false if the given user is nil' do
+        expect(org.has_user?(nil)).to be false
+      end
+    end
   end
 end

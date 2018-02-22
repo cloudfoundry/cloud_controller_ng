@@ -150,16 +150,15 @@ module VCAP::CloudController
     end
 
     def has_developer?(user)
-      developers.include?(user)
+      user.present? && developers_dataset.where(user_id: user.id).present?
     end
 
     def has_member?(user)
-      members = developers | managers | auditors
-      members.include?(user)
+      has_developer?(user) || has_manager?(user) || has_auditor?(user)
     end
 
     def in_organization?(user)
-      organization && organization.users.include?(user)
+      organization && organization.has_user?(user)
     end
 
     def validate
@@ -237,6 +236,14 @@ module VCAP::CloudController
     end
 
     private
+
+    def has_manager?(user)
+      user.present? && managers_dataset.where(user_id: user.id).present?
+    end
+
+    def has_auditor?(user)
+      user.present? && auditors_dataset.where(user_id: user.id).present?
+    end
 
     def memory_remaining
       memory_used = started_app_memory + running_task_memory

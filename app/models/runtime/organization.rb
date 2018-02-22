@@ -228,6 +228,10 @@ module VCAP::CloudController
       isolation_segment_models.map(&:guid)
     end
 
+    def has_user?(user)
+      user.present? && users_dataset.where(user_id: user.id).present?
+    end
+
     private
 
     def validate_default_isolation_segment

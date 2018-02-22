@@ -687,42 +687,74 @@ module VCAP::CloudController
     describe '#has_developer?' do
       subject(:space) { Space.make }
       let(:user) { User.make }
+      let(:other_developer) { User.make }
+
+      before do
+        space.organization.add_user(user)
+        space.organization.add_user(other_developer)
+        space.add_developer(other_developer)
+      end
 
       it 'returns true if the given user is a space developer' do
-        space.organization.add_user user
-        space.add_developer user
-        expect(space.has_developer?(user)).to be_truthy
+        space.add_developer(user)
+        expect(space.has_developer?(user)).to be true
       end
 
       it 'returns false if the given user is not a space developer' do
-        expect(space.has_developer?(user)).to be_falsey
+        expect(space.has_developer?(user)).to be false
+      end
+
+      it 'returns false if the given user is nil' do
+        expect(space.has_developer?(nil)).to be false
       end
     end
 
     describe '#has_member?' do
       subject(:space) { Space.make }
       let(:user) { User.make }
+      let(:other_user) { User.make }
+
+      before do
+        space.organization.add_user(user)
+        space.organization.add_user(other_user)
+        space.add_developer(other_user)
+      end
 
       it 'returns true if the given user is a space developer' do
-        space.organization.add_user user
-        space.add_developer user
-        expect(space.has_member?(user)).to be_truthy
+        space.add_developer(user)
+        expect(space.has_member?(user)).to be true
       end
 
       it 'returns true if the given user is a space auditor' do
-        space.organization.add_user user
-        space.add_auditor user
-        expect(space.has_member?(user)).to be_truthy
+        space.add_auditor(user)
+        expect(space.has_member?(user)).to be true
       end
 
       it 'returns true if the given user is a space manager' do
-        space.organization.add_user user
-        space.add_manager user
-        expect(space.has_member?(user)).to be_truthy
+        space.add_manager(user)
+        expect(space.has_member?(user)).to be true
       end
 
       it 'returns false if the given user is not a manager, auditor, or developer' do
-        expect(space.has_member?(user)).to be_falsey
+        expect(space.has_member?(user)).to be false
+      end
+
+      it 'returns false if the given user is nil' do
+        expect(space.has_member?(nil)).to be false
+      end
+    end
+
+    describe '#in_organization?' do
+      subject(:space) { Space.make }
+      let(:user) { User.make }
+
+      it "returns true if the given user is in the space's organization" do
+        space.organization.add_user(user)
+        expect(space.in_organization?(user)).to be true
+      end
+
+      it "returns false if the given user is not in the space's organization" do
+        expect(space.in_organization?(user)).to be false
       end
     end
   end
