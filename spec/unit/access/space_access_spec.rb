@@ -8,213 +8,336 @@ module VCAP::CloudController
     let(:scopes) { nil }
 
     let(:object) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { object }
 
-    before { set_current_user(user, scopes: scopes) }
-
-    it_behaves_like :admin_full_access
-    it_behaves_like :admin_read_only_access
-
-    context 'as a global auditor' do
-      include_context :global_auditor_setup
-
-      it_behaves_like :read_only_access
-    end
-
-    context 'as an organization manager' do
-      before { org.add_manager(user) }
-      it_behaves_like :full_access
-
-      context 'when the organization is suspended' do
-        before { object.organization.status = 'suspended' }
-        it_behaves_like :read_only_access
-      end
-    end
-
-    context 'as a space manager' do
-      before do
-        org.add_user(user)
-        object.add_manager(user)
+    describe 'when the parent organization is suspended' do
+      before(:each) do
+        org.status = VCAP::CloudController::Organization::SUSPENDED
+        org.save
       end
 
-      it { is_expected.not_to allow_op_on_object :create, object }
-      it { is_expected.to allow_op_on_object :read, object }
-      it { is_expected.to allow_op_on_object :read_for_update, object }
-      it { is_expected.to allow_op_on_object :update, object }
-      it { is_expected.not_to allow_op_on_object :delete, object }
+      index_table = {
+        unauthenticated: true,
+        reader_and_writer: true,
+        reader: true,
+        writer: true,
 
-      context 'when the organization is suspended' do
-        before { object.organization.status = 'suspended' }
+        admin: true,
+        admin_read_only: true,
+        global_auditor: true,
 
-        it_behaves_like :read_only_access
-      end
-    end
+        space_developer: true,
+        space_manager: true,
+        space_auditor: true,
+        org_user: true,
+        org_manager: true,
+        org_auditor: true,
+        org_billing_manager: true,
+      }
 
-    context 'as a space developer' do
-      before do
-        org.add_user(user)
-        object.add_developer(user)
-      end
+      read_table = {
+        unauthenticated: false,
+        reader_and_writer: false,
+        reader: false,
+        writer: false,
 
-      it_behaves_like :read_only_access
-    end
+        admin: true,
+        admin_read_only: true,
+        global_auditor: true,
 
-    context 'as a space auditor' do
-      before do
-        org.add_user(user)
-        object.add_auditor(user)
-      end
+        space_developer: true,
+        space_manager: true,
+        space_auditor: true,
+        org_user: false,
+        org_manager: true,
+        org_auditor: false,
+        org_billing_manager: false,
+      }
 
-      it_behaves_like :read_only_access
-    end
+      write_table = {
+        unauthenticated: false,
+        reader_and_writer: false,
+        reader: false,
+        writer: false,
 
-    context 'as an organization auditor (defensive)' do
-      before { org.add_auditor(user) }
-      it_behaves_like :no_access
-    end
+        admin: true,
+        admin_read_only: false,
+        global_auditor: false,
 
-    context 'as an organization billing manager (defensive)' do
-      before { org.add_billing_manager(user) }
-      it_behaves_like :no_access
-    end
+        space_developer: false,
+        space_manager: false,
+        space_auditor: false,
+        org_user: false,
+        org_manager: false,
+        org_auditor: false,
+        org_billing_manager: false,
+      }
 
-    context 'as an organization user (defensive)' do
-      before { org.add_user(user) }
-      it_behaves_like :no_access
-    end
+      it_behaves_like('an access control', :create, write_table)
+      it_behaves_like('an access control', :delete, write_table)
+      it_behaves_like('an access control', :index, index_table)
+      it_behaves_like('an access control', :read, read_table)
+      it_behaves_like('an access control', :read_for_update, write_table)
+      it_behaves_like('an access control', :update, write_table)
 
-    context 'as a user in a different organization (defensive)' do
-      before do
-        different_organization = VCAP::CloudController::Organization.make
-        different_organization.add_user(user)
-      end
+      describe '#can_remove_related_object?' do
+        let(:op_params) { { relation: relation, related_guid: related_guid } }
 
-      it_behaves_like :no_access
-    end
-
-    context 'as a manager in a different organization (defensive)' do
-      before do
-        different_organization = VCAP::CloudController::Organization.make
-        different_organization.add_manager(user)
-      end
-
-      it_behaves_like :no_access
-    end
-
-    context 'a user that isnt logged in (defensive)' do
-      let(:user) { nil }
-      let(:roles) { double(:roles, admin?: false, none?: true, present?: false) }
-      it_behaves_like :no_access
-    end
-
-    context 'any user using client without cloud_controller.write' do
-      let(:scopes) { ['cloud_controller.read'] }
-
-      before do
-        org.add_user(user)
-        org.add_manager(user)
-        org.add_billing_manager(user)
-        org.add_auditor(user)
-        object.add_manager(user)
-        object.add_developer(user)
-        object.add_auditor(user)
-      end
-
-      it_behaves_like :read_only_access
-    end
-
-    context 'any user using client without cloud_controller.read' do
-      let(:scopes) { [] }
-
-      before do
-        org.add_user(user)
-        org.add_manager(user)
-        org.add_billing_manager(user)
-        org.add_auditor(user)
-        object.add_manager(user)
-        object.add_developer(user)
-        object.add_auditor(user)
-      end
-
-      it_behaves_like :no_access
-    end
-
-    describe '#can_remove_related_object?' do
-      let(:params) { { relation: relation, related_guid: related_guid } }
-      let(:space) { object }
-
-      context 'with auditors' do
-        let(:relation) { :auditors }
-
-        context 'when acting against themselves' do
+        describe "when the user's guid matches the related guid" do
           let(:related_guid) { user.guid }
 
-          it 'is true' do
-            expect(access.can_remove_related_object?(space, params)).to be true
+          [:auditors, :developers, :managers].each do |r|
+            describe "when the relation is '#{r}'" do
+              let(:relation) { r }
+
+              can_remove_related_object_table = {
+                reader_and_writer: false,
+                reader: false,
+                writer: false,
+
+                admin: true,
+                admin_read_only: false,
+                global_auditor: false,
+
+                space_developer: true,
+                space_manager: true,
+                space_auditor: true,
+                org_user: true,
+                org_manager: true,
+                org_auditor: true,
+                org_billing_manager: true,
+              }
+
+              it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
+            end
+          end
+
+          describe 'when the relation is something else' do
+            let(:relation) { :apps }
+
+            can_remove_related_object_table = {
+              reader_and_writer: false,
+              reader: false,
+              writer: false,
+
+              admin: true,
+              admin_read_only: false,
+              global_auditor: false,
+
+              space_developer: false,
+              space_manager: false,
+              space_auditor: false,
+              org_user: false,
+              org_manager: false,
+              org_auditor: false,
+              org_billing_manager: false,
+            }
+
+            it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
           end
         end
 
-        context 'when acting against another' do
-          let(:related_guid) { 123456 }
+        describe "when the user's guid does not match the related guid" do
+          let(:related_guid) { 'abc' }
 
-          it 'is false' do
-            expect(access.can_remove_related_object?(space, params)).to be false
+          [:auditors, :developers, :managers, :something_else].each do |r|
+            describe "when the relation is '#{r}'" do
+              let(:relation) { r }
+
+              can_remove_related_object_table = {
+                reader_and_writer: false,
+                reader: false,
+                writer: false,
+
+                admin: true,
+                admin_read_only: false,
+                global_auditor: false,
+
+                space_developer: false,
+                space_manager: false,
+                space_auditor: false,
+                org_user: false,
+                org_manager: false,
+                org_auditor: false,
+                org_billing_manager: false,
+              }
+
+              it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
+            end
           end
         end
       end
+    end
 
-      context 'with developers' do
-        context 'when acting against themselves'
-        let(:relation) { :developers }
+    describe 'when the parent organization is not suspended' do
+      index_table = {
+        unauthenticated: true,
+        reader_and_writer: true,
+        reader: true,
+        writer: true,
 
-        context 'when acting against themselves' do
+        admin: true,
+        admin_read_only: true,
+        global_auditor: true,
+
+        space_developer: true,
+        space_manager: true,
+        space_auditor: true,
+        org_user: true,
+        org_manager: true,
+        org_auditor: true,
+        org_billing_manager: true,
+      }
+
+      read_table = {
+        unauthenticated: false,
+        reader_and_writer: false,
+        reader: false,
+        writer: false,
+
+        admin: true,
+        admin_read_only: true,
+        global_auditor: true,
+
+        space_developer: true,
+        space_manager: true,
+        space_auditor: true,
+        org_user: false,
+        org_manager: true,
+        org_auditor: false,
+        org_billing_manager: false,
+      }
+
+      write_table = {
+        unauthenticated: false,
+        reader_and_writer: false,
+        reader: false,
+        writer: false,
+
+        admin: true,
+        admin_read_only: false,
+        global_auditor: false,
+
+        space_developer: false,
+        space_manager: false,
+        space_auditor: false,
+        org_user: false,
+        org_manager: true,
+        org_auditor: false,
+        org_billing_manager: false,
+      }
+
+      update_table = {
+        unauthenticated: false,
+        reader_and_writer: false,
+        reader: false,
+        writer: false,
+
+        admin: true,
+        admin_read_only: false,
+        global_auditor: false,
+
+        space_developer: false,
+        space_manager: true,
+        space_auditor: false,
+        org_user: false,
+        org_manager: true,
+        org_auditor: false,
+        org_billing_manager: false,
+      }
+
+      it_behaves_like('an access control', :create, write_table)
+      it_behaves_like('an access control', :delete, write_table)
+      it_behaves_like('an access control', :index, index_table)
+      it_behaves_like('an access control', :read, read_table)
+      it_behaves_like('an access control', :read_for_update, update_table)
+      it_behaves_like('an access control', :update, update_table)
+
+      describe '#can_remove_related_object?' do
+        let(:op_params) { { relation: relation, related_guid: related_guid } }
+
+        describe "when the user's guid matches the related guid" do
           let(:related_guid) { user.guid }
 
-          it 'is true' do
-            expect(access.can_remove_related_object?(space, params)).to be true
+          [:auditors, :developers, :managers].each do |r|
+            describe "when the relation is '#{r}'" do
+              let(:relation) { r }
+
+              can_remove_related_object_table = {
+                reader_and_writer: false,
+                reader: false,
+                writer: false,
+
+                admin: true,
+                admin_read_only: false,
+                global_auditor: false,
+
+                space_developer: true,
+                space_manager: true,
+                space_auditor: true,
+                org_user: true,
+                org_manager: true,
+                org_auditor: true,
+                org_billing_manager: true,
+              }
+
+              it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
+            end
+          end
+
+          describe 'when the relation is something else' do
+            let(:relation) { :apps }
+
+            can_remove_related_object_table = {
+              reader_and_writer: false,
+              reader: false,
+              writer: false,
+
+              admin: true,
+              admin_read_only: false,
+              global_auditor: false,
+
+              space_developer: false,
+              space_manager: true,
+              space_auditor: false,
+              org_user: false,
+              org_manager: true,
+              org_auditor: false,
+              org_billing_manager: false,
+            }
+
+            it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
           end
         end
 
-        context 'when acting against another' do
-          let(:related_guid) { 123456 }
+        describe "when the user's guid does not match the related guid" do
+          let(:related_guid) { 'abc' }
 
-          it 'is false' do
-            expect(access.can_remove_related_object?(space, params)).to be false
+          [:auditors, :developers, :managers, :something_else].each do |r|
+            describe "when the relation is '#{r}'" do
+              let(:relation) { r }
+
+              can_remove_related_object_table = {
+                reader_and_writer: false,
+                reader: false,
+                writer: false,
+
+                admin: true,
+                admin_read_only: false,
+                global_auditor: false,
+
+                space_developer: false,
+                space_manager: true,
+                space_auditor: false,
+                org_user: false,
+                org_manager: true,
+                org_auditor: false,
+                org_billing_manager: false,
+              }
+
+              it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
+            end
           end
-        end
-      end
-
-      context 'with managers' do
-        let(:relation) { :managers }
-
-        before do
-          org.add_user(user)
-          org.add_manager(user)
-          space.add_manager(user)
-        end
-
-        context 'when acting against themselves' do
-          let(:related_guid) { user.guid }
-
-          it 'is true' do
-            expect(access.can_remove_related_object?(space, params)).to be true
-          end
-        end
-
-        context 'when acting against another' do
-          let(:related_guid) { 123456 }
-
-          it 'is true' do
-            expect(access.can_remove_related_object?(space, params)).to be true
-          end
-        end
-      end
-
-      context 'with apps' do
-        let(:relation) { :apps }
-        let(:related_guid) { user.guid }
-
-        it 'is false even when the guid matches the current user' do
-          expect(access.can_remove_related_object?(space, params)).to be false
         end
       end
     end
