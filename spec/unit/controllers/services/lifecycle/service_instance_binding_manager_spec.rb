@@ -37,6 +37,20 @@ module VCAP::CloudController
           expect(route_binding.route_service_url).to eq service_instance.route_service_url
         end
 
+        context 'when route is internal' do
+          let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+          let(:internal_route) { Route.make(domain: internal_domain, space: route.space) }
+
+          it 'raises an api error' do
+            expect {
+              manager.create_route_service_instance_binding(internal_route.guid, service_instance.guid, {}, route_services_enabled)
+            }.to raise_error do |e|
+              expect(e).to be_a(CloudController::Errors::ApiError)
+              expect(e.name).to eq('RouteServiceCannotBeBoundToInternalRoute')
+            end
+          end
+        end
+
         context 'when route services are disabled' do
           let(:route_services_enabled) { false }
 
@@ -85,6 +99,20 @@ module VCAP::CloudController
           }.to raise_error do |e|
             expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
+          end
+        end
+
+        context 'when route is internal' do
+          let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+          let(:internal_route) { Route.make(domain: internal_domain, space: route.space) }
+
+          it 'raises an api error' do
+            expect {
+              manager.create_route_service_instance_binding(internal_route.guid, service_instance.guid, {}, route_services_enabled)
+            }.to raise_error do |e|
+              expect(e).to be_a(CloudController::Errors::ApiError)
+              expect(e.name).to eq('RouteServiceCannotBeBoundToInternalRoute')
+            end
           end
         end
 

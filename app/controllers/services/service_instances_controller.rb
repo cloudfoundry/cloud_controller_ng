@@ -315,10 +315,6 @@ module VCAP::CloudController
     def bind_route(route_guid, instance_guid)
       logger.debug 'cc.association.add', model: self.class.model_class_name, guid: instance_guid, assocation: :routes, other_guid: route_guid
 
-      if Route.find(guid: route_guid).try(:internal?)
-        raise CloudController::Errors::ApiError.new_from_details('RouteServiceCannotBeBoundToInternalRoute')
-      end
-
       arbitrary_parameters = @request_attrs['parameters']
 
       binding_manager = ServiceInstanceBindingManager.new(self, logger)
