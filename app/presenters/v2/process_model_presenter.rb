@@ -65,8 +65,8 @@ module CloudController
           end
         end
 
-        def can_read_env?(app)
-          VCAP::CloudController::Security::AccessContext.new.can?(:read_env, app)
+        def can_read_env?(process)
+          VCAP::CloudController::Security::AccessContext.new.can?(:read_env, process)
         end
 
         def redact(attr, has_permission=false)
