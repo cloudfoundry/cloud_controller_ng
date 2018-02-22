@@ -24,6 +24,10 @@ module VCAP::CloudController
           @event_repository.record_service_key_event('delete', key, nil)
         end
 
+        service_instance.shared_spaces.each do |target_space|
+          Repositories::ServiceInstanceShareEventRepository.record_unshare_event(service_instance, target_space, @event_repository.user_audit_info)
+        end
+
         service_instance.destroy
         @event_repository.record_service_instance_event('delete', service_instance, nil)
       end

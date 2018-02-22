@@ -88,6 +88,24 @@ module VCAP::CloudController
           expect(service_key_2).not_to exist
         end
       end
+
+      context 'when the service instance has shared spaces' do
+        let(:target_space) { Space.make }
+
+        before do
+          service_instance.add_shared_space(target_space)
+        end
+
+        it 'records an unshare service event' do
+          purger.purge(service_instance)
+
+          events = Event.where(type: 'audit.service_instance.unshare').all
+          event_key_guid = events.collect(&:actee)
+
+          expect(events.length).to eq(1)
+          expect(event_key_guid).to match_array([service_instance.guid])
+        end
+      end
     end
   end
 end
