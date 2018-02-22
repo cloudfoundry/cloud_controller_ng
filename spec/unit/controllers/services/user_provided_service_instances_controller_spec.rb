@@ -17,7 +17,8 @@ module VCAP::CloudController
               space_guid:            { type: 'string', required: true },
               service_binding_guids: { type: '[string]' },
               route_service_url:     { type: 'string', default: '' },
-              route_guids: { type: '[string]' },
+              route_guids:           { type: '[string]' },
+              tags:                  { type: '[string]', default: [] },
             })
       end
 
@@ -29,7 +30,8 @@ module VCAP::CloudController
               space_guid:            { type: 'string' },
               service_binding_guids: { type: '[string]' },
               route_service_url:     { type: 'string' },
-              route_guids: { type: '[string]' },
+              route_guids:           { type: '[string]' },
+              tags:                  { type: '[string]' },
             })
       end
     end
@@ -311,8 +313,9 @@ module VCAP::CloudController
         {
           'name'              => 'my-upsi',
           'credentials'       => { 'uri' => 'https://user:password@service-location.com:port/db' },
+          'tags'              => ['tag-a', 'tag-b'],
           'space_guid'        => space.guid,
-          'route_service_url' => 'https://route.url.com'
+          'route_service_url' => 'https://route.url.com',
         }
       end
 
@@ -328,6 +331,7 @@ module VCAP::CloudController
         expect(service_instance.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
         expect(service_instance.space.guid).to eq space.guid
         expect(service_instance.route_service_url).to eq 'https://route.url.com'
+        expect(service_instance.tags).to eq ['tag-a', 'tag-b']
       end
 
       context 'when the new service instance name is taken' do
@@ -403,7 +407,8 @@ module VCAP::CloudController
                 'credentials'       => '[REDACTED]',
                 'space_guid'        => space.guid,
                 'syslog_drain_url'  => '',
-                'route_service_url' => 'https://route.url.com'
+                'route_service_url' => 'https://route.url.com',
+                'tags'              => ['tag-a', 'tag-b'],
               }
             })
       end
@@ -519,6 +524,18 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the tags passed in are too long' do
+        it 'returns service instance tags too long message correctly' do
+          req['tags'] = max_tags + ['z']
+
+          post '/v2/user_provided_service_instances', req.to_json
+
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['code']).to eq(60015)
+          expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
+        end
+      end
     end
 
     describe 'PUT', '/v2/user_provided_service_instances/:guid' do
@@ -528,7 +545,8 @@ module VCAP::CloudController
       let(:req) do
         {
           'name'        => 'my-upsi',
-          'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' }
+          'credentials' => { 'uri' => 'https://user:password@service-location.com:port/db' },
+          'tags'        => ['tag-a', 'tag-b'],
         }
       end
 
@@ -544,6 +562,7 @@ module VCAP::CloudController
         service_instance = UserProvidedServiceInstance.first
         expect(service_instance.name).to eq 'my-upsi'
         expect(service_instance.credentials).to eq({ 'uri' => 'https://user:password@service-location.com:port/db' })
+        expect(service_instance.tags).to eq(['tag-a', 'tag-b'])
         expect(service_instance.space.guid).to eq space.guid
       end
 
@@ -564,7 +583,8 @@ module VCAP::CloudController
         expect(event.metadata).to include({
               'request' => {
                 'name'        => 'my-upsi',
-                'credentials' => '[REDACTED]'
+                'credentials' => '[REDACTED]',
+                'tags'        => ['tag-a', 'tag-b'],
               }
             })
       end
@@ -582,6 +602,18 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(400)
           expect(decoded_response['code']).to eq(60002)
           expect(decoded_response['error_code']).to eq('CF-ServiceInstanceNameTaken')
+        end
+      end
+
+      context 'when the tags passed in are too long' do
+        it 'returns service instance tags too long message correctly' do
+          req['tags'] = max_tags + ['z']
+
+          put "/v2/user_provided_service_instances/#{service_instance.guid}", req.to_json
+
+          expect(last_response.status).to eq(400)
+          expect(decoded_response['code']).to eq(60015)
+          expect(decoded_response['error_code']).to eq('CF-ServiceInstanceTagsTooLong')
         end
       end
 
@@ -937,6 +969,10 @@ module VCAP::CloudController
           expect(JSON.parse(last_response.body)['description']).to eq("Route #{route.guid} is not bound to service instance #{service_instance.guid}.")
         end
       end
+    end
+
+    def max_tags
+      ['a' * 1024, 'b' * 1024] # 2048 characters
     end
   end
 end

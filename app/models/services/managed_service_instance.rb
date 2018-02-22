@@ -17,8 +17,6 @@ module VCAP::CloudController
 
     plugin :after_initialize
 
-    serialize_attributes :json, :tags
-
     add_association_dependencies service_instance_operation: :destroy
 
     def validation_policies
@@ -38,7 +36,6 @@ module VCAP::CloudController
       super
       validates_presence :service_plan
       validation_policies.map(&:validate)
-      validate_tags_length
     end
 
     def last_operation
@@ -119,10 +116,6 @@ module VCAP::CloudController
       service_plan.bindable?
     end
 
-    def tags
-      super || []
-    end
-
     def merged_tags
       (service.tags + tags).uniq
     end
@@ -183,12 +176,6 @@ module VCAP::CloudController
     def update_attributes(instance_attrs)
       set(instance_attrs)
       save_changes
-    end
-
-    def validate_tags_length
-      if tags.join('').length > 2048
-        @errors[:tags] = [:too_long]
-      end
     end
   end
 end

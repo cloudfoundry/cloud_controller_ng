@@ -32,12 +32,12 @@ RSpec.describe ServiceInstancePresenter do
     end
 
     context 'for a provided service instance' do
-      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
+      let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(tags: ['wonderful', 'the-best']) }
 
       specify do
         expect(subject[:label]).to eq('user-provided')
         expect(subject[:name]).to eq(service_instance.name)
-        expect(subject[:tags]).to eq([])
+        expect(subject[:tags]).to eq(['wonderful', 'the-best'])
       end
     end
   end

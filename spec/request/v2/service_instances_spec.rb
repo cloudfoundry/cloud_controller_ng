@@ -9,6 +9,131 @@ RSpec.describe 'ServiceInstances' do
     space.add_developer(user)
   end
 
+  describe 'POST /v2/service_instances' do
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+
+    before do
+      allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+        FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+      end
+    end
+
+    it 'creates a service instance' do
+      post_params = MultiJson.dump({
+        name:              'awesome-service-instance',
+        space_guid:        space.guid,
+        service_plan_guid: service_plan.guid,
+        parameters:        { 'KEY' => 'val' },
+        tags:              ['no-sql', 'georeplicated'],
+      })
+
+      post '/v2/service_instances', post_params, admin_headers
+
+      service_instance = VCAP::CloudController::ManagedServiceInstance.last
+      expect(last_response).to have_status_code(201)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => service_instance.guid,
+            'url'        => "/v2/service_instances/#{service_instance.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601 },
+          'entity' => {
+            'name'                 => 'awesome-service-instance',
+            'credentials'          => service_instance.credentials,
+            'service_guid'         => service_plan.service.guid,
+            'service_plan_guid'    => service_plan.guid,
+            'space_guid'           => space.guid,
+            'gateway_data'         => service_instance.gateway_data,
+            'dashboard_url'        => service_instance.dashboard_url,
+            'type'                 => 'managed_service_instance',
+            'last_operation' => {
+              'type'        => 'create',
+              'state'       => 'succeeded',
+              'description' => '',
+              'updated_at'  => iso8601,
+              'created_at'  => iso8601
+            },
+            'tags'                 => ['no-sql', 'georeplicated'],
+            'space_url'            => "/v2/spaces/#{space.guid}",
+            'service_url'          => "/v2/services/#{service_instance.service.guid}",
+            'service_plan_url'     => "/v2/service_plans/#{service_plan.guid}",
+            'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+            'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
+            'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
+            'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from",
+            'shared_to_url'        => "/v2/service_instances/#{service_instance.guid}/shared_to",
+          }
+        }
+      )
+    end
+  end
+
+  describe 'PUT /v2/service_instances/:guid' do
+    let(:service) { VCAP::CloudController::Service.make(plan_updateable: true) }
+    let(:old_service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: old_service_plan) }
+
+    before do
+      allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+        FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+      end
+    end
+
+    it 'creates updates a service instance' do
+      put_params = MultiJson.dump({
+        name:              'awesome-service-instance',
+        space_guid:        space.guid,
+        service_plan_guid: new_service_plan.guid,
+        parameters:        { 'KEY' => 'val' },
+        tags:              ['no-sql', 'georeplicated'],
+      })
+
+      put "/v2/service_instances/#{service_instance.guid}", put_params, admin_headers
+
+      service_instance = VCAP::CloudController::ManagedServiceInstance.last
+      expect(last_response).to have_status_code(201)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => service_instance.guid,
+            'url'        => "/v2/service_instances/#{service_instance.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601 },
+          'entity' => {
+            'name'                 => 'awesome-service-instance',
+            'credentials'          => service_instance.credentials,
+            'service_guid'         => new_service_plan.service.guid,
+            'service_plan_guid'    => new_service_plan.guid,
+            'space_guid'           => space.guid,
+            'gateway_data'         => service_instance.gateway_data,
+            'dashboard_url'        => service_instance.dashboard_url,
+            'type'                 => 'managed_service_instance',
+            'last_operation' => {
+              'type'        => 'update',
+              'description' => '',
+              'state'       => 'succeeded',
+              'updated_at'  => iso8601,
+              'created_at'  => iso8601
+            },
+            'tags'                 => ['no-sql', 'georeplicated'],
+            'space_url'            => "/v2/spaces/#{space.guid}",
+            'service_url'          => "/v2/services/#{service_instance.service.guid}",
+            'service_plan_url'     => "/v2/service_plans/#{new_service_plan.guid}",
+            'service_bindings_url' => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+            'service_keys_url'     => "/v2/service_instances/#{service_instance.guid}/service_keys",
+            'routes_url'           => "/v2/service_instances/#{service_instance.guid}/routes",
+            'shared_from_url'      => "/v2/service_instances/#{service_instance.guid}/shared_from",
+            'shared_to_url'        => "/v2/service_instances/#{service_instance.guid}/shared_to",
+          }
+        }
+      )
+    end
+  end
+
   describe 'GET /v2/service_instances/:service_instance_guid' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(active: false) }
@@ -275,6 +400,87 @@ RSpec.describe 'ServiceInstances' do
         expect(parsed_response['error_code']).to eq 'CF-ServiceInstanceDeletionSharesExists'
         expect(parsed_response['code']).to eq 390002
       end
+    end
+  end
+
+  describe 'POST /v2/user_provided_service_instances' do
+    it 'creates a user-provided service instance' do
+      post_params = MultiJson.dump({
+        name:              'awesome-service-instance',
+        space_guid:        space.guid,
+        tags:              ['no-sql', 'georeplicated'],
+        syslog_drain_url:  'syslog://example.com',
+        credentials:       { 'somekey': 'somevalue' },
+        route_service_url: 'https://logger.example.com',
+      })
+
+      post '/v2/user_provided_service_instances', post_params, admin_headers
+
+      service_instance = VCAP::CloudController::UserProvidedServiceInstance.last
+      expect(last_response).to have_status_code(201)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => service_instance.guid,
+            'url'        => "/v2/user_provided_service_instances/#{service_instance.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601 },
+          'entity' => {
+            'name'                 => 'awesome-service-instance',
+            'credentials'          => { 'somekey' => 'somevalue' },
+            'space_guid'           => space.guid,
+            'type'                 => 'user_provided_service_instance',
+            'tags'                 => ['no-sql', 'georeplicated'],
+            'space_url'            => "/v2/spaces/#{space.guid}",
+            'service_bindings_url' => "/v2/user_provided_service_instances/#{service_instance.guid}/service_bindings",
+            'routes_url'           => "/v2/user_provided_service_instances/#{service_instance.guid}/routes",
+            'syslog_drain_url'     => 'syslog://example.com',
+            'route_service_url'    => 'https://logger.example.com',
+          }
+        }
+      )
+    end
+  end
+
+  describe 'PUT /v2/user_provided_service_instances/:guid' do
+    let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+
+    it 'updates the user-provided service instance' do
+      put_params = MultiJson.dump({
+        name:              'awesome-service-instance',
+        space_guid:        space.guid,
+        tags:              ['no-sql', 'georeplicated'],
+        syslog_drain_url:  'syslog://example.com',
+        credentials:       { 'somekey': 'somevalue' },
+        route_service_url: 'https://logger.example.com',
+      })
+
+      put "/v2/user_provided_service_instances/#{service_instance.guid}", put_params, admin_headers
+
+      expect(last_response).to have_status_code(201)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => service_instance.guid,
+            'url'        => "/v2/user_provided_service_instances/#{service_instance.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601 },
+          'entity' => {
+            'name'                 => 'awesome-service-instance',
+            'credentials'          => { 'somekey' => 'somevalue' },
+            'space_guid'           => space.guid,
+            'type'                 => 'user_provided_service_instance',
+            'tags'                 => ['no-sql', 'georeplicated'],
+            'space_url'            => "/v2/spaces/#{space.guid}",
+            'service_bindings_url' => "/v2/user_provided_service_instances/#{service_instance.guid}/service_bindings",
+            'routes_url'           => "/v2/user_provided_service_instances/#{service_instance.guid}/routes",
+            'syslog_drain_url'     => 'syslog://example.com',
+            'route_service_url'    => 'https://logger.example.com',
+          }
+        }
+      )
     end
   end
 end

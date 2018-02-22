@@ -186,6 +186,27 @@
                 </ul>
               </td>
             </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">tags</span>
+              </td>
+              <td>
+                <span class="description">A list of tags for the service instance. Max characters: 2048</span>
+              </td>
+              <td>
+                <span class="default">[]</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>[&quot;db&quot;]</li>
+                      <li>[&quot;accounting&quot;, &quot;mongodb&quot;]</li>
+                </ul>
+              </td>
+            </tr>
           </tbody>
         </table>
 
@@ -196,7 +217,8 @@
     "somekey": "somevalue"
   },
   "syslog_drain_url": "syslog://example.com",
-  "route_service_url": "https://logger.example.com"
+  "route_service_url": "https://logger.example.com",
+  "tags": ["accounting", "mongodb"]
 }</pre>
 
       <h4>Headers</h4>
@@ -213,7 +235,8 @@ Cookie: </pre>
     &quot;somekey&quot;: &quot;somevalue&quot;
   },
   &quot;syslog_drain_url&quot;: &quot;syslog://example.com&quot;,
-  &quot;route_service_url&quot;: &quot;https://logger.example.com&quot;
+  &quot;route_service_url&quot;: &quot;https://logger.example.com&quot;,
+  "tags": ["accounting", "mongodb"]
 }&#39; -X POST \
 	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5MyIsImVtYWlsIjoiZW1haWwtMTQ4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.3e7tZmyp9P6Ca_KFYwIg_6e4zO6k96Avm0y6ghyV7LU&quot; \
 	-H &quot;Host: example.org&quot; \
@@ -243,6 +266,7 @@ Cookie: </pre>
     "type": "user_provided_service_instance",
     "syslog_drain_url": "syslog://example.com",
     "route_service_url": "https://logger.example.com",
+    "tags": ["accounting", "mongodb"],
     "space_url": "/v2/spaces/d5d30998-48ea-4499-9d10-80a8af005aca",
     "service_bindings_url": "/v2/user_provided_service_instances/d7facf53-dbff-470c-a032-9ea9b8be12f1/service_bindings",
     "routes_url": "/v2/user_provided_service_instances/d7facf53-dbff-470c-a032-9ea9b8be12f1/routes"
