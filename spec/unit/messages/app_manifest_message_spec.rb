@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when memory is not part of expected set of values' do
+      context 'when memory unit is not part of expected set of values' do
         let(:params) { { memory: '200INVALID' } }
 
         it 'is not valid' do
@@ -93,6 +93,28 @@ module VCAP::CloudController
 
         expect(message.requested?(:instances)).to be_truthy
         expect(message.requested?(:memory)).to be_truthy
+      end
+    end
+
+    describe '#process_scale_message' do
+      let(:parsed_yaml) { { 'memory' => '200GB', instances: 5 } }
+
+      it 'returns a ProcessScaleMessage containing mapped attributes' do
+        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+
+        expect(message.process_scale_message.instances).to eq(5)
+        expect(message.process_scale_message.memory_in_mb).to eq(204800)
+      end
+
+      context 'when attributes are not requested in the manifest' do
+        let(:parsed_yaml) { {} }
+
+        it 'does not forward missing attributes to the ProcessScaleMessage' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+
+          expect(message.process_scale_message.requested?(:instances)).to be false
+          expect(message.process_scale_message.requested?(:memory_in_mb)).to be false
+        end
       end
     end
   end
