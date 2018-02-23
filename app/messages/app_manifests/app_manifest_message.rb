@@ -1,9 +1,10 @@
 require 'messages/base_message'
 require 'messages/processes/process_scale_message'
+require 'palm_civet'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:instances].freeze
+    ALLOWED_KEYS = [:instances, :memory].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -31,8 +32,17 @@ module VCAP::CloudController
 
     def process_scale_data
       {
-        instances: instances
+        instances: instances,
+        memory_in_mb: convert_memory_to_mb(memory)
       }
+    end
+
+    def convert_memory_to_mb(memory)
+      memory_in_mb = PalmCivet.to_megabytes(memory) if memory
+    rescue PalmCivet::InvalidByteQuantityError => e
+      errors.add(:base, 'memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+
+      memory_in_mb
     end
   end
 end
