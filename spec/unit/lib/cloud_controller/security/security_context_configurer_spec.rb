@@ -17,13 +17,17 @@ module VCAP::CloudController
         end
 
         it 'initially clears the security context token' do
-          SecurityContext.set('foo', 'bar')
+          SecurityContext.set('foo', 'bar', 'baz')
+
+          # Fail early in the #configure so that we do not set new values on the token
           allow(token_decoder).to receive(:decode_token).with(auth_token).and_raise('BOGUS_TEST_ERROR')
           expect {
             configurer.configure(auth_token)
           }.to raise_error('BOGUS_TEST_ERROR')
+
           expect(SecurityContext.current_user).to be_nil
           expect(SecurityContext.token).to be_nil
+          expect(SecurityContext.auth_token).to be_nil
         end
 
         it 'sets the security context token and the raw token' do
