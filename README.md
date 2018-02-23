@@ -61,7 +61,10 @@ It will try to connect to those databases with the following connection string:
 postgres: postgres://postgres@localhost:5432/cc_test
 mysql: mysql2://root:password@localhost:3306/cc_test
 
-rake db:create will create the above database when the `DB` environment variable is set to postgres or mysql.
+```
+rake db:create
+```
+will create the above database when the `DB` environment variable is set to postgres or mysql.
 You should run this before running rake in order to ensure that the `cc_test` database exists.
 
 You can specify the full connection string via the `DB_CONNECTION_STRING`
