@@ -40,7 +40,7 @@ module VCAP::CloudController
     def convert_memory_to_mb(memory)
       memory_in_mb = PalmCivet.to_megabytes(memory) if memory
     rescue PalmCivet::InvalidByteQuantityError => e
-      errors.add(:base, 'memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+      errors.add(:base, 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
 
       memory_in_mb
     end

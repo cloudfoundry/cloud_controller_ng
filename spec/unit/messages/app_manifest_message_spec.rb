@@ -22,7 +22,7 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+          expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
         end
       end
 
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+          expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
         end
       end
     end

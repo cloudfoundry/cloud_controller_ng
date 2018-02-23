@@ -64,11 +64,13 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       context 'when specified manifest fails validations' do
-        let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => -1 }] } }
+        let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit' }] } }
 
-        it 'returns a 422' do
+        it 'returns a 422 and validation errors' do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
+          expect(response).to have_error_message('Instances must be greater than or equal to 0')
+          expect(response).to have_error_message('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
         end
       end
     end
