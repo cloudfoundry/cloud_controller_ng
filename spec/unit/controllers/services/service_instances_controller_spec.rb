@@ -4557,6 +4557,164 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters' do
+      let(:space) { Space.make }
+      let(:service) { Service.make(:routing, bindings_retrievable: true) }
+      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+      let(:route) { Route.make(space: space) }
+      let(:developer) { make_developer_for_space(space) }
+
+      before { set_current_user developer }
+
+      context 'when the service instance does not exist' do
+        it 'returns a 404' do
+          get "/v2/service_instances/invalid-guid/routes/#{route.guid}/parameters"
+
+          expect(last_response).to have_status_code(404)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceInstanceNotFound')
+          expect(JSON.parse(last_response.body)['description']).to eql('The service instance could not be found: invalid-guid')
+        end
+      end
+
+      context 'when the route does not exist' do
+        it 'returns a 404' do
+          get "/v2/service_instances/#{instance.guid}/routes/invalid-guid/parameters"
+
+          expect(last_response).to have_status_code(404)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-RouteNotFound')
+          expect(JSON.parse(last_response.body)['description']).to eql('The route could not be found: invalid-guid')
+        end
+      end
+
+      context 'when the route binding does not exist' do
+        it 'returns a 400' do
+          get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+
+          expect(last_response).to have_status_code(400)
+          expect(JSON.parse(last_response.body)['error_code']).to eql('CF-InvalidRelation')
+          expect(JSON.parse(last_response.body)['description']).to eql("Route #{route.guid} is not bound to service instance #{instance.guid}.")
+        end
+      end
+
+      context 'when the route binding does exist' do
+        let!(:route_binding) { RouteBinding.make(service_instance: instance, route: route) }
+
+        context 'when bindings_retrievable is set to false' do
+          let(:service) { Service.make(:routing, bindings_retrievable: false) }
+
+          it 'returns a 400' do
+            get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+
+            expect(last_response).to have_status_code(400)
+            expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchBindingParametersNotSupported')
+            expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service binding parameters.')
+          end
+        end
+
+        context 'when bindings_retrievable is set to true' do
+          let(:broker_responce_body) { {}.to_json }
+          let(:broker_response_code) { 200 }
+
+          before do
+            stub_request(:get, %r{#{instance.service.service_broker.broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+              with(basic_auth: basic_auth(service_broker: instance.service.service_broker)).
+              to_return(status: broker_response_code, body: broker_responce_body)
+          end
+
+          context 'when there are parameters' do
+            let(:broker_responce_body) { { 'parameters' => { 'foo' => { 'bar' => true } } }.to_json }
+
+            it 'returns the parameters from the service broker' do
+              get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+
+              expect(last_response).to have_status_code(200)
+              expect(JSON.parse(last_response.body)['foo']['bar']).to eql(true)
+              expect(JSON.parse(last_response.body).length).to eql(1)
+            end
+          end
+
+          context 'when there are no parameters' do
+            let(:broker_responce_body) { {}.to_json }
+
+            it 'returns an empty object' do
+              get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+
+              expect(last_response).to have_status_code(200)
+              expect(last_response.body).to eql({}.to_json)
+            end
+          end
+
+          describe 'permissions' do
+            {
+              'admin'               => 200,
+              'admin_read_only'     => 200,
+              'global_auditor'      => 200,
+              'space_developer'     => 200,
+              'space_auditor'       => 200,
+              'space_manager'       => 200,
+              'org_manager'         => 200,
+              'org_auditor'         => 403,
+              'org_billing_manager' => 403,
+              'org_user'            => 403,
+            }.each do |role, expected_return_value|
+              context "as a(n) #{role}" do
+                before do
+                  set_current_user_as_role(
+                    role:   role,
+                    org:    space.organization,
+                    space:  space,
+                    scopes: ['cloud_controller.read']
+                  )
+                end
+
+                it "returns #{expected_return_value}" do
+                  get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+                  expect(last_response).to have_status_code(expected_return_value)
+                end
+              end
+            end
+          end
+
+          context 'when the service instance is shared' do
+            let(:target_space) { Space.make }
+
+            before do
+              instance.add_shared_space(target_space)
+            end
+
+            describe 'permissions' do
+              {
+                'space_developer'     => 403,
+                'space_auditor'       => 403,
+                'space_manager'       => 403,
+                'org_manager'         => 403,
+                'org_auditor'         => 403,
+                'org_billing_manager' => 403,
+                'org_user'            => 403,
+              }.each do |role, expected_return_value|
+                context "as a(n) #{role} in the target org/space" do
+                  before do
+                    set_current_user_as_role(
+                      role:   role,
+                      org:    target_space.organization,
+                      space:  target_space,
+                      scopes: ['cloud_controller.read']
+                    )
+                  end
+
+                  it "returns #{expected_return_value}" do
+                    get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+                    expect(last_response).to have_status_code(expected_return_value)
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
     describe 'Validation messages' do
       let(:paid_quota) { QuotaDefinition.make(total_services: 1) }
       let(:free_quota_with_no_services) do
