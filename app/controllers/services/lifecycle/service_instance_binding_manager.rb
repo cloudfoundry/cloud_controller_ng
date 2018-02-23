@@ -22,6 +22,10 @@ module VCAP::CloudController
       route = Route.find(guid: route_guid)
       raise RouteNotFound unless route
 
+      if route.try(:internal?)
+        raise CloudController::Errors::ApiError.new_from_details('RouteServiceCannotBeBoundToInternalRoute')
+      end
+
       instance = ServiceInstance.find(guid: instance_guid)
 
       raise ServiceInstanceNotFound unless instance
