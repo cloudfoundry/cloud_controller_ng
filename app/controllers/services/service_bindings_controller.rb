@@ -49,6 +49,8 @@ module VCAP::CloudController
         }
       })
 
+      accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+
       app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid']) unless app
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
@@ -58,7 +60,9 @@ module VCAP::CloudController
       service_binding = creator.create(app, service_instance, message, volume_services_enabled?)
       warn_if_user_provided_service_has_parameters!(service_instance)
 
-      [HTTP::CREATED,
+      response_code = accepts_incomplete ? HTTP::ACCEPTED : HTTP::CREATED
+
+      [response_code,
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
        object_renderer.render_json(self.class, service_binding, @opts)
       ]

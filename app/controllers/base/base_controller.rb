@@ -164,6 +164,11 @@ module VCAP::CloudController::RestController
       params['async'] == 'true'
     end
 
+    def convert_flag_to_bool(flag)
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+      flag == 'true'
+    end
+
     # hook called before +create+
     def before_create; end
 

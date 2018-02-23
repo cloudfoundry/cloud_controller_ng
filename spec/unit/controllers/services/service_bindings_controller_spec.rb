@@ -366,6 +366,38 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the accepts_incomplete query paramater' do
+          context 'and when the parameter is true' do
+            it 'returns a 202 status code' do
+              post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+              expect(last_response).to have_status_code(202)
+
+              # TODO: Add an expectation that the broker receives accepts_incomplete=true
+            end
+          end
+
+          context 'and when the parameter is false' do
+            it 'returns a 201 status code' do
+              post '/v2/service_bindings?accepts_incomplete=false', req.to_json
+              expect(last_response).to have_status_code(201)
+
+              # TODO: Should ensure that the accepts_incomplete reaches the broker
+              # expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}\?accepts\_incomplete\=false})).
+              #   to have_been_made
+            end
+          end
+
+          context 'and when the parameter is not a bool' do
+            it 'returns a 400 status code' do
+              post '/v2/service_bindings?accepts_incomplete=not_a_bool', req.to_json
+              expect(last_response).to have_status_code(400)
+
+              expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                to_not have_been_made
+            end
+          end
+        end
+
         context 'when the app is in a space that the service instance is shared to' do
           let(:shared_from_space) { Space.make }
           let(:service_instance) { ManagedServiceInstance.make(space: shared_from_space) }
