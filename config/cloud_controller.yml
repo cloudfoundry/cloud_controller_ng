@@ -160,6 +160,8 @@ default_health_check_timeout: 60
 maximum_health_check_timeout: 180
 
 disable_custom_buildpacks: false
+copilot:
+  enabled: false
 broker_client_timeout_seconds: 60
 
 uaa_client_name: 'cc-service-dashboards'

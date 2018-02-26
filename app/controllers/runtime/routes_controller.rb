@@ -1,4 +1,5 @@
 require 'actions/routing/route_delete'
+require 'actions/routing/route_create'
 
 module VCAP::CloudController
   class RoutesController < RestController::ModelController
@@ -140,17 +141,16 @@ module VCAP::CloudController
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
-      overwrite_port! if convert_flag_to_bool(params['generate_port'])
+      overwrite_port! if convert_flag_to_bool(@params['generate_port'])
 
-      before_create
-
-      route = nil
-      model.db.transaction do
-        route = model.create_from_hash(request_attrs)
-        validate_access(:create, route, request_attrs)
-      end
+      route_create = RouteCreate.new(
+        access_validator: self,
+        logger: logger
+      )
+      route = route_create.create_route(route_hash: @request_attrs)
 
       after_create(route)
+
       [
         HTTP::CREATED,
         { 'Location' => "#{self.class.path}/#{route.guid}" },
@@ -249,7 +249,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process_guid) unless process
 
       begin
-        V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs).add
+        V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError
@@ -294,6 +294,48 @@ module VCAP::CloudController
 
     attr_reader :app_event_repository, :route_event_repository, :routing_api_client
 
+    def overwrite_port!
+      add_warning('Specified port ignored. Random port generated.') if @request_attrs['port']
+
+      generated_port = PortGenerator.new(@request_attrs['domain_guid']).generate_port(validated_router_group.reservable_ports)
+      raise CloudController::Errors::ApiError.new_from_details('OutOfRouterGroupPorts', validated_router_group.name) if generated_port < 0
+      overwrite_request_attr('port', generated_port)
+    end
+
+    def validated_router_group
+      @router_group ||=
+        begin
+          @routing_api_client.router_group(validated_domain.router_group_guid)
+        rescue RoutingApi::RoutingApiDisabled
+          raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
+        end
+    end
+
+    def validated_domain
+      domain_guid = @request_attrs['domain_guid']
+      domain      = Domain.find(guid: domain_guid)
+      domain_invalid!(domain_guid) if domain.nil?
+
+      if @routing_api_client.router_group(domain.router_group_guid).nil?
+        raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
+      end
+
+      unless domain.shared? && domain.tcp?
+        raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
+      end
+
+      domain
+    end
+
+    def domain_invalid!(domain_guid)
+      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
+    end
+
+    def convert_flag_to_bool(flag)
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+      flag == 'true'
+    end
+
     def check_route_reserved(domain_guid, host, path, port)
       validate_access(:reserved, model)
       domain = Domain[guid: domain_guid]
@@ -308,48 +350,6 @@ module VCAP::CloudController
         return [HTTP::NO_CONTENT, nil] if routes.count > 0
       end
       [HTTP::NOT_FOUND, nil]
-    end
-
-    def domain_invalid!(domain_guid)
-      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
-    end
-
-    def overwrite_port!
-      add_warning('Specified port ignored. Random port generated.') if @request_attrs['port']
-
-      generated_port = PortGenerator.new(@request_attrs['domain_guid']).generate_port(validated_router_group.reservable_ports)
-      raise CloudController::Errors::ApiError.new_from_details('OutOfRouterGroupPorts', validated_router_group.name) if generated_port < 0
-      overwrite_request_attr('port', generated_port)
-    end
-
-    def validated_router_group
-      @router_group ||=
-        begin
-          routing_api_client.router_group(validated_domain.router_group_guid)
-        rescue RoutingApi::RoutingApiDisabled
-          raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
-        end
-    end
-
-    def validated_domain
-      domain_guid = @request_attrs['domain_guid']
-      domain      = Domain.find(guid: domain_guid)
-      domain_invalid!(domain_guid) if domain.nil?
-
-      if routing_api_client.router_group(domain.router_group_guid).nil?
-        raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
-      end
-
-      unless domain.shared? && domain.tcp?
-        raise CloudController::Errors::ApiError.new_from_details('RouteInvalid', 'Port is supported for domains of TCP router groups only.')
-      end
-
-      domain
-    end
-
-    def convert_flag_to_bool(flag)
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
-      flag == 'true'
     end
 
     def assemble_route_attrs

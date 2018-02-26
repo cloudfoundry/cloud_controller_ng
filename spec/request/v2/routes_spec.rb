@@ -234,6 +234,45 @@ RSpec.describe 'Routes' do
     end
   end
 
+  describe 'POST /v2/routes' do
+    it 'creates a route' do
+      domain = VCAP::CloudController::Domain.make
+      post_params = MultiJson.dump({
+        domain_guid: domain.guid,
+        space_guid: space.guid,
+        host: 'some-host',
+        path: '/some-path'
+      })
+
+      post '/v2/routes', post_params, headers_for(user)
+
+      route = VCAP::CloudController::Route.last
+      expect(last_response.status).to eq(201), last_response.body
+      expect(MultiJson.load(last_response.body)).to be_a_response_like(
+        {
+          'metadata' => {
+            'guid'       => route.guid,
+            'url'        => "/v2/routes/#{route.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601
+          },
+          'entity' => {
+            'host'                  => 'some-host',
+            'path'                  => '/some-path',
+            'domain_guid'           => domain.guid,
+            'space_guid'            => space.guid,
+            'service_instance_guid' => nil,
+            'port'                  => nil,
+            'domain_url'            => "/v2/shared_domains/#{domain.guid}",
+            'space_url'             => "/v2/spaces/#{space.guid}",
+            'apps_url'              => "/v2/routes/#{route.guid}/apps",
+            'route_mappings_url'    => "/v2/routes/#{route.guid}/route_mappings"
+          }
+        }
+      )
+    end
+  end
+
   describe 'GET /v2/routes/:guid/route_mappings' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:route) { VCAP::CloudController::Route.make(space: space) }

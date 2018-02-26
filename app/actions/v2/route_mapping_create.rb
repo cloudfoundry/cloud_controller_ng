@@ -21,12 +21,13 @@ module VCAP::CloudController
       UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
       NO_PORT_REQUESTED                   = 'Port must be specified when mapping to a non-web process'.freeze
 
-      def initialize(user_audit_info, route, process, request_attrs)
+      def initialize(user_audit_info, route, process, request_attrs, logger)
         @user_audit_info = user_audit_info
         @app             = process.app
         @route           = route
         @process         = process
         @request_attrs   = request_attrs
+        @logger          = logger
       end
 
       def add
@@ -44,6 +45,12 @@ module VCAP::CloudController
         RouteMappingModel.db.transaction do
           route_mapping.save
           route_handler.update_route_information
+
+          begin
+            CopilotHandler.new.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
+          rescue CopilotHandler::CopilotUnavailable => e
+            @logger.error("failed communicating with copilot backend: #{e.message}")
+          end
 
           app_event_repository.record_map_route(
             app,
