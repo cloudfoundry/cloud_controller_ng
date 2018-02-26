@@ -14,6 +14,18 @@ module VCAP::CloudController
     end
 
     describe 'memory' do
+      context 'when memory is not a string' do
+        let(:params) { { memory: 5 } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+        end
+      end
+
       context 'when memory does not have a unit' do
         let(:params) { { memory: '5' } }
 
@@ -35,6 +47,44 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
           expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+        end
+      end
+    end
+
+    describe 'disk_quota' do
+      context 'when disk_quota is not a string' do
+        let(:params) { { disk_quota: 5 } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Disk Quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+        end
+      end
+
+      context 'when disk_quota does not have a unit' do
+        let(:params) { { disk_quota: '5' } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Disk Quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+        end
+      end
+
+      context 'when disk_quota unit is not part of expected set of values' do
+        let(:params) { { disk_quota: '200INVALID' } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Disk Quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
         end
       end
     end
@@ -97,13 +147,14 @@ module VCAP::CloudController
     end
 
     describe '#process_scale_message' do
-      let(:parsed_yaml) { { 'memory' => '200GB', instances: 5 } }
+      let(:parsed_yaml) { { 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 } }
 
       it 'returns a ProcessScaleMessage containing mapped attributes' do
         message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
         expect(message.process_scale_message.instances).to eq(5)
         expect(message.process_scale_message.memory_in_mb).to eq(204800)
+        expect(message.process_scale_message.disk_in_mb).to eq(1024000)
       end
 
       context 'when attributes are not requested in the manifest' do
@@ -114,6 +165,7 @@ module VCAP::CloudController
 
           expect(message.process_scale_message.requested?(:instances)).to be false
           expect(message.process_scale_message.requested?(:memory_in_mb)).to be false
+          expect(message.process_scale_message.requested?(:disk_in_mb)).to be false
         end
       end
     end
