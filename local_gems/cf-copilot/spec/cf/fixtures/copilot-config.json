@@ -1,0 +1,11 @@
+{
+  "ListenAddressForPilot": "127.0.0.1:5001",
+  "ListenAddressForCloudController": "127.0.0.1:5002",
+  "PilotClientCAPath": "./fakeCA.crt",
+  "CloudControllerClientCAPath": "./fakeCA.crt",
+  "ServerCertPath": "./copilot-server.crt",
+  "ServerKeyPath": "./copilot-server.key",
+  "BBS": {
+    "Disable": true
+  }
+}

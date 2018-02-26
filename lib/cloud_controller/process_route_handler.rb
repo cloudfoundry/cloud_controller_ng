@@ -1,7 +1,10 @@
+require 'cf-copilot'
+
 module VCAP::CloudController
   class ProcessRouteHandler
-    def initialize(process, runners=nil)
+    def initialize(process, runners = nil)
       @process = process
+
       @runners = runners || CloudController::DependencyLocator.instance.runners
     end
 
@@ -18,7 +21,9 @@ module VCAP::CloudController
           @process.save_changes
         end
 
-        @process.db.after_commit { notify_backend_of_route_update }
+        @process.db.after_commit do
+          notify_backend_of_route_update
+        end
       end
     end
 

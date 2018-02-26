@@ -301,13 +301,15 @@ module VCAP::CloudController
           let(:router_group_guid) { 'router-group-guid-1' }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: router_group_guid) }
-          let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
+          let(:copilot_client) { double('copilot_client') }
+          let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client, copilot_client: copilot_client) }
           let(:tcp_domain) { SharedDomain.make(name: 'tcpdomain.com', router_group_guid: router_group_guid) }
           let(:route) { Route.make(domain: tcp_domain, port: 5155, space: space) }
 
           before do
             allow(CloudController::DependencyLocator).to receive(:instance).and_return(dependency_double)
             allow_any_instance_of(RouteValidator).to receive(:validate)
+            allow(copilot_client).to receive(:map_route)
           end
 
           it 'maps the route' do

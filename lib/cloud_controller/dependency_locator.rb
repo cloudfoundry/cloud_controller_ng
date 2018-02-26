@@ -76,6 +76,10 @@ module CloudController
       @dependencies[:stager_client] || register(:stager_client, VCAP::CloudController::Diego::StagerClient.new(config))
     end
 
+    def copilot_client
+      @dependencies[:copilot_client] || register(:copilot_client, build_copilot_client)
+    end
+
     def bbs_apps_client
       @dependencies[:bbs_apps_client] || register(:bbs_apps_client, build_bbs_apps_client)
     end
@@ -364,6 +368,16 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client)
+    end
+
+    def build_copilot_client
+      Cloudfoundry::Copilot::Client.new(
+          host: 'copilot.service.cf.internal',
+          port: 9001,
+          client_ca: File.open(config.get(:diego, :bbs, :ca_file)).read,
+          client_key: File.open(config.get(:diego, :bbs, :key_file)).read,
+          client_chain: File.open(config.get(:diego, :bbs, :cert_file)).read
+      )
     end
 
     def build_bbs_apps_client
