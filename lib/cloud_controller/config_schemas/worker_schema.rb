@@ -100,6 +100,10 @@ module VCAP::CloudController
           optional(:uaa_client_secret) => String,
           optional(:uaa_client_scope) => String,
 
+          optional(:credhub_api) => {
+            internal_url: String,
+          },
+
           loggregator: {
             router: String,
           },
