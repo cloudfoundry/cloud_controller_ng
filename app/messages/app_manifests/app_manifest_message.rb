@@ -1,6 +1,6 @@
 require 'messages/base_message'
 require 'messages/processes/process_scale_message'
-require 'palm_civet'
+require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
@@ -39,13 +39,15 @@ module VCAP::CloudController
     end
 
     def convert_to_mb(human_readable_byte_value, attribute)
-      return unless human_readable_byte_value.present?
-
-      byte_value_in_mb = PalmCivet.to_megabytes(human_readable_byte_value.to_s)
-    rescue PalmCivet::InvalidByteQuantityError
+      byte_converter.convert_to_mb(human_readable_byte_value)
+    rescue ByteConverter::InvalidUnitsError
       errors.add(:base, "#{attribute} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB")
 
-      byte_value_in_mb
+      nil
+    end
+
+    def byte_converter
+      ByteConverter.new
     end
   end
 end

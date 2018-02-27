@@ -14,7 +14,15 @@ RSpec.describe 'App Manifests' do
 
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do
     let(:yml_manifest) do
-      { 'applications' => [{ 'name' => 'blah', 'instances' => 4 }] }.to_yaml
+      {
+        'applications' => [
+          { 'name' => 'blah',
+            'instances' => 4,
+            'memory' => '2048MB',
+            'disk_quota' => '1.5GB'
+          }
+        ]
+      }.to_yaml
     end
 
     it 'applies the manifest' do
@@ -30,6 +38,8 @@ RSpec.describe 'App Manifests' do
 
       web_process.reload
       expect(web_process.instances).to eq(4)
+      expect(web_process.memory).to eq(2048)
+      expect(web_process.disk_quota).to eq(1536)
     end
   end
 end
