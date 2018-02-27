@@ -1,12 +1,11 @@
 source 'https://rubygems.org'
 
-gem 'cf-copilot', path: './local_gems'
-
 gem 'actionpack'
 gem 'actionview'
 gem 'activemodel'
 gem 'addressable'
 gem 'allowy'
+gem 'cf-copilot'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.0'
