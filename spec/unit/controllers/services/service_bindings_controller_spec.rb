@@ -385,6 +385,17 @@ module VCAP::CloudController
               # expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}\?accepts\_incomplete\=false})).
               #   to have_been_made
             end
+
+            context 'and the broker returns 422' do
+              let(:bind_status) { 422 }
+              let(:bind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                post '/v2/service_bindings?accepts_incomplete=false', req.to_json
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
           end
 
           context 'and when the parameter is not a bool' do

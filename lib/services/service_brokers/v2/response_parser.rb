@@ -54,8 +54,9 @@ module VCAP::Services
               FailingValidator.new(Errors::ServiceBrokerConflict)
             when 422
               FailWhenValidator.new('error',
-                { 'RequiresApp' => Errors::AppRequired },
-                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                                    { 'RequiresApp' => Errors::AppRequired,
+                                      'AsyncRequired' => Errors::AsyncRequired },
+                                      FailingValidator.new(Errors::ServiceBrokerBadResponse))
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             end
