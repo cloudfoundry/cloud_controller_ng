@@ -25,6 +25,18 @@ module VCAP::CloudController
           expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
         end
       end
+
+      context 'when memory is not a positive amount' do
+        let(:params) { { memory: '-1MB' } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+        end
+      end
     end
 
     describe 'disk_quota' do
@@ -37,6 +49,18 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
           expect(message.errors.full_messages).to include('Disk Quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+        end
+      end
+
+      context 'when disk_quota is not a positive amount' do
+        let(:params) { { disk_quota: '-1MB' } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Disk in mb must be greater than 0')
         end
       end
     end
