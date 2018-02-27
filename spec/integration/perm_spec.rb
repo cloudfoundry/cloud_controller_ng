@@ -4,7 +4,9 @@ require 'perm_test_helpers'
 require 'rails_helper'
 require 'securerandom'
 
-RSpec.describe 'Perm', type: :integration, skip: ENV['CF_RUN_PERM_SPECS'] != 'true' do
+# The `perm` symbol is an rspec tag used in RSpec.configure to set an exclusion_filter to avoid showing pending perm tests.
+skip_perm_tests = ENV['CF_RUN_PERM_SPECS'] != 'true'
+RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_perm_tests do
   perm_server = nil
   perm_hostname = nil
   perm_port = nil
