@@ -916,6 +916,30 @@ module VCAP::CloudController
               # expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}\?accepts\_incomplete\=false})).
               #   to have_been_made
             end
+
+            context 'and the broker only supports asynchronous request' do
+              let(:unbind_status) { 422 }
+              let(:unbind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+          end
+
+          context 'and when the parameter is not set' do
+            context 'and when the broker only supports asynchronous request' do
+              let(:unbind_status) { 422 }
+              let(:unbind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}"
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
           end
 
           context 'and when the parameter is not a bool' do
