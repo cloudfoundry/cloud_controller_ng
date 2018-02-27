@@ -897,6 +897,50 @@ module VCAP::CloudController
           expect(a_request(:delete, bind_url_regex(service_binding: service_binding))).to have_been_made
         end
 
+        describe 'accepts_incomplete' do
+          context 'when accepts_incomplete is true' do
+            it 'returns a 202 status code' do
+              delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+              expect(last_response).to have_status_code(202)
+
+              # TODO: Add an expectation that the broker receives accepts_incomplete=true
+            end
+          end
+
+          context 'when accepts_incomplete is false' do
+            it 'returns a 204 status code' do
+              delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+              expect(last_response).to have_status_code(204)
+
+              # TODO: Should ensure that the accepts_incomplete reaches the broker
+              # expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}\?accepts\_incomplete\=false})).
+              #   to have_been_made
+            end
+          end
+
+          context 'and when the parameter is not a bool' do
+            it 'returns a 400 status code' do
+              delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=not_a_bool"
+              expect(last_response).to have_status_code(400)
+
+              expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                to_not have_been_made
+            end
+
+            context 'when ?async=true' do
+              context 'and when the parameter is not a bool' do
+                it 'returns a 400 status code' do
+                  delete "/v2/service_bindings/#{service_binding.guid}?async=true&accepts_incomplete=not_a_bool"
+                  expect(last_response).to have_status_code(400)
+
+                  expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                    to_not have_been_made
+                end
+              end
+            end
+          end
+        end
+
         describe 'locking the service instance of the binding' do
           context 'when the instance does not have a last_operation' do
             before do

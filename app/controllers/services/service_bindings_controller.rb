@@ -86,12 +86,14 @@ module VCAP::CloudController
 
       deleter = ServiceBindingDelete.new(UserAuditInfo.from_context(SecurityContext))
 
-      if async?
+      accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+      if async? && !accepts_incomplete
         job = deleter.single_delete_async(binding)
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
+        response_code = accepts_incomplete ? HTTP::ACCEPTED : HTTP::NO_CONTENT
         deleter.single_delete_sync(binding)
-        [HTTP::NO_CONTENT, nil]
+        [response_code, nil]
       end
     end
 
