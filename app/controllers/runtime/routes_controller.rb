@@ -141,7 +141,7 @@ module VCAP::CloudController
 
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
-      overwrite_port! if convert_flag_to_bool(@params['generate_port'])
+      overwrite_port! if convert_flag_to_bool(params['generate_port'])
 
       route_create = RouteCreate.new(
         access_validator: self,
@@ -305,7 +305,7 @@ module VCAP::CloudController
     def validated_router_group
       @router_group ||=
         begin
-          @routing_api_client.router_group(validated_domain.router_group_guid)
+          routing_api_client.router_group(validated_domain.router_group_guid)
         rescue RoutingApi::RoutingApiDisabled
           raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
         end
@@ -316,7 +316,7 @@ module VCAP::CloudController
       domain      = Domain.find(guid: domain_guid)
       domain_invalid!(domain_guid) if domain.nil?
 
-      if @routing_api_client.router_group(domain.router_group_guid).nil?
+      if routing_api_client.router_group(domain.router_group_guid).nil?
         raise CloudController::Errors::ApiError.new_from_details('RouterGroupNotFound', domain.router_group_guid.to_s)
       end
 

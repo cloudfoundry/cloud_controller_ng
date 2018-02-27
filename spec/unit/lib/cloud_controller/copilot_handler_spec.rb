@@ -4,20 +4,14 @@ require 'cloud_controller/copilot_handler'
 module VCAP::CloudController
   RSpec.describe CopilotHandler do
     subject(:handler) { CopilotHandler.new }
-    let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client) }
+    let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client, upsert_route: nil, map_route: nil) }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
     end
 
     describe '#create_route' do
-      let(:route) { instance_double(Route) }
-
-      before do
-        allow(copilot_client).to receive(:upsert_route)
-        allow(route).to receive(:guid).and_return('some-route-guid')
-        allow(route).to receive(:fqdn).and_return('some-fqdn')
-      end
+      let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn') }
 
       it 'calls copilot_client.upsert_route' do
         handler.create_route(route)
@@ -53,7 +47,6 @@ module VCAP::CloudController
       end
 
       before do
-        allow(copilot_client).to receive(:map_route)
         allow(Diego::ProcessGuid).to receive(:from_process).with(process).and_return(diego_process_guid)
       end
 

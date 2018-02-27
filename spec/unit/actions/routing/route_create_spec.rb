@@ -64,19 +64,12 @@ module VCAP::CloudController
       end
 
       context 'when copilot is enabled' do
-<<<<<<< HEAD
-        let(:copilot_handler) { instance_double(CopilotHandler) }
-=======
         let(:copilot_handler) { instance_double(CopilotHandler, create_route: nil) }
->>>>>>> 5514ba257... Clean up specs for route_create and route_delete
 
         before do
           TestConfig.override(copilot: { enabled: true })
           allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
-<<<<<<< HEAD
           allow(copilot_handler).to receive(:create_route)
-=======
->>>>>>> 5514ba257... Clean up specs for route_create and route_delete
         end
 
         it 'creates a route and notifies copilot' do
