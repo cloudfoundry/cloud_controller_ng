@@ -105,6 +105,10 @@ module VCAP::CloudController
             internal_url: String,
           },
 
+          credential_references: {
+            interpolate_service_bindings: bool
+          },
+
           loggregator: {
             router: String,
           },
