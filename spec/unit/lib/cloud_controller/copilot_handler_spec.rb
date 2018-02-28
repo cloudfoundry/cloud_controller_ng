@@ -4,7 +4,9 @@ require 'cloud_controller/copilot_handler'
 module VCAP::CloudController
   RSpec.describe CopilotHandler do
     subject(:handler) { CopilotHandler.new }
-    let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client, upsert_route: nil, map_route: nil) }
+    let(:copilot_client) do
+      instance_double(Cloudfoundry::Copilot::Client, upsert_route: nil, map_route: nil, unmap_route: nil)
+    end
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
@@ -66,6 +68,38 @@ module VCAP::CloudController
 
         it 'raises a CopilotUnavailable exception' do
           expect { handler.map_route(route_mapping) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+        end
+      end
+    end
+
+    describe '#unmap_route' do
+      let(:capi_process_guid) { 'some-capi-process-guid' }
+      let(:route_guid) { 'some-route-guid' }
+      let(:route) { instance_double(Route, guid: route_guid) }
+      let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
+      let(:route_mapping) do
+        instance_double(
+          RouteMappingModel,
+          process: process,
+          route: route,
+        )
+      end
+
+      it 'calls copilot_client.map_route' do
+        handler.unmap_route(route_mapping)
+        expect(copilot_client).to have_received(:unmap_route).with(
+          capi_process_guid: capi_process_guid,
+          route_guid: route_guid
+        )
+      end
+
+      context 'when copilot_client.unmap_route returns an error' do
+        before do
+          allow(copilot_client).to receive(:unmap_route).and_raise('uh oh')
+        end
+
+        it 'raises a CopilotUnavailable exception' do
+          expect { handler.unmap_route(route_mapping) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
         end
       end
     end
