@@ -33,7 +33,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(process.space.guid)
 
-      route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs).add
+      route_mapping = V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
 
       if !request_attrs.key?('app_port') && !process.ports.blank?
         add_warning("Route has been mapped to app port #{route_mapping.app_port}.")

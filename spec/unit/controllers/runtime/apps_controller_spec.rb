@@ -1756,7 +1756,7 @@ module VCAP::CloudController
         )
 
         fake_route_mapping_create = instance_double(V2::RouteMappingCreate)
-        allow(V2::RouteMappingCreate).to receive(:new).with(anything, route, process, anything).and_return(fake_route_mapping_create)
+        allow(V2::RouteMappingCreate).to receive(:new).with(anything, route, process, anything, instance_of(Steno::Logger)).and_return(fake_route_mapping_create)
         expect(fake_route_mapping_create).to receive(:add)
 
         put "/v2/apps/#{process.guid}/routes/#{route.guid}", nil

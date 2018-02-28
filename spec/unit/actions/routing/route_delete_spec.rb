@@ -10,16 +10,11 @@ module VCAP::CloudController
       )
     end
 
-    let(:app_event_repository) { instance_double(Repositories::AppEventRepository) }
-    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository) }
+    let(:app_event_repository) { instance_double(Repositories::AppEventRepository, record_unmap_route: nil) }
+    let(:route_event_repository) { instance_double(Repositories::RouteEventRepository, record_route_delete_request: nil) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid', user_email: 'user-email') }
     let(:recursive) { false }
     let!(:route) { Route.make }
-
-    before do
-      allow(app_event_repository).to receive(:record_unmap_route)
-      allow(route_event_repository).to receive(:record_route_delete_request)
-    end
 
     describe 'delete_unmapped_route' do
       it 'deletes the route' do

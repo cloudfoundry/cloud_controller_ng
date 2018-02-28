@@ -298,7 +298,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid) unless route
 
       begin
-        V2::RouteMappingCreate.new(user_audit_info, route, process, request_attrs).add
+        V2::RouteMappingCreate.new(user_audit_info, route, process, request_attrs, logger).add
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError

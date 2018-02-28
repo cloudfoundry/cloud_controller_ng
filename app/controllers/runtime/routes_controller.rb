@@ -1,4 +1,5 @@
 require 'actions/routing/route_delete'
+require 'actions/routing/route_create'
 
 module VCAP::CloudController
   class RoutesController < RestController::ModelController
@@ -142,15 +143,14 @@ module VCAP::CloudController
 
       overwrite_port! if convert_flag_to_bool(params['generate_port'])
 
-      before_create
-
-      route = nil
-      model.db.transaction do
-        route = model.create_from_hash(request_attrs)
-        validate_access(:create, route, request_attrs)
-      end
+      route_create = RouteCreate.new(
+        access_validator: self,
+        logger: logger
+      )
+      route = route_create.create_route(route_hash: @request_attrs)
 
       after_create(route)
+
       [
         HTTP::CREATED,
         { 'Location' => "#{self.class.path}/#{route.guid}" },
@@ -249,7 +249,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process_guid) unless process
 
       begin
-        V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs).add
+        V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::DuplicateRouteMapping
         # the route is already mapped, consider the request successful
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError
@@ -294,26 +294,6 @@ module VCAP::CloudController
 
     attr_reader :app_event_repository, :route_event_repository, :routing_api_client
 
-    def check_route_reserved(domain_guid, host, path, port)
-      validate_access(:reserved, model)
-      domain = Domain[guid: domain_guid]
-      if domain
-        ds = domain.router_group_guid.present? ? Domain.where(router_group_guid: domain.router_group_guid) : domain
-
-        routes = Route.where(domain: ds)
-        routes = routes.where(host: host) if host
-        routes = routes.where(path: path) if path
-        routes = routes.where(port: port) if port
-
-        return [HTTP::NO_CONTENT, nil] if routes.count > 0
-      end
-      [HTTP::NOT_FOUND, nil]
-    end
-
-    def domain_invalid!(domain_guid)
-      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
-    end
-
     def overwrite_port!
       add_warning('Specified port ignored. Random port generated.') if @request_attrs['port']
 
@@ -347,9 +327,29 @@ module VCAP::CloudController
       domain
     end
 
+    def domain_invalid!(domain_guid)
+      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
+    end
+
     def convert_flag_to_bool(flag)
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
       flag == 'true'
+    end
+
+    def check_route_reserved(domain_guid, host, path, port)
+      validate_access(:reserved, model)
+      domain = Domain[guid: domain_guid]
+      if domain
+        ds = domain.router_group_guid.present? ? Domain.where(router_group_guid: domain.router_group_guid) : domain
+
+        routes = Route.where(domain: ds)
+        routes = routes.where(host: host) if host
+        routes = routes.where(path: path) if path
+        routes = routes.where(port: port) if port
+
+        return [HTTP::NO_CONTENT, nil] if routes.count > 0
+      end
+      [HTTP::NOT_FOUND, nil]
     end
 
     def assemble_route_attrs

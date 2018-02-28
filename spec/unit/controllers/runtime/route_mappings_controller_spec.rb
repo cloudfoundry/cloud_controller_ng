@@ -196,6 +196,27 @@ module VCAP::CloudController
               expect(warning).to include('Route has been mapped to app port 8080.')
             end
 
+            context 'when copilot is enabled' do
+              let(:copilot_handler) { instance_double(CopilotHandler, map_route: nil) }
+
+              before do
+                TestConfig.override(copilot: { enabled: true })
+                allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
+              end
+
+              it 'notifies copilot' do
+                post '/v2/route_mappings', body
+
+                expect(last_response).to have_status_code(201)
+                expect(decoded_response['entity']['app_port']).to eq(8080)
+
+                warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                expect(warning).to include('Route has been mapped to app port 8080.')
+
+                expect(copilot_handler).to have_received(:map_route)
+              end
+            end
+
             context 'when another mapping with the same port already exists' do
               it 'does not create another route mapping' do
                 post '/v2/route_mappings', body

@@ -3,7 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   module V2
     RSpec.describe RouteMappingCreate do
-      subject(:route_mapping_create) { RouteMappingCreate.new(user_audit_info, route, process, request_attrs) }
+      let(:logger) { instance_double(Steno::Logger) }
+      subject(:route_mapping_create) { RouteMappingCreate.new(user_audit_info, route, process, request_attrs, logger) }
 
       let(:space) { app.space }
       let(:app) { AppModel.make }
@@ -24,17 +25,65 @@ module VCAP::CloudController
       describe '#add' do
         let(:route) { Route.make(space: space) }
 
+        before do
+          allow(CopilotHandler).to receive(:new)
+        end
+
         it 'maps the route' do
           expect {
             route_mapping = route_mapping_create.add
             expect(route_mapping.route.guid).to eq(route.guid)
             expect(route_mapping.process.guid).to eq(process.guid)
+            expect(CopilotHandler).not_to have_received(:new)
           }.to change { RouteMappingModel.count }.by(1)
         end
 
         it 'delegates to the route handler to update route information' do
           route_mapping_create.add
           expect(route_handler).to have_received(:update_route_information)
+        end
+
+        context 'when copilot is enabled' do
+          let(:copilot_handler) { instance_double(CopilotHandler) }
+
+          before do
+            TestConfig.override(copilot: { enabled: true })
+            allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
+            allow(copilot_handler).to receive(:map_route)
+          end
+
+          it 'delegates to the copilot handler to notify copilot' do
+            expect {
+              route_mapping = route_mapping_create.add
+              expect(copilot_handler).to have_received(:map_route).with(route_mapping)
+            }.to change { RouteMappingModel.count }.by(1)
+          end
+
+          context 'when CopilotHandler#map_route errors out' do
+            let(:event_repository) { double(Repositories::AppEventRepository) }
+
+            before do
+              allow(copilot_handler).to receive(:map_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
+              allow(logger).to receive(:error)
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
+              allow(event_repository).to receive(:record_map_route)
+            end
+
+            it 'logs and swallows the error' do
+              expect {
+                route_mapping = route_mapping_create.add
+                expect(route_handler).to have_received(:update_route_information)
+                expect(copilot_handler).to have_received(:map_route).with(route_mapping)
+                expect(logger).to have_received(:error).with('failed communicating with copilot backend: some-error')
+                expect(event_repository).to have_received(:record_map_route).with(
+                  app,
+                  route,
+                  user_audit_info,
+                  route_mapping: route_mapping
+                )
+              }.to change { RouteMappingModel.count }.by(1)
+            end
+          end
         end
 
         describe 'app_port' do
@@ -242,7 +291,7 @@ module VCAP::CloudController
             let(:worker_process) { ProcessModel.make(:process, app: app, type: 'worker', ports: [8888]) }
 
             it 'allows a new route mapping' do
-              RouteMappingCreate.new(user_audit_info, route, worker_process, request_attrs).add
+              RouteMappingCreate.new(user_audit_info, route, worker_process, request_attrs, logger).add
               expect(app.reload.routes).to eq([route, route])
             end
           end

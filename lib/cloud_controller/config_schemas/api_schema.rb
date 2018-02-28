@@ -304,6 +304,15 @@ module VCAP::CloudController
             timeout_in_milliseconds: Integer,
             ca_cert_path: String,
             optional(:query_raise_on_mismatch) => bool,
+          },
+
+          optional(:copilot) => {
+            enabled: bool,
+            optional(:host) => String,
+            optional(:port) => Integer,
+            optional(:client_ca_file) => String,
+            optional(:client_key_file) => String,
+            optional(:client_chain_file) => String,
           }
         }
       end

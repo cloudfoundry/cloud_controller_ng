@@ -492,4 +492,34 @@ RSpec.describe CloudController::DependencyLocator do
       expect(locator.perm_client).to be_an_instance_of(VCAP::CloudController::Perm::Client)
     end
   end
+
+  describe '#copilot_client' do
+    let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client) }
+
+    before do
+      TestConfig.override(
+        {
+          copilot: {
+            enabled: true,
+            host: 'some-host',
+            port: 1234,
+            client_ca_file: 'some-client-ca-file',
+            client_key_file: 'some-client-key-file',
+            client_chain_file: 'some-client-chain-file'
+          }
+        }
+      )
+    end
+
+    it 'returns the copilot client' do
+      expect(Cloudfoundry::Copilot::Client).to receive(:new).with(
+        host: 'some-host',
+        port: 1234,
+        client_ca_file: 'some-client-ca-file',
+        client_key_file: 'some-client-key-file',
+        client_chain_file: 'some-client-chain-file'
+      ).and_return(copilot_client)
+      expect(locator.copilot_client).to eq(copilot_client)
+    end
+  end
 end

@@ -5,6 +5,7 @@ gem 'actionview'
 gem 'activemodel'
 gem 'addressable'
 gem 'allowy'
+gem 'cf-copilot'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.0'
