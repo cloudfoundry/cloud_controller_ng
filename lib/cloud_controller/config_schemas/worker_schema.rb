@@ -25,6 +25,7 @@ module VCAP::CloudController
             syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
           },
 
+          stacks_file: String,
           newrelic_enabled: bool,
 
           db: {
@@ -173,6 +174,7 @@ module VCAP::CloudController
       class << self
         def configure_components(config)
           ResourcePool.instance = ResourcePool.new(config)
+          Stack.configure(config.get(:stacks_file))
         end
       end
     end
