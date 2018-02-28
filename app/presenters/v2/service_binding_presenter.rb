@@ -20,6 +20,13 @@ module CloudController
             'syslog_drain_url'      => service_binding.syslog_drain_url,
             'volume_mounts'         => ::ServiceBindingPresenter.censor_volume_mounts(service_binding.volume_mounts),
             'name'                  => service_binding.name,
+            'last_operation'        => {
+              'type'        => 'create',
+              'state'       => 'succeeded',
+              'description' => '',
+              'updated_at'  => service_binding.updated_at,
+              'created_at'  => service_binding.created_at,
+            },
           }.merge!(rel_hash)
         end
       end

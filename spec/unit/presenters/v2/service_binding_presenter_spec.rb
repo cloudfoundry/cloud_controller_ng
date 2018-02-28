@@ -32,17 +32,24 @@ module CloudController::Presenters::V2
       it 'returns the service binding entity' do
         expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to eq(
           {
-            'app_guid'              => service_binding.app.guid,
-            'service_instance_guid' => service_binding.service_instance.guid,
-            'credentials'           => { 'secret' => 'key' },
-            'binding_options'       => {},
-            'gateway_data'          => nil,
-            'gateway_name'          => '',
-            'syslog_drain_url'      => 'syslog://drain.example.com',
-            'volume_mounts'         => [{ 'container_dir' => 'mount' }],
-            'relationship_url'      => 'http://relationship.example.com',
-            'name'                  => nil,
-            'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
+            'app_guid'                       => service_binding.app.guid,
+            'service_instance_guid'          => service_binding.service_instance.guid,
+            'credentials'                    => { 'secret' => 'key' },
+            'binding_options'                => {},
+            'gateway_data'                   => nil,
+            'gateway_name'                   => '',
+            'syslog_drain_url'               => 'syslog://drain.example.com',
+            'volume_mounts'                  => [{ 'container_dir' => 'mount' }],
+            'relationship_url'               => 'http://relationship.example.com',
+            'name'                           => nil,
+            'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters",
+            'last_operation'                 => {
+              'type'        => 'create',
+              'state'       => 'succeeded',
+              'description' => '',
+              'updated_at'  => service_binding.updated_at,
+              'created_at'  => service_binding.created_at,
+            },
           }
         )
       end

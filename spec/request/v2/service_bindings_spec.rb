@@ -50,6 +50,13 @@ RSpec.describe 'ServiceBindings' do
                 'gateway_name' => '',
                 'syslog_drain_url' => nil,
                 'volume_mounts' => [],
+                'last_operation' => {
+                  'type' => 'create',
+                  'state' => 'succeeded',
+                  'description' => '',
+                  'updated_at' => iso8601,
+                  'created_at' => iso8601,
+                },
                 'app_url' => "/v2/apps/#{process1.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
                 'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters"
@@ -72,6 +79,13 @@ RSpec.describe 'ServiceBindings' do
                 'gateway_name' => '',
                 'syslog_drain_url' => nil,
                 'volume_mounts' => [],
+                'last_operation' => {
+                  'type' => 'create',
+                  'state' => 'succeeded',
+                  'description' => '',
+                  'updated_at' => iso8601,
+                  'created_at' => iso8601,
+                },
                 'app_url' => "/v2/apps/#{process2.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
                 'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding2.guid}/parameters"
@@ -125,6 +139,13 @@ RSpec.describe 'ServiceBindings' do
                   'gateway_name' => '',
                   'syslog_drain_url' => nil,
                   'volume_mounts' => [],
+                  'last_operation' => {
+                    'type' => 'create',
+                    'state' => 'succeeded',
+                    'description' => '',
+                    'updated_at' => iso8601,
+                    'created_at' => iso8601,
+                  },
                   'app_url' => "/v2/apps/#{process1.guid}",
                   'app' => {
                     'metadata' => {
@@ -266,6 +287,13 @@ RSpec.describe 'ServiceBindings' do
             'gateway_name' => '',
             'syslog_drain_url' => nil,
             'volume_mounts' => [],
+            'last_operation' => {
+              'type' => 'create',
+              'state' => 'succeeded',
+              'description' => '',
+              'updated_at' => iso8601,
+              'created_at' => iso8601,
+            },
             'app_url' => "/v2/apps/#{process1.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
             'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters"
@@ -328,6 +356,13 @@ RSpec.describe 'ServiceBindings' do
             'gateway_name' => '',
             'syslog_drain_url' => 'syslog://mydrain.example.com',
             'volume_mounts' => [{ 'container_dir' => 'mount' }],
+            'last_operation' => {
+              'type' => 'create',
+              'state' => 'succeeded',
+              'description' => '',
+              'updated_at' => iso8601,
+              'created_at' => iso8601,
+            },
             'app_url' => "/v2/apps/#{process.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
             'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"

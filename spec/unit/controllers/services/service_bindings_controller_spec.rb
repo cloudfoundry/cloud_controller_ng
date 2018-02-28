@@ -366,8 +366,8 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the accepts_incomplete query paramater' do
-          context 'and when the parameter is true' do
+        describe 'accepts_incomplete' do
+          context 'when accepts_incomplete is true' do
             it 'returns a 202 status code' do
               post '/v2/service_bindings?accepts_incomplete=true', req.to_json
               expect(last_response).to have_status_code(202)
@@ -376,7 +376,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'and when the parameter is false' do
+          context 'when accepts_incomplete is false' do
             it 'returns a 201 status code' do
               post '/v2/service_bindings?accepts_incomplete=false', req.to_json
               expect(last_response).to have_status_code(201)
@@ -398,7 +398,20 @@ module VCAP::CloudController
             end
           end
 
-          context 'and when the parameter is not a bool' do
+          context 'when accepts_incomplete is not set' do
+            context 'and the broker only supports asynchronous request' do
+              let(:bind_status) { 422 }
+              let(:bind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                post '/v2/service_bindings', req.to_json
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+          end
+
+          context 'when accepts_incomplete is not a bool' do
             it 'returns a 400 status code' do
               post '/v2/service_bindings?accepts_incomplete=not_a_bool', req.to_json
               expect(last_response).to have_status_code(400)
