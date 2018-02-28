@@ -60,11 +60,8 @@ module VCAP::CloudController
         end
 
         context 'when no config values are provided' do
-          let(:null_overrides) { %w(stacks_file) }
-
           let(:cc_config_file) do
             config = YAML.load_file('config/cloud_controller.yml')
-            null_overrides.each { |override| config.delete(override) }
             config['db'].delete('database')
 
             file = Tempfile.new('cc_config.yml')
