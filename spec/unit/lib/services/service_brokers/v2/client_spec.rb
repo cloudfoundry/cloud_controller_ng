@@ -981,6 +981,28 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the caller provides accepts_incomplete' do
+        context 'when accepts_incomplete=true' do
+          let(:accepts_incomplete) { true }
+
+          it 'make a put request with accepts_incomplete true' do
+            client.bind(binding, arbitrary_parameters, accepts_incomplete)
+            expect(http_client).to have_received(:put).
+              with(/accepts_incomplete=true/, anything)
+          end
+        end
+
+        context 'when accepts_incomplete=false' do
+          let(:accepts_incomplete) { false }
+
+          it 'make a put request without the accepts_incomplete query parameter' do
+            client.bind(binding, arbitrary_parameters, accepts_incomplete)
+            expect(http_client).to have_received(:put).
+              with(/^((?!accepts_incomplete).)*$/, anything)
+          end
+        end
+      end
+
       context 'when the binding does not have an app_guid' do
         let(:binding) { VCAP::CloudController::RouteBinding.make }
 

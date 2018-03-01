@@ -11,6 +11,7 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: {}) }
+      let(:accepts_incomplete) { false }
       let(:request) do
         {
           'type'          => 'app',
@@ -34,18 +35,10 @@ module VCAP::CloudController
       before do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
         allow(client).to receive(:bind).and_return({})
-
-        credentials          = { 'credentials' => '{}' }.to_json
-        fake_service_binding = ServiceBinding.new(service_instance: service_instance, guid: '')
-        opts                 = {
-          fake_service_binding: fake_service_binding,
-          body:                 credentials
-        }
-        stub_bind(service_instance, opts)
       end
 
       it 'creates a Service Binding' do
-        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
 
         expect(ServiceBinding.count).to eq(1)
         expect(service_binding.app_guid).to eq(app.guid)
@@ -55,7 +48,7 @@ module VCAP::CloudController
       end
 
       it 'creates an audit.service_binding.create event' do
-        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
 
         event = Event.last
         expect(event.type).to eq('audit.service_binding.create')
@@ -68,7 +61,7 @@ module VCAP::CloudController
           ServiceInstanceOperation.make(service_instance_id: service_instance.id, state: 'in progress')
 
           expect {
-            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
           }.to raise_error do |e|
             expect(e).to be_a(CloudController::Errors::ApiError)
             expect(e.message).to include('in progress')
@@ -84,7 +77,7 @@ module VCAP::CloudController
 
         it 'raises ServiceInstanceNotBindable' do
           expect {
-            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
           }.to raise_error(ServiceBindingCreate::ServiceInstanceNotBindable)
         end
       end
@@ -96,7 +89,7 @@ module VCAP::CloudController
 
         it 'raises InvalidServiceBinding' do
           expect {
-            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
           }.to raise_error(ServiceBindingCreate::InvalidServiceBinding)
         end
       end
@@ -107,7 +100,7 @@ module VCAP::CloudController
 
         it 'raises a VolumeMountServiceDisabled error' do
           expect {
-            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
           }.to raise_error ServiceBindingCreate::VolumeMountServiceDisabled
         end
       end
@@ -119,7 +112,7 @@ module VCAP::CloudController
         context 'when the service instance has not been shared into the app space' do
           it 'raises a SpaceMismatch error' do
             expect {
-              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             }.to raise_error ServiceBindingCreate::SpaceMismatch
           end
         end
@@ -131,9 +124,37 @@ module VCAP::CloudController
 
           it 'creates the service binding' do
             expect {
-              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             }.to change { ServiceBinding.count }.by 1
           end
+        end
+      end
+
+      context 'when accepts_incomplete is set to true' do
+        let(:accepts_incomplete) { true }
+
+        it 'passes the accepts_incomplete parameter to the broker client' do
+          expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), anything, true)
+          service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+        end
+
+        context 'and the broker responds asynchronously' do
+          it 'returns nil binding and doesnt store binding in the db' do
+            allow(client).to receive(:bind).and_return({ async_not_yet_implemented: true })
+
+            service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+            expect(service_binding).to be_nil
+            expect(ServiceBinding.count).to eq 0
+          end
+        end
+      end
+
+      context 'when accepts_incomplete is set to false' do
+        let(:accepts_incomplete) { false }
+
+        it 'passes the accepts_incomplete parameter to the broker client' do
+          expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), anything, false)
+          service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
         end
       end
 
@@ -145,7 +166,7 @@ module VCAP::CloudController
 
           it 'does not create a binding' do
             expect {
-              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             }.to raise_error 'meow'
 
             expect(ServiceBinding.count).to eq 0
@@ -167,7 +188,7 @@ module VCAP::CloudController
             expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
 
             expect {
-              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             }.to raise_error('meow')
 
             expect(client).to have_received(:bind)
@@ -175,7 +196,7 @@ module VCAP::CloudController
 
           it 'does not try to enqueue a delayed job for orphan mitigation' do
             expect {
-              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             }.to raise_error('meow')
 
             orphan_mitigating_job = Delayed::Job.first
@@ -184,7 +205,7 @@ module VCAP::CloudController
 
           it 'logs that the unbind failed' do
             expect {
-              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled)
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             }.to raise_error('meow')
 
             expect(logger).to have_received(:error).with /Failed to save/

@@ -3,6 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Service Broker API integration' do
   describe 'v2.14' do
     include VCAP::CloudController::BrokerApiHelper
+    let(:catalog) { default_catalog }
 
     before do
       setup_cc
@@ -80,8 +81,6 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'when the brokers catalog does not set bindings_retrievable' do
-        let(:catalog) { default_catalog }
-
         it 'defaults to false on the service resource' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
@@ -129,8 +128,6 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'when the brokers catalog does not set instances_retrievable' do
-        let(:catalog) { default_catalog }
-
         it 'defaults to false' do
           get("/v2/services/#{@service_guid}",
               {}.to_json,
@@ -139,6 +136,24 @@ RSpec.describe 'Service Broker API integration' do
 
           expect(parsed_body['entity']['instances_retrievable']).to eq false
         end
+      end
+    end
+
+    describe 'creating service bindings asynchronously' do
+      before do
+        provision_service
+        create_app
+      end
+
+      it 'performs the synchronous flow if broker does not return async response code' do
+        async_bind_service(status: 201)
+
+        expect(
+          a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+\?accepts_incomplete=true})
+        ).to have_been_made
+
+        service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+        expect(service_binding).not_to be_nil
       end
     end
   end

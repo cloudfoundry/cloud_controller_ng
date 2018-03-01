@@ -368,11 +368,21 @@ module VCAP::CloudController
 
         describe 'accepts_incomplete' do
           context 'when accepts_incomplete is true' do
+            let(:bind_status) { 202 }
+            let(:bind_body) { {} }
+
             it 'returns a 202 status code' do
               post '/v2/service_bindings?accepts_incomplete=true', req.to_json
               expect(last_response).to have_status_code(202)
+            end
 
-              # TODO: Add an expectation that the broker receives accepts_incomplete=true
+            context 'and the broker is synchronous' do
+              let(:bind_status) { 201 }
+
+              it 'returns a 201 status code' do
+                post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+                expect(last_response).to have_status_code(201)
+              end
             end
           end
 
@@ -380,13 +390,9 @@ module VCAP::CloudController
             it 'returns a 201 status code' do
               post '/v2/service_bindings?accepts_incomplete=false', req.to_json
               expect(last_response).to have_status_code(201)
-
-              # TODO: Should ensure that the accepts_incomplete reaches the broker
-              # expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}\?accepts\_incomplete\=false})).
-              #   to have_been_made
             end
 
-            context 'and the broker returns 422' do
+            context 'and the broker only supports asynchronous request' do
               let(:bind_status) { 422 }
               let(:bind_body) { { error: 'AsyncRequired' } }
 

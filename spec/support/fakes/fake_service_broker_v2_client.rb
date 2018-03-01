@@ -68,7 +68,7 @@ class FakeServiceBrokerV2Client
     }, nil]
   end
 
-  def bind(_binding, _arbitrary_parameters)
+  def bind(_binding, _arbitrary_parameters, _accepts_incomplete=nil)
     {
       credentials: credentials,
       syslog_drain_url: syslog_drain_url,
