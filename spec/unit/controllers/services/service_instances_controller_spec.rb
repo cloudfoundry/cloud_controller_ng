@@ -4645,6 +4645,17 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the broker responds with invalid json' do
+            let(:broker_responce_body) { '{"foo"}' }
+
+            it 'returns a 502 with proper error' do
+              get "/v2/service_instances/#{instance.guid}/routes/#{route.guid}/parameters"
+
+              expect(last_response).to have_status_code(502)
+              expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
           describe 'permissions' do
             {
               'admin'               => 200,

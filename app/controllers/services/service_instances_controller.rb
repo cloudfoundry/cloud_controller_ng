@@ -280,7 +280,7 @@ module VCAP::CloudController
         parameters = fetcher.fetch_parameters(route_binding)
 
         [HTTP::OK, parameters.to_json]
-      rescue
+      rescue ServiceBindingRead::NotSupportedError
         raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
       end
     end
