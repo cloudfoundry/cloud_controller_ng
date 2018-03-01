@@ -339,11 +339,6 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', "Domain with guid #{domain_guid} does not exist")
     end
 
-    def convert_flag_to_bool(flag)
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
-      flag == 'true'
-    end
-
     def check_route_reserved(domain_guid, host, path, port)
       validate_access(:reserved, model)
       domain = Domain[guid: domain_guid]
