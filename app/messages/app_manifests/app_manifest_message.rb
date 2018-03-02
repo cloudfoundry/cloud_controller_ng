@@ -22,6 +22,13 @@ module VCAP::CloudController
       app_update_message.errors.full_messages.each do |error_message|
         errors.add(:base, error_message)
       end
+
+      if errors.empty? && buildpack_validator
+        buildpack_validator.valid?
+        buildpack_validator.errors.full_messages.each do |error_message|
+          errors.add(:base, error_message)
+        end
+      end
       errors.empty?
     end
 
@@ -37,6 +44,19 @@ module VCAP::CloudController
 
     def allowed_keys
       ALLOWED_KEYS
+    end
+
+    def buildpack_validator
+      @buildpack_validator ||= begin
+        buildpacks = app_update_message.try(:buildpack_data).try(:buildpacks)
+        if buildpacks
+          db_result = BuildpackLifecycleFetcher.fetch(buildpacks, Stack.last.try(:name))
+          BuildpackLifecycleDataValidator.new({
+            buildpack_infos: db_result[:buildpack_infos],
+            stack: db_result[:stack],
+          })
+        end
+      end
     end
 
     def process_scale_attribute_mapping

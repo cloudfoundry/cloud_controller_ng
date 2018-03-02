@@ -78,6 +78,18 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Lifecycle Buildpacks can only contain strings')
           end
         end
+
+        context 'when the buildpack is not a known name or url' do
+          let(:params) { { buildpack: 'i am not a buildpack' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include(%/Buildpack "#{params[:buildpack]}" must be an existing admin buildpack or a valid git URI/)
+          end
+        end
       end
 
       describe 'instances' do

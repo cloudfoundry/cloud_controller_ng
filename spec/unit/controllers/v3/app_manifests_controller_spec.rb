@@ -100,6 +100,7 @@ RSpec.describe AppManifestsController, type: :controller do
     end
 
     context 'when the request body includes a buildpack' do
+      let!(:php_buildpack) { VCAP::CloudController::Buildpack.make(name: 'php_buildpack') }
       let(:request_body) do
         { 'applications' =>
           [{ 'name' => 'blah', 'instances' => 4, 'buildpack' => 'php_buildpack' }] }
@@ -109,6 +110,7 @@ RSpec.describe AppManifestsController, type: :controller do
         VCAP::CloudController::ProcessModel.make(app: app_model)
         post :apply_manifest, guid: app_model.guid, body: request_body
 
+        expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
         app_apply_manifest_jobs.first
