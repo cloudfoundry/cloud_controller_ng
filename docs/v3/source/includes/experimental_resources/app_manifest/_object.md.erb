@@ -1,0 +1,8 @@
+### The app manifest
+
+Field | Description
+---- | -----------
+**buildpack**  | a) Blank OR `default` OR `null` will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.
+**disk_quota** | The disk limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
+**instances** | The number of instances to run.
+**memory** | The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
