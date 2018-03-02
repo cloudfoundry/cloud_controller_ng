@@ -40,7 +40,6 @@ class ApplicationController < ActionController::Base
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
   before_action :null_coalesce_body
-  before_action :validate_content_type!
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
@@ -185,14 +184,6 @@ class ApplicationController < ActionController::Base
     end
 
     raise CloudController::Errors::InvalidAuthToken
-  end
-
-  def validate_content_type!
-    invalid_request!('Content-Type cannot be yaml') if request_content_type_is_yaml?
-  end
-
-  def request_content_type_is_yaml?
-    Mime::Type.lookup(request.content_type) == :yaml
   end
 
   def handle_blobstore_error(error)

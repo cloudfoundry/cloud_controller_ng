@@ -3,102 +3,118 @@ require 'messages/app_manifests/app_manifest_message'
 
 module VCAP::CloudController
   RSpec.describe AppManifestMessage do
-    context 'when unexpected keys are requested' do
-      let(:params) { { instances: 3, memory: '2G', name: 'foo' } }
+    describe 'validations' do
+      context 'when unexpected keys are requested' do
+        let(:params) { { instances: 3, memory: '2G', name: 'foo' } }
 
-      it 'is valid' do
-        message = AppManifestMessage.new(params)
-
-        expect(message).to be_valid
-      end
-    end
-
-    describe 'memory' do
-      context 'when memory unit is not part of expected set of values' do
-        let(:params) { { memory: '200INVALID' } }
-
-        it 'is not valid' do
+        it 'is valid' do
           message = AppManifestMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+          expect(message).to be_valid
         end
       end
 
-      context 'when memory is not a positive amount' do
-        let(:params) { { memory: '-1MB' } }
+      describe 'memory' do
+        context 'when memory unit is not part of expected set of values' do
+          let(:params) { { memory: '200INVALID' } }
 
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+          end
         end
-      end
-    end
 
-    describe 'disk_quota' do
-      context 'when disk_quota unit is not part of expected set of values' do
-        let(:params) { { disk_quota: '200INVALID' } }
+        context 'when memory is not a positive amount' do
+          let(:params) { { memory: '-1MB' } }
 
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Disk Quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
-        end
-      end
-
-      context 'when disk_quota is not a positive amount' do
-        let(:params) { { disk_quota: '-1MB' } }
-
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Disk in mb must be greater than 0')
-        end
-      end
-    end
-
-    describe 'instances' do
-      context 'when instances is not an number' do
-        let(:params) { { instances: 'silly string thing' } }
-
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
-
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Instances is not a number')
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Memory in mb must be greater than 0')
+          end
         end
       end
 
-      context 'when instances is not an integer' do
-        let(:params) { { instances: 3.5 } }
+      describe 'disk_quota' do
+        context 'when disk_quota unit is not part of expected set of values' do
+          let(:params) { { disk_quota: '200INVALID' } }
 
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Instances must be an integer')
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Disk Quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+          end
+        end
+
+        context 'when disk_quota is not a positive amount' do
+          let(:params) { { disk_quota: '-1MB' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Disk in mb must be greater than 0')
+          end
         end
       end
 
-      context 'when instances is not a positive integer' do
-        let(:params) { { instances: -1 } }
+      describe 'buildpack' do
+        context 'when the buildpack is not a string' do
+          let(:params) { { buildpack: 99 } }
 
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Instances must be greater than or equal to 0')
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Lifecycle Buildpacks can only contain strings')
+          end
+        end
+      end
+
+      describe 'instances' do
+        context 'when instances is not an number' do
+          let(:params) { { instances: 'silly string thing' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Instances is not a number')
+          end
+        end
+
+        context 'when instances is not an integer' do
+          let(:params) { { instances: 3.5 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Instances must be an integer')
+          end
+        end
+
+        context 'when instances is not a positive integer' do
+          let(:params) { { instances: -1 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Instances must be greater than or equal to 0')
+          end
         end
       end
     end
@@ -142,6 +158,43 @@ module VCAP::CloudController
           expect(message.process_scale_message.requested?(:instances)).to be false
           expect(message.process_scale_message.requested?(:memory_in_mb)).to be false
           expect(message.process_scale_message.requested?(:disk_in_mb)).to be false
+        end
+      end
+    end
+
+    describe '#app_update_message' do
+      let(:buildpack) { VCAP::CloudController::Buildpack.make }
+      let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
+
+      it 'returns a AppUpdateMessage containing mapped attributes' do
+        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+
+        expect(message.app_update_message.buildpack_data.buildpacks).to include(buildpack.name)
+      end
+
+      context 'when attributes are not requested in the manifest' do
+        let(:parsed_yaml) { {} }
+
+        it 'does not forward missing attributes to the AppUpdateMessage' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+
+          expect(message.app_update_message.requested?(:lifecycle)).to be false
+        end
+      end
+
+      context 'when it specifies a "default" buildpack' do
+        let(:parsed_yaml) { { buildpack: 'default' } }
+        it 'updates the buildpack_data to be an empty array' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+        end
+      end
+
+      context 'when it specifies a null buildpack' do
+        let(:parsed_yaml) { { buildpack: nil } }
+        it 'updates the buildpack_data to be an empty array' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
         end
       end
     end

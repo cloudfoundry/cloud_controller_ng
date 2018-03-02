@@ -5,6 +5,8 @@ class AppManifestsController < ApplicationController
 
   wrap_parameters :body, format: [:yaml]
 
+  before_action :validate_content_type!
+
   def apply_manifest
     message = AppManifestMessage.create_from_http_request(parsed_app_manifest_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -26,7 +28,14 @@ class AppManifestsController < ApplicationController
   private
 
   def validate_content_type!
-    invalid_request!('Content-Type must be yaml') unless request_content_type_is_yaml?
+    if !request_content_type_is_yaml?
+      logger.error("Context-type isn't yaml: #{request.content_type}")
+      invalid_request!('Content-Type must be yaml')
+    end
+  end
+
+  def request_content_type_is_yaml?
+    Mime::Type.lookup(request.content_type) == :yaml
   end
 
   def parsed_app_manifest_params

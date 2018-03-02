@@ -13,13 +13,15 @@ RSpec.describe 'App Manifests' do
   end
 
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:yml_manifest) do
       {
         'applications' => [
           { 'name' => 'blah',
             'instances' => 4,
             'memory' => '2048MB',
-            'disk_quota' => '1.5GB'
+            'disk_quota' => '1.5GB',
+            'buildpack' => buildpack.name
           }
         ]
       }.to_yaml
@@ -40,6 +42,9 @@ RSpec.describe 'App Manifests' do
       expect(web_process.instances).to eq(4)
       expect(web_process.memory).to eq(2048)
       expect(web_process.disk_quota).to eq(1536)
+
+      app_model.reload
+      expect(app_model.lifecycle_data.buildpacks).to include(buildpack.name)
     end
   end
 end

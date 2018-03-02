@@ -25,16 +25,22 @@ module VCAP::CloudController
     end
 
     def update_lifecycle_data_model(app)
-      should_save = false
+      if [update_lifecycle_data_buildpacks(app),
+          update_lifecycle_data_stack(app)].any?
+        app.lifecycle_data.save
+      end
+    end
+
+    def update_lifecycle_data_buildpacks(app)
       if message.buildpack_data.requested?(:buildpacks)
-        should_save = true
         app.lifecycle_data.buildpacks = buildpacks
       end
+    end
+
+    def update_lifecycle_data_stack(app)
       if message.buildpack_data.requested?(:stack)
-        should_save = true
         app.lifecycle_data.stack = message.buildpack_data.stack
       end
-      app.lifecycle_data.save if should_save
     end
 
     def type

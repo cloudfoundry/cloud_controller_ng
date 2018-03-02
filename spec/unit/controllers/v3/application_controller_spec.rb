@@ -276,39 +276,4 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response).to have_error_message('Unknown request')
     end
   end
-
-  describe '#validate_content_type!' do
-    let(:yml_manifest) do
-      { 'my_yaml_key' => [{ 'name' => 'blah', 'instances' => 4 }] }.to_yaml
-    end
-
-    before do
-      set_current_user_as_admin
-      routes.draw { post 'yaml_rejection' => 'anonymous#yaml_rejection' }
-    end
-
-    context 'when the user sends application/x-yaml' do
-      it 'returns a 400' do
-        request.headers['CONTENT_TYPE'] = 'application/x-yaml'
-        post :yaml_rejection, body: yml_manifest
-        expect(response.status).to eq(400)
-      end
-    end
-
-    context 'when the user sends text/yaml' do
-      it 'returns a 400' do
-        request.headers['CONTENT_TYPE'] = 'text/yaml'
-        post :yaml_rejection, body: yml_manifest
-        expect(response.status).to eq(400)
-      end
-    end
-
-    context 'when the user sends non-yaml' do
-      it 'returns a 200' do
-        request.headers['CONTENT_TYPE'] = 'application/json'
-        post :yaml_rejection, body: '{"foo": "bar"}'
-        expect(response.status).to eq(200)
-      end
-    end
-  end
 end

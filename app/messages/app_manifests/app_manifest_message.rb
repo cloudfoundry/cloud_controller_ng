@@ -4,7 +4,7 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:instances, :memory, :disk_quota].freeze
+    ALLOWED_KEYS = [:instances, :memory, :disk_quota, :buildpack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
 
@@ -17,11 +17,20 @@ module VCAP::CloudController
       process_scale_message.errors.full_messages.each do |error_message|
         errors.add(:base, error_message)
       end
+
+      app_update_message.valid?
+      app_update_message.errors.full_messages.each do |error_message|
+        errors.add(:base, error_message)
+      end
       errors.empty?
     end
 
     def process_scale_message
       @process_scale_message ||= ProcessScaleMessage.create_from_http_request(process_scale_attribute_mapping)
+    end
+
+    def app_update_message
+      @app_update_message ||= AppUpdateMessage.create_from_http_request(app_update_attribute_mapping)
     end
 
     private
@@ -36,6 +45,24 @@ module VCAP::CloudController
         memory_in_mb: convert_to_mb(memory, 'Memory'),
         disk_in_mb: convert_to_mb(disk_quota, 'Disk Quota'),
       }.compact
+    end
+
+    def app_update_attribute_mapping
+      {
+        lifecycle: buildpack_lifecycle_data,
+
+      }.compact
+    end
+
+    def buildpack_lifecycle_data
+      return unless requested?(:buildpack)
+
+      {
+        type: Lifecycles::BUILDPACK,
+        data: {
+          buildpacks: [buildpack].reject { |x| x == 'default' }.compact
+        }
+      }
     end
 
     def convert_to_mb(human_readable_byte_value, attribute)

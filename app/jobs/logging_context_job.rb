@@ -18,8 +18,6 @@ module VCAP::CloudController
         end
       rescue CloudController::Blobstore::BlobstoreError => e
         raise CloudController::Errors::ApiError.new_from_details('BlobstoreError', e.message)
-      rescue ProcessScale::InvalidProcess => e
-        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)
       end
 
       def error(job, e)

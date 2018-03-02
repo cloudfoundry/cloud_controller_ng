@@ -11,6 +11,10 @@ module VCAP::CloudController
       process_scale_message = message.process_scale_message
       ProcessScale.new(user_audit_info, app.web_process, process_scale_message).scale
 
+      app_update_message = message.app_update_message
+      lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
+      AppUpdate.new(user_audit_info).update(app, app_update_message, lifecycle)
+
       app
     end
 

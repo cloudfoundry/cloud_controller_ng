@@ -61,6 +61,15 @@ RSpec.describe AppManifestsController, type: :controller do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(400)
         end
+
+        context 'when the app does not exist' do
+          let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 1, 'memory' => '4MB' }] } }
+
+          it 'returns a 400' do
+            post :apply_manifest, guid: 'no-such-app-guid', body: request_body
+            expect(response.status).to eq(404)
+          end
+        end
       end
 
       context 'when specified manifest fails validations' do
@@ -72,6 +81,47 @@ RSpec.describe AppManifestsController, type: :controller do
           expect(response).to have_error_message('Instances must be greater than or equal to 0')
           expect(response).to have_error_message('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
         end
+      end
+
+      context 'when the request payload is not yaml' do
+        let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 1 }] } }
+        before do
+          allow(CloudController::Errors::ApiError).to receive(:new_from_details).and_call_original
+          request.headers['CONTENT_TYPE'] = 'text/plain'
+        end
+
+        it 'returns a 400' do
+          post :apply_manifest, guid: app_model.guid, body: request_body
+          expect(response.status).to eq(400)
+          # Verify we're getting the InvalidError we're expecting
+          expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('InvalidRequest', 'Content-Type must be yaml').exactly :once
+        end
+      end
+    end
+
+    context 'when the request body includes a buildpack' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'instances' => 4, 'buildpack' => 'php_buildpack' }] }
+      end
+
+      it 'sets the buildpack' do
+        VCAP::CloudController::ProcessModel.make(app: app_model)
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+        app_apply_manifest_jobs.first
+
+        app = VCAP::CloudController::AppModel.find(guid: app_model.guid)
+        web_process = app.web_process
+
+        expect(web_process.instances).to eq(1)
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new).with(
+          app_model.guid,
+          instance_of(VCAP::CloudController::AppManifestMessage),
+          app_apply_manifest_action,
+        )
       end
     end
 

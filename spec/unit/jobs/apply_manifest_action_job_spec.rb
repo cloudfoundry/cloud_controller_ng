@@ -36,6 +36,15 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a ProcessScale::InvalidProcess occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(ProcessScale::InvalidProcess, 'maximum instance count exceeded')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /maximum instance count exceeded/)
+        end
+      end
+
       describe '#resource_type' do
         it 'returns a display name' do
           expect(job.resource_type).to eq('app')
