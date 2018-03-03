@@ -7579,16 +7579,20 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </thead><tbody>
 <tr>
+<td><strong>buildpack</strong></td>
+<td>a) Blank OR <code class="prettyprint">default</code> OR <code class="prettyprint">null</code> will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.</td>
+</tr>
+<tr>
+<td><strong>disk_quota</strong></td>
+<td>The disk limit for all instances of the web process. <br>This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
+</tr>
+<tr>
 <td><strong>instances</strong></td>
 <td>The number of instances to run.</td>
 </tr>
 <tr>
 <td><strong>memory</strong></td>
-<td>The memory limit for all instances of the web process. This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
-</tr>
-<tr>
-<td><strong>disk_quota</strong></td>
-<td>The disk limit for all instances of the web process. This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
+<td>The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
 </tr>
 </tbody></table>
 
