@@ -6,7 +6,7 @@
   "app/controllers/*.rb": {"type": "unit", "alternate": "spec/unit/controllers/{}_spec.rb"},
   "app/jobs/*.rb": {"type": "unit", "alternate": "spec/unit/jobs/{}_spec.rb"},
   "app/messages/*.rb": {"type": "unit", "alternate": "spec/unit/messages/{}_spec.rb"},
-  "app/models/v3/persistence/*.rb": {"type": "unit", "alternate": "spec/unit/models/runtime/v3/persistence/{}_spec.rb"},
+  "app/models/runtime*.rb": {"type": "unit", "alternate": "spec/unit/models/runtime/{}_spec.rb"},
   "app/models/*.rb": {"type": "unit", "alternate": "spec/unit/models/{}_spec.rb"},
   "app/presenters/*.rb": {"type": "unit", "alternate": "spec/unit/presenters/{}_spec.rb"},
   "app/fetchers/*.rb": {"type": "unit", "alternate": "spec/unit/fetchers/{}_spec.rb"},
