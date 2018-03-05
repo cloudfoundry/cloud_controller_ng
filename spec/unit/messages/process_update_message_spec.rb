@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/processes/process_update_message'
+require 'messages/process_update_message'
 
 module VCAP::CloudController
   RSpec.describe ProcessUpdateMessage do

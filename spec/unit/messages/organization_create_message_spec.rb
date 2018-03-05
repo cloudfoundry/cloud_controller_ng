@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/orgs/organization_create_message'
+require 'messages/organization_create_message'
 
 module VCAP::CloudController
   RSpec.describe OrganizationCreateMessage do

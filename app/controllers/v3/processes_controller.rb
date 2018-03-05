@@ -8,9 +8,9 @@ require 'fetchers/process_fetcher'
 require 'actions/process_scale'
 require 'actions/process_terminate'
 require 'actions/process_update'
-require 'messages/processes/process_scale_message'
-require 'messages/processes/process_update_message'
-require 'messages/processes/processes_list_message'
+require 'messages/process_scale_message'
+require 'messages/process_update_message'
+require 'messages/processes_list_message'
 require 'controllers/v3/mixins/app_sub_resource'
 
 class ProcessesController < ApplicationController

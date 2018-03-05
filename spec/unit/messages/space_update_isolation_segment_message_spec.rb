@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/spaces/space_update_isolation_segment_message'
+require 'messages/space_update_isolation_segment_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceUpdateIsolationSegmentMessage do

@@ -1,4 +1,4 @@
-require 'messages/builds/build_create_message'
+require 'messages/build_create_message'
 require 'presenters/v3/build_presenter'
 require 'actions/build_create'
 

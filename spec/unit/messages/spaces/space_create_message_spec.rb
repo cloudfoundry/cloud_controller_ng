@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/spaces/space_create_message'
+require 'messages/space_create_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceCreateMessage do

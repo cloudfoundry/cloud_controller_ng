@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/app_manifests/app_manifest_message'
+require 'messages/app_manifest_message'
 
 module VCAP::CloudController
   RSpec.describe AppManifestMessage do

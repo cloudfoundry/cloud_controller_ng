@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/tasks/task_create_message'
+require 'messages/task_create_message'
 
 module VCAP::CloudController
   RSpec.describe TaskCreateMessage do

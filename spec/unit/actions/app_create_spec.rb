@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/apps/app_create_message'
+require 'messages/app_create_message'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 
 module VCAP::CloudController

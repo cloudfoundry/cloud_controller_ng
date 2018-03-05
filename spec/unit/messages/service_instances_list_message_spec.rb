@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/service_instances/service_instances_list_message'
+require 'messages/service_instances_list_message'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstancesListMessage do

@@ -1,5 +1,5 @@
 require 'messages/to_many_relationship_message'
-require 'messages/service_instances/service_instances_list_message'
+require 'messages/service_instances_list_message'
 
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'

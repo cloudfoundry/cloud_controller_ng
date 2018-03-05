@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/packages/internal_package_update_message'
+require 'messages/internal_package_update_message'
 
 module VCAP::CloudController
   RSpec.describe InternalPackageUpdateMessage do

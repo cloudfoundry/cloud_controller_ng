@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/orgs/orgs_list_message'
+require 'messages/orgs_list_message'
 
 module VCAP::CloudController
   RSpec.describe OrgsListMessage do

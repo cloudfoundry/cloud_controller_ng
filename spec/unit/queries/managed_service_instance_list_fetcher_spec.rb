@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'fetchers/managed_service_instance_list_fetcher'
-require 'messages/service_instances/service_instances_list_message'
+require 'messages/service_instances_list_message'
 
 module VCAP::CloudController
   RSpec.describe ManagedServiceInstanceListFetcher do

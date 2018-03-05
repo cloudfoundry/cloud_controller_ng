@@ -1,5 +1,5 @@
-require 'messages/route_mappings/route_mappings_create_message'
-require 'messages/route_mappings/route_mappings_list_message'
+require 'messages/route_mappings_create_message'
+require 'messages/route_mappings_list_message'
 require 'fetchers/route_mapping_list_fetcher'
 require 'fetchers/add_route_fetcher'
 require 'presenters/v3/paginated_list_presenter'

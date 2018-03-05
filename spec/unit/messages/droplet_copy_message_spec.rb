@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/droplets/droplet_copy_message'
+require 'messages/droplet_copy_message'
 
 module VCAP::CloudController
   RSpec.describe DropletCopyMessage do

@@ -1,4 +1,4 @@
-require 'messages/apps/app_feature_update_message'
+require 'messages/app_feature_update_message'
 require 'controllers/v3/mixins/app_sub_resource'
 require 'presenters/v3/app_feature_presenter'
 require 'presenters/v3/app_ssh_status_presenter'

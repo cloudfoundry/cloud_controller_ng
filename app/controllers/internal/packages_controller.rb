@@ -1,5 +1,5 @@
 require 'actions/package_update'
-require 'messages/packages/internal_package_update_message'
+require 'messages/internal_package_update_message'
 
 module VCAP::CloudController
   module Internal

@@ -5,9 +5,9 @@ require 'actions/package_delete'
 require 'actions/package_upload'
 require 'actions/package_create'
 require 'actions/package_copy'
-require 'messages/packages/package_create_message'
-require 'messages/packages/package_upload_message'
-require 'messages/packages/packages_list_message'
+require 'messages/package_create_message'
+require 'messages/package_upload_message'
+require 'messages/packages_list_message'
 require 'controllers/v3/mixins/app_sub_resource'
 
 class PackagesController < ApplicationController

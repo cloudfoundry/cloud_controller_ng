@@ -1,6 +1,6 @@
 require 'messages/base_message'
 require 'messages/validators'
-require 'messages/lifecycles/buildpack_lifecycle_data_message'
+require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class BuildCreateMessage < BaseMessage

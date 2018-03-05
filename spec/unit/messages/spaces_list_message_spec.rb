@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/spaces/spaces_list_message'
+require 'messages/spaces_list_message'
 
 module VCAP::CloudController
   RSpec.describe SpacesListMessage do

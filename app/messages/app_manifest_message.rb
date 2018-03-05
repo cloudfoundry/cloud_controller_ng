@@ -1,5 +1,5 @@
 require 'messages/base_message'
-require 'messages/processes/process_scale_message'
+require 'messages/process_scale_message'
 require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController

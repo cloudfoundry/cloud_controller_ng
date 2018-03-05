@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'messages/apps/app_update_message'
+require 'messages/app_update_message'
 
 module VCAP::CloudController
   RSpec.describe AppUpdateMessage do
