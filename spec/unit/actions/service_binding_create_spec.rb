@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       before do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        allow(client).to receive(:bind).and_return({})
+        allow(client).to receive(:bind).and_return({ async: false, binding: {} })
       end
 
       it 'creates a Service Binding' do
@@ -140,7 +140,7 @@ module VCAP::CloudController
 
         context 'and the broker responds asynchronously' do
           it 'returns nil binding and doesnt store binding in the db' do
-            allow(client).to receive(:bind).and_return({ async_not_yet_implemented: true })
+            allow(client).to receive(:bind).and_return({ async: true, binding: {} })
 
             service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             expect(service_binding).to be_nil

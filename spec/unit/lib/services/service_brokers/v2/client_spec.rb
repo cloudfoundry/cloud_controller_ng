@@ -66,7 +66,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { '/v2/catalog' }
       let(:catalog_response) { HttpResponse.new(code: code, body: catalog_response_body, message: message) }
       let(:catalog_response_body) { response_data.to_json }
-      let(:code) { '200' }
+      let(:code) { 200 }
       let(:message) { 'OK' }
 
       before do
@@ -98,7 +98,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}" }
       let(:response) { HttpResponse.new(code: code, body: response_body, message: message) }
       let(:response_body) { response_data.to_json }
-      let(:code) { '201' }
+      let(:code) { 201 }
       let(:message) { 'Created' }
       let(:developer) { make_developer_for_space(instance.space) }
 
@@ -186,7 +186,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns 204 (No Content)' do
-        let(:code) { '204' }
+        let(:code) { 204 }
         let(:client) { Client.new(client_attrs) }
 
         it 'raises ServiceBrokerBadResponse and initiates orphan mitigation' do
@@ -360,7 +360,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}" }
       let(:response) { HttpResponse.new(code: code, message: message, body: response_body) }
       let(:response_body) { response_data.to_json }
-      let(:code) { '200' }
+      let(:code) { 200 }
       let(:message) { 'OK' }
       let(:broker_provided_operation) { nil }
 
@@ -416,7 +416,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns 410' do
-        let(:code) { '410' }
+        let(:code) { 410 }
         let(:message) { 'GONE' }
         let(:response_data) do
           {}
@@ -786,7 +786,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}/service_bindings/#{key.guid}" }
       let(:response) { HttpResponse.new(body: response_body, code: code, message: message) }
       let(:response_body) { response_data.to_json }
-      let(:code) { '201' }
+      let(:code) { 201 }
       let(:message) { 'Created' }
       let(:cc_service_key_client_name) { 'cc-service-key-thingy' }
 
@@ -924,7 +924,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}" }
       let(:response) { HttpResponse.new(body: response_body, code: code, message: message) }
       let(:response_body) { response_data.to_json }
-      let(:code) { '201' }
+      let(:code) { 201 }
       let(:message) { 'Created' }
 
       before do
@@ -958,13 +958,18 @@ module VCAP::Services::ServiceBrokers::V2
       it 'sets the credentials on the binding' do
         attributes = client.bind(binding, arbitrary_parameters)
         # ensure attributes return match ones for the database
-        binding.set(attributes)
+        binding.set(attributes[:binding])
         binding.save
 
         expect(binding.credentials).to eq({
           'username' => 'admin',
           'password' => 'secret'
         })
+      end
+
+      it 'returns async false for synchronous creation' do
+        response = client.bind(binding, arbitrary_parameters)
+        expect(response[:async]).to eq(false)
       end
 
       context 'when the caller provides an arbitrary parameters in an optional request_attrs hash' do
@@ -989,6 +994,15 @@ module VCAP::Services::ServiceBrokers::V2
             client.bind(binding, arbitrary_parameters, accepts_incomplete)
             expect(http_client).to have_received(:put).
               with(/accepts_incomplete=true/, anything)
+          end
+
+          context 'and when the broker returns asynchronously' do
+            let(:code) { 202 }
+
+            it 'returns async true' do
+              response = client.bind(binding, arbitrary_parameters, accepts_incomplete)
+              expect(response[:async]).to eq(true)
+            end
           end
         end
 
@@ -1031,7 +1045,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'sets the syslog_drain_url on the binding' do
           attributes = client.bind(binding, arbitrary_parameters)
           # ensure attributes return match ones for the database
-          binding.set(attributes)
+          binding.set(attributes[:binding])
           binding.save
 
           expect(binding.syslog_drain_url).to eq('syslog://example.com:514')
@@ -1082,7 +1096,7 @@ module VCAP::Services::ServiceBrokers::V2
         it 'stores the volume mount on the service binding' do
           attributes = client.bind(binding, arbitrary_parameters)
 
-          binding.set(attributes)
+          binding.set(attributes[:binding])
           binding.save
 
           expect(binding.volume_mounts).to match_array([
@@ -1178,7 +1192,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}" }
       let(:response) { HttpResponse.new(code: code, body: response_body, message: message) }
       let(:response_body) { response_data.to_json }
-      let(:code) { '200' }
+      let(:code) { 200 }
       let(:message) { 'OK' }
 
       before do
@@ -1214,7 +1228,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns a 204 NO CONTENT' do
-        let(:code) { '204' }
+        let(:code) { 204 }
         let(:message) { 'NO CONTENT' }
 
         it 'raises a ServiceBrokerBadResponse error' do
@@ -1225,7 +1239,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns an error' do
-        let(:code) { '204' }
+        let(:code) { 204 }
         let(:response_data) do
           { 'description' => 'Could not delete instance' }
         end
@@ -1248,7 +1262,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:path) { "/v2/service_instances/#{instance.guid}" }
       let(:response) { HttpResponse.new(code: code, body: response_body, message: message) }
       let(:response_body) { response_data.to_json }
-      let(:code) { '200' }
+      let(:code) { 200 }
       let(:message) { 'OK' }
 
       before do
@@ -1346,7 +1360,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the broker returns a 204 NO CONTENT' do
-        let(:code) { '204' }
+        let(:code) { 204 }
         let(:message) { 'NO CONTENT' }
         let(:client) { Client.new(client_attrs) }
 
@@ -1359,7 +1373,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       context 'when the broker returns an error' do
         let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-        let(:code) { '204' }
+        let(:code) { 204 }
         let(:response_data) do
           { 'description' => 'Could not delete instance' }
         end

@@ -33,9 +33,12 @@ module VCAP::CloudController
 
       binding_result = request_binding_from_broker(service_instance, binding, message.parameters, accepts_incomplete)
 
-      return if binding_result.key?(:async_not_yet_implemented)
+      if binding_result[:async]
+        return
+        #set last_operation state to in_progress on binding
+      end
 
-      binding.set(binding_result)
+      binding.set(binding_result[:binding])
 
       begin
         binding.save

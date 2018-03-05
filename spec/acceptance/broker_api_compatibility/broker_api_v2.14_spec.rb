@@ -145,15 +145,36 @@ RSpec.describe 'Service Broker API integration' do
         create_app
       end
 
-      it 'performs the synchronous flow if broker does not return async response code' do
-        async_bind_service(status: 201)
+      context 'when the broker returns asynchronously' do
+        it 'performs the asynchronously flow and fetches the last operation from the broker' do
+          #operation_data = 'some_operation_data'
+          async_bind_service(status: 202)
+          #stub_async_last_operation(operation_data: operation_data)
 
-        expect(
-          a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+\?accepts_incomplete=true})
-        ).to have_been_made
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+          expect(a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
 
-        service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
-        expect(service_binding).not_to be_nil
+          # service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+          # Delayed::Worker.new.work_off
+          #
+          # expect(a_request(
+          #   :get,
+          #   "#{service_instance_url(service_instance)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
+          # )).to have_been_made
+        end
+
+        context 'when the broker returns synchronously' do
+          it 'performs the synchronous flow' do
+            async_bind_service(status: 201)
+
+            expect(
+              a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+\?accepts_incomplete=true})
+            ).to have_been_made
+
+            service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+            expect(service_binding).not_to be_nil
+          end
+        end
       end
     end
   end

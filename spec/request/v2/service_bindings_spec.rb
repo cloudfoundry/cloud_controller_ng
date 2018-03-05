@@ -333,7 +333,7 @@ RSpec.describe 'ServiceBindings' do
       }.to_json
 
       post '/v2/service_bindings', req_body, headers_for(user)
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_status_code(201)
 
       service_binding = VCAP::CloudController::ServiceBinding.last
 
