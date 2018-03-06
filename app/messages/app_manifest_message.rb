@@ -63,7 +63,7 @@ module VCAP::CloudController
       {
         instances: instances,
         memory_in_mb: convert_to_mb(memory, 'Memory'),
-        disk_in_mb: convert_to_mb(disk_quota, 'Disk Quota'),
+        disk_in_mb: convert_to_mb(disk_quota, 'Disk quota'),
       }.compact
     end
 
@@ -90,6 +90,9 @@ module VCAP::CloudController
     rescue ByteConverter::InvalidUnitsError
       errors.add(:base, "#{attribute} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB")
 
+      nil
+    rescue ByteConverter::NonNumericError
+      errors.add(:base, "#{attribute} is not a number")
       nil
     end
 

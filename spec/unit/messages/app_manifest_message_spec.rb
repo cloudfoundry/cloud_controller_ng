@@ -62,18 +62,18 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Disk quota must be greater than 0MB')
+          end
         end
-      end
 
-      context 'when disk_quota is not numeric' do
-        let(:params) { { disk_quota: 'gerg herscheiser' } }
+        context 'when disk_quota is not numeric' do
+          let(:params) { { disk_quota: 'gerg herscheiser' } }
 
-        it 'is not valid' do
-          message = AppManifestMessage.new(params)
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Disk quota is not a number')
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Disk quota is not a number')
           end
         end
       end
