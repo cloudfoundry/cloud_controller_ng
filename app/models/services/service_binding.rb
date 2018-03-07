@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     plugin :after_initialize
 
+    one_to_one :service_binding_operation
+
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :service_instance, key: :service_instance_guid, primary_key: :guid, without_guid_generation: true
 
@@ -90,6 +92,10 @@ module VCAP::CloudController
       { app_guid: app_guid,
         space_guid: space.guid
       }
+    end
+
+    def last_operation
+      service_binding_operation || ServiceBindingOperation::CREATE_SUCCEEDED_OPERATION
     end
   end
 end

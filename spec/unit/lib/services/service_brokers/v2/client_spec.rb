@@ -1003,6 +1003,15 @@ module VCAP::Services::ServiceBrokers::V2
               response = client.bind(binding, arbitrary_parameters, accepts_incomplete)
               expect(response[:async]).to eq(true)
             end
+
+            context 'and when the broker provides operation' do
+              let(:response_data) { { operation: '123' } }
+
+              it 'returns the operation attribute' do
+                response = client.bind(binding, arbitrary_parameters, accepts_incomplete)
+                expect(response[:operation]).to eq('123')
+              end
+            end
           end
         end
 

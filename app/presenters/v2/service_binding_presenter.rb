@@ -22,8 +22,8 @@ module CloudController
             'name'                  => service_binding.name,
             'last_operation'        => {
               'type'        => 'create',
-              'state'       => 'succeeded',
-              'description' => '',
+              'state'       => service_binding.last_operation.state,
+              'description' => service_binding.last_operation.description,
               'updated_at'  => service_binding.updated_at,
               'created_at'  => service_binding.created_at,
             },

@@ -132,7 +132,8 @@ module VCAP::Services::ServiceBrokers::V2
 
       {
         async: async_response?(response),
-        binding: attributes
+        binding: attributes,
+        operation: parsed_response['operation']
       }
     rescue Errors::ServiceBrokerApiTimeout,
            Errors::ServiceBrokerBadResponse,

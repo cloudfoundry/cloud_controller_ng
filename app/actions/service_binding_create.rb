@@ -33,11 +33,6 @@ module VCAP::CloudController
 
       binding_result = request_binding_from_broker(service_instance, binding, message.parameters, accepts_incomplete)
 
-      if binding_result[:async]
-        return
-        #set last_operation state to in_progress on binding
-      end
-
       binding.set(binding_result[:binding])
 
       begin
@@ -48,6 +43,10 @@ module VCAP::CloudController
         logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
         mitigate_orphan(binding)
         raise e
+      end
+
+      if binding_result[:async]
+        ServiceBindingOperation.create(service_binding_id: binding.id, state: 'in progress', broker_provided_operation: binding_result[:operation])
       end
 
       binding

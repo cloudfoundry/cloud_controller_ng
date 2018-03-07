@@ -374,6 +374,19 @@ module VCAP::CloudController
             it 'returns a 202 status code' do
               post '/v2/service_bindings?accepts_incomplete=true', req.to_json
               expect(last_response).to have_status_code(202)
+              binding = ServiceBinding.last
+              expect(binding.last_operation.state).to eql('in progress')
+            end
+
+            context 'when the service broker returns operation state' do
+              let(:bind_body) { { operation: '123' } }
+
+              it 'persists the operation state' do
+                post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+                expect(last_response).to have_status_code(202)
+                binding = ServiceBinding.last
+                expect(binding.last_operation.broker_provided_operation).to eq('123')
+              end
             end
 
             context 'and the broker is synchronous' do

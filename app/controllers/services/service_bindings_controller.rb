@@ -60,13 +60,13 @@ module VCAP::CloudController
       service_binding = creator.create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)
       warn_if_user_provided_service_has_parameters!(service_instance)
 
-      if service_binding
+      if service_binding.last_operation && service_binding.last_operation.state == 'in progress'
+        [HTTP::ACCEPTED, nil]
+      else
         [HTTP::CREATED,
          { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
          object_renderer.render_json(self.class, service_binding, @opts)
         ]
-      else
-        [HTTP::ACCEPTED, nil]
       end
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
