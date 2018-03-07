@@ -361,6 +361,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the broker_url contains basic auth' do
+          before { body_hash[:broker_url] = 'http://basic:auth@cf-service-broker.example.com' }
+
+          it 'returns an error' do
+            stub_catalog
+            post '/v2/service_brokers', body
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response.fetch('code')).to eq(270016)
+          end
+        end
+
         context 'when the broker name is taken' do
           before do
             ServiceBroker.make(name: body_hash[:name])
