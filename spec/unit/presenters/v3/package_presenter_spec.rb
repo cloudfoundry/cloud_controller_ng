@@ -33,6 +33,31 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
           expect(result[:links][:download][:method]).to eq('GET')
         end
+
+        context 'when bits-service is enabled' do
+          before do
+            VCAP::CloudController::Config.config.set(:bits_service, { enabled: true })
+          end
+
+          let(:bits_service_double) { double('bits_service') }
+          let(:blob_double) { double('blob') }
+          let(:bits_service_public_upload_url) { "https://some.public/signed/url/to/upload/package#{package.guid}" }
+
+          before do
+            allow_any_instance_of(CloudController::DependencyLocator).to receive(:package_blobstore).
+              and_return(bits_service_double)
+            allow(bits_service_double).to receive(:blob).and_return(blob_double)
+            allow(blob_double).to receive(:public_upload_url).and_return(bits_service_public_upload_url)
+          end
+
+          it 'includes links to upload to bits-service' do
+            expect(result[:links][:upload][:href]).to eq(bits_service_public_upload_url)
+            expect(result[:links][:upload][:method]).to eq('PUT')
+
+            expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
+            expect(result[:links][:download][:method]).to eq('GET')
+          end
+        end
       end
 
       context 'when the package type is docker' do
