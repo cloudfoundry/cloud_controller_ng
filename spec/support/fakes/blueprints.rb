@@ -268,7 +268,7 @@ module VCAP::CloudController
     description       { Sham.description }
   end
 
-  # if you want to create an app with droplet, use ProcessModelFactory.make
+  # if you want to create a process with droplet, use ProcessModelFactory.make
   # This is because the lack of factory hooks in Machinist.
   ProcessModel.blueprint do
     instances { 1 }

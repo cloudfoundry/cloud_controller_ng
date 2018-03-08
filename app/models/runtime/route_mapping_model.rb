@@ -1,3 +1,5 @@
+require 'cloud_controller/copilot_handler'
+
 module VCAP::CloudController
   class RouteMappingModel < Sequel::Model(:route_mappings)
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid,
@@ -17,6 +19,24 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       { space: Space.user_visible(user) }
+    end
+
+    def after_destroy
+      super
+
+      db.after_commit do
+        begin
+          CopilotHandler.new.unmap_route(self) if Config.config.get(:copilot, :enabled)
+        rescue CopilotHandler::CopilotUnavailable => e
+          logger.error("failed communicating with copilot backend: #{e.message}")
+        end
+      end
+    end
+
+    private
+
+    def logger
+      @logger ||= Steno.logger('cc.route_mapping')
     end
   end
 end

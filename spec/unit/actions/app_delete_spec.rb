@@ -70,14 +70,39 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
-        it 'deletes associated routes' do
-          route_mapping = RouteMappingModel.make(app: app, route: Route.make)
+        describe 'deleting associated routes' do
+          let(:process_type) { 'web' }
+          let(:process) { ProcessModel.make(app: app, type: process_type) }
+          let(:route) { Route.make }
+          let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type) }
 
-          expect {
-            app_delete.delete(app_dataset)
-          }.to change { RouteMappingModel.count }.by(-1)
-          expect(route_mapping.exists?).to be_falsey
-          expect(app.exists?).to be_falsey
+          before do
+            diego_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
+            stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{diego_process_guid}").to_return(status: 202, body: '')
+          end
+
+          it 'deletes associated route mappings' do
+            expect {
+              app_delete.delete(app_dataset)
+            }.to change { RouteMappingModel.count }.by(-1)
+            expect(route_mapping.exists?).to be_falsey
+            expect(app.exists?).to be_falsey
+          end
+
+          context 'when copilot is enabled', isolation: :truncation do
+            let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client) }
+
+            before do
+              TestConfig.override(copilot: { enabled: true })
+              allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
+              allow(copilot_client).to receive(:unmap_route)
+            end
+
+            it 'tells copilot to unmap the route' do
+              expect(copilot_client).to receive(:unmap_route).with({ capi_process_guid: process.guid, route_guid: route.guid })
+              app_delete.delete(app_dataset)
+            end
+          end
         end
 
         it 'deletes associated tasks' do
