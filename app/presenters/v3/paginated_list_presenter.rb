@@ -1,4 +1,5 @@
 require 'presenters/v3/app_presenter'
+require 'presenters/v3/build_presenter'
 require 'presenters/v3/droplet_presenter'
 require 'presenters/v3/isolation_segment_presenter'
 require 'presenters/v3/package_presenter'
@@ -19,6 +20,7 @@ module VCAP::CloudController
           'ProcessModel'          => VCAP::CloudController::Presenters::V3::ProcessPresenter,
           'AppModel'              => VCAP::CloudController::Presenters::V3::AppPresenter,
           'DropletModel'          => VCAP::CloudController::Presenters::V3::DropletPresenter,
+          'BuildModel'            => VCAP::CloudController::Presenters::V3::BuildPresenter,
           'IsolationSegmentModel' => VCAP::CloudController::Presenters::V3::IsolationSegmentPresenter,
           'Organization'          => VCAP::CloudController::Presenters::V3::OrganizationPresenter,
           'Space'                 => VCAP::CloudController::Presenters::V3::SpacePresenter,

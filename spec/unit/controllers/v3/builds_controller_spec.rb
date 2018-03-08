@@ -1,6 +1,156 @@
 require 'rails_helper'
 
 RSpec.describe BuildsController, type: :controller do
+  describe '#index' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:organization) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: organization) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package_guid: package.guid,
+        build: build,
+      )
+    end
+    let(:package2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:build2) { VCAP::CloudController::BuildModel.make(package: package2, app: app_model) }
+    let!(:droplet2) do
+      VCAP::CloudController::DropletModel.make(
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package_guid: package2.guid,
+        build: build2,
+      )
+    end
+
+    context 'permissions' do
+      describe 'authorization' do
+        role_to_expected_http_response = {
+          'admin' => 200,
+          'admin_read_only' => 200,
+          'global_auditor' => 200,
+          'space_developer' => 200,
+          'space_manager' => 200,
+          'space_auditor' => 200,
+          'org_manager' => 200,
+          'org_auditor' => 200,
+          'org_billing_manager' => 200,
+        }.freeze
+
+        has_no_space_access = {
+          'org_auditor' => true,
+          'org_billing_manager' => true,
+        }
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(role: role, org: organization, space: space, user: user)
+
+              get :index
+              expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+              resources = parsed_body['resources']
+              if has_no_space_access[role]
+                expect(resources.size).to eq(0), "role #{role}: expected 0, got: #{resources.size}"
+              else
+                expect(resources.size).to eq(2), "role #{role}: expected 2, got: #{resources.size}"
+                expect(resources.map { |r| r['guid'] }).to match_array([build.guid, build2.guid])
+                expect(resources.map { |r| r['state'] }.all? { |state| state == 'STAGED' }).to be_truthy
+                expect(resources.map { |r| r['package']['guid'] }).to match_array([package.guid, package2.guid])
+              end
+            end
+          end
+        end
+      end
+
+      context 'when the user does not have the "cloud_controller.read" scope' do
+        before do
+          set_current_user(user, scopes: [])
+        end
+
+        it 'returns a 403 Not Authorized error' do
+          get :index
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
+
+    context 'as admin' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      context 'query params' do
+        context 'invalid param format' do
+          let(:params) { { 'order_by' => '^%' } }
+
+          it 'returns 400' do
+            get :index, params
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include('BadQueryParameter')
+            expect(response.body).to include("Order by can only be: 'created_at', 'updated_at'")
+          end
+        end
+
+        context 'unknown query param' do
+          let(:params) { { 'bad_param' => 'foo' } }
+
+          it 'returns 400' do
+            get :index, params
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include('BadQueryParameter')
+            expect(response.body).to include('Unknown query parameter(s)')
+            expect(response.body).to include('bad_param')
+          end
+        end
+
+        context 'invalid pagination' do
+          let(:params) { { 'per_page' => 9999999999999999 } }
+
+          it 'returns 400' do
+            get :index, params
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include('BadQueryParameter')
+            expect(response.body).to include('Per page must be between')
+          end
+        end
+
+        context 'query params in pagination links' do
+          let(:params) { { 'per_page' => 1, states: VCAP::CloudController::BuildModel::STAGED_STATE } }
+
+          it 'adds requested params to the links' do
+            get :index, params
+
+            expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/builds")
+            expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
+            expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+            expect(parsed_body['pagination']['next']['href']).to match(/states=#{VCAP::CloudController::BuildModel::STAGED_STATE}/)
+          end
+        end
+      end
+
+      it 'lists the builds visible to the user' do
+        get :index
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([build, build2].map(&:guid))
+      end
+
+      it 'returns pagination links for /v3/builds' do
+        get :index
+
+        expect(parsed_body['pagination']['first']['href']).to start_with("#{link_prefix}/v3/builds")
+      end
+    end
+  end
+
   describe '#create' do
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }

@@ -1,8 +1,23 @@
 require 'messages/build_create_message'
+require 'messages/builds_list_message'
+require 'fetchers/build_list_fetcher'
 require 'presenters/v3/build_presenter'
 require 'actions/build_create'
 
 class BuildsController < ApplicationController
+  def index
+    message = BuildsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+    build_list_fetcher = BuildListFetcher.new(message: message)
+    dataset = if can_read_globally?
+                build_list_fetcher.fetch_all
+              else
+                build_list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/builds', message: message)
+  end
+
   def create
     message = BuildCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?

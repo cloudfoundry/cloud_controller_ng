@@ -53,6 +53,7 @@ Rails.application.routes.draw do
 
   # builds
   post '/builds', to: 'builds#create'
+  get '/builds', to: 'builds#index'
   get '/builds/:guid', to: 'builds#show'
 
   # droplets
