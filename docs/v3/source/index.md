@@ -46,6 +46,7 @@ includes:
   - resources/builds/object
   - resources/builds/create
   - resources/builds/get
+  - resources/builds/list
   - resources/droplets/header
   - resources/droplets/object
   - resources/droplets/copy
