@@ -118,6 +118,132 @@ RSpec.describe 'Builds' do
         created_by_user_email: 'bob@loblaw.com'
       )
     end
+    let!(:second_build) do
+      VCAP::CloudController::BuildModel.make(
+        package: package,
+        app: app_model,
+        created_at: build.created_at - 1.day,
+        created_by_user_name: 'bob the builder',
+        created_by_user_guid: developer.guid,
+        created_by_user_email: 'bob@loblaw.com'
+      )
+    end
+    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
+      package_guid: package.guid,
+      build: build,
+    )
+    }
+    let(:second_droplet) { VCAP::CloudController::DropletModel.make(
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
+      package_guid: package.guid,
+      build: second_build,
+    )
+    }
+    let(:body) do
+      { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
+                                                stack: 'cflinuxfs2' } } }
+    end
+    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.create_from_http_request(body) }
+
+    before do
+      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
+      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(second_build)
+      build.update(state: droplet.state, error_description: droplet.error_description)
+      second_build.update(state: second_droplet.state, error_description: second_droplet.error_description)
+    end
+
+    context 'when there are other spaces the developer cannot see' do
+      let(:non_accessible_space) { VCAP::CloudController::Space.make }
+      let(:non_accessible_app_model) { VCAP::CloudController::AppModel.make(space_guid: non_accessible_space.guid, name: 'other-app') }
+      let!(:non_accessible_build) { VCAP::CloudController::BuildModel.make(app: non_accessible_app_model) }
+
+      let(:per_page) { 2 }
+      let(:order_by) { '-created_at' }
+
+      it 'lists the builds for spaces that the user has access to' do
+        get "v3/builds?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources']).to include(hash_including('guid' => build.guid))
+        expect(parsed_response['resources']).to include(hash_including('guid' => second_build.guid))
+        expect(parsed_response).to be_a_response_like({
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
+            'next'          => nil,
+            'previous'      => nil,
+          },
+          'resources' => [
+            {
+              'guid' => build.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'state' => 'STAGED',
+              'error' => nil,
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                  'stack' => 'cflinuxfs2',
+                },
+              },
+              'package' => { 'guid' => package.guid, },
+              'droplet' => {
+                'guid' => droplet.guid,
+                'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
+              },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+              },
+              'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
+            },
+            {
+              'guid' => second_build.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'state' => 'STAGED',
+              'error' => nil,
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+                  'stack' => 'cflinuxfs2',
+                },
+              },
+              'package' => { 'guid' => package.guid, },
+              'droplet' => {
+                'guid' => second_droplet.guid,
+                'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
+              },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
+                'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
+              },
+              'created_by' => { 'guid' => developer.guid, 'name' => 'bob the builder', 'email' => 'bob@loblaw.com', }
+            },
+          ]
+        })
+      end
+    end
+  end
+
+  describe 'GET /v3/builds/:guid' do
+    let(:build) do
+      VCAP::CloudController::BuildModel.make(
+        package: package,
+        app: app_model,
+        created_by_user_name: 'bob the builder',
+        created_by_user_guid: developer.guid,
+        created_by_user_email: 'bob@loblaw.com'
+      )
+    end
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,
