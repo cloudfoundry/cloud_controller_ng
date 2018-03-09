@@ -14,7 +14,9 @@ class DbConfig
     {
       log_level: 'debug',
       database: connection_string,
-      pool_timeout: 10
+      pool_timeout: 10,
+      read_timeout: 3600,
+      connection_validation_timeout: 3600
     }
   end
 

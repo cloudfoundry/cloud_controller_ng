@@ -85,6 +85,8 @@ db: &db
   max_connections: 25
   pool_timeout: 10
   log_level: debug2
+  read_timeout: 3600
+  connection_validation_timeout: 3600
 
 login:
   url: https://login.bosh-lite.com

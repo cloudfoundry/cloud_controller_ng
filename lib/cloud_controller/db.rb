@@ -19,7 +19,7 @@ module VCAP::CloudController
     # @return [Sequel::Database]
     def self.connect(opts, logger)
       connection_options = { sql_mode: [:strict_trans_tables, :strict_all_tables, :no_zero_in_date] }
-      [:max_connections, :pool_timeout].each do |key|
+      [:max_connections, :pool_timeout, :read_timeout].each do |key|
         connection_options[key] = opts[key] if opts[key]
       end
 
@@ -59,6 +59,8 @@ module VCAP::CloudController
         db.sql_log_level = opts[:log_level]
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
+      db.extension(:connection_validator)
+      db.pool.connection_validation_timeout = opts[:connection_validation_timeout]
 
       db
     end
