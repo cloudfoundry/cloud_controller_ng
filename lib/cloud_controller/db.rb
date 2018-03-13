@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       db.extension(:connection_validator)
-      db.pool.connection_validation_timeout = opts[:connection_validation_timeout]
+      db.pool.connection_validation_timeout = opts[:connection_validation_timeout] if opts[:connection_validation_timeout]
 
       db
     end
