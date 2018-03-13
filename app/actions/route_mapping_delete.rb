@@ -21,6 +21,13 @@ module VCAP::CloudController
           )
 
           route_mapping.destroy
+
+          begin
+            CopilotHandler.new.unmap_route(route_mapping) if Config.config.get(:copilot, :enabled)
+          rescue CopilotHandler::CopilotUnavailable => e
+            logger.error("failed communicating with copilot backend: #{e.message}")
+          end
+
           route_handler.update_route_information
         end
       end
