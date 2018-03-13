@@ -211,6 +211,13 @@ module VCAP::Services
           parse_fetch_parameters(path, response, fetch_binding_parameters_response_schema)
         end
 
+        def parse_fetch_service_binding_last_operation(path, response)
+          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
+
+          validator = SuccessValidator.new
+          validator.validate(unvalidated_response.to_hash)
+        end
+
         def fetch_instance_parameters_response_schema
           {
             '$schema' => 'http://json-schema.org/draft-04/schema#',

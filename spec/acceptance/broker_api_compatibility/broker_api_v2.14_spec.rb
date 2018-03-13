@@ -147,20 +147,20 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'when the broker returns asynchronously' do
         it 'performs the asynchronously flow and fetches the last operation from the broker' do
-          #operation_data = 'some_operation_data'
-          async_bind_service(status: 202)
-          #stub_async_last_operation(operation_data: operation_data)
+          operation_data = 'some_operation_data'
 
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          expect(a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
+          stub_async_binding_last_operation(operation_data: operation_data)
+          async_bind_service(status: 202, response_body: { operation: operation_data })
+
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          expect(a_request(:put, service_binding_url(service_binding, 'accepts_incomplete=true'))).to have_been_made
 
           # service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
           # Delayed::Worker.new.work_off
           #
-          # expect(a_request(
-          #   :get,
-          #   "#{service_instance_url(service_instance)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
-          # )).to have_been_made
+          expect(a_request(:get,
+            "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
+          )).to have_been_made
         end
 
         context 'when the broker returns synchronously' do

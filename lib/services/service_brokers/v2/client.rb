@@ -157,6 +157,15 @@ module VCAP::Services::ServiceBrokers::V2
       raise e.exception("Service instance #{binding&.service_instance&.name}: #{e.message}")
     end
 
+    def fetch_service_binding_last_operation(service_binding)
+      path = service_binding_last_operation_path(service_binding)
+      response = @http_client.get(path)
+
+      last_operation = @response_parser.parse_fetch_service_binding_last_operation(path, response)
+
+      last_operation.deep_symbolize_keys
+    end
+
     def deprovision(instance, accepts_incomplete: false)
       path = service_instance_resource_path(instance)
 
@@ -285,6 +294,18 @@ module VCAP::Services::ServiceBrokers::V2
         path += '?accepts_incomplete=true'
       end
       path
+    end
+
+    def service_binding_last_operation_path(service_binding)
+      query_params = {
+       'service_id' => service_binding.service_instance.service.broker_provided_id,
+       'plan_id' => service_binding.service_instance.service_plan.broker_provided_id
+      }
+
+      if service_binding.last_operation.broker_provided_operation
+        query_params['operation'] = service_binding.last_operation.broker_provided_operation
+      end
+      "#{service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)}/last_operation?#{query_params.to_query}"
     end
 
     def service_instance_resource_path(instance, opts={})

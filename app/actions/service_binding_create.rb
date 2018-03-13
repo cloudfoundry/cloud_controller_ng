@@ -31,7 +31,9 @@ module VCAP::CloudController
       )
       raise InvalidServiceBinding.new(binding.errors.full_messages.join(' ')) unless binding.valid?
 
-      binding_result = request_binding_from_broker(service_instance, binding, message.parameters, accepts_incomplete)
+      client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
+
+      binding_result = request_binding_from_broker(client, binding, message.parameters, accepts_incomplete)
 
       binding.set(binding_result[:binding])
 
@@ -46,7 +48,12 @@ module VCAP::CloudController
       end
 
       if binding_result[:async]
-        ServiceBindingOperation.create(service_binding_id: binding.id, state: 'in progress', broker_provided_operation: binding_result[:operation])
+        ServiceBindingOperation.create(service_binding_id: binding.id, type: 'create', state: 'in progress',
+                                       broker_provided_operation: binding_result[:operation])
+
+        last_operation_result = client.fetch_service_binding_last_operation(binding)
+
+        binding.service_binding_operation.update_attributes(last_operation_result[:last_operation])
       end
 
       binding
@@ -54,8 +61,7 @@ module VCAP::CloudController
 
     private
 
-    def request_binding_from_broker(instance, service_binding, parameters, accepts_incomplete)
-      client = VCAP::Services::ServiceClientProvider.provide(instance: instance)
+    def request_binding_from_broker(client, service_binding, parameters, accepts_incomplete)
       client.bind(service_binding, parameters, accepts_incomplete).tap do |response|
         response.delete(:route_service_url)
       end

@@ -139,19 +139,32 @@ module VCAP::CloudController
         end
 
         context 'and the broker responds asynchronously' do
-          it 'returns the binding operation' do
-            allow(client).to receive(:bind).and_return({ async: true, binding: {} })
+          before do
+            allow(client).to receive(:bind).and_return({ async: true, binding: {}, operation: '123' })
+            allow(client).to receive(:fetch_service_binding_last_operation).with(instance_of(VCAP::CloudController::ServiceBinding)).
+              and_return({ last_operation: { state: 'in progress', description: '10% complete' } })
+          end
 
+          it 'returns the binding operation' do
             service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             expect(ServiceBinding.count).to eq 1
             expect(service_binding.last_operation.state).to eq('in progress')
           end
 
-          it 'returns the broker provided operation' do
-            allow(client).to receive(:bind).and_return({ async: true, binding: {}, operation: '123' })
-
+          it 'service binding operation has broker provided operation' do
             service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             expect(service_binding.last_operation.broker_provided_operation).to eq('123')
+          end
+
+          it 'service binding operation has type create' do
+            service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+            expect(service_binding.last_operation.type).to eq('create')
+          end
+
+          it 'expect to fetch last operation' do
+            service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+            expect(service_binding.last_operation.state).to eq('in progress')
+            expect(service_binding.last_operation.description).to eq('10% complete')
           end
         end
       end

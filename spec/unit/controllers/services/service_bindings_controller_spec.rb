@@ -32,6 +32,8 @@ module VCAP::CloudController
     let(:bind_body) { { credentials: credentials } }
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }
+    let(:last_operation_status) { 200 }
+    let(:last_operation_body) { { state: 'in progress' } }
     let(:credentials) do
       { 'foo' => 'bar' }
     end
@@ -47,6 +49,9 @@ module VCAP::CloudController
       stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
         with(basic_auth: basic_auth(service_broker: broker)).
         to_return(status: unbind_status, body: unbind_body.to_json)
+      stub_request(:get, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}/last_operation}).
+        with(basic_auth: basic_auth(service_broker: broker)).
+        to_return(status: last_operation_status, body: last_operation_body.to_json)
     end
 
     def bind_url_regex(opts={})

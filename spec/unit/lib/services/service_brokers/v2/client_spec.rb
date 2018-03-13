@@ -1474,6 +1474,50 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    describe '#fetch_service_binding_last_operation' do
+      let(:binding) { VCAP::CloudController::ServiceBinding.make }
+      let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make }
+      let(:broker_response) { HttpResponse.new(code: 200, body: { last_operation: { state: 'in progress', description: '10%' } }.to_json) }
+
+      before do
+        binding.service_binding_operation = binding_operation
+        allow(http_client).to receive(:get).and_return(broker_response)
+      end
+
+      it 'returns the broker response' do
+        response = client.fetch_service_binding_last_operation(binding)
+        expect(response).to eq({ last_operation: { state: 'in progress', description: '10%' } })
+      end
+
+      context 'when the broker does not provide operation data' do
+        it 'makes a get request with the correct path' do
+          client.fetch_service_binding_last_operation(binding)
+
+          service_id = binding.service_instance.service_plan.service.broker_provided_id
+          plan_id = binding.service_instance.service_plan.broker_provided_id
+          query_params = "?plan_id=#{plan_id}&service_id=#{service_id}"
+
+          expect(http_client).to have_received(:get).
+            with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}/last_operation#{query_params}")
+        end
+      end
+
+      context 'when the broker provides operation data' do
+        let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(broker_provided_operation: '123') }
+
+        it 'makes a get request with the correct path' do
+          client.fetch_service_binding_last_operation(binding)
+
+          service_id = binding.service_instance.service_plan.service.broker_provided_id
+          plan_id = binding.service_instance.service_plan.broker_provided_id
+          query_params = "?operation=123&plan_id=#{plan_id}&service_id=#{service_id}"
+
+          expect(http_client).to have_received(:get).
+            with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}/last_operation#{query_params}")
+        end
+      end
+    end
+
     def unwrap_delayed_job(job)
       job.payload_object.handler.handler.handler
     end

@@ -181,6 +181,10 @@ module VCAP::Services
           when :fetch_service_instance
             method = :parse_fetch_instance_parameters
             path = '/v2/service_instances/GUID'
+          when :fetch_service_binding_last_operation
+            method = :parse_fetch_service_binding_last_operation
+            path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID/last_operation'
+
           end
 
           [method, path]
@@ -934,6 +938,8 @@ module VCAP::Services
         test_case(:fetch_service_instance, 422, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_instance, 504, {}.to_json,                                     error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(instance_uri, 'Status Code: 504 message, Body: {}'))
         test_common_error_cases(:fetch_service_instance)
+
+        test_case(:fetch_service_binding_last_operation, 200, { last_operation: { state: 'in progress' } }.to_json, result: { 'last_operation' => { 'state' => 'in progress' } })
         # rubocop:enable Metrics/LineLength
       end
     end
