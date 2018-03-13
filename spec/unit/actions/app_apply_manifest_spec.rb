@@ -129,6 +129,55 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'converting ManifestProcessScaleMessages to ProcessScaleMessages' do
+        let(:message) { AppManifestMessage.new(params) }
+        let(:process_scale_message) { message.process_scale_message }
+
+        context 'when all params are given' do
+          let(:params) do { name: 'blah1', instances: 4, disk_quota: '3500MB', memory: '120MB' } end
+          it 'converts them all' do
+            expect(process_scale_message.instances).to eq(4)
+            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
+            expect(process_scale_message.disk_in_mb).to eq(3500)
+            expect(process_scale_message.requested?(:memory)).to be_falsey
+            expect(process_scale_message.memory_in_mb).to eq(120)
+          end
+        end
+
+        context 'when no disk_quota is given' do
+          let(:params) do { name: 'blah2', instances: 4, memory: '120MB' } end
+          it "doesn't set anything for disk_in_mb" do
+            expect(process_scale_message.instances).to eq(4)
+            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
+            expect(process_scale_message.requested?(:disk_in_mb)).to be_falsey
+            expect(process_scale_message.requested?(:memory)).to be_falsey
+            expect(process_scale_message.memory_in_mb).to eq(120)
+          end
+        end
+
+        context 'when no memory is given' do
+          let(:params) do { name: 'blah3', instances: 4, disk_quota: '3500MB' } end
+          it "doesn't set anything for memory_in_mb" do
+            expect(process_scale_message.instances).to eq(4)
+            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
+            expect(process_scale_message.disk_in_mb).to eq(3500)
+            expect(process_scale_message.requested?(:memory)).to be_falsey
+            expect(process_scale_message.requested?(:memory_in_mb)).to be_falsey
+          end
+        end
+
+        context 'when no scaling fields are given' do
+          let(:params) do { name: 'blah4' } end
+          it "doesn't set any scaling fields" do
+            expect(process_scale_message.requested?(:instances)).to be_falsey
+            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
+            expect(process_scale_message.requested?(:disk_in_mb)).to be_falsey
+            expect(process_scale_message.requested?(:memory)).to be_falsey
+            expect(process_scale_message.requested?(:memory_in_mb)).to be_falsey
+          end
+        end
+      end
     end
   end
 end

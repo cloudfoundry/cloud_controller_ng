@@ -1,5 +1,5 @@
 require 'messages/base_message'
-require 'messages/process_scale_message'
+require 'messages/manifest_process_scale_message'
 require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
@@ -7,14 +7,23 @@ module VCAP::CloudController
     ALLOWED_KEYS = [:instances, :memory, :disk_quota, :buildpack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
+    attr_accessor :manifest_process_scale_message, :app_update_message
+
+    validates_with NoAdditionalKeysValidator
 
     def self.create_from_http_request(parsed_yaml)
       AppManifestMessage.new(parsed_yaml.deep_symbolize_keys)
     end
 
+    def initialize(params)
+      super(params)
+      @manifest_process_scale_message = ManifestProcessScaleMessage.new(process_scale_attribute_mapping)
+      @app_update_message = AppUpdateMessage.create_from_http_request(app_update_attribute_mapping)
+    end
+
     def valid?
-      process_scale_message.valid?
-      process_scale_message.errors.full_messages.each do |error_message|
+      manifest_process_scale_message.valid?
+      manifest_process_scale_message.errors.full_messages.each do |error_message|
         errors.add(:base, error_message)
       end
 
@@ -33,11 +42,16 @@ module VCAP::CloudController
     end
 
     def process_scale_message
-      @process_scale_message ||= ProcessScaleMessage.create_from_http_request(process_scale_attribute_mapping)
-    end
-
-    def app_update_message
-      @app_update_message ||= AppUpdateMessage.create_from_http_request(app_update_attribute_mapping)
+      # convert self's ManifestProcessScaleMessage into a ProcessScaleMessage
+      @process_scale_message ||= begin
+        params = {}
+        [[:instances, :instances],
+         [:disk_quota, :disk_in_mb],
+         [:memory, :memory_in_mb]].each do |original_key, target_key|
+          params[target_key] = manifest_process_scale_message.send(original_key) if manifest_process_scale_message.requested?(original_key)
+        end
+        ProcessScaleMessage.new(params)
+      end
     end
 
     private
@@ -62,8 +76,8 @@ module VCAP::CloudController
     def process_scale_attribute_mapping
       {
         instances: instances,
-        memory_in_mb: convert_to_mb(memory, 'Memory'),
-        disk_in_mb: convert_to_mb(disk_quota, 'Disk quota'),
+        memory: convert_to_mb(memory, 'Memory'),
+        disk_quota: convert_to_mb(disk_quota, 'Disk quota'),
       }.compact
     end
 

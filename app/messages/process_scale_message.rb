@@ -6,9 +6,11 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
-    validates_with NoAdditionalKeysValidator, ManifestValidator
+    validates_with NoAdditionalKeysValidator
 
     validates :instances, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+    validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+    validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 
     def self.create_from_http_request(body)
       ProcessScaleMessage.new(body.deep_symbolize_keys)

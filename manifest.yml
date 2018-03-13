@@ -1,0 +1,4 @@
+---
+applications:
+- instances: 1
+  disk_quota: 1.5G 

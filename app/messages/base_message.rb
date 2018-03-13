@@ -73,38 +73,6 @@ module VCAP::CloudController
       end
     end
 
-    class ManifestValidator < ActiveModel::Validator
-      def validate(record)
-        validate_optional_positive(record, :memory_in_mb, 'Memory')
-        validate_optional_positive(record, :disk_in_mb, 'Disk quota')
-      end
-
-      private
-
-      def validate_optional_positive(record, attribute, label)
-        value = record.send(attribute)
-        return if value.nil?
-        value = value.to_s
-        final_value = begin
-          begin
-            Float(value)
-          rescue
-            record.errors[:base] << "#{label} is not a number"
-            return
-          end
-          begin
-            Integer(value)
-          rescue
-            record.errors[:base] << "#{label} must be an integer"
-            return
-          end
-        end
-        if final_value <= 0
-          record.errors[:base] << "#{label} must be greater than 0MB"
-        end
-      end
-    end
-
     private
 
     def allowed_keys

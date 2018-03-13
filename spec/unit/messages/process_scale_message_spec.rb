@@ -58,7 +58,7 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.count).to eq(1)
-        expect(message.errors[:base]).to include('Memory is not a number')
+        expect(message.errors[:memory_in_mb]).to include('is not a number')
       end
     end
 
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.count).to eq(1)
-        expect(message.errors[:base]).to include('Memory must be greater than 0MB')
+        expect(message.errors[:memory_in_mb]).to include('must be greater than 0')
       end
     end
 
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.count).to eq(1)
-        expect(message.errors[:base]).to include('Memory must be an integer')
+        expect(message.errors[:memory_in_mb]).to include('must be an integer')
       end
 
       context 'when disk_in_mb is not an number' do
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
-          expect(message.errors[:base]).to include('Disk quota is not a number')
+          expect(message.errors[:disk_in_mb]).to include('is not a number')
         end
       end
 
@@ -105,7 +105,7 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
-          expect(message.errors[:base]).to include('Disk quota must be greater than 0MB')
+          expect(message.errors[:disk_in_mb]).to include('must be greater than 0')
         end
       end
 
@@ -117,7 +117,7 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(1)
-          expect(message.errors[:base]).to include('Disk quota must be an integer')
+          expect(message.errors[:disk_in_mb]).to include('must be an integer')
         end
       end
     end

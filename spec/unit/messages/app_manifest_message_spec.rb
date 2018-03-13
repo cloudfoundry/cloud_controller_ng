@@ -38,6 +38,18 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Memory must be greater than 0MB')
           end
         end
+
+        context 'when memory is in bytes' do
+          let(:params) { { memory: '-35B' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Memory must be greater than 0MB')
+          end
+        end
       end
 
       describe 'disk_quota' do
@@ -149,6 +161,7 @@ module VCAP::CloudController
       it 'returns the correct AppManifestMessage' do
         message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
+        expect(message).to be_valid
         expect(message).to be_a(AppManifestMessage)
         expect(message.instances).to eq(4)
         expect(message.memory).to eq('200GB')
@@ -165,23 +178,58 @@ module VCAP::CloudController
     describe '#process_scale_message' do
       let(:parsed_yaml) { { 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 } }
 
-      it 'returns a ProcessScaleMessage containing mapped attributes' do
+      it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
         message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
-        expect(message.process_scale_message.instances).to eq(5)
-        expect(message.process_scale_message.memory_in_mb).to eq(204800)
-        expect(message.process_scale_message.disk_in_mb).to eq(1024000)
+        expect(message.manifest_process_scale_message.instances).to eq(5)
+        expect(message.manifest_process_scale_message.memory).to eq(204800)
+        expect(message.manifest_process_scale_message.disk_quota).to eq(1024000)
+      end
+
+      context 'it handles bytes' do
+        let(:parsed_yaml) { { 'disk_quota' => '7340032B', 'memory' => '3145728B', instances: 8 } }
+
+        it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_process_scale_message.instances).to eq(8)
+          expect(message.manifest_process_scale_message.memory).to eq(3)
+          expect(message.manifest_process_scale_message.disk_quota).to eq(7)
+        end
+      end
+
+      context 'it handles exactly 1MB' do
+        let(:parsed_yaml) { { 'disk_quota' => '1048576B', 'memory' => '1048576B', instances: 8 } }
+
+        it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_process_scale_message.instances).to eq(8)
+          expect(message.manifest_process_scale_message.memory).to eq(1)
+          expect(message.manifest_process_scale_message.disk_quota).to eq(1)
+        end
+      end
+
+      context 'it complains about 1MB - 1' do
+        let(:parsed_yaml) { { 'disk_quota' => '1048575B', 'memory' => '1048575B', instances: 8 } }
+
+        it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(2)
+          expect(message.errors.full_messages).to match_array(['Memory must be greater than 0MB', 'Disk quota must be greater than 0MB'])
+        end
       end
 
       context 'when attributes are not requested in the manifest' do
         let(:parsed_yaml) { {} }
 
-        it 'does not forward missing attributes to the ProcessScaleMessage' do
+        it 'does not forward missing attributes to the ManifestProcessScaleMessage' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
           expect(message.process_scale_message.requested?(:instances)).to be false
-          expect(message.process_scale_message.requested?(:memory_in_mb)).to be false
-          expect(message.process_scale_message.requested?(:disk_in_mb)).to be false
+          expect(message.process_scale_message.requested?(:memory)).to be false
+          expect(message.process_scale_message.requested?(:disk_quota)).to be false
         end
       end
     end
@@ -190,7 +238,7 @@ module VCAP::CloudController
       let(:buildpack) { VCAP::CloudController::Buildpack.make }
       let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
 
-      it 'returns a AppUpdateMessage containing mapped attributes' do
+      it 'returns an AppUpdateMessage containing mapped attributes' do
         message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
         expect(message.app_update_message.buildpack_data.buildpacks).to include(buildpack.name)
