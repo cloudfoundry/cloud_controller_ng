@@ -59,10 +59,13 @@ module VCAP::CloudController
         db.sql_log_level = opts[:log_level]
       end
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
+      add_connection_validator_extension(db, opts)
+      db
+    end
+
+    def self.add_connection_validator_extension(db, opts)
       db.extension(:connection_validator)
       db.pool.connection_validation_timeout = opts[:connection_validation_timeout] if opts[:connection_validation_timeout]
-
-      db
     end
 
     def self.load_models(db_config, logger)
