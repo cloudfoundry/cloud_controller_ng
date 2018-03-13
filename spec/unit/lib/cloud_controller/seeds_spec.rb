@@ -98,6 +98,16 @@ module VCAP::CloudController
             expect(domain.router_group_guid).to be_nil
             expect(domain.wildcard).to be_falsey
           end
+
+          it 'creates the internal domain after the app domain' do
+            # `cf push` uses the first domain by default when creating routes
+            # we want to make sure that the first domain is an app domain if possible
+
+            Seeds.write_seed_data(config)
+            app_domain_id = Domain.find(name: 'customer-app-domain1.com').id
+            internal_domain_id = Domain.find(name: 'apps.internal').id
+            expect(app_domain_id).to be < internal_domain_id
+          end
         end
       end
 

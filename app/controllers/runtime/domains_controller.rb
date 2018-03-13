@@ -26,11 +26,6 @@ module VCAP::CloudController
       do_delete(domain)
     end
 
-    def enumerate
-      @opts[:order_by] = :internal
-      super
-    end
-
     deprecated_endpoint(path)
     define_messages
     define_routes

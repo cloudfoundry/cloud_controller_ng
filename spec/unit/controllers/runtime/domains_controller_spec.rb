@@ -258,7 +258,7 @@ module VCAP::CloudController
           Domain.dataset.destroy
         end
 
-        it 'shows the internal domain last' do
+        it 'shows the domains in the order they were seeded/created' do
           domain1 = Domain.make(name: 'domain1.capi.land')
           domain_internal = Domain.make(name: 'apps.internal', internal: true)
           domain3 = Domain.make(name: 'domain3.capi.land')
@@ -267,7 +267,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200), last_response.body
           domains = JSON.parse(last_response.body)['resources']
           expect(domains.size).to be(3)
-          expect(domains.map { |x| x['entity']['name'] }).to eq([domain1.name, domain3.name, domain_internal.name])
+          expect(domains.map { |x| x['entity']['name'] }).to eq([domain1.name, domain_internal.name, domain3.name])
         end
       end
     end
