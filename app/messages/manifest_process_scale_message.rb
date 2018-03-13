@@ -41,12 +41,12 @@ module VCAP::CloudController
       value = nil
       begin
         value = Float(data[:value])
-      rescue
+      rescue ArgumentError
         return 'is not a number'
       end
       begin
-        value = Integer(value)
-      rescue
+        value = Integer(value.to_s)
+      rescue ArgumentError
         return 'must be an integer'
       end
       if value <= 0
