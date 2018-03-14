@@ -36,55 +36,9 @@ module VCAP::CloudController
         expect(app.reload.routes).to be_empty
       end
 
-      it 'delegates to the route handler to update route information' do
+      it 'delegates to the route handler to update route information without process validation' do
         route_mapping_delete.delete(route_mapping)
-        expect(route_handler).to have_received(:update_route_information)
-      end
-
-      context 'when copilot is enabled' do
-        let(:copilot_handler) { instance_double(CopilotHandler) }
-
-        before do
-          TestConfig.override(copilot: { enabled: true })
-          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
-          allow(copilot_handler).to receive(:unmap_route)
-        end
-
-        it 'delegates to the copilot handler to notify copilot' do
-          expect {
-            route_mapping_delete.delete(route_mapping)
-            expect(copilot_handler).to have_received(:unmap_route).with(route_mapping)
-          }.to change { RouteMappingModel.count }.by(-1)
-        end
-
-        context 'when CopilotHandler#unmap_route errors out' do
-          let(:event_repository) { double(Repositories::AppEventRepository) }
-
-          before do
-            allow(copilot_handler).to receive(:unmap_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
-            allow(Steno).to receive(:logger).and_return(logger)
-            allow(logger).to receive(:debug)
-            allow(logger).to receive(:error)
-            allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
-            allow(event_repository).to receive(:record_unmap_route)
-          end
-
-          it 'logs and swallows the error' do
-            expect {
-              route_mapping_delete.delete(route_mapping)
-              expect(route_handler).to have_received(:update_route_information)
-              expect(copilot_handler).to have_received(:unmap_route).with(route_mapping)
-              expect(logger).to have_received(:debug)
-              expect(logger).to have_received(:error)
-              expect(event_repository).to have_received(:record_unmap_route).with(
-                app,
-                route,
-                user_audit_info,
-                route_mapping: route_mapping
-              )
-            }.to change { RouteMappingModel.count }.by(-1)
-          end
-        end
+        expect(route_handler).to have_received(:update_route_information).with(perform_validation: false)
       end
 
       describe 'recording events' do

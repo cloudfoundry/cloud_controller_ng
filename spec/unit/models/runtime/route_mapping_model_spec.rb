@@ -22,6 +22,80 @@ module VCAP::CloudController
           RouteMappingModel.make(valid_route_mapping_opts)
         }.to raise_error(Sequel::ValidationFailed, /app_guid and route_guid and process_type and app_port unique/)
       end
+
+      context 'when copilot is disabled', isolation: :truncation do
+        let(:copilot_handler) { instance_double(CopilotHandler) }
+
+        before do
+          TestConfig.override({ copilot: { enabled: false } })
+          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
+        end
+
+        context 'on delete' do
+          it 'does not talk to copilot' do
+            route_mapping = RouteMappingModel.make({
+              app: app_model,
+              route: route,
+              process_type: 'buckeyes',
+              app_port: -1
+            })
+            expect(copilot_handler).to_not receive(:unmap_route)
+            route_mapping.destroy
+          end
+        end
+      end
+
+      context 'when copilot is enabled', isolation: :truncation do
+        let(:copilot_handler) { instance_double(CopilotHandler) }
+
+        before do
+          TestConfig.override({ copilot: { enabled: true } })
+          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
+          allow(copilot_handler).to receive(:unmap_route)
+        end
+
+        context 'on delete' do
+          let!(:route_mapping) do
+            RouteMappingModel.make({
+              app: app_model,
+              route: route,
+              process_type: 'buckeyes',
+              app_port: -1
+            })
+          end
+
+          it 'unmaps the route in copilot' do
+            expect(copilot_handler).to receive(:unmap_route).with(route_mapping)
+            route_mapping.destroy
+          end
+
+          context 'when there is an error communicating with copilot' do
+            let(:logger) { instance_double(Steno::Logger, error: nil) }
+
+            it 'logs and swallows the error' do
+              allow(copilot_handler).to receive(:unmap_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
+              allow(Steno).to receive(:logger).and_return(logger)
+
+              expect {
+                route_mapping.destroy
+
+                expect(copilot_handler).to have_received(:unmap_route).with(route_mapping)
+                expect(logger).to have_received(:error).with(/failed communicating.*some-error/)
+              }.to change { RouteMappingModel.count }.by(-1)
+            end
+          end
+
+          context 'when the delete is part of a transaction' do
+            it 'only executes after the transaction is completed' do
+              RouteMappingModel.db.transaction do
+                route_mapping.destroy
+                expect(copilot_handler).to_not have_received(:unmap_route)
+              end
+              expect(copilot_handler).to have_received(:unmap_route).with(route_mapping)
+            end
+          end
+        end
+      end
     end
   end
 end

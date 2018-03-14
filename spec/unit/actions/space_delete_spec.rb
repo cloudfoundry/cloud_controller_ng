@@ -267,6 +267,18 @@ module VCAP::CloudController
             end
           end
         end
+
+        describe 'routes and route mappings' do
+          let!(:process) { ProcessModel.make app: app, type: 'web' }
+          let!(:route) { Route.make space: space }
+
+          it 'deletes routes in the space (by way of model association dependency)' do
+            expect(route.exists?).to be true
+            expect {
+              space_delete.delete(space_dataset)
+            }.to change { Route.count }.by(-1)
+          end
+        end
       end
     end
   end

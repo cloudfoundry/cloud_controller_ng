@@ -27,6 +27,36 @@ module VCAP::CloudController
         it 'updates the version' do
           expect { handler.update_route_information }.to change { process.reload.updated_at }
         end
+
+        context 'when perform_validation is not provided' do
+          let(:db) { instance_double(Sequel::Database) }
+          let(:process) { instance_double(ProcessModel, db: db) }
+
+          it 'calls #save_changes with validate true' do
+            allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
+            allow(process).to receive_messages(lock!: nil, diego?: true)
+
+            expect(process).to receive(:set).with(updated_at: instance_of(Sequel::SQL::Constant))
+            expect(process).to receive(:save_changes).with(hash_including(validate: true))
+
+            handler.update_route_information
+          end
+        end
+
+        context 'when perform_validation is false' do
+          let(:db) { instance_double(Sequel::Database) }
+          let(:process) { instance_double(ProcessModel, db: db) }
+
+          it 'calls #save_changes with validate false' do
+            allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
+            allow(process).to receive_messages(lock!: nil, diego?: true)
+
+            expect(process).to receive(:set).with(updated_at: instance_of(Sequel::SQL::Constant))
+            expect(process).to receive(:save_changes).with(hash_including(validate: false))
+
+            handler.update_route_information(perform_validation: false)
+          end
+        end
       end
 
       describe 'updating the backend' do
