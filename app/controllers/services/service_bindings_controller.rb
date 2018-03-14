@@ -25,6 +25,20 @@ module VCAP::CloudController
       object_renderer.render_json(self.class, obj, @opts)
     end
 
+    get '/v2/service_bindings/:guid/parameters', :parameters
+
+    def parameters(guid)
+      binding = find_guid_and_validate_access(:read, guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding.v2_app.present?
+
+      unless binding.service_instance.managed_instance? && binding.service.bindings_retrievable
+        message = 'This service does not support fetching service binding parameters.'
+        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+      end
+
+      [HTTP::OK, {}]
+    end
+
     post path, :create
 
     def create
