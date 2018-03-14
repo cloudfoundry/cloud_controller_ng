@@ -38,14 +38,13 @@ module VCAP::CloudController
     # but if @base.class doesn't have a `i18n_scope` method, `object` is nil, so we
     # have to analyze the data.
     def self.invalid_field_message_with_nil_object(data)
-      value = nil
       begin
-        value = Float(data[:value])
+        Float(data[:value])
       rescue ArgumentError
         return 'is not a number'
       end
       begin
-        value = Integer(value.to_s)
+        value = Integer(data[:value])
       rescue ArgumentError
         return 'must be an integer'
       end

@@ -123,7 +123,7 @@ module VCAP::CloudController
     end
 
     describe '.create_from_http_request' do
-      let(:body) { { 'instances' => 3, 'disk_quota' => 2048, 'memory' => 1025 } }
+      let(:body) { { 'instances' => 3, 'disk_quota' => 2048, 'memory' => 1025.0 } }
 
       it 'returns a ManifestProcessScaleMessage' do
         message = ManifestProcessScaleMessage.create_from_http_request(body)
@@ -139,6 +139,32 @@ module VCAP::CloudController
         message = ManifestProcessScaleMessage.create_from_http_request(body)
 
         expect(message.requested?(:instances)).to be_truthy
+      end
+    end
+
+    describe 'invalid_field_message_with_nil_object' do
+      let(:data) do { value: value } end
+      let(:result) { ManifestProcessScaleMessage.invalid_field_message_with_nil_object(data) }
+
+      context "when it's not a number" do
+        let(:value) { 'size-50 natty bo T-shirt' }
+        it 'is not a number' do
+          expect(result).to eq('is not a number')
+        end
+      end
+
+      context "when it's not an integer" do
+        let(:value) { '22.4' }
+        it 'is not a float' do
+          expect(result).to eq('must be an integer')
+        end
+      end
+
+      context "when it's negative" do
+        let(:value) { -22 }
+        it 'is negative' do
+          expect(result).to eq('must be greater than 0MB')
+        end
       end
     end
   end
