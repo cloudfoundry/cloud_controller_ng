@@ -36,7 +36,10 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
       end
 
-      [HTTP::OK, {}]
+      client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
+      resp = client.fetch_service_binding(binding)
+
+      [HTTP::OK, {}, resp.fetch('parameters', {}).to_json]
     end
 
     post path, :create
