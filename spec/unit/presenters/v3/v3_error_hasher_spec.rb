@@ -117,6 +117,47 @@ RSpec.describe V3ErrorHasher do
         }])
       end
     end
+
+    context 'when the error has multiple messages' do
+      let(:error) do
+        CloudController::Errors::CompoundError.new([
+          CloudController::Errors::ApiError.new_from_details('DomainInvalid', 'arg1'),
+          CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'arg2'),
+        ])
+      end
+
+      before do
+        error.set_backtrace('fake backtrace')
+      end
+
+      it 'displays all errors with test mode info for each error' do
+        expect(unsanitized_hash['errors'].length).to eq 2
+        expect(unsanitized_hash).to eq({
+          'errors' => [
+            {
+              'code' => 130001,
+              'detail' => 'The domain is invalid: arg1',
+              'title' => 'CF-DomainInvalid',
+              'test_mode_info' => {
+                'detail' => 'The domain is invalid: arg1',
+                'title' => 'CF-DomainInvalid',
+                'backtrace' => ['fake backtrace'],
+              }
+            },
+            {
+              'code' => 10008,
+              'detail' => 'arg2',
+              'title' => 'CF-UnprocessableEntity',
+              'test_mode_info' => {
+                'detail' => 'arg2',
+                'title' => 'CF-UnprocessableEntity',
+                'backtrace' => ['fake backtrace'],
+              }
+            }
+          ]
+        })
+      end
+    end
   end
 
   describe '#sanitized_hash' do
@@ -207,6 +248,37 @@ RSpec.describe V3ErrorHasher do
 
       it 'does not expose the extra information' do
         expect(sanitized_hash['errors'].first).not_to have_key('arbitrary key')
+      end
+    end
+
+    context 'when the error has multiple messages' do
+      let(:error) do
+        CloudController::Errors::CompoundError.new([
+          CloudController::Errors::ApiError.new_from_details('DomainInvalid', 'arg1'),
+          CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'arg2'),
+        ])
+      end
+
+      before do
+        error.set_backtrace('fake backtrace')
+      end
+
+      it 'displays all errors' do
+        expect(sanitized_hash['errors'].length).to eq 2
+        expect(sanitized_hash).to eq({
+          'errors' => [
+            {
+              'code' => 130001,
+              'detail' => 'The domain is invalid: arg1',
+              'title' => 'CF-DomainInvalid',
+            },
+            {
+              'code' => 10008,
+              'detail' => 'arg2',
+              'title' => 'CF-UnprocessableEntity',
+            }
+          ]
+        })
       end
     end
   end

@@ -153,6 +153,21 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when there are multiple errors' do
+        let(:params) { { instances: -1, memory: 120 } }
+
+        it 'is not valid' do
+          message = AppManifestMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(2)
+          expect(message.errors.full_messages).to match_array([
+            'Instances must be greater than or equal to 0',
+            'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+          ])
+        end
+      end
     end
 
     describe '.create_from_http_request' do

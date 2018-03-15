@@ -57,6 +57,20 @@ module VCAP::CloudController
         end
       end
 
+      context 'when we have more than one error' do
+        let(:params) { { name: 3.5, unexpected: 'foo' } }
+
+        it 'is not valid' do
+          message = AppUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(2)
+          expect(message.errors.full_messages).to match_array([
+            'Name must be a string',
+            "Unknown field(s): 'unexpected'"
+          ])
+        end
+      end
       describe 'lifecycle' do
         context 'when lifecycle is provided' do
           let(:params) do

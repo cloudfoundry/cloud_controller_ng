@@ -9,7 +9,7 @@ class AppManifestsController < ApplicationController
 
   def apply_manifest
     message = AppManifestMessage.create_from_http_request(parsed_app_manifest_params)
-    unprocessable!(message.errors.full_messages) unless message.valid?
+    compound_error!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
@@ -26,6 +26,11 @@ class AppManifestsController < ApplicationController
   end
 
   private
+
+  def compound_error!(error_messages)
+    underlying_errors = error_messages.map { |message| unprocessable(message) }
+    raise CloudController::Errors::CompoundError.new(underlying_errors)
+  end
 
   def validate_content_type!
     if !request_content_type_is_yaml?

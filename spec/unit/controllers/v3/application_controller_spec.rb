@@ -53,6 +53,13 @@ RSpec.describe ApplicationController, type: :controller do
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'omg no!')
     end
 
+    def compound_error
+      raise CloudController::Errors::CompoundError.new [
+        CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error1'),
+        CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'error2'),
+      ]
+    end
+
     def blobstore_error
       raise CloudController::Blobstore::BlobstoreError.new('it broke!')
     end
@@ -263,6 +270,17 @@ RSpec.describe ApplicationController, type: :controller do
       get :api_explode
       expect(response.status).to eq(400)
       expect(response).to have_error_message('The request is invalid')
+    end
+  end
+
+  describe '#handle_compound_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from CompoundErrors and renders an error presenter' do
+      routes.draw { get 'compound_error' => 'anonymous#compound_error' }
+      get :compound_error
+      expect(response.status).to eq(400)
+      expect(parsed_body['errors'].length).to eq 2
     end
   end
 

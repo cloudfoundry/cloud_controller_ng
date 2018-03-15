@@ -10,27 +10,41 @@ class V3ErrorHasher < BaseErrorHasher
   def unsanitized_hash
     return { 'errors' => [UNKNOWN_ERROR_HASH.dup] } if error.nil?
 
-    payload = if api_error?
-                api_error_hash
+    payload = if compound_error?
+                compound_error_hash
+              elsif api_error?
+                [with_test_mode_info(api_error_hash(error))]
               elsif services_error?
-                services_error_hash
+                [with_test_mode_info(services_error_hash)]
               else
-                UNKNOWN_ERROR_HASH.dup
+                [with_test_mode_info(UNKNOWN_ERROR_HASH.dup)]
               end
-    payload['test_mode_info'] = test_mode_hash
 
-    { 'errors' => [payload] }
+    { 'errors' => payload }
+  end
+
+  def compound_error_hash
+    error.underlying_errors.map do |underlying_error|
+      with_test_mode_info(api_error_hash(underlying_error), an_error: underlying_error)
+    end
+  end
+
+  def with_test_mode_info(hash, an_error: nil)
+    hash['test_mode_info'] = test_mode_hash(an_error || error)
+    hash
   end
 
   def sanitized_hash
     return_hash = unsanitized_hash
-    return_hash['errors'].first.keep_if { |k, _| allowed_keys.include? k }
+    return_hash['errors'] = unsanitized_hash['errors'].map do |error|
+      error.keep_if { |k, _| allowed_keys.include? k }
+    end
     return_hash
   end
 
   private
 
-  def api_error_hash
+  def api_error_hash(error)
     {
       'detail' => error.message,
       'title'  => "CF-#{error.name}",
@@ -51,21 +65,23 @@ class V3ErrorHasher < BaseErrorHasher
     hash
   end
 
-  def test_mode_hash
-    debug_title = if error.respond_to?(:name)
-                    "CF-#{error.name}"
-                  else
-                    "CF-#{error.class.name.demodulize}"
-                  end
-
+  def test_mode_hash(an_error)
     info = {
-      'detail'    => error.message,
-      'title'     => debug_title,
+      'detail'    => an_error.message,
+      'title'     => generate_debug_title(an_error),
       'backtrace' => error.backtrace,
     }
     info.merge!(error.to_h) if error.respond_to?(:to_h)
 
     info
+  end
+
+  def generate_debug_title(error)
+    if error.respond_to?(:name)
+      "CF-#{error.name}"
+    else
+      "CF-#{error.class.name.demodulize}"
+    end
   end
 
   def allowed_keys

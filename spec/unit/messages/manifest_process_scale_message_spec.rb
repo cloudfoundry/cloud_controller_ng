@@ -120,6 +120,21 @@ module VCAP::CloudController
           expect(message.errors.full_messages).to include('Disk quota must be an integer')
         end
       end
+
+      context 'when we have more than one error' do
+        let(:params) { { disk_quota: 3.5, memory: 'smiling greg' } }
+
+        it 'is not valid' do
+          message = ManifestProcessScaleMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(2)
+          expect(message.errors.full_messages).to match_array([
+            'Disk quota must be an integer',
+            'Memory is not a number'
+          ])
+        end
+      end
     end
 
     describe '.create_from_http_request' do

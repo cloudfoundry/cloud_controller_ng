@@ -1,4 +1,5 @@
 require 'cloud_controller/blobstore/errors'
+require 'cloud_controller/errors/compound_error'
 
 module V3ErrorsHelper
   def invalid_request!(message)
@@ -9,8 +10,12 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', message)
   end
 
+  def unprocessable(message)
+    CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+  end
+
   def unprocessable!(message)
-    raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
+    raise unprocessable(message)
   end
 
   def unauthorized!
@@ -46,6 +51,7 @@ class ApplicationController < ActionController::Base
   rescue_from CloudController::Errors::NotFound, with: :handle_not_found
   rescue_from CloudController::Errors::InvalidAuthToken, with: :handle_invalid_auth_token
   rescue_from CloudController::Errors::ApiError, with: :handle_api_error
+  rescue_from CloudController::Errors::CompoundError, with: :handle_compound_error
 
   def configuration
     Config.config
@@ -198,6 +204,7 @@ class ApplicationController < ActionController::Base
   end
   alias_method :handle_not_authenticated, :handle_exception
   alias_method :handle_api_error, :handle_exception
+  alias_method :handle_compound_error, :handle_exception
   alias_method :handle_not_found, :handle_exception
   alias_method :handle_invalid_auth_token, :handle_exception
 
