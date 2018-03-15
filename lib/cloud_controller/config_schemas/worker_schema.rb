@@ -94,6 +94,8 @@ module VCAP::CloudController
             current_key_label: String
           },
 
+          disable_custom_buildpacks: bool,
+
           broker_client_timeout_seconds: Integer,
           broker_client_default_async_poll_interval_seconds: Integer,
           broker_client_max_async_poll_duration_minutes: Integer,
