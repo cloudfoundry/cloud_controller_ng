@@ -10,28 +10,17 @@ class V3ErrorHasher < BaseErrorHasher
   def unsanitized_hash
     return { 'errors' => [UNKNOWN_ERROR_HASH.dup] } if error.nil?
 
-    payload = if compound_error?
-                compound_error_hash
-              elsif api_error?
-                [with_test_mode_info(api_error_hash(error))]
-              elsif services_error?
-                [with_test_mode_info(services_error_hash)]
-              else
-                [with_test_mode_info(UNKNOWN_ERROR_HASH.dup)]
-              end
+    errors_payload = if compound_error?
+                       compound_error_payload
+                     elsif api_error?
+                       api_error_payload
+                     elsif services_error?
+                       services_error_payload
+                     else
+                       unknown_error_payload
+                     end
 
-    { 'errors' => payload }
-  end
-
-  def compound_error_hash
-    error.underlying_errors.map do |underlying_error|
-      with_test_mode_info(api_error_hash(underlying_error), an_error: underlying_error)
-    end
-  end
-
-  def with_test_mode_info(hash, an_error: nil)
-    hash['test_mode_info'] = test_mode_hash(an_error || error)
-    hash
+    { 'errors' => errors_payload }
   end
 
   def sanitized_hash
@@ -44,34 +33,61 @@ class V3ErrorHasher < BaseErrorHasher
 
   private
 
-  def api_error_hash(error)
+  def compound_error_payload
+    hash_api_errors(error.underlying_errors)
+  end
+
+  def api_error_payload
+    hash_api_errors([error])
+  end
+
+  def services_error_payload
+    [
+      with_test_mode_info(hash: services_error_hash, an_error: error, backtrace: error.backtrace)
+    ]
+  end
+
+  def unknown_error_payload
+    [
+      with_test_mode_info(hash: UNKNOWN_ERROR_HASH.dup, an_error: error, backtrace: error.backtrace)
+    ]
+  end
+
+  def hash_api_errors(api_errors)
+    api_errors.map do |an_error|
+      with_test_mode_info(hash: api_error_hash(an_error), an_error: an_error, backtrace: error.backtrace)
+    end
+  end
+
+  def api_error_hash(an_error)
     {
-      'detail' => error.message,
-      'title'  => "CF-#{error.name}",
-      'code'   => error.code,
+      'detail' => an_error.message,
+      'title'  => "CF-#{an_error.name}",
+      'code'   => an_error.code,
     }
   end
 
   def services_error_hash
-    hash = {
-      'detail' => error.message,
-      'title'  => "CF-#{error.class.name.demodulize}",
-      'code'   => UNKNOWN_ERROR_HASH['code'],
+    error_hash = error.to_h
+    {
+      'detail' => error_hash['detail'] || error.message,
+      'title' => error_hash['title'] || "CF-#{error.class.name.demodulize}",
+      'code' => error_hash['code'] || UNKNOWN_ERROR_HASH['code'],
     }
-    allowed_keys.each do |key|
-      hash[key] = error.to_h[key] unless error.to_h[key].nil?
-    end
+  end
 
+  def with_test_mode_info(hash:, an_error:, backtrace:)
+    hash['test_mode_info'] = test_mode_hash(an_error: an_error, backtrace: backtrace)
     hash
   end
 
-  def test_mode_hash(an_error)
+  def test_mode_hash(an_error:, backtrace:)
     info = {
       'detail'    => an_error.message,
       'title'     => generate_debug_title(an_error),
-      'backtrace' => error.backtrace,
+      'backtrace' => backtrace,
     }
-    info.merge!(error.to_h) if error.respond_to?(:to_h)
+    info.merge!(an_error.to_h) if an_error.respond_to?(:to_h)
 
     info
   end
