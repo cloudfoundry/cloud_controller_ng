@@ -67,8 +67,8 @@ module CloudController::Presenters::V2
               'type'        => 'create',
               'state'       => 'in progress',
               'description' => '10% complete',
-              'updated_at'  => service_binding.updated_at,
-              'created_at'  => service_binding.created_at,
+              'updated_at'  => service_binding.last_operation.updated_at,
+              'created_at'  => service_binding.last_operation.created_at,
             },
             }
           )

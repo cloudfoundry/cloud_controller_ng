@@ -95,7 +95,7 @@ module VCAP::CloudController
     end
 
     def last_operation
-      service_binding_operation || ServiceBindingOperation::CREATE_SUCCEEDED_OPERATION
+      service_binding_operation
     end
 
     def is_created?

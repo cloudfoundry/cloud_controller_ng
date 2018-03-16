@@ -22,10 +22,10 @@ module CloudController
             'name'                  => service_binding.name,
             'last_operation'        => {
               'type'        => 'create',
-              'state'       => service_binding.last_operation.state,
-              'description' => service_binding.last_operation.description,
-              'updated_at'  => service_binding.updated_at,
-              'created_at'  => service_binding.created_at,
+              'state'       => service_binding.last_operation.try(:state) || 'succeeded',
+              'description' => service_binding.last_operation.try(:description) || '',
+              'updated_at'  => service_binding.last_operation.try(:updated_at) || service_binding.updated_at,
+              'created_at'  => service_binding.last_operation.try(:created_at) || service_binding.created_at,
             },
           }.merge!(rel_hash)
         end
