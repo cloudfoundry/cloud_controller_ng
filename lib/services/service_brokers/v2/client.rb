@@ -1,5 +1,3 @@
-require 'jobs/services/service_instance_state_fetch'
-
 module VCAP::Services::ServiceBrokers::V2
   class Client
     CATALOG_PATH = '/v2/catalog'.freeze

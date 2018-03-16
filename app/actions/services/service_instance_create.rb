@@ -1,4 +1,5 @@
 require 'actions/services/synchronous_orphan_mitigate'
+require 'jobs/services/service_instance_state_fetch'
 
 module VCAP::CloudController
   class ServiceInstanceCreate
