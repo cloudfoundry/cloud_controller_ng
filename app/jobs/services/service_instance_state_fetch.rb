@@ -18,7 +18,7 @@ module VCAP::CloudController
           return if service_instance.nil?
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
-          attrs_to_update = client.fetch_service_instance_state(service_instance)
+          attrs_to_update = client.fetch_service_instance_last_operation(service_instance)
           update_with_attributes(attrs_to_update, service_instance)
 
           retry_state_updater unless service_instance.terminal_state?

@@ -59,7 +59,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def fetch_service_instance_state(instance)
+    def fetch_service_instance_last_operation(instance)
       path                = service_instance_last_operation_path(instance)
       response            = @http_client.get(path)
       parsed_response     = @response_parser.parse_fetch_state(path, response)

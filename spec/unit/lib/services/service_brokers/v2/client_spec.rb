@@ -340,7 +340,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
-    describe '#fetch_service_instance_state' do
+    describe '#fetch_service_instance_last_operation' do
       let(:plan) { VCAP::CloudController::ServicePlan.make }
       let(:space) { VCAP::CloudController::Space.make }
       let(:instance) do
@@ -370,7 +370,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a put request with correct path' do
-        client.fetch_service_instance_state(instance)
+        client.fetch_service_instance_last_operation(instance)
 
         expect(http_client).to have_received(:get).
           with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}")
@@ -378,7 +378,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker operation id is specified' do
         let(:broker_provided_operation) { 'a_broker_provided_operation' }
         it 'makes a put request with correct path' do
-          client.fetch_service_instance_state(instance)
+          client.fetch_service_instance_last_operation(instance)
 
           expect(http_client).to have_received(:get) do |path|
             uri = URI.parse(path)
@@ -394,7 +394,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'returns the attributes to update the service instance model' do
-        attrs          = client.fetch_service_instance_state(instance)
+        attrs          = client.fetch_service_instance_last_operation(instance)
         expected_attrs = { last_operation: response_data.symbolize_keys }
         expect(attrs).to eq(expected_attrs)
       end
@@ -409,7 +409,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'passes through the extra fields' do
-          attrs = client.fetch_service_instance_state(instance)
+          attrs = client.fetch_service_instance_last_operation(instance)
           expect(attrs[:foo]).to eq 'bar'
           expect(attrs[:last_operation]).to eq({ state: 'succeeded', description: '100% created' })
         end
@@ -428,7 +428,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns attributes to indicate the service instance was deleted' do
-            attrs = client.fetch_service_instance_state(instance)
+            attrs = client.fetch_service_instance_last_operation(instance)
             expect(attrs).to include(
               last_operation: {
                 state: 'succeeded'
@@ -443,7 +443,7 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           it 'returns attributes to indicate the service instance operation failed' do
-            attrs = client.fetch_service_instance_state(instance)
+            attrs = client.fetch_service_instance_last_operation(instance)
             expect(attrs).to include(
               last_operation: {
                 state: 'failed'
@@ -461,7 +461,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'does not return a description field' do
-          attrs = client.fetch_service_instance_state(instance)
+          attrs = client.fetch_service_instance_last_operation(instance)
           expect(attrs).to eq({ last_operation: { state: 'succeeded' } })
         end
       end
