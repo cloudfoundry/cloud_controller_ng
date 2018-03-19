@@ -102,18 +102,6 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Lifecycle Buildpacks can only contain strings')
           end
         end
-
-        context 'when the buildpack is not a known name or url' do
-          let(:params) { { buildpack: 'i am not a buildpack' } }
-
-          it 'is not valid' do
-            message = AppManifestMessage.new(params)
-
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include(%/Buildpack "#{params[:buildpack]}" must be an existing admin buildpack or a valid git URI/)
-          end
-        end
       end
 
       describe 'instances' do
@@ -155,16 +143,25 @@ module VCAP::CloudController
       end
 
       context 'when there are multiple errors' do
-        let(:params) { { instances: -1, memory: 120 } }
+        let(:params) do
+          {
+            instances: -1,
+            memory: 120,
+            disk_quota: '-120KB',
+            buildpack: 99,
+          }
+        end
 
         it 'is not valid' do
           message = AppManifestMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.count).to eq(2)
+          expect(message.errors.count).to eq(4)
           expect(message.errors.full_messages).to match_array([
             'Instances must be greater than or equal to 0',
-            'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+            'Disk quota must be greater than 0MB',
+            'Lifecycle Buildpacks can only contain strings'
           ])
         end
       end

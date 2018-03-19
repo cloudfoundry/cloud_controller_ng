@@ -12,7 +12,7 @@ module VCAP::CloudController
         logger.info("Applying app manifest to app: #{resource_guid}")
 
         apply_manifest_action.apply(resource_guid, apply_manifest_message)
-      rescue ProcessScale::InvalidProcess => e
+      rescue ProcessScale::InvalidProcess, AppUpdate::InvalidApp => e
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)
       end
 

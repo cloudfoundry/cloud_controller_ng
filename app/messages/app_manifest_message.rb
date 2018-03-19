@@ -32,45 +32,25 @@ module VCAP::CloudController
         errors.add(:base, error_message)
       end
 
-      if errors.empty? && buildpack_validator
-        buildpack_validator.valid?
-        buildpack_validator.errors.full_messages.each do |error_message|
-          errors.add(:base, error_message)
-        end
-      end
       errors.empty?
     end
 
     def process_scale_message
-      # convert self's ManifestProcessScaleMessage into a ProcessScaleMessage
-      @process_scale_message ||= begin
-        params = {}
-        [[:instances, :instances],
-         [:disk_quota, :disk_in_mb],
-         [:memory, :memory_in_mb]].each do |original_key, target_key|
-          params[target_key] = manifest_process_scale_message.send(original_key) if manifest_process_scale_message.requested?(original_key)
-        end
-        ProcessScaleMessage.new(params)
-      end
+      return @process_scale_message if @process_scale_message.present?
+
+      process_scale_message_params = {
+        instances: manifest_process_scale_message.instances,
+        disk_in_mb: manifest_process_scale_message.disk_quota,
+        memory_in_mb: manifest_process_scale_message.memory
+      }.compact
+
+      @process_scale_message = ProcessScaleMessage.new(process_scale_message_params)
     end
 
     private
 
     def allowed_keys
       ALLOWED_KEYS
-    end
-
-    def buildpack_validator
-      @buildpack_validator ||= begin
-        buildpacks = app_update_message.try(:buildpack_data).try(:buildpacks)
-        if buildpacks
-          db_result = BuildpackLifecycleFetcher.fetch(buildpacks, Stack.last.try(:name))
-          BuildpackLifecycleDataValidator.new({
-            buildpack_infos: db_result[:buildpack_infos],
-            stack: db_result[:stack],
-          })
-        end
-      end
     end
 
     def process_scale_attribute_mapping
