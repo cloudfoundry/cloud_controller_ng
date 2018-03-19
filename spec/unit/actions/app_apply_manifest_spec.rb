@@ -39,8 +39,9 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the request is invalid due to a negative instance count' do
-          let(:message) { AppManifestMessage.new({ name: 'blah', instances: -1 }) }
+        context 'when process scale raises an exception' do
+          let(:process_scale_message) { instance_double(ProcessScaleMessage) }
+          let(:message) { instance_double(AppManifestMessage, process_scale_message: process_scale_message) }
 
           before do
             allow(process_scale).

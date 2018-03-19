@@ -91,6 +91,17 @@ module VCAP::CloudController
       end
 
       describe 'buildpack' do
+        context 'when providing a valid buildpack name' do
+          let(:buildpack) { Buildpack.make }
+          let(:params) { { buildpack: buildpack.name } }
+
+          it 'is valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).to be_valid
+          end
+        end
+
         context 'when the buildpack is not a string' do
           let(:params) { { buildpack: 99 } }
 
@@ -99,7 +110,32 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Lifecycle Buildpacks can only contain strings')
+            expect(message.errors.full_messages).to include('Buildpacks can only contain strings')
+          end
+        end
+      end
+
+      describe 'stack' do
+        context 'when providing a valid stack name' do
+          let(:params) { { stack: 'cflinuxfs2' } }
+
+          it 'is valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).to be_valid
+            expect(message.stack).to eq('cflinuxfs2')
+          end
+        end
+
+        context 'when the stack is not a string' do
+          let(:params) { { stack: 99 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Stack must be a string')
           end
         end
       end
@@ -149,6 +185,7 @@ module VCAP::CloudController
             memory: 120,
             disk_quota: '-120KB',
             buildpack: 99,
+            stack: 42
           }
         end
 
@@ -156,12 +193,13 @@ module VCAP::CloudController
           message = AppManifestMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.count).to eq(4)
+          expect(message.errors.count).to eq(5)
           expect(message.errors.full_messages).to match_array([
             'Instances must be greater than or equal to 0',
             'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
             'Disk quota must be greater than 0MB',
-            'Lifecycle Buildpacks can only contain strings'
+            'Buildpacks can only contain strings',
+            'Stack must be a string',
           ])
         end
       end
@@ -248,21 +286,49 @@ module VCAP::CloudController
 
     describe '#app_update_message' do
       let(:buildpack) { VCAP::CloudController::Buildpack.make }
-      let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
+      let(:stack) { VCAP::CloudController::Stack.make }
+      let(:parsed_yaml) { { 'buildpack' => buildpack.name, 'stack' => stack.name } }
 
       it 'returns an AppUpdateMessage containing mapped attributes' do
         message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
         expect(message.app_update_message.buildpack_data.buildpacks).to include(buildpack.name)
+        expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
       end
 
       context 'when attributes are not requested in the manifest' do
-        let(:parsed_yaml) { {} }
+        context 'when no lifecycle data is requested in the manifest' do
+          let(:parsed_yaml) { {} }
 
-        it 'does not forward missing attributes to the AppUpdateMessage' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          it 'does not forward missing attributes to the AppUpdateMessage' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
 
-          expect(message.app_update_message.requested?(:lifecycle)).to be false
+            expect(message.app_update_message.requested?(:lifecycle)).to be false
+          end
+        end
+
+        context 'when stack is not requested in the manifest but buildpack is requested' do
+          let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
+
+          it 'does not forward missing attributes to the AppUpdateMessage' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+
+            expect(message.app_update_message.requested?(:lifecycle)).to be true
+            expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be true
+            expect(message.app_update_message.buildpack_data.requested?(:stack)).to be false
+          end
+        end
+
+        context 'when buildpack is not requested in the manifest but stack is requested' do
+          let(:parsed_yaml) { { 'stack' => stack.name } }
+
+          it 'does not forward missing attributes to the AppUpdateMessage' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+
+            expect(message.app_update_message.requested?(:lifecycle)).to be true
+            expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be false
+            expect(message.app_update_message.buildpack_data.requested?(:stack)).to be true
+          end
         end
       end
 

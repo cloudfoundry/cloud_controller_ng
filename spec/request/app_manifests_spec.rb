@@ -21,7 +21,8 @@ RSpec.describe 'App Manifests' do
             'instances' => 4,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
-            'buildpack' => buildpack.name
+            'buildpack' => buildpack.name,
+            'stack' => 'cflinuxfs2'
           }
         ]
       }.to_yaml
@@ -44,7 +45,9 @@ RSpec.describe 'App Manifests' do
       expect(web_process.disk_quota).to eq(1536)
 
       app_model.reload
-      expect(app_model.lifecycle_data.buildpacks).to include(buildpack.name)
+      lifecycle_data = app_model.lifecycle_data
+      expect(lifecycle_data.buildpacks).to include(buildpack.name)
+      expect(lifecycle_data.stack).to eq('cflinuxfs2')
     end
   end
 end

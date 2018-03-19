@@ -12,6 +12,7 @@ module VCAP::CloudController
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
     let!(:ruby_buildpack) { Buildpack.make(name: 'ruby') }
+    let(:stack) { Stack.make(name: 'SUSE') }
 
     before do
       app_model.lifecycle_data.update(buildpacks: Array(buildpack), stack: Stack.default.name)
@@ -58,7 +59,7 @@ module VCAP::CloudController
           AppUpdateMessage.new({
               lifecycle: {
                 type: 'buildpack',
-                data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: 'redhat' }
+                data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: stack.name }
               }
             })
         end
@@ -73,7 +74,22 @@ module VCAP::CloudController
 
           expect(app_model.name).to eq('original name')
           expect(app_model.lifecycle_data.buildpacks).to eq(['http://new-buildpack.url', 'ruby'])
-          expect(app_model.lifecycle_data.stack).to eq('redhat')
+          expect(app_model.lifecycle_data.stack).to eq(stack.name)
+        end
+
+        context 'when the lifecycle is invalid' do
+          let(:message) do
+            AppUpdateMessage.new({
+              lifecycle: {
+                type: 'buildpack',
+                data: { buildpacks: ['http://new-buildpack.url', 'ruby'], stack: 'non-existent-stack' }
+              }
+            })
+          end
+
+          it 'raises an AppUpdate::InvalidApp error' do
+            expect { app_update.update(app_model, message, lifecycle) }.to raise_error(AppUpdate::InvalidApp)
+          end
         end
       end
 

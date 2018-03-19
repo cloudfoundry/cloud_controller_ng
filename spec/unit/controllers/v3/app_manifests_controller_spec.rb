@@ -7,7 +7,7 @@ RSpec.describe AppManifestsController, type: :controller do
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
     let(:app_apply_manifest_action) { instance_double(VCAP::CloudController::AppApplyManifest) }
-    let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 1 }] } }
+    let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] } }
 
     before do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
@@ -121,43 +121,53 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the buildpack' do
-        VCAP::CloudController::ProcessModel.make(app: app_model)
         post :apply_manifest, guid: app_model.guid, body: request_body
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
-        app_apply_manifest_jobs.first
 
-        app = VCAP::CloudController::AppModel.find(guid: app_model.guid)
-        web_process = app.web_process
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.buildpack).to eq 'php_buildpack'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
 
-        expect(web_process.instances).to eq(1)
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new).with(
-          app_model.guid,
-          instance_of(VCAP::CloudController::AppManifestMessage),
-          app_apply_manifest_action,
-        )
+    context 'when the request body includes a stack' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'stack' => 'cflinuxfs2' }] }
+      end
+
+      it 'sets the stack' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.stack).to eq 'cflinuxfs2'
+          expect(action).to eq app_apply_manifest_action
+        end
       end
     end
 
     it 'successfully scales the app in a background job' do
-      VCAP::CloudController::ProcessModel.make(app: app_model)
       post :apply_manifest, guid: app_model.guid, body: request_body
 
+      expect(response.status).to eq(202)
       app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
       expect(app_apply_manifest_jobs.count).to eq 1
-      app_apply_manifest_jobs.first
 
-      app = VCAP::CloudController::AppModel.find(guid: app_model.guid)
-      web_process = app.web_process
-
-      expect(web_process.instances).to eq(1)
-      expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new).with(
-        app_model.guid,
-        instance_of(VCAP::CloudController::AppManifestMessage),
-        app_apply_manifest_action,
-      )
+      expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(app_guid).to eq app_model.guid
+        expect(message.instances).to eq '2'
+        expect(action).to eq app_apply_manifest_action
+      end
     end
 
     it 'creates a job to track the applying the app manifest and returns it in the location header' do

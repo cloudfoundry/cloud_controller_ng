@@ -4,7 +4,7 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:instances, :memory, :disk_quota, :buildpack].freeze
+    ALLOWED_KEYS = [:instances, :memory, :disk_quota, :buildpack, :stack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
     attr_accessor :manifest_process_scale_message, :app_update_message
@@ -22,15 +22,8 @@ module VCAP::CloudController
     end
 
     def valid?
-      manifest_process_scale_message.valid?
-      manifest_process_scale_message.errors.full_messages.each do |error_message|
-        errors.add(:base, error_message)
-      end
-
-      app_update_message.valid?
-      app_update_message.errors.full_messages.each do |error_message|
-        errors.add(:base, error_message)
-      end
+      validate_process_scale_message!
+      validate_app_update_message_lifecycle!
 
       errors.empty?
     end
@@ -64,18 +57,20 @@ module VCAP::CloudController
     def app_update_attribute_mapping
       {
         lifecycle: buildpack_lifecycle_data,
-
       }.compact
     end
 
     def buildpack_lifecycle_data
-      return unless requested?(:buildpack)
+      return unless requested?(:buildpack) || requested?(:stack)
+
+      buildpacks = [buildpack].reject { |x| x == 'default' }.compact if requested?(:buildpack)
 
       {
         type: Lifecycles::BUILDPACK,
         data: {
-          buildpacks: [buildpack].reject { |x| x == 'default' }.compact
-        }
+          buildpacks: buildpacks,
+          stack: stack
+        }.compact
       }
     end
 
@@ -92,6 +87,20 @@ module VCAP::CloudController
 
     def byte_converter
       ByteConverter.new
+    end
+
+    def validate_process_scale_message!
+      manifest_process_scale_message.valid?
+      manifest_process_scale_message.errors.full_messages.each do |error_message|
+        errors.add(:base, error_message)
+      end
+    end
+
+    def validate_app_update_message_lifecycle!
+      app_update_message.valid?
+      app_update_message.errors[:lifecycle].each do |error_message|
+        errors.add(:base, error_message)
+      end
     end
   end
 end
