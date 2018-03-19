@@ -239,7 +239,8 @@ RSpec.describe 'Apps' do
                       'syslog_drain_url'      => nil,
                       'volume_mounts'         => [],
                       'app_url'               => "/v2/apps/#{process.guid}",
-                      'service_instance_url'  => "/v2/service_instances/#{service_binding.service_instance.guid}"
+                      'service_instance_url'  => "/v2/service_instances/#{service_binding.service_instance.guid}",
+                      'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
                     }
                   }
                 ],
@@ -1237,7 +1238,8 @@ RSpec.describe 'Apps' do
                 'syslog_drain_url'      => nil,
                 'volume_mounts'         => [],
                 'app_url'               => "/v2/apps/#{process.guid}",
-                'service_instance_url'  => "/v2/service_instances/#{service_instance.guid}"
+                'service_instance_url'  => "/v2/service_instances/#{service_instance.guid}",
+                'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
               }
             }
           ]
