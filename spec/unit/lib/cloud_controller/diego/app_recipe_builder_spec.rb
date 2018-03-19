@@ -270,7 +270,6 @@ module VCAP::CloudController
               [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')]
             )
             expect(lrp.instances).to eq(21)
-            expect(lrp.legacy_download_user).to eq('root')
             expect(lrp.log_guid).to eq(process.app.guid)
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
             expect(lrp.max_pids).to eq(100)
@@ -883,7 +882,6 @@ module VCAP::CloudController
               rule_staging_specific,
             ])
             expect(lrp.environment_variables).to eq([])
-            expect(lrp.legacy_download_user).to eq('root')
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
             expect(lrp.log_guid).to eq(process.app.guid)
             expect(lrp.max_pids).to eq(100)

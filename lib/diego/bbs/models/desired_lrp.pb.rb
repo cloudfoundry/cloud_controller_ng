@@ -69,7 +69,6 @@ module Diego
         optional :string, :metrics_guid, 12
         optional :int64, :created_at, 13
         repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 14
-        optional :string, :legacy_download_user, 15
         optional :string, :trusted_system_certificates_path, 16
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 17
         optional ::Diego::Bbs::Models::Network, :network, 18

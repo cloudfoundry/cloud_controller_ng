@@ -56,7 +56,6 @@ module VCAP::CloudController
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     generate_egress_rules,
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
-          legacy_download_user:             'root',
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
           network:                          generate_network,
           cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate,

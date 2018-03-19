@@ -144,7 +144,6 @@ module VCAP::CloudController
             expect(result.memory_mb).to eq(42)
             expect(result.disk_mb).to eq(51)
             expect(result.cpu_weight).to eq(50)
-            expect(result.legacy_download_user).to eq('vcap')
 
             expect(result.completion_callback_url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
@@ -234,11 +233,6 @@ module VCAP::CloudController
           it 'sets privileged container to the config value' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.privileged).to be(false)
-          end
-
-          it 'sets the legacy download user' do
-            result = task_recipe_builder.build_staging_task(config, staging_details)
-            expect(result.legacy_download_user).to eq('vcap')
           end
 
           it 'sets the cached dependencies' do
@@ -465,7 +459,6 @@ module VCAP::CloudController
             expect(result.log_source).to eq(TASK_LOG_SOURCE)
 
             expect(result.action).to eq(task_action)
-            expect(result.legacy_download_user).to eq('vcap')
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
 
             expect(result.metrics_guid).to eq('')
@@ -599,7 +592,6 @@ module VCAP::CloudController
             ])
             expect(result.completion_callback_url).to eq(expected_callback_url)
             expect(result.log_source).to eq(TASK_LOG_SOURCE)
-            expect(result.legacy_download_user).to eq('vcap')
             expect(result.trusted_system_certificates_path).to eq('/etc/cf-system-certificates')
             expect(result.volume_mounts).to eq([])
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
