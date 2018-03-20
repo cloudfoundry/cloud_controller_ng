@@ -385,4 +385,42 @@ RSpec.describe 'ServiceBindings' do
       )
     end
   end
+
+  describe 'GET /v2/service_bindings/:guid/parameters' do
+    let(:service) { VCAP::CloudController::Service.make(bindings_retrievable: true) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let!(:service_binding1) do
+      VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app)
+    end
+
+    before do
+      allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+        fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+        fb.parameters = { 'parameters' => {
+          'top_level_param' => {
+            'nested_param' => true,
+          },
+          'another_param' => 'some-value',
+        } }
+        fb
+      end
+    end
+
+    it 'displays the service binding parameters' do
+      get "/v2/service_bindings/#{service_binding1.guid}/parameters", nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = last_response.body
+      expect(MultiJson.load(parsed_response)).to be_a_response_like(
+        {
+          'top_level_param' => {
+            'nested_param' => true,
+          },
+          'another_param' => 'some-value',
+        }
+      )
+    end
+  end
 end
