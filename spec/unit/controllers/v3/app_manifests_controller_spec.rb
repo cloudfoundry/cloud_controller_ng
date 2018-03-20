@@ -74,14 +74,14 @@ RSpec.describe AppManifestsController, type: :controller do
 
       context 'when specified manifest fails validations' do
         let(:request_body) do
-          { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit' }] }
+          { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit', 'command' => '' }] }
         end
 
         it 'returns a 422 and validation errors' do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(2)
+          expect(errors.size).to eq(3)
 
           expect(errors[0]).to include({
             'detail' => 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
@@ -91,6 +91,12 @@ RSpec.describe AppManifestsController, type: :controller do
 
           expect(errors[1]).to include({
             'detail' => 'Instances must be greater than or equal to 0',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          })
+
+          expect(errors[2]).to include({
+            'detail' => 'Command must be between 1 and 4096 characters',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           })

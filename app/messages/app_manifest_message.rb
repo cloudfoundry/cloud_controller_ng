@@ -4,7 +4,8 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:instances, :memory, :disk_quota, :buildpack, :stack].freeze
+    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :instances,
+                    :memory, :stack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
     attr_accessor :manifest_process_scale_message, :app_update_message
@@ -55,9 +56,14 @@ module VCAP::CloudController
     end
 
     def app_update_attribute_mapping
-      {
+      mapping = {
         lifecycle: buildpack_lifecycle_data,
       }.compact
+      if command
+        actual_command = (command == 'default' || command == 'null') ? nil : command
+        mapping[:command] = actual_command
+      end
+      mapping
     end
 
     def buildpack_lifecycle_data
@@ -100,6 +106,9 @@ module VCAP::CloudController
       app_update_message.valid?
       app_update_message.errors[:lifecycle].each do |error_message|
         errors.add(:base, error_message)
+      end
+      app_update_message.errors[:command].each do |error_message|
+        errors.add(:command, error_message)
       end
     end
   end

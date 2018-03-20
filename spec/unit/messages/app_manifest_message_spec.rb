@@ -347,6 +347,65 @@ module VCAP::CloudController
           expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
         end
       end
+
+      describe 'command' do
+        let(:parsed_yaml) do
+          { command: command }
+        end
+
+        message = nil
+        before do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        end
+
+        context 'when a new command is specified' do
+          let(:command) { 'new-command' }
+
+          it 'sets the command field in the message' do
+            expect(message).to be_valid
+            expect(message.app_update_message.command).to eq('new-command')
+          end
+        end
+
+        context 'when a null command is specified' do
+          let(:command) { 'null' }
+
+          it 'unsets the command field in the message' do
+            expect(message).to be_valid
+            expect(message.app_update_message.command).to eq(nil)
+          end
+        end
+
+        context 'when a default command is specified' do
+          let(:command) { 'default' }
+
+          it 'unsets the command field in the message' do
+            expect(message).to be_valid
+            expect(message.app_update_message.command).to eq(nil)
+          end
+        end
+
+        context 'when an empty command is specified' do
+          let(:command) { '' }
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
+          end
+        end
+
+        context 'when no command is specified' do
+          let(:parsed_yaml) do
+            {}
+          end
+
+          it 'does not set a command field' do
+            expect(message).to be_valid
+            expect(message.app_update_message.requested?(:command)).to be_falsey
+          end
+        end
+      end
     end
   end
 end

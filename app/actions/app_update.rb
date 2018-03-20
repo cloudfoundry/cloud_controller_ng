@@ -16,6 +16,8 @@ module VCAP::CloudController
 
         app.name = message.name if message.requested?(:name)
 
+        update_app_command(app, message) if message.requested?(:command)
+
         app.save
 
         raise InvalidApp.new(lifecycle.errors.full_messages.join(', ')) unless lifecycle.valid?
@@ -37,6 +39,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def update_app_command(app, message)
+      app.web_process.command = message.command
+      app.web_process.save
+    end
 
     def using_disabled_custom_buildpack?(app)
       app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
