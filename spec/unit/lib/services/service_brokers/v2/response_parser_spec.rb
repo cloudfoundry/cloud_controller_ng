@@ -4,6 +4,135 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       RSpec.describe 'ResponseParser' do
+        describe 'JsonSchemaValidator' do
+          let(:json_validator) { ResponseParser::JsonSchemaValidator.new(logger, schema, inner_validator) }
+          let(:logger) { instance_double(Steno::Logger, warn: nil) }
+          let(:schema) {
+            {
+              '$schema' => 'http://json-schema.org/draft-04/schema#',
+              'type' => 'object',
+              'properties' => {},
+            }
+          }
+          let(:inner_validator) { {} }
+          let(:broker_response) {
+            ResponseParser::UnvalidatedResponse.new('GET', 'https://example.com', '/path',
+                                                    HttpResponse.new(
+                                                      code: '200',
+                                                      body: broker_response_body,
+            ))
+          }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(logger)
+            allow(inner_validator).to receive(:validate).and_return('inner-validator-result')
+          end
+
+          context 'when the broker response body is valid' do
+            let(:broker_response_body) { '{}' }
+            it 'does not raise' do
+              expect { json_validator.validate(broker_response.to_hash) }.not_to raise_error
+            end
+
+            it 'returns the inner validator result' do
+              expect(json_validator.validate(broker_response.to_hash)).to eql('inner-validator-result')
+            end
+
+            it 'calls the inner validator with the same parameters it was passed' do
+              json_validator.validate(broker_response.to_hash)
+              expect(inner_validator).to have_received(:validate).with(broker_response.to_hash)
+            end
+          end
+
+          context 'when the broker response is not a top-level JSON object' do
+            ['invalid', '[]', '"not-top-level-object"'].each do |body|
+              context "and the response body is #{body}" do
+                let(:broker_response_body) { body }
+                it 'raises' do
+                  expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                    expect(e.to_h['description']).to eq(
+                      "The service broker returned an invalid response for the request to https://example.com/path: expected valid JSON object in body, broker returned '#{body}'")
+                    expect(e.response_code).to eq(502)
+                    expect(e.to_h['http']['method']).to eq('GET')
+                    expect(e.to_h['http']['status']).to eq(200)
+                  end
+                end
+              end
+            end
+
+            context 'and the response body is not able to be parsed' do
+              let(:broker_response_body) { 'invalid' }
+              it 'logs the error' do
+                begin
+                  json_validator.validate(broker_response.to_hash)
+                rescue
+                  # this is tested above
+                end
+
+                expect(logger).to have_received(:warn).with "MultiJson parse error `\"invalid\"'"
+              end
+            end
+          end
+
+          context 'when the schema has required properties' do
+            let(:schema) {
+              {
+                'id' => 'some-id',
+                '$schema' => 'http://json-schema.org/draft-04/schema#',
+                'type' => 'object',
+                'required' => ['prop1', 'prop2'],
+                'properties' => {
+                  'prop1' => {
+                    'type' => 'boolean',
+                  },
+                  'prop2' => {
+                    'type' => 'string',
+                  }
+                }
+              }
+            }
+
+            context 'and there is a single validation failure' do
+              let(:broker_response_body) {
+                {
+                  prop1: true
+                }.to_json
+              }
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                  description_lines = e.to_h['description'].split("\n")
+                  expect(description_lines[0]).to eq('The service broker returned an invalid response for the request to https://example.com/path: ')
+                  expect(description_lines.drop(1)).to contain_exactly("The property '#/' did not contain a required property of 'prop2'")
+                  expect(e.response_code).to eq(502)
+                  expect(e.to_h['http']['method']).to eq('GET')
+                  expect(e.to_h['http']['status']).to eq(200)
+                end
+              end
+            end
+
+            context 'and there are multiple validation failures' do
+              let(:broker_response_body) {
+                {
+                }.to_json
+              }
+
+              it 'raises a ServiceBrokerResponseMalformed error' do
+                expect { json_validator.validate(broker_response.to_hash) }.to raise_error(Errors::ServiceBrokerResponseMalformed) do |e|
+                  description_lines = e.to_h['description'].split("\n")
+                  expect(description_lines[0]).to eq('The service broker returned an invalid response for the request to https://example.com/path: ')
+                  expect(description_lines.drop(1)).to contain_exactly(
+                    "The property '#/' did not contain a required property of 'prop2'",
+                    "The property '#/' did not contain a required property of 'prop1'")
+                  expect(e.response_code).to eq(502)
+                  expect(e.to_h['http']['method']).to eq('GET')
+                  expect(e.to_h['http']['status']).to eq(200)
+                end
+              end
+            end
+          end
+        end
+
         def get_method_and_path(operation)
           case operation
           when :provision
@@ -28,10 +157,10 @@ module VCAP::Services
             method = :parse_catalog
             path = '/v2/catalog'
           when :fetch_service_binding
-            method = :parse_fetch_parameters
+            method = :parse_fetch_binding_parameters
             path = '/v2/service_instances/GUID/service_bindings/BINDING_GUID'
           when :fetch_service_instance
-            method = :parse_fetch_parameters
+            method = :parse_fetch_instance_parameters
             path = '/v2/service_instances/GUID'
           end
 
@@ -306,7 +435,7 @@ module VCAP::Services
           'Please contact the service provider.'
         end
 
-        def self.malformed_repsonse_error(uri, message)
+        def self.malformed_response_error(uri, message)
           "The service broker returned an invalid response for the request to #{uri}: #{message}"
         end
 
@@ -320,7 +449,7 @@ module VCAP::Services
 
         def self.with_valid_volume_mounts
           {
-            'volume_mounts' => [{ 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }]
+            'volume_mounts' => [{ 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }]
           }
         end
 
@@ -329,7 +458,7 @@ module VCAP::Services
             'volume_mounts' => [{
                 'device_type' => 'none',
                 'device' => { 'volume_id' => 'foo', 'mount_config' => nil },
-                'mode' => 'none',
+                'mode' => 'r',
                 'container_dir' => 'none',
                 'driver' => 'none'
               }]
@@ -345,7 +474,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_device_type
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'device' => 'foo', 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+              { 'device_type' => 'none', 'device' => 'foo', 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
             ]
           }
         end
@@ -353,7 +482,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_nil_driver
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'mode' => 'none', 'container_dir' => 'none', 'driver' => nil, 'device' => { 'volume_id' => 'foo' } }
+              { 'device_type' => 'none', 'mode' => 'r', 'container_dir' => 'none', 'driver' => nil, 'device' => { 'volume_id' => 'foo' } }
             ]
           }
         end
@@ -361,7 +490,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_empty_driver
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'mode' => 'none', 'container_dir' => 'none', 'driver' => '', 'device' => { 'volume_id' => 'foo' } }
+              { 'device_type' => 'none', 'mode' => 'r', 'container_dir' => 'none', 'driver' => '', 'device' => { 'volume_id' => 'foo' } }
             ]
           }
         end
@@ -369,7 +498,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_no_device
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+              { 'device_type' => 'none', 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
             ]
           }
         end
@@ -377,7 +506,15 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_no_device_type
           {
             'volume_mounts' => [
-              { 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+              { 'device' => { 'volume_id' => 'foo' }, 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_bad_device_type
+          {
+            'volume_mounts' => [
+              { 'device_type' => 5, 'device' => { 'volume_id' => 'foo' }, 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
             ]
           }
         end
@@ -390,10 +527,34 @@ module VCAP::Services
           }
         end
 
+        def self.with_invalid_volume_mounts_bad_mode_type
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 3, 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_bad_mode_value
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'read', 'container_dir' => 'none', 'driver' => 'none' }
+            ]
+          }
+        end
+
         def self.with_invalid_volume_mounts_no_container_dir
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'driver' => 'none' }
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'r', 'driver' => 'none' }
+            ]
+          }
+        end
+
+        def self.with_invalid_volume_mounts_bad_container_dir
+          {
+            'volume_mounts' => [
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'r', 'container_dir' => false, 'driver' => 'none' }
             ]
           }
         end
@@ -401,7 +562,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_no_driver
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none' }
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo' }, 'mode' => 'r', 'container_dir' => 'none' }
             ]
           }
         end
@@ -409,7 +570,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_no_volume_id
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'device' => {}, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+              { 'device_type' => 'none', 'device' => {}, 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
             ]
           }
         end
@@ -417,7 +578,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_bad_volume_id
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'device' => { 'volume_id' => 4 }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 4 }, 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
             ]
           }
         end
@@ -425,7 +586,7 @@ module VCAP::Services
         def self.with_invalid_volume_mounts_bad_mount_config
           {
             'volume_mounts' => [
-              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo', 'mount_config' => 'foo' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+              { 'device_type' => 'none', 'device' => { 'volume_id' => 'foo', 'mount_config' => 'foo' }, 'mode' => 'r', 'container_dir' => 'none', 'driver' => 'none' }
             ]
           }
         end
@@ -452,8 +613,8 @@ module VCAP::Services
         test_case(:provision, 202, broker_non_empty_json,                                       result: client_result_with_state('in progress'))
         test_case(:provision, 202, with_dashboard_url.to_json,                                  result: client_result_with_state('in progress').merge(with_dashboard_url))
         test_case(:provision, 202, with_operation.to_json,                                      result: client_result_with_state('in progress').merge(with_operation))
-        test_case(:provision, 202, with_non_string_operation.to_json,                           error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
-        test_case(:provision, 202, with_long_operation.to_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
+        test_case(:provision, 202, with_non_string_operation.to_json,                           error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:provision, 202, with_long_operation.to_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_pass_through(:provision, 202, with_dashboard_url,                                  expected_state: 'in progress')
         test_case(:provision, 204, broker_partial_json,                                         error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_malformed_json,                                       error: Errors::ServiceBrokerBadResponse)
@@ -597,8 +758,8 @@ module VCAP::Services
         test_case(:deprovision, 202, broker_empty_json,                                         result: client_result_with_state('in progress'))
         test_case(:deprovision, 202, broker_non_empty_json,                                     result: client_result_with_state('in progress'))
         test_case(:deprovision, 202, with_operation.to_json,                                    result: client_result_with_state('in progress').merge(with_operation))
-        test_case(:deprovision, 202, with_non_string_operation.to_json,                         error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
-        test_case(:deprovision, 202, with_long_operation.to_json,                               error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
+        test_case(:deprovision, 202, with_non_string_operation.to_json,                         error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:deprovision, 202, with_long_operation.to_json,                               error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_pass_through(:deprovision, 202,                                                    expected_state: 'in progress')
         test_case(:deprovision, 204, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 204, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
@@ -650,8 +811,8 @@ module VCAP::Services
         test_case(:update, 202, broker_empty_json,                                              result: client_result_with_state('in progress'))
         test_case(:update, 202, broker_non_empty_json,                                          result: client_result_with_state('in progress'))
         test_case(:update, 202, with_operation.to_json,                                         result: client_result_with_state('in progress').merge(with_operation))
-        test_case(:update, 202, with_non_string_operation.to_json,                              error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
-        test_case(:update, 202, with_long_operation.to_json,                                    error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
+        test_case(:update, 202, with_non_string_operation.to_json,                              error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:update, 202, with_long_operation.to_json,                                    error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_pass_through(:update, 202,                                                         expected_state: 'in progress')
         test_case(:update, 204, broker_partial_json,                                            error: Errors::ServiceBrokerBadResponse)
         test_case(:update, 204, broker_malformed_json,                                          error: Errors::ServiceBrokerBadResponse)
@@ -665,19 +826,79 @@ module VCAP::Services
         test_case(:update, 422, { error: 'AsyncRequired' }.to_json,                             error: Errors::AsyncRequired)
         test_common_error_cases(:update)
 
-        test_case(:fetch_service_binding, 200, { foo: 'bar' }.to_json, result: { 'foo' => 'bar' })
-        test_case(:fetch_service_binding, 200, broker_malformed_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, binding_uri))
-        test_case(:fetch_service_binding, 200, broker_partial_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
-        test_case(:fetch_service_binding, 200, broker_empty_json, result: {})
-        test_case(:fetch_service_binding, 200, { parameters: true }.to_json, error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(binding_uri, 'The service broker response contained a parameters field that was not a JSON object.'))
-        test_case(:fetch_service_binding, 408, {}.to_json, error: Errors::ServiceBrokerApiTimeout, description: broker_timeout_error(binding_uri))
-        test_case(:fetch_service_binding, 504, {}.to_json, error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(binding_uri, 'Status Code: 504 message, Body: {}'))
+        test_case(:fetch_service_binding, 200, { foo: 'bar' }.to_json,                               result: { 'foo' => 'bar' })
+        test_case(:fetch_service_binding, 200, broker_malformed_json,                                error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, binding_uri))
+        test_case(:fetch_service_binding, 200, broker_partial_json,                                  error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
+        test_case(:fetch_service_binding, 200, broker_empty_json,                                    result: {})
+        test_case(:fetch_service_binding, 200, { parameters: true }.to_json,                         error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/parameters' of type boolean did not match the following type: object"))
+        test_case(:fetch_service_binding, 200, { credentials: 'bla' }.to_json,                       error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/credentials' of type string did not match the following type: object"))
+        test_case(:fetch_service_binding, 200, { syslog_drain_url: {} }.to_json,                     error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/syslog_drain_url' of type object did not match the following type: string"))
+        test_case(:fetch_service_binding, 200, { route_service_url: {} }.to_json,                    error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/route_service_url' of type object did not match the following type: string"))
+        test_case(:fetch_service_binding, 200, { volume_mounts: 'invalid' }.to_json,                 error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts' of type string did not match the following type: array"))
+        test_case(:fetch_service_binding, 200, { volume_mounts: ['foo'] }.to_json,                   error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0' of type string did not match the following type: object"))
+        test_case(:fetch_service_binding, 200, { volume_mounts: [] }.to_json,                        result: { 'volume_mounts' => [] })
+        test_case(:fetch_service_binding, 200, with_valid_volume_mounts.to_json,                     result: with_valid_volume_mounts)
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_device_type.to_json,       error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/device' of type string did not match the following type: object"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_no_volume_id.to_json,      error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/device' did not contain a required property of 'volume_id'"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_bad_volume_id.to_json,     error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/device/volume_id' of type integer did not match the following type: string"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_bad_mount_config.to_json,  error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/device/mount_config' of type string did not match one or more of the following types: object, null"))
+        test_case(:fetch_service_binding, 200, with_valid_volume_mounts_nil_mount_config.to_json,    result: with_valid_volume_mounts_nil_mount_config)
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_no_device.to_json,         error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0' did not contain a required property of 'device'"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_no_device_type.to_json,    error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0' did not contain a required property of 'device_type'"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_bad_device_type.to_json,   error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/device_type' of type integer did not match the following type: string"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_nil_driver.to_json,        error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/driver' of type null did not match the following type: string"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_no_driver.to_json,         error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0' did not contain a required property of 'driver'"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_no_mode.to_json,           error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0' did not contain a required property of 'mode'"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_bad_mode_type.to_json,     error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/mode' value 3 did not match one of the following values: r, rw"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_bad_mode_value.to_json,    error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/mode' value \"read\" did not match one of the following values: r, rw"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_no_container_dir.to_json,  error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0' did not contain a required property of 'container_dir'"))
+        test_case(:fetch_service_binding, 200, with_invalid_volume_mounts_bad_container_dir.to_json, error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, "\nThe property '#/volume_mounts/0/container_dir' of type boolean did not match the following type: string"))
+        test_case(:fetch_service_binding, 201, broker_partial_json,                             error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 201, broker_malformed_json,                           error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 201, broker_empty_json,                               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 201, {}.to_json,                                      error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 204, broker_partial_json,                             error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 204, broker_malformed_json,                           error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 204, broker_empty_json,                               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 204, {}.to_json,                                      error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 408, {}.to_json,                                      error: Errors::ServiceBrokerApiTimeout, description: broker_timeout_error(binding_uri))
+        test_case(:fetch_service_binding, 409, broker_partial_json,                             error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 409, broker_malformed_json,                           error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 409, broker_empty_json,                               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 410, broker_partial_json,                             error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 410, broker_malformed_json,                           error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 410, broker_empty_json,                               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 422, broker_partial_json,                             error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 422, broker_malformed_json,                           error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 422, broker_empty_json,                               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding, 504, {}.to_json,                                      error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(binding_uri, 'Status Code: 504 message, Body: {}'))
+        test_common_error_cases(:fetch_service_binding)
 
-        test_case(:fetch_service_instance, 200, { foo: 'bar' }.to_json, result: { 'foo' => 'bar' })
-        test_case(:fetch_service_instance, 200, broker_empty_json, result: {})
-        test_case(:fetch_service_instance, 200, broker_malformed_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, instance_uri))
-        test_case(:fetch_service_instance, 200, broker_partial_json, error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
-        test_case(:fetch_service_instance, 200, { parameters: true }.to_json, error: Errors::ServiceBrokerResponseMalformed, description: malformed_repsonse_error(instance_uri, 'The service broker response contained a parameters field that was not a JSON object.'))
+        test_case(:fetch_service_instance, 200, { foo: 'bar' }.to_json,                         result: { 'foo' => 'bar' })
+        test_case(:fetch_service_instance, 200, broker_empty_json,                              result: {})
+        test_case(:fetch_service_instance, 200, broker_malformed_json,                          error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, instance_uri))
+        test_case(:fetch_service_instance, 200, broker_partial_json,                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
+        test_case(:fetch_service_instance, 200, { parameters: true }.to_json,                   error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/parameters' of type boolean did not match the following type: object"))
+        test_case(:fetch_service_instance, 201, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 201, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 201, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 201, {}.to_json,                                     error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 204, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 204, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 204, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 204, {}.to_json,                                     error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 408, {}.to_json,                                     error: Errors::ServiceBrokerApiTimeout, description: broker_timeout_error(instance_uri))
+        test_case(:fetch_service_instance, 409, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 409, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 409, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 410, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 410, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 410, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 422, broker_partial_json,                            error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 422, broker_malformed_json,                          error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 422, broker_empty_json,                              error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_instance, 504, {}.to_json,                                     error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(instance_uri, 'Status Code: 504 message, Body: {}'))
+        test_common_error_cases(:fetch_service_instance)
         # rubocop:enable Metrics/LineLength
       end
     end

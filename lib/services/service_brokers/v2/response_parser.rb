@@ -185,13 +185,94 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_fetch_parameters(path, response)
+        def parse_fetch_parameters(path, response, schema)
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
-          validator = CommonErrorValidator.new(JsonObjectValidator.new(@logger,
-            ParametersValidator.new(SuccessValidator.new)))
+          validator =
+            case unvalidated_response.code
+            when 200
+              JsonSchemaValidator.new(@logger, schema, SuccessValidator.new)
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
+
+          validator = CommonErrorValidator.new(validator)
 
           validator.validate(unvalidated_response.to_hash)
+        end
+
+        def parse_fetch_instance_parameters(path, response)
+          parse_fetch_parameters(path, response, fetch_instance_parameters_response_schema)
+        end
+
+        def parse_fetch_binding_parameters(path, response)
+          parse_fetch_parameters(path, response, fetch_binding_parameters_response_schema)
+        end
+
+        def fetch_instance_parameters_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'parameters' => {
+                'type' => 'object',
+              },
+            },
+          }
+        end
+
+        def fetch_binding_parameters_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'parameters' => {
+                'type' => 'object',
+              },
+              'credentials' => {
+                'type' => 'object',
+              },
+              'syslog_drain_url' => {
+                'type' => 'string',
+              },
+              'route_service_url' => {
+                'type' => 'string',
+              },
+              'volume_mounts' => {
+                'type' => 'array',
+                'items' => {
+                  'type' => 'object',
+                  'required' => ['device', 'device_type', 'driver', 'mode', 'container_dir'],
+                  'properties' => {
+                    'device' => {
+                      'type' => 'object',
+                      'required' => ['volume_id'],
+                      'properties' => {
+                        'volume_id' => {
+                          'type' => 'string',
+                        },
+                        'mount_config' => {
+                          'type' => ['object', 'null'],
+                        },
+                      },
+                    },
+                    'device_type' => {
+                      'type' => 'string',
+                    },
+                    'driver' => {
+                      'type' => 'string',
+                    },
+                    'mode' => {
+                      'enum' => ['r', 'rw'],
+                    },
+                    'container_dir' => {
+                      'type' => 'string',
+                    },
+                  },
+                },
+              },
+            }
+          }
         end
 
         class UnvalidatedResponse
@@ -514,6 +595,44 @@ module VCAP::Services
             end
 
             @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+        end
+
+        class JsonSchemaValidator
+          def initialize(logger, schema, validator)
+            @logger = logger
+            @schema = schema
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            begin
+              parsed_response = MultiJson.load(response.body)
+            rescue MultiJson::ParseError
+              @logger.warn "MultiJson parse error `#{response.try(:body).inspect}'"
+            end
+
+            unless parsed_response.is_a?(Hash)
+              raise Errors::ServiceBrokerResponseMalformed.new(
+                uri,
+                method,
+                response,
+                "expected valid JSON object in body, broker returned '#{response.body}'")
+            end
+
+            schema_validation_errors = JSON::Validator.fully_validate(@schema, response.body)
+
+            if schema_validation_errors.any?
+              err_msgs = schema_validation_errors.map { |e| remove_trailing_validation_schema_id(e) }
+
+              raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response, "\n" + err_msgs.join("\n"))
+            end
+
+            @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+
+          def remove_trailing_validation_schema_id(err_msg)
+            err_msg.sub(/ in schema.*$/, '')
           end
         end
       end
