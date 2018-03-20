@@ -185,11 +185,11 @@ module VCAP::Services
           validator.validate(unvalidated_response.to_hash)
         end
 
-        def parse_fetch_service_binding(path, response)
+        def parse_fetch_parameters(path, response)
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
           validator = CommonErrorValidator.new(JsonObjectValidator.new(@logger,
-            BindParametersValidator.new(SuccessValidator.new)))
+            ParametersValidator.new(SuccessValidator.new)))
 
           validator.validate(unvalidated_response.to_hash)
         end
@@ -499,7 +499,7 @@ module VCAP::Services
           end
         end
 
-        class BindParametersValidator
+        class ParametersValidator
           def initialize(validator)
             @validator = validator
           end

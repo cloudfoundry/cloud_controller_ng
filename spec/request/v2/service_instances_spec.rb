@@ -150,7 +150,7 @@ RSpec.describe 'ServiceInstances' do
           set_current_user_as_admin
         end
 
-        it 'lists all service_instances' do
+        it 'returns data about the given service instance' do
           get "v2/service_instances/#{service_instance.guid}", nil, admin_headers
 
           expect(last_response.status).to eq(200)
@@ -273,6 +273,45 @@ RSpec.describe 'ServiceInstances' do
             }
           )
         end
+      end
+    end
+  end
+
+  describe 'GET /v2/service_instances/:service_instance_guid/parameters' do
+    let(:service) { VCAP::CloudController::Service.make(instances_retrievable: true) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+    context 'with a managed service instance' do
+      before do
+        set_current_user_as_admin
+
+        allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+          fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+          fb.parameters = { 'parameters' => {
+              'top_level_param' => {
+                'nested_param' => true,
+              },
+              'another_param' => 'some-value',
+            } }
+          fb
+        end
+      end
+
+      it 'returns all parameters of the service instance' do
+        get "v2/service_instances/#{service_instance.guid}/parameters", nil, admin_headers
+
+        expect(last_response.status).to eq(200)
+
+        parsed_response = last_response.body
+        expect(MultiJson.load(parsed_response)).to be_a_response_like(
+          {
+            'top_level_param' => {
+              'nested_param' => true,
+            },
+            'another_param' => 'some-value',
+          }
+        )
       end
     end
   end

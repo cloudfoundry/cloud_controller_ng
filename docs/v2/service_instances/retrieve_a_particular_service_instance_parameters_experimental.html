@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Service Bindings API</title>
+  <title>Service Instances API</title>
   <meta charset="utf-8">
   <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
   <script>
@@ -63,15 +63,15 @@
 </head>
 <body>
 <div class="container">
-  <h1>Service Bindings API</h1>
+  <h1>Service Instances API</h1>
 
   <div class="article">
-    <h2>Retrieve a Particular Service Binding's Parameters (Experimental)</h2>
-    <h3>GET /v2/service_bindings/:guid/parameters</h3>
+    <h2>Retrieve a Particular Service Instance's Parameters (Experimental)</h2>
+    <h3>GET /v2/service_instances/:guid/parameters</h3>
 
       <h3>Request</h3>
       <h4>Route</h4>
-      <pre class="request route highlight">GET /v2/service_bindings/ddd7fb26-c42d-4acf-a035-60fdd094a167/parameters</pre>
+      <pre class="request route highlight">GET /v2/service_instances/ddd7fb26-c42d-4acf-a035-60fdd094a167/parameters</pre>
 
 
 
@@ -83,7 +83,7 @@ Host: example.org
 Cookie: </pre>
 
         <h4>cURL</h4>
-        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_bindings/ddd7fb26-c42d-4acf-a035-60fdd094a167/parameters&quot; -X GET \
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_instances/ddd7fb26-c42d-4acf-a035-60fdd094a167/parameters&quot; -X GET \
 	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMCIsImVtYWlsIjoiZW1haWwtMjkyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.0MsVZ0mRjX1JYkb_CfI1sjMRuP0vy5IgtdK90ktWtGg&quot; \
 	-H &quot;Host: example.org&quot; \
 	-H &quot;Cookie: &quot;</pre>
@@ -102,7 +102,6 @@ Cookie: </pre>
 X-VCAP-Request-ID: 5f0b6b5a-990a-4798-bb6a-f7bdfd2ff0d2
 Content-Length: 0
 X-Content-Type-Options: nosniff</pre>
-
   </div>
 </div>
 </body>

@@ -217,7 +217,6 @@ module VCAP::CloudController
     end
 
     get '/v2/service_instances/:guid/shared_from', :shared_from_information
-
     def shared_from_information(guid)
       service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
 
@@ -246,6 +245,20 @@ module VCAP::CloudController
         @opts,
         {},
       )
+    end
+
+    get '/v2/service_instances/:guid/parameters', :parameters
+    def parameters(guid)
+      service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
+
+      if service_instance.user_provided_instance? || !service_instance.service.instances_retrievable
+        raise CloudController::Errors::ApiError.new_from_details('ServiceFetchInstanceParametersNotSupported')
+      end
+
+      client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
+      resp = client.fetch_service_instance(service_instance)
+
+      [HTTP::OK, resp.fetch('parameters', {}).to_json]
     end
 
     def self.url_for_guid(guid, object=nil)
