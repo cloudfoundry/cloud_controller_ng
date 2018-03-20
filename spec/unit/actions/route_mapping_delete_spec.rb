@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:space) { Space.make }
     let(:app) { AppModel.make(space: space) }
     let(:route) { Route.make(space: space) }
-    let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'other') }
+    let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'other', guid: 'go wild') }
     let(:route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
 
     before do
@@ -56,7 +56,8 @@ module VCAP::CloudController
             app,
             route,
             user_audit_info,
-            route_mapping: route_mapping
+            route_mapping.guid,
+            route_mapping.process_type
           )
         end
       end

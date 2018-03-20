@@ -91,13 +91,9 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
       end
 
-      def record_unmap_route(app, route, user_audit_info, route_mapping: nil)
+      def record_unmap_route(app, route, user_audit_info, route_mapping_guid, process_type)
         actor_hash = actor_or_system_hash(user_audit_info)
-        metadata   = { route_guid: route.guid }
-        if route_mapping
-          metadata[:route_mapping_guid] = route_mapping.guid
-          metadata[:process_type]       = route_mapping.process_type
-        end
+        metadata   = { route_guid: route.guid, route_mapping_guid: route_mapping_guid, process_type: process_type }
         create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
       end
 

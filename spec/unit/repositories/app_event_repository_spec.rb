@@ -239,9 +239,11 @@ module VCAP::CloudController
       describe '#record_unmap_route' do
         let(:process) { ProcessModelFactory.make }
         let(:route) { Route.make }
+        let(:route_mapping_guid) { 'twice_baked' }
+        let(:process_type) { 'potato' }
 
         it 'creates a new app.unmap_route audit event' do
-          event = app_event_repository.record_unmap_route(process, route, user_audit_info)
+          event = app_event_repository.record_unmap_route(process, route, user_audit_info, route_mapping_guid, process_type)
           expect(event.type).to eq('audit.app.unmap-route')
           expect(event.actor).to eq(user_guid)
           expect(event.actor_type).to eq('user')
@@ -250,13 +252,15 @@ module VCAP::CloudController
           expect(event.actor_username).to eq(user_name)
           expect(event.actee).to eq(process.guid)
           expect(event.metadata[:route_guid]).to eq(route.guid)
+          expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
+          expect(event.metadata[:process_type]).to eq('potato')
         end
 
         context 'when there is no actor' do
           let(:user_guid) { nil }
 
           it 'creates a new app.unmap_route audit event with system as the actor' do
-            event = app_event_repository.record_unmap_route(process, route, user_audit_info)
+            event = app_event_repository.record_unmap_route(process, route, user_audit_info, route_mapping_guid, process_type)
             expect(event.type).to eq('audit.app.unmap-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
@@ -264,17 +268,7 @@ module VCAP::CloudController
             expect(event.actee_type).to eq('app')
             expect(event.actee).to eq(process.guid)
             expect(event.metadata[:route_guid]).to eq(route.guid)
-          end
-        end
-
-        context 'when given route mapping information' do
-          let(:app) { AppModel.make(space: route.space) }
-          let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
-
-          it 'creates a new app.map_route audit event with appropriate metadata' do
-            event = app_event_repository.record_unmap_route(app, route, user_audit_info, route_mapping: route_mapping)
-            expect(event.metadata[:route_guid]).to eq(route.guid)
-            expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+            expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
             expect(event.metadata[:process_type]).to eq('potato')
           end
         end

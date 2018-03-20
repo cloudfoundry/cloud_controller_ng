@@ -17,7 +17,8 @@ module VCAP::CloudController
             route_mapping.app,
             route_mapping.route,
             @user_audit_info,
-            route_mapping: route_mapping
+            route_mapping.guid,
+            route_mapping.process_type
           )
 
           route_mapping.destroy
