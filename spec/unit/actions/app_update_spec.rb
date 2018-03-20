@@ -89,7 +89,8 @@ module VCAP::CloudController
 
           it 'raises an AppUpdate::InvalidApp error' do
             expect { app_update.update(app_model, message,
-              lifecycle) }.to raise_error(AppUpdate::InvalidApp, 'Stack must be an existing stack')
+              lifecycle)
+            }.to raise_error(AppUpdate::InvalidApp, 'Stack must be an existing stack')
           end
         end
       end
