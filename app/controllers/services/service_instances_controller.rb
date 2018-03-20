@@ -123,9 +123,13 @@ module VCAP::CloudController
       validate_access(:read_for_update, service_instance)
       validate_access(:update, projected_service_instance(service_instance))
 
-      validate_name_update(service_instance)
-      validate_space_update(related_objects[:space])
-      validate_plan_update(related_objects[:plan], related_objects[:service], service_instance)
+      ServiceUpdateValidator.validate!(
+        service_instance,
+        update_attrs: @request_attrs,
+        space: related_objects[:space],
+        service_plan: related_objects[:plan],
+        service: related_objects[:service]
+      )
 
       update = ServiceInstanceUpdate.new(accepts_incomplete: accepts_incomplete, services_event_repository: @services_event_repository)
       update.update_service_instance(service_instance, request_attrs)
@@ -446,30 +450,6 @@ module VCAP::CloudController
       request_attrs
     end
 
-    def validate_plan_update(current_plan, service, service_instance)
-      requested_plan_guid = request_attrs['service_plan_guid']
-      if plan_update_requested?(requested_plan_guid, current_plan)
-        plan_not_updateable! if service_disallows_plan_update?(service)
-
-        requested_plan = ServicePlan.find(guid: requested_plan_guid)
-        invalid_relation!('Plan') if invalid_plan?(requested_plan, service)
-
-        unable_to_update_to_nonbindable_plan! if !requested_plan.bindable? && service_instance.service_bindings.any?
-      end
-    end
-
-    def validate_space_update(space)
-      space_change_not_allowed! if space_change_requested?(request_attrs['space_guid'], space)
-    end
-
-    def validate_name_update(service_instance)
-      return unless request_attrs['name'] && service_instance.shared?
-
-      if request_attrs['name'] != service_instance.name
-        raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceCannotBeRenamed')
-      end
-    end
-
     def validate_shared_space_updateable(service_instance)
       if @access_context.can?(:read, service_instance) && @access_context.cannot?(:read, service_instance.space)
         raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceNotUpdatableInTargetSpace')
@@ -502,17 +482,6 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceInvalid', 'not a valid service plan')
     end
 
-    def plan_not_updateable!
-      raise CloudController::Errors::ApiError.new_from_details('ServicePlanNotUpdateable')
-    end
-
-    def unable_to_update_to_nonbindable_plan!
-      raise CloudController::Errors::ApiError.new_from_details(
-        'ServicePlanInvalid',
-        'cannot switch to non-bindable plan when service bindings exist'
-      )
-    end
-
     def invalid_relation!(message)
       raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', message)
     end
@@ -530,24 +499,12 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeletionSharesExists', name)
     end
 
-    def space_change_not_allowed!
-      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
-    end
-
     def not_found!(guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', guid)
     end
 
     def plan_visible_to_org?(organization, service_plan)
       ServicePlan.organization_visible(organization).filter(guid: service_plan.guid).count > 0
-    end
-
-    def invalid_plan?(requested_plan, service)
-      plan_not_found?(requested_plan) || plan_in_different_service?(requested_plan, service)
-    end
-
-    def plan_update_requested?(requested_plan_guid, old_plan)
-      requested_plan_guid && requested_plan_guid != old_plan.guid
     end
 
     def has_routes?(service_instance)
@@ -564,22 +521,6 @@ module VCAP::CloudController
 
     def has_shares?(service_instance)
       !service_instance.shared_spaces.empty?
-    end
-
-    def space_change_requested?(requested_space_guid, current_space)
-      requested_space_guid && requested_space_guid != current_space.guid
-    end
-
-    def plan_not_found?(service_plan)
-      !service_plan
-    end
-
-    def plan_in_different_service?(service_plan, service)
-      service_plan.service.guid != service.guid
-    end
-
-    def service_disallows_plan_update?(service)
-      !service.plan_updateable
     end
 
     def status_from_operation_state(service_instance)

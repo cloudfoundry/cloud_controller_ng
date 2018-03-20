@@ -2457,6 +2457,19 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(400)
         end
       end
+
+      context 'when the service plan is paid and the space quota disallows paid services' do
+        before do
+          allow(ServiceUpdateValidator).to receive(:validate!).and_raise CloudController::Errors::ApiError.new_from_details(
+            'ServiceInstanceServicePlanNotAllowed')
+        end
+
+        it 'returns an error' do
+          put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", '{}'
+          expect(last_response.status).to eq(400)
+          expect(last_response.body).to match /paid service plans are not allowed/
+        end
+      end
     end
 
     describe 'DELETE /v2/service_instances/:service_instance_guid' do
