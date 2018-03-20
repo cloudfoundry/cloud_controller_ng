@@ -18,7 +18,7 @@ module VCAP::CloudController
 
         app.save
 
-        raise InvalidApp.new(lifecycle.errors.full_messages) unless lifecycle.valid?
+        raise InvalidApp.new(lifecycle.errors.full_messages.join(', ')) unless lifecycle.valid?
         lifecycle.update_lifecycle_data_model(app)
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
