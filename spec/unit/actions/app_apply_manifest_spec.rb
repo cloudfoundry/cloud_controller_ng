@@ -150,6 +150,21 @@ module VCAP::CloudController
               with(app, app_update_message, instance_of(AppBuildpackLifecycle))
           end
         end
+
+        context 'when the request is invalid' do
+          let(:message) { AppManifestMessage.new({ name: 'stack-test', stack: 'no-such-stack' }) }
+
+          before do
+            allow(app_update).
+              to receive(:update).and_raise(AppUpdate::InvalidApp.new('invalid app'))
+          end
+
+          it 'bubbles up the error' do
+            expect {
+              app_apply_manifest.apply(app.guid, message)
+            }.to raise_error(AppUpdate::InvalidApp, 'invalid app')
+          end
+        end
       end
 
       describe 'converting ManifestProcessScaleMessages to ProcessScaleMessages' do
