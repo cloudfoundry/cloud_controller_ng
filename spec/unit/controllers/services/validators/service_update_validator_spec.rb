@@ -56,6 +56,12 @@ module VCAP::CloudController
               }.to raise_error(CloudController::Errors::ApiError, /cannot switch to non-bindable/)
             end
           end
+
+          context 'and service bindings do not exist' do
+            it 'returns true' do
+              expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
+            end
+          end
         end
 
         context 'when the service does not allow plan updates' do
@@ -65,7 +71,7 @@ module VCAP::CloudController
 
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
-          it 'raises a validation error if the plan is changes' do
+          it 'raises a validation error if the plan changes' do
             expect {
               ServiceUpdateValidator.validate!(service_instance, args)
             }.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
@@ -194,6 +200,15 @@ module VCAP::CloudController
                 expect(service_instance.service_plan).to eq(old_service_plan)
                 expect(service_instance.reload.service_plan).to eq(old_service_plan)
               end
+            end
+          end
+
+          context 'when paid plans are enabled for the quota' do
+            let(:new_service_plan) { ServicePlan.make(:v2, service: service, free: false) }
+            let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
+
+            it 'succeeds for paid plans' do
+              expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
             end
           end
         end
