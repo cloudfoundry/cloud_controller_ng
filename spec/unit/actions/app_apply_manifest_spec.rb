@@ -131,6 +131,27 @@ module VCAP::CloudController
         end
       end
 
+      describe 'updating stack' do
+        let(:message) { AppManifestMessage.new({ name: 'stack-test', stack: 'cflinuxfs2' }) }
+        let(:app_update_message) { message.app_update_message }
+        let(:app) { AppModel.make }
+
+        context 'when the request is valid' do
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls AppUpdate with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(AppUpdate).to have_received(:new).with(user_audit_info)
+            expect(app_update).to have_received(:update).
+              with(app, app_update_message, instance_of(AppBuildpackLifecycle))
+          end
+        end
+      end
+
       describe 'converting ManifestProcessScaleMessages to ProcessScaleMessages' do
         let(:message) { AppManifestMessage.new(params) }
         let(:process_scale_message) { message.process_scale_message }
