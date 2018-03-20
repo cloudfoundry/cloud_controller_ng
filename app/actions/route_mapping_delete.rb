@@ -13,6 +13,10 @@ module VCAP::CloudController
         route_handler = ProcessRouteHandler.new(route_mapping.process)
 
         RouteMappingModel.db.transaction do
+          next if RouteMappingModel.find(guid: route_mapping.guid).nil?
+          route_mapping.destroy
+
+          route_handler.update_route_information(perform_validation: false)
           event_repository.record_unmap_route(
             route_mapping.app,
             route_mapping.route,
@@ -20,9 +24,6 @@ module VCAP::CloudController
             route_mapping.guid,
             route_mapping.process_type
           )
-
-          route_mapping.destroy
-          route_handler.update_route_information(perform_validation: false)
         end
       end
     end
