@@ -38,6 +38,14 @@ module VCAP::CloudController
       validation_policies.map(&:validate)
     end
 
+    def valid_with_plan?(new_plan)
+      old_plan = service_plan
+      self.service_plan = new_plan
+      is_valid = valid?
+      self.service_plan = old_plan
+      is_valid
+    end
+
     def last_operation
       service_instance_operation
     end

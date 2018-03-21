@@ -35,12 +35,12 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceSpaceChangeNotAllowed')
       end
 
-      def check_plan_still_valid(service_instance, service_plan, requested_plan_guid)
-        requested_plan = requested_plan_guid ? ServicePlan.find(guid: requested_plan_guid) : service_plan
-        service_instance.service_plan = requested_plan
-        is_valid = service_instance.valid?
-        service_instance.service_plan = service_plan
-        unable_to_update_to_nonfree_plan!(service_instance) if !is_valid
+      def check_plan_still_valid(service_instance, current_plan, requested_plan_guid)
+        requested_plan = requested_plan_guid ? ServicePlan.find(guid: requested_plan_guid) : current_plan
+
+        if !service_instance.valid_with_plan?(requested_plan)
+          unable_to_update_to_nonfree_plan!(service_instance)
+        end
       end
 
       def validate_changing_plan(current_plan, service, service_instance, requested_plan_guid)

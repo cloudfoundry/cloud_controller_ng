@@ -87,6 +87,50 @@ module VCAP::CloudController
       end
     end
 
+    describe '#valid_with_plan?' do
+      let(:original_plan) { ServicePlan.make(free: true) }
+
+      let(:free_quota) do
+        QuotaDefinition.make(
+          total_services: 1,
+          non_basic_services_allowed: false
+        )
+      end
+      let(:org) { Organization.make(quota_definition: free_quota) }
+      let(:space) { Space.make(organization: org) }
+      let(:service_instance) { ManagedServiceInstance.make(
+        space: space,
+        service_plan: original_plan
+      )
+      }
+
+      context 'for valid requested plans' do
+        let(:new_plan) { ServicePlan.make(free: true) }
+
+        it 'does not change the plan' do
+          service_instance.valid_with_plan?(new_plan)
+          expect(service_instance.service_plan).to eq(original_plan)
+        end
+
+        it 'returns true' do
+          expect(service_instance.valid_with_plan?(new_plan)).to eq(true)
+        end
+      end
+
+      context 'for invalid requested plans' do
+        let(:new_plan) { ServicePlan.make(free: false) }
+
+        it 'does not change the plan' do
+          service_instance.valid_with_plan?(new_plan)
+          expect(service_instance.service_plan).to eq(original_plan)
+        end
+
+        it 'returns false' do
+          expect(service_instance.valid_with_plan?(new_plan)).to eq(false)
+        end
+      end
+    end
+
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation, :tags }
       it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
