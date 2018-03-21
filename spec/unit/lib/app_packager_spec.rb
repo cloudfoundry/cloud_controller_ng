@@ -9,7 +9,8 @@ RSpec.describe AppPackager do
     end
   end
 
-  subject(:app_packager) { AppPackager.new(input_zip) }
+  let(:logger) { instance_double(Steno::Logger, error: nil) }
+  subject(:app_packager) { AppPackager.new(input_zip, logger: logger) }
 
   describe '#size' do
     let(:input_zip) { File.join(Paths::FIXTURES, 'good.zip') }
@@ -29,6 +30,39 @@ RSpec.describe AppPackager do
       expect(Dir["#{@tmpdir}/**/*"].size).to eq 4
       expect(Dir["#{@tmpdir}/*"].size).to eq 3
       expect(Dir["#{@tmpdir}/subdir/*"].size).to eq 1
+    end
+
+    context 'when the zip contains files with weird permissions' do
+      context 'when there are unreadable dirs' do
+        let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'unreadable_dir.zip') }
+
+        it 'makes all files/dirs readable to cc' do
+          app_packager.unzip(@tmpdir)
+
+          expect(File.readable?("#{@tmpdir}/unreadable")).to be true
+        end
+      end
+
+      context 'when there are unwritable dirs' do
+        let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'undeletable_dir.zip') }
+
+        it 'makes all files/dirs writable to cc' do
+          app_packager.unzip(@tmpdir)
+
+          expect(File.writable?("#{@tmpdir}/undeletable")).to be true
+        end
+      end
+
+      context 'when there are untraversable dirs' do
+        let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'untraversable_dir.zip') }
+
+        it 'makes all dirs traversable to cc' do
+          app_packager.unzip(@tmpdir)
+
+          expect(File.executable?("#{@tmpdir}/untraversable")).to be true
+          expect(File.executable?("#{@tmpdir}/untraversable/file.txt")).to be false
+        end
+      end
     end
 
     context 'when the zip destination does not exist' do
@@ -72,8 +106,26 @@ RSpec.describe AppPackager do
     end
 
     context 'when there is an error unzipping' do
-      it 'raises an exception' do
+      before do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
+      end
+
+      it 'raises an exception' do
+        expect {
+          app_packager.unzip(@tmpdir)
+        }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
+      end
+    end
+
+    context 'when there is an error adjusting permissions' do
+      before do
+        allow(Open3).to receive(:capture3).with(/unzip/).and_return(['output', 'error', double(success?: true)])
+        allow(FileUtils).to receive(:chmod_R).and_raise(StandardError.new('bad things happened'))
+      end
+
+      it 'raises an exception' do
+        expect(logger).to receive(:error).with "Fixing zip file permissions error\n bad things happened"
+
         expect {
           app_packager.unzip(@tmpdir)
         }.to raise_error(CloudController::Errors::ApiError, /Invalid zip archive/)
@@ -207,7 +259,7 @@ RSpec.describe AppPackager do
         allow(Open3).to receive(:capture3).and_return(['output', 'error', double(success?: false)])
         expect {
           app_packager.fix_subdir_permissions
-        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Could not remove the directories/)
+        }.to raise_error(CloudController::Errors::ApiError, /The app package is invalid: Error removing zip directories./)
       end
     end
 

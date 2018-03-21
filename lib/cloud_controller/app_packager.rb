@@ -9,8 +9,9 @@ class AppPackager
 
   attr_reader :path
 
-  def initialize(zip_path)
+  def initialize(zip_path, logger: nil)
     @path = zip_path
+    @logger = logger
   end
 
   def unzip(destination_dir)
@@ -24,6 +25,8 @@ class AppPackager
       logger.error("Unzipping had errors\n STDOUT: \"#{output}\"\n STDERR: \"#{error}\"")
       invalid_zip!
     end
+
+    fix_unzipped_permissions(destination_dir)
   end
 
   def append_dir_contents(additional_contents_dir)
@@ -79,9 +82,16 @@ class AppPackager
     )
 
     unless status.success?
-      raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid',
-        "Could not remove the directories\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
+      logger.error("Could not remove the directories\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
+      raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'Error removing zip directories.')
     end
+  end
+
+  def fix_unzipped_permissions(destination_dir)
+    FileUtils.chmod_R('u+rwX', destination_dir)
+  rescue => e
+    logger.error("Fixing zip file permissions error\n #{e}")
+    invalid_zip!
   end
 
   def empty_directory?(dir)

@@ -170,6 +170,45 @@ module CloudController::Packager
           expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be true
         end
 
+        context 'when there is an unreadable directory in the zip' do
+          let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'unreadable_dir.zip') }
+          let(:input_zip_file_path) { File.join(local_tmp_dir, 'unreadable_dir.zip') }
+
+          it 'is able to clean up all files regardless of their permissions in the zip' do
+            expect {
+              packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
+            }.to_not change {
+              Dir.entries(local_tmp_dir)
+            }
+          end
+        end
+
+        context 'when there is an undeletable directory in the zip' do
+          let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'undeletable_dir.zip') }
+          let(:input_zip_file_path) { File.join(local_tmp_dir, 'undeletable_dir.zip') }
+
+          it 'is able to clean up all files regardless of their permissions in the zip' do
+            expect {
+              packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
+            }.to_not change {
+              Dir.entries(local_tmp_dir)
+            }
+          end
+        end
+
+        context 'when there is an untraversable directory in the zip' do
+          let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'untraversable_dir.zip') }
+          let(:input_zip_file_path) { File.join(local_tmp_dir, 'untraversable_dir.zip') }
+
+          it 'is able to clean up all files regardless of their permissions in the zip' do
+            expect {
+              packer.send_package_to_blobstore(blobstore_key, input_zip_file_path, [])
+            }.to_not change {
+              Dir.entries(local_tmp_dir)
+            }
+          end
+        end
+
         context 'when some of the files are symlinks' do
           let(:input_zip) { File.join(Paths::FIXTURES, 'express-app.zip') }
           let(:uploaded_files_path) { File.join(local_tmp_dir, 'express-app.zip') }
