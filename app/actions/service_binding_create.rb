@@ -44,9 +44,8 @@ module VCAP::CloudController
           binding.last_operation.update(last_operation_result[:last_operation])
         else
           binding.save
+          Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, message.audit_hash)
         end
-
-        Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, message.audit_hash)
       rescue => e
         logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
         mitigate_orphan(binding)

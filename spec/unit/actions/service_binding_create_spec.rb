@@ -170,6 +170,11 @@ module VCAP::CloudController
             expect(service_binding.last_operation.description).to eq('10% complete')
           end
 
+          it 'does not audit a create binding event' do
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+            expect(Event.count).to eq(0)
+          end
+
           context 'when the create ServiceBindingOperation fails' do
             before do
               allow(ServiceBindingOperation).to receive(:create).and_raise('failed')
