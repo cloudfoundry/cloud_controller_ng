@@ -408,11 +408,21 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a null command is specified' do
+        context 'when a string command of value "null" is specified' do
           let(:command) { 'null' }
 
           it 'unsets the command field in the message' do
             expect(message).to be_valid
+            expect(message.app_update_message.command).to eq(nil)
+          end
+        end
+
+        context 'when a nil command (value nil) is specified' do
+          let(:command) { nil }
+
+          it 'unsets the command field in the message' do
+            expect(message).to be_valid
+            expect(message.app_update_message.requested?(:command)).to be true
             expect(message.app_update_message.command).to eq(nil)
           end
         end

@@ -60,7 +60,7 @@ module VCAP::CloudController
         lifecycle: buildpack_lifecycle_data,
         env: env,
       }.compact
-      if command
+      if requested?(:command)
         actual_command = (command == 'default' || command == 'null') ? nil : command
         mapping[:command] = actual_command
       end
