@@ -36,6 +36,7 @@ module CloudController::Presenters::V2
               'service_url'       => "/v2/services/#{service_plan.service.guid}",
               'shared_from_url'   => "/v2/service_instances/#{service_instance.guid}/shared_from",
               'shared_to_url'     => "/v2/service_instances/#{service_instance.guid}/shared_to",
+              'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
             }
           )
         end
