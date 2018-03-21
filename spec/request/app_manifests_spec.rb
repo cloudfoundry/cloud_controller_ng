@@ -24,6 +24,11 @@ RSpec.describe 'App Manifests' do
             'buildpack' => buildpack.name,
             'stack' => 'cflinuxfs2',
             'command' => 'new-command',
+            'env' => {
+              'k1' => 'mangos',
+              'k2' => 'pears',
+              'k3' => 'watermelon'
+            }
           }
         ]
       }.to_yaml
@@ -50,6 +55,11 @@ RSpec.describe 'App Manifests' do
       lifecycle_data = app_model.lifecycle_data
       expect(lifecycle_data.buildpacks).to include(buildpack.name)
       expect(lifecycle_data.stack).to eq('cflinuxfs2')
+      expect(app_model.environment_variables).to match({
+        'k1' => 'mangos',
+        'k2' => 'pears',
+        'k3' => 'watermelon'
+      })
     end
   end
 end
