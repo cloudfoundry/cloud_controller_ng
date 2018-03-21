@@ -38,22 +38,19 @@ module VCAP::CloudController
       binding.set(binding_result[:binding])
 
       begin
-        binding.save
+        if binding_result[:async]
+          binding.save_with_new_operation({ type: 'create', state: 'in progress', broker_provided_operation: binding_result[:operation] })
+          last_operation_result = client.fetch_service_binding_last_operation(binding)
+          binding.last_operation.update(last_operation_result[:last_operation])
+        else
+          binding.save
+        end
 
         Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, message.audit_hash)
       rescue => e
         logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
         mitigate_orphan(binding)
         raise e
-      end
-
-      if binding_result[:async]
-        ServiceBindingOperation.create(service_binding_id: binding.id, type: 'create', state: 'in progress',
-                                       broker_provided_operation: binding_result[:operation])
-
-        last_operation_result = client.fetch_service_binding_last_operation(binding)
-
-        binding.service_binding_operation.update_attributes(last_operation_result[:last_operation])
       end
 
       binding

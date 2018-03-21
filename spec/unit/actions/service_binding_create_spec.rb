@@ -3,6 +3,8 @@ require 'actions/service_binding_create'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingCreate do
+    RSpec::Matchers.define_negated_matcher :not_change, :change
+
     describe '#create' do
       subject(:service_binding_create) { ServiceBindingCreate.new(user_audit_info) }
       let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
@@ -147,7 +149,8 @@ module VCAP::CloudController
 
           it 'returns the binding operation' do
             service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-            expect(ServiceBinding.count).to eq 1
+            expect(ServiceBinding.count).to eq(1)
+            expect(ServiceBindingOperation.count).to eq(1)
             expect(service_binding.last_operation.state).to eq('in progress')
           end
 
@@ -165,6 +168,28 @@ module VCAP::CloudController
             service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             expect(service_binding.last_operation.state).to eq('in progress')
             expect(service_binding.last_operation.description).to eq('10% complete')
+          end
+
+          context 'when the create ServiceBindingOperation fails' do
+            before do
+              allow(ServiceBindingOperation).to receive(:create).and_raise('failed')
+            end
+
+            it 'should NOT insert binding when the operation fails to create' do
+              expect {
+                service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+              }.to raise_error('failed').and not_change(ServiceBinding, :count)
+            end
+
+            it 'should trigger orphan mitigation' do
+              expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+
+              expect {
+                service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+              }.to raise_error('failed')
+
+              expect(client).to have_received(:bind)
+            end
           end
         end
       end
