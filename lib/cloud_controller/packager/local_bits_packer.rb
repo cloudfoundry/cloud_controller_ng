@@ -6,9 +6,9 @@ module CloudController
   module Packager
     class LocalBitsPacker
       def send_package_to_blobstore(blobstore_key, uploaded_package_zip, cached_files_fingerprints)
-        matched_resources = CloudController::Blobstore::FingerprintsCollection.new(cached_files_fingerprints)
-
         Dir.mktmpdir('local_bits_packer', tmp_dir) do |root_path|
+          matched_resources = CloudController::Blobstore::FingerprintsCollection.new(cached_files_fingerprints, root_path)
+
           app_package_zip = File.join(root_path, 'copied_app_package.zip')
           app_packager = AppPackager.new(app_package_zip)
 

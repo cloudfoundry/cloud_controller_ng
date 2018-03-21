@@ -12,12 +12,13 @@ module CloudController
         ]
       end
 
-      let(:collection) { FingerprintsCollection.new(unpresented_fingerprints) }
+      let(:root_path) { '/some/where' }
+      let(:collection) { FingerprintsCollection.new(unpresented_fingerprints, root_path) }
 
       describe '.new' do
         it 'validates that the input is a array of hashes' do
           expect {
-            FingerprintsCollection.new('')
+            FingerprintsCollection.new('', '')
           }.to raise_error CloudController::Errors::ApiError, /invalid/
         end
       end
@@ -40,11 +41,23 @@ module CloudController
             expect(fingerprint['fn']).to eq('path/to/file')
           end
 
-          context 'when the file name is unsafe' do
-            let(:unpresented_fingerprints) { [
-              { 'fn' => '../../file', 'size' => 'my_filesize', 'sha1' => 'mysha' }
-            ]
-            }
+          context 'when the file path resolves inside the root path' do
+            let(:unpresented_fingerprints) do
+              [
+                { 'fn' => "../../..#{root_path}/legit/path", 'size' => 'my_filesize', 'sha1' => 'mysha' }
+              ]
+            end
+            it 'presents file path' do
+              expect(fingerprint['fn']).to eq("../../..#{root_path}/legit/path")
+            end
+          end
+
+          context 'when the file path resolves outside the root path' do
+            let(:unpresented_fingerprints) do
+              [
+                { 'fn' => '../incorrect/path', 'size' => 'my_filesize', 'sha1' => 'mysha' }
+              ]
+            end
             it 'raises an error' do
               expect {
                 fingerprint

@@ -1,12 +1,13 @@
 module CloudController
   module Blobstore
     class FingerprintsCollection
-      def initialize(fingerprints)
+      def initialize(fingerprints, root_path)
         unless fingerprints.is_a?(Array)
           raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'invalid :resources')
         end
 
         @fingerprints = fingerprints
+        @root_path = root_path
       end
 
       DEFAULT_FILE_MODE = 0744
@@ -47,8 +48,12 @@ module CloudController
 
       def validate_path(file_name)
         checker = VCAP::CloudController::FilePathChecker
-        raise CloudController::Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', "File path '#{file_name}' is not safe.") unless checker.safe_path? file_name
+        invalid_path!(file_name) unless checker.safe_path? file_name, @root_path
         file_name
+      end
+
+      def invalid_path!(file_name)
+        raise CloudController::Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', "File path '#{file_name}' is not safe.")
       end
     end
   end

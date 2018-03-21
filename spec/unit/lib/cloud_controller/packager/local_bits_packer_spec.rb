@@ -170,6 +170,11 @@ module CloudController::Packager
           expect(global_app_bits_cache.exists?(sha_of_bye_file_in_good_zip)).to be true
         end
 
+        it 'initializes the fingerprints collection to be scoped to the temporary working directory' do
+          expect(CloudController::Blobstore::FingerprintsCollection).to receive(:new).with(fingerprints, %r{#{local_tmp_dir}\/local_bits_packer}).and_return([])
+          packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
+        end
+
         context 'when there is an unreadable directory in the zip' do
           let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'unreadable_dir.zip') }
           let(:input_zip_file_path) { File.join(local_tmp_dir, 'unreadable_dir.zip') }
