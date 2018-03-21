@@ -4,7 +4,7 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :instances,
+    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :env, :instances,
                     :memory, :stack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
     def valid?
       validate_process_scale_message!
-      validate_app_update_message_lifecycle!
+      validate_app_update_message!
 
       errors.empty?
     end
@@ -58,6 +58,7 @@ module VCAP::CloudController
     def app_update_attribute_mapping
       mapping = {
         lifecycle: buildpack_lifecycle_data,
+        env: env,
       }.compact
       if command
         actual_command = (command == 'default' || command == 'null') ? nil : command
@@ -102,13 +103,20 @@ module VCAP::CloudController
       end
     end
 
-    def validate_app_update_message_lifecycle!
+    def validate_app_update_message!
       app_update_message.valid?
       app_update_message.errors[:lifecycle].each do |error_message|
         errors.add(:base, error_message)
       end
       app_update_message.errors[:command].each do |error_message|
         errors.add(:command, error_message)
+      end
+      app_update_message.errors[:env].each do |error_message|
+        if error_message == 'must be a hash'
+          errors[:base] << 'env must be a hash of keys and values'
+        else
+          errors[:env] << error_message
+        end
       end
     end
   end

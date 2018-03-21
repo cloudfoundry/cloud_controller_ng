@@ -178,6 +178,45 @@ module VCAP::CloudController
         end
       end
 
+      describe 'env' do
+        context 'when env is not a hash' do
+          let(:params) do
+            {
+              env: 'im a non-hash'
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('env must be a hash of keys and values')
+          end
+        end
+
+        context 'when env has bad keys' do
+          let(:params) do
+            {
+              env: {
+                "": 'null-key',
+                VCAP_BAD_KEY: 1,
+                VMC_BAD_KEY: %w/hey it's an array/,
+                PORT: 5,
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(4)
+            expect(message.errors.full_messages).to match_array([
+              'Env cannot set PORT',
+              'Env cannot start with VCAP_',
+              'Env cannot start with VMC_',
+              'Env key must be a minimum length of 1'])
+          end
+        end
+      end
+
       context 'when there are multiple errors' do
         let(:params) do
           {
@@ -185,7 +224,8 @@ module VCAP::CloudController
             memory: 120,
             disk_quota: '-120KB',
             buildpack: 99,
-            stack: 42
+            stack: 42,
+            env: %w/not a hash/
           }
         end
 
@@ -193,13 +233,14 @@ module VCAP::CloudController
           message = AppManifestMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors.count).to eq(5)
+          expect(message.errors.count).to eq(6)
           expect(message.errors.full_messages).to match_array([
             'Instances must be greater than or equal to 0',
             'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
             'Disk quota must be greater than 0MB',
             'Buildpacks can only contain strings',
             'Stack must be a string',
+            'env must be a hash of keys and values',
           ])
         end
       end
