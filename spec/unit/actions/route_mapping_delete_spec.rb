@@ -12,9 +12,12 @@ module VCAP::CloudController
     let(:route) { Route.make(space: space) }
     let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'other', guid: 'go wild') }
     let(:route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
+    let(:event_repository) { instance_double(Repositories::AppEventRepository) }
 
     before do
       allow(ProcessRouteHandler).to receive(:new).and_return(route_handler)
+      allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
+      allow(event_repository).to receive(:record_unmap_route)
     end
 
     describe '#delete' do
@@ -42,25 +45,16 @@ module VCAP::CloudController
           expect(route_handler).to have_received(:update_route_information).with(perform_validation: false)
         end
 
-        describe 'recording events' do
-          let(:event_repository) { instance_double(Repositories::AppEventRepository) }
+        it 'records an event for un mapping a route to an app' do
+          route_mapping_delete.delete(route_mapping)
 
-          before do
-            allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
-            allow(event_repository).to receive(:record_unmap_route)
-          end
-
-          it 'records an event for un mapping a route to an app' do
-            route_mapping_delete.delete(route_mapping)
-
-            expect(event_repository).to have_received(:record_unmap_route).with(
-              app,
-              route,
-              user_audit_info,
-              route_mapping.guid,
-              route_mapping.process_type
-            )
-          end
+          expect(event_repository).to have_received(:record_unmap_route).with(
+            app,
+            route,
+            user_audit_info,
+            route_mapping.guid,
+            route_mapping.process_type
+          )
         end
       end
 
@@ -84,19 +78,16 @@ module VCAP::CloudController
           expect(route_handler).not_to have_received(:update_route_information)
         end
 
-        describe 'recording events' do
-          let(:event_repository) { instance_double(Repositories::AppEventRepository) }
+        it 'still records an event for un mapping a route to an app' do
+          route_mapping_delete.delete(route_mapping)
 
-          before do
-            allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
-            allow(event_repository).to receive(:record_unmap_route)
-          end
-
-          it 'does not record an event for un mapping a route to an app' do
-            route_mapping_delete.delete(route_mapping)
-
-            expect(event_repository).not_to have_received(:record_unmap_route)
-          end
+          expect(event_repository).to have_received(:record_unmap_route).with(
+            app,
+            route,
+            user_audit_info,
+            route_mapping.guid,
+            route_mapping.process_type
+          )
         end
       end
     end
