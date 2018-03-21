@@ -58,23 +58,28 @@ keep it up to date, documenting the purpose of the various types of tests.
 By default `rspec` will randomly pick between postgres and mysql.
 
 It will try to connect to those databases with the following connection string:
-postgres: postgres://postgres@localhost:5432/cc_test
-mysql: mysql2://root:password@localhost:3306/cc_test
 
+* postgres: `postgres://postgres@localhost:5432/cc_test`
+* mysql: `mysql2://root:password@localhost:3306/cc_test`
+
+To specify a custom username, password, host, or port for either database type, you can override the default
+connection string prefix (the part before the `cc_test` database name) by setting the `MYSQL_CONNECTION_PREFIX`
+and/or `POSTGRES_CONNECTION_PREFIX` variables. Alternatively, to override the full connection string, including 
+the database name, you can set the `DB_CONNECTION_STRING` environment variable.  This will restrict you to only 
+running tests in serial, however.
+
+For example, to run unit tests in parallel with a custom mysql username and password, you could execute:
 ```
-rake db:create
+MYSQL_CONNECTION_PREFIX=mysql2://custom_user:custom_password@localhost:3306 bundle exec rake
 ```
-will create the above database when the `DB` environment variable is set to postgres or mysql.
-You should run this before running rake in order to ensure that the `cc_test` database exists.
 
-You can specify the full connection string via the `DB_CONNECTION_STRING`
-environment variable. Examples:
+The following are examples of completely fully overriding the database connection string:
 
-    DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" rake
-    DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" rake
+    DB_CONNECTION_STRING="postgres://postgres@localhost:5432/cc_test" DB=postgres rake spec:serial
+    DB_CONNECTION_STRING="mysql2://root:password@localhost:3306/cc_test" DB=mysql rake spec:serial
 
 If you are running the integration specs (which are included in the full rake),
-and you are specifying DB_CONNECTION_STRING, you will also
+and you are specifying `DB_CONNECTION_STRING`, you will also
 need to have a second test database with `_integration_cc` as the name suffix.
 
 For example, if you are using:
@@ -85,6 +90,13 @@ You will also need a database called:
 
     `cc_test_integration_cc`
 
+The command
+```
+rake db:create
+```
+will create the above database when the `DB` environment variable is set to postgres or mysql.
+You should run this before running rake in order to ensure that the `cc_test` database exists.
+
 #### Running tests on a single file
 
 The development team typically will run the specs to a single file as (e.g.)
@@ -94,6 +106,14 @@ The development team typically will run the specs to a single file as (e.g.)
 #### Running all the unit tests
 
     bundle exec rake spec
+
+Note that this will run all tests in parallel by default. If you are setting a custom `DB_CONNECTION_STRING`,
+you will need to run the tests in serial instead:
+
+    bundle exec rake spec:serial
+
+To be able to run the unit tests in parallel and still use custom connection strings, use the
+`MYSQL_CONNECTION_PREFIX` and `POSTGRES_CONNECTION_PREFIX` environment variables described above.
 
 #### Running static analysis
 
