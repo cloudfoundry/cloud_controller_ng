@@ -92,6 +92,56 @@ module VCAP::CloudController
             }.to raise_error(AppUpdate::InvalidApp, 'Stack must be an existing stack')
           end
         end
+
+        context 'when changing the lifecycle type' do
+          let(:message) do
+            AppUpdateMessage.new({
+              lifecycle: {
+                type: 'docker',
+                data: {}
+              }
+            })
+          end
+
+          it 'raises an InvalidApp error' do
+            expect(app_model.lifecycle_type).to eq('buildpack')
+
+            expect {
+              app_update.update(app_model, message, lifecycle)
+            }.to raise_error(AppUpdate::InvalidApp, 'Lifecycle type cannot be changed')
+          end
+        end
+
+        context 'when custom buildpacks are disabled and user provides a custom buildpack' do
+          let(:message) do
+            AppUpdateMessage.new({
+              lifecycle: {
+                type: 'buildpack',
+                data: {
+                  buildpacks: ['https://github.com/buildpacks/my-special-buildpack'],
+                  stack:      'cflinuxfs2'
+                }
+              }
+            })
+          end
+
+          before do
+            TestConfig.override(disable_custom_buildpacks: true)
+          end
+
+          it 'raises an InvalidApp error' do
+            expect {
+              app_update.update(app_model, message, lifecycle)
+            }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
+          end
+
+          it 'does not modify the app' do
+            lifecycle_data = app_model.lifecycle_data
+            expect {
+              app_update.update(app_model, message, lifecycle) rescue nil
+            }.not_to change { [app_model, lifecycle_data, Event.count] }
+          end
+        end
       end
 
       describe 'updating command' do
@@ -139,6 +189,95 @@ module VCAP::CloudController
         end
       end
 
+      describe 'updating env' do
+        let!(:process_model) { ProcessModel.make(app: app_model) } # for inner uses of app.web_process
+        let(:app_model) { AppModel.make }
+        let(:message) do
+          AppUpdateMessage.new({
+            env: {
+              'kTWO': '4',
+              'kTHREE': '3'
+            },
+          })
+        end
+
+        context 'when there are existing env variables' do
+          before do
+            app_model.environment_variables = {
+              'kONE': '1',
+              'kTWO': '2',
+            }
+            app_model.save
+          end
+
+          it 'overrides existing env variables' do
+            app_update.update(app_model, message, lifecycle)
+            app_model.reload
+
+            expect(app_model.environment_variables.symbolize_keys).to be_a_response_like({
+              "kONE": '1',
+              "kTWO": '4',
+              "kTHREE": '3'
+            })
+          end
+
+          it 'adds new env variables' do
+            message = AppUpdateMessage.new({
+              env: {
+                'kTHREE': '3',
+                'kFOUR': '4',
+              },
+            })
+            app_update.update(app_model, message, lifecycle)
+            app_model.reload
+
+            expect(app_model.environment_variables.symbolize_keys).to be_a_response_like({
+              "kONE": '1',
+              "kTWO": '2',
+              "kTHREE": '3',
+              "kFOUR": '4',
+            })
+          end
+
+          it 'retains the existing env variables' do
+            message = AppUpdateMessage.new({
+              command: 'run barkley'
+            })
+
+            app_update.update(app_model, message, lifecycle)
+            app_model.reload
+
+            expect(app_model.environment_variables.symbolize_keys).to be_a_response_like({
+              "kONE": '1',
+              "kTWO": '2',
+            })
+          end
+        end
+
+        context 'when there are no existing env variables' do
+          it 'adds new env variables' do
+            expect(app_model.environment_variables).to be_nil
+            app_update.update(app_model, message, lifecycle)
+            app_model.reload
+
+            expect(app_model.environment_variables.symbolize_keys).to be_a_response_like({
+              "kTWO": '4',
+              "kTHREE": '3'
+            })
+          end
+
+          it 'does not add new env variables' do
+            message = AppUpdateMessage.new({
+              command: 'run barkley'
+            })
+            app_update.update(app_model, message, lifecycle)
+            app_model.reload
+
+            expect(app_model.environment_variables).to be_nil
+          end
+        end
+      end
+
       context 'when the app is invalid' do
         before do
           allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))
@@ -146,56 +285,6 @@ module VCAP::CloudController
 
         it 'raises an invalid app error' do
           expect { app_update.update(app_model, message, lifecycle) }.to raise_error(AppUpdate::InvalidApp)
-        end
-      end
-
-      context 'when changing the lifecycle type' do
-        let(:message) do
-          AppUpdateMessage.new({
-              lifecycle: {
-                type: 'docker',
-                data: {}
-              }
-            })
-        end
-
-        it 'raises an InvalidApp error' do
-          expect(app_model.lifecycle_type).to eq('buildpack')
-
-          expect {
-            app_update.update(app_model, message, lifecycle)
-          }.to raise_error(AppUpdate::InvalidApp, 'Lifecycle type cannot be changed')
-        end
-      end
-
-      context 'when custom buildpacks are disabled and user provides a custom buildpack' do
-        let(:message) do
-          AppUpdateMessage.new({
-            lifecycle: {
-              type: 'buildpack',
-              data: {
-                buildpacks: ['https://github.com/buildpacks/my-special-buildpack'],
-                stack:      'cflinuxfs2'
-              }
-            }
-          })
-        end
-
-        before do
-          TestConfig.override(disable_custom_buildpacks: true)
-        end
-
-        it 'raises an InvalidApp error' do
-          expect {
-            app_update.update(app_model, message, lifecycle)
-          }.to raise_error(CloudController::Errors::ApiError, /Custom buildpacks are disabled/)
-        end
-
-        it 'does not modify the app' do
-          lifecycle_data = app_model.lifecycle_data
-          expect {
-            app_update.update(app_model, message, lifecycle) rescue nil
-          }.not_to change { [app_model, lifecycle_data, Event.count] }
         end
       end
     end

@@ -17,6 +17,7 @@ module VCAP::CloudController
         app.name = message.name if message.requested?(:name)
 
         update_app_command(app, message) if message.requested?(:command)
+        update_app_env(app, message) if message.requested?(:env)
 
         app.save
 
@@ -45,6 +46,10 @@ module VCAP::CloudController
       app.web_process.save
     end
 
+    def update_app_env(app, message)
+      app.environment_variables = existing_environment_variables_for(app).merge(message.env).compact
+    end
+
     def using_disabled_custom_buildpack?(app)
       app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
     end
@@ -56,6 +61,10 @@ module VCAP::CloudController
     def validate_not_changing_lifecycle_type!(app, lifecycle)
       return if app.lifecycle_type == lifecycle.type
       raise InvalidApp.new('Lifecycle type cannot be changed')
+    end
+
+    def existing_environment_variables_for(app)
+      app.environment_variables.nil? ? {} : app.environment_variables.symbolize_keys
     end
   end
 end

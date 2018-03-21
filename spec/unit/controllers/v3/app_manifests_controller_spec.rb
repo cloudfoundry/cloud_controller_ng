@@ -74,32 +74,35 @@ RSpec.describe AppManifestsController, type: :controller do
 
       context 'when specified manifest fails validations' do
         let(:request_body) do
-          { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit', 'command' => '' }] }
+          { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit', 'command' => '', 'env' => 42 }] }
         end
 
         it 'returns a 422 and validation errors' do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(3)
+          expect(errors.size).to eq(4)
+          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
 
-          expect(errors[0]).to include({
-            'detail' => 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          })
-
-          expect(errors[1]).to include({
+            {
+              'detail' => 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            },
+            {
             'detail' => 'Instances must be greater than or equal to 0',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
-          })
-
-          expect(errors[2]).to include({
+          }, {
             'detail' => 'Command must be between 1 and 4096 characters',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
-          })
+          }, {
+            'detail' => 'env must be a hash of keys and values',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }
+          ])
         end
       end
 
@@ -157,6 +160,27 @@ RSpec.describe AppManifestsController, type: :controller do
         expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.stack).to eq 'cflinuxfs2'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a environment' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'env' => { 'KEY100' => 'banana' } }] }
+      end
+
+      it 'sets the environment' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.env).to eq({ KEY100: 'banana' })
           expect(action).to eq app_apply_manifest_action
         end
       end
