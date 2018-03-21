@@ -4374,7 +4374,7 @@ module VCAP::CloudController
 
       context 'when instances_retrievable is set to true' do
         let(:service) { Service.make(instances_retrievable: true) }
-        let(:body) {}
+        let(:body) { {}.to_json }
         let(:response_code) { 200 }
 
         before do
@@ -4441,6 +4441,21 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the service instance has an operation in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+
+          before do
+            instance.service_instance_operation = last_operation
+            instance.save
+          end
+
+          it 'should show an error message for get parameter operation' do
+            get "/v2/service_instances/#{instance.guid}/parameters"
+            expect(last_response).to have_status_code 409
+            expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
+          end
+        end
       end
 
       context 'when instances_retrievable is set to false' do
@@ -4451,6 +4466,22 @@ module VCAP::CloudController
           expect(last_response.status).to eql(400)
           expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
           expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+        end
+
+        context 'when the service instance has an operation in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+
+          before do
+            instance.service_instance_operation = last_operation
+            instance.save
+          end
+
+          it 'returns a 400 with error rather than a 409' do
+            get "/v2/service_instances/#{instance.guid}/parameters"
+            expect(last_response.status).to eql(400)
+            expect(JSON.parse(last_response.body)['error_code']).to eql('CF-ServiceFetchInstanceParametersNotSupported')
+            expect(JSON.parse(last_response.body)['description']).to eql('This service does not support fetching service instance parameters.')
+          end
         end
       end
 

@@ -1046,7 +1046,7 @@ module VCAP::CloudController
           let(:service) { Service.make(bindings_retrievable: true) }
           let(:broker) { service.service_broker }
           let(:binding) { ServiceBinding.make(service_instance: managed_service_instance, app: process.app) }
-          let(:body) {}
+          let(:body) { { 'parameters' => { 'foo' => true } }.to_json }
           let(:response_code) { 200 }
 
           before do
@@ -1127,6 +1127,35 @@ module VCAP::CloudController
               expect(last_response.status).to eql(502)
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceBrokerResponseMalformed')
+            end
+          end
+
+          context 'when the user has access to the binding of a shared service instance' do
+            let(:managed_service_instance) { ManagedServiceInstance.make(space: Space.make, service_plan: service_plan) }
+
+            before do
+              managed_service_instance.add_shared_space(space)
+            end
+
+            it 'returns the parameters' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(200)
+              expect(last_response.body).to eql({ 'foo' => true }.to_json)
+            end
+          end
+
+          context 'when the user who shared the service instance tries to access binding parameters in the shared to space' do
+            let(:source_space) { Space.make }
+            let(:managed_service_instance) { ManagedServiceInstance.make(space: source_space, service_plan: service_plan) }
+            let(:developer) { make_developer_for_space(source_space) }
+
+            before do
+              managed_service_instance.add_shared_space(space)
+            end
+
+            it 'returns a 403' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response.status).to eql(403)
             end
           end
 

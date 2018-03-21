@@ -422,5 +422,13 @@ RSpec.describe 'ServiceBindings' do
         }
       )
     end
+
+    it 'does not list service bindings without web processes' do
+      non_web_process = VCAP::CloudController::ProcessModelFactory.make(space: space, type: 'non-web')
+      non_displayed_binding = VCAP::CloudController::ServiceBinding.make(app: non_web_process.app, service_instance: service_instance)
+
+      get "/v2/service_bindings/#{non_displayed_binding.guid}/parameters", nil, headers_for(user)
+      expect(last_response.status).to eq(404)
+    end
   end
 end
