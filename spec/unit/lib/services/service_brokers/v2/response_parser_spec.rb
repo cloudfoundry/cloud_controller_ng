@@ -697,7 +697,12 @@ module VCAP::Services
         test_case(:bind,      201, with_valid_volume_mounts.to_json, service: :no_volume_mount, error: Errors::ServiceBrokerInvalidVolumeMounts, description: volume_mounts_not_required_error(binding_uri))
         test_pass_through(:bind, 201, with_credentials,                                         expected_state: 'succeeded')
 
-        test_case(:bind,      202, broker_empty_json,                                           error: Errors::ServiceBrokerBadResponse)
+        test_case(:bind,      202, broker_empty_json,                                             result: {})
+        test_case(:bind,      202, with_operation.to_json,                                        result: with_operation)
+        test_case(:bind,      202, broker_malformed_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, binding_uri))
+        test_case(:bind,      202, broker_partial_json,                                           error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))
+        test_case(:bind,      202, with_non_string_operation.to_json,                             error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, 'The service broker response contained an operation field that was not a string.'))
+        test_case(:bind,      202, with_long_operation.to_json,                                   error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(binding_uri, 'The service broker response contained an operation field exceeding 10k characters.'))
         test_case(:bind,      204, broker_partial_json,                                         error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      204, broker_malformed_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:bind,      204, broker_empty_json,                                           error: Errors::ServiceBrokerBadResponse)
