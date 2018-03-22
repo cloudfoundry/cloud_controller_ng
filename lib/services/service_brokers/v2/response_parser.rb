@@ -290,7 +290,7 @@ module VCAP::Services
           def initialize(method, uri, path, response)
             @method = method
             @code = response.code.to_i
-            @uri = URI(uri + path)
+            @uri = URI(uri + path).to_s
             @response = response
           end
 

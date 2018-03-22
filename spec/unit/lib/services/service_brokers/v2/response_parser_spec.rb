@@ -4,6 +4,19 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       RSpec.describe 'ResponseParser' do
+        describe 'UnvalidatedResponse' do
+          let(:fake_response) { VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 200, body: {}) }
+
+          it 'should serialize the uri as a string' do
+            unvalidated_response = ResponseParser::UnvalidatedResponse.new(:get, 'http://example.com', '/path', fake_response)
+            expect(unvalidated_response.uri).to eql('http://example.com/path')
+          end
+
+          it 'should raise an error if the uri is invalid' do
+            expect { ResponseParser::UnvalidatedResponse.new(:get, 'http://examp', 'bad path', fake_response) }.to raise_error(URI::InvalidURIError)
+          end
+        end
+
         describe 'JsonSchemaValidator' do
           let(:json_validator) { ResponseParser::JsonSchemaValidator.new(logger, schema, inner_validator) }
           let(:logger) { instance_double(Steno::Logger, warn: nil) }
