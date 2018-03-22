@@ -371,26 +371,43 @@ module VCAP::CloudController
           end
         end
 
-        describe 'accepts_incomplete' do
+        describe 'asynchronous binding creation' do
           context 'when accepts_incomplete is true' do
-            let(:bind_status) { 202 }
             let(:bind_body) { {} }
 
-            it 'returns a 202 status code' do
-              post '/v2/service_bindings?accepts_incomplete=true', req.to_json
-              expect(last_response).to have_status_code(202)
-              binding = ServiceBinding.last
-              expect(binding.last_operation.state).to eql('in progress')
-            end
+            context 'and the broker returns asynchronously' do
+              let(:bind_status) { 202 }
 
-            context 'when the service broker returns operation state' do
-              let(:bind_body) { { operation: '123' } }
-
-              it 'persists the operation state' do
+              before do
                 post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+              end
+
+              it 'returns a 202 status code' do
                 expect(last_response).to have_status_code(202)
+              end
+
+              it 'saves the binding in the model' do
                 binding = ServiceBinding.last
-                expect(binding.last_operation.broker_provided_operation).to eq('123')
+                expect(binding.last_operation.state).to eql('in progress')
+              end
+
+              it 'returns an in progress service binding response' do
+                hash_body = JSON.parse(last_response.body)
+                expect(hash_body['entity']['last_operation']['type']).to eq('create')
+                expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
+              end
+
+              it 'returns a location header' do
+                expect(last_response.headers['Location']).to match(%r{^/v2/service_bindings/[[:alnum:]-]+$})
+              end
+
+              context 'when the service broker returns operation state' do
+                let(:bind_body) { { operation: '123' } }
+
+                it 'persists the operation state' do
+                  binding = ServiceBinding.last
+                  expect(binding.last_operation.broker_provided_operation).to eq('123')
+                end
               end
             end
 
@@ -1102,6 +1119,23 @@ module VCAP::CloudController
             expect(entity['name']).to eq('binding')
             expect(entity['service_instance_guid']).to eq(si2.guid)
           end
+        end
+      end
+
+      context 'when the binding has last operation' do
+        before do
+          binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create')
+          set_current_user(developer)
+        end
+
+        it 'returns the in progress state' do
+          get '/v2/service_bindings?inline-relations-depth=1'
+          expect(last_response).to have_status_code(200)
+
+          service_binding = decoded_response['resources'].first
+          expect(service_binding['entity']['last_operation']['type']).to eq('create')
+          expect(service_binding['entity']['last_operation']['state']).to eq('in progress')
         end
       end
     end
