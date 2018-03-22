@@ -28,6 +28,9 @@ Rails.application.routes.draw do
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'
   patch '/apps/:guid/environment_variables', to: 'apps_v3#update_environment_variables'
 
+  # builds
+  get '/apps/:guid/builds', to: 'apps_v3#list_builds'
+
   # processes
   get '/processes', to: 'processes#index'
   get '/processes/:process_guid', to: 'processes#show'

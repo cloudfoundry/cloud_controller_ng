@@ -1258,6 +1258,45 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
+  describe '#builds' do
+    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:space) { app_model.space }
+    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:build1) { VCAP::CloudController::Build.make(app_guid: app_model.guid, guid: 'build-1') }
+    let(:build2) { VCAP::CloudController::Build.make(app_guid: app_model.guid, guid: 'build-2') }
+    before do
+      set_current_user_as_admin(user: user)
+    end
+
+    context 'when the given app does not exist' do
+      it 'returns a validation error' do
+        get :list_builds, guid: 'no-such-app'
+
+        expect(response.status).to eq 404
+        expect(response.body).to include 'ResourceNotFound'
+      end
+    end
+
+    context 'when given an invalid request' do
+      it 'returns a validation error' do
+        get :list_builds, guid: app_model.guid, "no-such-param": 42
+
+        expect(response.status).to eq 400
+        expect(response.body).to include 'BadQueryParameter'
+        expect(response.body).to include 'no-such-param'
+      end
+    end
+
+    it 'returns a 200 and lists the app\'s builds' do
+      get :list_builds, guid: app_model.guid
+      
+      expect(response.status).to eq(200), response.body
+      #debugger
+      expect(parsed_body.resources.size).to eq(2)
+    end
+  end
+
   describe '#show_env' do
     let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }

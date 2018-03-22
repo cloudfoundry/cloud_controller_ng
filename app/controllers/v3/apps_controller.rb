@@ -14,6 +14,7 @@ require 'messages/app_update_message'
 require 'messages/app_create_message'
 require 'messages/app_update_environment_variables_message'
 require 'messages/app_manifest_message'
+require 'messages/app_builds_list_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_environment_variables_presenter'
@@ -150,6 +151,13 @@ class AppsV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'Unable to communicate with Diego')
   end
 
+  
+  def list_builds
+    message = AppBuildsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+    render status: :ok, json: []
+  end
+  
   def show_env
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
