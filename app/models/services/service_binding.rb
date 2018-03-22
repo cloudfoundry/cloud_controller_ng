@@ -97,5 +97,9 @@ module VCAP::CloudController
     def last_operation
       service_binding_operation || ServiceBindingOperation::CREATE_SUCCEEDED_OPERATION
     end
+
+    def is_created?
+      !service_binding_operation || service_binding_operation.state == 'succeeded'
+    end
   end
 end

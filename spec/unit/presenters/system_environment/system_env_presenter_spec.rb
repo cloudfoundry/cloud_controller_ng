@@ -39,6 +39,36 @@ module VCAP::CloudController
           expect(binding[:name]).to eq('elephantsql-vip-uat')
         end
 
+        context 'when a service binding has not been created yet' do
+          let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress') }
+          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+
+          before do
+            service_binding.service_binding_operation = service_binding_operation
+          end
+
+          it 'does not include service binding and instance information' do
+            expect(system_env_presenter.system_env[:VCAP_SERVICES]).to be_empty
+          end
+        end
+
+        context 'when a service binding has successfully been asynchronously created' do
+          let(:service_binding_operation) { ServiceBindingOperation.make(state: 'succeeded') }
+          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+
+          before do
+            service_binding.service_binding_operation = service_binding_operation
+          end
+
+          it 'does not include service binding and instance information' do
+            expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(1).items
+            binding = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first.to_hash
+
+            expect(binding[:credentials]).to eq(service_binding.credentials)
+            expect(binding[:name]).to eq('elephantsql-vip-uat')
+          end
+        end
+
         describe 'volume mounts' do
           context 'when the service binding has volume mounts' do
             let!(:service_binding) do
