@@ -180,24 +180,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      describe 'command' do
-        context 'when an empty command is specified' do
-          let(:params) do
-            {
-              command: command
-            }
-          end
-          let(:command) { '' }
-
-          it 'is not valid' do
-            message = AppUpdateMessage.new(params)
-            expect(message).to_not be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
-          end
-        end
-      end
     end
   end
 end

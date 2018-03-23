@@ -8,6 +8,7 @@ module VCAP::CloudController
     let(:process_scale) { instance_double(ProcessScale) }
     let(:app_update) { instance_double(AppUpdate) }
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
+    let(:process_update) { instance_double(ProcessUpdate) }
 
     describe '#apply' do
       before do
@@ -18,6 +19,10 @@ module VCAP::CloudController
         allow(AppUpdate).
           to receive(:new).and_return(app_update)
         allow(app_update).to receive(:update)
+
+        allow(ProcessUpdate).
+          to receive(:new).and_return(process_update)
+        allow(process_update).to receive(:update)
 
         allow(AppPatchEnvironmentVariables).
           to receive(:new).and_return(app_patch_env)
@@ -204,6 +209,42 @@ module VCAP::CloudController
             expect {
               app_apply_manifest.apply(app.guid, message)
             }.to raise_error(AppPatchEnvironmentVariables::InvalidApp, 'invalid app')
+          end
+        end
+      end
+
+      describe 'updating command' do
+        let(:message) { AppManifestMessage.new({ command: 'new-command' }) }
+        let(:manifest_process_update_message) { message.manifest_process_update_message }
+        let(:app) { AppModel.make }
+
+        context 'when the request is valid' do
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls ProcessUpdate with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
+            expect(process_update).to have_received(:update).
+              with(app.web_process, manifest_process_update_message)
+          end
+        end
+
+        context 'when the request is invalid' do
+          let(:message) { AppManifestMessage.new({ command: '' }) }
+
+          before do
+            allow(process_update).
+              to receive(:update).and_raise(ProcessUpdate::InvalidProcess.new('invalid process'))
+          end
+
+          it 'bubbles up the error' do
+            expect {
+              app_apply_manifest.apply(app.guid, message)
+            }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
           end
         end
       end

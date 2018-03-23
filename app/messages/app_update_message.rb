@@ -3,7 +3,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :command, :lifecycle].freeze
+    ALLOWED_KEYS = [:name, :lifecycle].freeze
 
     attr_accessor(*ALLOWED_KEYS)
     attr_reader :app
@@ -20,10 +20,6 @@ module VCAP::CloudController
     validates_with LifecycleValidator, if: lifecycle_requested?
 
     validates :name, string: true, allow_nil: true
-    validates :command,
-      string:    true,
-      allow_nil: true,
-      length:    { in: 1..4096, message: 'must be between 1 and 4096 characters' }
 
     validates :lifecycle_type,
       string: true,

@@ -144,51 +144,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'updating command' do
-        let!(:process_model) { ProcessModel.make(app: app_model) }
-        let(:app_model) { AppModel.make(name: app_name) }
-        let(:message) do
-          AppUpdateMessage.new({
-            command: 'my new command'
-          })
-        end
-
-        it 'updates the apps command' do
-          expect(app_model.name).to eq('original name')
-          expect(app_model.web_process.command).to eq(nil)
-
-          app_update.update(app_model, message, lifecycle)
-          app_model.reload
-
-          expect(app_model.name).to eq('original name')
-          expect(app_model.web_process.command).to eq('my new command')
-        end
-      end
-
-      describe 'resetting command' do
-        let!(:process_model) { ProcessModel.make(app: app_model) }
-        let(:app_model) { AppModel.make(name: app_name) }
-        let(:message) do
-          AppUpdateMessage.new({
-            command: nil
-          })
-        end
-
-        it 'resets the apps command' do
-          app_model.web_process.command = 'old-command'
-          app_model.web_process.save
-
-          expect(app_model.name).to eq('original name')
-          expect(app_model.web_process.command).to eq('old-command')
-
-          app_update.update(app_model, message, lifecycle)
-          app_model.reload
-
-          expect(app_model.name).to eq('original name')
-          expect(app_model.web_process.command).to be_nil
-        end
-      end
-
       context 'when the app is invalid' do
         before do
           allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))

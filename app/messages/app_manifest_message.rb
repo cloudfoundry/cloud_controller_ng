@@ -8,7 +8,10 @@ module VCAP::CloudController
                     :memory, :stack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
-    attr_accessor :manifest_process_scale_message, :app_update_message, :manifest_env_update_message
+    attr_accessor :manifest_process_scale_message,
+                  :app_update_message,
+                  :manifest_env_update_message,
+                  :manifest_process_update_message
 
     validates_with NoAdditionalKeysValidator
 
@@ -21,10 +24,12 @@ module VCAP::CloudController
       @manifest_process_scale_message = ManifestProcessScaleMessage.new(process_scale_attribute_mapping)
       @app_update_message = AppUpdateMessage.create_from_http_request(app_update_attribute_mapping)
       @manifest_env_update_message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(env_update_attribute_mapping)
+      @manifest_process_update_message = ProcessUpdateMessage.new(process_update_attribute_mapping)
     end
 
     def valid?
       validate_process_scale_message!
+      validate_process_update_message!
       validate_app_update_message!
       validate_env_update_message! if requested?(:env)
 
@@ -61,10 +66,6 @@ module VCAP::CloudController
       mapping = {
         lifecycle: buildpack_lifecycle_data
       }.compact
-      if requested?(:command)
-        actual_command = (command == 'default' || command == 'null') ? nil : command
-        mapping[:command] = actual_command
-      end
       mapping
     end
 
@@ -72,6 +73,14 @@ module VCAP::CloudController
       mapping = {}
       if requested?(:env)
         mapping[:var] = env
+      end
+      mapping
+    end
+
+    def process_update_attribute_mapping
+      mapping = {}
+      if requested?(:command) && !command.nil? && command != 'null' && command != 'default'
+        mapping[:command] = command
       end
       mapping
     end
@@ -108,6 +117,13 @@ module VCAP::CloudController
     def validate_process_scale_message!
       manifest_process_scale_message.valid?
       manifest_process_scale_message.errors.full_messages.each do |error_message|
+        errors.add(:base, error_message)
+      end
+    end
+
+    def validate_process_update_message!
+      manifest_process_update_message.valid?
+      manifest_process_update_message.errors.full_messages.each do |error_message|
         errors.add(:base, error_message)
       end
     end
