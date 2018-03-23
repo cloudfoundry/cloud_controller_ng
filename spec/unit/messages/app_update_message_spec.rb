@@ -7,10 +7,6 @@ module VCAP::CloudController
       let(:body) {
         {
           'name' => 'some-name',
-          'env' => {
-            'TWO' => '4',
-            'THREE' => '3'
-          },
           'lifecycle' => {
             'type' => 'buildpack',
             'data' => {
@@ -27,7 +23,6 @@ module VCAP::CloudController
         expect(message).to be_a(AppUpdateMessage)
         expect(message).to be_valid
         expect(message.name).to eq('some-name')
-        expect(message.env).to eq({ TWO: '4', THREE: '3' })
         expect(message.lifecycle[:data][:buildpacks].first).to eq('some-buildpack')
         expect(message.lifecycle[:data][:stack]).to eq('some-stack')
       end
@@ -36,7 +31,6 @@ module VCAP::CloudController
         message = AppUpdateMessage.create_from_http_request(body)
 
         expect(message.requested?(:name)).to be_truthy
-        expect(message.requested?(:env)).to be_truthy
         expect(message.requested?(:lifecycle)).to be_truthy
       end
     end
@@ -201,45 +195,6 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
-          end
-        end
-      end
-
-      describe 'env' do
-        context 'when env is not a hash' do
-          let(:params) do
-            {
-              env: 'im a non-hash'
-            }
-          end
-          it 'is not valid' do
-            message = AppUpdateMessage.new(params)
-            expect(message).to_not be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Env must be a hash')
-          end
-        end
-
-        context 'when env has bad keys' do
-          let(:params) do
-            {
-              env: {
-                "": 'null-key',
-                VCAP_BAD_KEY: 1,
-                VMC_BAD_KEY: %w/hey it's an array/,
-                PORT: 5,
-              }
-            }
-          end
-          it 'is not valid' do
-            message = AppUpdateMessage.new(params)
-            expect(message).to_not be_valid
-            expect(message.errors.count).to eq(4)
-            expect(message.errors.full_messages).to match_array([
-              'Env cannot set PORT',
-              'Env cannot start with VCAP_',
-              'Env cannot start with VMC_',
-              'Env key must be a minimum length of 1'])
           end
         end
       end

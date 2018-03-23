@@ -7,6 +7,7 @@ module VCAP::CloudController
     let(:user_audit_info) { instance_double(UserAuditInfo) }
     let(:process_scale) { instance_double(ProcessScale) }
     let(:app_update) { instance_double(AppUpdate) }
+    let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
 
     describe '#apply' do
       before do
@@ -17,6 +18,10 @@ module VCAP::CloudController
         allow(AppUpdate).
           to receive(:new).and_return(app_update)
         allow(app_update).to receive(:update)
+
+        allow(AppPatchEnvironmentVariables).
+          to receive(:new).and_return(app_patch_env)
+        allow(app_patch_env).to receive(:patch)
       end
 
       describe 'scaling instances' do
@@ -163,6 +168,42 @@ module VCAP::CloudController
             expect {
               app_apply_manifest.apply(app.guid, message)
             }.to raise_error(AppUpdate::InvalidApp, 'invalid app')
+          end
+        end
+      end
+
+      describe 'updating environment variables' do
+        let(:message) { AppManifestMessage.new({ env: { 'foo': 'bar' } }) }
+        let(:manifest_env_update_message) { message.manifest_env_update_message }
+        let(:app) { AppModel.make }
+
+        context 'when the request is valid' do
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls AppPatchEnvironmentVariables with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(AppPatchEnvironmentVariables).to have_received(:new).with(user_audit_info)
+            expect(app_patch_env).to have_received(:patch).
+              with(app, manifest_env_update_message)
+          end
+        end
+
+        context 'when the request is invalid' do
+          let(:message) { AppManifestMessage.new({ env: 'not-a-hash' }) }
+
+          before do
+            allow(app_patch_env).
+              to receive(:patch).and_raise(AppPatchEnvironmentVariables::InvalidApp.new('invalid app'))
+          end
+
+          it 'bubbles up the error' do
+            expect {
+              app_apply_manifest.apply(app.guid, message)
+            }.to raise_error(AppPatchEnvironmentVariables::InvalidApp, 'invalid app')
           end
         end
       end

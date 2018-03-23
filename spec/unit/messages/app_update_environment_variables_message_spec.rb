@@ -52,6 +52,18 @@ module VCAP::CloudController
         expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
       end
 
+      it 'returns a validation error when a key is a non-string value' do
+        invalid_body = {
+          var: {
+            1 => 'foo'
+          }
+        }
+        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+
+        expect(message).not_to be_valid
+        expect(message.errors_on(:var)[0]).to include('key must be a string')
+      end
+
       it 'returns a validation error when `PORT` is specified' do
         invalid_body = {
           var: {
@@ -110,6 +122,16 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'some_number'")
+      end
+
+      it 'returns a validation error when var is not a hash' do
+        invalid_body = {
+          var: 'sweet potato'
+        }
+        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to match('must be a hash')
       end
 
       it 'returns successfully when a value is nil' do

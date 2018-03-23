@@ -18,7 +18,7 @@ module VCAP::CloudController
     end
 
     describe '#patch' do
-      let(:request_environment_variables) { { override: 'new-value' } }
+      let(:request_environment_variables) { { override: 'new-value', new: 'env' } }
       let(:message) do
         AppUpdateEnvironmentVariablesMessage.new({
           var: request_environment_variables,
@@ -45,6 +45,7 @@ module VCAP::CloudController
         expect(app_model.environment_variables).to eq({
           'override' => 'new-value',
           'preserve' => 'value-to-keep',
+          'new' => 'env',
         })
       end
 
@@ -60,6 +61,7 @@ module VCAP::CloudController
 
           expect(app_model.environment_variables).to eq({
             'override' => 'new-value',
+            'new' => 'env',
           })
         end
       end

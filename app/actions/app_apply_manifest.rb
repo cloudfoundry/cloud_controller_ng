@@ -14,6 +14,8 @@ module VCAP::CloudController
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
       AppUpdate.new(user_audit_info).update(app, app_update_message, lifecycle)
 
+      AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message.manifest_env_update_message)
+
       app
     end
 

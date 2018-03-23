@@ -3,7 +3,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :command, :env, :lifecycle].freeze
+    ALLOWED_KEYS = [:name, :command, :lifecycle].freeze
 
     attr_accessor(*ALLOWED_KEYS)
     attr_reader :app
@@ -18,15 +18,6 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
-
-    def valid?
-      super
-      if requested?(:env)
-        VCAP::CloudController::Validators::EnvironmentVariablesValidator.
-          validate_each(self, :env, env)
-      end
-      errors.empty?
-    end
 
     validates :name, string: true, allow_nil: true
     validates :command,

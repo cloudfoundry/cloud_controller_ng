@@ -8,7 +8,7 @@ module VCAP::CloudController
                     :memory, :stack].freeze
 
     attr_accessor(*ALLOWED_KEYS)
-    attr_accessor :manifest_process_scale_message, :app_update_message
+    attr_accessor :manifest_process_scale_message, :app_update_message, :manifest_env_update_message
 
     validates_with NoAdditionalKeysValidator
 
@@ -20,11 +20,13 @@ module VCAP::CloudController
       super(params)
       @manifest_process_scale_message = ManifestProcessScaleMessage.new(process_scale_attribute_mapping)
       @app_update_message = AppUpdateMessage.create_from_http_request(app_update_attribute_mapping)
+      @manifest_env_update_message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(env_update_attribute_mapping)
     end
 
     def valid?
       validate_process_scale_message!
       validate_app_update_message!
+      validate_env_update_message! if requested?(:env)
 
       errors.empty?
     end
@@ -57,12 +59,19 @@ module VCAP::CloudController
 
     def app_update_attribute_mapping
       mapping = {
-        lifecycle: buildpack_lifecycle_data,
-        env: env,
+        lifecycle: buildpack_lifecycle_data
       }.compact
       if requested?(:command)
         actual_command = (command == 'default' || command == 'null') ? nil : command
         mapping[:command] = actual_command
+      end
+      mapping
+    end
+
+    def env_update_attribute_mapping
+      mapping = {}
+      if requested?(:env)
+        mapping[:var] = env
       end
       mapping
     end
@@ -111,7 +120,11 @@ module VCAP::CloudController
       app_update_message.errors[:command].each do |error_message|
         errors.add(:command, error_message)
       end
-      app_update_message.errors[:env].each do |error_message|
+    end
+
+    def validate_env_update_message!
+      manifest_env_update_message.valid?
+      manifest_env_update_message.errors[:var].each do |error_message|
         if error_message == 'must be a hash'
           errors[:base] << 'env must be a hash of keys and values'
         else
