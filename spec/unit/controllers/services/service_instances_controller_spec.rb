@@ -4539,6 +4539,34 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the service instance is shared' do
+          let(:target_space) { Space.make }
+
+          before do
+            instance.add_shared_space(target_space)
+          end
+
+          ['space_auditor', 'space_developer', 'space_manager',].each do |role|
+            let(:service) { Service.make(instances_retrievable: true) }
+
+            context "as an #{role} in the target space, but with no permissions in the souce space" do
+              before do
+                set_current_user_as_role(
+                  role:   role,
+                  org:    target_space.organization,
+                  space:  target_space,
+                  scopes: ['cloud_controller.read']
+                )
+              end
+
+              it 'returns 403 NotAuthorized' do
+                get "/v2/service_instances/#{instance.guid}/parameters"
+                expect(last_response.status).to eq(403)
+              end
+            end
+          end
+        end
       end
     end
 
