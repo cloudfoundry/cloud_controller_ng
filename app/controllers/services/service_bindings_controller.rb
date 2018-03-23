@@ -1,6 +1,7 @@
 require 'vcap/services/api'
 require 'controllers/services/lifecycle/service_instance_binding_manager'
 require 'models/helpers/process_types'
+require 'actions/services/service_binding_read'
 
 module VCAP::CloudController
   class ServiceBindingsController < RestController::ModelController
@@ -91,14 +92,13 @@ module VCAP::CloudController
       binding = find_guid_and_validate_access(:read, guid)
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding.v2_app.present?
 
-      unless binding.service_instance.managed_instance? && binding.service.bindings_retrievable
+      fetcher = ServiceBindingRead.new
+      begin
+        parameters = fetcher.fetch_parameters(binding)
+        [HTTP::OK, parameters.to_json]
+      rescue ServiceBindingRead::NotSupportedError
         raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
       end
-
-      client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
-      resp = client.fetch_service_binding(binding)
-
-      [HTTP::OK, resp.fetch('parameters', {}).to_json]
     end
 
     def self.translate_validation_exception(e, _attributes)
