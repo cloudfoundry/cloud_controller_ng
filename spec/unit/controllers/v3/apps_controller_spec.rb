@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe AppsV3Controller, type: :controller do
   describe '#index' do
@@ -1263,15 +1264,15 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
-    let(:build1) { VCAP::CloudController::Build.make(app_guid: app_model.guid, guid: 'build-1') }
-    let(:build2) { VCAP::CloudController::Build.make(app_guid: app_model.guid, guid: 'build-2') }
+    let!(:build1) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-1') }
+    let!(:build2) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-2') }
     before do
       set_current_user_as_admin(user: user)
     end
 
     context 'when the given app does not exist' do
       it 'returns a validation error' do
-        get :list_builds, guid: 'no-such-app'
+        get :builds, guid: 'no-such-app'
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -1280,7 +1281,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when given an invalid request' do
       it 'returns a validation error' do
-        get :list_builds, guid: app_model.guid, "no-such-param": 42
+        get :builds, guid: app_model.guid, "no-such-param": 42
 
         expect(response.status).to eq 400
         expect(response.body).to include 'BadQueryParameter'
@@ -1289,11 +1290,30 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     it 'returns a 200 and lists the app\'s builds' do
-      get :list_builds, guid: app_model.guid
-      
+      get :builds, guid: app_model.guid
+
+      expect(response.status).to eq(200)
+      expect(parsed_body['resources'].size).to eq(2)
+      expect(parsed_body['resources'].map { |x| x['guid'] }).to match_array([build1.guid, build2.guid])
+    end
+
+    it 'paginates with query parameters' do
+      get :builds, guid: app_model.guid, states: 'STAGED', 'per_page': 1
+
       expect(response.status).to eq(200), response.body
-      #debugger
-      expect(parsed_body.resources.size).to eq(2)
+      expect(parsed_body['resources'].size).to eq(1)
+      expect(parsed_body['resources'][0]['guid']).to eq(build1.guid)
+
+      expect(parsed_body['pagination']['previous']).to be(nil)
+      expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/apps/#{app_model.guid}/builds")
+      expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
+      expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+      expect(parsed_body['pagination']['next']['href']).to match(/states=#{VCAP::CloudController::BuildModel::STAGED_STATE}/)
+    end
+
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) { READ_ONLY_PERMS }
+      let(:api_call) { lambda {       get :builds, guid: app_model.guid } }
     end
   end
 

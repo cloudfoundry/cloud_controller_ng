@@ -21,6 +21,7 @@ require 'presenters/v3/app_environment_variables_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/app_droplet_relationship_presenter'
 require 'fetchers/app_list_fetcher'
+require 'fetchers/app_builds_list_fetcher'
 require 'fetchers/app_fetcher'
 require 'fetchers/app_delete_fetcher'
 require 'fetchers/assign_current_droplet_fetcher'
@@ -151,13 +152,15 @@ class AppsV3Controller < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', 'Unable to communicate with Diego')
   end
 
-  
-  def list_builds
+  def builds
     message = AppBuildsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    render status: :ok, json: []
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    dataset = AppBuildsListFetcher.new(app.guid, message).fetch_all
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: "/v3/apps/#{app.guid}/builds", message: message)
   end
-  
+
   def show_env
     app, space, org = AppFetcher.new.fetch(params[:guid])
 

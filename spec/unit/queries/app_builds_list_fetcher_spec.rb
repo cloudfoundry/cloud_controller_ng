@@ -53,59 +53,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe '#fetch_for_spaces' do
-      context 'when looking at build for app_in_space1' do
-        let(:app_guid) { app_in_space1.guid }
-
-        it 'returns a Sequel::Dataset' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
-          expect(results).to be_a(Sequel::Dataset)
-        end
-
-        it 'returns only the builds in spaces requested' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
-          expect(results.all).to match_array([
-            staged_build_for_app1_space1,
-            failed_build_for_app1_space1,
-          ])
-        end
-
-        context 'when staged or failed' do
-          let(:filters) { { states: [BuildModel::FAILED_STATE] } }
-
-          it 'returns all of the builds with the requested states' do
-            results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
-            expect(results.all).to match_array([
-              failed_build_for_app1_space1,
-            ])
-          end
-        end
-      end
-
-      context 'when looking at builds for app3_in_space2' do
-        let(:app_guid) { app3_in_space2.guid }
-
-        it 'returns a Sequel::Dataset' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
-          expect(results).to be_a(Sequel::Dataset)
-        end
-
-        it 'returns only the builds in spaces requested' do
-          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
-          expect(results.all).to match_array([])
-        end
-
-        context 'when staged or failed' do
-            let(:filters) { { states: [BuildModel::FAILED_STATE] } }
-
-            it 'returns all of the builds with the requested states' do
-              results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
-              expect(results.all).to match_array([
-              ])
-            end
-         end
-      end
-    end
   end
 end
