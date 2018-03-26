@@ -1,6 +1,7 @@
 require 'actions/services/synchronous_orphan_mitigate'
 require 'actions/services/locks/lock_check'
 require 'repositories/service_binding_event_repository'
+require 'jobs/services/service_binding_state_fetch'
 
 module VCAP::CloudController
   class ServiceBindingCreate
@@ -40,6 +41,9 @@ module VCAP::CloudController
       begin
         if binding_result[:async]
           binding.save_with_new_operation({ type: 'create', state: 'in progress', broker_provided_operation: binding_result[:operation] })
+          job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(binding.guid)
+          enqueuer = Jobs::Enqueuer.new(job)
+          enqueuer.enqueue
           last_operation_result = client.fetch_service_binding_last_operation(binding)
           binding.last_operation.update(last_operation_result[:last_operation])
         else

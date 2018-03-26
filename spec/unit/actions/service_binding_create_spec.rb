@@ -175,6 +175,14 @@ module VCAP::CloudController
             expect(Event.count).to eq(0)
           end
 
+          it 'enqueues a fetch job' do
+            expect {
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+            }.to change { Delayed::Job.count }.from(0).to(1)
+
+            expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceBindingStateFetch
+          end
+
           context 'when the create ServiceBindingOperation fails' do
             before do
               allow(ServiceBindingOperation).to receive(:create).and_raise('failed')
