@@ -79,6 +79,19 @@ module VCAP::CloudController
       ]
     end
 
+    get '/v2/service_keys/:guid/parameters', :parameters
+    def parameters(guid)
+      service_key = find_guid_and_validate_access(:read, guid)
+
+      fetcher = ServiceBindingRead.new
+      parameters = fetcher.fetch_parameters(service_key)
+      [HTTP::OK, parameters.to_json]
+    rescue ServiceBindingRead::NotSupportedError
+      raise CloudController::Errors::ApiError.new_from_details('ServiceKeyNotSupported', 'This service does not support fetching service key parameters.')
+    rescue CloudController::Errors::ApiError => e
+      e.name == 'NotAuthorized' ? raise(CloudController::Errors::ApiError.new_from_details('ServiceKeyNotFound', guid)) : raise(e)
+    end
+
     def self.translate_validation_exception(e, attributes)
       unique_errors = e.errors.on([:name, :service_instance_id])
       if unique_errors && unique_errors.include?(:unique)

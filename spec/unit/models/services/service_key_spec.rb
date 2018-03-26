@@ -137,44 +137,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#to_hash' do
-      let(:service_key) { ServiceKey.make }
-      let(:developer) { make_developer_for_space(service_key.service_instance.space) }
-      let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
-      let(:user) { make_user_for_space(service_key.service_instance.space) }
-      let(:manager) { make_manager_for_space(service_key.service_instance.space) }
-
-      it 'does not redact creds for an admin' do
-        set_current_user_as_admin
-        expect(service_key.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'does not redact creds for an admin_read_only' do
-        set_current_user_as_admin_read_only
-        expect(service_key.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'does not redact creds for a space developer' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
-        expect(service_key.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space auditor' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
-        expect(service_key.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space user' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
-        expect(service_key.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space manager' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
-        expect(service_key.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-    end
-
     describe 'user_visibility_filter' do
       let!(:service_instance) { ManagedServiceInstance.make }
       let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
