@@ -79,8 +79,8 @@ module VCAP::CloudController
 
     def process_update_attribute_mapping
       mapping = {}
-      if requested?(:command) && !command.nil? && command != 'null' && command != 'default'
-        mapping[:command] = command
+      if requested?(:command)
+        mapping[:command] = command || 'null'
       end
       mapping
     end

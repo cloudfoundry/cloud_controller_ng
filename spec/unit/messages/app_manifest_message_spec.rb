@@ -411,17 +411,18 @@ module VCAP::CloudController
         it 'does not set the command field in the process update message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq(nil)
+          expect(message.manifest_process_update_message.command).to eq('null')
         end
       end
 
+      # This happens when users specify `command: ` with no value in the manifest.
       context 'when a nil command (value nil) is specified' do
         let(:command) { nil }
 
-        it 'does not set the command field in the process update message' do
+        it 'sets the field as null in the process update message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq(nil)
+          expect(message.manifest_process_update_message.command).to eq('null')
         end
       end
 
@@ -431,7 +432,7 @@ module VCAP::CloudController
         it 'does not set the command field in the process update message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq(nil)
+          expect(message.manifest_process_update_message.command).to eq('default')
         end
       end
 
