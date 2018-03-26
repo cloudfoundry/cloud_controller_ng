@@ -12,22 +12,27 @@ module VCAP::CloudController
       }
     end
     let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check }) }
+    let!(:droplet) { DropletModel.make(process_types: { web: 'BE rackup' }) }
+    let!(:app) { AppModel.make(droplet: droplet) }
     let!(:process) do
       ProcessModel.make(
         :process,
+        type: 'web',
         command:              'initial command',
         health_check_type:    'port',
         health_check_timeout: 10,
-        ports:                [1574, 3389]
+        ports:                [1574, 3389],
+        app: app
       )
     end
+
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#update' do
       it 'updates the requested changes on the process' do
-        process_update.update(process, message)
+        process_update.update(process, message, NonManifestStrategy)
 
         process.reload
         expect(process.command).to eq('new')
@@ -44,7 +49,7 @@ module VCAP::CloudController
         end
 
         it 'updates the requested changes on the process' do
-          process_update.update(process, message)
+          process_update.update(process, message, NonManifestStrategy)
 
           process.reload
           expect(process.command).to eq('new')
@@ -72,7 +77,7 @@ module VCAP::CloudController
         end
 
         it 'clears the HTTP endpoint field' do
-          process_update.update(process, message)
+          process_update.update(process, message, NonManifestStrategy)
 
           process.reload
           expect(process.command).to eq('new')
@@ -85,7 +90,7 @@ module VCAP::CloudController
         let(:message) { ProcessUpdateMessage.new({}) }
 
         it 'does not update the process' do
-          process_update.update(process, message)
+          process_update.update(process, message, NonManifestStrategy)
 
           process.reload
           expect(process.command).to eq('initial command')
@@ -103,7 +108,7 @@ module VCAP::CloudController
         end
 
         it 'updates just the requested information' do
-          process_update.update(process, message)
+          process_update.update(process, message, NonManifestStrategy)
 
           process.reload
           expect(process.health_check_type).to eq('process')
@@ -124,7 +129,7 @@ module VCAP::CloudController
           }
         )
 
-        process_update.update(process, message)
+        process_update.update(process, message, NonManifestStrategy)
       end
 
       context 'when the process is invalid' do
@@ -134,8 +139,55 @@ module VCAP::CloudController
 
         it 'raises an invalid error' do
           expect {
-            process_update.update(process, message)
+            process_update.update(process, message, NonManifestStrategy)
           }.to raise_error(ProcessUpdate::InvalidProcess, 'the message')
+        end
+      end
+
+      context 'NonManifestStrategy command' do
+        context 'when the new command is null' do
+          let(:message) { ProcessUpdateMessage.new({ command: 'null' }) }
+
+          it 'does not reset the command to detected buildpack command' do
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('null')
+          end
+        end
+        context 'when the new command is default' do
+          let(:message) { ProcessUpdateMessage.new({ command: 'default' }) }
+
+          it 'does not reset the command to detected buildpack command' do
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('default')
+          end
+        end
+      end
+
+      context 'ManifestStrategy command' do
+        context 'when the new command is null' do
+          let(:message) { ProcessUpdateMessage.new({ command: 'null' }) }
+
+          it 'resets the command to the detected buildpack command' do
+            process_update.update(process, message, ManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('BE rackup')
+          end
+        end
+
+        context 'when the new command is default' do
+          let(:message) { ProcessUpdateMessage.new({ command: 'default' }) }
+
+          it 'resets the command to the detected buildpack command' do
+            process_update.update(process, message, ManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('BE rackup')
+          end
         end
       end
     end

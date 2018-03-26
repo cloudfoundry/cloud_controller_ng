@@ -229,7 +229,7 @@ module VCAP::CloudController
             app_apply_manifest.apply(app.guid, message)
             expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
             expect(process_update).to have_received(:update).
-              with(app.web_process, manifest_process_update_message)
+              with(app.web_process, manifest_process_update_message, ManifestStrategy)
           end
         end
 

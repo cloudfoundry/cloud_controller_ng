@@ -39,7 +39,7 @@ module VCAP::CloudController
     def add_or_update_process(app, type, command)
       existing_process = app.processes_dataset.where(type: type).first
       if existing_process
-        ProcessUpdate.new(@user_audit_info).update(existing_process, ProcessUpdateMessage.new({ command: command }))
+        ProcessUpdate.new(@user_audit_info).update(existing_process, ProcessUpdateMessage.new({ command: command }), NonManifestStrategy)
       else
         ProcessCreate.new(@user_audit_info).create(app, { type: type, command: command })
       end

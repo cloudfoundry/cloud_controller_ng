@@ -6,11 +6,12 @@ module VCAP::CloudController
       @user_audit_info = user_audit_info
     end
 
-    def update(process, message)
+    def update(process, message, strategy_class)
+      strategy = strategy_class.new(message, process)
       process.db.transaction do
         process.lock!
 
-        process.command              = message.command if message.requested?(:command)
+        process.command              = strategy.updated_command if message.requested?(:command)
         process.health_check_type    = message.health_check_type if message.requested?(:health_check_type)
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)
         if message.requested?(:health_check_type) && message.health_check_type != 'http'

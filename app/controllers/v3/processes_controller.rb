@@ -12,6 +12,7 @@ require 'messages/process_scale_message'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
 require 'controllers/v3/mixins/app_sub_resource'
+require 'cloud_controller/strategies/non_manifest_strategy'
 
 class ProcessesController < ApplicationController
   include AppSubResource
@@ -45,7 +46,7 @@ class ProcessesController < ApplicationController
     message = ProcessUpdateMessage.create_from_http_request(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    ProcessUpdate.new(user_audit_info).update(@process, message)
+    ProcessUpdate.new(user_audit_info).update(@process, message, NonManifestStrategy)
 
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process)
   rescue ProcessUpdate::InvalidProcess => e

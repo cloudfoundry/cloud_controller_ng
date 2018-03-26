@@ -1,4 +1,5 @@
 require 'actions/process_scale'
+require 'cloud_controller/strategies/manifest_strategy'
 
 module VCAP::CloudController
   class AppApplyManifest
@@ -14,7 +15,7 @@ module VCAP::CloudController
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
       AppUpdate.new(user_audit_info).update(app, app_update_message, lifecycle)
 
-      ProcessUpdate.new(user_audit_info).update(app.web_process, message.manifest_process_update_message)
+      ProcessUpdate.new(user_audit_info).update(app.web_process, message.manifest_process_update_message, ManifestStrategy)
 
       AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message.manifest_env_update_message)
 
