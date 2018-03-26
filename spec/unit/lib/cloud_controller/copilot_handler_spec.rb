@@ -3,9 +3,9 @@ require 'cloud_controller/copilot_handler'
 
 module VCAP::CloudController
   RSpec.describe CopilotHandler do
-    subject(:handler) { CopilotHandler.new }
+    subject(:handler) { CopilotHandler }
     let(:copilot_client) do
-      instance_double(Cloudfoundry::Copilot::Client, upsert_route: nil, map_route: nil, unmap_route: nil)
+      instance_spy(::Cloudfoundry::Copilot::Client)
     end
 
     before do
@@ -56,7 +56,6 @@ module VCAP::CloudController
         handler.map_route(route_mapping)
         expect(copilot_client).to have_received(:map_route).with(
           capi_process_guid: capi_process_guid,
-          diego_process_guid: diego_process_guid,
           route_guid: route_guid
         )
       end
@@ -100,6 +99,56 @@ module VCAP::CloudController
 
         it 'raises a CopilotUnavailable exception' do
           expect { handler.unmap_route(route_mapping) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+        end
+      end
+    end
+
+    describe '#upsert_capi_diego_process_association' do
+      let(:capi_process_guid) { 'some-capi-process-guid' }
+      let(:diego_process_guid) { 'some-diego-process-guid' }
+      let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
+
+      before do
+        allow(Diego::ProcessGuid).to receive(:from_process).with(process).and_return(diego_process_guid)
+      end
+
+      it 'calls copilot_client.upsert_capi_diego_process_association' do
+        handler.upsert_capi_diego_process_association(process)
+        expect(copilot_client).to have_received(:upsert_capi_diego_process_association).with(
+          capi_process_guid: capi_process_guid,
+          diego_process_guids: [diego_process_guid]
+        )
+      end
+
+      context 'when copilot_client.upsert_capi_diego_process_association returns an error' do
+        before do
+          allow(copilot_client).to receive(:upsert_capi_diego_process_association).and_raise('uh oh')
+        end
+
+        it 'raises a CopilotUnavailable exception' do
+          expect { handler.upsert_capi_diego_process_association(process) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+        end
+      end
+    end
+
+    describe '#delete_capi_diego_process_association' do
+      let(:capi_process_guid) { 'some-capi-process-guid' }
+      let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
+
+      it 'calls copilot_client.delete_capi_diego_process_association' do
+        handler.delete_capi_diego_process_association(process)
+        expect(copilot_client).to have_received(:delete_capi_diego_process_association).with(
+          capi_process_guid: capi_process_guid
+        )
+      end
+
+      context 'when copilot_client.delete_capi_diego_process_association returns an error' do
+        before do
+          allow(copilot_client).to receive(:delete_capi_diego_process_association).and_raise('uh oh')
+        end
+
+        it 'raises a CopilotUnavailable exception' do
+          expect { handler.delete_capi_diego_process_association(process) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
         end
       end
     end

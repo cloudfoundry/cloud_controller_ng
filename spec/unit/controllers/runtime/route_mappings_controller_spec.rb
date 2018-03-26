@@ -197,13 +197,10 @@ module VCAP::CloudController
             end
 
             context 'when copilot is enabled' do
-              let(:copilot_handler) { instance_double(CopilotHandler, map_route: nil) }
-
               before do
                 TestConfig.override(copilot: { enabled: true })
-                allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
+                allow(CopilotHandler).to receive(:map_route)
               end
-
               it 'notifies copilot' do
                 post '/v2/route_mappings', body
 
@@ -213,7 +210,7 @@ module VCAP::CloudController
                 warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
                 expect(warning).to include('Route has been mapped to app port 8080.')
 
-                expect(copilot_handler).to have_received(:map_route)
+                expect(CopilotHandler).to have_received(:map_route)
               end
             end
 

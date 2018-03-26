@@ -1,12 +1,12 @@
 module VCAP::CloudController
   module Diego
     class ProcessGuid
-      def self.from(app_guid, app_version)
-        "#{app_guid}-#{app_version}"
+      def self.from(process_guid, process_version)
+        "#{process_guid}-#{process_version}"
       end
 
-      def self.from_process(app)
-        from(app.guid, app.version)
+      def self.from_process(process)
+        from(process.guid, process.version)
       end
 
       def self.app_guid(versioned_guid)

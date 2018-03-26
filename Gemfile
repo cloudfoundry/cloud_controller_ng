@@ -5,7 +5,7 @@ gem 'actionview'
 gem 'activemodel'
 gem 'addressable'
 gem 'allowy'
-gem 'cf-copilot'
+gem 'cf-copilot', git: 'https://github.com/cloudfoundry/copilot.git', branch: 'master', glob: 'sdk/ruby/*.gemspec'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.0'

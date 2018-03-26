@@ -24,11 +24,8 @@ module VCAP::CloudController
       end
 
       context 'when copilot is disabled', isolation: :truncation do
-        let(:copilot_handler) { instance_double(CopilotHandler) }
-
         before do
           TestConfig.override({ copilot: { enabled: false } })
-          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
         end
 
         context 'on delete' do
@@ -39,19 +36,16 @@ module VCAP::CloudController
               process_type: 'buckeyes',
               app_port: -1
             })
-            expect(copilot_handler).to_not receive(:unmap_route)
+            expect(CopilotHandler).to_not receive(:unmap_route)
             route_mapping.destroy
           end
         end
       end
 
       context 'when copilot is enabled', isolation: :truncation do
-        let(:copilot_handler) { instance_double(CopilotHandler) }
-
         before do
           TestConfig.override({ copilot: { enabled: true } })
-          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
-          allow(copilot_handler).to receive(:unmap_route)
+          allow(CopilotHandler).to receive(:unmap_route)
         end
 
         context 'on delete' do
@@ -65,7 +59,7 @@ module VCAP::CloudController
           end
 
           it 'unmaps the route in copilot' do
-            expect(copilot_handler).to receive(:unmap_route).with(route_mapping)
+            expect(CopilotHandler).to receive(:unmap_route).with(route_mapping)
             route_mapping.destroy
           end
 
@@ -73,13 +67,13 @@ module VCAP::CloudController
             let(:logger) { instance_double(Steno::Logger, error: nil) }
 
             it 'logs and swallows the error' do
-              allow(copilot_handler).to receive(:unmap_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
+              allow(CopilotHandler).to receive(:unmap_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
               allow(Steno).to receive(:logger).and_return(logger)
 
               expect {
                 route_mapping.destroy
 
-                expect(copilot_handler).to have_received(:unmap_route).with(route_mapping)
+                expect(CopilotHandler).to have_received(:unmap_route).with(route_mapping)
                 expect(logger).to have_received(:error).with(/failed communicating.*some-error/)
               }.to change { RouteMappingModel.count }.by(-1)
             end
@@ -89,9 +83,9 @@ module VCAP::CloudController
             it 'only executes after the transaction is completed' do
               RouteMappingModel.db.transaction do
                 route_mapping.destroy
-                expect(copilot_handler).to_not have_received(:unmap_route)
+                expect(CopilotHandler).to_not have_received(:unmap_route)
               end
-              expect(copilot_handler).to have_received(:unmap_route).with(route_mapping)
+              expect(CopilotHandler).to have_received(:unmap_route).with(route_mapping)
             end
           end
         end

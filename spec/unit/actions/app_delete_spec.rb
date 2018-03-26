@@ -90,16 +90,20 @@ module VCAP::CloudController
           end
 
           context 'when copilot is enabled', isolation: :truncation do
-            let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client) }
+            let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client, unmap_route: nil, delete_capi_diego_process_association: nil) }
 
             before do
               TestConfig.override(copilot: { enabled: true })
               allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
-              allow(copilot_client).to receive(:unmap_route)
             end
 
             it 'tells copilot to unmap the route' do
               expect(copilot_client).to receive(:unmap_route).with({ capi_process_guid: process.guid, route_guid: route.guid })
+              app_delete.delete(app_dataset)
+            end
+
+            it 'tells copilot to delete the capi process' do
+              expect(copilot_client).to receive(:delete_capi_diego_process_association).with({ capi_process_guid: process.guid })
               app_delete.delete(app_dataset)
             end
           end

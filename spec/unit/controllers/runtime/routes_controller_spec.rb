@@ -276,8 +276,6 @@ module VCAP::CloudController
       end
 
       it 'creates a route' do
-        expect(CopilotHandler).not_to receive(:new)
-
         post '/v2/routes', MultiJson.dump(req)
 
         created_route = Route.last
@@ -290,11 +288,9 @@ module VCAP::CloudController
       end
 
       context 'when copilot is enabled' do
-        let(:copilot_handler) { instance_double(CopilotHandler, create_route: nil) }
-
         before do
           TestConfig.override(copilot: { enabled: true })
-          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
+          allow(CopilotHandler).to receive(:create_route)
         end
 
         it 'creates a route and notifies Copilot' do
@@ -307,14 +303,14 @@ module VCAP::CloudController
           expect(last_response.body).to include(created_route.guid)
           expect(last_response.body).to include(created_route.host)
           expect(created_route.host).to eq('example')
-          expect(copilot_handler).to have_received(:create_route)
+          expect(CopilotHandler).to have_received(:create_route)
         end
 
         context 'when the call to copilot fails' do
           let(:logger) { instance_double(Steno::Logger) }
 
           before do
-            allow(copilot_handler).to receive(:create_route).and_raise(CopilotHandler::CopilotUnavailable.new('something'))
+            allow(CopilotHandler).to receive(:create_route).and_raise(CopilotHandler::CopilotUnavailable.new('something'))
             allow_any_instance_of(RoutesController).to receive(:logger).and_return(logger)
             allow(logger).to receive(:debug)
           end
@@ -331,7 +327,7 @@ module VCAP::CloudController
             expect(last_response.body).to include(created_route.guid)
             expect(last_response.body).to include(created_route.host)
             expect(created_route.host).to eq('example')
-            expect(copilot_handler).to have_received(:create_route)
+            expect(CopilotHandler).to have_received(:create_route)
           end
         end
       end

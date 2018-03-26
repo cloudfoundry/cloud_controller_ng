@@ -4,6 +4,7 @@ require 'cloud_controller/diego/protocol'
 require 'cloud_controller/diego/buildpack/lifecycle_protocol'
 require 'cloud_controller/diego/docker/lifecycle_protocol'
 require 'cloud_controller/diego/egress_rules'
+require 'cloud_controller/backends/copilot_runner_delegator'
 
 module VCAP::CloudController
   class Runners
@@ -12,7 +13,7 @@ module VCAP::CloudController
     end
 
     def runner_for_process(process)
-      diego_runner(process)
+      CopilotRunnerDelegator.new(diego_runner(process), process)
     end
 
     def diego_processes(batch_size, last_id)

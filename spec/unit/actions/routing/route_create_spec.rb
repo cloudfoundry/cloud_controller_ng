@@ -64,12 +64,9 @@ module VCAP::CloudController
       end
 
       context 'when copilot is enabled' do
-        let(:copilot_handler) { instance_double(CopilotHandler, create_route: nil) }
-
         before do
           TestConfig.override(copilot: { enabled: true })
-          allow(CopilotHandler).to receive(:new).and_return(copilot_handler)
-          allow(copilot_handler).to receive(:create_route)
+          allow(CopilotHandler).to receive(:create_route)
         end
 
         it 'creates a route and notifies copilot' do
@@ -78,8 +75,7 @@ module VCAP::CloudController
 
             expect(access_validator).to have_received(:validate_access).with(:create, instance_of(Route))
             expect(access_validator_route_arg).to eq(route)
-            expect(CopilotHandler).to have_received(:new)
-            expect(copilot_handler).to have_received(:create_route).with(route)
+            expect(CopilotHandler).to have_received(:create_route).with(route)
             expect(route.host).to eq(host)
             expect(route.path).to eq(path)
           }.to change { Route.count }.by(1)
@@ -87,7 +83,7 @@ module VCAP::CloudController
 
         context 'when copilot handler raises an exception' do
           before do
-            allow(copilot_handler).to receive(:create_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
+            allow(CopilotHandler).to receive(:create_route).and_raise(CopilotHandler::CopilotUnavailable.new('some-error'))
             allow(logger).to receive(:error)
           end
 
@@ -97,8 +93,7 @@ module VCAP::CloudController
 
               expect(access_validator).to have_received(:validate_access).with(:create, instance_of(Route))
               expect(access_validator_route_arg).to eq(route)
-              expect(CopilotHandler).to have_received(:new)
-              expect(copilot_handler).to have_received(:create_route).with(route)
+              expect(CopilotHandler).to have_received(:create_route).with(route)
               expect(logger).to have_received(:error).with('failed communicating with copilot backend: some-error')
               expect(route.host).to eq(host)
               expect(route.path).to eq(path)

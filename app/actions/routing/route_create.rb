@@ -11,7 +11,7 @@ module VCAP::CloudController
         @access_validator.validate_access(:create, route)
 
         begin
-          CopilotHandler.new.create_route(route) if Config.config.get(:copilot, :enabled)
+          CopilotHandler.create_route(route) if Config.config.get(:copilot, :enabled)
         rescue CopilotHandler::CopilotUnavailable => e
           @logger.error("failed communicating with copilot backend: #{e.message}")
         end
