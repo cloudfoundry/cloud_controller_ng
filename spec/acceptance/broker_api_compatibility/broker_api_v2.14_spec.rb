@@ -155,9 +155,8 @@ RSpec.describe 'Service Broker API integration' do
           service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
           expect(a_request(:put, service_binding_url(service_binding, 'accepts_incomplete=true'))).to have_been_made
 
-          # service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-          # Delayed::Worker.new.work_off
-          #
+          Delayed::Worker.new.work_off
+
           expect(a_request(:get,
             "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
           )).to have_been_made

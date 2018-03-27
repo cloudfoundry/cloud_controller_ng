@@ -143,8 +143,6 @@ module VCAP::CloudController
         context 'and the broker responds asynchronously' do
           before do
             allow(client).to receive(:bind).and_return({ async: true, binding: {}, operation: '123' })
-            allow(client).to receive(:fetch_service_binding_last_operation).with(instance_of(VCAP::CloudController::ServiceBinding)).
-              and_return({ last_operation: { state: 'in progress', description: '10% complete' } })
           end
 
           it 'returns the binding operation' do
@@ -167,7 +165,6 @@ module VCAP::CloudController
           it 'expect to fetch last operation' do
             service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
             expect(service_binding.last_operation.state).to eq('in progress')
-            expect(service_binding.last_operation.description).to eq('10% complete')
           end
 
           it 'does not audit a create binding event' do
@@ -181,6 +178,7 @@ module VCAP::CloudController
             }.to change { Delayed::Job.count }.from(0).to(1)
 
             expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceBindingStateFetch
+            expect(Delayed::Job.first.queue).to eq('cc-generic')
           end
 
           context 'when the create ServiceBindingOperation fails' do
