@@ -392,16 +392,39 @@ module VCAP::CloudController
 
     describe '#process_update_message' do
       let(:parsed_yaml) do
-        { command: command }
+        { command: command, "health-check-type": health_check_type }
       end
 
-      context 'when a new command is specified' do
-        let(:command) { 'new-command' }
+      let(:command) { 'new-command' }
+      let(:health_check_type) { 'port' }
 
-        it 'sets the command field in the message' do
+      context 'when new properties are specified' do
+        it 'sets the command and health check type fields in the message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_update_message.command).to eq('new-command')
+          expect(message.manifest_process_update_message.health_check[:type]).to eq('port')
+        end
+      end
+
+      context 'invalid health check type' do
+        let(:health_check_type) { 'foo' }
+
+        it 'is invalid' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors.full_messages).to include('Health check type must be "port", "process", or "http"')
+        end
+      end
+
+      context 'deprecated health check type none' do
+        let(:health_check_type) { 'none' }
+
+        it 'is converted to process' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_process_update_message.health_check[:type]).to eq('process')
         end
       end
 
@@ -447,15 +470,16 @@ module VCAP::CloudController
         end
       end
 
-      context 'when no command is specified' do
+      context 'when no parameters is specified' do
         let(:parsed_yaml) do
           {}
         end
 
-        it 'does not set a command field' do
+        it 'does not set a command or health_check_type field' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_update_message.requested?(:command)).to be_falsey
+          expect(message.manifest_process_update_message.requested?(:health_check)).to be_falsey
         end
       end
     end

@@ -4,8 +4,10 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :env, :instances,
+    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :env, :health_check_type, :instances,
                     :memory, :stack].freeze
+
+    HEALTH_CHECK_TYPE_MAPPING = { 'none' => 'process' }.freeze
 
     attr_accessor(*ALLOWED_KEYS)
     attr_accessor :manifest_process_scale_message,
@@ -16,14 +18,21 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     def self.create_from_http_request(parsed_yaml)
-      AppManifestMessage.new(parsed_yaml.deep_symbolize_keys)
+      AppManifestMessage.new(AppManifestMessage.underscore_keys(parsed_yaml.deep_symbolize_keys))
+    end
+
+    def self.underscore_keys(yaml)
+      yaml.inject({}) do |memo, (key, val)|
+        memo[key.to_s.underscore.to_sym] = val
+        memo
+      end
     end
 
     def initialize(params)
       super(params)
       @manifest_process_scale_message = ManifestProcessScaleMessage.new(process_scale_attribute_mapping)
-      @app_update_message = AppUpdateMessage.create_from_http_request(app_update_attribute_mapping)
-      @manifest_env_update_message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(env_update_attribute_mapping)
+      @app_update_message = AppUpdateMessage.new(app_update_attribute_mapping)
+      @manifest_env_update_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
       @manifest_process_update_message = ProcessUpdateMessage.new(process_update_attribute_mapping)
     end
 
@@ -82,6 +91,10 @@ module VCAP::CloudController
       if requested?(:command)
         mapping[:command] = command || 'null'
       end
+
+      if requested_keys.include?(:health_check_type)
+        mapping[:health_check] = { type: converted_health_check_type }
+      end
       mapping
     end
 
@@ -97,6 +110,11 @@ module VCAP::CloudController
           stack: stack
         }.compact
       }
+    end
+
+    # none was deprecated in favor of process
+    def converted_health_check_type
+      HEALTH_CHECK_TYPE_MAPPING[health_check_type] || health_check_type
     end
 
     def convert_to_mb(human_readable_byte_value, attribute)
