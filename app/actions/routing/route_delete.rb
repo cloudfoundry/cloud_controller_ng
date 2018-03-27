@@ -41,7 +41,15 @@ module VCAP::CloudController
 
       route_event_repository.record_route_delete_request(route, user_audit_info, recursive)
 
-      RouteMappingDelete.new(user_audit_info).delete(route.route_mappings)
+      route.route_mappings.each do |route_mapping|
+        app_event_repository.record_unmap_route(
+          route_mapping.app,
+          route,
+          user_audit_info,
+          route_mapping.guid,
+          route_mapping.process_type
+        )
+      end
 
       Jobs::Runtime::ModelDeletion.new(route.class, route.guid)
     end

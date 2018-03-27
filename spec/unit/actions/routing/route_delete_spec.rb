@@ -83,15 +83,21 @@ module VCAP::CloudController
         let!(:route_mapping) { RouteMappingModel.make route: route }
         let!(:route_mapping_2) { RouteMappingModel.make route: route }
 
-        before do
-          expect_any_instance_of(RouteMappingDelete).to receive(:delete).with(contain_exactly(route_mapping, route_mapping_2))
-        end
-
-        it 'deletes the mappings through RouteMappingDelete' do
+        it 'deletes the mappings' do
           route_delete_action.delete_sync(route: route, recursive: recursive)
 
           expect(route_mapping.exists?).to be_falsey
           expect(route_mapping_2.exists?).to be_falsey
+        end
+
+        it 'creates an unmap-route audit event for each mapping' do
+          app = route_mapping.app
+          app_2 = route_mapping_2.app
+
+          route_delete_action.delete_sync(route: route, recursive: recursive)
+
+          expect(app_event_repository).to have_received(:record_unmap_route).with(app, route, user_audit_info, route_mapping.guid, route_mapping.process_type).once
+          expect(app_event_repository).to have_received(:record_unmap_route).with(app_2, route, user_audit_info, route_mapping_2.guid, route_mapping_2.process_type).once
         end
       end
 
