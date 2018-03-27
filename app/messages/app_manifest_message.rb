@@ -4,7 +4,7 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :env, :health_check_type, :instances,
+    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :env, :health_check_http_endpoint, :health_check_type, :instances,
                     :memory, :stack].freeze
 
     HEALTH_CHECK_TYPE_MAPPING = { 'none' => 'process' }.freeze
@@ -94,7 +94,12 @@ module VCAP::CloudController
 
       if requested_keys.include?(:health_check_type)
         mapping[:health_check] = { type: converted_health_check_type }
+
+        if requested_keys.include?(:health_check_http_endpoint)
+          mapping[:health_check][:data] = { endpoint: health_check_http_endpoint }
+        end
       end
+
       mapping
     end
 

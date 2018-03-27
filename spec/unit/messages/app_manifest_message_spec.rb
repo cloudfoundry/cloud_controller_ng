@@ -392,81 +392,97 @@ module VCAP::CloudController
 
     describe '#process_update_message' do
       let(:parsed_yaml) do
-        { command: command, "health-check-type": health_check_type }
+        { command: command, "health-check-type": health_check_type, "health-check-http-endpoint": health_check_http_endpoint }
       end
 
       let(:command) { 'new-command' }
-      let(:health_check_type) { 'port' }
+      let(:health_check_type) { 'http' }
+      let(:health_check_http_endpoint) { '/endpoint' }
 
       context 'when new properties are specified' do
         it 'sets the command and health check type fields in the message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_update_message.command).to eq('new-command')
-          expect(message.manifest_process_update_message.health_check[:type]).to eq('port')
+          expect(message.manifest_process_update_message.health_check[:type]).to eq('http')
+          expect(message.manifest_process_update_message.health_check[:data][:endpoint]).to eq('/endpoint')
         end
       end
 
-      context 'invalid health check type' do
-        let(:health_check_type) { 'foo' }
+      context 'health checks' do
+        context 'invalid health check type' do
+          let(:health_check_type) { 'foo' }
 
-        it 'is invalid' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Health check type must be "port", "process", or "http"')
+          it 'is invalid' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Health check type must be "port", "process", or "http"')
+          end
+        end
+        context 'deprecated health check type none' do
+          let(:health_check_type) { 'none' }
+
+          it 'is converted to process' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.health_check[:type]).to eq('process')
+          end
+        end
+
+        context 'health check endpoint is not valid uri' do
+          let(:health_check_http_endpoint) { 'invalid' }
+
+          it 'is invalid' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Health check endpoint must be a valid URI path')
+          end
         end
       end
 
-      context 'deprecated health check type none' do
-        let(:health_check_type) { 'none' }
+      context 'command' do
+        context 'when a string command of value "null" is specified' do
+          let(:command) { 'null' }
 
-        it 'is converted to process' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
-          expect(message).to be_valid
-          expect(message.manifest_process_update_message.health_check[:type]).to eq('process')
+          it 'does not set the command field in the process update message' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.command).to eq('null')
+          end
         end
-      end
 
-      context 'when a string command of value "null" is specified' do
-        let(:command) { 'null' }
+        # This happens when users specify `command: ` with no value in the manifest.
+        context 'when a nil command (value nil) is specified' do
+          let(:command) { nil }
 
-        it 'does not set the command field in the process update message' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
-          expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq('null')
+          it 'sets the field as null in the process update message' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.command).to eq('null')
+          end
         end
-      end
 
-      # This happens when users specify `command: ` with no value in the manifest.
-      context 'when a nil command (value nil) is specified' do
-        let(:command) { nil }
+        context 'when a default command is specified' do
+          let(:command) { 'default' }
 
-        it 'sets the field as null in the process update message' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
-          expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq('null')
+          it 'does not set the command field in the process update message' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.command).to eq('default')
+          end
         end
-      end
 
-      context 'when a default command is specified' do
-        let(:command) { 'default' }
+        context 'when an empty command is specified' do
+          let(:command) { '' }
 
-        it 'does not set the command field in the process update message' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
-          expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq('default')
-        end
-      end
-
-      context 'when an empty command is specified' do
-        let(:command) { '' }
-
-        it 'is not valid' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(1)
-          expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
+          end
         end
       end
 
