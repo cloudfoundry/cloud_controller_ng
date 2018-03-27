@@ -1,4 +1,4 @@
-require 'cloud_controller/copilot_handler'
+require 'cloud_controller/copilot_adapter'
 
 module VCAP::CloudController
   class RouteMappingModel < Sequel::Model(:route_mappings)
@@ -26,8 +26,8 @@ module VCAP::CloudController
 
       db.after_commit do
         begin
-          CopilotHandler.unmap_route(self) if Config.config.get(:copilot, :enabled)
-        rescue CopilotHandler::CopilotUnavailable => e
+          CopilotAdapter.unmap_route(self) if Config.config.get(:copilot, :enabled)
+        rescue CopilotAdapter::CopilotUnavailable => e
           logger.error("failed communicating with copilot backend: #{e.message}")
         end
       end

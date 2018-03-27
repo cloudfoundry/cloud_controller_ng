@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'cloud_controller/copilot_handler'
+require 'cloud_controller/copilot_adapter'
 
 module VCAP::CloudController
-  RSpec.describe CopilotHandler do
-    subject(:handler) { CopilotHandler }
+  RSpec.describe CopilotAdapter do
+    subject(:handler) { CopilotAdapter }
     let(:copilot_client) do
       instance_spy(::Cloudfoundry::Copilot::Client)
     end
@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { handler.create_route(route) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+          expect { handler.create_route(route) }.to raise_error(CopilotAdapter::CopilotUnavailable, 'uh oh')
         end
       end
     end
@@ -66,7 +66,7 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { handler.map_route(route_mapping) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+          expect { handler.map_route(route_mapping) }.to raise_error(CopilotAdapter::CopilotUnavailable, 'uh oh')
         end
       end
     end
@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { handler.unmap_route(route_mapping) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+          expect { handler.unmap_route(route_mapping) }.to raise_error(CopilotAdapter::CopilotUnavailable, 'uh oh')
         end
       end
     end
@@ -126,7 +126,7 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { handler.upsert_capi_diego_process_association(process) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+          expect { handler.upsert_capi_diego_process_association(process) }.to raise_error(CopilotAdapter::CopilotUnavailable, 'uh oh')
         end
       end
     end
@@ -148,7 +148,7 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { handler.delete_capi_diego_process_association(process) }.to raise_error(CopilotHandler::CopilotUnavailable, 'uh oh')
+          expect { handler.delete_capi_diego_process_association(process) }.to raise_error(CopilotAdapter::CopilotUnavailable, 'uh oh')
         end
       end
     end
