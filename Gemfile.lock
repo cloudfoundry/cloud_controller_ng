@@ -10,15 +10,6 @@ GIT
       subprocess (~> 1)
 
 GIT
-  remote: https://github.com/cloudfoundry/copilot.git
-  revision: 583848ee7c64dcb400665d1286235a2906f107d3
-  branch: master
-  glob: sdk/ruby/*.gemspec
-  specs:
-    cf-copilot (0.0.2.dev)
-      grpc (~> 1.0)
-
-GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
@@ -99,6 +90,8 @@ GEM
       steno
     builder (3.2.3)
     byebug (9.0.6)
+    cf-copilot (0.0.2)
+      grpc (~> 1.0)
     cf-uaa-lib (3.13.0)
       httpclient (~> 2.8, >= 2.8.2.4)
       multi_json (~> 1.12.0, >= 1.12.1)
@@ -443,7 +436,7 @@ DEPENDENCIES
   awesome_print
   bits_service_client
   byebug
-  cf-copilot!
+  cf-copilot
   cf-perm!
   cf-perm-test-helpers!
   cf-uaa-lib (~> 3.13.0)
