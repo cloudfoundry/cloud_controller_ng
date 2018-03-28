@@ -42,12 +42,12 @@ includes:
   - resources/apps/stop
   - resources/apps/delete
   - resources/apps/list
-  - resources/apps/builds
   - resources/builds/header
   - resources/builds/object
   - resources/builds/create
   - resources/builds/get
   - resources/builds/list
+  - resources/builds/list_for_app
   - resources/droplets/header
   - resources/droplets/object
   - resources/droplets/copy
