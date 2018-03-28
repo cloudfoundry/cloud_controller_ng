@@ -31,13 +31,31 @@ module VCAP::CloudController
           end
         end
 
-        context 'when nothing matches the given guid' do
-          subject(:job) { ModelDeletion.new(Space, 'not_a_guid_at_all') }
+        describe 'race conditions' do
+          context 'when nothing matches the given guid' do
+            subject(:job) { ModelDeletion.new(Space, 'not_a_guid_at_all') }
 
-          it 'just returns' do
-            expect {
-              job.perform
-            }.not_to change { Space.count }
+            it 'just returns' do
+              expect {
+                job.perform
+              }.not_to change { Space.count }
+            end
+          end
+
+          context 'when the model is deleted by a parallel job after it is loaded, but before it is deleted' do
+            let(:space) { Space.new }
+            subject(:job) { ModelDeletion.new(Space, 'guid') }
+
+            before do
+              space.id = 1
+              allow(Space).to receive(:find).and_return(space)
+            end
+
+            it 'just returns' do
+              expect {
+                job.perform
+              }.to change { Space.count }.by 0
+            end
           end
         end
 

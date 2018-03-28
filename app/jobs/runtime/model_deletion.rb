@@ -15,7 +15,14 @@ module VCAP::CloudController
 
           model = model_class.find(guid: guid)
           return if model.nil?
-          model.destroy
+
+          model.db.transaction do
+            if model.exists?
+              model.lock!
+
+              model.destroy
+            end
+          end
         end
 
         def job_name_in_configuration
