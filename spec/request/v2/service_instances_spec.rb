@@ -321,6 +321,43 @@ RSpec.describe 'ServiceInstances' do
     end
   end
 
+  describe 'GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters' do
+    let(:service) { VCAP::CloudController::Service.make(:routing, bindings_retrievable: true) }
+    let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let!(:route_binding) { VCAP::CloudController::RouteBinding.make(route: route, service_instance: service_instance) }
+
+    before do
+      allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
+        fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
+        fb.parameters = { 'parameters' => {
+            'top_level_param' => {
+              'nested_param' => true,
+            },
+            'another_param' => 'some-value',
+          } }
+        fb
+      end
+    end
+
+    it 'returns all parameters of the route binding' do
+      get "v2/service_instances/#{service_instance.guid}/routes/#{route.guid}/parameters", nil, headers_for(user)
+
+      expect(last_response).to have_status_code(200)
+
+      parsed_response = last_response.body
+      expect(MultiJson.load(parsed_response)).to be_a_response_like(
+        {
+          'top_level_param' => {
+            'nested_param' => true,
+          },
+          'another_param' => 'some-value',
+        }
+      )
+    end
+  end
+
   describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
 

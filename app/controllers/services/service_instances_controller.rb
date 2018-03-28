@@ -270,6 +270,25 @@ module VCAP::CloudController
       end
     end
 
+    get '/v2/service_instances/:service_instance_guid/routes/:route_guid/parameters', :route_binding_parameters
+    def route_binding_parameters(service_instance_guid, route_guid)
+      service_instance = find_guid_and_validate_access(:read, service_instance_guid, ServiceInstance)
+      route = find_guid_and_validate_access(:read, route_guid, Route)
+
+      route_binding = RouteBinding.find(service_instance: service_instance, route: route)
+      route_binding_does_not_exist!(route_guid, service_instance_guid) unless route_binding
+
+      fetcher = ServiceBindingRead.new
+
+      begin
+        parameters = fetcher.fetch_parameters(route_binding)
+
+        [HTTP::OK, parameters.to_json]
+      rescue ServiceBindingRead::NotSupportedError
+        raise CloudController::Errors::ApiError.new_from_details('ServiceFetchBindingParametersNotSupported')
+      end
+    end
+
     def self.url_for_guid(guid, object=nil)
       if object.class == UserProvidedServiceInstance
         user_provided_path = VCAP::CloudController::UserProvidedServiceInstancesController.path
@@ -277,10 +296,6 @@ module VCAP::CloudController
       else
         "#{path}/#{guid}"
       end
-    end
-
-    def self.not_found_exception(guid, _find_model)
-      CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', guid)
     end
 
     def get_filtered_dataset_for_enumeration(model, ds_without_eager, qp, opts)
@@ -372,7 +387,7 @@ module VCAP::CloudController
 
       HTTP::NO_CONTENT
     rescue ServiceInstanceBindingManager::RouteBindingNotFound
-      invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.")
+      route_binding_does_not_exist!(route_guid, instance_guid)
     rescue ServiceInstanceBindingManager::RouteNotFound
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', route_guid)
     rescue ServiceInstanceBindingManager::ServiceInstanceNotFound
@@ -399,6 +414,10 @@ module VCAP::CloudController
     private_constant :ServiceInstanceSharedToSerializer
 
     private
+
+    def route_binding_does_not_exist!(route_guid, instance_guid)
+      invalid_relation!("Route #{route_guid} is not bound to service instance #{instance_guid}.")
+    end
 
     def find_service_instance(guid)
       find_guid(guid, ManagedServiceInstance)

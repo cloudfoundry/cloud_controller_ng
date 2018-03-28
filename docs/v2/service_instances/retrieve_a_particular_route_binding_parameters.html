@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Instances API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Instances API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Route Binding's Parameters</h2>
+    <h3>GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/service_instances/8fe97ac9-d53a-4858-b6a4-53c20f1fe409/routes/3bbd74b5-516d-409e-a107-19eaf9b2da18/parameters</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMCIsImVtYWlsIjoiZW1haWwtMjkyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.0MsVZ0mRjX1JYkb_CfI1sjMRuP0vy5IgtdK90ktWtGg
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_instances/8fe97ac9-d53a-4858-b6a4-53c20f1fe409/routes/3bbd74b5-516d-409e-a107-19eaf9b2da18/parameters&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzMCIsImVtYWlsIjoiZW1haWwtMjkyQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDN9.0MsVZ0mRjX1JYkb_CfI1sjMRuP0vy5IgtdK90ktWtGg&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">
+{
+  "some-arbitrary-parameter-key": "some-value"
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 5f0b6b5a-990a-4798-bb6a-f7bdfd2ff0d2
+Content-Length: 0
+X-Content-Type-Options: nosniff</pre>
+  </div>
+</div>
+</body>
+</html>
