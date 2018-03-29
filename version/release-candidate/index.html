@@ -2077,105 +2077,6 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 </tbody></table>
 
-          <h3 id="list-builds">List builds</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/builds"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/builds?states=STAGING&amp;page=1&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/builds?states=STAGING&amp;page=1&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_by"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3cb4e243-bed4-49d5-8739-f8b45abdec1c"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
-          </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8e4da443-f255-499c-8b47-b3729b5b7432"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/builds/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve all builds for the app.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/apps/[guid]/builds</code></p>
-
-<h4 id="query-parameters">Query Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>states</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of build states to filter by.</td>
-</tr>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>order_by</strong></td>
-<td><em>string</em></td>
-<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
-</tr>
-</tbody></table>
-
           <h2 id="builds">Builds</h2>
 
 <p>Builds represent the process of staging an application package. There are two types
@@ -2519,6 +2420,105 @@ resource can be created to initiate the staging process. A successful build resu
 <td><strong>app_guids</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of app guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display. Valid values are integers &gt;= 1.</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-builds-for-an-app">List builds for an app</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/builds"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/builds?states=STAGING&amp;page=1&amp;per_page=2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/[guid]/builds?states=STAGING&amp;page=1&amp;per_page=2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_by"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3cb4e243-bed4-49d5-8739-f8b45abdec1c"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bill@example.com"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"STAGING"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="w"> </span><span class="p">],</span><span class="w">
+          </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"package"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8e4da443-f255-499c-8b47-b3729b5b7432"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/builds/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Retrieve all builds for the app.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/apps/[guid]/builds</code></p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>states</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of build states to filter by.</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
