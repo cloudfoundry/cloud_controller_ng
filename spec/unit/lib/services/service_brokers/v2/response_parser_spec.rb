@@ -279,6 +279,10 @@ module VCAP::Services
           'service-broker.com/v2/service_instances/GUID/service_bindings/BINDING_GUID'
         end
 
+        def self.binding_last_operation_uri
+          'service-broker.com/v2/service_instances/GUID/service_bindings/BINDING_GUID/last_operation'
+        end
+
         def self.broker_partial_json
           '""'
         end
@@ -411,9 +415,9 @@ module VCAP::Services
           response_body
         end
 
-        def self.response_not_understood(expected_state, actual_state)
+        def self.response_not_understood(expected_state, actual_state, uri)
           actual_state = actual_state ? "'#{actual_state}'" : 'null'
-          'The service broker returned an invalid response for the request to service-broker.com/v2/service_instances/GUID: ' \
+          "The service broker returned an invalid response for the request to #{uri}: " \
           "expected state was '#{expected_state}', broker returned #{actual_state}."
         end
 
@@ -725,8 +729,8 @@ module VCAP::Services
 
         test_case(:fetch_state, 200, broker_partial_json,                                       error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:fetch_state, 200, broker_malformed_json,                                     error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, instance_uri), expect_warning: true)
-        test_case(:fetch_state, 200, broker_empty_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', ''))
-        test_case(:fetch_state, 200, broker_body_with_state('unrecognized').to_json,            error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', 'unrecognized'))
+        test_case(:fetch_state, 200, broker_empty_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', '', instance_uri))
+        test_case(:fetch_state, 200, broker_body_with_state('unrecognized').to_json,            error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', 'unrecognized', instance_uri))
         test_case(:fetch_state, 200, broker_body_with_state('succeeded').to_json,               result: client_result_with_state('succeeded'))
         test_case(:fetch_state, 200, broker_body_with_state('succeeded').merge('description' => 'a description').to_json, result: client_result_with_state('succeeded', description: 'a description'))
         test_pass_through(:fetch_state, 200, broker_body_with_state('succeeded'),               expected_state: 'succeeded')
@@ -939,7 +943,33 @@ module VCAP::Services
         test_case(:fetch_service_instance, 504, {}.to_json,                                     error: Errors::ServiceBrokerBadResponse, description: broker_bad_response_error(instance_uri, 'Status Code: 504 message, Body: {}'))
         test_common_error_cases(:fetch_service_instance)
 
-        test_case(:fetch_service_binding_last_operation, 200, { last_operation: { state: 'in progress' } }.to_json, result: { 'last_operation' => { 'state' => 'in progress' } })
+        test_pass_through(:fetch_service_binding_last_operation, 200, broker_body_with_state('succeeded'), expected_state: 'succeeded')
+        test_case(:fetch_service_binding_last_operation, 200, { state: 'in progress' }.to_json, result: { 'last_operation' => { 'state' => 'in progress' } })
+        test_case(:fetch_service_binding_last_operation, 200, broker_partial_json,                                       error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_last_operation_uri))
+        test_case(:fetch_service_binding_last_operation, 200, broker_malformed_json,                                     error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_malformed_json, binding_last_operation_uri), expect_warning: true)
+        test_case(:fetch_service_binding_last_operation, 200, broker_empty_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', '', binding_last_operation_uri))
+        test_case(:fetch_service_binding_last_operation, 200, broker_body_with_state('unrecognized').to_json,            error: Errors::ServiceBrokerResponseMalformed, description: response_not_understood('succeeded', 'unrecognized', binding_last_operation_uri))
+        test_case(:fetch_service_binding_last_operation, 200, broker_body_with_state('succeeded').to_json,               result: client_result_with_state('succeeded'))
+        test_case(:fetch_service_binding_last_operation, 200, broker_body_with_state('succeeded').merge('description' => 'a description').to_json, result: client_result_with_state('succeeded', description: 'a description'))
+        test_case(:fetch_service_binding_last_operation, 201, broker_partial_json,                                       error: Errors::ServiceBrokerResponseMalformed)
+        test_case(:fetch_service_binding_last_operation, 201, broker_malformed_json,                                     error: Errors::ServiceBrokerResponseMalformed)
+        test_case(:fetch_service_binding_last_operation, 201, broker_body_with_state('succeeded').to_json,               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 202, broker_partial_json,                                       error: Errors::ServiceBrokerResponseMalformed)
+        test_case(:fetch_service_binding_last_operation, 202, broker_malformed_json,                                     error: Errors::ServiceBrokerResponseMalformed)
+        test_case(:fetch_service_binding_last_operation, 202, broker_body_with_state('succeeded').to_json,               error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 204, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 204, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 204, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 409, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 409, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 409, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 410, broker_empty_json,                                         result: {})
+        test_case(:fetch_service_binding_last_operation, 410, broker_partial_json,                                       result: {})
+        test_case(:fetch_service_binding_last_operation, 410, broker_malformed_json,                                     result: {})
+        test_case(:fetch_service_binding_last_operation, 422, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 422, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
+        test_case(:fetch_service_binding_last_operation, 422, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
+        test_common_error_cases(:fetch_state)
         # rubocop:enable Metrics/LineLength
       end
     end

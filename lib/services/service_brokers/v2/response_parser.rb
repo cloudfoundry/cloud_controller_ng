@@ -212,10 +212,7 @@ module VCAP::Services
         end
 
         def parse_fetch_service_binding_last_operation(path, response)
-          unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
-
-          validator = SuccessValidator.new
-          validator.validate(unvalidated_response.to_hash)
+          parse_fetch_state(path, response)
         end
 
         def fetch_instance_parameters_response_schema

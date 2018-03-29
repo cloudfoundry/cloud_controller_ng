@@ -1477,7 +1477,7 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#fetch_service_binding_last_operation' do
       let(:binding) { VCAP::CloudController::ServiceBinding.make }
       let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make }
-      let(:broker_response) { HttpResponse.new(code: 200, body: { last_operation: { state: 'in progress', description: '10%' } }.to_json) }
+      let(:broker_response) { HttpResponse.new(code: 200, body: { state: 'in progress', description: '10%' }.to_json) }
 
       before do
         binding.service_binding_operation = binding_operation

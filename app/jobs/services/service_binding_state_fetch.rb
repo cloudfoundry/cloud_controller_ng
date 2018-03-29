@@ -2,7 +2,6 @@ module VCAP::CloudController
   module Jobs
     module Services
       class ServiceBindingStateFetch < VCAP::CloudController::Jobs::CCJob
-
         def initialize(service_binding_guid)
           @service_binding_guid = service_binding_guid
           @end_timestamp = Time.now + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
