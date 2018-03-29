@@ -48,6 +48,7 @@ module VCAP::CloudController
             log_level: String, # debug, info, etc.
             log_db_queries:         bool,
             ssl_verify_hostname:    bool,
+            connection_validation_timeout: Integer,
             optional(:ca_cert_path) => String,
           },
 
