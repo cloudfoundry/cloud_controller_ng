@@ -45,12 +45,21 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a ProcessScale::InvalidApp error occurs' do
+      context 'when an AppUpdate::InvalidApp error occurs' do
         it 'wraps the error in an ApiError' do
           allow(apply_manifest_action).to receive(:apply).and_raise(AppUpdate::InvalidApp, 'Specified unknown buildpack name')
           expect {
             job.perform
           }.to raise_error(CloudController::Errors::ApiError, /unknown buildpack name/)
+        end
+      end
+
+      context 'when a ProcessUpdate::InvalidProcess error occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(ProcessUpdate::InvalidProcess, 'Invalid health check type')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /Invalid health check type/)
         end
       end
 

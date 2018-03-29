@@ -1,18 +1,29 @@
 require 'messages/base_message'
 require 'messages/manifest_process_scale_message'
+require 'messages/manifest_process_update_message'
 require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [:buildpack, :command, :disk_quota, :env, :health_check_http_endpoint, :health_check_type, :instances,
-                    :memory, :stack].freeze
+    ALLOWED_KEYS = [
+      :buildpack,
+      :command,
+      :disk_quota,
+      :env,
+      :health_check_http_endpoint,
+      :health_check_type,
+      :timeout,
+      :instances,
+      :memory,
+      :stack
+    ].freeze
 
     HEALTH_CHECK_TYPE_MAPPING = { 'none' => 'process' }.freeze
 
     attr_accessor(*ALLOWED_KEYS)
     attr_accessor :manifest_process_scale_message,
                   :app_update_message,
-                  :manifest_env_update_message,
+                  :app_update_environment_variables_message,
                   :manifest_process_update_message
 
     validates_with NoAdditionalKeysValidator
@@ -32,8 +43,8 @@ module VCAP::CloudController
       super(params)
       @manifest_process_scale_message = ManifestProcessScaleMessage.new(process_scale_attribute_mapping)
       @app_update_message = AppUpdateMessage.new(app_update_attribute_mapping)
-      @manifest_env_update_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
-      @manifest_process_update_message = ProcessUpdateMessage.new(process_update_attribute_mapping)
+      @app_update_environment_variables_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
+      @manifest_process_update_message = ManifestProcessUpdateMessage.new(process_update_attribute_mapping)
     end
 
     def valid?
@@ -88,18 +99,10 @@ module VCAP::CloudController
 
     def process_update_attribute_mapping
       mapping = {}
-      if requested?(:command)
-        mapping[:command] = command || 'null'
-      end
-
-      if requested_keys.include?(:health_check_type)
-        mapping[:health_check] = { type: converted_health_check_type }
-
-        if requested_keys.include?(:health_check_http_endpoint)
-          mapping[:health_check][:data] = { endpoint: health_check_http_endpoint }
-        end
-      end
-
+      mapping[:command] = command || 'null' if requested?(:command)
+      mapping[:health_check_type] = converted_health_check_type if requested?(:health_check_type)
+      mapping[:health_check_http_endpoint] = health_check_http_endpoint if requested?(:health_check_http_endpoint)
+      mapping[:timeout] = timeout if requested?(:timeout)
       mapping
     end
 
@@ -162,8 +165,8 @@ module VCAP::CloudController
     end
 
     def validate_env_update_message!
-      manifest_env_update_message.valid?
-      manifest_env_update_message.errors[:var].each do |error_message|
+      app_update_environment_variables_message.valid?
+      app_update_environment_variables_message.errors[:var].each do |error_message|
         if error_message == 'must be a hash'
           errors[:base] << 'env must be a hash of keys and values'
         else

@@ -392,20 +392,26 @@ module VCAP::CloudController
 
     describe '#process_update_message' do
       let(:parsed_yaml) do
-        { command: command, "health-check-type": health_check_type, "health-check-http-endpoint": health_check_http_endpoint }
+        { 'command' => command,
+          'health-check-type' => health_check_type,
+          'health-check-http-endpoint' => health_check_http_endpoint,
+          'timeout' => health_check_timeout
+        }
       end
 
       let(:command) { 'new-command' }
       let(:health_check_type) { 'http' }
       let(:health_check_http_endpoint) { '/endpoint' }
+      let(:health_check_timeout) { 10 }
 
       context 'when new properties are specified' do
         it 'sets the command and health check type fields in the message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_update_message.command).to eq('new-command')
-          expect(message.manifest_process_update_message.health_check[:type]).to eq('http')
-          expect(message.manifest_process_update_message.health_check[:data][:endpoint]).to eq('/endpoint')
+          expect(message.manifest_process_update_message.health_check_type).to eq('http')
+          expect(message.manifest_process_update_message.health_check_endpoint).to eq('/endpoint')
+          expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
         end
       end
 
@@ -426,23 +432,55 @@ module VCAP::CloudController
           it 'is converted to process' do
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
             expect(message).to be_valid
-            expect(message.manifest_process_update_message.health_check[:type]).to eq('process')
+            expect(message.manifest_process_update_message.health_check_type).to eq('process')
           end
         end
 
-        context 'health check endpoint is not valid uri' do
+        context 'invalid health check endpoint' do
           let(:health_check_http_endpoint) { 'invalid' }
 
           it 'is invalid' do
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Health check endpoint must be a valid URI path')
+            expect(message.errors.full_messages).to include('Health check http endpoint must be a valid URI path')
+          end
+        end
+
+        context 'invalid health check timeout' do
+          let(:health_check_timeout) { -1 }
+
+          it 'is invalid' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Timeout must be greater than or equal to 1')
+          end
+        end
+
+        context 'health check timeout without other health check parameters' do
+          let(:health_check_timeout) { 10 }
+          let(:parsed_yaml) { { "timeout": health_check_timeout } }
+
+          it 'sets the health check timeout in the message' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
           end
         end
       end
 
       context 'command' do
+        context 'when command is not requested' do
+          let(:parsed_yaml) { {} }
+
+          it 'does not set the command field in the process update message' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.requested?(:command)).to be false
+          end
+        end
+
         context 'when a string command of value "null" is specified' do
           let(:command) { 'null' }
 
@@ -497,6 +535,17 @@ module VCAP::CloudController
           expect(message.manifest_process_update_message.requested?(:command)).to be_falsey
           expect(message.manifest_process_update_message.requested?(:health_check)).to be_falsey
         end
+      end
+    end
+
+    describe '#app_update_environment_variables_message' do
+      let(:parsed_yaml) { { 'env' => { 'foo' => 'bar', 'baz' => 4.44444444444, 'qux' => false } } }
+
+      it 'returns a AppUpdateEnvironmentVariablesMessage containing the env vars' do
+        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        expect(message).to be_valid
+        expect(message.app_update_environment_variables_message.var).
+          to eq({ foo: 'bar', baz: 4.44444444444, qux: false })
       end
     end
   end

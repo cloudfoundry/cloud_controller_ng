@@ -13,6 +13,7 @@ module VCAP::CloudController
           internal_service_hostname: String,
 
           default_health_check_timeout: Integer,
+          maximum_health_check_timeout: Integer,
 
           uaa: {
             internal_url: String,

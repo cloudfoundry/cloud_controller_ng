@@ -179,7 +179,7 @@ module VCAP::CloudController
 
       describe 'updating environment variables' do
         let(:message) { AppManifestMessage.new({ env: { 'foo': 'bar' } }) }
-        let(:manifest_env_update_message) { message.manifest_env_update_message }
+        let(:app_update_environment_variables_message) { message.app_update_environment_variables_message }
         let(:app) { AppModel.make }
 
         context 'when the request is valid' do
@@ -193,7 +193,7 @@ module VCAP::CloudController
             app_apply_manifest.apply(app.guid, message)
             expect(AppPatchEnvironmentVariables).to have_received(:new).with(user_audit_info)
             expect(app_patch_env).to have_received(:patch).
-              with(app, manifest_env_update_message)
+              with(app, app_update_environment_variables_message)
           end
         end
 
@@ -294,6 +294,27 @@ module VCAP::CloudController
             expect(process_scale_message.requested?(:disk_in_mb)).to be_falsey
             expect(process_scale_message.requested?(:memory)).to be_falsey
             expect(process_scale_message.requested?(:memory_in_mb)).to be_falsey
+          end
+        end
+      end
+
+      describe 'updating process' do
+        let(:message) { AppManifestMessage.new({ name: 'blah', type: 'process' }) }
+        let(:manifest_process_update_message) { message.manifest_process_update_message }
+        let(:process) { ProcessModel.make }
+        let(:app) { process.app }
+
+        context 'when the request is valid' do
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls ProcessUpdate with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
+            expect(process_update).to have_received(:update).with(process, manifest_process_update_message, ManifestStrategy)
           end
         end
       end
