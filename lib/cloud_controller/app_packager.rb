@@ -88,10 +88,11 @@ class AppPackager
   end
 
   def fix_unzipped_permissions(destination_dir)
-    FileUtils.chmod_R('u+rwX', destination_dir)
-  rescue => e
-    logger.error("Fixing zip file permissions error\n #{e}")
-    invalid_zip!
+    stdout, error, status = Open3.capture3(%(chmod -R u+rwX #{Shellwords.escape(destination_dir)}))
+    unless status.success?
+      logger.error("Fixing zip file permissions error\n STDOUT: \"#{stdout}\"\n STDERR: \"#{error}\"")
+      invalid_zip!
+    end
   end
 
   def empty_directory?(dir)

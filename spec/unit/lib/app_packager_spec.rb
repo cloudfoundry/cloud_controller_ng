@@ -65,6 +65,16 @@ RSpec.describe AppPackager do
       end
     end
 
+    context 'when the zip contains broken symlinks' do
+      let(:input_zip) { File.join(Paths::FIXTURES, 'app_packager_zips', 'broken-file-symlink.zip') }
+
+      it 'successfully unzips' do
+        expect {
+          app_packager.unzip(@tmpdir)
+        }.not_to raise_error
+      end
+    end
+
     context 'when the zip destination does not exist' do
       it 'raises an exception' do
         expect {
@@ -120,11 +130,11 @@ RSpec.describe AppPackager do
     context 'when there is an error adjusting permissions' do
       before do
         allow(Open3).to receive(:capture3).with(/unzip/).and_return(['output', 'error', double(success?: true)])
-        allow(FileUtils).to receive(:chmod_R).and_raise(StandardError.new('bad things happened'))
+        allow(Open3).to receive(:capture3).with(/chmod/).and_return(['output', 'error', double(success?: false)])
       end
 
       it 'raises an exception' do
-        expect(logger).to receive(:error).with "Fixing zip file permissions error\n bad things happened"
+        expect(logger).to receive(:error).with /Fixing zip file permissions error.*\n.*output.*\n.*error.*/
 
         expect {
           app_packager.unzip(@tmpdir)
