@@ -390,9 +390,10 @@ module VCAP::CloudController
       end
     end
 
-    describe '#process_update_message' do
+    describe '#manifest_process_update_message' do
       let(:parsed_yaml) do
-        { 'command' => command,
+        {
+          'command' => command,
           'health-check-type' => health_check_type,
           'health-check-http-endpoint' => health_check_http_endpoint,
           'timeout' => health_check_timeout
@@ -426,6 +427,7 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Health check type must be "port", "process", or "http"')
           end
         end
+
         context 'deprecated health check type none' do
           let(:health_check_type) { 'none' }
 
@@ -447,14 +449,25 @@ module VCAP::CloudController
           end
         end
 
-        context 'invalid health check timeout' do
-          let(:health_check_timeout) { -1 }
+        context 'when health check timeout is not a positive integer' do
+          let(:health_check_timeout) { 0 }
 
           it 'is invalid' do
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Timeout must be greater than or equal to 1')
+          end
+        end
+
+        context 'when health check timeout is not a number' do
+          let(:health_check_timeout) { 'twenty' }
+
+          it 'is invalid' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Timeout is not a number')
           end
         end
 
@@ -466,6 +479,28 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
+          end
+        end
+
+        context 'when health check type is http and endpoint is not specified' do
+          let(:parsed_yaml) { { 'health-check-type' => 'http' } }
+
+          it 'defaults endpoint to "/"' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.health_check_type).to eq('http')
+            expect(message.manifest_process_update_message.health_check_endpoint).to eq('/')
+          end
+        end
+
+        context 'when health check type is not http and endpoint is not specified' do
+          let(:parsed_yaml) { { 'health-check-type' => 'port' } }
+
+          it 'does not default endpoint to "/"' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_message.health_check_type).to eq('port')
+            expect(message.manifest_process_update_message.health_check_endpoint).to be_nil
           end
         end
       end

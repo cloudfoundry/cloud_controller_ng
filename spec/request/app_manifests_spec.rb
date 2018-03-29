@@ -24,6 +24,9 @@ RSpec.describe 'App Manifests' do
             'buildpack' => buildpack.name,
             'stack' => 'cflinuxfs2',
             'command' => 'new-command',
+            'health_check_type' => 'http',
+            'health_check_http_endpoint' => '/health',
+            'timeout' => 42,
             'env' => {
               'k1' => 'mangos',
               'k2' => 'pears',
@@ -50,16 +53,19 @@ RSpec.describe 'App Manifests' do
       expect(web_process.memory).to eq(2048)
       expect(web_process.disk_quota).to eq(1536)
       expect(web_process.command).to eq('new-command')
+      expect(web_process.health_check_type).to eq('http')
+      expect(web_process.health_check_http_endpoint).to eq('/health')
+      expect(web_process.health_check_timeout).to eq(42)
 
       app_model.reload
       lifecycle_data = app_model.lifecycle_data
       expect(lifecycle_data.buildpacks).to include(buildpack.name)
       expect(lifecycle_data.stack).to eq('cflinuxfs2')
-      expect(app_model.environment_variables).to match({
+      expect(app_model.environment_variables).to match(
         'k1' => 'mangos',
         'k2' => 'pears',
         'k3' => 'watermelon'
-      })
+      )
     end
   end
 end

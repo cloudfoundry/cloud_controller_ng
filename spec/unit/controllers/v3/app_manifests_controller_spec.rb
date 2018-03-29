@@ -165,7 +165,91 @@ RSpec.describe AppManifestsController, type: :controller do
       end
     end
 
-    context 'when the request body includes a environment' do
+    context 'when the request body includes a command' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'command' => 'run-me.sh' }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.command).to eq 'run-me.sh'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a health-check-type' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'health-check-type' => 'process' }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.health_check_type).to eq 'process'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a health-check-http-endpoint' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'health-check-http-endpoint' => '/health' }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.health_check_http_endpoint).to eq '/health'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a timeout' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'timeout' => 9001 }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.timeout).to eq '9001'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes an environment variable' do
       let(:request_body) do
         { 'applications' =>
           [{ 'name' => 'blah', 'env' => { 'KEY100' => 'banana' } }] }

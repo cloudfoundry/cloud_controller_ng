@@ -100,9 +100,14 @@ module VCAP::CloudController
     def process_update_attribute_mapping
       mapping = {}
       mapping[:command] = command || 'null' if requested?(:command)
-      mapping[:health_check_type] = converted_health_check_type if requested?(:health_check_type)
       mapping[:health_check_http_endpoint] = health_check_http_endpoint if requested?(:health_check_http_endpoint)
       mapping[:timeout] = timeout if requested?(:timeout)
+
+      if requested?(:health_check_type)
+        mapping[:health_check_type] = converted_health_check_type
+        mapping[:health_check_http_endpoint] ||= '/' if health_check_type == 'http'
+      end
+
       mapping
     end
 
