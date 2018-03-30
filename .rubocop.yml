@@ -1,6 +1,7 @@
 require:
 - ./spec/linters/migration/add_constraint_name.rb
 - ./spec/linters/migration/include_string_size.rb
+- ./spec/linters/migration/require_primary_key.rb
 
 AllCops:
   TargetRubyVersion: 2.4
@@ -126,6 +127,13 @@ Migration/IncludeStringSize:
   Exclude:
     # skip old migration files since we do not want to fix them after they are in the wild
     - !ruby/regexp /db/migrations/201([0-6]|70[1-6]|707[01]).+\.rb$/
+
+Migration/RequirePrimaryKey:
+  Include:
+    - 'db/migrations/**/*'
+  Exclude:
+    # skip old migration files since we do not want to fix them after they are in the wild
+    - !ruby/regexp /db/migrations/201([0-7]|80[1-3]).+\.rb$/
 
 Naming/FileName:
   Exclude:
