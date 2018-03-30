@@ -10,8 +10,10 @@ module VCAP::CloudController
       let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
       let(:volume_mount_services_enabled) { true }
 
+      let(:service) { Service.make(bindings_retrievable: true) }
+      let(:service_plan) { ServicePlan.make(service: service) }
       let(:app) { AppModel.make }
-      let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
+      let(:service_instance) { ManagedServiceInstance.make(space: app.space, service_plan: service_plan) }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: {}) }
       let(:accepts_incomplete) { false }
       let(:request) do
@@ -200,6 +202,26 @@ module VCAP::CloudController
               }.to raise_error('failed')
 
               expect(client).to have_received(:bind)
+            end
+          end
+
+          context 'when bindings_retrievable is false' do
+            let(:service) { Service.make(bindings_retrievable: false) }
+
+            it 'should raise an error' do
+              expect {
+                service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+              }.to raise_error(ServiceBindingCreate::ServiceBrokerInvalidBindigsRetrievable)
+            end
+
+            it 'should trigger orphan mitigation' do
+              expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+
+              begin
+                service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+              rescue ServiceBindingCreate::ServiceBrokerInvalidBindigsRetrievable
+                # tested elsewhere
+              end
             end
           end
         end

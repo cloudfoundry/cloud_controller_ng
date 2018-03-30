@@ -333,7 +333,9 @@ module VCAP::CloudController
 
       context 'for managed instances' do
         let(:broker) { service_instance.service.service_broker }
-        let(:service_instance) { ManagedServiceInstance.make(space: space) }
+        let(:service) { Service.make(bindings_retrievable: false) }
+        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
         let(:req) do
           {
             app_guid: process.guid,
@@ -375,48 +377,61 @@ module VCAP::CloudController
           context 'when accepts_incomplete is true' do
             let(:bind_body) { {} }
 
-            context 'and the broker returns asynchronously' do
-              let(:bind_status) { 202 }
-
-              before do
-                post '/v2/service_bindings?accepts_incomplete=true', req.to_json
-              end
-
-              it 'returns a 202 status code' do
-                expect(last_response).to have_status_code(202)
-              end
-
-              it 'saves the binding in the model' do
-                binding = ServiceBinding.last
-                expect(binding.last_operation.state).to eql('in progress')
-              end
-
-              it 'returns an in progress service binding response' do
-                hash_body = JSON.parse(last_response.body)
-                expect(hash_body['entity']['last_operation']['type']).to eq('create')
-                expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
-              end
-
-              it 'returns a location header' do
-                expect(last_response.headers['Location']).to match(%r{^/v2/service_bindings/[[:alnum:]-]+$})
-              end
-
-              context 'when the service broker returns operation state' do
-                let(:bind_body) { { operation: '123' } }
-
-                it 'persists the operation state' do
-                  binding = ServiceBinding.last
-                  expect(binding.last_operation.broker_provided_operation).to eq('123')
-                end
-              end
+            before do
+              post '/v2/service_bindings?accepts_incomplete=true', req.to_json
             end
 
-            context 'and the broker is synchronous' do
-              let(:bind_status) { 201 }
+            context 'when bindings_retrievable is true' do
+              let(:service) { Service.make(bindings_retrievable: true) }
 
-              it 'returns a 201 status code' do
-                post '/v2/service_bindings?accepts_incomplete=true', req.to_json
-                expect(last_response).to have_status_code(201)
+              context 'and the broker returns asynchronously' do
+                let(:bind_status) { 202 }
+
+                it 'returns a 202 status code' do
+                  expect(last_response).to have_status_code(202)
+                end
+
+                it 'saves the binding in the model' do
+                  binding = ServiceBinding.last
+                  expect(binding.last_operation.state).to eql('in progress')
+                end
+
+                it 'returns an in progress service binding response' do
+                  hash_body = JSON.parse(last_response.body)
+                  expect(hash_body['entity']['last_operation']['type']).to eq('create')
+                  expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
+                end
+
+                it 'returns a location header' do
+                  expect(last_response.headers['Location']).to match(%r{^/v2/service_bindings/[[:alnum:]-]+$})
+                end
+
+                context 'when the service broker returns operation state' do
+                  let(:bind_body) { { operation: '123' } }
+
+                  it 'persists the operation state' do
+                    binding = ServiceBinding.last
+                    expect(binding.last_operation.broker_provided_operation).to eq('123')
+                  end
+                end
+
+                context 'when bindings_retrievable is false' do
+                  let(:service) { Service.make(bindings_retrievable: false) }
+
+                  it 'should throw invalid service binding error' do
+                    expect(last_response).to have_status_code(400)
+                    expect(decoded_response['error_code']).to eq 'CF-ServiceBindingInvalid'
+                    expect(decoded_response['description']).to match('Could not create asynchronous binding')
+                  end
+                end
+              end
+
+              context 'and the broker is synchronous' do
+                let(:bind_status) { 201 }
+
+                it 'returns a 201 status code' do
+                  expect(last_response).to have_status_code(201)
+                end
               end
             end
           end
