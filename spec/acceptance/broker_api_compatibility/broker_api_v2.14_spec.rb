@@ -146,7 +146,7 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'when the broker returns asynchronously' do
-        it 'performs the asynchronously flow and fetches the last operation from the broker' do
+        it 'performs the flow asynchronously and fetches the last operation from the broker' do
           operation_data = 'some_operation_data'
 
           stub_async_binding_last_operation(operation_data: operation_data)
@@ -162,17 +162,36 @@ RSpec.describe 'Service Broker API integration' do
           )).to have_been_made
         end
 
-        context 'when the broker returns synchronously' do
-          it 'performs the synchronous flow' do
-            async_bind_service(status: 201)
+        context 'when bindings_retrievable is true' do
+          let(:catalog) do
+            catalog = default_catalog
+            catalog[:services].first[:bindings_retrievable] = true
+            catalog
+          end
 
-            expect(
-              a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+\?accepts_incomplete=true})
-            ).to have_been_made
+          it 'fetches the service binding details' do
+            stub_async_binding_last_operation
+            async_bind_service(status: 202)
 
             service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
-            expect(service_binding).not_to be_nil
+
+            Delayed::Worker.new.work_off
+
+            expect(a_request(:get, service_binding_url(service_binding))).to have_been_made
           end
+        end
+      end
+
+      context 'when the broker returns synchronously' do
+        it 'performs the synchronous flow' do
+          async_bind_service(status: 201)
+
+          expect(
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+\?accepts_incomplete=true})
+          ).to have_been_made
+
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          expect(service_binding).not_to be_nil
         end
       end
     end

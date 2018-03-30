@@ -35,6 +35,42 @@ module VCAP::CloudController
 
           before do
             allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+            allow(client).to receive(:fetch_service_binding_last_operation).and_return(last_operation: { state: state, description: description })
+          end
+
+          context 'when the last_operation state is succeeded' do
+            let(:state) { 'succeeded' }
+            let(:description) { '100%' }
+            let(:binding_response) {}
+
+            before do
+              allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
+
+              # executes job and enqueues another job
+              run_job(job)
+            end
+
+            context 'and the broker returns valid credentials' do
+              let(:binding_response) { { 'credentials': { 'a': 'b' } } }
+
+              it 'should not enqueue another fetch job' do
+                expect(Delayed::Job.count).to eq 0
+              end
+
+              it 'should update the service binding' do
+                service_binding.reload
+                expect(service_binding.credentials).to eq({ 'a' => 'b' })
+              end
+            end
+
+            context 'and the broker returns credentials and something else' do
+              let(:binding_response) { { 'credentials': { 'a': 'b' }, 'parameters': { 'c': 'd' } } }
+
+              it 'should update the service binding' do
+                service_binding.reload
+                expect(service_binding.credentials).to eq({ 'a' => 'b' })
+              end
+            end
           end
 
           context 'when the broker responds to last_operation' do

@@ -15,8 +15,13 @@ module VCAP::CloudController
           client = VCAP::Services::ServiceClientProvider.provide(instance: binding.service_instance)
 
           last_operation_result = client.fetch_service_binding_last_operation(binding)
+          if last_operation_result[:last_operation][:state] == 'succeeded'
+            binding_response = client.fetch_service_binding(binding)
+            binding.update({ 'credentials' => binding_response[:credentials] })
+          end
+
           binding.last_operation.update(last_operation_result[:last_operation])
-          retry_job unless binding.last_operation.state == 'failed'
+          retry_job unless binding.terminal_state?
         rescue HttpResponseError, Sequel::Error, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout => e
           logger = Steno.logger('cc-background')
           logger.error("There was an error while fetching the service binding operation state: #{e}")

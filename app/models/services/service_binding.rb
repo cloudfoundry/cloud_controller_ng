@@ -102,6 +102,10 @@ module VCAP::CloudController
       !service_binding_operation || service_binding_operation.state == 'succeeded'
     end
 
+    def terminal_state?
+      !service_binding_operation || (['succeeded', 'failed'].include? service_binding_operation.state)
+    end
+
     def save_with_new_operation(last_operation)
       ServiceBinding.db.transaction do
         save_changes
