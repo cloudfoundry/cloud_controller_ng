@@ -1,8 +1,11 @@
 require 'actions/process_scale'
+require 'actions/service_binding_create'
 require 'cloud_controller/strategies/manifest_strategy'
 
 module VCAP::CloudController
   class AppApplyManifest
+    SERVICE_BINDING_TYPE = 'app'
+
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
     end
@@ -18,12 +21,51 @@ module VCAP::CloudController
       ProcessUpdate.new(user_audit_info).update(app.web_process, message.manifest_process_update_message, ManifestStrategy)
 
       AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message.app_update_environment_variables_message)
-
+      create_service_instances(message, app)
       app
     end
 
     def logger
       @logger ||= Steno.logger('cc.action.app_apply_manifest')
+    end
+
+    private
+
+    def create_service_instances(message, app)
+      return unless message.services.present?
+
+      action = ServiceBindingCreate.new(user_audit_info)
+      message.services.each do |name|
+        service_instance = ServiceInstance.find(name: name)
+        service_instance_not_found!(name) unless service_instance
+        next if binding_exists?(service_instance, app)
+        binding_message = service_binding_message(app, service_instance)
+        action.create(app, service_instance, binding_message, volume_services_enabled?)
+      end
+    end
+
+    def binding_exists?(service_instance, app)
+      ServiceBinding.find(service_instance: service_instance, app: app)
+    end
+
+    # ServiceBindingCreate uses the app_guid and service_instance_guid for audit_hash, but there is different story for audit events
+    # In manifests, unlike in the API endpoint, these parameters must be fetched from DB
+    def service_binding_message(app, service)
+      ServiceBindingCreateMessage.new({
+        type: SERVICE_BINDING_TYPE,
+        relationships: {
+        },
+        data: {
+        }
+      })
+    end
+
+    def service_instance_not_found!(name)
+      raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "Service instance '#{name}' not found")
+    end
+
+    def volume_services_enabled?
+      VCAP::CloudController::Config.config.get(:volume_services_enabled)
     end
 
     attr_reader :user_audit_info

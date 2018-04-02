@@ -9,6 +9,7 @@ module VCAP::CloudController
     let(:app_update) { instance_double(AppUpdate) }
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
     let(:process_update) { instance_double(ProcessUpdate) }
+    let(:service_binding_create) { instance_double(ServiceBindingCreate) }
 
     describe '#apply' do
       before do
@@ -23,6 +24,10 @@ module VCAP::CloudController
         allow(ProcessUpdate).
           to receive(:new).and_return(process_update)
         allow(process_update).to receive(:update)
+
+        allow(ServiceBindingCreate).
+          to receive(:new).and_return(service_binding_create)
+        allow(service_binding_create).to receive(:create)
 
         allow(AppPatchEnvironmentVariables).
           to receive(:new).and_return(app_patch_env)
@@ -315,6 +320,81 @@ module VCAP::CloudController
             app_apply_manifest.apply(app.guid, message)
             expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
             expect(process_update).to have_received(:update).with(process, manifest_process_update_message, ManifestStrategy)
+          end
+        end
+      end
+
+      describe 'creating service bindings' do
+        let(:message) { AppManifestMessage.new({services: ['si-name'] }) } # why defined here?
+        let(:space) {Space.make }
+        let(:app) { AppModel.make(space: space) }
+
+        before do
+          TestConfig.override(volume_services_enabled: false)
+        end
+
+        context 'valid request' do
+          let(:message) { AppManifestMessage.new({services: ['si-name', 'si2-name'] }) }
+          let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space)}
+          let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space)}
+
+          it 'calls ServiceBindingCreate with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info)
+            expect(service_binding_create).to have_received(:create).
+              with(app, service_instance, instance_of(ServiceBindingCreateMessage), false)
+            expect(service_binding_create).to have_received(:create).
+              with(app, service_instance_2, instance_of(ServiceBindingCreateMessage), false)
+          end
+
+          context 'overriding service_binding_create.create' do
+            let(:service_binding_create2) { instance_double(ServiceBindingCreate) }
+
+            before do
+              allow(ServiceBindingCreate).to receive(:new).and_return(service_binding_create2)
+            end
+
+            it 'calls ServiceBindingCreate.create with the correct type' do
+              i = 0
+              allow(service_binding_create2).to receive(:create) do |_, _, binding_message, _|
+                expect(binding_message.type).to eq('app')
+                i += 1
+              end
+              app_apply_manifest.apply(app.guid, message)
+              expect(i).to eq(2)
+            end
+          end
+
+          context 'service binding already exists' do
+            let(:message) { AppManifestMessage.new({services: ['si-name'] }) }
+            let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
+
+            it 'does not create the binding' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(service_binding_create).to_not have_received(:create)
+            end
+          end
+
+          context 'volume_services_enabled' do
+            let(:message) { AppManifestMessage.new({services: ['si-name'] }) }
+            before do
+              TestConfig.override(volume_services_enabled: true)
+            end
+
+            it 'passes the volume_services_enabled_flag to ServiceBindingCreate' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(service_binding_create).to have_received(:create).
+                with(app, service_instance, instance_of(ServiceBindingCreateMessage), true)
+            end
+          end
+        end
+
+        context 'when the service instance does not exist' do
+          let(:message) { AppManifestMessage.new({ command: 'new-command', services: ['si-name', 'si-name-2'] }) }
+          it 'bubbles up the error' do
+            expect {
+              app_apply_manifest.apply(app.guid, message)
+            }.to raise_error(CloudController::Errors::NotFound, "Service instance 'si-name' not found")
           end
         end
       end

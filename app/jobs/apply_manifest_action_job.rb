@@ -15,7 +15,8 @@ module VCAP::CloudController
       rescue AppPatchEnvironmentVariables::InvalidApp,
              AppUpdate::InvalidApp,
              ProcessScale::InvalidProcess,
-             ProcessUpdate::InvalidProcess => e
+             ProcessUpdate::InvalidProcess,
+             ServiceBindingCreate::InvalidServiceBinding => e
 
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)
       end

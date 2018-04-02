@@ -183,7 +183,8 @@ module VCAP::CloudController
             optional(:client_ca_file) => String,
             optional(:client_key_file) => String,
             optional(:client_chain_file) => String,
-          }
+          },
+          volume_services_enabled: bool,
         }
       end
       # rubocop:enable Metrics/BlockLength
