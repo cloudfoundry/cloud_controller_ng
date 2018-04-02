@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe ManifestServiceBindingCreateMessage do
     describe '.create_from_http_request' do
       let(:body) {
-        {'services': ['s1', 's2'] }
+        { 'services': ['s1', 's2'] }
       }
 
       it 'returns the correct ManifestServiceBindingCreateMessage' do
@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       let(:body) {
-        {'services': ['s1', 's2'] }
+        { 'services': ['s1', 's2'] }
       }
 
       context 'when all values are correct' do
@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       context 'when service instance guid is not an array' do
         let(:body) {
-          {'services': 'service' }
+          { 'services': 'service' }
         }
 
         it 'is not valid' do
@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       context 'when service instance guid is a nested array' do
         let(:body) {
-          {'services': [['s1', 's2'], 's3'] }
+          { 'services': [['s1', 's2'], 's3'] }
         }
 
         it 'is not valid' do
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       context 'when unexpected keys are requested' do
         let(:body) {
-          {'services': ['s1', 's2'], 'surprise_key': 'surprise' }
+          { 'services': ['s1', 's2'], 'surprise_key': 'surprise' }
         }
 
         it 'is not valid' do

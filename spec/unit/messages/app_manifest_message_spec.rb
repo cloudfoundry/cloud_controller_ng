@@ -229,7 +229,7 @@ module VCAP::CloudController
             message = AppManifestMessage.new(params)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Services must be an array')
+            expect(message.errors.full_messages).to include('Services must be a list of service instance names')
           end
         end
       end
@@ -598,17 +598,6 @@ module VCAP::CloudController
         expect(message).to be_valid
         expect(message.app_update_environment_variables_message.var).
           to eq({ foo: 'bar', baz: 4.44444444444, qux: false })
-      end
-    end
-
-    describe '#service_bindings_message' do
-      let(:parsed_yaml) { { 'services': ['s1', 's2'] } }
-
-      it 'returns a message' do
-        message = AppManifestMessage.create_from_http_request(parsed_yaml)
-        expect(message).to be_valid
-        expect(message.service_bindings_message)
-          .to eq({type: 'app'})
       end
     end
   end

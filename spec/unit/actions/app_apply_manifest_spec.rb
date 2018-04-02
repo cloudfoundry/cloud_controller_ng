@@ -325,8 +325,8 @@ module VCAP::CloudController
       end
 
       describe 'creating service bindings' do
-        let(:message) { AppManifestMessage.new({services: ['si-name'] }) } # why defined here?
-        let(:space) {Space.make }
+        let(:message) { AppManifestMessage.new({ services: ['si-name'] }) } # why defined here?
+        let(:space) { Space.make }
         let(:app) { AppModel.make(space: space) }
 
         before do
@@ -334,9 +334,9 @@ module VCAP::CloudController
         end
 
         context 'valid request' do
-          let(:message) { AppManifestMessage.new({services: ['si-name', 'si2-name'] }) }
-          let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space)}
-          let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space)}
+          let(:message) { AppManifestMessage.new({ services: ['si-name', 'si2-name'] }) }
+          let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
+          let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space) }
 
           it 'calls ServiceBindingCreate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
@@ -366,7 +366,7 @@ module VCAP::CloudController
           end
 
           context 'service binding already exists' do
-            let(:message) { AppManifestMessage.new({services: ['si-name'] }) }
+            let(:message) { AppManifestMessage.new({ services: ['si-name'] }) }
             let!(:binding) { ServiceBinding.make(service_instance: service_instance, app: app) }
 
             it 'does not create the binding' do
@@ -376,7 +376,7 @@ module VCAP::CloudController
           end
 
           context 'volume_services_enabled' do
-            let(:message) { AppManifestMessage.new({services: ['si-name'] }) }
+            let(:message) { AppManifestMessage.new({ services: ['si-name'] }) }
             before do
               TestConfig.override(volume_services_enabled: true)
             end

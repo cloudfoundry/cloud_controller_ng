@@ -9,7 +9,7 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
 
     validate :services do
-      errors.add(:services, 'must be a list of service instance names') unless (services.is_a?(Array) && services.all? {|service| service.is_a?(String)})
+      errors.add(:services, 'must be a list of service instance names') unless services.is_a?(Array) && services.all? { |service| service.is_a?(String) }
     end
 
     def self.create_from_http_request(body)

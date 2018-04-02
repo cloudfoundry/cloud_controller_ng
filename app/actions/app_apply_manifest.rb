@@ -4,7 +4,7 @@ require 'cloud_controller/strategies/manifest_strategy'
 
 module VCAP::CloudController
   class AppApplyManifest
-    SERVICE_BINDING_TYPE = 'app'
+    SERVICE_BINDING_TYPE = 'app'.freeze
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
