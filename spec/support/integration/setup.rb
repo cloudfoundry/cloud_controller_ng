@@ -1,7 +1,7 @@
 require 'English'
 
 module IntegrationSetup
-  CC_START_TIMEOUT = 20
+  CC_START_TIMEOUT = 60
   SLEEP_INTERVAL = 0.5
 
   def start_cc(opts={})
