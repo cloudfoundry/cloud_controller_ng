@@ -7797,6 +7797,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>A key-value hash of environment variables to be used for the app when running.</td>
 </tr>
 <tr>
+<td><strong>health-check-http-endpoint</strong></td>
+<td>Endpoint called to determine if the app is healthy.</td>
+</tr>
+<tr>
 <td><strong>instances</strong></td>
 <td>The number of instances to run.</td>
 </tr>
@@ -7811,6 +7815,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>stack</strong></td>
 <td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code>.</td>
+</tr>
+<tr>
+<td><strong>timeout</strong></td>
+<td>Time in seconds at which the health-check will report failure.</td>
 </tr>
 </tbody></table>
 
