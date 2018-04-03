@@ -230,6 +230,28 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'HealthCheckValidator' do
+      let(:health_check_class) do
+        Class.new(fake_class) do
+          attr_accessor :health_check_type, :health_check_http_endpoint
+
+          validates_with HealthCheckValidator
+        end
+      end
+
+      context 'when the healthcheck type is not "http"' do
+        it 'correctly adds the health_check_type validation errors' do
+          message = health_check_class.new({
+            health_check_type: 'not-http',
+            health_check_http_endpoint: 'a-great-uri'
+          })
+
+          expect(message).to_not be_valid
+          expect(message.errors_on(:health_check_type)).to include('must be "http" to set a health check HTTP endpoint')
+        end
+      end
+    end
+
     describe 'LifecycleValidator' do
       let(:lifecycle_class) do
         Class.new(fake_class) do

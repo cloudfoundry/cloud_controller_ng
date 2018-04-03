@@ -83,6 +83,14 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class HealthCheckValidator < ActiveModel::Validator
+    def validate(record)
+      if record.health_check_type != 'http'
+        record.errors.add(:health_check_type, 'must be "http" to set a health check HTTP endpoint')
+      end
+    end
+  end
+
   class LifecycleValidator < ActiveModel::Validator
     def validate(record)
       data_message = {

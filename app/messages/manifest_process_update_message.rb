@@ -10,7 +10,12 @@ module VCAP::CloudController
       ManifestProcessUpdateMessage.new(body.deep_symbolize_keys)
     end
 
+    def self.health_check_endpoint_and_type_requested?
+      proc { |a| a.requested?(:health_check_type) && a.requested?(:health_check_http_endpoint) }
+    end
+
     validates_with NoAdditionalKeysValidator
+    validates_with HealthCheckValidator, if: health_check_endpoint_and_type_requested?
 
     validates :command,
       string: true,
@@ -35,13 +40,6 @@ module VCAP::CloudController
       super(params)
       @requested_keys << :health_check_timeout if params[:timeout]
       @requested_keys << :health_check_endpoint if params[:health_check_http_endpoint]
-    end
-
-    def valid?
-      super
-      if requested?(:health_check_http_endpoint) && requested?(:health_check_type) && health_check_type != 'http'
-        errors.add(:health_check_type, 'must be "http" to set a health check HTTP endpoint')
-      end
     end
 
     def health_check_endpoint

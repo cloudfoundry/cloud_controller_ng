@@ -129,6 +129,16 @@ module VCAP::CloudController
         end
       end
 
+      context 'when health check type is not http and endpoint is specified' do
+        let(:params) { { health_check_type: 'port', health_check_http_endpoint: '/endpoint' } }
+
+        it 'is not valid' do
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors[:health_check_type]).to include('must be "http" to set a health check HTTP endpoint')
+        end
+      end
+
       describe 'timeout' do
         context 'when timeout is not an number' do
           let(:params) { { timeout: 'hello there' } }
