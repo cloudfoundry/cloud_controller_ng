@@ -74,14 +74,19 @@ RSpec.describe AppManifestsController, type: :controller do
 
       context 'when specified manifest fails validations' do
         let(:request_body) do
-          { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit', 'command' => '', 'env' => 42 }] }
+          { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit',
+                                 'command' => '', 'env' => 42,
+                                 'health-check-http-endpoint' => '/endpoint',
+                                 'health-check-type' => 'foo',
+                                 'timeout' => -42
+          }] }
         end
 
         it 'returns a 422 and validation errors' do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(4)
+          expect(errors.size).to eq(7)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
 
             {
@@ -99,6 +104,18 @@ RSpec.describe AppManifestsController, type: :controller do
             'code' => 10008
           }, {
             'detail' => 'env must be a hash of keys and values',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'Health check type must be "http" to set a health check HTTP endpoint',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'Health check type must be "port", "process", or "http"',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }, {
+            'detail' => 'Timeout must be greater than or equal to 1',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }

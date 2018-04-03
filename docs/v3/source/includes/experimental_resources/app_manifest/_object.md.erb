@@ -6,6 +6,7 @@ Field | Description
 **command** | The command used to start the process.
 **disk_quota** | The disk limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
 **env** | A key-value hash of environment variables to be used for the app when running.
+**health-check-http-endpoint** | Endpoint called to determine if the app is healthy.
 **instances** | The number of instances to run.
 **memory** | The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
 **services** | An array of service-instance names to bind to the app.

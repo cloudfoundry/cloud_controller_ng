@@ -440,13 +440,14 @@ module VCAP::CloudController
           it 'is invalid' do
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
             expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Health check type must be "port", "process", or "http"')
+            expect(message.errors.count).to eq(2)
+            expect(message.errors.full_messages).to match_array(['Health check type must be "port", "process", or "http"',
+                                                                 'Health check type must be "http" to set a health check HTTP endpoint'])
           end
         end
 
         context 'deprecated health check type none' do
-          let(:health_check_type) { 'none' }
+          let(:parsed_yaml) { { "health-check-type": 'none' } }
 
           it 'is converted to process' do
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
@@ -496,6 +497,17 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_http_request(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
+          end
+        end
+
+        context 'when health check type is not http and endpoint is specified' do
+          let(:parsed_yaml) { { 'health-check-type' => 'port', 'health-check-http-endpoint' => '/endpoint' } }
+
+          it 'is invalid' do
+            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Health check type must be "http" to set a health check HTTP endpoint')
           end
         end
 
