@@ -96,8 +96,8 @@ module VCAP::CloudController
 
     def env_update_attribute_mapping
       mapping = {}
-      if requested?(:env)
-        mapping[:var] = env
+      if requested?(:env) && env.is_a?(Hash)
+        mapping[:var] = env.each { |k, v| env[k] = v.to_s }
       end
       mapping
     end

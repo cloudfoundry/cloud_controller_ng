@@ -609,7 +609,7 @@ module VCAP::CloudController
         message = AppManifestMessage.create_from_http_request(parsed_yaml)
         expect(message).to be_valid
         expect(message.app_update_environment_variables_message.var).
-          to eq({ foo: 'bar', baz: 4.44444444444, qux: false })
+          to eq({ foo: 'bar', baz: '4.44444444444', qux: 'false' })
       end
     end
   end
