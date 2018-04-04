@@ -44,7 +44,7 @@ module VCAP::CloudController
           raise ServiceBrokerInvalidBindigsRetrievable.new unless binding.service.bindings_retrievable
 
           binding.save_with_new_operation({ type: 'create', state: 'in progress', broker_provided_operation: binding_result[:operation] })
-          job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(binding.guid)
+          job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(binding.guid, @user_audit_info, message.audit_hash)
           enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
           enqueuer.enqueue
         else

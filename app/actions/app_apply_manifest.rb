@@ -90,7 +90,8 @@ module VCAP::CloudController
           app,
           service_instance,
           ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE),
-          volume_services_enabled?
+          volume_services_enabled?,
+          false
         )
       end
     end

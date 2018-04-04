@@ -14,6 +14,14 @@ module VCAP::CloudController
 
         let(:max_duration) { 10080 }
         let(:default_polling_interval) { 60 }
+        let(:user) { User.make }
+        let(:user_email) { 'fake@mail.foo' }
+        let(:user_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
+        let(:request_attrs) do
+          {
+            some_attr: 'some_value'
+          }
+        end
 
         before do
           TestConfig.override({
@@ -28,7 +36,7 @@ module VCAP::CloudController
         end
 
         describe '#perform' do
-          let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid) }
+          let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
           let(:state) { 'in progress' }
           let(:description) { '10%' }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
@@ -41,34 +49,59 @@ module VCAP::CloudController
           context 'when the last_operation state is succeeded' do
             let(:state) { 'succeeded' }
             let(:description) { '100%' }
-            let(:binding_response) {}
+            let(:binding_response) { {} }
 
             before do
               allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
-
-              # executes job and enqueues another job
-              run_job(job)
             end
 
-            context 'and the broker returns valid credentials' do
-              let(:binding_response) { { 'credentials': { 'a': 'b' } } }
-
-              it 'should not enqueue another fetch job' do
-                expect(Delayed::Job.count).to eq 0
+            context 'it executes a job' do
+              before do
+                # executes job and enqueues another job
+                run_job(job)
               end
 
-              it 'should update the service binding' do
-                service_binding.reload
-                expect(service_binding.credentials).to eq({ 'a' => 'b' })
+              context 'and the broker returns valid credentials' do
+                let(:binding_response) { { 'credentials': { 'a': 'b' } } }
+
+                it 'should not enqueue another fetch job' do
+                  expect(Delayed::Job.count).to eq 0
+                end
+
+                it 'should update the service binding' do
+                  service_binding.reload
+                  expect(service_binding.credentials).to eq({ 'a' => 'b' })
+                end
+              end
+
+              context 'and the broker returns credentials and something else' do
+                let(:binding_response) { { 'credentials': { 'a': 'b' }, 'parameters': { 'c': 'd' } } }
+
+                it 'should update the service binding' do
+                  service_binding.reload
+                  expect(service_binding.credentials).to eq({ 'a' => 'b' })
+                end
+              end
+
+              context 'when user information is provided' do
+                context 'and the last operation type is create' do
+                  it 'should create audit event' do
+                    event = Event.find(type: 'audit.service_binding.create')
+                    expect(event).to be
+                    expect(event.actee).to eq(service_binding.guid)
+                    expect(event.metadata['request']).to have_key('some_attr')
+                  end
+                end
               end
             end
 
-            context 'and the broker returns credentials and something else' do
-              let(:binding_response) { { 'credentials': { 'a': 'b' }, 'parameters': { 'c': 'd' } } }
+            context 'when the user has gone away' do
+              it 'should not create an audit event' do
+                user.destroy
 
-              it 'should update the service binding' do
-                service_binding.reload
-                expect(service_binding.credentials).to eq({ 'a' => 'b' })
+                run_job(job)
+
+                expect(Event.find(type: 'audit.service_binding.create')).to be_nil
               end
             end
           end
@@ -195,7 +228,7 @@ module VCAP::CloudController
           end
 
           context 'when the service binding has been purged' do
-            let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new('bad-binding-guid') }
+            let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new('bad-binding-guid', user_info, request_attrs) }
 
             it 'successfully exits the job' do
               # executes job and enqueues another job

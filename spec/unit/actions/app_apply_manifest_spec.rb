@@ -537,9 +537,9 @@ module VCAP::CloudController
             app_apply_manifest.apply(app.guid, message)
             expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info)
             expect(service_binding_create).to have_received(:create).
-              with(app, service_instance, instance_of(ServiceBindingCreateMessage), false)
+              with(app, service_instance, instance_of(ServiceBindingCreateMessage), false, false)
             expect(service_binding_create).to have_received(:create).
-              with(app, service_instance_2, instance_of(ServiceBindingCreateMessage), false)
+              with(app, service_instance_2, instance_of(ServiceBindingCreateMessage), false, false)
           end
 
           context 'overriding service_binding_create.create' do
@@ -579,7 +579,7 @@ module VCAP::CloudController
             it 'passes the volume_services_enabled_flag to ServiceBindingCreate' do
               app_apply_manifest.apply(app.guid, message)
               expect(service_binding_create).to have_received(:create).
-                with(app, service_instance, instance_of(ServiceBindingCreateMessage), true)
+                with(app, service_instance, instance_of(ServiceBindingCreateMessage), true, false)
             end
           end
         end
