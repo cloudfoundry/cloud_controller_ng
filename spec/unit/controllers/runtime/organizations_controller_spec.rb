@@ -728,6 +728,45 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/user_roles' do
+      context 'when the user is admin' do
+        let(:mgr) { User.make(guid: 'mgr-lemon') }
+        let(:user) { User.make(guid: 'user-lime') }
+        let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+        before do
+          allow(uaa_client).to receive(:usernames_for_ids).and_return({})
+        end
+
+        it 'returns a 200 and the expected users and roles' do
+          set_current_user_as_admin
+
+          get "/v2/organizations/#{org.guid}/user_roles"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].size).to eq(2)
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
+          expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/], [user.guid, %w/org_user/]])
+        end
+
+        it 'supports querying by user' do
+          set_current_user_as_admin
+
+          get "/v2/organizations/#{org.guid}/user_roles?q=user_guid:#{user.guid}"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].size).to eq(1)
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
+          expect(parts).to match_array([[user.guid, %w/org_user/]])
+        end
+
+        it 'supports querying for the manager' do
+          set_current_user_as_admin
+
+          get "/v2/organizations/#{org.guid}/user_roles?q=user_guid:#{mgr.guid}"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].size).to eq(1)
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
+          expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/]])
+        end
+      end
+
       context 'for an organization that does not exist' do
         it 'returns a 404' do
           set_current_user_as_admin
