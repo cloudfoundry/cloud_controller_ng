@@ -647,7 +647,7 @@ module VCAP::CloudController
 
           before do
             allow_any_instance_of(RouteValidator).to receive(:validate)
-            allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
+            allow(PortGenerator).to receive(:generate_port).and_return(generated_port)
           end
 
           context 'when requesting a randomly generated port' do
@@ -675,6 +675,27 @@ module VCAP::CloudController
                 expect(last_response.body).to include("\"port\": #{generated_port}")
                 expect(last_response.headers).to include('X-CF-Warnings')
                 expect(last_response.headers['X-CF-Warnings']).to include(port_override_warning)
+              end
+            end
+
+            context 'and the generated port is already taken due to race conditions' do
+              before do
+                allow(PortGenerator).to receive(:generate_port).and_return(generated_port, generated_port + 1)
+
+                call_count = 0
+                allow_any_instance_of(RouteCreate).to receive(:create_route) do |_, args|
+                  call_count += 1
+                  raise Sequel::UniqueConstraintViolation.new('port already taken') if call_count == 1
+                  Route.make(port: args[:route_hash]['port'])
+                end
+              end
+
+              it 'generates a different port and creates the route' do
+                post '/v2/routes?generate_port=true', MultiJson.dump(req), headers_for(user)
+
+                expect(last_response.status).to eq(201)
+                expect(last_response.body).to include("\"port\": #{generated_port + 1}")
+                expect(last_response.headers).not_to include('X-CF-Warnings')
               end
             end
           end
@@ -708,7 +729,7 @@ module VCAP::CloudController
             let(:domain_guid) { domain.guid }
 
             before do
-              allow_any_instance_of(PortGenerator).to receive(:generate_port).and_return(generated_port)
+              allow(PortGenerator).to receive(:generate_port).and_return(generated_port)
             end
 
             it 'returns 403' do

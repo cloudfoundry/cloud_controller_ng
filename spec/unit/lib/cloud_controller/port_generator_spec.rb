@@ -9,7 +9,6 @@ module VCAP::CloudController
 
     let(:domain_guid1) { domain1.guid }
     let(:domain1) { SharedDomain.make(router_group_guid: router_group_guid1) }
-    let(:generator1) { PortGenerator.new(domain_guid1) }
     let(:space_quota) { SpaceQuotaDefinition.make }
     let(:space) { Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
     let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
@@ -21,18 +20,18 @@ module VCAP::CloudController
 
     describe 'generate_port' do
       it 'generates a port' do
-        port = generator1.generate_port(Array(1024..65535))
+        port = PortGenerator.generate_port(domain_guid1, Array(1024..65535))
 
         expect((1024..65535).cover?(port)).to eq(true)
       end
 
       it 'runs out of ports' do
         3.times do
-          port = generator1.generate_port(Array(1024..1026))
+          port = PortGenerator.generate_port(domain_guid1, Array(1024..1026))
           Route.make(domain: domain1, port: port, space: space)
         end
 
-        port = generator1.generate_port(Array(1024..1026))
+        port = PortGenerator.generate_port(domain_guid1, Array(1024..1026))
         expect(port).to eq(-1)
       end
 
@@ -41,14 +40,13 @@ module VCAP::CloudController
         let(:router_group2) { double('router_group2', type: router_group_type, guid: router_group_guid2) }
 
         let(:domain2) { SharedDomain.make(router_group_guid: router_group_guid2) }
-        let(:generator2) { PortGenerator.new(domain2.guid) }
 
         it 'hands out the same port for multiple router groups' do
           Route.make(domain: domain1, port: 60001, space: space)
           Route.make(domain: domain2, port: 60001, space: space)
 
-          port1 = generator1.generate_port(Array(60001..60002))
-          port2 = generator2.generate_port(Array(60001..60002))
+          port1 = PortGenerator.generate_port(domain2.guid, Array(60001..60002))
+          port2 = PortGenerator.generate_port(domain2.guid, Array(60001..60002))
 
           expect(port1).to eq(port2)
         end
