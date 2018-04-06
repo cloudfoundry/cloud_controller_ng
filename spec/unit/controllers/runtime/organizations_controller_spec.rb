@@ -728,7 +728,6 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/user_roles' do
-
       context 'when the user is admin' do
         let(:mgr) { User.make(guid: 'mgr-lemon') }
         let(:user) { User.make(guid: 'user-lime') }
@@ -743,7 +742,7 @@ module VCAP::CloudController
           get "/v2/organizations/#{org.guid}/user_roles"
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(2)
-          parts = parsed_response['resources'].map {|res| [res['metadata']['guid'], res['entity']['organization_roles'].sort]}
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
           expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/], [user.guid, %w/org_user/]])
         end
 
@@ -753,7 +752,7 @@ module VCAP::CloudController
           get "/v2/organizations/#{org.guid}/user_roles?q=user_guid:#{user.guid}"
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(1)
-          parts = parsed_response['resources'].map {|res| [res['metadata']['guid'], res['entity']['organization_roles'].sort]}
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
           expect(parts).to match_array([[user.guid, %w/org_user/]])
         end
 
@@ -763,10 +762,9 @@ module VCAP::CloudController
           get "/v2/organizations/#{org.guid}/user_roles?q=user_guid:#{mgr.guid}"
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].size).to eq(1)
-          parts = parsed_response['resources'].map {|res| [res['metadata']['guid'], res['entity']['organization_roles'].sort]}
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
           expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/]])
         end
-
       end
 
       context 'for an organization that does not exist' do
