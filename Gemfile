@@ -1,8 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'actionpack'
-gem 'actionview'
-gem 'activemodel'
 gem 'addressable'
 gem 'allowy'
 gem 'cf-copilot'
@@ -27,7 +24,6 @@ gem 'palm_civet'
 gem 'posix-spawn', '~> 0.3.6'
 gem 'protobuf', '3.6.12'
 gem 'public_suffix'
-gem 'railties'
 gem 'rake'
 gem 'rfc822'
 gem 'rubyzip'
@@ -42,13 +38,20 @@ gem 'unf'
 gem 'vmstat', '~> 2.0'
 gem 'yajl-ruby'
 
+# Rails Components
+gem 'actionpack'
+gem 'actionview'
+gem 'activemodel'
+gem 'railties'
+
+# Blobstore and Bits Service Dependencies
+gem 'bits_service_client'
 gem 'fog-aws'
 gem 'fog-azure-rm'
 gem 'fog-google'
 gem 'fog-local'
 gem 'fog-openstack'
 
-gem 'bits_service_client'
 gem 'cf-uaa-lib', '~> 3.13.0'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
