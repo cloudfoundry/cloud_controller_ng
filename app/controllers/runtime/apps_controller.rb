@@ -81,8 +81,6 @@ module VCAP::CloudController
       app_instance_limit_errors = e.errors.on(:app_instance_limit)
       state_errors              = e.errors.on(:state)
       docker_errors             = e.errors.on(:docker)
-      diego_to_dea_errors       = e.errors.on(:diego_to_dea)
-      docker_to_dea_errors      = e.errors.on(:docker_to_dea)
 
       if space_and_name_errors
         CloudController::Errors::ApiError.new_from_details('AppNameTaken', attributes['name'])
@@ -100,10 +98,6 @@ module VCAP::CloudController
         CloudController::Errors::ApiError.new_from_details('AppInvalid', 'Invalid app state provided')
       elsif docker_errors && docker_errors.include?(:docker_disabled)
         CloudController::Errors::ApiError.new_from_details('DockerDisabled')
-      elsif diego_to_dea_errors
-        CloudController::Errors::ApiError.new_from_details('MultipleAppPortsMappedDiegoToDea')
-      elsif docker_to_dea_errors
-        CloudController::Errors::ApiError.new_from_details('DockerAppToDea')
       else
         CloudController::Errors::ApiError.new_from_details('AppInvalid', e.errors.full_messages)
       end

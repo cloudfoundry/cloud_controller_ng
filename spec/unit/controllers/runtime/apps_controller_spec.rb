@@ -297,28 +297,6 @@ module VCAP::CloudController
             end
           end
         end
-
-        context 'when diego is set to false' do
-          context 'when no custom ports are specified' do
-            it 'sets the ports to nil' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: false))
-              expect(last_response.status).to eq(201)
-              expect(decoded_response['entity']['ports']).to be nil
-              expect(decoded_response['entity']['diego']).to be false
-
-              warning = last_response.headers['X-Cf-Warnings']
-              expect(warning).to be_nil
-            end
-          end
-
-          context 'when custom ports are specified' do
-            it 'returns an error' do
-              post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: false, ports: [9090, 5222]))
-              expect(last_response.status).to eq(400)
-              expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
-            end
-          end
-        end
       end
 
       it 'creates the app' do
@@ -613,62 +591,6 @@ module VCAP::CloudController
           expect(decoded_response['entity']['diego']).to be false
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
           expect(warning).to include('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT')
-        end
-
-        context 'when custom ports are specified as part of update' do
-          it 'returns error indicating custom ports need to be removed' do
-            put "/v2/apps/#{process.guid}", '{ "diego": false, "ports":[9090] }'
-            expect(last_response.status).to eq(400)
-            expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
-          end
-        end
-
-        context 'when the app has existing custom ports' do
-          let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
-          let(:route) { Route.make(space: process.space) }
-          let(:route_mapping) { RouteMappingModel.make(app: process.app, route: route) }
-
-          it 'removes the app ports from the route mapping' do
-            put "/v2/apps/#{process.guid}", '{ "diego": false }'
-            expect(last_response).to have_status_code(201)
-            expect(decoded_response['entity']['ports']).to be nil
-            expect(decoded_response['entity']['diego']).to be false
-          end
-        end
-
-        context 'when the app is mapped to multiple ports' do
-          let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
-          let(:route) { Route.make(space: process.space) }
-          let!(:route_mapping_1) { RouteMappingModel.make(app: process.app, route: route, app_port: 9090) }
-          let!(:route_mapping_2) { RouteMappingModel.make(app: process.app, route: route, app_port: 5222) }
-          let(:error_message) do
-            'Multiple ports are supported for Diego only'
-          end
-
-          it 'returns an error' do
-            put "/v2/apps/#{process.guid}", '{ "diego": false }'
-            expect(last_response).to have_status_code(400)
-            expect(decoded_response['error_code']).to eq('CF-MultipleAppPortsMappedDiegoToDea')
-            expect(decoded_response['description']).to include(error_message)
-          end
-        end
-
-        context 'when the app is a docker app' do
-          let(:process) { ProcessModelFactory.make(instances: 1, diego: true) }
-          let(:error_message) do
-            'Docker apps cannot run on DEAs'
-          end
-
-          before do
-            process.app.buildpack_lifecycle_data = nil
-          end
-
-          it 'returns an error' do
-            put "/v2/apps/#{process.guid}", '{ "diego": false }'
-            expect(last_response).to have_status_code(400)
-            expect(decoded_response['error_code']).to eq('CF-DockerAppToDea')
-            expect(decoded_response['description']).to include(error_message)
-          end
         end
       end
 

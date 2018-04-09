@@ -213,8 +213,7 @@ module VCAP::CloudController
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
         HealthCheckPolicy.new(self, health_check_timeout),
         DockerPolicy.new(self),
-        PortsPolicy.new(self, changed_from_dea_to_diego?),
-        DiegoToDeaPolicy.new(self, changed_from_diego_to_dea?)
+        PortsPolicy.new(self),
       ]
     end
 
@@ -275,7 +274,6 @@ module VCAP::CloudController
 
       # column_changed?(:ports) reports false here for reasons unknown
       @ports_changed_by_user = changed_columns.include?(:ports)
-      update_ports(nil) if changed_from_diego_to_dea? && !changed_columns.include?(:ports)
       super
     end
 
@@ -480,7 +478,7 @@ module VCAP::CloudController
     end
 
     def active?
-      if diego? && docker?
+      if docker?
         return false unless FeatureFlag.enabled?(:diego_docker)
       end
       true
@@ -549,14 +547,6 @@ module VCAP::CloudController
       @non_unique_process_types ||= app.processes_dataset.select_map(:type).select do |process_type|
         process_type.downcase == type.downcase
       end
-    end
-
-    def changed_from_diego_to_dea?
-      column_changed?(:diego) && initial_value(:diego).present? && !diego
-    end
-
-    def changed_from_dea_to_diego?
-      column_changed?(:diego) && (initial_value(:diego) == false) && diego
     end
 
     def changed_from_default_ports?

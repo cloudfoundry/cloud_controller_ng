@@ -1632,59 +1632,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      context 'switching from diego to dea' do
-        subject(:process) { ProcessModelFactory.make(app: parent_app, state: 'STARTED', diego: true, ports: [8080, 2345]) }
-        let(:route) { Route.make(host: 'host', space: process.space) }
-        let(:route2) { Route.make(host: 'host', space: process.space) }
-        let!(:route_mapping_1) { RouteMappingModel.make(app: parent_app, route: route, process_type: process.type) }
-        let!(:route_mapping_2) { RouteMappingModel.make(app: parent_app, route: route2, process_type: process.type) }
-
-        before do
-          process.diego = false
-        end
-
-        it 'should not update the version' do
-          expect {
-            process.save
-            process.reload
-          }.not_to change { process.version }
-        end
-
-        it 'should update the version when the user updates a version-updating field' do
-          process.memory = 17
-
-          expect {
-            process.save
-            process.reload
-          }.to change { process.version }
-        end
-
-        it 'fails validations when ports are specified at the same time' do
-          process.ports = [45453]
-
-          expect {
-            process.save
-            process.reload
-          }.to raise_error Sequel::ValidationFailed
-        end
-
-        it 'should set ports to nil' do
-          expect(process.save.reload.ports).to be_nil
-        end
-
-        context 'app with one or more routes and multiple ports' do
-          before do
-            route_mapping_2.update(app_port: 2345)
-          end
-
-          it 'should raise an error' do
-            expect {
-              process.save
-            }.to raise_error Sequel::ValidationFailed, /Multiple app ports not allowed/
-          end
-        end
-      end
     end
 
     describe 'name' do
