@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
       response = client.fetch_service_binding(service_binding)
-      response.fetch('parameters', {})
+      response.fetch(:parameters, {})
     end
   end
 end

@@ -25,17 +25,17 @@ module VCAP::CloudController
 
         context 'and the broker returns a parameters key' do
           it 'returns the parameters fetched from the broker' do
-            broker_response = { 'parameters' => { 'foo' => 'bar' } }
+            broker_response = { parameters: { foo: 'bar' } }
             allow(fake_broker_client).to receive(:fetch_service_instance).with(service_instance).and_return(broker_response)
 
             action = ServiceInstanceRead.new
-            expect(action.fetch_parameters(service_instance)).to eql({ 'foo' => 'bar' })
+            expect(action.fetch_parameters(service_instance)).to eql({ foo: 'bar' })
           end
         end
 
         context 'and the broker returns another key' do
           it 'returns an empty object' do
-            broker_response = { 'something' => { 'foo' => 'bar' } }
+            broker_response = { something: { foo: 'bar' } }
             allow(fake_broker_client).to receive(:fetch_service_instance).with(service_instance).and_return(broker_response)
 
             action = ServiceInstanceRead.new

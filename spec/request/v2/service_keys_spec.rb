@@ -101,15 +101,15 @@ RSpec.describe 'ServiceKeys' do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
         fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
         fb.parameters = {
-          'parameters' => {
-            'top_level_param' => {
-              'nested_param' => true,
+          parameters: {
+            top_level_param: {
+              nested_param: true,
             },
-            'another_param' => 'some-value',
+            another_param: 'some-value',
           },
-          'credentials' =>
+          credentials:
           {
-            'secret' => 'key'
+            secret: 'key'
           }
         }
         fb

@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     def fetch_parameters(service_instance)
       resp = fetch_from_broker(service_instance)
-      resp.fetch('parameters', {})
+      resp.fetch(:parameters, {})
     end
 
     private

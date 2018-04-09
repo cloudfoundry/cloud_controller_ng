@@ -1450,7 +1450,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'returns the broker response' do
         response = client.fetch_service_binding(binding)
-        expect(response).to eq({ 'foo' => 'bar' })
+        expect(response).to eq({ foo: 'bar' })
       end
     end
 
@@ -1470,7 +1470,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'returns the broker response' do
         response = client.fetch_service_instance(instance)
-        expect(response).to eq({ 'foo' => 'bar' })
+        expect(response).to eq({ foo: 'bar' })
       end
     end
 

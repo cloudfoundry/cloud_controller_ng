@@ -434,12 +434,14 @@ RSpec.describe 'ServiceBindings' do
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
         fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
-        fb.parameters = { 'parameters' => {
-          'top_level_param' => {
-            'nested_param' => true,
-          },
-          'another_param' => 'some-value',
-        } }
+        fb.parameters = {
+          parameters: {
+            top_level_param: {
+              nested_param: true,
+            },
+            another_param: 'some-value',
+          }
+        }
         fb
       end
     end
