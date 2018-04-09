@@ -266,8 +266,6 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::SpaceMismatch => e
         raise CloudController::Errors::InvalidAppRelation.new(e.message)
-      rescue ::VCAP::CloudController::V2::RouteMappingCreate::RouteServiceNotSupportedError
-        raise CloudController::Errors::InvalidAppRelation.new("#{process.guid} - Route services are only supported for apps on Diego")
       end
 
       after_update(route)

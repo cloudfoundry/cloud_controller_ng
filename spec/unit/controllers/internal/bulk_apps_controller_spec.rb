@@ -336,24 +336,7 @@ module VCAP::CloudController
                 expect(decoded_response).to include(runners.runner_for_process(process).desire_app_message.as_json)
               end
             end
-
-            context 'when there is a mixture of diego and dea apps' do
-              before do
-                5.times { ProcessModelFactory.make }
-              end
-
-              it 'only returns the diego apps' do
-                diego_apps = runners.diego_processes(100, 0)
-
-                guids = ProcessModel.all.map { |app| Diego::ProcessGuid.from_process(app) }
-                post '/internal/bulk/apps', guids.to_json
-
-                expect(last_response.status).to eq(200)
-                expect(decoded_response.length).to eq(diego_apps.length)
-              end
-            end
           end
-
           # validate max batch size; reject requests that are too large
         end
       end

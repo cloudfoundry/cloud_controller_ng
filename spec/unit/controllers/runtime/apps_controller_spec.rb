@@ -672,16 +672,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when app is dea app' do
-        context 'when custom ports are specified' do
-          it 'returns error indicating custom ports need to be removed' do
-            put "/v2/apps/#{process.guid}", '{ "ports": [9090] }'
-            expect(last_response.status).to eq(400)
-            expect(decoded_response['description']).to include('Custom app ports supported for Diego only. Enable Diego for the app or remove custom app ports.')
-          end
-        end
-      end
-
       context 'when app is diego app' do
         let(:process) { ProcessModelFactory.make(instances: 1, diego: true, ports: [9090, 5222]) }
 
@@ -2143,19 +2133,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a route with a routing service is mapped to a non-diego app' do
-        let(:route_binding) { RouteBinding.make }
-        let(:route) { route_binding.route }
-        let(:process) { ProcessModelFactory.make(space: space, diego: false) }
-        let(:space) { route.space }
-
-        it 'fails to add the route' do
-          put "/v2/apps/#{process.guid}/routes/#{route.guid}", nil
-          expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to match(/The requested route relation is invalid: .* - Route services are only supported for apps on Diego/)
-        end
-      end
-
       context 'when the route is in a different space' do
         let(:route) { Route.make }
 
@@ -2172,7 +2149,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app is diego' do
+      context 'when the app has multiple ports' do
         let(:process) { ProcessModelFactory.make(diego: true, space: route.space, ports: [9797, 7979]) }
 
         it 'uses the first port for the app as the app_port' do

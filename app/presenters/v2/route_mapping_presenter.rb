@@ -18,7 +18,7 @@ module CloudController
         private
 
         def present_app_port(route_mapping)
-          if route_mapping.app.web_process.try(:dea?) || route_mapping.app_port == VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
+          if route_mapping.app_port == VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
             nil
           else
             route_mapping.app_port

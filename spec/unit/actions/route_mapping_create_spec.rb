@@ -59,23 +59,12 @@ module VCAP::CloudController
       context 'when the process is web' do
         let(:process_type) { 'web' }
 
-        context 'dea' do
-          let(:process) { ProcessModel.make(diego: false, app: app, type: process_type, health_check_type: 'none') }
+        let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
-          it 'succeeds' do
-            route_mapping_create.add(message)
-            expect(app.reload.routes).to eq([route])
-          end
-        end
-
-        context 'diego' do
-          let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
-
-          it 'succeeds with the default port' do
-            mapping = route_mapping_create.add(message)
-            expect(app.reload.routes).to eq([route])
-            expect(mapping.app_port).to eq(ProcessModel::DEFAULT_HTTP_PORT)
-          end
+        it 'succeeds with the default port' do
+          mapping = route_mapping_create.add(message)
+          expect(app.reload.routes).to eq([route])
+          expect(mapping.app_port).to eq(ProcessModel::DEFAULT_HTTP_PORT)
         end
 
         context 'docker' do

@@ -153,56 +153,33 @@ module VCAP::CloudController
         context 'when the process is web' do
           let(:process_type) { 'web' }
 
-          context 'dea' do
-            let(:process) { ProcessModel.make(diego: false, app: app, type: process_type, health_check_type: 'none') }
+          let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
-            context 'not requesting a port' do
-              let(:request_attrs) { {} }
-
-              it 'succeeds' do
-                route_mapping_create.add
-                expect(app.reload.routes).to eq([route])
-              end
-            end
-
-            context 'when requesting a port' do
-              let(:requested_port) { 4443 }
-
-              it 'raises AppPortNotSupportedError' do
-                expect { route_mapping_create.add }.to raise_error(RouteMappingCreate::AppPortNotSupportedError)
-              end
+          context 'requesting available port' do
+            let(:requested_port) { 5678 }
+            it 'succeeds' do
+              mapping = route_mapping_create.add
+              expect(app.reload.routes).to eq([route])
+              expect(mapping.app_port).to eq(5678)
             end
           end
 
-          context 'diego' do
-            let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
-
-            context 'requesting available port' do
-              let(:requested_port) { 5678 }
-              it 'succeeds' do
-                mapping = route_mapping_create.add
-                expect(app.reload.routes).to eq([route])
-                expect(mapping.app_port).to eq(5678)
-              end
+          context 'requesting unavailable' do
+            let(:requested_port) { 8888 }
+            it 'raises' do
+              expect {
+                route_mapping_create.add
+              }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
             end
+          end
 
-            context 'requesting unavailable' do
-              let(:requested_port) { 8888 }
-              it 'raises' do
-                expect {
-                  route_mapping_create.add
-                }.to raise_error(RouteMappingCreate::UnavailableAppPort, /8888 is not available/)
-              end
-            end
+          context 'not requesting a port' do
+            let(:request_attrs) { {} }
 
-            context 'not requesting a port' do
-              let(:request_attrs) { {} }
-
-              it 'succeeds using the first available port from the process' do
-                mapping = route_mapping_create.add
-                expect(app.reload.routes).to eq([route])
-                expect(mapping.app_port).to eq(1234)
-              end
+            it 'succeeds using the first available port from the process' do
+              mapping = route_mapping_create.add
+              expect(app.reload.routes).to eq([route])
+              expect(mapping.app_port).to eq(1234)
             end
           end
         end
@@ -316,25 +293,15 @@ module VCAP::CloudController
           let(:route_binding) { RouteBinding.make }
           let(:route) { route_binding.route }
 
-          context 'running on diego' do
-            let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: ports) }
+          let(:process) { ProcessModelFactory.make(space: route.space, diego: true, ports: ports) }
 
-            it 'maps the route' do
-              expect {
-                route_mapping = route_mapping_create.add
-                expect(route_mapping.route.guid).to eq(route.guid)
-                expect(route_mapping.process.guid).to eq(process.guid)
-                expect(route_mapping.app_port).to eq(8888)
-              }.to change { RouteMappingModel.count }.by(1)
-            end
-          end
-
-          context 'running on dea backend' do
-            let(:process) { ProcessModelFactory.make(space: route.space, diego: false) }
-
-            it 'raises RouteServiceNotSupportedError' do
-              expect { route_mapping_create.add }.to raise_error(RouteMappingCreate::RouteServiceNotSupportedError)
-            end
+          it 'maps the route' do
+            expect {
+              route_mapping = route_mapping_create.add
+              expect(route_mapping.route.guid).to eq(route.guid)
+              expect(route_mapping.process.guid).to eq(process.guid)
+              expect(route_mapping.app_port).to eq(8888)
+            }.to change { RouteMappingModel.count }.by(1)
           end
         end
 

@@ -10,15 +10,8 @@ module VCAP::CloudController
 
       with_transaction do
         @process.lock!
-
-        if @process.diego?
-          @process.set(updated_at: Sequel::CURRENT_TIMESTAMP)
-          @process.save_changes({ validate: perform_validation })
-        elsif @process.dea?
-          @process.set_new_version
-          @process.save_changes
-        end
-
+        @process.set(updated_at: Sequel::CURRENT_TIMESTAMP)
+        @process.save_changes({ validate: perform_validation })
         @process.db.after_commit { notify_backend_of_route_update }
       end
     end

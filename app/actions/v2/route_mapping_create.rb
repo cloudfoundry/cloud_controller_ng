@@ -11,10 +11,6 @@ module VCAP::CloudController
       end
       class RoutingApiDisabledError < InvalidRouteMapping
       end
-      class AppPortNotSupportedError < InvalidRouteMapping
-      end
-      class RouteServiceNotSupportedError < InvalidRouteMapping
-      end
 
       DUPLICATE_MESSAGE                   = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
       INVALID_SPACE_MESSAGE               = 'the app and route must belong to the same space'.freeze
@@ -85,8 +81,6 @@ module VCAP::CloudController
 
       def validate!
         validate_routing_api_enabled!
-        validate_route_services!
-        validate_port!
         validate_space!
         validate_available_port!
       end
@@ -108,11 +102,7 @@ module VCAP::CloudController
         return if requested_port.nil?
         return if process.docker?
 
-        if process.dea?
-          raise_unavailable_port!
-        else
-          raise_unavailable_port! unless available_ports.include?(requested_port.to_i)
-        end
+        raise_unavailable_port! unless available_ports.include?(requested_port.to_i)
       end
 
       def validate_space!
@@ -131,18 +121,10 @@ module VCAP::CloudController
         @available_ports ||= Diego::Protocol::OpenProcessPorts.new(process).to_a
       end
 
-      def validate_route_services!
-        raise RouteServiceNotSupportedError.new if !route.route_service_url.nil? && !process.diego?
-      end
-
       def validate_routing_api_enabled!
         if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
           raise RoutingApiDisabledError.new('Routing API is disabled')
         end
-      end
-
-      def validate_port!
-        raise AppPortNotSupportedError.new if request_attrs.key?('app_port') && process.dea?
       end
     end
   end

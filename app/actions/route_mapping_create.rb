@@ -8,8 +8,6 @@ module VCAP::CloudController
     end
     class RoutingApiDisabledError < InvalidRouteMapping
     end
-    class RouteServiceNotSupportedError < InvalidRouteMapping
-    end
 
     DUPLICATE_MESSAGE     = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
@@ -60,7 +58,6 @@ module VCAP::CloudController
 
     def validate!
       validate_routing_api_enabled!
-      validate_route_services!
       validate_space!
     end
 
@@ -70,10 +67,6 @@ module VCAP::CloudController
 
     def app_event_repository
       Repositories::AppEventRepository.new
-    end
-
-    def validate_route_services!
-      raise RouteServiceNotSupportedError.new if !route.route_service_url.nil? && !process.diego?
     end
 
     def validate_routing_api_enabled!

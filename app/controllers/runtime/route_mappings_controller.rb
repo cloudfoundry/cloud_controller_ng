@@ -50,10 +50,6 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('RoutePortNotEnabledOnApp')
     rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError
       raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
-    rescue ::VCAP::CloudController::V2::RouteMappingCreate::RouteServiceNotSupportedError
-      raise CloudController::Errors::InvalidRelation.new('Route services are only supported for apps on Diego')
-    rescue ::VCAP::CloudController::V2::RouteMappingCreate::AppPortNotSupportedError
-      raise CloudController::Errors::ApiError.new_from_details('AppPortMappingRequiresDiego')
     rescue ::VCAP::CloudController::V2::RouteMappingCreate::SpaceMismatch => e
       raise CloudController::Errors::InvalidRelation.new(e.message)
     end

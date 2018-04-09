@@ -159,7 +159,7 @@ The full list of optional test suites can be found [here](https://github.com/clo
 Cloud Controller uses [Steno](http://github.com/cloudfoundry/steno) to manage its logs.
 Each log entry includes a "source" field to designate which module in the code the
 entry originates from.  Some of the possible sources are 'cc.app', 'cc.app_stager',
-'cc.dea.client' and 'cc.healthmanager.client'.
+and 'cc.healthmanager.client'.
 
 Here are some use cases for the different log levels:
 * `error` - the CC received a malformed HTTP request, or a request for a non-existent droplet

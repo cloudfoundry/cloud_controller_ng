@@ -1077,7 +1077,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      it 'marks the apps routes as changed and sends an update to the dea' do
+      it 'marks the apps routes as changed and sends an update to diego' do
         fake_route_handler_app1 = instance_double(ProcessRouteHandler)
         fake_route_handler_app2 = instance_double(ProcessRouteHandler)
 

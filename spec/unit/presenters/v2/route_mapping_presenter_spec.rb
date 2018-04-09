@@ -34,17 +34,6 @@ module CloudController::Presenters::V2
         expect(relations_presenter).to have_received(:to_hash).with(controller, route_mapping, opts, depth, parents, orphans)
       end
 
-      context 'dea app' do
-        before do
-          VCAP::CloudController::ProcessModel.make(app: app, type: 'web', diego: false)
-        end
-
-        it 'presents the app_port as nil' do
-          entity = subject.entity_hash(controller, route_mapping, opts, depth, parents, orphans)
-          expect(entity['app_port']).to be_nil
-        end
-      end
-
       context 'docker app' do
         let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(
           app: app,

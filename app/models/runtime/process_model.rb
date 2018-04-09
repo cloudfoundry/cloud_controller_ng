@@ -83,10 +83,6 @@ module VCAP::CloudController
         where(diego: true)
       end
 
-      def dea
-        where(diego: false)
-      end
-
       def buildpack_type
         inner_join(BuildpackLifecycleDataModel.table_name, app_guid: :app_guid)
       end
@@ -141,10 +137,6 @@ module VCAP::CloudController
     attr_accessor :last_stager_response, :skip_process_observer_on_update
 
     alias_method :diego?, :diego
-
-    def dea?
-      !diego?
-    end
 
     # user_provided_ports method should be called to
     # get the value of ports stored in the database

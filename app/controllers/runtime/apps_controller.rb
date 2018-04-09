@@ -303,8 +303,6 @@ module VCAP::CloudController
         # the route is already mapped, consider the request successful
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::RoutingApiDisabledError
         raise CloudController::Errors::ApiError.new_from_details('RoutingApiDisabled')
-      rescue ::VCAP::CloudController::V2::RouteMappingCreate::RouteServiceNotSupportedError
-        raise CloudController::Errors::InvalidRouteRelation.new("#{route.guid} - Route services are only supported for apps on Diego")
       rescue ::VCAP::CloudController::V2::RouteMappingCreate::SpaceMismatch
         raise CloudController::Errors::InvalidRelation.new(
           'The app cannot be mapped to this route because the route is not in this space. Apps must be mapped to routes in the same space.')
