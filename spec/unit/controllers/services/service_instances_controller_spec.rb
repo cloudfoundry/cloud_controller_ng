@@ -3546,10 +3546,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the route is mapped to a diego app' do
+      context 'when the route is mapped to an app' do
         before do
-          diego_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
-          RouteMappingModel.make(app: diego_process.app, route: route, process_type: diego_process.type)
+          first_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
+          RouteMappingModel.make(app: first_process.app, route: route, process_type: first_process.type)
         end
 
         it 'successfully binds to the route' do
@@ -3557,47 +3557,15 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(201)
         end
 
-        context 'and is mapped to another diego app as well' do
+        context 'and is mapped to multiple apps' do
           before do
-            another_diego_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
-            RouteMappingModel.make(app: another_diego_process.app, route: route, process_type: another_diego_process.type)
+            another_process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
+            RouteMappingModel.make(app: another_process.app, route: route, process_type: another_process.type)
           end
 
-          it 'raises RouteServiceRequiresDiego' do
+          it 'successfully binds to the route' do
             put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
-
             expect(last_response).to have_status_code(201)
-          end
-        end
-      end
-
-      context 'when the route is mapped to a non-diego app' do
-        before do
-          process = ProcessModelFactory.make(diego: false, space: route.space, state: 'STARTED')
-          RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-        end
-
-        it 'raises RouteServiceRequiresDiego' do
-          put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
-
-          expect(last_response.status).to eq(400)
-          expect(JSON.parse(last_response.body)['description']).
-            to eq('Route services are only supported for apps on Diego. Unbind the service instance from the route or enable Diego for the app.')
-        end
-
-        context 'and is mapped to a diego app' do
-          before do
-            diego_process = ProcessModelFactory.make(diego: true, space: route.space, state: 'STARTED')
-            RouteMappingModel.make(app: diego_process.app, route: route, process_type: diego_process.type)
-          end
-
-          it 'raises RouteServiceRequiresDiego' do
-            put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
-
-            expect(last_response.status).to eq(400)
-
-            expect(JSON.parse(last_response.body)['description']).
-              to eq('Route services are only supported for apps on Diego. Unbind the service instance from the route or enable Diego for the app.')
           end
         end
       end

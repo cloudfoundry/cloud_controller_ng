@@ -53,7 +53,7 @@ RSpec.describe 'Routes' do
     end
 
     context 'with inline-relations-depth' do
-      let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, diego: false) }
+      let!(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
       let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, process_type: process.type, route: route) }
 
       it 'includes related records' do
@@ -157,7 +157,7 @@ RSpec.describe 'Routes' do
                       'health_check_http_endpoint' => nil,
                       'staging_failed_reason'      => nil,
                       'staging_failed_description' => nil,
-                      'diego'                      => false,
+                      'diego'                      => true,
                       'docker_image'               => nil,
                       'docker_credentials'         => {
                         'username' => nil,
@@ -166,7 +166,7 @@ RSpec.describe 'Routes' do
                       'package_updated_at'         => iso8601,
                       'detected_start_command'     => '',
                       'enable_ssh'                 => true,
-                      'ports'                      => nil,
+                      'ports'                      => [8080],
                       'space_url'                  => "/v2/spaces/#{space.guid}",
                       'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
                       'routes_url'                 => "/v2/apps/#{process.guid}/routes",

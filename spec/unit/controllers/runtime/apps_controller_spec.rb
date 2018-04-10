@@ -587,7 +587,6 @@ module VCAP::CloudController
         it 'updates the backend of the app and returns 201 with warning' do
           put "/v2/apps/#{process.guid}", '{ "diego": false}'
           expect(last_response).to have_status_code(201)
-          expect(decoded_response['entity']['ports']).to be nil
           expect(decoded_response['entity']['diego']).to be false
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
           expect(warning).to include('App ports have changed but are unknown. The app should now listen on the port specified by environment variable PORT')

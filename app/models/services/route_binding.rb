@@ -12,8 +12,8 @@ module VCAP::CloudController
     delegate :service, :service_plan, :client, to: :service_instance
 
     def notify_diego
-      route.apps.each do |app|
-        ProcessRouteHandler.new(app).notify_backend_of_route_update if app.diego?
+      route.apps.each do |process|
+        ProcessRouteHandler.new(process).notify_backend_of_route_update
       end
     end
 

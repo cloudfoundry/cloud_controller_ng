@@ -32,7 +32,6 @@ module VCAP::CloudController
       raise ServiceInstanceNotBindable unless instance.bindable?
       raise ServiceInstanceAlreadyBoundToSameRoute if route.service_instance == instance
       raise RouteAlreadyBoundToServiceInstance if route.service_instance
-      raise RouteServiceRequiresDiego if !route.all_apps_diego?
       raise RouteServiceDisabled if instance.route_service? && !route_services_enabled
 
       route_binding = RouteBinding.new

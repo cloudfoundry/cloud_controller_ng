@@ -25,7 +25,7 @@ module VCAP::CloudController
 
         it 'calls #save_changes with validate true' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
-          allow(process).to receive_messages(lock!: nil, diego?: true)
+          allow(process).to receive_messages(lock!: nil)
 
           expect(process).to receive(:set).with(updated_at: instance_of(Sequel::SQL::Constant))
           expect(process).to receive(:save_changes).with(hash_including(validate: true))
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
         it 'calls #save_changes with validate false' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
-          allow(process).to receive_messages(lock!: nil, diego?: true)
+          allow(process).to receive_messages(lock!: nil)
 
           expect(process).to receive(:set).with(updated_at: instance_of(Sequel::SQL::Constant))
           expect(process).to receive(:save_changes).with(hash_including(validate: false))

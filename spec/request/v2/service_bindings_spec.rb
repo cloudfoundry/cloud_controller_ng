@@ -11,7 +11,7 @@ RSpec.describe 'ServiceBindings' do
 
   describe 'GET /v2/service_bindings' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(diego: false, space: space) }
+    let(:process1) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:process2) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let!(:service_binding1) do
       VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: process1.app, credentials: { secret: 'key' })
@@ -157,7 +157,7 @@ RSpec.describe 'ServiceBindings' do
                       'health_check_http_endpoint' => nil,
                       'staging_failed_reason' => nil,
                       'staging_failed_description' => nil,
-                      'diego' => false,
+                      'diego' => true,
                       'docker_image' => nil,
                       'docker_credentials' => {
                         'username' => nil,
@@ -166,7 +166,7 @@ RSpec.describe 'ServiceBindings' do
                       'package_updated_at' => iso8601,
                       'detected_start_command' => '',
                       'enable_ssh' => true,
-                      'ports' => nil,
+                      'ports' => [8080],
                       'space_url' => "/v2/spaces/#{space.guid}",
                       'stack_url' => "/v2/stacks/#{process1.stack.guid}",
                       'routes_url' => "/v2/apps/#{process1.guid}/routes",

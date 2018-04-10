@@ -139,10 +139,6 @@ module VCAP::CloudController
       !Domain.find(name: fqdn).nil?
     end
 
-    def all_apps_diego?
-      apps.all?(&:diego?)
-    end
-
     def validate_changed_space(new_space)
       raise CloudController::Errors::InvalidAppRelation.new('Route and apps not in same space') if apps.any? { |app| app.space.id != space.id }
       raise InvalidOrganizationRelation.new("Organization cannot use domain #{domain.name}") if domain && !domain.usable_by_organization?(new_space.organization)

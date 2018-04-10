@@ -1027,32 +1027,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      describe 'all_apps_diego?' do
-        let(:diego_process) { ProcessModelFactory.make(diego: true) }
-        let(:route) { Route.make(space: diego_process.space, domain: SharedDomain.make) }
-
-        before do
-          RouteMappingModel.make(app: diego_process.app, route: route, process_type: diego_process.type)
-          route.reload
-        end
-
-        it 'returns true' do
-          expect(route.all_apps_diego?).to eq(true)
-        end
-
-        context 'when some apps are not using diego' do
-          let(:non_diego_process) { ProcessModelFactory.make(diego: false, space: diego_process.space) }
-
-          before do
-            RouteMappingModel.make(app: non_diego_process.app, route: route, process_type: non_diego_process.type)
-          end
-
-          it 'returns false' do
-            expect(route.all_apps_diego?).to eq(false)
-          end
-        end
-      end
     end
 
     describe 'relations' do
