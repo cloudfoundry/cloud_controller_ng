@@ -9,69 +9,58 @@ module VCAP::CloudController
     class RoutingApiDisabledError < InvalidRouteMapping
     end
 
-    DUPLICATE_MESSAGE     = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
+    DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
     INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
 
-    def initialize(user_audit_info, route, process)
-      @user_audit_info = user_audit_info
-      @app             = process.app
-      @route           = route
-      @process         = process
-    end
+    class << self
+      def add(user_audit_info, route, process)
+        validate!(process.app, route)
 
-    def add(message)
-      validate!
-
-      route_mapping = RouteMappingModel.new(
-        app:          app,
-        route:        route,
-        process_type: message.process_type,
-        app_port:     VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
-      )
-
-      route_handler = ProcessRouteHandler.new(process)
-
-      RouteMappingModel.db.transaction do
-        route_mapping.save
-        route_handler.update_route_information
-
-        app_event_repository.record_map_route(
-          app,
-          route,
-          user_audit_info,
-          route_mapping: route_mapping
+        route_mapping = RouteMappingModel.new(
+          app: process.app,
+          route: route,
+          process_type: process.type,
+          app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
         )
+
+        route_handler = ProcessRouteHandler.new(process)
+
+        RouteMappingModel.db.transaction do
+          route_mapping.save
+          route_handler.update_route_information
+
+          Repositories::AppEventRepository.new.record_map_route(
+            process.app,
+            route,
+            user_audit_info,
+            route_mapping: route_mapping
+          )
+        end
+
+        route_mapping
+      rescue Sequel::ValidationFailed => e
+        if e.errors && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]) && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]).include?(:unique)
+          raise DuplicateRouteMapping.new(DUPLICATE_MESSAGE)
+        end
+
+        raise InvalidRouteMapping.new(e.message)
       end
 
-      route_mapping
-    rescue Sequel::ValidationFailed => e
-      if e.errors && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]) && e.errors.on([:app_guid, :route_guid, :process_type, :app_port]).include?(:unique)
-        raise DuplicateRouteMapping.new(DUPLICATE_MESSAGE)
+      private
+
+      def validate!(app, route)
+        validate_routing_api_enabled!(route)
+        validate_space!(app, route)
       end
 
-      raise InvalidRouteMapping.new(e.message)
-    end
+      def validate_space!(app, route)
+        raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless app.space.guid == route.space.guid
+      end
 
-    private
-
-    attr_reader(:app, :route, :process, :user_audit_info)
-
-    def validate!
-      validate_routing_api_enabled!
-      validate_space!
-    end
-
-    def validate_space!
-      raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless app.space.guid == route.space.guid
-    end
-
-    def app_event_repository
-      Repositories::AppEventRepository.new
-    end
-
-    def validate_routing_api_enabled!
-      if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
-        raise RoutingApiDisabledError.new('Routing API is disabled')
+      def validate_routing_api_enabled!(route)
+        if Config.config.get(:routing_api).nil? && route.domain.shared? && route.domain.router_group_guid
+          raise RoutingApiDisabledError.new('Routing API is disabled')
+        end
       end
     end
   end

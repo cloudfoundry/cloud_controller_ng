@@ -10,12 +10,12 @@ module VCAP::CloudController
     class ManifestRoutesValidator < ActiveModel::Validator
       def validate(record)
         if !record.routes.is_a?(Array)
-          record.errors[:routes] << 'Routes must be a list of routes'
+          record.errors[:base] << 'routes must be a list of routes'
         else
           record.routes.each do |route_hash|
             route_uri = route_hash[:route]
             unless VALID_URI_REGEX.match?(route_uri)
-              record.errors[:routes] << "The route '#{route_uri}' is not a properly formed URL"
+              record.errors[:base] << "The route '#{route_uri}' is not a properly formed URL"
             end
           end
         end

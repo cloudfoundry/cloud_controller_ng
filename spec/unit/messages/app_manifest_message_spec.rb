@@ -220,11 +220,11 @@ module VCAP::CloudController
       describe 'routes' do
         context 'when a route uri is invalid' do
           let(:params) do
-            {routes:
+            { routes:
               [
-                {route: 'blah'},
-                {route: 'anotherblah'},
-                {route: 'http://example.com'},
+                { route: 'blah' },
+                { route: 'anotherblah' },
+                { route: 'http://example.com' },
               ]
             }
           end
@@ -233,7 +233,7 @@ module VCAP::CloudController
             message = ManifestRoutesMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to match_array("The route 'blah' is not a properly formed URL")
+            expect(message.errors.full_messages).to match_array(["The route 'anotherblah' is not a properly formed URL", "The route 'blah' is not a properly formed URL"])
           end
         end
       end
@@ -636,13 +636,13 @@ module VCAP::CloudController
 
     describe '#manifest_routes_message' do
       let(:parsed_yaml) do
-        {'routes' =>
+        { 'routes' =>
           [
-            {'route' => 'existing.example.com'},
-            {'route' => 'new.example.com'},
-            {'route' => 'tcp-example.com:1234'},
-            {'route' => 'path.example.com/path'},
-            {'route' => '*.example.com'},
+            { 'route' => 'existing.example.com' },
+            { 'route' => 'new.example.com' },
+            { 'route' => 'tcp-example.com:1234' },
+            { 'route' => 'path.example.com/path' },
+            { 'route' => '*.example.com' },
           ]
         }
       end
@@ -652,11 +652,11 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_routes_message.routes).to match_array([
-            {route: 'existing.example.com'},
-            {route: 'new.example.com'},
-            {route: 'tcp-example.com:1234'},
-            {route: 'path.example.com/path'},
-            {route: '*.example.com'}
+            { route: 'existing.example.com' },
+            { route: 'new.example.com' },
+            { route: 'tcp-example.com:1234' },
+            { route: 'path.example.com/path' },
+            { route: '*.example.com' }
           ])
         end
       end
@@ -673,6 +673,5 @@ module VCAP::CloudController
         end
       end
     end
-
   end
 end

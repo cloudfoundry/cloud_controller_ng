@@ -35,14 +35,14 @@ class RouteMappingsController < ApplicationController
     message = RouteMappingsCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, route, process, space, org = AddRouteFetcher.new.fetch(message)
+    app, route, process, space, org = AddRouteFetcher.fetch(message)
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
     route_not_found! unless route
 
     begin
-      route_mapping = RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process).add(message)
+      route_mapping = RouteMappingCreate.add(UserAuditInfo.from_context(SecurityContext), route, process)
     rescue ::VCAP::CloudController::RouteMappingCreate::InvalidRouteMapping => e
       unprocessable!(e.message)
     end

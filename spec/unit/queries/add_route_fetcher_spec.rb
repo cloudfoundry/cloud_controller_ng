@@ -2,8 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AddRouteFetcher do
-    subject(:fetcher) { AddRouteFetcher.new }
-
     let(:space) { Space.make }
     let(:app) { AppModel.make(space_guid: space.guid) }
 
@@ -26,7 +24,7 @@ module VCAP::CloudController
     end
 
     it 'should fetch the associated app, route, space, org, process' do
-      returned_app, returned_route, returned_process, returned_space, returned_org = fetcher.fetch(message)
+      returned_app, returned_route, returned_process, returned_space, returned_org = AddRouteFetcher.fetch(message)
       expect(returned_app).to eq(app)
       expect(returned_route).to eq(route)
       expect(returned_space).to eq(space)
@@ -48,7 +46,7 @@ module VCAP::CloudController
       end
 
       it 'returns nil' do
-        returned_app, returned_route, returned_process, returned_space, returned_org = fetcher.fetch(message)
+        returned_app, returned_route, returned_process, returned_space, returned_org = AddRouteFetcher.fetch(message)
         expect(returned_app).to be_nil
         expect(returned_route).to be_nil
         expect(returned_space).to be_nil

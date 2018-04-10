@@ -2,8 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteMappingCreate do
-    subject(:route_mapping_create) { RouteMappingCreate.new(user_audit_info, route, process) }
-
     let(:space) { app.space }
     let(:app) { AppModel.make }
     let(:user_guid) { 'user-guid' }
@@ -13,7 +11,6 @@ module VCAP::CloudController
     let(:process_type) { 'web' }
     let(:ports) { [8080] }
     let(:requested_port) { nil }
-    let(:message) { RouteMappingsCreateMessage.new({ relationships: { process: { type: process_type } } }) }
     let(:route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
 
     before do
@@ -25,14 +22,14 @@ module VCAP::CloudController
 
       it 'maps the route' do
         expect {
-          route_mapping = route_mapping_create.add(message)
+          route_mapping = RouteMappingCreate.add(user_audit_info, route, process)
           expect(route_mapping.route.guid).to eq(route.guid)
           expect(route_mapping.process.guid).to eq(process.guid)
         }.to change { RouteMappingModel.count }.by(1)
       end
 
       it 'delegates to the route handler to update route information' do
-        route_mapping_create.add(message)
+        RouteMappingCreate.add(user_audit_info, route, process)
         expect(route_handler).to have_received(:update_route_information)
       end
 
@@ -45,7 +42,7 @@ module VCAP::CloudController
         end
 
         it 'creates an event for adding a route to an app' do
-          route_mapping = route_mapping_create.add(message)
+          route_mapping = RouteMappingCreate.add(user_audit_info, route, process)
 
           expect(event_repository).to have_received(:record_map_route).with(
             app,
@@ -62,7 +59,7 @@ module VCAP::CloudController
         let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
         it 'succeeds with the default port' do
-          mapping = route_mapping_create.add(message)
+          mapping = RouteMappingCreate.add(user_audit_info, route, process)
           expect(app.reload.routes).to eq([route])
           expect(mapping.app_port).to eq(ProcessModel::DEFAULT_HTTP_PORT)
         end
@@ -75,7 +72,7 @@ module VCAP::CloudController
           end
 
           it 'succeeds' do
-            route_mapping_create.add(message)
+            RouteMappingCreate.add(user_audit_info, route, process)
             expect(app.reload.routes).to eq([route])
           end
         end
@@ -83,13 +80,13 @@ module VCAP::CloudController
 
       context 'when a route mapping already exists and a new mapping is requested' do
         before do
-          route_mapping_create.add(message)
+          RouteMappingCreate.add(user_audit_info, route, process)
         end
 
         context 'for the same process type' do
           it 'does not allow for duplicate route association' do
             expect {
-              route_mapping_create.add(message)
+              RouteMappingCreate.add(user_audit_info, route, process)
             }.to raise_error(RouteMappingCreate::DuplicateRouteMapping, /Duplicate Route Mapping/)
             expect(app.reload.routes).to eq([route])
           end
@@ -100,7 +97,7 @@ module VCAP::CloudController
           let(:worker_message) { RouteMappingsCreateMessage.new({ relationships: { process: { type: 'worker' } } }) }
 
           it 'allows a new route mapping' do
-            RouteMappingCreate.new(user_audit_info, route, worker_process).add(worker_message)
+            RouteMappingCreate.add(user_audit_info, route, worker_process)
             expect(app.reload.routes).to eq([route, route])
           end
         end
@@ -113,7 +110,7 @@ module VCAP::CloudController
 
         it 'raises an InvalidRouteMapping error' do
           expect {
-            route_mapping_create.add(message)
+            RouteMappingCreate.add(user_audit_info, route, process)
           }.to raise_error(RouteMappingCreate::InvalidRouteMapping, 'shizzle')
         end
       end
@@ -123,7 +120,7 @@ module VCAP::CloudController
 
         it 'raises InvalidRouteMapping' do
           expect {
-            route_mapping_create.add(message)
+            RouteMappingCreate.add(user_audit_info, route, process)
           }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /the app and route must belong to the same space/)
           expect(app.reload.routes).to be_empty
         end

@@ -5,13 +5,13 @@ module VCAP::CloudController
   RSpec.describe ManifestRoutesMessage do
     describe '.create_from_http_request' do
       let(:body) do
-        {'routes' =>
+        { 'routes' =>
           [
-            {'route' => 'existing.example.com'},
-            {'route' => 'new.example.com'},
-            {'route' => 'tcp-example.com:1234'},
-            {'route' => 'path.example.com/path'},
-            {'route' => '*.example.com'},
+            { 'route' => 'existing.example.com' },
+            { 'route' => 'new.example.com' },
+            { 'route' => 'tcp-example.com:1234' },
+            { 'route' => 'path.example.com/path' },
+            { 'route' => '*.example.com' },
           ]
         }
       end
@@ -22,26 +22,25 @@ module VCAP::CloudController
         expect(message).to be_a(ManifestRoutesMessage)
         expect(message.routes).to_not be_nil
         expect(message.routes).to match_array([
-          {route: 'existing.example.com'},
-          {route: 'new.example.com'},
-          {route: 'tcp-example.com:1234'},
-          {route: 'path.example.com/path'},
-          {route: '*.example.com'}
+          { route: 'existing.example.com' },
+          { route: 'new.example.com' },
+          { route: 'tcp-example.com:1234' },
+          { route: 'path.example.com/path' },
+          { route: '*.example.com' }
         ])
       end
     end
 
     describe 'validations' do
-
       context 'when routes is not an array of routes' do
         let(:body) do
-          { routes: 'im-so-not-an-array'}
+          { routes: 'im-so-not-an-array' }
         end
 
         it 'is valid' do
           message = ManifestRoutesMessage.new(body)
           expect(message).not_to be_valid
-          expect(message.errors[:routes]).to match_array("Routes must be a list of routes")
+          expect(message.errors).to match_array('routes must be a list of routes')
         end
       end
 
@@ -56,10 +55,9 @@ module VCAP::CloudController
         end
       end
 
-
       context 'when there is a port' do
         let(:body) do
-          { routes: [{route: 'tcp-example.com:1234'}] }
+          { routes: [{ route: 'tcp-example.com:1234' }] }
         end
 
         it 'is valid' do
@@ -70,7 +68,7 @@ module VCAP::CloudController
 
       context 'when there is a non-http protocol' do
         let(:body) do
-          { routes: [{route: 'tcp://www.example.com'}] }
+          { routes: [{ route: 'tcp://www.example.com' }] }
         end
 
         it 'is valid' do
@@ -81,7 +79,7 @@ module VCAP::CloudController
 
       context 'when there is a route with a path' do
         let(:body) do
-          { routes: [{route: 'path.example.com/path'}] }
+          { routes: [{ route: 'path.example.com/path' }] }
         end
 
         it 'is valid' do
@@ -92,7 +90,7 @@ module VCAP::CloudController
 
       context 'when there is a wildcard route' do
         let(:body) do
-          { routes: [{route: '*.example.com'}] }
+          { routes: [{ route: '*.example.com' }] }
         end
 
         it 'is valid' do
@@ -103,11 +101,11 @@ module VCAP::CloudController
 
       context 'when invalid route formats are provided' do
         let(:body) do
-          {routes:
+          { routes:
             [
-              {route: 'blah'},
-              {route: 'anotherblah'},
-              {route: 'http://example.com'},
+              { route: 'blah' },
+              { route: 'anotherblah' },
+              { route: 'http://example.com' },
             ]
           }
         end
@@ -116,20 +114,20 @@ module VCAP::CloudController
           message = ManifestRoutesMessage.new(body)
 
           expect(message).not_to be_valid
-          expect(message.errors[:routes]).to match_array("The route 'blah' is not a properly formed URL")
+          expect(message.errors).to match_array(["The route 'anotherblah' is not a properly formed URL", "The route 'blah' is not a properly formed URL"])
         end
       end
 
       context 'when there is a nil route' do
         let(:body) do
-          { routes: [{route: nil}] }
+          { routes: [{ route: nil }] }
         end
 
         it 'is valid' do
           message = ManifestRoutesMessage.new(body)
 
           expect(message).not_to be_valid
-          expect(message.errors[:routes]).to match_array("The route '' is not a properly formed URL")
+          expect(message.errors).to match_array("The route '' is not a properly formed URL")
         end
       end
 
@@ -137,7 +135,7 @@ module VCAP::CloudController
         let(:body) do
           {
             routes: [
-              {route: 'existing.example.com'},
+              { route: 'existing.example.com' },
             ],
             surprise_key: 'surprise'
           }
