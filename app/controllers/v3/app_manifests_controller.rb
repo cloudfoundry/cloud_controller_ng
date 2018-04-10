@@ -16,7 +16,7 @@ class AppManifestsController < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    apply_manifest_action = AppApplyManifest.new(user_audit_info)
+    apply_manifest_action = AppApplyManifest.new(user_audit_info, self)
     apply_manifest_job = VCAP::CloudController::Jobs::ApplyManifestActionJob.new(app.guid, message, apply_manifest_action)
 
     job = Jobs::Enqueuer.new(apply_manifest_job, queue: 'cc-generic').enqueue_pollable

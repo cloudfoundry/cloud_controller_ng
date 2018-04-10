@@ -217,6 +217,27 @@ module VCAP::CloudController
         end
       end
 
+      describe 'routes' do
+        context 'when a route uri is invalid' do
+          let(:params) do
+            {routes:
+              [
+                {route: 'blah'},
+                {route: 'anotherblah'},
+                {route: 'http://example.com'},
+              ]
+            }
+          end
+
+          it 'is not valid' do
+            message = ManifestRoutesMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to match_array("The route 'blah' is not a properly formed URL")
+          end
+        end
+      end
+
       describe 'services bindings' do
         context 'when services is not an array' do
           let(:params) do
@@ -612,5 +633,46 @@ module VCAP::CloudController
           to eq({ foo: 'bar', baz: '4.44444444444', qux: 'false' })
       end
     end
+
+    describe '#manifest_routes_message' do
+      let(:parsed_yaml) do
+        {'routes' =>
+          [
+            {'route' => 'existing.example.com'},
+            {'route' => 'new.example.com'},
+            {'route' => 'tcp-example.com:1234'},
+            {'route' => 'path.example.com/path'},
+            {'route' => '*.example.com'},
+          ]
+        }
+      end
+
+      context 'when new properties are specified' do
+        it 'sets the routes in the message' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_routes_message.routes).to match_array([
+            {route: 'existing.example.com'},
+            {route: 'new.example.com'},
+            {route: 'tcp-example.com:1234'},
+            {route: 'path.example.com/path'},
+            {route: '*.example.com'}
+          ])
+        end
+      end
+
+      context 'when no routes are specified' do
+        let(:parsed_yaml) do
+          {}
+        end
+
+        it 'does not set the routes in the message' do
+          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.manifest_routes_message.requested?(:routes)).to be_falsey
+        end
+      end
+    end
+
   end
 end

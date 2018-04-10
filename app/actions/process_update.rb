@@ -17,7 +17,7 @@ module VCAP::CloudController
         if message.requested?(:health_check_type) && message.health_check_type != 'http'
           process.health_check_http_endpoint = nil
         elsif message.requested?(:health_check_endpoint)
-          process.health_check_http_endpoint = message.health_check_endpoint
+          process.health_check_hØttp_endpoint = message.health_check_endpoint
         end
 
         process.save

@@ -2,6 +2,7 @@ require 'messages/base_message'
 require 'messages/manifest_process_scale_message'
 require 'messages/manifest_process_update_message'
 require 'messages/manifest_service_binding_create_message'
+require 'messages/manifest_routes_message'
 require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
@@ -16,6 +17,7 @@ module VCAP::CloudController
       :timeout,
       :instances,
       :memory,
+      :routes,
       :services,
       :stack
     ].freeze
@@ -27,7 +29,8 @@ module VCAP::CloudController
                   :app_update_message,
                   :app_update_environment_variables_message,
                   :manifest_process_update_message,
-                  :manifest_service_bindings_message
+                  :manifest_service_bindings_message,
+                  :manifest_routes_message
 
     validates_with NoAdditionalKeysValidator
 
@@ -49,12 +52,14 @@ module VCAP::CloudController
       @app_update_environment_variables_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
       @manifest_process_update_message = ManifestProcessUpdateMessage.new(process_update_attribute_mapping)
       @manifest_service_bindings_message = ManifestServiceBindingCreateMessage.new(service_bindings_attribute_mapping)
+      @manifest_routes_message = ManifestRoutesMessage.new(routes_attribute_mapping)
     end
 
     def valid?
       validate_process_scale_message!
       validate_process_update_message!
       validate_app_update_message!
+      validate_manifest_routes_message!
       validate_service_bindings_message! if requested?(:services)
       validate_env_update_message! if requested?(:env)
 
@@ -116,6 +121,12 @@ module VCAP::CloudController
       mapping
     end
 
+    def routes_attribute_mapping
+      mapping = {}
+      mapping[:routes] = routes if requested?(:routes)
+      mapping
+    end
+
     def service_bindings_attribute_mapping
       mapping = {}
       mapping[:services] = services if requested?(:services)
@@ -163,10 +174,17 @@ module VCAP::CloudController
       end
     end
 
+    def validate_manifest_routes_message!
+      manifest_routes_message.valid?
+      manifest_routes_message.errors[:routes].each do |error_message|
+        errors.add(:routes, error_message)
+      end
+    end
+
     def validate_process_update_message!
       manifest_process_update_message.valid?
       manifest_process_update_message.errors.full_messages.each do |error_message|
-        errors.add(:base, error_message)
+        errors.add(:routes, error_message)
       end
     end
 
