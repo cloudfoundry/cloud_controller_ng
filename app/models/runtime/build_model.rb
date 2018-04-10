@@ -85,10 +85,15 @@ module VCAP::CloudController
     end
 
     def record_staging_stopped
+      return unless need_to_create_stop_event?
       app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
     end
 
     private
+
+    def need_to_create_stop_event?
+      initial_value(:state) == STAGING_STATE
+    end
 
     def app_usage_event_repository
       Repositories::AppUsageEventRepository.new

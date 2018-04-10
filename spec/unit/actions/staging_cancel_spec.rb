@@ -22,11 +22,6 @@ module VCAP::CloudController
           cancel_action.cancel([build])
           expect(stager).to have_received(:stop_stage).with(build.guid)
         end
-
-        it 'creates a usage event' do
-          cancel_action.cancel([build])
-          expect(usage_event_repo).to have_received(:create_from_build).with(build, 'STAGING_STOPPED')
-        end
       end
 
       context 'when the build is in a terminal state' do

@@ -9,7 +9,6 @@ module VCAP::CloudController
 
       builds.each do |build|
         next if build.in_final_state?
-        build.record_staging_stopped
 
         begin
           @stagers.stager_for_app.stop_stage(build.guid)

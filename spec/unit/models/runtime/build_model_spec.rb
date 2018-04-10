@@ -118,16 +118,33 @@ module VCAP::CloudController
         expect { build_model.fail_to_stage! }.to change { build_model.state }.to(BuildModel::FAILED_STATE)
       end
 
-      it 'creates an app usage event for STAGING_STOPPED' do
-        expect {
-          build_model.fail_to_stage!
-        }.to change {
-          AppUsageEvent.count
-        }.by(1)
+      context 'when the state is not in the FAILED state' do
+        it 'creates an app usage event for STAGING_STOPPED' do
+          expect {
+            build_model.fail_to_stage!
+          }.to change {
+            AppUsageEvent.count
+          }.by(1)
 
-        event = AppUsageEvent.last
-        expect(event).to_not be_nil
-        expect(event.state).to eq('STAGING_STOPPED')
+          event = AppUsageEvent.last
+          expect(event).to_not be_nil
+          expect(event.state).to eq('STAGING_STOPPED')
+        end
+      end
+
+      context 'when the build is already in the FAILED state' do
+        let(:previously_failed_build) { BuildModel.make(package: package, state: BuildModel::FAILED_STATE) }
+
+        it 'creates an app usage event for STAGING_STOPPED' do
+          expect {
+            previously_failed_build.fail_to_stage!
+          }.to change {
+            AppUsageEvent.count
+          }.by(0)
+
+          event = AppUsageEvent.last
+          expect(event).to be_nil
+        end
       end
 
       context 'when a valid reason is specified' do
