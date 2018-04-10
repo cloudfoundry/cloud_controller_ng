@@ -149,7 +149,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       @response_parser.parse_unbind(path, response)
     rescue => e
-      raise e.exception("Service instance #{binding&.service_instance&.name}: #{e.message}")
+      raise e.exception("Service instance #{binding.service_instance.name}: #{e.message}")
     end
 
     def deprovision(instance, accepts_incomplete: false)

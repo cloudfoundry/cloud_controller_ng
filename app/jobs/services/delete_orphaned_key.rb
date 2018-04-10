@@ -13,7 +13,7 @@ module VCAP::CloudController
 
         def perform
           logger = Steno.logger('cc-background')
-          logger.info("There was an error during service key creation. Attempting to delete potentially created key. Instance guid: #{service_instance_guid}, Key guid #{key_guid}")
+          logger.info('There was an error during service key creation. Attempting to delete potentially created key.')
 
           client = VCAP::Services::ServiceBrokers::V2::Client.new(client_attrs)
           service_instance = VCAP::CloudController::ServiceInstance.first(guid: service_instance_guid)
