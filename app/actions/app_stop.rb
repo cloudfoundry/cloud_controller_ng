@@ -6,8 +6,12 @@ module VCAP::CloudController
       def stop(app:, user_audit_info:, record_event: true)
         app.db.transaction do
           app.lock!
-          app.update(desired_state: 'STOPPED')
-          app.processes.each { |process| process.update(state: 'STOPPED') }
+
+          app.update(desired_state: ProcessModel::STOPPED)
+          app.processes.each do |process|
+            process.lock!
+            process.update(state: ProcessModel::STOPPED)
+          end
 
           record_audit_event(app, user_audit_info) if record_event
         end

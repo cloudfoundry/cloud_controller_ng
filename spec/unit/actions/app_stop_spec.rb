@@ -34,6 +34,16 @@ module VCAP::CloudController
         end
       end
 
+      it 'locks the processes before updating' do
+        allow(app).to receive(:processes).and_return([process1, process2])
+        allow(process1).to receive(:lock!).and_call_original
+        allow(process2).to receive(:lock!).and_call_original
+
+        AppStop.stop(app: app, user_audit_info: user_audit_info)
+        expect(process1).to have_received(:lock!)
+        expect(process2).to have_received(:lock!)
+      end
+
       context 'when the app is invalid' do
         before do
           allow_any_instance_of(AppModel).to receive(:update).and_raise(Sequel::ValidationFailed.new('some message'))
