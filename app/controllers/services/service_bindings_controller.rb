@@ -56,6 +56,7 @@ module VCAP::CloudController
 
       creator = ServiceBindingCreate.new(UserAuditInfo.from_context(SecurityContext))
       service_binding = creator.create(app, service_instance, message, volume_services_enabled?)
+      warn_if_user_provided_service_has_parameters!(service_instance)
 
       [HTTP::CREATED,
        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
@@ -115,6 +116,12 @@ module VCAP::CloudController
 
     def volume_services_enabled?
       @config.get(:volume_services_enabled)
+    end
+
+    def warn_if_user_provided_service_has_parameters!(service_instance)
+      if service_instance.user_provided_instance? && @request_attrs['parameters']
+        add_warning('Configuration parameters are ignored for bindings to user-provided service instances.')
+      end
     end
   end
 end

@@ -176,6 +176,7 @@ module VCAP::CloudController
         it 'binds a service instance to an app' do
           post '/v2/service_bindings', req.to_json
           expect(last_response).to have_status_code(201)
+          expect(last_response.headers).not_to include('X-Cf-Warnings')
 
           binding = ServiceBinding.last
           expect(binding.credentials).to eq(credentials)
@@ -313,10 +314,14 @@ module VCAP::CloudController
         it_behaves_like 'BindableServiceInstance'
 
         context 'when the client passes arbitrary params' do
-          it 'does not use the arbitrary params' do
+          let(:params_warning) { CGI.escape('Configuration parameters are ignored for bindings to user-provided service instances.') }
+
+          it 'does not use the arbitrary params and warns the user' do
             body = req.merge(parameters: { 'key' => 'value' })
             post '/v2/service_bindings', body.to_json
             expect(last_response).to have_status_code 201
+            expect(last_response.headers).to include('X-Cf-Warnings')
+            expect(last_response.headers['X-Cf-Warnings']).to include(params_warning)
           end
         end
       end
@@ -405,6 +410,7 @@ module VCAP::CloudController
           it 'sends the parameters in the request to the broker' do
             post '/v2/service_bindings', req.to_json
             expect(last_response).to have_status_code(201)
+            expect(last_response.headers).not_to include('X-Cf-Warnings')
             binding_endpoint = %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
             expect(a_request(:put, binding_endpoint).with(body: hash_including(parameters: parameters))).to have_been_made
           end
