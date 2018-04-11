@@ -13,16 +13,14 @@ module VCAP::CloudController
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
       let(:message) { TaskCreateMessage.new name: name, command: command, disk_in_mb: 2048, memory_in_mb: 1024 }
-      let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
       let(:bbs_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
       let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
       before do
         locator = CloudController::DependencyLocator.instance
-        allow(locator).to receive(:nsync_client).and_return(client)
         allow(locator).to receive(:bbs_task_client).and_return(bbs_client)
-        allow(client).to receive(:desire_task).and_return(nil)
         allow(bbs_client).to receive(:desire_task).and_return(nil)
+        allow_any_instance_of(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:build_app_task)
 
         app.droplet = droplet
         app.save
@@ -31,7 +29,7 @@ module VCAP::CloudController
       it 'creates and returns a task using the given app and its droplet' do
         task = task_create_action.create(app, message, user_audit_info)
 
-        expect(task.app).to eq(app)
+        expect(task.app.guid).to eq(app.guid)
         expect(task.droplet).to eq(droplet)
         expect(task.command).to eq(command)
         expect(task.name).to eq(name)
@@ -40,27 +38,18 @@ module VCAP::CloudController
         expect(TaskModel.count).to eq(1)
       end
 
-      it "sets the task state to 'PENDING'" do
+      it "sets the task state to 'RUNNING'" do
         task = task_create_action.create(app, message, user_audit_info)
 
-        expect(task.state).to eq(TaskModel::PENDING_STATE)
+        expect(task.state).to eq(TaskModel::RUNNING_STATE)
       end
 
       describe 'desiring the task from Diego' do
-        context 'when using the bridge' do
-          it 'tells nsync to make the task' do
-            task = task_create_action.create(app, message, user_audit_info)
-
-            expect(client).to have_received(:desire_task).with(task)
-          end
-        end
-
         context 'when talking directly to BBS' do
           let(:task_definition) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
           let(:recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
 
           before do
-            config.set(:diego, temporary_local_tasks: true)
             allow(recipe_builder).to receive(:build_app_task).with(config, instance_of(TaskModel)).and_return(task_definition)
             allow(Diego::TaskRecipeBuilder).to receive(:new).and_return(recipe_builder)
           end

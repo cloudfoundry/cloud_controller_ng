@@ -13,10 +13,8 @@ module VCAP::CloudController
       let(:config) { TestConfig.config_instance }
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:task_recipe_builder) { instance_double(Diego::TaskRecipeBuilder) }
-      let(:config_overrides) { {} }
 
       before do
-        TestConfig.override(config_overrides)
         CloudController::DependencyLocator.instance.register(:bbs_stager_client, bbs_stager_client)
         CloudController::DependencyLocator.instance.register(:stager_client, stager_client)
         CloudController::DependencyLocator.instance.register(:nsync_client, nsync_client)
@@ -48,9 +46,7 @@ module VCAP::CloudController
           expect(stager_client).to have_received(:stage).with(staging_guid, message)
         end
 
-        context 'when staging local is configured and lifecycle is buildpack' do
-          let(:config_overrides) { { diego: { temporary_local_staging: true } } }
-
+        context 'when staging and lifecycle is buildpack' do
           before do
             staging_details.lifecycle = instance_double(BuildpackLifecycle, type: Lifecycles::BUILDPACK)
             allow(task_recipe_builder).to receive(:build_staging_task).and_return(message)
@@ -95,7 +91,6 @@ module VCAP::CloudController
           let(:bbs_apps_client) { instance_double(BbsAppsClient, desire_app: nil) }
           let(:app_recipe_builder) { instance_double(Diego::AppRecipeBuilder, build_app_lrp: build_lrp) }
           let(:build_lrp) { instance_double(::Diego::Bbs::Models::DesiredLRP) }
-          let(:config_overrides) { { diego: { temporary_local_apps: true } } }
 
           before do
             CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
@@ -142,7 +137,6 @@ module VCAP::CloudController
 
         context 'when configured to stop an index directly to diego' do
           let(:bbs_apps_client) { instance_double(BbsAppsClient, stop_index: nil) }
-          let(:config_overrides) { { diego: { temporary_local_apps: true } } }
 
           before do
             CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
@@ -172,7 +166,6 @@ module VCAP::CloudController
 
         context 'when configured to stop an app directly to diego' do
           let(:bbs_apps_client) { instance_double(BbsAppsClient, stop_app: nil) }
-          let(:config_overrides) { { diego: { temporary_local_apps: true } } }
 
           before do
             CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)

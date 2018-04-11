@@ -8,12 +8,8 @@ module VCAP::CloudController
 
       let(:config) do
         Config.new({
-          diego: {
-            temporary_local_tasks: temporary_local_tasks_enabled,
-          }
         })
       end
-      let(:temporary_local_tasks_enabled) { false }
 
       let(:app) { AppModel.make }
       let(:task) { TaskModel.make(name: 'ursulina', command: 'echo hi', app_guid: app.guid, state: TaskModel::RUNNING_STATE) }
@@ -41,16 +37,7 @@ module VCAP::CloudController
         expect(event.actee).to eq(app.guid)
       end
 
-      context 'when talking with nsync' do
-        it 'tells nsync to cancel the task' do
-          task_cancel.cancel(task: task, user_audit_info: user_audit_info)
-          expect(nsync_client).to have_received(:cancel_task).with(task)
-        end
-      end
-
       context 'when talking directly with bbs' do
-        let(:temporary_local_tasks_enabled) { true }
-
         it 'tells bbs to cancel the task' do
           task_cancel.cancel(task: task, user_audit_info: user_audit_info)
           expect(bbs_client).to have_received(:cancel_task).with(task.guid)

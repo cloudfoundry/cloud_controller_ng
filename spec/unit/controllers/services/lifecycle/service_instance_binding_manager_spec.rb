@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:manager) { ServiceInstanceBindingManager.new(access_validator, logger) }
     let(:event_repository) { double(:event_repository, record_service_instance_event: true) }
     let(:access_validator) { double(:access_validator) }
-    let(:logger) { double(:logger) }
+    let(:logger) { double(:logger, error: nil, info: nil) }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
     before do
@@ -187,13 +187,20 @@ module VCAP::CloudController
             before do
               process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
               RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
+              stub_request(:put, %r{https://foo.com/url-1/v2/service_instances/#{service_instance.guid}/service_bindings/[A-Za-z0-9-]+}).
+                to_return(status: 200, body: '{}')
             end
 
             it 'sends a message on to diego' do
-              expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
-                message = args.last
-                expect(message).to match(/route_service_url/)
+              # expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
+              expect(Diego::DesireAppHandler).to receive(:create_or_update_app) do |*args|
+                expect(message[0]).to eq(process.guid)
+                expect(args).to eq([3])
               end
+              # expect_any_instance_of(Diego::BbsAppsClient).to receive(:desire_app) do |*args|
+              #  message = args.last
+              #  expect(message).to match(/route_service_url/)
+              # end
               manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
             end
           end

@@ -39,16 +39,8 @@ module VCAP::CloudController
 
     def diego_reporter
       @diego_reporter ||= begin
-        if bypass_bridge?
-          Diego::InstancesReporter.new(dependency_locator.bbs_instances_client, dependency_locator.traffic_controller_client)
-        else
-          Diego::TpsInstancesReporter.new(dependency_locator.tps_client)
-        end
+        Diego::InstancesReporter.new(dependency_locator.bbs_instances_client, dependency_locator.traffic_controller_client)
       end
-    end
-
-    def bypass_bridge?
-      !!Config.config.get(:diego, :temporary_local_tps)
     end
 
     def dependency_locator

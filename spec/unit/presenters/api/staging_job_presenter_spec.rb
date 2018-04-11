@@ -29,15 +29,7 @@ RSpec.describe StagingJobPresenter do
       )
     end
 
-    context 'when temporary_cc_uploader_mtls is true' do
-      before do
-        TestConfig.override(
-          diego: {
-            temporary_cc_uploader_mtls: true,
-          }
-        )
-      end
-
+    context 'when it talks over mtls' do
       let(:expected_polling_url) do
         "https://#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:tls_port]}/internal/v4/staging_jobs/#{job.guid}"
       end

@@ -29,18 +29,7 @@ module VCAP::CloudController
           allow(CloudController::DependencyLocator.instance).to receive(:bbs_task_client).and_return(bbs_task_client)
         end
 
-        context 'when talking with nsync' do
-          before { TestConfig.override(diego: { temporary_local_tasks: false }) }
-
-          it 'sends a cancel request to nsync_client' do
-            task_delete.delete(task_dataset)
-            expect(nsync_client).to have_received(:cancel_task).with(task1)
-          end
-        end
-
         context 'when talking with bbs client directly' do
-          before { TestConfig.override(diego: { temporary_local_tasks: true }) }
-
           it 'sends a cancel request to bbs_task_client' do
             task_delete.delete(task_dataset)
             expect(bbs_task_client).to have_received(:cancel_task).with(task1.guid)

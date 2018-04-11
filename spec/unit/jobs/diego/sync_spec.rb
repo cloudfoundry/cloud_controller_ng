@@ -7,17 +7,7 @@ module VCAP::CloudController
       let(:tasks_sync) { instance_double(Diego::ProcessesSync) }
       subject(:job) { Sync.new }
 
-      before { TestConfig.override(config_hash) }
-
       describe '#perform' do
-        let(:config_hash) do
-          {
-            diego: {
-              temporary_local_sync: true
-            },
-          }
-        end
-
         before do
           allow(Diego::ProcessesSync).to receive(:new).and_return(processes_sync)
           allow(Diego::TasksSync).to receive(:new).and_return(tasks_sync)
@@ -34,26 +24,6 @@ module VCAP::CloudController
         it 'syncs tasks' do
           job.perform
           expect(tasks_sync).to have_received(:sync).once
-        end
-
-        context 'when local sync are disabled' do
-          let(:config_hash) do
-            {
-              diego: {
-                temporary_local_sync: false
-              },
-            }
-          end
-
-          it 'does not sync processes' do
-            job.perform
-            expect(processes_sync).not_to have_received(:sync)
-          end
-
-          it 'does not sync tasks' do
-            job.perform
-            expect(tasks_sync).not_to have_received(:sync)
-          end
         end
 
         it 'records sync duration' do

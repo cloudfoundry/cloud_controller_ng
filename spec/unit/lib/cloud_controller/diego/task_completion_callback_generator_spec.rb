@@ -13,10 +13,6 @@ module VCAP::CloudController
             internal_service_hostname: 'google.com',
             tls_port:                  '8888',
             external_port:             '8881',
-            diego:                     {
-              temporary_local_tps: true,
-              temporary_local_sync: temporary_local_sync
-            },
             internal_api: {
               auth_user: 'username',
               auth_password: 'password'
@@ -29,21 +25,9 @@ module VCAP::CloudController
         end
 
         context 'when CC is responsible for syncing with Diego' do
-          let(:temporary_local_sync) { true }
-
           it 'returns a v4 completion callback url' do
             expect(generator.generate(task)).to eq(
               "https://google.com:8888/internal/v4/tasks/#{task.guid}/completed"
-            )
-          end
-        end
-
-        context 'when the bridge is still handling syncing CC and Diego' do
-          let(:temporary_local_sync) { false }
-
-          it 'returns a v3 completion callback url' do
-            expect(generator.generate(task)).to eq(
-              "http://username:password@google.com:8881/internal/v3/tasks/#{task.guid}/completed"
             )
           end
         end
@@ -74,10 +58,6 @@ module VCAP::CloudController
               internal_service_hostname: 'google.com',
               tls_port:                  '8888',
               external_port: '8881',
-              diego:                     {
-                temporary_local_tps: true,
-                temporary_local_sync: true
-              },
             }
           end
 

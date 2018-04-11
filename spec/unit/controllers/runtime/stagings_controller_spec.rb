@@ -365,15 +365,6 @@ module VCAP::CloudController
     describe 'POST /internal/v4/droplets/:guid/upload' do
       include TempFileCreator
 
-      before do
-        c = staging_config.merge({
-          diego: {
-            temporary_cc_uploader_mtls: true,
-          }
-        })
-        TestConfig.override(c)
-      end
-
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
         let(:package) { PackageModel.make(app: process) }
@@ -512,15 +503,6 @@ module VCAP::CloudController
       end
       let(:app_model) { AppModel.make }
       let(:stack) { Sham.name }
-
-      before do
-        c = staging_config.merge({
-          diego: {
-            temporary_cc_uploader_mtls: true,
-          }
-        })
-        TestConfig.override(c)
-      end
 
       context 'with a valid app' do
         it 'returns 200' do

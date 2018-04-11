@@ -175,9 +175,6 @@ RSpec.describe CloudController::DependencyLocator do
             password: 'password',
           }
         },
-        diego:                     {
-          temporary_cc_uploader_mtls: true,
-        }
       }
     end
 
@@ -211,9 +208,6 @@ RSpec.describe CloudController::DependencyLocator do
         internal_service_hostname: 'internal.service.hostname',
         external_port:             8282,
         tls_port:                  8283,
-        diego:                     {
-          temporary_droplet_download_mtls: true,
-        }
       }
     end
 

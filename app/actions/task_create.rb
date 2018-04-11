@@ -51,22 +51,12 @@ module VCAP::CloudController
     attr_reader :config
 
     def submit_task(task)
-      if bypass_bridge?
-        begin
-          task_definition = Diego::TaskRecipeBuilder.new.build_app_task(config, task)
-          dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, Diego::TASKS_DOMAIN)
-          mark_task_as_running(task)
-        rescue => e
-          fail_task(task)
-          raise e
-        end
-      else
-        dependency_locator.nsync_client.desire_task(task)
-      end
-    end
-
-    def bypass_bridge?
-      config.get(:diego) && config.get(:diego, :temporary_local_tasks)
+      task_definition = Diego::TaskRecipeBuilder.new.build_app_task(config, task)
+      dependency_locator.bbs_task_client.desire_task(task.guid, task_definition, Diego::TASKS_DOMAIN)
+      mark_task_as_running(task)
+    rescue => e
+      fail_task(task)
+      raise e
     end
 
     def use_requested_name_or_generate_name(message)

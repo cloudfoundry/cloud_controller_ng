@@ -3,10 +3,12 @@ require 'spec_helper'
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:build_client) { instance_double(HTTPClient, post: nil) }
 
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
   end
 
   describe 'GET /v2/apps' do
@@ -914,7 +916,7 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps/:guid/stats' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED', space: space) }
-    let(:instances_reporters) { instance_double(VCAP::CloudController::Diego::TpsInstancesReporter) }
+    let(:instances_reporters) { instance_double(VCAP::CloudController::Diego::InstancesReporter) }
     let(:instances_reporter_response) do
       {
         0 => {
@@ -991,16 +993,29 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v2/apps/:guid/instances' do
+    def make_actual_lrp(instance_guid:, index:, state:, error:, since:)
+      ::Diego::Bbs::Models::ActualLRP.new(
+        actual_lrp_key:          ::Diego::Bbs::Models::ActualLRPKey.new(index: index),
+        actual_lrp_instance_key: ::Diego::Bbs::Models::ActualLRPInstanceKey.new(instance_guid: instance_guid),
+        state:                   state,
+        placement_error:         error,
+        since:                   since,
+      )
+    end
+
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(diego: true, space: space, state: 'STARTED', instances: 2) }
-    let(:tps_url) { "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process.guid}-#{process.version}" }
-    let(:instances) { [
-      { process_guid: process.guid, instance_guid: 'instance-A', index: 0, state: 'RUNNING', uptime: 0 },
-      { process_guid: process.guid, instance_guid: 'instance-A', index: 1, state: 'RUNNING', uptime: 0 }
-    ]
-    }
+    let(:two_days_ago_since_epoch_seconds) { 2.days.ago.to_i }
+    let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
+    let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
+    let(:bbs_instances_response) do
+      [
+        make_actual_lrp(instance_guid: 'instance-a', index: 0, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
+        make_actual_lrp(instance_guid: 'instance-b', index: 1, state: ::Diego::ActualLRPState::RUNNING, error: '', since: two_days_ago_since_epoch_ns),
+      ]
+    end
 
     before do
-      stub_request(:get, tps_url).to_return(status: 200, body: instances.to_json)
+      allow_any_instance_of(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:lrp_instances).and_return(bbs_instances_response)
     end
 
     it 'gets the instance information for a started app' do
@@ -1011,10 +1026,10 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           '0' => {
-            'state' => 'RUNNING', 'uptime' => 0, 'since' => nil
+            'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
           },
           '1' => {
-            'state' => 'RUNNING', 'uptime' => 0, 'since' => nil
+            'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
           }
         }
       )
@@ -1023,17 +1038,15 @@ RSpec.describe 'Apps' do
 
   describe 'DELETE /v2/apps/:guid/instances/:index' do
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, instances: 2, diego: true) }
-    let(:stop_url) { %r{http://nsync.service.cf.internal:8787/v1/apps/#{process.guid}.+/index/0} }
 
     before do
-      stub_request(:delete, stop_url).to_return(status: 202)
+      allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
     end
 
     it 'stops the instance' do
       delete "/v2/apps/#{process.guid}/instances/0", nil, headers_for(user)
 
       expect(last_response.status).to eq(204)
-      expect(a_request(:delete, stop_url)).to have_been_made
     end
   end
 

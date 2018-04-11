@@ -355,7 +355,6 @@ module VCAP::CloudController
               lifecycle_bundles: { 'buildpack/potato-stack': 'potato_lifecycle_bundle_url' },
               pid_limit: 100,
               use_privileged_containers_for_running: false,
-              temporary_local_tps: true,
             },
           })
         end

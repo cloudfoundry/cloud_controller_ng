@@ -18,11 +18,7 @@ module VCAP::CloudController
         task_event_repository.record_task_cancel(task, user_audit_info)
       end
 
-      if bypass_bridge?
-        bbs_task_client.cancel_task(task.guid)
-      else
-        nsync_client.cancel_task(task)
-      end
+      bbs_task_client.cancel_task(task.guid)
     end
 
     private
@@ -33,14 +29,6 @@ module VCAP::CloudController
       if task.state == TaskModel::SUCCEEDED_STATE || task.state == TaskModel::FAILED_STATE
         raise InvalidCancel.new("Task state is #{task.state} and therefore cannot be canceled")
       end
-    end
-
-    def bypass_bridge?
-      config.get(:diego) && config.get(:diego, :temporary_local_tasks)
-    end
-
-    def nsync_client
-      CloudController::DependencyLocator.instance.nsync_client
     end
 
     def bbs_task_client

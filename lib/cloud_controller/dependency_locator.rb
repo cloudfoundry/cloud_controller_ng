@@ -191,7 +191,7 @@ module CloudController
         blobstore_tls_port: config.get(:tls_port),
         user: config.get(:staging, :auth, :user),
         password: config.get(:staging, :auth, :password),
-        mtls: config.get(:diego, :temporary_cc_uploader_mtls),
+        mtls:  !!config.get(:tls_port),
       }
 
       Blobstore::UrlGenerator.new(
@@ -208,7 +208,7 @@ module CloudController
         internal_service_hostname: config.get(:internal_service_hostname),
         external_port: config.get(:external_port),
         tls_port: config.get(:tls_port),
-        mtls: config.get(:diego, :temporary_droplet_download_mtls),
+        mtls:  !!config.get(:tls_port),
       )
     end
 
