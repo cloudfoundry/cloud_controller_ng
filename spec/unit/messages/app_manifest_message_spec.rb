@@ -230,7 +230,7 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = ManifestRoutesMessage.new(params)
+            message = ManifestRoutesUpdateMessage.new(params)
 
             expect(message).not_to be_valid
             expect(message.errors.full_messages).to match_array(["The route 'anotherblah' is not a properly formed URL", "The route 'blah' is not a properly formed URL"])

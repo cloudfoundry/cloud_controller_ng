@@ -9,6 +9,7 @@ module VCAP::CloudController
     let(:app_update) { instance_double(AppUpdate) }
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
     let(:process_update) { instance_double(ProcessUpdate) }
+    let(:route_update) { instance_double(RouteUpdate) }
     let(:service_binding_create) { instance_double(ServiceBindingCreate) }
 
     describe '#apply' do
@@ -24,6 +25,10 @@ module VCAP::CloudController
         allow(ProcessUpdate).
           to receive(:new).and_return(process_update)
         allow(process_update).to receive(:update)
+
+        allow(RouteUpdate).
+          to receive(:new).and_return(route_update)
+        allow(route_update).to receive(:update)
 
         allow(ServiceBindingCreate).
           to receive(:new).and_return(service_binding_create)

@@ -2,7 +2,7 @@ require 'messages/base_message'
 require 'messages/manifest_process_scale_message'
 require 'messages/manifest_process_update_message'
 require 'messages/manifest_service_binding_create_message'
-require 'messages/manifest_routes_message'
+require 'messages/manifest_routes_update_message'
 require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
@@ -52,7 +52,7 @@ module VCAP::CloudController
       @app_update_environment_variables_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
       @manifest_process_update_message = ManifestProcessUpdateMessage.new(process_update_attribute_mapping)
       @manifest_service_bindings_message = ManifestServiceBindingCreateMessage.new(service_bindings_attribute_mapping)
-      @manifest_routes_message = ManifestRoutesMessage.new(routes_attribute_mapping)
+      @manifest_routes_message = ManifestRoutesUpdateMessage.new(routes_attribute_mapping)
     end
 
     def valid?

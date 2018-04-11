@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe RouteUpdate do
     subject(:route_update) { RouteUpdate.new(user_audit_info) }
 
-    let(:message) { ManifestRoutesMessage.new({
+    let(:message) { ManifestRoutesUpdateMessage.new({
       routes: [
         { 'route': 'http://potato.tomato.avocado-toast.com:8080/some-path' }
       ]

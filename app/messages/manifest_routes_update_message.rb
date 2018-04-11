@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class ManifestRoutesMessage < BaseMessage
+  class ManifestRoutesUpdateMessage < BaseMessage
     ALLOWED_KEYS = [:routes].freeze
     VALID_URI_REGEX = Regexp.new('^(?:https?://|tcp://)?(?:(?:[\\w-]+\\.)|(?:[*]\\.))+\\w+(?:\\:\\d+)?(?:/.*)*(?:\\.\\w+)?$')
 
@@ -26,7 +26,7 @@ module VCAP::CloudController
     validates_with ManifestRoutesValidator
 
     def self.create_from_http_request(body)
-      ManifestRoutesMessage.new(body.deep_symbolize_keys)
+      ManifestRoutesUpdateMessage.new(body.deep_symbolize_keys)
     end
 
     private
