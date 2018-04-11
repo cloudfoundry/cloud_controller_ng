@@ -683,7 +683,7 @@ module VCAP::CloudController
                 allow(PortGenerator).to receive(:generate_port).and_return(generated_port, generated_port + 1)
 
                 call_count = 0
-                allow_any_instance_of(RouteCreate).to receive(:create_route) do |_, args|
+                allow_any_instance_of(V2::RouteCreate).to receive(:create_route) do |_, args|
                   call_count += 1
                   raise Sequel::UniqueConstraintViolation.new('port already taken') if call_count == 1
                   Route.make(port: args[:route_hash]['port'])

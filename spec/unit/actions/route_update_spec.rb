@@ -3,8 +3,6 @@ require 'actions/route_update'
 
 module VCAP::CloudController
   RSpec.describe RouteUpdate do
-    subject(:route_update) { RouteUpdate.new(user_audit_info) }
-
     let(:message) { ManifestRoutesUpdateMessage.new({
       routes: [
         { 'route': 'http://potato.tomato.avocado-toast.com:8080/some-path' }
@@ -29,7 +27,7 @@ module VCAP::CloudController
 
           it 'does not attempt to re-map the route to the app' do
             expect {
-              route_update.update(app.guid, message)
+              RouteUpdate.update(app.guid, message, user_audit_info)
             }.not_to change { route_mapping.reload.updated_at }
           end
         end
@@ -38,7 +36,7 @@ module VCAP::CloudController
           it 'uses the existing route and creates a new mapping' do
             num_routes = Route.count
             num_maps = app.routes.length
-            route_update.update(app.guid, message)
+            RouteUpdate.update(app.guid, message, user_audit_info)
 
             routes = app.reload.routes
             expect(routes.length).to eq(num_routes + 0)
@@ -60,7 +58,7 @@ module VCAP::CloudController
 
           it 'creates and maps the route to the app' do
             expect {
-              route_update.update(app.guid, message)
+              RouteUpdate.update(app.guid, message, user_audit_info)
             }.to change { app.reload.routes.length }.by(1)
             routes = app.reload.routes
             expect(routes.length).to eq 1
@@ -71,12 +69,40 @@ module VCAP::CloudController
             expect(route.domain.name).to eq 'tomato.avocado-toast.com'
             expect(route.path).to eq '/some-path'
           end
+
+          context 'when using a wildcard host with a shared domain' do
+            let(:message) { ManifestRoutesUpdateMessage.new({
+              routes: [
+                { 'route': 'http://*.tomato.avocado-toast.com' }
+              ]
+            })
+            }
+
+            it 'raises an error' do
+              pending('support wildcards in app manifest routes')
+              expect {
+                RouteUpdate.update(app.guid, message, user_audit_info)
+              }.to raise_error(CloudController::Errors::ApiError, 'NotAuthorized')
+            end
+          end
+
+          context 'when route creation feature is disabled' do
+            before do
+              VCAP::CloudController::FeatureFlag.make(name: 'route_creation', enabled: false, error_message: 'nope')
+            end
+
+            it 'raises an unauthorized error' do
+              expect {
+                RouteUpdate.update(app.guid, message, user_audit_info)
+              }.to raise_error(CloudController::Errors::ApiError)
+            end
+          end
         end
 
         context 'when the domain does not exist' do
           it 'raises a route invalid error' do
             expect {
-              route_update.update(app.guid, message)
+              RouteUpdate.update(app.guid, message, user_audit_info)
             }.to raise_error(VCAP::CloudController::RouteValidator::RouteInvalid,
               "no domains exist for route #{message.routes.first[:route]}")
           end
@@ -89,7 +115,7 @@ module VCAP::CloudController
 
           it 'raises an error' do
             expect {
-              route_update.update(app.guid, message)
+              RouteUpdate.update(app.guid, message, user_audit_info)
             }.to raise_error(Route::InvalidOrganizationRelation)
           end
         end
@@ -100,7 +126,7 @@ module VCAP::CloudController
         let!(:broader_domain) { VCAP::CloudController::SharedDomain.make(name: 'avocado-toast.com') }
 
         it 'creates the route in the most specific domain' do
-          route_update.update(app.guid, message)
+          RouteUpdate.update(app.guid, message, user_audit_info)
 
           routes = app.reload.routes
           expect(routes.length).to eq(1)
@@ -115,7 +141,7 @@ module VCAP::CloudController
 
         it('raises an error indicating that a host must be provided') do
           expect {
-            route_update.update(app.guid, message)
+            RouteUpdate.update(app.guid, message, user_audit_info)
           }.to raise_error(RouteUpdate::InvalidRoute, /host is required for shared-domains/)
         end
       end
@@ -125,7 +151,7 @@ module VCAP::CloudController
 
         it('raises an error indicating that the host format is invalid') do
           expect {
-            route_update.update(app.guid, message)
+            RouteUpdate.update(app.guid, message, user_audit_info)
           }.to raise_error(RouteUpdate::InvalidRoute, /host format/)
         end
       end

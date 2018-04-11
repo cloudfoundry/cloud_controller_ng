@@ -9,7 +9,6 @@ module VCAP::CloudController
     let(:app_update) { instance_double(AppUpdate) }
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
     let(:process_update) { instance_double(ProcessUpdate) }
-    let(:route_update) { instance_double(RouteUpdate) }
     let(:service_binding_create) { instance_double(ServiceBindingCreate) }
 
     describe '#apply' do
@@ -26,9 +25,7 @@ module VCAP::CloudController
           to receive(:new).and_return(process_update)
         allow(process_update).to receive(:update)
 
-        allow(RouteUpdate).
-          to receive(:new).and_return(route_update)
-        allow(route_update).to receive(:update)
+        allow(RouteUpdate).to receive(:update)
 
         allow(ServiceBindingCreate).
           to receive(:new).and_return(service_binding_create)
@@ -328,6 +325,27 @@ module VCAP::CloudController
           end
         end
       end
+
+      # describe 'updating routes' do
+      #   let(:message) { AppManifestMessage.new({ name: 'blah', routes: [ {'route': 'http://tater.tots.com/tabasco'}]} ) }
+      #   let(:manifest_routes_message) { message.manifest_routes_update_message }
+      #   let(:process) { ProcessModel.make }
+      #   let(:app) { process.app }
+      #
+      #   context 'when the request is valid' do
+      #     it 'returns the app' do
+      #       expect(
+      #         app_apply_manifest.apply(app.guid, message)
+      #       ).to eq(app)
+      #     end
+      #
+      #     it 'calls RoutesUpdate with the correct arguments' do
+      #       app_apply_manifest.apply(app.guid, message)
+      #       expect(RouteUpdate).to have_received(:new).with(user_audit_info)
+      #       expect(route_update).to have_received(:update).with(app.guid, manifest_routes_update_message)
+      #     end
+      #   end
+      # end
 
       describe 'creating service bindings' do
         let(:message) { AppManifestMessage.new({ services: ['si-name'] }) } # why defined here?

@@ -1,5 +1,5 @@
 require 'actions/routing/route_delete'
-require 'actions/routing/route_create'
+require 'actions/v2/route_create'
 
 module VCAP::CloudController
   class RoutesController < RestController::ModelController
@@ -147,7 +147,7 @@ module VCAP::CloudController
         route_hash = attrs_with_generated_port
       end
 
-      route_create = RouteCreate.new(
+      route_create = V2::RouteCreate.new(
         access_validator: self,
         logger: logger
       )
