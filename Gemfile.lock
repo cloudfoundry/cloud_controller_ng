@@ -129,7 +129,6 @@ GEM
     erubis (2.7.0)
     eventmachine (1.0.9.1)
     excon (0.60.0)
-    fakefs (0.10.0)
     faraday (0.14.0)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
@@ -448,7 +447,6 @@ DEPENDENCIES
   debase (>= 0.2.2.beta14)
   em-http-request (~> 1.0)
   eventmachine (~> 1.0.9)
-  fakefs
   fog-aws
   fog-azure-rm
   fog-google

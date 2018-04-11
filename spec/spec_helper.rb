@@ -10,7 +10,6 @@ if ENV['COVERAGE']
 end
 ENV['PB_IGNORE_DEPRECATIONS'] = 'true'
 
-require 'fakefs/safe'
 require 'machinist/sequel'
 require 'machinist/object'
 require 'rack/test'
