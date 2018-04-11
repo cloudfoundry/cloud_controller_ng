@@ -70,6 +70,32 @@ module VCAP::CloudController
             expect(route.path).to eq '/some-path'
           end
 
+          context 'when using a wildcard host with a private domain' do
+            let(:message) { ManifestRoutesUpdateMessage.new({
+              routes: [
+                { 'route': 'http://*.private.avocado-toast.com' }
+              ]
+            })
+            }
+
+            before do
+              VCAP::CloudController::PrivateDomain.make(owning_organization: app.space.organization, name: 'private.avocado-toast.com')
+            end
+
+            it 'creates and maps the route to the app' do
+              expect {
+                RouteUpdate.update(app.guid, message, user_audit_info)
+              }.to change { app.reload.routes.length }.by(1)
+              routes = app.reload.routes
+              expect(routes.length).to eq 1
+
+              route = routes.first
+
+              expect(route.host).to eq '*'
+              expect(route.domain.name).to eq 'private.avocado-toast.com'
+            end
+          end
+
           context 'when using a wildcard host with a shared domain' do
             let(:message) { ManifestRoutesUpdateMessage.new({
               routes: [
@@ -79,10 +105,9 @@ module VCAP::CloudController
             }
 
             it 'raises an error' do
-              pending('support wildcards in app manifest routes')
               expect {
                 RouteUpdate.update(app.guid, message, user_audit_info)
-              }.to raise_error(CloudController::Errors::ApiError, 'NotAuthorized')
+              }.to raise_error(CloudController::Errors::ApiError)
             end
           end
 

@@ -18,6 +18,19 @@ module VCAP::CloudController
           path: '/path'
         )
       end
+
+      it 'splits a wildcard urls into route components' do
+        url = 'http://*.sub.some-domain.com/path'
+        expect(RouteDomainSplitter.split(url)).to eq(
+          protocol: 'http',
+          potential_host: '*',
+          potential_domains: [
+            'sub.some-domain.com',
+          ],
+          port: nil,
+          path: '/path'
+        )
+      end
     end
   end
 end
