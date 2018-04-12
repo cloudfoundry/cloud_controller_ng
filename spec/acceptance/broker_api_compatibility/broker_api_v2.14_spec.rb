@@ -169,19 +169,24 @@ RSpec.describe 'Service Broker API integration' do
                             )).to have_been_made
           end
 
-          it 'fetches the service binding details' do
-            stub_async_binding_last_operation
-            async_bind_service(status: 202)
-
-            service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
-
-            Delayed::Worker.new.work_off
-
-            expect(a_request(:get, service_binding_url(service_binding))).to have_been_made
-          end
-
           context 'when the last operation is successful' do
-            context 'but the binding is invalid' do
+            it 'fetches the service binding details' do
+              stub_async_binding_last_operation
+              async_bind_service(status: 202)
+
+              service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+              stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: '{"credentials": {"foo": true}')
+
+              Delayed::Worker.new.work_off
+
+              get("/v2/service_bindings/#{@binding_id}", '', admin_headers)
+              response = JSON.parse(last_response.body)
+
+              expect(response['entity']['last_operation']['state']).to eql('succeeded')
+              expect(response['entity']['credentials']).to eql('foo' => true)
+            end
+
+            context 'but the get binding response is invalid' do
               it 'set the last operation status to failed and perform orphan mitigation' do
                 stub_async_binding_last_operation
                 async_bind_service(status: 202, response_body: { operation: 'some-operation' })
@@ -196,13 +201,28 @@ RSpec.describe 'Service Broker API integration' do
               end
             end
 
-            context 'but the binding is not 200' do
+            context 'but the get binding response is not 200' do
               it 'set the last operation status to failed and perform orphan mitigation' do
                 stub_async_binding_last_operation
                 async_bind_service(status: 202, response_body: { operation: 'some-operation' })
 
                 service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
                 stub_request(:get, service_binding_url(service_binding)).to_return(status: 204, body: '{}')
+
+                Delayed::Worker.new.work_off
+
+                expect(service_binding.last_operation.state).to eq('failed')
+                expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
+              end
+            end
+
+            context 'but the request to get the binding timed out' do
+              it 'set the last operation status to failed' do
+                stub_async_binding_last_operation
+                async_bind_service(status: 202, response_body: { operation: 'some-operation' })
+
+                service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+                stub_request(:get, service_binding_url(service_binding)).to_timeout
 
                 Delayed::Worker.new.work_off
 

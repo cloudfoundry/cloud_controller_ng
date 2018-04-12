@@ -21,7 +21,7 @@ module VCAP::CloudController
           if last_operation_result[:last_operation][:state] == 'succeeded'
             begin
               binding_response = client.fetch_service_binding(service_binding)
-            rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse
+            rescue HttpResponseError, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout
               set_binding_failed_state(service_binding, logger)
               return
             end
