@@ -90,7 +90,7 @@ GEM
       steno
     builder (3.2.3)
     byebug (9.0.6)
-    cf-copilot (0.0.2)
+    cf-copilot (0.0.3)
       grpc (~> 1.0)
     cf-uaa-lib (3.13.0)
       httpclient (~> 2.8, >= 2.8.2.4)

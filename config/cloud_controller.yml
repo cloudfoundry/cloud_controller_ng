@@ -357,3 +357,12 @@ credhub_api:
 
 credential_references:
   interpolate_service_bindings: true
+
+copilot:
+  enabled: false
+  host: copilot.service.cf.internal
+  port: 9080
+  client_ca_file: 'spec/fixtures/certs/copilot_ca.crt'
+  client_key_file: 'spec/fixtures/certs/copilot.key'
+  client_chain_file: 'spec/fixtures/certs/copilot.crt'
+  sync_frequency_in_seconds: 30

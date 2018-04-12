@@ -41,21 +41,21 @@ module VCAP::CloudController
         context 'when copilot is enabled' do
           before do
             TestConfig.override(copilot: { enabled: true })
-            allow(CopilotAdapter).to receive(:map_route)
+            allow(Copilot::Adapter).to receive(:map_route)
           end
 
           it 'delegates to the copilot handler to notify copilot' do
             expect {
               route_mapping = route_mapping_create.add
-              expect(CopilotAdapter).to have_received(:map_route).with(route_mapping)
+              expect(Copilot::Adapter).to have_received(:map_route).with(route_mapping)
             }.to change { RouteMappingModel.count }.by(1)
           end
 
-          context 'when CopilotAdapter#map_route errors out' do
+          context 'when Copilot::Adapter#map_route errors out' do
             let(:event_repository) { double(Repositories::AppEventRepository) }
 
             before do
-              allow(CopilotAdapter).to receive(:map_route).and_raise(CopilotAdapter::CopilotUnavailable.new('some-error'))
+              allow(Copilot::Adapter).to receive(:map_route).and_raise(Copilot::Adapter::CopilotUnavailable.new('some-error'))
               allow(logger).to receive(:error)
               allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
               allow(event_repository).to receive(:record_map_route)
@@ -65,7 +65,7 @@ module VCAP::CloudController
               expect {
                 route_mapping = route_mapping_create.add
                 expect(route_handler).to have_received(:update_route_information)
-                expect(CopilotAdapter).to have_received(:map_route).with(route_mapping)
+                expect(Copilot::Adapter).to have_received(:map_route).with(route_mapping)
                 expect(logger).to have_received(:error).with('failed communicating with copilot backend: some-error')
                 expect(event_repository).to have_received(:record_map_route).with(
                   app,

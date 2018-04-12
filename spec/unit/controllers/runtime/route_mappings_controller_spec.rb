@@ -166,6 +166,7 @@ module VCAP::CloudController
               TestConfig.override(copilot: { enabled: true })
               allow(CopilotAdapter).to receive(:map_route)
             end
+
             it 'notifies copilot' do
               post '/v2/route_mappings', body
 
