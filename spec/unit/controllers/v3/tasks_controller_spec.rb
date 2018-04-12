@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe TasksController, type: :controller do
+  let(:client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, desire_task: nil) }
   let(:tasks_enabled) { true }
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
@@ -22,7 +23,6 @@ RSpec.describe TasksController, type: :controller do
         "memory_in_mb": 2048,
       }
     end
-    let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -32,17 +32,16 @@ RSpec.describe TasksController, type: :controller do
       app_model.droplet = droplet
       app_model.save
 
-      locator = CloudController::DependencyLocator.instance
-      allow(locator).to receive(:nsync_client).and_return(client)
-      allow(client).to receive(:desire_task).and_return(nil)
+      CloudController::DependencyLocator.instance.register(:bbs_task_client, client)
+      allow_any_instance_of(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:build_app_task)
     end
 
     it 'returns a 202 and the task' do
       post :create, app_guid: app_model.guid, body: req_body
 
-      expect(response.status).to eq 202
+      expect(response.status).to eq(202)
       expect(parsed_body['name']).to eq('mytask')
-      expect(parsed_body['state']).to eq('PENDING')
+      expect(parsed_body['state']).to eq('RUNNING')
       expect(parsed_body['memory_in_mb']).to eq(2048)
       expect(parsed_body['sequence_id']).to eq(1)
     end
@@ -458,14 +457,12 @@ RSpec.describe TasksController, type: :controller do
 
   describe '#cancel' do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'usher', app_guid: app_model.guid }
-    let(:client) { instance_double(VCAP::CloudController::Diego::NsyncClient) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      locator = CloudController::DependencyLocator.instance
-      allow(locator).to receive(:nsync_client).and_return(client)
+      CloudController::DependencyLocator.instance.register(:bbs_task_client, client)
       allow(client).to receive(:cancel_task).and_return(nil)
     end
 

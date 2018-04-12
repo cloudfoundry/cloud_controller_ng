@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Builds' do
+  let(:bbs_stager_client) { instance_double(VCAP::CloudController::Diego::BbsStagerClient) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name, email: 'bob@loblaw.com') }
@@ -53,8 +54,8 @@ RSpec.describe 'Builds' do
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_app_buildpack_cache_upload_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_download_url).and_return('some-string')
       allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:package_droplet_upload_url).and_return('some-string')
-      stub_request(:put, %r{#{TestConfig.config[:diego][:stager_url]}/v1/staging/}).
-        to_return(status: 202, body: diego_staging_response.to_json)
+      CloudController::DependencyLocator.instance.register(:bbs_stager_client, bbs_stager_client)
+      allow(bbs_stager_client).to receive(:stage)
     end
 
     it 'creates a Builds resource' do
@@ -95,7 +96,7 @@ RSpec.describe 'Builds' do
           }
         }
 
-      expect(last_response.status).to eq(201), last_response.body
+      expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       event = VCAP::CloudController::Event.last

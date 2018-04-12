@@ -76,11 +76,6 @@ module VCAP::CloudController
           let(:route) { Route.make }
           let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type) }
 
-          before do
-            diego_process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-            stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{diego_process_guid}").to_return(status: 202, body: '')
-          end
-
           it 'deletes associated route mappings' do
             expect {
               app_delete.delete(app_dataset)
@@ -94,6 +89,7 @@ module VCAP::CloudController
 
             before do
               TestConfig.override(copilot: { enabled: true })
+              allow_any_instance_of(Diego::Messenger).to receive(:send_stop_app_request)
               allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
             end
 

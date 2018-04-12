@@ -1687,12 +1687,12 @@ module VCAP::CloudController
         end
 
         before do
-          allow_any_instance_of(Diego::NsyncClient).to receive(:desire_app).and_return(nil)
           put "/v2/apps/#{docker_process.guid}/routes/#{pre_mapped_route.guid}", nil
         end
 
         context 'when Docker is disabled' do
           before do
+            allow_any_instance_of(Diego::Messenger).to receive(:send_desire_request)
             FeatureFlag.find(name: 'diego_docker').update(enabled: false)
           end
 

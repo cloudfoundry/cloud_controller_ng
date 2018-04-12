@@ -6,6 +6,11 @@ RSpec.describe 'Processes' do
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'ProcHudson' }
+  let(:build_client) { instance_double(HTTPClient, post: nil) }
+
+  before do
+    allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
+  end
 
   describe 'GET /v3/processes' do
     let!(:web_process) {
@@ -325,96 +330,107 @@ RSpec.describe 'Processes' do
     end
   end
 
-  describe 'GET /v3/processes/:guid/stats' do
-    it 'succeeds when TPS is an older version without net_info' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model)
+  describe 'GET stats' do
+    let(:process) { VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model) }
+    let(:net_info_1) {
+      {
+        address: '1.2.3.4',
+        ports: [
+          {
+            host_port: 8080,
+            container_port: 1234
+          }, {
+            host_port: 3000,
+            container_port: 4000
+          }
+        ]
+      }
+    }
 
-      usage_time   = Time.now.utc.to_s
-      tps_response = [{
-        process_guid:  process.guid,
-        instance_guid: 'instance-A',
-        index:         0,
-        state:         'RUNNING',
-        details:       'some-details',
-        uptime:        1,
-        since:         101,
-        host:          'toast',
-        port:          8080,
-        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
-      }].to_json
-
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
-
-      get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['resources'][0]['port']).to eq(8080)
+    let(:stats_for_process) do
+      {
+        0 => {
+          state: 'RUNNING',
+          details: 'some-details',
+          stats: {
+            name: process.name,
+            uris: process.uris,
+            host: 'toast',
+            net_info: net_info_1,
+            uptime: 12345,
+            mem_quota:  process[:memory] * 1024 * 1024,
+            disk_quota: process[:disk_quota] * 1024 * 1024,
+            fds_quota: process.file_descriptors,
+            usage: {
+              time: usage_time,
+              cpu:  80,
+              mem:  128,
+              disk: 1024,
+            }
+          }
+        },
+      }
     end
 
-    it 'retrieves the stats for a process' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model)
+    let(:instances_reporters) { double(:instances_reporters) }
+    let(:usage_time) { Time.now.utc.to_s }
 
-      usage_time   = Time.now.utc.to_s
-      tps_response = [{
-        process_guid:  process.guid,
-        instance_guid: 'instance-A',
-        index:         0,
-        state:         'RUNNING',
-        details:       'some-details',
-        uptime:        1,
-        since:         101,
-        host:          'toast',
-        net_info:      {
-          address: 'host',
-          ports:   [
-            { container_port: 7890, host_port: 5432 },
-            { container_port: 8080, host_port: 1234 }
-          ]
+    let(:expected_response) do
+      {
+      'resources' => [{
+        'type'           => 'worker',
+        'index'          => 0,
+        'state'          => 'RUNNING',
+        'usage'          => {
+          'time' => usage_time,
+          'cpu'  => 80,
+          'mem'  => 128,
+          'disk' => 1024,
         },
-        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
-      }].to_json
-
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
-
-      get "/v3/processes/#{process.guid}/stats", nil, developer_headers
-
-      expected_response = {
-        'resources' => [{
-          'type'           => 'worker',
-          'index'          => 0,
-          'state'          => 'RUNNING',
-          'usage'          => {
-            'time' => usage_time,
-            'cpu'  => 80,
-            'mem'  => 128,
-            'disk' => 1024,
+        'host'           => 'toast',
+        'instance_ports' => [
+          {
+            'external' => 8080,
+            'internal' => 1234
           },
-          'host'           => 'toast',
-          'instance_ports' => [
-            {
-              'external' => 5432,
-              'internal' => 7890
-            },
-            {
-              'external' => 1234,
-              'internal' => 8080
-            }
-          ],
-          'uptime'         => 1,
-          'mem_quota'      => 1073741824,
-          'disk_quota'     => 1073741824,
-          'fds_quota'      => 16384
-        }]
-      }
+          {
+            'external' => 3000,
+            'internal' => 4000
+          }
+        ],
+        'uptime'         => 12345,
+        'mem_quota'      => 1073741824,
+        'disk_quota'     => 1073741824,
+        'fds_quota'      => 16384
+      }]
+    }
+    end
 
-      parsed_response = MultiJson.load(last_response.body)
+    before do
+      CloudController::DependencyLocator.instance.register(:instances_reporters, instances_reporters)
+      allow(instances_reporters).to receive(:stats_for_app).and_return(stats_for_process)
+    end
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
+    describe 'GET /v3/processes/:guid/stats' do
+      it 'retrieves the stats for a process' do
+        get "/v3/processes/#{process.guid}/stats", nil, developer_headers
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    describe 'GET /v3/apps/:guid/processes/:type/stats' do
+      it 'retrieves the stats for a process belonging to an app' do
+        get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
     end
   end
 
@@ -588,11 +604,11 @@ RSpec.describe 'Processes' do
   end
 
   describe 'DELETE /v3/processes/:guid/instances/:index' do
+    before do
+      allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
+    end
     it 'terminates a single instance of a process' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model)
-
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
 
       delete "/v3/processes/#{process.guid}/instances/0", nil, developer_headers
 
@@ -918,99 +934,6 @@ RSpec.describe 'Processes' do
     end
   end
 
-  describe 'GET /v3/apps/:guid/processes/:type/stats' do
-    it 'succeeds when TPS is an older version without net_info' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model)
-
-      usage_time   = Time.now.utc.to_s
-      tps_response = [{
-        process_guid:  process.guid,
-        instance_guid: 'instance-A',
-        index:         0,
-        state:         'RUNNING',
-        details:       'some-details',
-        uptime:        1,
-        since:         101,
-        host:          'toast',
-        port:          8080,
-        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
-      }].to_json
-
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
-
-      get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['resources'][0]['port']).to eq(8080)
-    end
-
-    it 'retrieves the stats for a process belonging to an app' do
-      process = VCAP::CloudController::ProcessModel.make(:process, type: 'worker', app: app_model)
-
-      usage_time   = Time.now.utc.to_s
-      tps_response = [{
-        process_guid:  process.guid,
-        instance_guid: 'instance-A',
-        index:         0,
-        state:         'RUNNING',
-        details:       'some-details',
-        uptime:        1,
-        since:         101,
-        host:          'toast',
-        net_info:      {
-          address: 'host',
-          ports:   [
-            { container_port: 7890, host_port: 5432 },
-            { container_port: 8080, host_port: 1234 }
-          ]
-        },
-        stats:         { time: usage_time, cpu: 80, mem: 128, disk: 1024 }
-      }].to_json
-
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-      stub_request(:get, "http://tps.service.cf.internal:1518/v1/actual_lrps/#{process_guid}/stats").to_return(status: 200, body: tps_response)
-
-      get "/v3/apps/#{app_model.guid}/processes/worker/stats", nil, developer_headers
-
-      expected_response = {
-        'resources' => [{
-          'type'           => 'worker',
-          'index'          => 0,
-          'state'          => 'RUNNING',
-          'usage'          => {
-            'time' => usage_time,
-            'cpu'  => 80,
-            'mem'  => 128,
-            'disk' => 1024,
-          },
-          'host'           => 'toast',
-          'instance_ports' => [
-            {
-              'external' => 5432,
-              'internal' => 7890
-            },
-            {
-              'external' => 1234,
-              'internal' => 8080
-            }
-          ],
-          'uptime'         => 1,
-          'mem_quota'      => 1073741824,
-          'disk_quota'     => 1073741824,
-          'fds_quota'      => 16384
-        }]
-      }
-
-      parsed_response = MultiJson.load(last_response.body)
-
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(expected_response)
-    end
-  end
-
   describe 'POST /v3/apps/:guid/processes/:type/actions/scale' do
     it 'scales the process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(
@@ -1092,11 +1015,11 @@ RSpec.describe 'Processes' do
   end
 
   describe 'DELETE /v3/apps/:guid/processes/:type/instances/:index' do
+    before do
+      allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
+    end
     it 'terminates a single instance of a process belonging to an app' do
       process = VCAP::CloudController::ProcessModel.make(:process, type: 'web', app: app_model)
-
-      process_guid = VCAP::CloudController::Diego::ProcessGuid.from_process(process)
-      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/apps/#{process_guid}/index/0").to_return(status: 202, body: '')
 
       delete "/v3/apps/#{app_model.guid}/processes/web/instances/0", nil, developer_headers
 

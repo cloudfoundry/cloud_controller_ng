@@ -37,6 +37,12 @@ module VCAP::CloudController
       end
       after { FileUtils.rm_rf(workspace) }
 
+      def get_and_redirect(url)
+        get url
+        expect(last_response.status).to eq(302)
+        get last_response.headers['Location']
+      end
+
       def upload_droplet
         droplet_file = Tempfile.new(v3_app.guid)
         droplet_file.write('droplet contents')
@@ -45,11 +51,25 @@ module VCAP::CloudController
         Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid).perform
       end
 
+      describe 'blobstore_url_generator' do
+        let(:hostname) { Config.config.get(:internal_service_hostname) }
+        let(:tls_port) { Config.config.get(:tls_port) }
+        let(:expected_redirect) { "https://#{hostname}:#{tls_port}/internal/v4/droplets/#{process.guid}/#{process.droplet_checksum}/download" }
+
+        it 'should redirect to the url provided by the blobstore_url_generator' do
+          upload_droplet
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+
+          expect(last_response).to be_redirect
+          expect(last_response.header['Location']).to eq(expected_redirect)
+        end
+      end
+
       context 'when using with nginx' do
         it 'succeeds for valid droplets' do
           upload_droplet
 
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+          get_and_redirect "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(200)
           expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{process.droplet_hash}")
         end
@@ -61,7 +81,7 @@ module VCAP::CloudController
         it 'succeeds for valid droplets' do
           upload_droplet
 
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+          get_and_redirect "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(200)
           expect(last_response.body).to eq('droplet contents')
         end
@@ -73,59 +93,28 @@ module VCAP::CloudController
         end
 
         it 'raises an error' do
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+          get_and_redirect "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to eq("Staging error: droplet not found for #{process.guid}")
         end
 
         it 'fails if blobstore is remote' do
-          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+          get_and_redirect "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(400)
         end
       end
 
       context 'with an invalid droplet_hash' do
         it 'returns an error' do
-          get "/internal/v2/droplets/#{process.guid}/bogus/download"
+          get_and_redirect "/internal/v2/droplets/#{process.guid}/bogus/download"
           expect(last_response.status).to eq(404)
         end
       end
 
       context 'with an invalid app' do
         it 'should return an error' do
-          get '/internal/v2/droplets/bad/bogus/download'
+          get_and_redirect '/internal/v2/droplets/bad/bogus/download'
           expect(last_response.status).to eq(404)
-        end
-      end
-
-      context 'when the blobstore is not local' do
-        before do
-          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
-        end
-
-        it 'should redirect to the url provided by the blobstore_url_generator' do
-          upload_droplet
-          allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
-
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
-
-          expect(last_response).to be_redirect
-          expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
-        end
-      end
-
-      context 'when mTLS is enabled' do
-        it 'should redirect to the endpoint provided by DropletUrlGenerator' do
-          upload_droplet
-          allow_any_instance_of(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:mtls).and_return(true)
-          allow_any_instance_of(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:perma_droplet_download_url).
-            with(process.guid, process.droplet_checksum).and_return('https://example.com/tls-somewhere-else')
-
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
-
-          expect(last_response).to be_redirect
-          expect(last_response.header['Location']).to eq('https://example.com/tls-somewhere-else')
         end
       end
     end
