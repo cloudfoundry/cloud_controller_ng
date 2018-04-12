@@ -11,6 +11,7 @@ module VCAP::CloudController
         end
 
         def perform
+          logger = Steno.logger('cc-background')
           service_binding = ServiceBinding.first(guid: @service_binding_guid)
           return if service_binding.nil? # assume the binding has been purged
 
@@ -18,7 +19,12 @@ module VCAP::CloudController
 
           last_operation_result = client.fetch_service_binding_last_operation(service_binding)
           if last_operation_result[:last_operation][:state] == 'succeeded'
-            binding_response = client.fetch_service_binding(service_binding)
+            begin
+              binding_response = client.fetch_service_binding(service_binding)
+            rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed
+              set_binding_failed_state(service_binding, logger)
+              return
+            end
             service_binding.update({ 'credentials' => binding_response[:credentials] })
             record_event(service_binding, @request_attrs)
           end
@@ -26,7 +32,6 @@ module VCAP::CloudController
           service_binding.last_operation.update(last_operation_result[:last_operation])
           retry_job unless service_binding.terminal_state?
         rescue HttpResponseError, Sequel::Error, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout => e
-          logger = Steno.logger('cc-background')
           logger.error("There was an error while fetching the service binding operation state: #{e}")
           retry_job
         end
@@ -59,6 +64,14 @@ module VCAP::CloudController
         def enqueue_again
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
           VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
+        end
+
+        def set_binding_failed_state(service_binding, logger)
+          service_binding.last_operation.update(
+            state: 'failed',
+            description: 'The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.'
+          )
+          SynchronousOrphanMitigate.new(logger).attempt_unbind(service_binding)
         end
       end
     end
