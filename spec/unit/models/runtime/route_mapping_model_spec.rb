@@ -36,7 +36,7 @@ module VCAP::CloudController
               process_type: 'buckeyes',
               app_port: -1
             })
-            expect(CopilotAdapter).to_not receive(:unmap_route)
+            expect(Copilot::Adapter).to_not receive(:unmap_route)
             route_mapping.destroy
           end
         end
@@ -45,7 +45,7 @@ module VCAP::CloudController
       context 'when copilot is enabled', isolation: :truncation do
         before do
           TestConfig.override({ copilot: { enabled: true } })
-          allow(CopilotAdapter).to receive(:unmap_route)
+          allow(Copilot::Adapter).to receive(:unmap_route)
         end
 
         context 'on delete' do
@@ -59,7 +59,7 @@ module VCAP::CloudController
           end
 
           it 'unmaps the route in copilot' do
-            expect(CopilotAdapter).to receive(:unmap_route).with(route_mapping)
+            expect(Copilot::Adapter).to receive(:unmap_route).with(route_mapping)
             route_mapping.destroy
           end
 
@@ -67,13 +67,13 @@ module VCAP::CloudController
             let(:logger) { instance_double(Steno::Logger, error: nil) }
 
             it 'logs and swallows the error' do
-              allow(CopilotAdapter).to receive(:unmap_route).and_raise(CopilotAdapter::CopilotUnavailable.new('some-error'))
+              allow(Copilot::Adapter).to receive(:unmap_route).and_raise(Copilot::Adapter::CopilotUnavailable.new('some-error'))
               allow(Steno).to receive(:logger).and_return(logger)
 
               expect {
                 route_mapping.destroy
 
-                expect(CopilotAdapter).to have_received(:unmap_route).with(route_mapping)
+                expect(Copilot::Adapter).to have_received(:unmap_route).with(route_mapping)
                 expect(logger).to have_received(:error).with(/failed communicating.*some-error/)
               }.to change { RouteMappingModel.count }.by(-1)
             end
@@ -83,9 +83,9 @@ module VCAP::CloudController
             it 'only executes after the transaction is completed' do
               RouteMappingModel.db.transaction do
                 route_mapping.destroy
-                expect(CopilotAdapter).to_not have_received(:unmap_route)
+                expect(Copilot::Adapter).to_not have_received(:unmap_route)
               end
-              expect(CopilotAdapter).to have_received(:unmap_route).with(route_mapping)
+              expect(Copilot::Adapter).to have_received(:unmap_route).with(route_mapping)
             end
           end
         end

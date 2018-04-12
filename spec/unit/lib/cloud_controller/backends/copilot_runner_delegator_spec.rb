@@ -9,8 +9,8 @@ module VCAP::CloudController
     let(:process) { instance_double(ProcessModel) }
 
     before do
-      allow(CopilotAdapter).to receive(:upsert_capi_diego_process_association)
-      allow(CopilotAdapter).to receive(:delete_capi_diego_process_association)
+      allow(Copilot::Adapter).to receive(:upsert_capi_diego_process_association)
+      allow(Copilot::Adapter).to receive(:delete_capi_diego_process_association)
     end
 
     context 'when copilot is enabled' do
@@ -25,13 +25,13 @@ module VCAP::CloudController
 
       it 'delegates start to the runner and then copilot' do
         expect(runner).to receive(:start)
-        expect(CopilotAdapter).to receive(:upsert_capi_diego_process_association).with process
+        expect(Copilot::Adapter).to receive(:upsert_capi_diego_process_association).with process
         copilot_delegator.start
       end
 
       it 'delegates stop to the runner and then copilot' do
         expect(runner).to receive(:stop)
-        expect(CopilotAdapter).to receive(:delete_capi_diego_process_association).with process
+        expect(Copilot::Adapter).to receive(:delete_capi_diego_process_association).with process
         copilot_delegator.stop
       end
 
@@ -55,8 +55,8 @@ module VCAP::CloudController
         allow(runner).to receive(:start)
         allow(runner).to receive(:stop)
 
-        expect(CopilotAdapter).not_to receive(:upsert_capi_diego_process_association)
-        expect(CopilotAdapter).not_to receive(:delete_capi_diego_process_association)
+        expect(Copilot::Adapter).not_to receive(:upsert_capi_diego_process_association)
+        expect(Copilot::Adapter).not_to receive(:delete_capi_diego_process_association)
         copilot_delegator.start
         copilot_delegator.stop
       end

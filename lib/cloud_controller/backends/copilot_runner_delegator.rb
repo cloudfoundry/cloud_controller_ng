@@ -15,12 +15,12 @@ module VCAP::CloudController
 
     def start
       @runner.start
-      CopilotAdapter.upsert_capi_diego_process_association(@process) if copilot_enabled?
+      Copilot::Adapter.upsert_capi_diego_process_association(@process) if copilot_enabled?
     end
 
     def stop
       @runner.stop
-      CopilotAdapter.delete_capi_diego_process_association(@process) if copilot_enabled?
+      Copilot::Adapter.delete_capi_diego_process_association(@process) if copilot_enabled?
     end
 
     private

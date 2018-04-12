@@ -7,8 +7,9 @@ require 'cloud_controller/backends/instances_reporters'
 require 'repositories/service_event_repository'
 require 'cloud_controller/config_schemas/api_schema'
 require 'cloud_controller/config_schemas/clock_schema'
-require 'cloud_controller/config_schemas/worker_schema'
 require 'cloud_controller/config_schemas/migrate_schema'
+require 'cloud_controller/config_schemas/route_syncer_schema'
+require 'cloud_controller/config_schemas/worker_schema'
 
 module VCAP::CloudController
   class Config
@@ -28,7 +29,7 @@ module VCAP::CloudController
       end
 
       def schema_class_for_context(context)
-        const_get("VCAP::CloudController::ConfigSchemas::#{context.capitalize}Schema")
+        const_get("VCAP::CloudController::ConfigSchemas::#{context.to_s.camelize}Schema")
       end
 
       private
@@ -47,9 +48,11 @@ module VCAP::CloudController
       end
 
       def sanitize_staging_auth(config)
-        auth = config[:staging][:auth]
-        auth[:user] = escape_userinfo(auth[:user]) unless valid_in_userinfo?(auth[:user])
-        auth[:password] = escape_password(auth[:password]) unless valid_in_userinfo?(auth[:password])
+        if config.key?(:staging)
+          auth = config[:staging][:auth]
+          auth[:user] = escape_userinfo(auth[:user]) unless valid_in_userinfo?(auth[:user])
+          auth[:password] = escape_password(auth[:password]) unless valid_in_userinfo?(auth[:password])
+        end
       end
 
       def escape_password(value)
