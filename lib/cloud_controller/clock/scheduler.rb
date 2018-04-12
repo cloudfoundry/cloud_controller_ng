@@ -15,6 +15,7 @@ module VCAP::CloudController
       { name: 'expired_orphaned_blob_cleanup', class: Jobs::Runtime::ExpiredOrphanedBlobCleanup, time: '01:00', cutoff: false },
       { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:30', priority: Clock::MEDIUM_PRIORITY, cutoff: false },
       { name: 'pollable_job_cleanup', class: Jobs::Runtime::PollableJobCleanup, time: '02:00', cutoff: false },
+      { name: 'request_counts_cleanup', class: Jobs::Runtime::RequestCountsCleanup, time: '02:30', cutoff: false },
     ].freeze
 
     FREQUENTS = [

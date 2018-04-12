@@ -113,6 +113,12 @@ module VCAP::CloudController
           expect(block.call).to be_instance_of(Jobs::Runtime::PollableJobCleanup)
         end
 
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'request_counts_cleanup', at: '02:30', priority: 0)
+          expect(Jobs::Runtime::RequestCountsCleanup).to receive(:new).with(no_args).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::RequestCountsCleanup)
+        end
+
         schedule.start
       end
 

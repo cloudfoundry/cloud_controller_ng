@@ -29,6 +29,7 @@ require 'jobs/runtime/pending_build_cleanup'
 require 'jobs/runtime/pending_droplet_cleanup'
 require 'jobs/runtime/pollable_job_cleanup'
 require 'jobs/runtime/prune_completed_tasks'
+require 'jobs/runtime/request_counts_cleanup'
 
 require 'jobs/services/legacy_jobs/service_instance_deletion'
 require 'jobs/services/service_usage_events_cleanup'
