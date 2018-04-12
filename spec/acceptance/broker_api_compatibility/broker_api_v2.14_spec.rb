@@ -195,6 +195,21 @@ RSpec.describe 'Service Broker API integration' do
                 expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
               end
             end
+
+            context 'but the binding is not 200' do
+              it 'set the last operation status to failed and perform orphan mitigation' do
+                stub_async_binding_last_operation
+                async_bind_service(status: 202, response_body: { operation: 'some-operation' })
+
+                service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+                stub_request(:get, service_binding_url(service_binding)).to_return(status: 204, body: '{}')
+
+                Delayed::Worker.new.work_off
+
+                expect(service_binding.last_operation.state).to eq('failed')
+                expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
+              end
+            end
           end
         end
       end

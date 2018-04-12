@@ -106,6 +106,38 @@ module VCAP::CloudController
                 end
               end
 
+              context 'and the broker returns with invalid status code' do
+                let(:broker_response) {
+                  VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
+                    code: '204',
+                    body: {}.to_json,
+                  )
+                }
+                let(:binding_response) { { 'credentials': '{}' } }
+                let(:bad_response_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse.new(nil, nil, broker_response) }
+
+                before do
+                  allow(client).to receive(:fetch_service_binding).with(service_binding).and_raise(bad_response_exception)
+                end
+
+                it 'should not enqueue another fetch job' do
+                  expect(client).to receive(:unbind).with(service_binding)
+
+                  run_job(job)
+                  expect(Delayed::Job.count).to eq 0
+                end
+
+                it 'should update the service binding last operation' do
+                  expect(client).to receive(:unbind).with(service_binding)
+
+                  run_job(job)
+                  service_binding.reload
+                  expect(service_binding.last_operation.state).to eq('failed')
+                  expect(service_binding.last_operation.description).
+                    to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
+                end
+              end
+
               context 'and the broker returns credentials and something else' do
                 before do
                   run_job(job)
