@@ -56,7 +56,7 @@ GEM
       activesupport (>= 3.2)
       i18n
     ast (2.3.0)
-    awesome_print (1.7.0)
+    awesome_print (1.8.0)
     azure-core (0.1.14)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
