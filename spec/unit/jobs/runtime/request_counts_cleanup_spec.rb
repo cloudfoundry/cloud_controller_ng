@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:logger) { double(Steno::Logger, info: nil) }
 
       subject(:job) do
-        RequestCountsCleanup.new()
+        RequestCountsCleanup.new
       end
 
       before do
