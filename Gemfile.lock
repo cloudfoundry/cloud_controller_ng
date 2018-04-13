@@ -274,7 +274,7 @@ GEM
     pg (1.0.0)
     posix-spawn (0.3.13)
     powerpack (0.1.1)
-    protobuf (3.8.2)
+    protobuf (3.6.12)
       activesupport (>= 3.2)
       middleware
       thor
@@ -470,7 +470,7 @@ DEPENDENCIES
   parallel_tests
   pg
   posix-spawn (~> 0.3.6)
-  protobuf
+  protobuf (= 3.6.12)
   pry-byebug
   public_suffix
   rack-test
