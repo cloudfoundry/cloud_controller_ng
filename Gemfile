@@ -59,7 +59,7 @@ gem 'cf-perm', git: 'https://github.com/cloudfoundry-incubator/perm-rb.git', bra
 gem 'scientist'
 
 group :db do
-  gem 'mysql2', '0.4.8'
+  gem 'mysql2', '~> 0.4.10'
   gem 'pg', '0.19.0'
 end
 

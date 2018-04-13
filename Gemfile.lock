@@ -257,7 +257,7 @@ GEM
     multipart-parser (0.1.1)
     multipart-post (2.0.0)
     mustache (0.99.8)
-    mysql2 (0.4.8)
+    mysql2 (0.4.10)
     net-ssh (2.9.2)
     netaddr (1.5.1)
     netrc (0.11.0)
@@ -461,7 +461,7 @@ DEPENDENCIES
   mime-types (~> 3.0)
   multi_json
   multipart-parser
-  mysql2 (= 0.4.8)
+  mysql2 (~> 0.4.10)
   net-ssh
   netaddr
   newrelic_rpm (>= 3.12)
