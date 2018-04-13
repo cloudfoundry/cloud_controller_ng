@@ -69,6 +69,44 @@ module VCAP::CloudController::Presenters::V3
             with(anything, show_secrets: true, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).exactly(set.count).times
         end
       end
+
+      context 'when there are decorators' do
+        class BananaDecorator
+          class << self
+            def decorate(hash, monkeys)
+              hash[:included] ||= {}
+              hash[:included][:bananas] = monkeys.map { |monkey| "#{monkey.name}'s banana" }
+              hash
+            end
+          end
+        end
+
+        class TailDecorator
+          class << self
+            def decorate(hash, monkeys)
+              hash[:included] ||= {}
+              hash[:included][:tails] = monkeys.map { |monkey| "#{monkey.name}'s tail" }
+              hash
+            end
+          end
+        end
+
+        subject(:presenter) do
+          PaginatedListPresenter.new(
+            dataset: dataset,
+            path: path,
+            message: message,
+            show_secrets: true,
+            decorators: [BananaDecorator, TailDecorator]
+          )
+        end
+
+        it 'decorates the hash with them' do
+          result = presenter.to_hash
+          expect(result[:included][:bananas]).to match_array(["bobo's banana", "george's banana"])
+          expect(result[:included][:tails]).to match_array(["bobo's tail", "george's tail"])
+        end
+      end
     end
   end
 end

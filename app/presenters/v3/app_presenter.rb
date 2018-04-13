@@ -5,7 +5,7 @@ module VCAP::CloudController
     module V3
       class AppPresenter < BasePresenter
         def to_hash
-          {
+          hash = {
             guid: app.guid,
             name: app.name,
             state: app.desired_state,
@@ -24,6 +24,8 @@ module VCAP::CloudController
             },
             links: build_links
           }
+
+          @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }
         end
 
         private

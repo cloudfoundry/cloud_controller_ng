@@ -77,6 +77,16 @@ module VCAP::CloudController
       end
     end
 
+    class IncludeParamValidator < ActiveModel::Validator
+      def validate(record)
+        valid_values = options[:valid_values]
+
+        if record.requested?(:include) && !valid_values.member?(record.include)
+          record.errors[:base] << "Invalid included resource: '#{record.include}'"
+        end
+      end
+    end
+
     private
 
     def allowed_keys

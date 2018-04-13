@@ -187,7 +187,7 @@ RSpec.describe 'Apps' do
       VCAP::CloudController::AppModel.make(space: space)
       VCAP::CloudController::AppModel.make
 
-      get '/v3/apps?per_page=2', nil, user_header
+      get '/v3/apps?per_page=2&include=space', nil, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -196,9 +196,9 @@ RSpec.describe 'Apps' do
           'pagination' => {
             'total_results' => 3,
             'total_pages'   => 2,
-            'first'         => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=2" },
-            'last'          => { 'href' => "#{link_prefix}/v3/apps?page=2&per_page=2" },
-            'next'          => { 'href' => "#{link_prefix}/v3/apps?page=2&per_page=2" },
+            'first'         => { 'href' => "#{link_prefix}/v3/apps?include=space&page=1&per_page=2" },
+            'last'          => { 'href' => "#{link_prefix}/v3/apps?include=space&page=2&per_page=2" },
+            'next'          => { 'href' => "#{link_prefix}/v3/apps?include=space&page=2&per_page=2" },
             'previous'      => nil,
           },
           'resources' => [
@@ -267,7 +267,29 @@ RSpec.describe 'Apps' do
                 'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
               }
             }
-          ]
+          ],
+          'included' => {
+            'spaces' => [{
+              'guid' => space.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => space.name,
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => space.organization.guid }
+                }
+              },
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
+                },
+                'organization' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
+                }
+              }
+            }]
+          }
         }
       )
     end
@@ -416,7 +438,7 @@ RSpec.describe 'Apps' do
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
 
-      get "/v3/apps/#{app_model.guid}", nil, user_header
+      get "/v3/apps/#{app_model.guid}?include=space", nil, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -453,6 +475,28 @@ RSpec.describe 'Apps' do
             'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/route_mappings" },
             'start'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
             'stop'           => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+          },
+          'included' => {
+            'spaces' => [{
+              'guid' => space.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => space.name,
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => space.organization.guid }
+                }
+              },
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
+                },
+                'organization' => {
+                  'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
+                }
+              }
+            }]
           }
         }
       )

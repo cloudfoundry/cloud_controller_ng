@@ -88,6 +88,13 @@ module VCAP::CloudController
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
+      it 'does not accept include that is not space' do
+        message = AppsListMessage.new({ include: 'space' })
+        expect(message).to be_valid
+        message = AppsListMessage.new({ include: 'greg\'s buildpack' })
+        expect(message).not_to be_valid
+      end
+
       describe 'order_by' do
         it 'allows name' do
           message = AppsListMessage.new(order_by: 'name')

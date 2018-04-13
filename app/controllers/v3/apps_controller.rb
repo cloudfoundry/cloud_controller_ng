@@ -9,7 +9,9 @@ require 'actions/app_apply_manifest'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/set_current_droplet'
+require 'decorators/include_app_space_decorator'
 require 'messages/apps_list_message'
+require 'messages/app_show_message'
 require 'messages/app_update_message'
 require 'messages/app_create_message'
 require 'messages/app_update_environment_variables_message'
@@ -37,15 +39,35 @@ class AppsV3Controller < ApplicationController
                 AppListFetcher.new.fetch(message, readable_space_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/apps', message: message)
+    decorators = []
+    decorators << IncludeAppSpaceDecorator if message.include == 'space'
+
+    render status: :ok,
+           json: Presenters::V3::PaginatedListPresenter.new(
+             dataset: dataset,
+             path: '/v3/apps',
+             message: message,
+             decorators: decorators
+      )
   end
 
   def show
+    message = AppShowMessage.from_params(query_params)
+
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
 
-    render status: :ok, json: Presenters::V3::AppPresenter.new(app, show_secrets: can_see_secrets?(space))
+    decorators = []
+    decorators << IncludeAppSpaceDecorator if message.include == 'space'
+
+    render status: :ok, json: Presenters::V3::AppPresenter.new(
+      app,
+      show_secrets: can_see_secrets?(space),
+      decorators: decorators
+    )
   end
 
   def create

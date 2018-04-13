@@ -57,6 +57,22 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
+    context 'include space' do
+      it 'decorates the response with spaces' do
+        get :index, include: 'space'
+
+        space_guids = parsed_body['included']['spaces'].map { |s| s['guid'] }
+        expect(response.status).to eq(200)
+        expect(space_guids).to match_array([app_model_1.space_guid])
+      end
+
+      it 'does not include spaces if no one asks for them' do
+        get :index
+
+        expect(parsed_body).to_not have_key('included')
+      end
+    end
+
     context 'query params' do
       context 'invalid param format' do
         it 'returns 400' do
@@ -87,6 +103,16 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response.body).to include 'Per page must be between'
         end
       end
+
+      context 'invalid include' do
+        it 'returns 400' do
+          get :index, include: 'juice'
+
+          expect(response.status).to eq 400
+          expect(response.body).to include 'BadQueryParameter'
+          expect(response.body).to include "Invalid included resource: 'juice'"
+        end
+      end
     end
   end
 
@@ -107,6 +133,28 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       expect(response.status).to eq 200
       expect(parsed_body['guid']).to eq(app_model.guid)
+    end
+
+    describe 'include query param' do
+      context 'when including spaces' do
+        it 'includes the space' do
+          get :show, guid: app_model.guid, include: :space
+
+          expect(response.status).to eq 200
+          expect(parsed_body['guid']).to eq(app_model.guid)
+          expect(parsed_body['included']['spaces'].first['guid']).to eq(space.guid)
+          expect(parsed_body['included']['spaces'].first['relationships']['organization']['data']['guid']).to eq(space.organization.guid)
+        end
+      end
+
+      context 'when including an unrecognized query param' do
+        it 'includes the space' do
+          get :show, guid: app_model.guid, include: :milk
+
+          expect(response.status).to eq 400
+          expect(response.body).to match('Invalid included resource: \'milk\'')
+        end
+      end
     end
 
     context 'when the app does not exist' do

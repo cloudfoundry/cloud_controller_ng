@@ -190,5 +190,38 @@ module VCAP::CloudController
         expect(message.errors.full_messages[0]).to include("Unknown query parameter(s): 'notallowed', 'extra'")
       end
     end
+
+    describe 'include param validation' do
+      let(:fake_class) do
+        Class.new(BaseMessage) do
+          validates_with VCAP::CloudController::BaseMessage::IncludeParamValidator, valid_values: ['foo', 'bar']
+
+          def allowed_keys
+            [:include]
+          end
+
+          def include=(x)
+            @x = x
+          end
+
+          def include
+            @x
+          end
+        end
+      end
+
+      it 'is valid with an allowed include value' do
+        message = fake_class.new({ include: 'bar' })
+
+        expect(message).to be_valid
+      end
+
+      it 'is NOT valid with not allowed include value' do
+        message = fake_class.new({ include: 'stuff' })
+
+        expect(message).to be_invalid
+        expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'")
+      end
+    end
   end
 end
