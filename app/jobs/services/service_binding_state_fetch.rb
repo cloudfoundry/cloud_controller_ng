@@ -21,8 +21,9 @@ module VCAP::CloudController
           if last_operation_result[:last_operation][:state] == 'succeeded'
             begin
               binding_response = client.fetch_service_binding(service_binding)
-            rescue HttpResponseError, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout
+            rescue HttpResponseError, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout => e
               set_binding_failed_state(service_binding, logger)
+              logger.error("There was an error while fetching the service binding details: #{e}")
               return
             end
             service_binding.update({ 'credentials' => binding_response[:credentials] })

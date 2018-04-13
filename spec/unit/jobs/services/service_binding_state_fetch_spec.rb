@@ -104,6 +104,14 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.description).
                     to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
                 end
+
+                it 'should not create an audit event' do
+                  expect(client).to receive(:unbind).with(service_binding)
+
+                  run_job(job)
+
+                  expect(Event.all.count).to eq 0
+                end
               end
 
               context 'and the broker returns with invalid status code' do
@@ -136,6 +144,14 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.description).
                     to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
                 end
+
+                it 'should not create an audit event' do
+                  expect(client).to receive(:unbind).with(service_binding)
+
+                  run_job(job)
+
+                  expect(Event.all.count).to eq 0
+                end
               end
 
               context 'and the broker response timeout' do
@@ -167,6 +183,14 @@ module VCAP::CloudController
                   expect(service_binding.last_operation.state).to eq('failed')
                   expect(service_binding.last_operation.description).
                     to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
+                end
+
+                it 'should not create an audit event' do
+                  expect(client).to receive(:unbind).with(service_binding)
+
+                  run_job(job)
+
+                  expect(Event.all.count).to eq 0
                 end
               end
 
