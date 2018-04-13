@@ -261,7 +261,7 @@ GEM
     net-ssh (4.2.0)
     netaddr (1.5.1)
     netrc (0.11.0)
-    newrelic_rpm (3.18.1.330)
+    newrelic_rpm (5.0.0.342)
     nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
     os (0.9.6)
@@ -464,7 +464,7 @@ DEPENDENCIES
   mysql2 (~> 0.4.10)
   net-ssh
   netaddr
-  newrelic_rpm (>= 3.12)
+  newrelic_rpm
   nokogiri (~> 1.8.1)
   palm_civet
   parallel_tests
