@@ -11,6 +11,11 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
   let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: process.app, service_instance: service_instance) }
+  let(:bbs_instances_client) { instance_double(VCAP::CloudController::Diego::BbsInstancesClient) }
+
+  before do
+    CloudController::DependencyLocator.instance.register(:bbs_instances_client, bbs_instances_client)
+  end
 
   authenticated_request
 

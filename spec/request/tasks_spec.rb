@@ -13,6 +13,7 @@ RSpec.describe 'Tasks' do
   let(:developer_headers) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { 'user@email.example.com' }
   let(:user_name) { 'Task McNamara' }
+  let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
 
   before do
     stub_request(:post, 'http://nsync.service.cf.internal:8787/v1/tasks').to_return(status: 202)
@@ -251,10 +252,13 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'PUT /v3/tasks/:guid/cancel (deprecated)' do
+    before do
+      CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
+      allow(bbs_task_client).to receive(:cancel_task)
+    end
+
     it 'returns a json representation of the task with the requested guid' do
       task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
-
-      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task.guid}").to_return(status: 202)
 
       put "/v3/tasks/#{task.guid}/cancel", nil, developer_headers
 
@@ -284,10 +288,12 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'POST /v3/tasks/:guid/actions/cancel' do
+    before do
+      CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
+      allow(bbs_task_client).to receive(:cancel_task)
+    end
     it 'returns a json representation of the task with the requested guid' do
       task = VCAP::CloudController::TaskModel.make name: 'task', command: 'echo task', app_guid: app_model.guid
-
-      stub_request(:delete, "http://nsync.service.cf.internal:8787/v1/tasks/#{task.guid}").to_return(status: 202)
 
       post "/v3/tasks/#{task.guid}/actions/cancel", nil, developer_headers
 
@@ -520,6 +526,13 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'POST /v3/apps/:guid/tasks' do
+    before do
+      CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
+      allow(bbs_task_client).to receive(:desire_task)
+      allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
+      allow_any_instance_of(VCAP::CloudController::Diego::TaskRecipeBuilder).to receive(:build_app_task)
+    end
+
     it 'creates a task for an app with an assigned current droplet' do
       body = {
         name:         'best task ever',

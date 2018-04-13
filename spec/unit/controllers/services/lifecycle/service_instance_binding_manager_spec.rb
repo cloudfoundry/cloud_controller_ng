@@ -5,11 +5,15 @@ module VCAP::CloudController
     let(:manager) { ServiceInstanceBindingManager.new(access_validator, logger) }
     let(:event_repository) { double(:event_repository, record_service_instance_event: true) }
     let(:access_validator) { double(:access_validator) }
-    let(:logger) { double(:logger, error: nil, info: nil) }
+    let(:logger) { double(:logger) }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
+    let(:bbs_apps_client) { instance_double(Diego::BbsAppsClient) }
+    let(:messenger) { instance_double(Diego::Messenger, send_desire_request: nil) }
 
     before do
+      allow(Diego::Messenger).to receive(:new).and_return(messenger)
       allow(::CloudController::DependencyLocator.instance).to receive(:services_event_repository) { event_repository }
+      CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
     end
 
     describe '#create_route_service_instance_binding' do
@@ -177,31 +181,23 @@ module VCAP::CloudController
         context 'binding a service instance to a route' do
           context 'when the route has no apps' do
             it 'does not send request to diego' do
-              expect_any_instance_of(Diego::NsyncClient).not_to receive(:desire_app)
-
               manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
+              expect(messenger).not_to have_received(:send_desire_request)
             end
           end
 
           context 'when the route has an app', isolation: :truncation do
+            let(:process) { ProcessModelFactory.make(space: route.space, state: 'STARTED') }
             before do
-              process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
               RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-              stub_request(:put, %r{https://foo.com/url-1/v2/service_instances/#{service_instance.guid}/service_bindings/[A-Za-z0-9-]+}).
-                to_return(status: 200, body: '{}')
             end
 
             it 'sends a message on to diego' do
-              # expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
-              expect(Diego::DesireAppHandler).to receive(:create_or_update_app) do |*args|
-                expect(message[0]).to eq(process.guid)
-                expect(args).to eq([3])
-              end
-              # expect_any_instance_of(Diego::BbsAppsClient).to receive(:desire_app) do |*args|
-              #  message = args.last
-              #  expect(message).to match(/route_service_url/)
-              # end
               manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
+              expect(messenger).to have_received(:send_desire_request) do |*args|
+                expect(args[0]).to eq(process)
+                expect(args[1]).to be_a(Config)
+              end
             end
           end
         end
@@ -372,13 +368,12 @@ module VCAP::CloudController
               process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
               RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
-              process_guid = Diego::ProcessGuid.from_process(process)
               stub_request(:delete, service_binding_url_pattern).to_return(status: 200, body: {}.to_json)
 
+              allow(messenger).to receive(:send_desire_request).and_raise('my error')
               expect {
-                stub_request(:put, "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}").to_return(status: 500)
                 manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
-              }.to raise_error(CloudController::Errors::ApiError, /desire app failed: 500/i)
+              }.to raise_error('my error')
             end
 
             it 'orphans the route binding and mitigates it' do
@@ -386,7 +381,7 @@ module VCAP::CloudController
               expect(RouteBinding.find(service_instance_id: service_instance.id, route_id: route.id)).to be_nil
             end
 
-            it 'logs that nsync failed to update' do
+            it 'logs that diego failed to update' do
               expect(logger).to have_received(:error).with /Failed to update/
             end
           end
@@ -414,20 +409,12 @@ module VCAP::CloudController
 
           process = ProcessModelFactory.make(space: route.space, state: 'STARTED')
           RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
-
-          process_guid = Diego::ProcessGuid.from_process(process)
-          stub_request(:put, "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}").to_return(status: 202)
         end
 
         it 'unbinds the route and service instance', isolation: :truncation do
           expect(route_binding.service_instance).to eq service_instance
           expect(route_binding.route).to eq route
           expect(route_binding.route_service_url).to eq service_instance.route_service_url
-
-          expect_any_instance_of(Diego::NsyncClient).to receive(:desire_app) do |*args|
-            message = args.last
-            expect(message).not_to match(/route_service_url/)
-          end
 
           expect {
             manager.delete_route_service_instance_binding(route.guid, service_instance.guid)

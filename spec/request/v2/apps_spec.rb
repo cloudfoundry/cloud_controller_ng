@@ -1037,16 +1037,18 @@ RSpec.describe 'Apps' do
   end
 
   describe 'DELETE /v2/apps/:guid/instances/:index' do
+    let(:bbs_apps_client) { instance_double(VCAP::CloudController::Diego::BbsAppsClient, stop_index: nil) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space, instances: 2, diego: true) }
 
     before do
-      allow_any_instance_of(VCAP::CloudController::Diego::BbsAppsClient).to receive(:stop_index)
+      CloudController::DependencyLocator.instance.register(:bbs_apps_client, bbs_apps_client)
     end
 
     it 'stops the instance' do
       delete "/v2/apps/#{process.guid}/instances/0", nil, headers_for(user)
 
       expect(last_response.status).to eq(204)
+      expect(bbs_apps_client).to have_received(:stop_index)
     end
   end
 
