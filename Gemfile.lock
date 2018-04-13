@@ -222,7 +222,7 @@ GEM
     json (1.8.6)
     json-schema (2.8.0)
       addressable (>= 2.4)
-    json_pure (1.8.6)
+    json_pure (2.1.0)
     jwt (2.1.0)
     little-plugger (1.1.4)
     logging (2.2.2)
@@ -454,7 +454,7 @@ DEPENDENCIES
   httpclient
   i18n
   json-schema
-  json_pure (= 1.8.6)
+  json_pure
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)
