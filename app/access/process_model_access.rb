@@ -3,7 +3,7 @@ module VCAP::CloudController
     def create?(app, params=nil)
       return true if admin_user?
       return false if app.in_suspended_org?
-      app.space.has_developer?(context.user)
+      app.space&.has_developer?(context.user)
     end
 
     def read_for_update?(app, params=nil)
@@ -28,7 +28,7 @@ module VCAP::CloudController
 
     def read_env?(app)
       return true if admin_user? || admin_read_only_user?
-      app.space.has_developer?(context.user)
+      app.space&.has_developer?(context.user)
     end
 
     def read_env_with_token?(app)
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
     def read_permissions?(app)
       return true if admin_user? || admin_read_only_user?
-      app.space.has_developer?(context.user)
+      app.space&.has_developer?(context.user)
     end
 
     def read_permissions_with_token?(app)

@@ -231,5 +231,27 @@ module VCAP::CloudController
 
       it_behaves_like :no_access
     end
+
+    context 'handles concurrent deletion of app' do
+      let(:object) { VCAP::CloudController::ProcessModelFactory.make(space: nil) }
+      # only using global_auditor as an example of a non-admin user
+      include_context :global_auditor_setup
+
+      before do
+        allow(object).to receive(:in_suspended_org?).and_return(false)
+      end
+
+      it 'does NOT allow global_auditor to create' do
+        expect(subject.create?(object)).to be_falsey
+      end
+
+      it 'does NOT allow global_auditor to :read_env' do
+        expect(subject).not_to allow_op_on_object(:read_env, object)
+      end
+
+      it 'does NOT allow the user to :read_permissions' do
+        expect(subject).not_to allow_op_on_object(:read_permissions, object)
+      end
+    end
   end
 end
