@@ -1,3 +1,5 @@
+require 'cloud_controller/diego/task_environment'
+
 module VCAP::CloudController
   module Diego
     class TaskEnvironmentVariableCollector

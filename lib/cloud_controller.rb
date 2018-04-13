@@ -76,10 +76,6 @@ require 'cloud_controller/legacy_api/legacy_info'
 
 require 'cloud_controller/resource_pool'
 
-require 'cloud_controller/diego/nsync_client'
-require 'cloud_controller/diego/stager_client'
-require 'cloud_controller/diego/tps_client'
-
 require 'cloud_controller/structured_error'
 require 'cloud_controller/http_request_error'
 require 'cloud_controller/http_response_error'

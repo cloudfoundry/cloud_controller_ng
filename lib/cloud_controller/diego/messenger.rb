@@ -60,10 +60,6 @@ module VCAP::CloudController
         @task_recipe_builder ||= TaskRecipeBuilder.new
       end
 
-      def stager_client
-        CloudController::DependencyLocator.instance.stager_client
-      end
-
       def bbs_apps_client
         CloudController::DependencyLocator.instance.bbs_apps_client
       end

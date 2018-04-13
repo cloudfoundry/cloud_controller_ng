@@ -10,7 +10,6 @@ module VCAP::CloudController
       let!(:task2) { TaskModel.make(state: TaskModel::SUCCEEDED_STATE) }
       let(:task_dataset) { TaskModel.all }
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo).as_null_object }
-      let(:nsync_client) { instance_double(VCAP::CloudController::Diego::NsyncClient, cancel_task: nil) }
       let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, cancel_task: nil) }
 
       it 'deletes the tasks' do
@@ -25,7 +24,6 @@ module VCAP::CloudController
         let!(:task1) { TaskModel.make(state: TaskModel::RUNNING_STATE) }
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:nsync_client).and_return(nsync_client)
           allow(CloudController::DependencyLocator.instance).to receive(:bbs_task_client).and_return(bbs_task_client)
         end
 

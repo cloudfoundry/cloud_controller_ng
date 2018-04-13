@@ -16,8 +16,6 @@ RSpec.describe 'Tasks' do
   let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
 
   before do
-    stub_request(:post, 'http://nsync.service.cf.internal:8787/v1/tasks').to_return(status: 202)
-
     VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
 
     app_model.droplet = droplet

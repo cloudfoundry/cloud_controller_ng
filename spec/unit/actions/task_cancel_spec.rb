@@ -14,12 +14,10 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:task) { TaskModel.make(name: 'ursulina', command: 'echo hi', app_guid: app.guid, state: TaskModel::RUNNING_STATE) }
       let(:user_audit_info) { instance_double(VCAP::CloudController::UserAuditInfo).as_null_object }
-      let(:nsync_client) { instance_double(VCAP::CloudController::Diego::NsyncClient, cancel_task: nil) }
       let(:bbs_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, cancel_task: nil) }
 
       before do
         locator = CloudController::DependencyLocator.instance
-        allow(locator).to receive(:nsync_client).and_return(nsync_client)
         allow(locator).to receive(:bbs_task_client).and_return(bbs_client)
       end
 

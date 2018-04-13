@@ -216,9 +216,6 @@ rate_limiter:
   reset_interval_in_minutes: 60
 
 diego:
-  nsync_url: http://nsync.service.cf.internal:8787
-  stager_url: http://stager.service.cf.internal:8888
-  tps_url: http://tps.service.cf.internal:1518
   file_server_url: http://file-server.service.cf.internal:8080
   cc_uploader_url: http://cc-uploader.service.cf.internal:9090
   use_privileged_containers_for_running: false

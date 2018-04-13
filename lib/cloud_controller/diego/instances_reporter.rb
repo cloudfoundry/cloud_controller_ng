@@ -1,4 +1,3 @@
-require 'cloud_controller/diego/process_stats_generator'
 require 'traffic_controller/client'
 require 'utils/workpool'
 

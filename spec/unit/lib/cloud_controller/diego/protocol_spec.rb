@@ -152,7 +152,7 @@ module VCAP::CloudController
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('segment-from-selector')
         end
 
-        it 'is a message with the information nsync needs to desire the app' do
+        it 'is a message desired app information' do
           # TODO: The test shouldn't be a copy/paste of the implementation
           expect(message.as_json).to match({
             'disk_mb' => process.disk_quota,

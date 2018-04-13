@@ -13,12 +13,10 @@ require 'cloud_controller/blob_sender/missing_blob_handler'
 require 'traffic_controller/client'
 require 'cloud_controller/diego/task_recipe_builder'
 require 'cloud_controller/diego/app_recipe_builder'
-require 'cloud_controller/diego/stager_client'
 require 'cloud_controller/diego/bbs_apps_client'
 require 'cloud_controller/diego/bbs_stager_client'
 require 'cloud_controller/diego/bbs_task_client'
 require 'cloud_controller/diego/bbs_instances_client'
-require 'cloud_controller/diego/tps_client'
 require 'cloud_controller/diego/messenger'
 require 'cloud_controller/blobstore/client_provider'
 require 'cloud_controller/resource_pool_wrapper'
@@ -68,14 +66,6 @@ module CloudController
       @dependencies[:stagers] || register(:stagers, VCAP::CloudController::Stagers.new(config))
     end
 
-    def nsync_client
-      @dependencies[:nsync_client] || register(:nsync_client, VCAP::CloudController::Diego::NsyncClient.new(config))
-    end
-
-    def stager_client
-      @dependencies[:stager_client] || register(:stager_client, VCAP::CloudController::Diego::StagerClient.new(config))
-    end
-
     def copilot_client
       @dependencies[:copilot_client] || register(:copilot_client, build_copilot_client)
     end
@@ -94,10 +84,6 @@ module CloudController
 
     def bbs_instances_client
       @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_bbs_instances_client)
-    end
-
-    def tps_client
-      @dependencies[:tps_client] || register(:tps_client, Diego::TPSClient.new(config))
     end
 
     def traffic_controller_client

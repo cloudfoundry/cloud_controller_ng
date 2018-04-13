@@ -445,24 +445,6 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#nsync_client' do
-    it 'returns the diego nsync listener client' do
-      expect(locator.nsync_client).to be_an_instance_of(VCAP::CloudController::Diego::NsyncClient)
-    end
-  end
-
-  describe '#stager_client' do
-    it 'returns the diego stager client' do
-      expect(locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
-    end
-  end
-
-  describe '#tps_client' do
-    it 'returns the diego tps client' do
-      expect(locator.tps_client).to be_an_instance_of(VCAP::CloudController::Diego::TPSClient)
-    end
-  end
-
   describe '#stagers' do
     it 'returns the stagers' do
       expect(locator.stagers).to be_an_instance_of(VCAP::CloudController::Stagers)
