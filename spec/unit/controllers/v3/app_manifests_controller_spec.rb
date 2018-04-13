@@ -78,7 +78,8 @@ RSpec.describe AppManifestsController, type: :controller do
                                  'command' => '', 'env' => 42,
                                  'health-check-http-endpoint' => '/endpoint',
                                  'health-check-type' => 'foo',
-                                 'timeout' => -42
+                                 'timeout' => -42,
+                                 'routes' => [{ 'route' => 'garbage' }]
           }] }
         end
 
@@ -86,39 +87,41 @@ RSpec.describe AppManifestsController, type: :controller do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(7)
+          expect(errors.size).to eq(8)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
-
             {
               'detail' => 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
-            },
-            {
-            'detail' => 'Instances must be greater than or equal to 0',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'Command must be between 1 and 4096 characters',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'env must be a hash of keys and values',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'Health check type must be "http" to set a health check HTTP endpoint',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'Health check type must be "port", "process", or "http"',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }, {
-            'detail' => 'Timeout must be greater than or equal to 1',
-            'title' => 'CF-UnprocessableEntity',
-            'code' => 10008
-          }
+            }, {
+              'detail' => 'Instances must be greater than or equal to 0',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => 'Command must be between 1 and 4096 characters',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => 'env must be a hash of keys and values',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => 'Health check type must be "http" to set a health check HTTP endpoint',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => 'Health check type must be "port", "process", or "http"',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => 'Timeout must be greater than or equal to 1',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => "The route 'garbage' is not a properly formed URL",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }
           ])
         end
       end
@@ -282,6 +285,27 @@ RSpec.describe AppManifestsController, type: :controller do
         expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.env).to eq({ KEY100: 'banana' })
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a valid route' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'routes' => [{ 'route' => 'potato.yolo.io'}] }] }
+      end
+
+      it 'sets the route' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.routes).to eq([{ route: 'potato.yolo.io' }])
           expect(action).to eq app_apply_manifest_action
         end
       end

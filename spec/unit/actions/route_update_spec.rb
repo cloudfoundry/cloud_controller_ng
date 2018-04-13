@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe RouteUpdate do
     let(:message) { ManifestRoutesUpdateMessage.new({
       routes: [
-        { 'route': 'http://potato.tomato.avocado-toast.com:8080/some-path' }
+        { 'route': 'http://potato.tomato.avocado-toast.com/some-path' }
       ]
     })
     }
@@ -108,6 +108,38 @@ module VCAP::CloudController
               expect {
                 RouteUpdate.update(app.guid, message, user_audit_info)
               }.to raise_error(CloudController::Errors::ApiError)
+            end
+          end
+
+          context 'when the route is a tcp route' do
+            let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: rg) }
+            let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'tcp', reservable_ports: [1234]) }
+            let!(:tcp_domain) { SharedDomain.make(name: 'tcp.tomato.avocado-toast.com', router_group_guid: '123') }
+            let(:message) do
+              ManifestRoutesUpdateMessage.new({
+                routes: [
+                  { 'route': 'http://tcp.tomato.avocado-toast.com:1234' }
+                ]
+              })
+            end
+
+            before do
+              allow_any_instance_of(CloudController::DependencyLocator).to receive(:routing_api_client).and_return(ra_client)
+              allow(ra_client).to receive(:enabled?).and_return(true)
+            end
+
+            it 'creates and maps the route to the app' do
+              expect {
+                RouteUpdate.update(app.guid, message, user_audit_info)
+              }.to change { app.reload.routes.length }.by(1)
+              routes = app.reload.routes
+              expect(routes.length).to eq(1)
+
+              route = routes.first
+
+              expect(route.host).to eq('')
+              expect(route.domain.name).to eq('tcp.tomato.avocado-toast.com')
+              expect(route.port).to eq(1234)
             end
           end
 

@@ -32,15 +32,27 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
-      context 'when routes is not an array of routes' do
+      context 'when routes is not an array' do
         let(:body) do
           { routes: 'im-so-not-an-array' }
         end
 
-        it 'is valid' do
+        it 'is not valid' do
           message = ManifestRoutesUpdateMessage.new(body)
           expect(message).not_to be_valid
-          expect(message.errors).to match_array('routes must be a list of routes')
+          expect(message.errors).to match_array('routes must be a list of route hashes')
+        end
+      end
+
+      context 'when routes is an array of unexpected format' do
+        let(:body) do
+          { routes: [{'route' => 'path.com'}, 'foo.land'] }
+        end
+
+        it 'is not valid' do
+          message = ManifestRoutesUpdateMessage.new(body)
+          expect(message).not_to be_valid
+          expect(message.errors).to match_array('routes must be a list of route hashes')
         end
       end
 
@@ -66,7 +78,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when there is a non-http protocol' do
+      context 'when there is a tcp protocol' do
         let(:body) do
           { routes: [{ route: 'tcp://www.example.com' }] }
         end
@@ -74,6 +86,17 @@ module VCAP::CloudController
         it 'is valid' do
           message = ManifestRoutesUpdateMessage.new(body)
           expect(message).to be_valid
+        end
+      end
+
+      context 'when there is a protocol other than tcp or http' do
+        let(:body) do
+          { routes: [{ route: 'ftp://www.example.com' }] }
+        end
+
+        it 'is invalid' do
+          message = ManifestRoutesUpdateMessage.new(body)
+          expect(message).not_to be_valid
         end
       end
 
@@ -123,7 +146,7 @@ module VCAP::CloudController
           { routes: [{ route: nil }] }
         end
 
-        it 'is valid' do
+        it 'is invalid' do
           message = ManifestRoutesUpdateMessage.new(body)
 
           expect(message).not_to be_valid

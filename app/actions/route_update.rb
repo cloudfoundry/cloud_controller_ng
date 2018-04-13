@@ -54,6 +54,7 @@ module VCAP::CloudController
             host: host,
             domain_guid: existing_domain.guid,
             path: route_components[:path],
+            port: route_components[:port] || 0,
             space_guid: app.space.guid
           }
           route = Route.find(host: host, domain: existing_domain, path: route_components[:path])

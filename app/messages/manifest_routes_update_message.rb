@@ -9,8 +9,8 @@ module VCAP::CloudController
 
     class ManifestRoutesValidator < ActiveModel::Validator
       def validate(record)
-        if !record.routes.is_a?(Array)
-          record.errors[:base] << 'routes must be a list of routes'
+        if is_not_array?(record.routes) || contains_non_hash_values?(record.routes)
+          record.errors[:base] << 'routes must be a list of route hashes'
         else
           record.routes.each do |route_hash|
             route_uri = route_hash[:route]
@@ -19,6 +19,14 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      def is_not_array?(routes)
+        !routes.is_a?(Array)
+      end
+
+      def contains_non_hash_values?(routes)
+        routes.any? {|r| !r.is_a?(Hash)}
       end
     end
 
