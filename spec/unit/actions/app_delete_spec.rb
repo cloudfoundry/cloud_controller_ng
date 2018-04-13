@@ -19,6 +19,18 @@ module VCAP::CloudController
         expect(app.exists?).to be_falsey
       end
 
+      context 'when the app no longer exists' do
+        before do
+          app.destroy
+        end
+
+        it 'returns without redeleting' do
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { AppModel.count }.by(0)
+        end
+      end
+
       it 'creates an audit event' do
         expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_delete_request).with(
           app,
