@@ -60,7 +60,7 @@ gem 'scientist'
 
 group :db do
   gem 'mysql2', '~> 0.4.10'
-  gem 'pg', '0.19.0'
+  gem 'pg'
 end
 
 group :operations do
