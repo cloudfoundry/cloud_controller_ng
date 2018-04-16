@@ -2,7 +2,7 @@ require 'actions/process_scale'
 require 'actions/service_binding_create'
 require 'actions/route_update'
 require 'cloud_controller/strategies/manifest_strategy'
-require 'cloud_controller/app_manifest/route_domain_splitter'
+require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
   class AppApplyManifest
@@ -21,7 +21,7 @@ module VCAP::CloudController
       AppUpdate.new(@user_audit_info).update(app, app_update_message, lifecycle)
 
       ProcessUpdate.new(@user_audit_info).update(app.web_process, message.manifest_process_update_message, ManifestStrategy)
-      RouteUpdate.update(app.guid, message.manifest_routes_message, @user_audit_info)
+      RouteUpdate.update(app.guid, message.manifest_routes_update_message, @user_audit_info)
 
       AppPatchEnvironmentVariables.new(@user_audit_info).patch(app, message.app_update_environment_variables_message)
       create_service_instances(message, app)

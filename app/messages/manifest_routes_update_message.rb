@@ -1,23 +1,16 @@
 require 'messages/base_message'
+require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
   class ManifestRoutesUpdateMessage < BaseMessage
     ALLOWED_KEYS = [:routes].freeze
-    VALID_URI_REGEX = Regexp.new('^(?:https?://|tcp://)?(?:(?:[\\w-]+\\.)|(?:[*]\\.))+\\w+(?:\\:\\d+)?(?:/.*)*(?:\\.\\w+)?$')
 
     attr_accessor(*ALLOWED_KEYS)
 
-    class ManifestRoutesValidator < ActiveModel::Validator
+    class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
         if is_not_array?(record.routes) || contains_non_hash_values?(record.routes)
-          record.errors[:base] << 'routes must be a list of route hashes'
-        else
-          record.routes.each do |route_hash|
-            route_uri = route_hash[:route]
-            unless VALID_URI_REGEX.match?(route_uri)
-              record.errors[:base] << "The route '#{route_uri}' is not a properly formed URL"
-            end
-          end
+          record.errors[:routes] << 'must be a list of route hashes'
         end
       end
 
@@ -31,16 +24,34 @@ module VCAP::CloudController
     end
 
     validates_with NoAdditionalKeysValidator
-    validates_with ManifestRoutesValidator
+    validates_with ManifestRoutesYAMLValidator
+    validate :routes_are_uris
 
     def self.create_from_http_request(body)
       ManifestRoutesUpdateMessage.new(body.deep_symbolize_keys)
+    end
+
+    def route_hashes
+      manifest_routes.map(&:to_hash)
     end
 
     private
 
     def allowed_keys
       ALLOWED_KEYS
+    end
+
+    def manifest_routes
+      @manifest_routes ||= routes.map { |route| ManifestRoute.parse(route[:route]) }
+    end
+
+    def routes_are_uris
+      return if errors[:routes].present?
+
+      manifest_routes.each do |manifest_route|
+        next if manifest_route.valid?
+        errors.add(:base, "The route '#{manifest_route}' is not a properly formed URL")
+      end
     end
   end
 end

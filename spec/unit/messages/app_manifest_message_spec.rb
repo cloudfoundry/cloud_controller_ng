@@ -218,6 +218,23 @@ module VCAP::CloudController
       end
 
       describe 'routes' do
+        context 'when all routes are valid' do
+          let(:params) do
+            { routes:
+              [
+                { route: 'existing.example.com' },
+                { route: 'new.example.com' },
+              ]
+            }
+          end
+
+          it 'returns true' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).to be_valid
+          end
+        end
+
         context 'when a route uri is invalid' do
           let(:params) do
             { routes:
@@ -230,10 +247,21 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = ManifestRoutesUpdateMessage.new(params)
+            message = AppManifestMessage.new(params)
 
             expect(message).not_to be_valid
             expect(message.errors.full_messages).to match_array(["The route 'anotherblah' is not a properly formed URL", "The route 'blah' is not a properly formed URL"])
+          end
+        end
+
+        context 'when routes are malformed' do
+          let(:params) { { routes: ['blah'] } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to match_array(['Routes must be a list of route hashes'])
           end
         end
       end
@@ -463,7 +491,7 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(2)
             expect(message.errors.full_messages).to match_array(['Health check type must be "port", "process", or "http"',
-                                                                 'Health check type must be "http" to set a health check HTTP endpoint'])
+              'Health check type must be "http" to set a health check HTTP endpoint'])
           end
         end
 
@@ -634,15 +662,11 @@ module VCAP::CloudController
       end
     end
 
-    describe '#manifest_routes_message' do
+    describe '#manifest_routes_update_message' do
       let(:parsed_yaml) do
         { 'routes' =>
           [
-            { 'route' => 'existing.example.com' },
-            { 'route' => 'new.example.com' },
-            { 'route' => 'tcp-example.com:1234' },
-            { 'route' => 'path.example.com/path' },
-            { 'route' => '*.example.com' },
+            { 'route' => 'existing.example.com' }
           ]
         }
       end
@@ -651,12 +675,13 @@ module VCAP::CloudController
         it 'sets the routes in the message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_routes_message.routes).to match_array([
-            { route: 'existing.example.com' },
-            { route: 'new.example.com' },
-            { route: 'tcp-example.com:1234' },
-            { route: 'path.example.com/path' },
-            { route: '*.example.com' }
+          expect(message.manifest_routes_update_message.route_hashes).to match_array([
+            {
+              potential_host: 'existing',
+              potential_domains: ['existing.example.com', 'example.com'],
+              port: nil,
+              path: ''
+            }
           ])
         end
       end
@@ -669,7 +694,7 @@ module VCAP::CloudController
         it 'does not set the routes in the message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_routes_message.requested?(:routes)).to be_falsey
+          expect(message.manifest_routes_update_message.requested?(:routes)).to be_falsey
         end
       end
     end

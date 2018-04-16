@@ -328,7 +328,7 @@ module VCAP::CloudController
 
       describe 'updating routes' do
         let(:message) { AppManifestMessage.new({ name: 'blah', routes: [{ 'route': 'http://tater.tots.com/tabasco' }] }) }
-        let(:manifest_routes_message) { message.manifest_routes_message }
+        let(:manifest_routes_update_message) { message.manifest_routes_update_message }
         let(:process) { ProcessModel.make }
         let(:app) { process.app }
 
@@ -341,7 +341,7 @@ module VCAP::CloudController
 
           it 'calls RoutesUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(RouteUpdate).to have_received(:update).with(app.guid, manifest_routes_message, user_audit_info)
+            expect(RouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
           end
         end
       end

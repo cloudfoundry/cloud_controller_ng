@@ -1,4 +1,4 @@
-require 'cloud_controller/app_manifest/route_domain_splitter'
+require 'cloud_controller/app_manifest/manifest_route'
 require 'actions/v3/route_create'
 
 module VCAP::CloudController
@@ -40,7 +40,7 @@ module VCAP::CloudController
 
       def find_valid_route_in_url(app, route_url, user_audit_info)
         logger = Steno.logger('cc.action.route_update')
-        route_components = RouteDomainSplitter.split(route_url)
+        route_components = ManifestRoute.split(route_url)
         potential_host = route_components[:potential_host]
 
         route_components[:potential_domains].each do |potential_domain|
