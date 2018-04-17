@@ -53,12 +53,20 @@ module VCAP::CloudController
         end
 
         def droplet_buildpack_info
-          return nil unless droplet.buildpack_receipt_buildpack
-
-          [{
-            name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
-            detect_output: droplet.buildpack_receipt_detect_output
-          }]
+          return nil unless droplet.buildpack_lifecycle_data&.buildpack_lifecycle_buildpacks
+          droplet.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.map do |buildpack|
+            if buildpack.admin_buildpack_name
+              name_to_lookup = name_to_print = buildpack.admin_buildpack_name
+            else
+              name_to_lookup = buildpack.buildpack_url
+              name_to_print = CloudController::UrlSecretObfuscator.obfuscate(buildpack.buildpack_url)
+            end
+            detect_output = droplet.buildpack_receipt_buildpack&.==(name_to_lookup) ? droplet.buildpack_receipt_detect_output : nil
+            {
+              name: name_to_print,
+              detect_output: detect_output
+            }
+          end
         end
       end
     end

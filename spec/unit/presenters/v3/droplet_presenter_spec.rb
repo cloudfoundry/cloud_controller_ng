@@ -21,10 +21,11 @@ module VCAP::CloudController::Presenters::V3
       let(:result) { DropletPresenter.new(droplet).to_hash }
       let(:buildpack) { 'the-happiest-buildpack' }
       let(:buildpack_receipt_buildpack) { 'the-happiest-buildpack' }
+      let(:buildpack2) { 'shaq' }
 
       context 'buildpack lifecycle' do
         before do
-          droplet.lifecycle_data.buildpacks       = [buildpack]
+          droplet.lifecycle_data.buildpacks       = [buildpack, buildpack2]
           droplet.lifecycle_data.stack            = 'the-happiest-stack'
           droplet.buildpack_receipt_buildpack     = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = 'the-happiest-buildpack-detect-output'
@@ -48,7 +49,8 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:checksum]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
           expect(result[:stack]).to eq('the-happiest-stack')
-          expect(result[:buildpacks]).to eq([{ name: 'the-happiest-buildpack', detect_output: 'the-happiest-buildpack-detect-output' }])
+          expect(result[:buildpacks]).to match_array([{ name: 'the-happiest-buildpack', detect_output: 'the-happiest-buildpack-detect-output' },
+                                                      { name: 'shaq', detect_output: nil }])
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
@@ -65,7 +67,8 @@ module VCAP::CloudController::Presenters::V3
           let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
 
           it 'obfuscates the username and password' do
-            expect(result[:buildpacks]).to eq([{ name: 'https://***:***@neopets.com', detect_output: 'the-happiest-buildpack-detect-output' }])
+            expect(result[:buildpacks]).to match_array([{ name: 'shaq', detect_output: nil },
+                                                        { name: 'https://***:***@neopets.com', detect_output: 'the-happiest-buildpack-detect-output' }])
           end
         end
 
