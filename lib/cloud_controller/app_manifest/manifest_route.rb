@@ -9,11 +9,11 @@ module VCAP::CloudController
     def self.parse(string)
       parsed_uri = Addressable::URI.heuristic_parse(string, scheme: 'unspecified')
 
-      if parsed_uri.nil?
-        attrs = {}
-      else
-        attrs = parsed_uri.to_hash
-      end
+      attrs = if parsed_uri.nil?
+                {}
+              else
+                parsed_uri.to_hash
+              end
 
       attrs[:full_route] = string
       ManifestRoute.new(attrs)
@@ -31,20 +31,19 @@ module VCAP::CloudController
 
     def to_hash
       route = @attrs[:host]
-
       route_segments = route.split('.', 2)
-      potential_host = route_segments[0]
 
-      if route.start_with?(WILDCARD_HOST)
-        potential_domains = [route_segments[1]]
-      else
-        potential_domains = CloudController::DomainDecorator.new(route).intermediate_domains.
-          map(&:name).sort_by(&:length).reverse
-      end
+      pairs = [
+        {
+          host: route_segments[0],
+          domain: route_segments[1],
+        }
+      ]
+
+      pairs.unshift(host: '', domain: route) unless route.start_with?(WILDCARD_HOST)
 
       {
-        potential_host: potential_host,
-        potential_domains: potential_domains,
+        candidate_host_domain_pairs: pairs,
         port: @attrs[:port],
         path: @attrs[:path]
       }

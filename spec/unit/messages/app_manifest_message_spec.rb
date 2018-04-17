@@ -491,7 +491,7 @@ module VCAP::CloudController
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(2)
             expect(message.errors.full_messages).to match_array(['Health check type must be "port", "process", or "http"',
-              'Health check type must be "http" to set a health check HTTP endpoint'])
+                                                                 'Health check type must be "http" to set a health check HTTP endpoint'])
           end
         end
 
@@ -675,14 +675,7 @@ module VCAP::CloudController
         it 'sets the routes in the message' do
           message = AppManifestMessage.create_from_http_request(parsed_yaml)
           expect(message).to be_valid
-          expect(message.manifest_routes_update_message.route_hashes).to match_array([
-            {
-              potential_host: 'existing',
-              potential_domains: ['existing.example.com', 'example.com'],
-              port: nil,
-              path: ''
-            }
-          ])
+          expect(message.manifest_routes_update_message.manifest_routes).to all(be_a(ManifestRoute))
         end
       end
 

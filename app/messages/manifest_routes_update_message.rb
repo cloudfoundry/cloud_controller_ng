@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
-        if is_not_array?(record.routes) || contains_non_hash_values?(record.routes)
+        if is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
           record.errors[:routes] << 'must be a list of route hashes'
         end
       end
@@ -18,8 +18,8 @@ module VCAP::CloudController
         !routes.is_a?(Array)
       end
 
-      def contains_non_hash_values?(routes)
-        routes.any? {|r| !r.is_a?(Hash)}
+      def contains_non_route_hash_values?(routes)
+        routes.any? { |r| !(r.is_a?(Hash) && r[:route].present?) }
       end
     end
 
@@ -31,18 +31,14 @@ module VCAP::CloudController
       ManifestRoutesUpdateMessage.new(body.deep_symbolize_keys)
     end
 
-    def route_hashes
-      manifest_routes.map(&:to_hash)
+    def manifest_routes
+      @manifest_routes ||= routes.map { |route| ManifestRoute.parse(route[:route]) }
     end
 
     private
 
     def allowed_keys
       ALLOWED_KEYS
-    end
-
-    def manifest_routes
-      @manifest_routes ||= routes.map { |route| ManifestRoute.parse(route[:route]) }
     end
 
     def routes_are_uris

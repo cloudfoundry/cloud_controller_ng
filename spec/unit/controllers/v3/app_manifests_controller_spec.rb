@@ -293,7 +293,7 @@ RSpec.describe AppManifestsController, type: :controller do
     context 'when the request body includes a valid route' do
       let(:request_body) do
         { 'applications' =>
-          [{ 'name' => 'blah', 'routes' => [{ 'route' => 'potato.yolo.io'}] }] }
+          [{ 'name' => 'blah', 'routes' => [{ 'route' => 'potato.yolo.io' }] }] }
       end
 
       it 'sets the route' do

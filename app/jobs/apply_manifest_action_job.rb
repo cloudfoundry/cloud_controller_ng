@@ -16,6 +16,7 @@ module VCAP::CloudController
              AppUpdate::InvalidApp,
              ProcessScale::InvalidProcess,
              ProcessUpdate::InvalidProcess,
+             RouteUpdate::InvalidRoute,
              ServiceBindingCreate::InvalidServiceBinding => e
 
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)

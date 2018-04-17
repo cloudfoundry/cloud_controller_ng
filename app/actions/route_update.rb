@@ -14,21 +14,20 @@ module VCAP::CloudController
         not_found! unless app
         routes_to_map = []
 
-        message.routes.each do |route_hash|
-          route_url = route_hash[:route]
-          route = find_valid_route_in_url(app, route_url, user_audit_info)
+        message.manifest_routes.each do |manifest_route|
+          route = find_valid_route(app, manifest_route.to_hash, user_audit_info)
 
           if route
             routes_to_map << route
           else
-            raise RouteValidator::RouteInvalid.new("no domains exist for route #{route_url}")
+            raise RouteValidator::RouteInvalid.new("no domains exist for route #{manifest_route}")
           end
         end
 
         # map route to app, but do this only if the full message contains valid routes
         routes_to_map.each do |route|
-          rm = RouteMappingModel.find(app: app, route: route)
-          next if rm
+          route_mapping_exists = RouteMappingModel.find(app: app, route: route)
+          next if route_mapping_exists
 
           RouteMappingCreate.add(user_audit_info, route, app.web_process)
         end
@@ -38,26 +37,23 @@ module VCAP::CloudController
 
       private
 
-      def find_valid_route_in_url(app, route_url, user_audit_info)
+      def find_valid_route(app, manifest_route, user_audit_info)
         logger = Steno.logger('cc.action.route_update')
-        route_components = ManifestRoute.split(route_url)
-        potential_host = route_components[:potential_host]
 
-        route_components[:potential_domains].each do |potential_domain|
+        manifest_route[:candidate_host_domain_pairs].each do |candidate|
+          potential_domain = candidate[:domain]
           existing_domain = Domain.find(name: potential_domain)
           next if !existing_domain
 
-          # the part before the matched domain is considered the host
-          host = (potential_host.split('.') - potential_domain.split('.')).join('.')
-
+          host = candidate[:host]
           route_hash = {
             host: host,
             domain_guid: existing_domain.guid,
-            path: route_components[:path],
-            port: route_components[:port] || 0,
+            path: manifest_route[:path],
+            port: manifest_route[:port] || 0,
             space_guid: app.space.guid
           }
-          route = Route.find(host: host, domain: existing_domain, path: route_components[:path])
+          route = Route.find(host: host, domain: existing_domain, path: route_hash[:path])
           if !route
             FeatureFlag.raise_unless_enabled!(:route_creation)
             if host == '*' && existing_domain.shared?

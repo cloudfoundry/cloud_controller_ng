@@ -8,6 +8,8 @@ module VCAP::CloudController
         {
           external_port: Integer,
           external_domain: String,
+          system_hostnames: [String],
+          system_domain: String,
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,

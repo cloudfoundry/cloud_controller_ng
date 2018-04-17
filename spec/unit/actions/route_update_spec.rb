@@ -3,12 +3,13 @@ require 'actions/route_update'
 
 module VCAP::CloudController
   RSpec.describe RouteUpdate do
-    let(:message) { ManifestRoutesUpdateMessage.new({
-      routes: [
-        { 'route': 'http://potato.tomato.avocado-toast.com/some-path' }
-      ]
-    })
-    }
+    let(:message) do
+      ManifestRoutesUpdateMessage.new(
+        routes: [
+          { 'route': 'http://potato.tomato.avocado-toast.com/some-path' }
+        ]
+      )
+    end
 
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
@@ -70,13 +71,65 @@ module VCAP::CloudController
             expect(route.path).to eq '/some-path'
           end
 
+          context 'when using a host that matches the first segment of the domain' do
+            let(:message) do
+              ManifestRoutesUpdateMessage.new(
+                routes: [
+                  { 'route': 'http://tomato.tomato.avocado-toast.com/some-path' }
+                ]
+              )
+            end
+
+            it 'creates and maps the route to the app' do
+              expect {
+                RouteUpdate.update(app.guid, message, user_audit_info)
+              }.to change { app.reload.routes.length }.by(1)
+              routes = app.reload.routes
+              expect(routes.length).to eq 1
+
+              route = routes.first
+
+              expect(route.host).to eq 'tomato'
+              expect(route.domain.name).to eq 'tomato.avocado-toast.com'
+              expect(route.path).to eq '/some-path'
+            end
+          end
+
+          context 'when using a private domain but no host' do
+            let(:message) do
+              ManifestRoutesUpdateMessage.new(
+                routes: [
+                  { 'route': 'http://private.avocado-toast.com' }
+                ]
+              )
+            end
+
+            before do
+              VCAP::CloudController::PrivateDomain.make(owning_organization: app.space.organization, name: 'private.avocado-toast.com')
+            end
+
+            it 'creates and maps the route to the app' do
+              expect {
+                RouteUpdate.update(app.guid, message, user_audit_info)
+              }.to change { app.reload.routes.length }.by(1)
+              routes = app.reload.routes
+              expect(routes.length).to eq 1
+
+              route = routes.first
+
+              expect(route.host).to eq ''
+              expect(route.domain.name).to eq 'private.avocado-toast.com'
+            end
+          end
+
           context 'when using a wildcard host with a private domain' do
-            let(:message) { ManifestRoutesUpdateMessage.new({
-              routes: [
-                { 'route': 'http://*.private.avocado-toast.com' }
-              ]
-            })
-            }
+            let(:message) do
+              ManifestRoutesUpdateMessage.new(
+                routes: [
+                  { 'route': 'http://*.private.avocado-toast.com' }
+                ]
+              )
+            end
 
             before do
               VCAP::CloudController::PrivateDomain.make(owning_organization: app.space.organization, name: 'private.avocado-toast.com')
@@ -97,12 +150,13 @@ module VCAP::CloudController
           end
 
           context 'when using a wildcard host with a shared domain' do
-            let(:message) { ManifestRoutesUpdateMessage.new({
-              routes: [
-                { 'route': 'http://*.tomato.avocado-toast.com' }
-              ]
-            })
-            }
+            let(:message) do
+              ManifestRoutesUpdateMessage.new(
+                routes: [
+                  { 'route': 'http://*.tomato.avocado-toast.com' }
+                ]
+              )
+            end
 
             it 'raises an error' do
               expect {
@@ -116,11 +170,11 @@ module VCAP::CloudController
             let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'tcp', reservable_ports: [1234]) }
             let!(:tcp_domain) { SharedDomain.make(name: 'tcp.tomato.avocado-toast.com', router_group_guid: '123') }
             let(:message) do
-              ManifestRoutesUpdateMessage.new({
+              ManifestRoutesUpdateMessage.new(
                 routes: [
                   { 'route': 'http://tcp.tomato.avocado-toast.com:1234' }
                 ]
-              })
+              )
             end
 
             before do
@@ -205,6 +259,13 @@ module VCAP::CloudController
 
       context 'when the host is invalid' do
         let!(:domain) { VCAP::CloudController::SharedDomain.make(name: 'avocado-toast.com') }
+        let(:message) do
+          ManifestRoutesUpdateMessage.new(
+            routes: [
+              { 'route': 'http://not good host 🌝.avocado-toast.com/some-path' }
+            ]
+          )
+        end
 
         it('raises an error indicating that the host format is invalid') do
           expect {
