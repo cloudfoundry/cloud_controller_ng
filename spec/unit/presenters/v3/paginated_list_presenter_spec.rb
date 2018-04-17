@@ -71,22 +71,26 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when there are decorators' do
-        class BananaDecorator
-          class << self
-            def decorate(hash, monkeys)
-              hash[:included] ||= {}
-              hash[:included][:bananas] = monkeys.map { |monkey| "#{monkey.name}'s banana" }
-              hash
+        let(:banana_decorator) do
+          Class.new do
+            class << self
+              def decorate(hash, monkeys)
+                hash[:included] ||= {}
+                hash[:included][:bananas] = monkeys.map { |monkey| "#{monkey.name}'s banana" }
+                hash
+              end
             end
           end
         end
 
-        class TailDecorator
-          class << self
-            def decorate(hash, monkeys)
-              hash[:included] ||= {}
-              hash[:included][:tails] = monkeys.map { |monkey| "#{monkey.name}'s tail" }
-              hash
+        let(:tail_decorator) do
+          Class.new do
+            class << self
+              def decorate(hash, monkeys)
+                hash[:included] ||= {}
+                hash[:included][:tails] = monkeys.map { |monkey| "#{monkey.name}'s tail" }
+                hash
+              end
             end
           end
         end
@@ -97,7 +101,7 @@ module VCAP::CloudController::Presenters::V3
             path: path,
             message: message,
             show_secrets: true,
-            decorators: [BananaDecorator, TailDecorator]
+            decorators: [banana_decorator, tail_decorator]
           )
         end
 

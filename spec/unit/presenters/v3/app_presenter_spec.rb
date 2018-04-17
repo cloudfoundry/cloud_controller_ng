@@ -53,17 +53,19 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when there are decorators' do
-        class BananaDecorator
-          class << self
-            def decorate(hash, apps)
-              hash[:included] ||= {}
-              hash[:included][:bananas] = apps.map { |app| "#{app.name} is bananas" }
-              hash
+        let(:banana_decorator) do
+          Class.new do
+            class << self
+              def decorate(hash, apps)
+                hash[:included] ||= {}
+                hash[:included][:bananas] = apps.map { |app| "#{app.name} is bananas" }
+                hash
+              end
             end
           end
         end
 
-        let(:result) { AppPresenter.new(app, decorators: [BananaDecorator]).to_hash }
+        let(:result) { AppPresenter.new(app, decorators: [banana_decorator]).to_hash }
 
         it 'runs the decorators' do
           expect(result[:included][:bananas]).to match_array(['Davis is bananas'])
