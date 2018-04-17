@@ -424,6 +424,16 @@ module VCAP::CloudController
                     expect(decoded_response['description']).to match('Could not create asynchronous binding')
                   end
                 end
+
+                context 'when attempting to bind and the service binding already exists' do
+                  it 'returns a ServiceBindingAppServiceTaken error' do
+                    post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+
+                    expect(last_response.status).to eq(400)
+                    expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
+                    expect(decoded_response['description']).to eq('The app is already bound to the service.')
+                  end
+                end
               end
 
               context 'and the broker is synchronous' do
