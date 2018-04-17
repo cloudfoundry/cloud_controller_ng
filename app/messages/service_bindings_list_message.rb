@@ -17,15 +17,5 @@ module VCAP::CloudController
 
       new(opts.symbolize_keys)
     end
-
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

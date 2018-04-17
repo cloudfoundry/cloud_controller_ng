@@ -26,14 +26,9 @@ module VCAP::CloudController
       @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
     end
 
-    private
-
     class Relationships < BaseMessage
-      attr_accessor :organization
-
-      def allowed_keys
-        [:organization]
-      end
+      ALLOWED_KEYS = [:organization].freeze
+      attr_accessor(*ALLOWED_KEYS)
 
       validates_with NoAdditionalKeysValidator
 
@@ -42,10 +37,6 @@ module VCAP::CloudController
       def organization_guid
         HashUtils.dig(organization, :data, :guid)
       end
-    end
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

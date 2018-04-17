@@ -30,11 +30,5 @@ module VCAP::CloudController
         errors.add(:data, "#{default_isolation_segment_guid} must be a string")
       end
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

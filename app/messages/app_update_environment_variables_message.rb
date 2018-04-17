@@ -20,11 +20,5 @@ module VCAP::CloudController
       result['environment_variables'] = result.delete('var')
       result
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

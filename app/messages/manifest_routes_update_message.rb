@@ -37,10 +37,6 @@ module VCAP::CloudController
 
     private
 
-    def allowed_keys
-      ALLOWED_KEYS
-    end
-
     def routes_are_uris
       return if errors[:routes].present?
 

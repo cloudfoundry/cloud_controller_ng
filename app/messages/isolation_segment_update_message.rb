@@ -12,11 +12,5 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates :name, string: true
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

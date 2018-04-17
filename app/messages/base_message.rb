@@ -9,7 +9,7 @@ module VCAP::CloudController
     attr_accessor :requested_keys, :extra_keys
 
     def initialize(params={})
-      params ||= {}
+      params = params ? params.symbolize_keys : {}
       @requested_keys   = params.keys
       disallowed_params = params.slice!(*allowed_keys)
       @extra_keys       = disallowed_params.keys
@@ -90,7 +90,7 @@ module VCAP::CloudController
     private
 
     def allowed_keys
-      raise NotImplementedError
+      self.class::ALLOWED_KEYS
     end
   end
 end

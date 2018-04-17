@@ -49,11 +49,5 @@ module VCAP::CloudController
     def health_check_timeout
       timeout
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

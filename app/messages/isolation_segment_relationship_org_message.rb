@@ -24,11 +24,5 @@ module VCAP::CloudController
     def guids
       data.map { |val| val[:guid] }
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

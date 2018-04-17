@@ -57,11 +57,5 @@ module VCAP::CloudController
     def audit_hash
       super(exclude: [:health_check_type, :health_check_timeout, :health_check_endpoint])
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

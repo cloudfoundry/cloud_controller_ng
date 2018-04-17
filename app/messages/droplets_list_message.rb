@@ -27,10 +27,6 @@ module VCAP::CloudController
     validate :app_nested_request, if: -> { app_guid.present? }
     validate :not_app_nested_request, unless: -> { app_guid.present? }
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
     def to_param_hash
       super(exclude: [:app_guid, :package_guid])
     end
@@ -57,10 +53,6 @@ module VCAP::CloudController
       invalid_attributes << :organization_guids if organization_guids
       invalid_attributes << :space_guids if space_guids
       errors.add(:base, "Unknown query parameter(s): '#{invalid_attributes.join("', '")}'") if invalid_attributes.present?
-    end
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

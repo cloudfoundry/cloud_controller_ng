@@ -28,10 +28,6 @@ module VCAP::CloudController
 
     private
 
-    def allowed_keys
-      ALLOWED_KEYS
-    end
-
     def requested_state
       unless [PackageModel::PENDING_STATE, PackageModel::READY_STATE, PackageModel::FAILED_STATE].include?(state)
         errors.add(:state, 'must be one of PROCESSING_UPLOAD, READY, FAILED')

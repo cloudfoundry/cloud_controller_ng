@@ -13,6 +13,7 @@ module VCAP::CloudController
     attr_reader :pagination_options
 
     def initialize(params={})
+      params = params.symbolize_keys
       @pagination_params = params.slice(*ALLOWED_PAGINATION_KEYS)
       @pagination_options = PaginationOptions.from_params(params)
       super(params)

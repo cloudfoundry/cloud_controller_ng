@@ -80,10 +80,6 @@ module VCAP::CloudController
 
     private
 
-    def allowed_keys
-      ALLOWED_KEYS
-    end
-
     def process_scale_attribute_mapping
       {
         instances: instances,

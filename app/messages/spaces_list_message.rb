@@ -11,10 +11,6 @@ module VCAP::CloudController
     validates :names, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
     def self.from_params(params)
       opts = params.dup
       to_array! opts, 'names'
@@ -24,12 +20,6 @@ module VCAP::CloudController
 
     def valid_order_by_values
       super << :name
-    end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

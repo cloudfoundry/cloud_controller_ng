@@ -41,11 +41,5 @@ module VCAP::CloudController
     def route_guid
       HashUtils.dig(route, :guid)
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

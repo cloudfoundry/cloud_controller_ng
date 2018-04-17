@@ -6,10 +6,6 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
     validates_with NoAdditionalParamsValidator
     validates_with IncludeParamValidator, valid_values: ['space']
 
@@ -32,12 +28,6 @@ module VCAP::CloudController
 
     def valid_order_by_values
       super << :name
-    end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

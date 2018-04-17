@@ -42,11 +42,5 @@ module VCAP::CloudController
     def buildpack_data
       @buildpack_data ||= BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

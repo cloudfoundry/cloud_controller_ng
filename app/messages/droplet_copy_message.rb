@@ -22,11 +22,5 @@ module VCAP::CloudController
     def app_guid
       HashUtils.dig(app, :data, :guid)
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

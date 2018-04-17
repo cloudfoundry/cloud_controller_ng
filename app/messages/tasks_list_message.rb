@@ -18,10 +18,6 @@ module VCAP::CloudController
     validate :non_app_nested_request, if: -> { !app_guid.present? }
     validates :sequence_ids, array: true, allow_nil: true
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
     def to_param_hash
       super(exclude: [:page, :per_page, :order_by, :app_guid])
     end
@@ -48,10 +44,6 @@ module VCAP::CloudController
       invalid_params = []
       invalid_params << :sequence_ids if sequence_ids
       errors.add(:base, "Unknown query parameter(s): '#{invalid_params.join("', '")}'") if invalid_params.present?
-    end
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

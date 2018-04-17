@@ -12,11 +12,5 @@ module VCAP::CloudController
     def self.create_from_http_request(body)
       AppFeatureUpdateMessage.new(body.deep_symbolize_keys)
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

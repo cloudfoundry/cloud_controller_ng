@@ -51,11 +51,5 @@ module VCAP::CloudController
     def lifecycle_type
       HashUtils.dig(lifecycle, :type)
     end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
-    end
   end
 end

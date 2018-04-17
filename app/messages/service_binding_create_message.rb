@@ -28,12 +28,8 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      attr_accessor :service_instance
-      attr_accessor :app
-
-      def allowed_keys
-        [:service_instance, :app]
-      end
+      ALLOWED_KEYS = [:service_instance, :app].freeze
+      attr_accessor(*ALLOWED_KEYS)
 
       def app_guid
         HashUtils.dig(app, :data, :guid)
@@ -50,19 +46,10 @@ module VCAP::CloudController
     end
 
     class Data < BaseMessage
-      attr_accessor :parameters
-
-      def allowed_keys
-        [:parameters]
-      end
+      ALLOWED_KEYS = [:parameters].freeze
+      attr_accessor(*ALLOWED_KEYS)
 
       validates_with NoAdditionalKeysValidator
-    end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

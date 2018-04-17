@@ -2,9 +2,7 @@ require 'spec_helper'
 require 'messages/list_message'
 
 class VCAP::CloudController::ListMessage
-  def allowed_keys
-    # redefining here so NotImplementedError isn't raised
-  end
+  ALLOWED_KEYS = [].freeze
 end
 
 module VCAP::CloudController

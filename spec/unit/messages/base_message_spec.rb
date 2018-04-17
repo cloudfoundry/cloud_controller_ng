@@ -6,9 +6,7 @@ module VCAP::CloudController
     describe '#requested?' do
       it 'returns true if the key was requested, false otherwise' do
         FakeClass = Class.new(BaseMessage) do
-          def allowed_keys
-            []
-          end
+          self::ALLOWED_KEYS = [].freeze
         end
 
         message = FakeClass.new({ requested: 'thing' })
@@ -20,11 +18,8 @@ module VCAP::CloudController
 
     describe '#audit_hash' do
       class AuditMessage < BaseMessage
-        attr_accessor :field1, :field2
-
-        def allowed_keys
-          [:field1, :field2]
-        end
+        ALLOWED_KEYS = [:field1, :field2].freeze
+        attr_accessor(*ALLOWED_KEYS)
       end
 
       it 'returns only requested keys in a json object' do
@@ -47,12 +42,9 @@ module VCAP::CloudController
     end
 
     describe '#to_param_hash' do
-      ParamsClass = Class.new(BaseMessage) do
-        attr_accessor :array_field, :num_field, :string_field, :nil_field
-
-        def allowed_keys
-          [:array_field, :num_field, :string_field, :nil_field]
-        end
+      class ParamsClass < BaseMessage
+        ALLOWED_KEYS = [:array_field, :num_field, :string_field, :nil_field].freeze
+        attr_accessor(*ALLOWED_KEYS)
       end
 
       let(:opts) do
@@ -141,10 +133,7 @@ module VCAP::CloudController
       let(:fake_class) do
         Class.new(BaseMessage) do
           validates_with VCAP::CloudController::BaseMessage::NoAdditionalKeysValidator
-
-          def allowed_keys
-            [:allowed]
-          end
+          self::ALLOWED_KEYS = [:allowed].freeze
 
           def allowed=(_); end
         end
@@ -168,10 +157,7 @@ module VCAP::CloudController
       let(:fake_class) do
         Class.new(BaseMessage) do
           validates_with VCAP::CloudController::BaseMessage::NoAdditionalParamsValidator
-
-          def allowed_keys
-            [:allowed]
-          end
+          self::ALLOWED_KEYS = [:allowed].freeze
 
           def allowed=(_); end
         end
@@ -195,10 +181,7 @@ module VCAP::CloudController
       let(:fake_class) do
         Class.new(BaseMessage) do
           validates_with VCAP::CloudController::BaseMessage::IncludeParamValidator, valid_values: ['foo', 'bar']
-
-          def allowed_keys
-            [:include]
-          end
+          self::ALLOWED_KEYS = [:include].freeze
 
           def include=(x)
             @x = x

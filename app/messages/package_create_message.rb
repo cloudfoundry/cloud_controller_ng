@@ -47,14 +47,9 @@ module VCAP::CloudController
       result
     end
 
-    private
-
     class Relationships < BaseMessage
-      attr_accessor :app
-
-      def allowed_keys
-        [:app]
-      end
+      ALLOWED_KEYS = [:app].freeze
+      attr_accessor(*ALLOWED_KEYS)
 
       validates_with NoAdditionalKeysValidator
 
@@ -63,10 +58,6 @@ module VCAP::CloudController
       def app_guid
         HashUtils.dig(app, :data, :guid)
       end
-    end
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

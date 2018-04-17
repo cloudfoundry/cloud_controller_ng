@@ -42,10 +42,6 @@ module VCAP::CloudController
       end
     end
 
-    def allowed_keys
-      ALLOWED_KEYS
-    end
-
     def tmpdir
       VCAP::CloudController::Config.config.get(:directories, :tmpdir)
     end

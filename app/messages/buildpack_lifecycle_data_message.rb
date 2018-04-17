@@ -8,10 +8,6 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_KEYS)
 
-    def allowed_keys
-      ALLOWED_KEYS
-    end
-
     validates_with NoAdditionalKeysValidator
 
     validates :stack,

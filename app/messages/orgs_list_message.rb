@@ -10,10 +10,6 @@ module VCAP::CloudController
 
     validates :names, array: true, allow_nil: true
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
     def to_param_hash
       super(exclude: [:page, :per_page, :order_by, :isolation_segment_guid])
     end
@@ -26,12 +22,6 @@ module VCAP::CloudController
 
     def valid_order_by_values
       super << :name
-    end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end

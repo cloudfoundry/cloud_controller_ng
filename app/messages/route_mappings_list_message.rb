@@ -8,10 +8,6 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator
 
-    def initialize(params={})
-      super(params.symbolize_keys)
-    end
-
     def to_param_hash
       super(exclude: [:app_guid])
     end
@@ -24,12 +20,6 @@ module VCAP::CloudController
       end
 
       new(opts.symbolize_keys)
-    end
-
-    private
-
-    def allowed_keys
-      ALLOWED_KEYS
     end
   end
 end
