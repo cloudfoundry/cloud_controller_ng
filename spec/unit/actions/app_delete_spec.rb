@@ -24,10 +24,10 @@ module VCAP::CloudController
           app.destroy
         end
 
-        it 'returns without redeleting' do
+        it 'throws an exception' do
           expect {
             app_delete.delete(app_dataset)
-          }.to change { AppModel.count }.by(0)
+          }.to raise_error(Sequel::NoExistingObject, 'Record not found')
         end
       end
 

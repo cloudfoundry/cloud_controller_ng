@@ -1064,6 +1064,18 @@ module VCAP::CloudController
         expect(parent_app.exists?).to be_falsey
       end
 
+      it 'throws an exception on a subsequent deletion' do
+        expect(process.exists?).to be_truthy
+        expect(parent_app.exists?).to be_truthy
+
+        delete_app
+
+        expect(last_response.status).to eq(204)
+        delete_app
+        expect(last_response.status).to eq(404)
+        expect(parsed_response['description']).to eq("The app could not be found: #{parent_app.guid}")
+      end
+
       context 'non recursive deletion' do
         context 'with NON-empty service_binding association' do
           let!(:svc_instance) { ManagedServiceInstance.make(space: process.space) }

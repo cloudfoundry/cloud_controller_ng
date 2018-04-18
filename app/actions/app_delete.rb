@@ -19,7 +19,6 @@ module VCAP::CloudController
     def delete(apps, record_event: true)
       apps.each do |app|
         app.db.transaction do
-          next unless app.exists?
           app.lock!
           logger.info("Deleting app: #{app.guid}")
 
