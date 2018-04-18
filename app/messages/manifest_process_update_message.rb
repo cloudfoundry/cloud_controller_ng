@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ManifestProcessUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:command, :health_check_type, :health_check_http_endpoint, :timeout].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:command, :health_check_type, :health_check_http_endpoint, :timeout]
 
     def self.create_from_http_request(body)
       ManifestProcessUpdateMessage.new(body.deep_symbolize_keys)

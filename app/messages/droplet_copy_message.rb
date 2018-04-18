@@ -4,9 +4,8 @@ require 'messages/docker_lifecycle_data_message'
 
 module VCAP::CloudController
   class DropletCopyMessage < BaseMessage
-    ALLOWED_KEYS = [:relationships].freeze
+    register_allowed_keys [:relationships]
 
-    attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalKeysValidator
     validates :app, hash: true
     validates :app_guid, guid: true

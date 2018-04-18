@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ManifestServiceBindingCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:services].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:services]
 
     validates_with NoAdditionalKeysValidator
 

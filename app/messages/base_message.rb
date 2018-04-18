@@ -8,6 +8,11 @@ module VCAP::CloudController
 
     attr_accessor :requested_keys, :extra_keys
 
+    def self.register_allowed_keys(allowed_keys)
+      self.const_set(:ALLOWED_KEYS, allowed_keys.freeze)
+      attr_accessor(*allowed_keys)
+    end
+
     def initialize(params={})
       params = params ? params.symbolize_keys : {}
       @requested_keys   = params.keys

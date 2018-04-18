@@ -1,8 +1,6 @@
 module VCAP::CloudController
   class DockerLifecycleDataMessage < BaseMessage
-    ALLOWED_KEYS = [].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys []
 
     validates_with NoAdditionalKeysValidator
 

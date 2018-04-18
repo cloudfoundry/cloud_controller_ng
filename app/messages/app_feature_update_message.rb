@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class AppFeatureUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:enabled].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:enabled]
 
     validates_with NoAdditionalKeysValidator
     validates :enabled, boolean: true

@@ -3,9 +3,8 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :lifecycle].freeze
+    register_allowed_keys [:name, :lifecycle]
 
-    attr_accessor(*ALLOWED_KEYS)
     attr_reader :app
 
     def self.create_from_http_request(body)

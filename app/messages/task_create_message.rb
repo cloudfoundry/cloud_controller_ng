@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class TaskCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :command, :disk_in_mb, :memory_in_mb, :droplet_guid].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:name, :command, :disk_in_mb, :memory_in_mb, :droplet_guid]
 
     validates_with NoAdditionalKeysValidator
 

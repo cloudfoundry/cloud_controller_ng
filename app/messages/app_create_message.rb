@@ -3,9 +3,7 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class AppCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :environment_variables, :relationships, :lifecycle].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:name, :environment_variables, :relationships, :lifecycle]
 
     def self.create_from_http_request(body)
       AppCreateMessage.new(body.deep_symbolize_keys)
@@ -49,8 +47,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      ALLOWED_KEYS = [:space].freeze
-      attr_accessor(*ALLOWED_KEYS)
+      register_allowed_keys [:space]
 
       validates_with NoAdditionalKeysValidator
 

@@ -2,10 +2,8 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ServiceBindingCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:type, :name, :relationships, :data].freeze
+    register_allowed_keys [:type, :name, :relationships, :data]
     ALLOWED_TYPES = ['app'].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
 
     def self.create_from_http_request(body)
       ServiceBindingCreateMessage.new(body.deep_symbolize_keys)
@@ -28,8 +26,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      ALLOWED_KEYS = [:service_instance, :app].freeze
-      attr_accessor(*ALLOWED_KEYS)
+      register_allowed_keys [:service_instance, :app]
 
       def app_guid
         HashUtils.dig(app, :data, :guid)
@@ -46,8 +43,7 @@ module VCAP::CloudController
     end
 
     class Data < BaseMessage
-      ALLOWED_KEYS = [:parameters].freeze
-      attr_accessor(*ALLOWED_KEYS)
+      register_allowed_keys [:parameters]
 
       validates_with NoAdditionalKeysValidator
     end

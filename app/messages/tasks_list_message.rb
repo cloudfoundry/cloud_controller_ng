@@ -2,9 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class TasksListMessage < ListMessage
-    ALLOWED_KEYS = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :app_guid, :sequence_ids].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :app_guid, :sequence_ids]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
 

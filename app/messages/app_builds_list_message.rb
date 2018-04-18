@@ -2,14 +2,13 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class AppBuildsListMessage < ListMessage
-    ALLOWED_KEYS = [
+    register_allowed_keys [
       :order_by,
       :page,
       :per_page,
       :states
-    ].freeze
+    ]
 
-    attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalParamsValidator
 
     validates :states, array: true, allow_nil: true

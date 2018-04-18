@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/list_message'
 
 class VCAP::CloudController::ListMessage
-  ALLOWED_KEYS = [].freeze
+  register_allowed_keys []
 end
 
 module VCAP::CloudController

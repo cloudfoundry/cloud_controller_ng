@@ -4,9 +4,8 @@ require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
   class BuildCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:staging_memory_in_mb, :staging_disk_in_mb, :environment_variables, :lifecycle, :package].freeze
+    register_allowed_keys [:staging_memory_in_mb, :staging_disk_in_mb, :environment_variables, :lifecycle, :package]
 
-    attr_accessor(*ALLOWED_KEYS)
     def self.create_from_http_request(body)
       BuildCreateMessage.new(body.deep_symbolize_keys)
     end

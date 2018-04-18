@@ -7,7 +7,7 @@ require 'cloud_controller/app_manifest/byte_converter'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
-    ALLOWED_KEYS = [
+    register_allowed_keys [
       :buildpack,
       :command,
       :disk_quota,
@@ -20,11 +20,10 @@ module VCAP::CloudController
       :routes,
       :services,
       :stack
-    ].freeze
+    ]
 
     HEALTH_CHECK_TYPE_MAPPING = { 'none' => 'process' }.freeze
 
-    attr_accessor(*ALLOWED_KEYS)
     attr_accessor :manifest_process_scale_message,
                   :app_update_message,
                   :app_update_environment_variables_message,

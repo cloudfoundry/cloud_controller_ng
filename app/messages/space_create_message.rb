@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class SpaceCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:name, :relationships].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:name, :relationships]
 
     validates_with NoAdditionalKeysValidator,
       RelationshipValidator
@@ -27,8 +25,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      ALLOWED_KEYS = [:organization].freeze
-      attr_accessor(*ALLOWED_KEYS)
+      register_allowed_keys [:organization]
 
       validates_with NoAdditionalKeysValidator
 

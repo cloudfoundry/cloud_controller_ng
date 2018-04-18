@@ -292,8 +292,7 @@ module VCAP::CloudController::Validators
 
     describe 'RelationshipValidator' do
       class RelationshipMessage < VCAP::CloudController::BaseMessage
-        ALLOWED_KEYS = [:relationships].freeze
-        attr_accessor(*ALLOWED_KEYS)
+        register_allowed_keys [:relationships]
 
         def relationships_message
           Relationships.new(relationships.deep_symbolize_keys)
@@ -302,8 +301,7 @@ module VCAP::CloudController::Validators
         validates_with RelationshipValidator
 
         class Relationships < VCAP::CloudController::BaseMessage
-          ALLOWED_KEYS = [:foo].freeze
-          attr_accessor(*ALLOWED_KEYS)
+          register_allowed_keys [:foo]
 
           validates :foo, numericality: true
         end
@@ -324,13 +322,11 @@ module VCAP::CloudController::Validators
 
     describe 'DataValidator' do
       class DataMessage < VCAP::CloudController::BaseMessage
-        ALLOWED_KEYS = [:data].freeze
-        attr_accessor(*ALLOWED_KEYS)
+        register_allowed_keys [:data]
         validates_with DataValidator
 
         class Data < VCAP::CloudController::BaseMessage
-          ALLOWED_KEYS = [:foo].freeze
-          attr_accessor(*ALLOWED_KEYS)
+          register_allowed_keys [:foo]
 
           validates :foo, numericality: true
         end

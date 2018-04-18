@@ -2,9 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class RouteMappingsListMessage < ListMessage
-    ALLOWED_KEYS = [:app_guid, :app_guids, :order_by, :page, :per_page, :route_guids].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:app_guid, :app_guids, :order_by, :page, :per_page, :route_guids]
 
     validates_with NoAdditionalParamsValidator
 

@@ -4,9 +4,7 @@ require 'messages/validators/docker_data_validator'
 
 module VCAP::CloudController
   class PackageCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:relationships, :type, :data].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:relationships, :type, :data]
 
     validates_with NoAdditionalKeysValidator,
       DockerDataValidator,
@@ -48,8 +46,7 @@ module VCAP::CloudController
     end
 
     class Relationships < BaseMessage
-      ALLOWED_KEYS = [:app].freeze
-      attr_accessor(*ALLOWED_KEYS)
+      register_allowed_keys [:app]
 
       validates_with NoAdditionalKeysValidator
 

@@ -3,9 +3,7 @@ require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
   class ManifestRoutesUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:routes].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:routes]
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)

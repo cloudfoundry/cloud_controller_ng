@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class IsolationSegmentRelationshipOrgMessage < BaseMessage
-    ALLOWED_KEYS = [:data].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:data]
 
     def self.create_from_http_request(body)
       IsolationSegmentRelationshipOrgMessage.new(body.deep_symbolize_keys)

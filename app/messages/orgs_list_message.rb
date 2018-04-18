@@ -2,9 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class OrgsListMessage < ListMessage
-    ALLOWED_KEYS = [:page, :per_page, :names, :order_by, :isolation_segment_guid].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:page, :per_page, :names, :order_by, :isolation_segment_guid]
 
     validates_with NoAdditionalParamsValidator
 

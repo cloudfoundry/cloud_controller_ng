@@ -4,9 +4,7 @@ module VCAP::CloudController
   class PackageUploadMessage < BaseMessage
     class MissingFilePathError < StandardError; end
 
-    ALLOWED_KEYS = [:bits_path, :bits_name, :cached_resources].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:bits_path, :bits_name, :cached_resources]
 
     validates_with NoAdditionalKeysValidator
 

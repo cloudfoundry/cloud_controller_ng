@@ -2,9 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class ServiceBindingsListMessage < ListMessage
-    ALLOWED_KEYS = [:app_guids, :service_instance_guids, :order_by, :page, :per_page].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:app_guids, :service_instance_guids, :order_by, :page, :per_page]
 
     validates_with NoAdditionalParamsValidator
 

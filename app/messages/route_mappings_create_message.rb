@@ -3,9 +3,8 @@ require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class RouteMappingsCreateMessage < BaseMessage
-    ALLOWED_KEYS = [:relationships].freeze
+    register_allowed_keys [:relationships]
 
-    attr_accessor(*ALLOWED_KEYS)
     validates_with NoAdditionalKeysValidator
     validates :app, hash: true
     validates :app_guid, guid: true

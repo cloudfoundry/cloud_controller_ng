@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ProcessScaleMessage < BaseMessage
-    ALLOWED_KEYS = [:instances, :memory_in_mb, :disk_in_mb].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:instances, :memory_in_mb, :disk_in_mb]
 
     validates_with NoAdditionalKeysValidator
 

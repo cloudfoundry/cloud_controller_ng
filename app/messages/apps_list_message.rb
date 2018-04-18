@@ -2,9 +2,7 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class AppsListMessage < ListMessage
-    ALLOWED_KEYS = [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :order_direction, :include].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:names, :guids, :organization_guids, :space_guids, :page, :per_page, :order_by, :order_direction, :include]
 
     validates_with NoAdditionalParamsValidator
     validates_with IncludeParamValidator, valid_values: ['space']

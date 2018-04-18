@@ -2,9 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class InternalPackageUpdateMessage < BaseMessage
-    ALLOWED_KEYS = [:state, :checksums, :error].freeze
-
-    attr_accessor(*ALLOWED_KEYS)
+    register_allowed_keys [:state, :checksums, :error]
 
     def self.create_from_http_request(body)
       InternalPackageUpdateMessage.new(body.deep_symbolize_keys)
@@ -59,11 +57,9 @@ module VCAP::CloudController
   end
 
   class Checksum < ::VCAP::CloudController::BaseMessage
-    ALLOWED_KEYS = [:type, :value].freeze
+    register_allowed_keys [:type, :value]
     SHA1         = 'sha1'.freeze
     SHA256       = 'sha256'.freeze
-
-    attr_accessor(*ALLOWED_KEYS)
 
     def allowed_keys
       ALLOWED_KEYS
