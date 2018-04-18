@@ -3,27 +3,6 @@ require 'messages/build_create_message'
 
 module VCAP::CloudController
   RSpec.describe BuildCreateMessage do
-    describe '.create_from_http_request' do
-      let(:body) do
-        {
-          'package' => { 'guid' => 'package-guid' },
-        }
-      end
-
-      it 'returns the correct BuildCreateMessage' do
-        message = BuildCreateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(BuildCreateMessage)
-        expect(message.package_guid).to eq('package-guid')
-      end
-
-      it 'converts requested keys to symbols' do
-        message = BuildCreateMessage.create_from_http_request(body)
-
-        expect(message.requested?(:package)).to be true
-      end
-    end
-
     describe 'validations' do
       context 'when no params are given' do
         let(:params) {}

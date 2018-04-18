@@ -7,10 +7,6 @@ module VCAP::CloudController
 
     attr_reader :app
 
-    def self.create_from_http_request(body)
-      AppUpdateMessage.new(body.deep_symbolize_keys)
-    end
-
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
@@ -39,7 +35,7 @@ module VCAP::CloudController
     end
 
     def buildpack_data
-      @buildpack_data ||= BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
+      @buildpack_data ||= BuildpackLifecycleDataMessage.new(lifecycle_data)
     end
   end
 end

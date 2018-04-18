@@ -37,7 +37,7 @@ module VCAP::CloudController
           expect_any_instance_of(Repositories::SpaceEventRepository).to receive(:record_space_update).with(
             space,
             user_audit_info,
-            { 'data' => { guid: isolation_segment.guid } }
+            { 'data' => { 'guid' => isolation_segment.guid } }
           )
 
           space_update.update(space, org, message)

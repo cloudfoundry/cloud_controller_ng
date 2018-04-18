@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     it 'returns the correct AppRouteMappingsCreateMessage' do
-      message = RouteMappingsCreateMessage.create_from_http_request(body)
+      message = RouteMappingsCreateMessage.new(body)
 
       expect(message).to be_a(RouteMappingsCreateMessage)
       expect(message.route_guid).to eq('some-route-guid')
@@ -21,7 +21,7 @@ module VCAP::CloudController
     end
 
     it 'converts requested keys to symbols' do
-      message = RouteMappingsCreateMessage.create_from_http_request(body)
+      message = RouteMappingsCreateMessage.new(body)
       expect(message.requested?(:relationships)).to be_truthy
     end
 

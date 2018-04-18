@@ -3,55 +3,6 @@ require 'messages/process_update_message'
 
 module VCAP::CloudController
   RSpec.describe ProcessUpdateMessage do
-    describe '.create_from_http_request' do
-      let(:body) { { 'command' => 'foo' } }
-
-      it 'returns the correct ProcessUpdateMessage' do
-        message = ProcessUpdateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(ProcessUpdateMessage)
-        expect(message.command).to eq('foo')
-      end
-
-      it 'converts requested keys to symbols' do
-        message = ProcessUpdateMessage.create_from_http_request(body)
-
-        expect(message.requested?(:command)).to be_truthy
-      end
-
-      describe 'requested keys for health check' do
-        it 'does not add them if they are not requested' do
-          message = ProcessUpdateMessage.create_from_http_request(body)
-
-          expect(message.requested?(:health_check_type)).to be false
-          expect(message.requested?(:health_check_timeout)).to be false
-          expect(message.requested?(:health_check_endpoint)).to be false
-        end
-
-        it 'adds requested keys if they are requested' do
-          body = {
-            health_check: { type: 'http', data: { timeout: 5, endpoint: '/test' } }
-          }
-          message = ProcessUpdateMessage.create_from_http_request(body)
-
-          expect(message.requested?(:health_check_type)).to be true
-          expect(message.requested?(:health_check_timeout)).to be true
-          expect(message.requested?(:health_check_endpoint)).to be true
-        end
-
-        it 'adds requested keys, even if their values are nil' do
-          body = {
-            health_check: { type: nil, data: { timeout: nil, endpoint: nil } }
-          }
-          message = ProcessUpdateMessage.create_from_http_request(body)
-
-          expect(message.requested?(:health_check_type)).to be true
-          expect(message.requested?(:health_check_timeout)).to be true
-          expect(message.requested?(:health_check_endpoint)).to be true
-        end
-      end
-    end
-
     describe '#requested?' do
       it 'returns true if the key was requested, false otherwise' do
         message = ProcessUpdateMessage.new({ requested: 'thing' })
@@ -77,7 +28,7 @@ module VCAP::CloudController
           {
             health_check: { type: 'type', data: { timeout: 4, endpoint: 'something' } }
           })
-        expect(message.audit_hash).to eq({ 'health_check' => { type: 'type', data: { timeout: 4, endpoint: 'something' } } })
+        expect(message.audit_hash).to eq({ 'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something' } } })
       end
     end
 

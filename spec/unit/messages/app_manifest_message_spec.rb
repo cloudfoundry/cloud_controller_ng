@@ -312,11 +312,11 @@ module VCAP::CloudController
       end
     end
 
-    describe '.create_from_http_request' do
+    describe '.create_from_yml' do
       let(:parsed_yaml) { { 'name' => 'blah', 'instances' => 4, 'memory' => '200GB' } }
 
       it 'returns the correct AppManifestMessage' do
-        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        message = AppManifestMessage.create_from_yml(parsed_yaml)
 
         expect(message).to be_valid
         expect(message).to be_a(AppManifestMessage)
@@ -325,7 +325,7 @@ module VCAP::CloudController
       end
 
       it 'converts requested keys to symbols' do
-        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        message = AppManifestMessage.create_from_yml(parsed_yaml)
 
         expect(message.requested?(:instances)).to be_truthy
         expect(message.requested?(:memory)).to be_truthy
@@ -336,7 +336,7 @@ module VCAP::CloudController
       let(:parsed_yaml) { { 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 } }
 
       it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
-        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        message = AppManifestMessage.create_from_yml(parsed_yaml)
 
         expect(message.manifest_process_scale_message.instances).to eq(5)
         expect(message.manifest_process_scale_message.memory).to eq(204800)
@@ -347,7 +347,7 @@ module VCAP::CloudController
         let(:parsed_yaml) { { 'disk_quota' => '7340032B', 'memory' => '3145728B', instances: 8 } }
 
         it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_scale_message.instances).to eq(8)
           expect(message.manifest_process_scale_message.memory).to eq(3)
@@ -359,7 +359,7 @@ module VCAP::CloudController
         let(:parsed_yaml) { { 'disk_quota' => '1048576B', 'memory' => '1048576B', instances: 8 } }
 
         it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_scale_message.instances).to eq(8)
           expect(message.manifest_process_scale_message.memory).to eq(1)
@@ -371,7 +371,7 @@ module VCAP::CloudController
         let(:parsed_yaml) { { 'disk_quota' => '1048575B', 'memory' => '1048575B', instances: 8 } }
 
         it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(2)
           expect(message.errors.full_messages).to match_array(['Memory must be greater than 0MB', 'Disk quota must be greater than 0MB'])
@@ -382,7 +382,7 @@ module VCAP::CloudController
         let(:parsed_yaml) { {} }
 
         it 'does not forward missing attributes to the ManifestProcessScaleMessage' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
 
           expect(message.process_scale_message.requested?(:instances)).to be false
           expect(message.process_scale_message.requested?(:memory)).to be false
@@ -397,7 +397,7 @@ module VCAP::CloudController
       let(:parsed_yaml) { { 'buildpack' => buildpack.name, 'stack' => stack.name } }
 
       it 'returns an AppUpdateMessage containing mapped attributes' do
-        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        message = AppManifestMessage.create_from_yml(parsed_yaml)
 
         expect(message.app_update_message.buildpack_data.buildpacks).to include(buildpack.name)
         expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
@@ -408,7 +408,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { {} }
 
           it 'does not forward missing attributes to the AppUpdateMessage' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
 
             expect(message.app_update_message.requested?(:lifecycle)).to be false
           end
@@ -418,7 +418,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
 
           it 'does not forward missing attributes to the AppUpdateMessage' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
 
             expect(message.app_update_message.requested?(:lifecycle)).to be true
             expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be true
@@ -430,7 +430,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { 'stack' => stack.name } }
 
           it 'does not forward missing attributes to the AppUpdateMessage' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
 
             expect(message.app_update_message.requested?(:lifecycle)).to be true
             expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be false
@@ -442,7 +442,7 @@ module VCAP::CloudController
       context 'when it specifies a "default" buildpack' do
         let(:parsed_yaml) { { buildpack: 'default' } }
         it 'updates the buildpack_data to be an empty array' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
         end
       end
@@ -450,7 +450,7 @@ module VCAP::CloudController
       context 'when it specifies a null buildpack' do
         let(:parsed_yaml) { { buildpack: nil } }
         it 'updates the buildpack_data to be an empty array' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
         end
       end
@@ -473,7 +473,7 @@ module VCAP::CloudController
 
       context 'when new properties are specified' do
         it 'sets the command and health check type fields in the message' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_update_message.command).to eq('new-command')
           expect(message.manifest_process_update_message.health_check_type).to eq('http')
@@ -487,7 +487,7 @@ module VCAP::CloudController
           let(:health_check_type) { 'foo' }
 
           it 'is invalid' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(2)
             expect(message.errors.full_messages).to match_array(['Health check type must be "port", "process", or "http"',
@@ -499,7 +499,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { "health-check-type": 'none' } }
 
           it 'is converted to process' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.health_check_type).to eq('process')
           end
@@ -509,7 +509,7 @@ module VCAP::CloudController
           let(:health_check_http_endpoint) { 'invalid' }
 
           it 'is invalid' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Health check http endpoint must be a valid URI path')
@@ -520,7 +520,7 @@ module VCAP::CloudController
           let(:health_check_timeout) { 0 }
 
           it 'is invalid' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Timeout must be greater than or equal to 1')
@@ -531,7 +531,7 @@ module VCAP::CloudController
           let(:health_check_timeout) { 'twenty' }
 
           it 'is invalid' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Timeout is not a number')
@@ -543,7 +543,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { "timeout": health_check_timeout } }
 
           it 'sets the health check timeout in the message' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
           end
@@ -553,7 +553,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { 'health-check-type' => 'port', 'health-check-http-endpoint' => '/endpoint' } }
 
           it 'is invalid' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Health check type must be "http" to set a health check HTTP endpoint')
@@ -564,7 +564,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { 'health-check-type' => 'http' } }
 
           it 'defaults endpoint to "/"' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.health_check_type).to eq('http')
             expect(message.manifest_process_update_message.health_check_endpoint).to eq('/')
@@ -575,7 +575,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { { 'health-check-type' => 'port' } }
 
           it 'does not default endpoint to "/"' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.health_check_type).to eq('port')
             expect(message.manifest_process_update_message.health_check_endpoint).to be_nil
@@ -588,7 +588,7 @@ module VCAP::CloudController
           let(:parsed_yaml) { {} }
 
           it 'does not set the command field in the process update message' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.requested?(:command)).to be false
           end
@@ -598,7 +598,7 @@ module VCAP::CloudController
           let(:command) { 'null' }
 
           it 'does not set the command field in the process update message' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.command).to eq('null')
           end
@@ -609,7 +609,7 @@ module VCAP::CloudController
           let(:command) { nil }
 
           it 'sets the field as null in the process update message' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.command).to eq('null')
           end
@@ -619,7 +619,7 @@ module VCAP::CloudController
           let(:command) { 'default' }
 
           it 'does not set the command field in the process update message' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).to be_valid
             expect(message.manifest_process_update_message.command).to eq('default')
           end
@@ -629,7 +629,7 @@ module VCAP::CloudController
           let(:command) { '' }
 
           it 'is not valid' do
-            message = AppManifestMessage.create_from_http_request(parsed_yaml)
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
@@ -643,7 +643,7 @@ module VCAP::CloudController
         end
 
         it 'does not set a command or health_check_type field' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_process_update_message.requested?(:command)).to be_falsey
           expect(message.manifest_process_update_message.requested?(:health_check)).to be_falsey
@@ -655,7 +655,7 @@ module VCAP::CloudController
       let(:parsed_yaml) { { 'env' => { 'foo' => 'bar', 'baz' => 4.44444444444, 'qux' => false } } }
 
       it 'returns a AppUpdateEnvironmentVariablesMessage containing the env vars' do
-        message = AppManifestMessage.create_from_http_request(parsed_yaml)
+        message = AppManifestMessage.create_from_yml(parsed_yaml)
         expect(message).to be_valid
         expect(message.app_update_environment_variables_message.var).
           to eq({ foo: 'bar', baz: '4.44444444444', qux: 'false' })
@@ -673,7 +673,7 @@ module VCAP::CloudController
 
       context 'when new properties are specified' do
         it 'sets the routes in the message' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_routes_update_message.manifest_routes).to all(be_a(ManifestRoute))
         end
@@ -685,7 +685,7 @@ module VCAP::CloudController
         end
 
         it 'does not set the routes in the message' do
-          message = AppManifestMessage.create_from_http_request(parsed_yaml)
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
           expect(message.manifest_routes_update_message.requested?(:routes)).to be_falsey
         end

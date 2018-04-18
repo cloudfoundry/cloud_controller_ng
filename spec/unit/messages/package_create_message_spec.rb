@@ -3,24 +3,6 @@ require 'messages/package_create_message'
 
 module VCAP::CloudController
   RSpec.describe PackageCreateMessage do
-    describe '.create_from_http_request' do
-      let(:body) { { 'type' => 'docker', 'relationships' => { 'app' => { 'data' => { 'guid' => 'guid' } } } } }
-
-      it 'returns the correct PackageCreateMessage' do
-        message = PackageCreateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(PackageCreateMessage)
-        expect(message.app_guid).to eq('guid')
-        expect(message.type).to eq('docker')
-      end
-
-      it 'converts requested keys to symbols' do
-        message = PackageCreateMessage.create_from_http_request(body)
-
-        expect(message.requested?(:type)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       let(:relationships) { { app: { data: { guid: 'some-guid' } } } }
 
@@ -181,12 +163,12 @@ module VCAP::CloudController
 
         it 'redacts the password field' do
           expect(message.audit_hash).to eq({
-            'relationships' => relationships,
+            'relationships' => relationships.deep_stringify_keys,
             'type' => 'docker',
             'data' => {
-              image: image,
-              username: docker_username,
-              password: '***'
+              'image' => image,
+              'username' => docker_username,
+              'password' => '***'
             }
           })
         end
@@ -203,7 +185,7 @@ module VCAP::CloudController
 
         it 'returns the audit_hash' do
           expect(message.audit_hash).to eq({
-            'relationships' => relationships,
+            'relationships' => relationships.deep_stringify_keys,
             'type' => 'buildpack',
           })
         end

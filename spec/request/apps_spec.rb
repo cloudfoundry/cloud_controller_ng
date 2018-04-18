@@ -624,7 +624,7 @@ RSpec.describe 'Apps' do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
                                                 stack: 'cflinuxfs2' } } }
     end
-    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.create_from_http_request(body) }
+    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
     let(:per_page) { 2 }
     let(:order_by) { '-created_at' }
 

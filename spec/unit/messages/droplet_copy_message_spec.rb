@@ -12,14 +12,14 @@ module VCAP::CloudController
     end
 
     it 'returns the correct DropletCopyMessage' do
-      message = DropletCopyMessage.create_from_http_request(body)
+      message = DropletCopyMessage.new(body)
 
       expect(message).to be_a(DropletCopyMessage)
       expect(message.app_guid).to eq('some-app-guid')
     end
 
     it 'converts requested keys to symbols' do
-      message = DropletCopyMessage.create_from_http_request(body)
+      message = DropletCopyMessage.new(body)
       expect(message.requested?(:relationships)).to be_truthy
     end
 

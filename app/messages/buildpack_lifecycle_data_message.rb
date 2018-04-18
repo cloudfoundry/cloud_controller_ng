@@ -2,10 +2,6 @@ module VCAP::CloudController
   class BuildpackLifecycleDataMessage < BaseMessage
     register_allowed_keys [:buildpacks, :stack]
 
-    def self.create_from_http_request(body)
-      BuildpackLifecycleDataMessage.new((body || {}).deep_symbolize_keys)
-    end
-
     validates_with NoAdditionalKeysValidator
 
     validates :stack,

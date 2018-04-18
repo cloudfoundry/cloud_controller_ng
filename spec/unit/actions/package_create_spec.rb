@@ -27,7 +27,7 @@ module VCAP::CloudController
           instance_of(PackageModel),
           user_audit_info,
           {
-            'relationships' => relationships,
+            'relationships' => relationships.deep_stringify_keys,
             'type' => type,
           }
         )
@@ -69,12 +69,12 @@ module VCAP::CloudController
             instance_of(PackageModel),
             user_audit_info,
             {
-              'relationships' => relationships,
+              'relationships' => relationships.deep_stringify_keys,
               'type' => type,
               'data' => {
-                image: image,
-                username: docker_username,
-                password: '***'
+                'image' => image,
+                'username' => docker_username,
+                'password' => '***'
               }
             }
           )

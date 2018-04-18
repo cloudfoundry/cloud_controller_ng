@@ -15,10 +15,6 @@ module VCAP::CloudController
 
     delegate :app_guid, to: :relationships_message
 
-    def self.create_from_http_request(body)
-      PackageCreateMessage.new(body.deep_symbolize_keys)
-    end
-
     def bits_type?
       type == 'bits'
     end
@@ -39,7 +35,7 @@ module VCAP::CloudController
       result = super
 
       if result['data']
-        result['data'][:password] = VCAP::CloudController::Presenters::V3::PackagePresenter::REDACTED_MESSAGE
+        result['data']['password'] = VCAP::CloudController::Presenters::V3::PackagePresenter::REDACTED_MESSAGE
       end
 
       result

@@ -3,37 +3,6 @@ require 'messages/service_binding_create_message'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingCreateMessage do
-    describe '.create_from_http_request' do
-      let(:body) {
-        {
-          'type' => 'pipe',
-          'name' => 'fluid',
-          'relationships' => {
-            'app' => {
-              'data' => {
-                'guid' => 'druid'
-              }
-            },
-            'service_instance' => {
-              'data' => {
-                'guid' => 'squid'
-              }
-            },
-          },
-        }
-      }
-
-      it 'returns the correct ServiceBindingCreateMessage' do
-        message = ServiceBindingCreateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(ServiceBindingCreateMessage)
-        expect(message.type).to eq('pipe')
-        expect(message.name).to eq('fluid')
-        expect(message.app_guid).to eq('druid')
-        expect(message.service_instance_guid).to eq('squid')
-      end
-    end
-
     describe 'validations' do
       let(:valid_body) {
         {

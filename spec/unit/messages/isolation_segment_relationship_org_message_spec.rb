@@ -3,30 +3,6 @@ require 'messages/isolation_segment_relationship_org_message'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentRelationshipOrgMessage do
-    describe '.create_from_http_request' do
-      let(:body) {
-        {
-          data: [
-            { 'guid' => 'some-guid' },
-            { 'guid' => 'some-guid-2' }
-          ]
-        }
-      }
-
-      it 'returns the correct IsolationSegmentRelationshipOrgMessage' do
-        message = IsolationSegmentRelationshipOrgMessage.create_from_http_request(body)
-
-        expect(message).to be_a(IsolationSegmentRelationshipOrgMessage)
-        expect(message.guids).to eq(['some-guid', 'some-guid-2'])
-      end
-
-      it 'converts requested keys to symbols' do
-        message = IsolationSegmentRelationshipOrgMessage.create_from_http_request(body)
-
-        expect(message.requested?(:data)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       context 'where there are no guids in the data' do
         let(:params) do

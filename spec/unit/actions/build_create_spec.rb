@@ -19,7 +19,7 @@ module VCAP::CloudController
     let(:environment_builder) { double(:environment_builder) }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'charles@las.gym', user_guid: '1234', user_name: 'charles') }
 
-    let(:staging_message) { BuildCreateMessage.create_from_http_request(request) }
+    let(:staging_message) { BuildCreateMessage.new(request) }
     let(:request) do
       {
         lifecycle: {

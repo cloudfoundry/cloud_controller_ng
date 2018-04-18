@@ -25,10 +25,6 @@ module VCAP::CloudController
     validates_with ManifestRoutesYAMLValidator
     validate :routes_are_uris
 
-    def self.create_from_http_request(body)
-      ManifestRoutesUpdateMessage.new(body.deep_symbolize_keys)
-    end
-
     def manifest_routes
       @manifest_routes ||= routes.map { |route| ManifestRoute.parse(route[:route]) }
     end

@@ -9,7 +9,7 @@ module VCAP::CloudController
       patch '/internal/v4/packages/:guid', :update
       def update(guid)
         payload = MultiJson.load(body)
-        message = ::VCAP::CloudController::InternalPackageUpdateMessage.create_from_http_request(payload)
+        message = ::VCAP::CloudController::InternalPackageUpdateMessage.new(payload)
         unprocessable!(message.errors.full_messages) unless message.valid?
 
         package = ::VCAP::CloudController::PackageModel.find(guid: guid)

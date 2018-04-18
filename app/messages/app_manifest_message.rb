@@ -33,8 +33,8 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    def self.create_from_http_request(parsed_yaml)
-      AppManifestMessage.new(AppManifestMessage.underscore_keys(parsed_yaml.deep_symbolize_keys))
+    def self.create_from_yml(parsed_yaml)
+      AppManifestMessage.new(underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
     def self.underscore_keys(yaml)

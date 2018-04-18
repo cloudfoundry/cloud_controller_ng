@@ -19,7 +19,7 @@ class BuildsController < ApplicationController
   end
 
   def create
-    message = BuildCreateMessage.create_from_http_request(params[:body])
+    message = BuildCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: message.package_guid).

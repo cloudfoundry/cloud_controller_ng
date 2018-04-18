@@ -3,27 +3,8 @@ require 'messages/manifest_process_update_message'
 
 module VCAP::CloudController
   RSpec.describe ManifestProcessUpdateMessage do
-    let(:message) { ManifestProcessUpdateMessage.create_from_http_request(body) }
+    let(:message) { ManifestProcessUpdateMessage.new(body) }
     let(:body) { {} }
-
-    describe '.create_from_http_request' do
-      let(:body) do
-        {
-          'command' => 'rspec spec',
-          'health_check_type' => 'http',
-          'health_check_http_endpoint' => '/health',
-          'timeout' => 42,
-        }
-      end
-
-      it 'returns the correct ManifestProcessUpdateMessage' do
-        expect(message).to be_a(ManifestProcessUpdateMessage)
-        expect(message.command).to eq('rspec spec')
-        expect(message.health_check_type).to eq('http')
-        expect(message.health_check_endpoint).to eq('/health')
-        expect(message.health_check_timeout).to eq(42)
-      end
-    end
 
     describe 'validations' do
       let(:message) { ManifestProcessUpdateMessage.new(params) }

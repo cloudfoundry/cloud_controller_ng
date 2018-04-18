@@ -6,10 +6,6 @@ module VCAP::CloudController
   class BuildCreateMessage < BaseMessage
     register_allowed_keys [:staging_memory_in_mb, :staging_disk_in_mb, :environment_variables, :lifecycle, :package]
 
-    def self.create_from_http_request(body)
-      BuildCreateMessage.new(body.deep_symbolize_keys)
-    end
-
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
@@ -40,7 +36,7 @@ module VCAP::CloudController
     end
 
     def buildpack_data
-      @buildpack_data ||= VCAP::CloudController::BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
+      @buildpack_data ||= VCAP::CloudController::BuildpackLifecycleDataMessage.new(lifecycle_data)
     end
 
     def lifecycle_data

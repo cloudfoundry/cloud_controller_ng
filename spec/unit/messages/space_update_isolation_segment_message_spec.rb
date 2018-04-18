@@ -3,25 +3,6 @@ require 'messages/space_update_isolation_segment_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceUpdateIsolationSegmentMessage do
-    describe '.create_from_http_request' do
-      let(:params) do
-        { data: { 'guid' => 'iso-seg-guid' } }
-      end
-
-      it 'returns the correct SpaceUpdateIsoSegMessage' do
-        message = SpaceUpdateIsolationSegmentMessage.create_from_http_request(params)
-
-        expect(message).to be_a(SpaceUpdateIsolationSegmentMessage)
-        expect(message.isolation_segment_guid).to eq('iso-seg-guid')
-      end
-
-      it 'converts a requested keys to symbols' do
-        message = SpaceUpdateIsolationSegmentMessage.create_from_http_request(params)
-
-        expect(message.requested?(:data)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       context 'when there is no guid in the data' do
         let(:symbolized_body) do

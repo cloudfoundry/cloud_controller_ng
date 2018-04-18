@@ -3,38 +3,6 @@ require 'messages/app_update_message'
 
 module VCAP::CloudController
   RSpec.describe AppUpdateMessage do
-    describe '.create_from_http_request' do
-      let(:body) {
-        {
-          'name' => 'some-name',
-          'lifecycle' => {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpacks' => ['some-buildpack'],
-              'stack' => 'some-stack'
-            }
-          }
-        }
-      }
-
-      it 'returns the correct AppUpdateMessage' do
-        message = AppUpdateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(AppUpdateMessage)
-        expect(message).to be_valid
-        expect(message.name).to eq('some-name')
-        expect(message.lifecycle[:data][:buildpacks].first).to eq('some-buildpack')
-        expect(message.lifecycle[:data][:stack]).to eq('some-stack')
-      end
-
-      it 'converts requested keys to symbols' do
-        message = AppUpdateMessage.create_from_http_request(body)
-
-        expect(message.requested?(:name)).to be_truthy
-        expect(message.requested?(:lifecycle)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:params) { { unexpected: 'foo' } }

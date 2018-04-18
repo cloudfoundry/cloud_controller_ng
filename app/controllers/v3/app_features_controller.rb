@@ -34,7 +34,7 @@ class AppFeaturesController < ApplicationController
     unauthorized! unless can_write?(space.guid)
     resource_not_found!(:feature) unless params[:name] == 'ssh'
 
-    message = VCAP::CloudController::AppFeatureUpdateMessage.create_from_http_request(params[:body])
+    message = VCAP::CloudController::AppFeatureUpdateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app.update(enable_ssh: message.enabled)

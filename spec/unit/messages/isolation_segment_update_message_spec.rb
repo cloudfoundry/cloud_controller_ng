@@ -3,27 +3,6 @@ require 'messages/isolation_segment_update_message'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentUpdateMessage do
-    describe '.create_from_http_request' do
-      let(:body) {
-        {
-          'name' => 'some-name',
-        }
-      }
-
-      it 'returns the correct IsolationSegmentMessage' do
-        message = IsolationSegmentUpdateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(IsolationSegmentUpdateMessage)
-        expect(message.name).to eq('some-name')
-      end
-
-      it 'converts requested keys to symbols' do
-        message = IsolationSegmentUpdateMessage.create_from_http_request(body)
-
-        expect(message.requested?(:name)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:params) {

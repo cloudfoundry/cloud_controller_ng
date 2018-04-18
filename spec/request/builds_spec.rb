@@ -146,7 +146,7 @@ RSpec.describe 'Builds' do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
                                                 stack: 'cflinuxfs2' } } }
     end
-    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.create_from_http_request(body) }
+    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
     before do
       VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
@@ -256,7 +256,7 @@ RSpec.describe 'Builds' do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
                                                 stack: 'cflinuxfs2' } } }
     end
-    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.create_from_http_request(body) }
+    let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
     before do
       VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)

@@ -32,7 +32,7 @@ class RouteMappingsController < ApplicationController
   end
 
   def create
-    message = RouteMappingsCreateMessage.create_from_http_request(params[:body])
+    message = RouteMappingsCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app, route, process, space, org = AddRouteFetcher.fetch(message)

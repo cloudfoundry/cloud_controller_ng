@@ -17,7 +17,7 @@ class SpacesV3Controller < ApplicationController
   end
 
   def create
-    message = SpaceCreateMessage.create_from_http_request(params[:body])
+    message = SpaceCreateMessage.new(params[:body])
     missing_org = 'Invalid organization. Ensure the organization exists and you have access to it.'
 
     unprocessable!(missing_org) unless can_read_from_org?(message.organization_guid)
@@ -52,7 +52,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless can_read?(space.guid, org.guid)
     unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
-    message = SpaceUpdateIsolationSegmentMessage.create_from_http_request(params[:body])
+    message = SpaceUpdateIsolationSegmentMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     SpaceUpdateIsolationSegment.new(user_audit_info).update(space, org, message)

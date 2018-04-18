@@ -33,7 +33,7 @@ class ServiceInstancesV3Controller < ApplicationController
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
-    message = VCAP::CloudController::ToManyRelationshipMessage.create_from_http_request(params[:body])
+    message = VCAP::CloudController::ToManyRelationshipMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     spaces = Space.where(guid: message.guids)

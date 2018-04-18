@@ -4,10 +4,6 @@ module VCAP::CloudController
   class SpaceUpdateIsolationSegmentMessage < BaseMessage
     register_allowed_keys [:data]
 
-    def self.create_from_http_request(body)
-      SpaceUpdateIsolationSegmentMessage.new(body.deep_symbolize_keys)
-    end
-
     def self.data_requested?
       @data_requested ||= proc { |a| a.requested?(:data) }
     end

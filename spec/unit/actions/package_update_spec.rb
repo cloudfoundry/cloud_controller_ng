@@ -23,7 +23,7 @@ module VCAP::CloudController
         }
       end
       let(:package) { PackageModel.make(state: PackageModel::PENDING_STATE) }
-      let(:message) { InternalPackageUpdateMessage.create_from_http_request(body) }
+      let(:message) { InternalPackageUpdateMessage.new(body) }
 
       it 'updates the package' do
         package_update.update(package, message)

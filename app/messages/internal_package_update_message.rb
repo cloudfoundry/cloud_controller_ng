@@ -4,10 +4,6 @@ module VCAP::CloudController
   class InternalPackageUpdateMessage < BaseMessage
     register_allowed_keys [:state, :checksums, :error]
 
-    def self.create_from_http_request(body)
-      InternalPackageUpdateMessage.new(body.deep_symbolize_keys)
-    end
-
     validates_with NoAdditionalKeysValidator
 
     validate :requested_state

@@ -3,25 +3,6 @@ require 'messages/orgs_default_iso_seg_update_message'
 
 module VCAP::CloudController
   RSpec.describe OrgDefaultIsoSegUpdateMessage do
-    describe '.create_from_http_request' do
-      let(:params) do
-        { 'data' => { 'guid' => 'iso-seg-guid' } }
-      end
-
-      it 'returns the correct OrgsUpdateMessage' do
-        message = OrgDefaultIsoSegUpdateMessage.create_from_http_request(params)
-
-        expect(message).to be_a(OrgDefaultIsoSegUpdateMessage)
-        expect(message.default_isolation_segment_guid).to eq('iso-seg-guid')
-      end
-
-      it 'converts a requested keys to symbols' do
-        message = OrgDefaultIsoSegUpdateMessage.create_from_http_request(params)
-
-        expect(message.requested?(:data)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       context 'when there is no guid in the data' do
         let(:symbolized_body) do

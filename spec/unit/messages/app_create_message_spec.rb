@@ -3,56 +3,6 @@ require 'messages/app_create_message'
 
 module VCAP::CloudController
   RSpec.describe AppCreateMessage do
-    describe '.create_from_http_request' do
-      let(:body) {
-        {
-          'name' => 'some-name',
-          'environment_variables' => {
-            'ENVVAR' => 'env-val'
-          },
-          'relationships' => {
-            'space' => {
-              'data' => {
-                'guid' => 'some-guid'
-              }
-            }
-          },
-          'lifecycle' => {
-            'type' => 'buildpack',
-            'data' => {
-              'buildpack' => 'some-buildpack',
-              'stack' => 'some-stack'
-            }
-          }
-        }
-      }
-
-      it 'returns the correct AppCreateMessage' do
-        message = AppCreateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(AppCreateMessage)
-        expect(message.name).to eq('some-name')
-        expect(message.space_guid).to eq('some-guid')
-        expect(message.environment_variables).to eq({ ENVVAR: 'env-val' })
-        expect(message.lifecycle).to eq(
-          { type: 'buildpack',
-            data: {
-              buildpack: 'some-buildpack',
-              stack: 'some-stack'
-            }
-          })
-      end
-
-      it 'converts requested keys to symbols' do
-        message = AppCreateMessage.create_from_http_request(body)
-
-        expect(message.requested?(:name)).to be_truthy
-        expect(message.requested?(:relationships)).to be_truthy
-        expect(message.requested?(:environment_variables)).to be_truthy
-        expect(message.requested?(:lifecycle)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:params) do

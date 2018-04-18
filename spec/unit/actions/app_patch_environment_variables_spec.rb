@@ -30,7 +30,7 @@ module VCAP::CloudController
           app_model,
           app_model.space,
           user_audit_info,
-          { 'environment_variables' => request_environment_variables },
+          { 'environment_variables' => request_environment_variables.deep_stringify_keys },
         )
 
         app_update.patch(app_model, message)

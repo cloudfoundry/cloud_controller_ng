@@ -105,7 +105,7 @@ class PackagesController < ApplicationController
   private
 
   def create_fresh
-    message = PackageCreateMessage.create_from_http_request(params[:body])
+    message = PackageCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first

@@ -12,25 +12,6 @@ module VCAP::CloudController
       }
     }
 
-    describe '.create_from_http_request' do
-      it 'returns a Message containing the requested env vars' do
-        message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(valid_body)
-
-        expect(message).to be_a(AppUpdateEnvironmentVariablesMessage)
-        expect(message.var).to eq(
-          {
-            ENV_VAR: 'env-value',
-            ANOTHER_VAR: 'another-value'
-          })
-      end
-
-      it 'converts requested keys to symbols' do
-        message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(valid_body)
-
-        expect(message.requested?(:var)).to be_truthy
-      end
-    end
-
     describe 'validations' do
       it 'returns no validation errors on a valid request' do
         message = AppUpdateEnvironmentVariablesMessage.new(valid_body.deep_symbolize_keys)

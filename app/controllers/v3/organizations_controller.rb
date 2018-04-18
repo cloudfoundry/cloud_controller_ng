@@ -38,7 +38,7 @@ class OrganizationsV3Controller < ApplicationController
   def create
     unauthorized! unless can_write_globally? || user_org_creation_enabled?
 
-    message = VCAP::CloudController::OrganizationCreateMessage.create_from_http_request(params[:body])
+    message = VCAP::CloudController::OrganizationCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = OrganizationCreate.new(perm_client: perm_client).create(message)
@@ -63,7 +63,7 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def update_default_isolation_segment
-    message = OrgDefaultIsoSegUpdateMessage.create_from_http_request(unmunged_body)
+    message = OrgDefaultIsoSegUpdateMessage.new(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = fetch_org(params[:guid])

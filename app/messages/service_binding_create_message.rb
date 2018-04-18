@@ -5,10 +5,6 @@ module VCAP::CloudController
     register_allowed_keys [:type, :name, :relationships, :data]
     ALLOWED_TYPES = ['app'].freeze
 
-    def self.create_from_http_request(body)
-      ServiceBindingCreateMessage.new(body.deep_symbolize_keys)
-    end
-
     validates_with NoAdditionalKeysValidator, RelationshipValidator, DataValidator
 
     validates :data, hash: true, allow_nil: true

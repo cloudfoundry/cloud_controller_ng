@@ -5,10 +5,6 @@ module VCAP::CloudController
   class AppCreateMessage < BaseMessage
     register_allowed_keys [:name, :environment_variables, :relationships, :lifecycle]
 
-    def self.create_from_http_request(body)
-      AppCreateMessage.new(body.deep_symbolize_keys)
-    end
-
     def self.lifecycle_requested?
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
@@ -39,7 +35,7 @@ module VCAP::CloudController
     end
 
     def buildpack_data
-      @buildpack_data ||= BuildpackLifecycleDataMessage.create_from_http_request(lifecycle_data)
+      @buildpack_data ||= BuildpackLifecycleDataMessage.new(lifecycle_data)
     end
 
     def relationships_message

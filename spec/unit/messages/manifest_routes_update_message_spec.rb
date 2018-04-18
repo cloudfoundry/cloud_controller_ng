@@ -3,52 +3,6 @@ require 'messages/manifest_routes_update_message'
 
 module VCAP::CloudController
   RSpec.describe ManifestRoutesUpdateMessage do
-    describe '.create_from_http_request' do
-      let(:body) do
-        { 'routes' =>
-          [
-            { 'route' => 'existing.example.com' },
-            { 'route' => 'new.example.com' },
-          ]
-        }
-      end
-
-      it 'returns the correct ManifestRoutesMessage' do
-        message = ManifestRoutesUpdateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(ManifestRoutesUpdateMessage)
-        expect(message.routes).to_not be_nil
-        expect(message.manifest_routes.map(&:to_hash)).to match_array([
-          {
-            candidate_host_domain_pairs: [
-              {
-                host: '',
-                domain: 'existing.example.com'
-              },
-              { host: 'existing',
-                domain: 'example.com'
-              }
-            ],
-            port: nil,
-            path: ''
-          },
-          {
-            candidate_host_domain_pairs: [
-              {
-                host: '',
-                domain: 'new.example.com'
-              },
-              { host: 'new',
-                domain: 'example.com'
-              }
-            ],
-            port: nil,
-            path: ''
-          }
-        ])
-      end
-    end
-
     describe 'yaml validations' do
       context 'when unexpected keys are requested' do
         let(:body) do
@@ -74,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          msg = ManifestRoutesUpdateMessage.create_from_http_request(body)
+          msg = ManifestRoutesUpdateMessage.new(body)
           expect(msg.valid?).to eq(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
         end
@@ -86,7 +40,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          msg = ManifestRoutesUpdateMessage.create_from_http_request(body)
+          msg = ManifestRoutesUpdateMessage.new(body)
           expect(msg.valid?).to eq(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
         end
@@ -98,7 +52,7 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          msg = ManifestRoutesUpdateMessage.create_from_http_request(body)
+          msg = ManifestRoutesUpdateMessage.new(body)
           expect(msg.valid?).to eq(false)
           expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
         end
@@ -117,7 +71,7 @@ module VCAP::CloudController
         end
 
         it 'returns true' do
-          msg = ManifestRoutesUpdateMessage.create_from_http_request(body)
+          msg = ManifestRoutesUpdateMessage.new(body)
 
           expect(msg.valid?).to eq(true)
         end
@@ -134,7 +88,7 @@ module VCAP::CloudController
         end
 
         it 'returns false' do
-          msg = ManifestRoutesUpdateMessage.create_from_http_request(body)
+          msg = ManifestRoutesUpdateMessage.new(body)
 
           expect(msg.valid?).to eq(false)
           expect(msg.errors.full_messages).to include("The route 'potato://bad.example.com' is not a properly formed URL")

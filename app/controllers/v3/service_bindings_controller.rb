@@ -11,7 +11,7 @@ class ServiceBindingsController < ApplicationController
   include AppSubResource
 
   def create
-    message = ServiceBindingCreateMessage.create_from_http_request(params[:body])
+    message = ServiceBindingCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)

@@ -16,10 +16,6 @@ module VCAP::CloudController
 
     delegate :organization_guid, to: :relationships_message
 
-    def self.create_from_http_request(body)
-      new(body.deep_symbolize_keys)
-    end
-
     def relationships_message
       @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
     end

@@ -123,8 +123,8 @@ module VCAP::CloudController
           {
             'command'      => 'new',
             'health_check' => {
-              type: 'process',
-              data: { timeout: 20 }
+              'type' => 'process',
+              'data' => { 'timeout' => 20 }
             }
           }
         )

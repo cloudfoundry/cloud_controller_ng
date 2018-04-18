@@ -20,7 +20,7 @@ class IsolationSegmentsController < ApplicationController
   def create
     unauthorized! unless roles.admin?
 
-    message = IsolationSegmentCreateMessage.create_from_http_request(params[:body])
+    message = IsolationSegmentCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     isolation_segment = nil
@@ -73,7 +73,7 @@ class IsolationSegmentsController < ApplicationController
 
     isolation_segment_model = find_isolation_segment(params[:guid])
 
-    message = IsolationSegmentUpdateMessage.create_from_http_request(params[:body])
+    message = IsolationSegmentUpdateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     IsolationSegmentUpdate.new.update(isolation_segment_model, message)
@@ -154,7 +154,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment_model = IsolationSegmentModel.first(guid: params[:guid])
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
-    message = IsolationSegmentRelationshipOrgMessage.create_from_http_request(params[:body])
+    message = IsolationSegmentRelationshipOrgMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organizations = Organization.where(guid: message.guids).all

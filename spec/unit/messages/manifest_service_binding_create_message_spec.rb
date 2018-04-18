@@ -3,19 +3,6 @@ require 'messages/manifest_service_binding_create_message'
 
 module VCAP::CloudController
   RSpec.describe ManifestServiceBindingCreateMessage do
-    describe '.create_from_http_request' do
-      let(:body) {
-        { 'services': ['s1', 's2'] }
-      }
-
-      it 'returns the correct ManifestServiceBindingCreateMessage' do
-        message = ManifestServiceBindingCreateMessage.create_from_http_request(body)
-
-        expect(message).to be_a(ManifestServiceBindingCreateMessage)
-        expect(message.services).to match_array(['s1', 's2'])
-      end
-    end
-
     describe 'validations' do
       let(:body) {
         { 'services': ['s1', 's2'] }

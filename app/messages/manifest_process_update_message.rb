@@ -4,10 +4,6 @@ module VCAP::CloudController
   class ManifestProcessUpdateMessage < BaseMessage
     register_allowed_keys [:command, :health_check_type, :health_check_http_endpoint, :timeout]
 
-    def self.create_from_http_request(body)
-      ManifestProcessUpdateMessage.new(body.deep_symbolize_keys)
-    end
-
     def self.health_check_endpoint_and_type_requested?
       proc { |a| a.requested?(:health_check_type) && a.requested?(:health_check_http_endpoint) }
     end
@@ -36,8 +32,8 @@ module VCAP::CloudController
 
     def initialize(params={})
       super(params)
-      @requested_keys << :health_check_timeout if params[:timeout]
-      @requested_keys << :health_check_endpoint if params[:health_check_http_endpoint]
+      @requested_keys << :health_check_timeout if requested? :timeout
+      @requested_keys << :health_check_endpoint if requested? :health_check_http_endpoint
     end
 
     def health_check_endpoint

@@ -26,7 +26,7 @@ module VCAP::CloudController
           },
         }
       end
-      let(:message) { ServiceBindingCreateMessage.create_from_http_request(request) }
+      let(:message) { ServiceBindingCreateMessage.new(request) }
       let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
       let(:logger) { instance_double(Steno::Logger) }
       let(:arbitrary_parameters) { {} }

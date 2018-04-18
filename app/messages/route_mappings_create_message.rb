@@ -13,10 +13,6 @@ module VCAP::CloudController
     validates :process, hash: true, allow_nil: true
     validates :process_type, string: true, allow_nil: true
 
-    def self.create_from_http_request(body)
-      new(body.deep_symbolize_keys)
-    end
-
     def app
       HashUtils.dig(relationships, :app)
     end

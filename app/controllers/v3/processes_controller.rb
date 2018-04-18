@@ -43,7 +43,7 @@ class ProcessesController < ApplicationController
   end
 
   def update
-    message = ProcessUpdateMessage.create_from_http_request(unmunged_body)
+    message = ProcessUpdateMessage.new(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     ProcessUpdate.new(user_audit_info).update(@process, message, NonManifestStrategy)
@@ -64,7 +64,7 @@ class ProcessesController < ApplicationController
   def scale
     FeatureFlag.raise_unless_enabled!(:app_scaling)
 
-    message = ProcessScaleMessage.create_from_http_request(params[:body])
+    message = ProcessScaleMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     ProcessScale.new(user_audit_info, @process, message).scale

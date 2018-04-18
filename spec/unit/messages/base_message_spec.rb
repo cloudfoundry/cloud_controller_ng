@@ -3,6 +3,26 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   RSpec.describe BaseMessage do
+    describe '.initialize' do
+      let(:fake_class) do
+        Class.new(BaseMessage) do
+          register_allowed_keys []
+        end
+      end
+
+      it 'symbolizes keys' do
+        message = fake_class.new({ 'foo' => 'bar' })
+        expect(message.requested?(:foo)).to be_truthy
+      end
+
+      it 'does not mutate the params for initialization' do
+        params = { 'foo' => 'bar' }
+        fake_class.new(params)
+        expect(params['foo']).to eq('bar')
+        expect(params).not_to have_key(:foo)
+      end
+    end
+
     describe '#requested?' do
       it 'returns true if the key was requested, false otherwise' do
         FakeClass = Class.new(BaseMessage) do

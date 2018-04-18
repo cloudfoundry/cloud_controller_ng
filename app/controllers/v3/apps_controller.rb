@@ -71,7 +71,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def create
-    message = AppCreateMessage.create_from_http_request(params[:body])
+    message = AppCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
@@ -92,7 +92,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def update
-    message = AppUpdateMessage.create_from_http_request(params[:body])
+    message = AppUpdateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(params[:guid])
@@ -215,7 +215,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
 
-    message = AppUpdateEnvironmentVariablesMessage.create_from_http_request(params[:body])
+    message = AppUpdateEnvironmentVariablesMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message)

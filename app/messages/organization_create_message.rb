@@ -11,9 +11,5 @@ module VCAP::CloudController
       length: { maximum: 255 },
       format: { with: ->(_) { Organization::ORG_NAME_REGEX }, message: 'must not contain escaped characters' },
       allow_nil: true
-
-    def self.create_from_http_request(body)
-      OrganizationCreateMessage.new(body.deep_symbolize_keys)
-    end
   end
 end

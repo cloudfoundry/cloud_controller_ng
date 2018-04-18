@@ -9,9 +9,5 @@ module VCAP::CloudController
     validates :disk_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
     validates :droplet_guid, guid: true, allow_nil: true
-
-    def self.create_from_http_request(body)
-      new(body.deep_symbolize_keys)
-    end
   end
 end

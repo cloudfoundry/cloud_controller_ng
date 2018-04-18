@@ -4,10 +4,6 @@ module VCAP::CloudController
   class IsolationSegmentRelationshipOrgMessage < BaseMessage
     register_allowed_keys [:data]
 
-    def self.create_from_http_request(body)
-      IsolationSegmentRelationshipOrgMessage.new(body.deep_symbolize_keys)
-    end
-
     validates_with NoAdditionalKeysValidator
     validates :data, presence: true, array: true, allow_nil: false, allow_blank: false
     validates_each :data do |record, attr, values|

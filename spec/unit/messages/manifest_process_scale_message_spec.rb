@@ -144,25 +144,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe '.create_from_http_request' do
-      let(:body) { { 'instances' => 3, 'disk_quota' => 2048, 'memory' => 1025.0 } }
-
-      it 'returns a ManifestProcessScaleMessage' do
-        message = ManifestProcessScaleMessage.create_from_http_request(body)
-
-        expect(message).to be_a(ManifestProcessScaleMessage)
-        expect(message.errors).to be_empty
-        expect(message.memory).to eq(1025)
-        expect(message.disk_quota).to eq(2048)
-        expect(message.instances).to eq(3)
-      end
-
-      it 'converts requested keys to symbols' do
-        message = ManifestProcessScaleMessage.create_from_http_request(body)
-
-        expect(message.requested?(:instances)).to be_truthy
-      end
-    end
   end
 end

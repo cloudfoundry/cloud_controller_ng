@@ -121,22 +121,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe '.create_from_http_request' do
-      let(:body) { { 'instances' => 3 } }
-
-      it 'returns the correct ProcessScaleMessage' do
-        message = ProcessScaleMessage.create_from_http_request(body)
-
-        expect(message).to be_a(ProcessScaleMessage)
-        expect(message.instances).to eq(3)
-      end
-
-      it 'converts requested keys to symbols' do
-        message = ProcessScaleMessage.create_from_http_request(body)
-
-        expect(message.requested?(:instances)).to be_truthy
-      end
-    end
   end
 end

@@ -4,12 +4,9 @@ module VCAP::CloudController
   class ProcessUpdateMessage < BaseMessage
     register_allowed_keys [:command, :health_check]
 
-    def self.create_from_http_request(body)
-      ProcessUpdateMessage.new(body.deep_symbolize_keys)
-    end
-
     def initialize(params={})
       super(params)
+      params = params.deep_symbolize_keys
       @requested_keys << :health_check_type if HashUtils.dig(params, :health_check)&.key?(:type)
       @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:timeout)
       @requested_keys << :health_check_endpoint if HashUtils.dig(params, :health_check, :data)&.key?(:endpoint)

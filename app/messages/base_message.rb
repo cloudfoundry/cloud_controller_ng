@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     def initialize(params={})
-      params = params ? params.symbolize_keys : {}
+      params = params ? params.deep_symbolize_keys : {}
       @requested_keys   = params.keys
       disallowed_params = params.slice!(*allowed_keys)
       @extra_keys       = disallowed_params.keys
@@ -29,9 +29,9 @@ module VCAP::CloudController
       request = {}
       requested_keys.each do |key|
         next if exclude.include?(key)
-        request[key.to_s] = self.try(key)
+        request[key] = self.try(key)
       end
-      request
+      request.deep_stringify_keys
     end
 
     def to_param_hash(opts={ exclude: [] })

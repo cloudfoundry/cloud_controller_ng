@@ -41,7 +41,7 @@ class TasksController < ApplicationController
   def create
     FeatureFlag.raise_unless_enabled!(:task_creation)
 
-    message = TaskCreateMessage.create_from_http_request(params[:body])
+    message = TaskCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
