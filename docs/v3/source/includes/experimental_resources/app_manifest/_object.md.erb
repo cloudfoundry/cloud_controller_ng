@@ -10,6 +10,7 @@ Field | Description
 **health-check-type** | Type of health check to perform. `none` is deprecated and an alias to `process`.
 **instances** | The number of instances to run.
 **memory** | The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
+**routes** | An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: `- route: www.example.com/path`
 **services** | An array of service-instance names to bind to the app.
 **stack** | The root filesystem to use with the buildpack, for example `cflinuxfs2`.
 **timeout** | Time in seconds at which the health-check will report failure.
