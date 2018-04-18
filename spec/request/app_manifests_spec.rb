@@ -4,6 +4,9 @@ RSpec.describe 'App Manifests' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:space) { VCAP::CloudController::Space.make }
+  let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+  let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space) }
+  let(:second_route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path') }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
 
@@ -31,7 +34,11 @@ RSpec.describe 'App Manifests' do
               'k1' => 'mangos',
               'k2' => 'pears',
               'k3' => 'watermelon'
-            }
+            },
+            'routes' => [
+              { 'route' => "https://#{route.host}.#{route.domain.name}" },
+              { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
+            ],
           }
         ]
       }.to_yaml
@@ -44,9 +51,11 @@ RSpec.describe 'App Manifests' do
       post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
       expect(last_response.status).to eq(202)
-      expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{VCAP::CloudController::PollableJobModel.last.guid}))
+      job_guid = VCAP::CloudController::PollableJobModel.last.guid
+      expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
 
       Delayed::Worker.new.work_off
+      expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
 
       web_process.reload
       expect(web_process.instances).to eq(4)
@@ -66,6 +75,7 @@ RSpec.describe 'App Manifests' do
         'k2' => 'pears',
         'k3' => 'watermelon'
       )
+      expect(app_model.routes).to match_array([route, second_route])
     end
   end
 end
