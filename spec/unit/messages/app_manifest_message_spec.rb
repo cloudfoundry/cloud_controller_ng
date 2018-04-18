@@ -264,6 +264,47 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to match_array(['Routes must be a list of route hashes'])
           end
         end
+
+        context 'when no-route is specified' do
+          let(:params) { { 'no-route' => no_route_val } }
+
+          context 'when no-route is true' do
+            let(:no_route_val) { true }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params)
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when no-route is not a boolean' do
+            let(:no_route_val) { 'I am a free s0mjgnbha' }
+
+            it 'is not valid' do
+              message = AppManifestMessage.create_from_yml(params)
+              expect(message).not_to be_valid
+              expect(message.errors.full_messages).to match_array(['No-route must be a boolean'])
+            end
+          end
+
+          context 'when no-route is true and routes are specified' do
+            let(:params) do
+              {
+                no_route: true,
+                routes:
+                [
+                  { route: 'http://example.com' }
+                ]
+              }
+            end
+
+            it 'is not valid' do
+              message = AppManifestMessage.create_from_yml(params)
+              expect(message).not_to be_valid
+              expect(message.errors.full_messages).to match_array(['Cannot use the combination of properties: no-route, routes'])
+            end
+          end
+        end
       end
 
       describe 'services bindings' do

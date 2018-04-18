@@ -6,6 +6,7 @@ module VCAP::CloudController
     subject(:app_apply_manifest) { AppApplyManifest.new(user_audit_info) }
     let(:user_audit_info) { instance_double(UserAuditInfo) }
     let(:process_scale) { instance_double(ProcessScale) }
+    let(:route_mapping_delete) { instance_double(RouteMappingDelete) }
     let(:app_update) { instance_double(AppUpdate) }
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
     let(:process_update) { instance_double(ProcessUpdate) }
@@ -25,7 +26,11 @@ module VCAP::CloudController
           to receive(:new).and_return(process_update)
         allow(process_update).to receive(:update)
 
-        allow(RouteUpdate).to receive(:update)
+        allow(ManifestRouteUpdate).to receive(:update)
+
+        allow(RouteMappingDelete).
+          to receive(:new).and_return(route_mapping_delete)
+        allow(route_mapping_delete).to receive(:delete)
 
         allow(ServiceBindingCreate).
           to receive(:new).and_return(service_binding_create)
@@ -339,9 +344,53 @@ module VCAP::CloudController
             ).to eq(app)
           end
 
-          it 'calls RoutesUpdate with the correct arguments' do
+          it 'calls ManifestRouteUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(RouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
+            expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
+          end
+        end
+      end
+
+      describe 'deleting existing routes' do
+        let(:manifest_routes_update_message) { message.manifest_routes_update_message }
+        let(:process) { ProcessModel.make }
+        let(:app) { process.app }
+        let(:route1) { Route.make(space: app.space) }
+        let(:route2) { Route.make(space: app.space) }
+        let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: process.type) }
+        let!(:route_mapping2) { RouteMappingModel.make(app: app, route: route2, process_type: process.type) }
+
+        context 'when no_route is true' do
+          let(:message) { AppManifestMessage.new({ name: 'blah', no_route: true }) }
+
+          context 'when the request is valid' do
+            it 'returns the app' do
+              expect(
+                app_apply_manifest.apply(app.guid, message)
+              ).to eq(app)
+            end
+
+            it 'calls RouteMappingDelete with the routes' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(route_mapping_delete).to have_received(:delete).with([route_mapping1, route_mapping2])
+            end
+          end
+        end
+
+        context 'when no_route is false' do
+          let(:message) { AppManifestMessage.new({ name: 'blah', no_route: false }) }
+
+          context 'when the request is valid' do
+            it 'returns the app' do
+              expect(
+                app_apply_manifest.apply(app.guid, message)
+              ).to eq(app)
+            end
+
+            it 'does not call RouteMappingDelete' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(route_mapping_delete).not_to have_received(:delete)
+            end
           end
         end
       end

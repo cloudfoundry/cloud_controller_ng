@@ -17,6 +17,7 @@ module VCAP::CloudController
       :timeout,
       :instances,
       :memory,
+      :no_route,
       :routes,
       :services,
       :stack
@@ -30,8 +31,6 @@ module VCAP::CloudController
                   :manifest_process_update_message,
                   :manifest_service_bindings_message,
                   :manifest_routes_update_message
-
-    validates_with NoAdditionalKeysValidator
 
     def self.create_from_yml(parsed_yaml)
       AppManifestMessage.new(underscore_keys(parsed_yaml.deep_symbolize_keys))
@@ -58,7 +57,7 @@ module VCAP::CloudController
       validate_process_scale_message!
       validate_process_update_message!
       validate_app_update_message!
-      validate_manifest_routes_update_message! if requested?(:routes)
+      validate_manifest_routes_update_message! if requested?(:routes) || requested?(:no_route)
       validate_service_bindings_message! if requested?(:services)
       validate_env_update_message! if requested?(:env)
 
@@ -119,6 +118,7 @@ module VCAP::CloudController
     def routes_attribute_mapping
       mapping = {}
       mapping[:routes] = routes if requested?(:routes)
+      mapping[:no_route] = no_route if requested?(:no_route)
       mapping
     end
 

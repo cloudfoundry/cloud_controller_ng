@@ -77,5 +77,40 @@ RSpec.describe 'App Manifests' do
       )
       expect(app_model.routes).to match_array([route, second_route])
     end
+
+    describe 'no-route' do
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            { 'name' => 'blah',
+              'no-route' => true,
+            }
+          ]
+        }.to_yaml
+      end
+      let!(:route_mapping) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          process_type: process.type
+        )
+      end
+
+      it 'deletes the existing route' do
+        expect(app_model.routes).to match_array([route])
+
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
+
+        app_model.reload
+        expect(app_model.routes).to be_empty
+      end
+    end
   end
 end

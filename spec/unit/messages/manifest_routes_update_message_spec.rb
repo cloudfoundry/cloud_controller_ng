@@ -22,6 +22,80 @@ module VCAP::CloudController
         end
       end
 
+      context 'when no_route is requested' do
+        let(:body) do
+          { 'no_route' => true }
+        end
+
+        it 'is valid' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+          expect(msg.valid?).to eq(true)
+        end
+      end
+
+      context 'when no_route is not a boolean' do
+        let(:body) do
+          { 'no_route' => 'tru' }
+        end
+
+        it 'is not valid' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+          expect(msg.valid?).to eq(false)
+          expect(msg.errors.full_messages).to include('No-route must be a boolean')
+        end
+      end
+
+      context 'when no_route is true and routes are specified' do
+        let(:body) do
+          {
+            'no_route' => true,
+            'routes' => routes
+          }
+        end
+
+        context 'when we provide zero routes' do
+          let(:routes) { [] }
+
+          it 'is not valid' do
+            msg = ManifestRoutesUpdateMessage.new(body)
+            expect(msg.valid?).to eq(false)
+            expect(msg.errors.full_messages).to include('Cannot use the combination of properties: no-route, routes')
+          end
+        end
+
+        context 'when we provide one or more routes' do
+          let(:routes) do
+            [
+              { 'route' => 'existing.example.com' },
+              { 'route' => 'new.example.com' },
+            ]
+          end
+
+          it 'is not valid' do
+            msg = ManifestRoutesUpdateMessage.new(body)
+            expect(msg.valid?).to eq(false)
+            expect(msg.errors.full_messages).to include('Cannot use the combination of properties: no-route, routes')
+          end
+        end
+      end
+
+      context 'when no_route is false and routes are specified' do
+        let(:body) do
+          {
+            'no_route' => false,
+            'routes' => [
+              { 'route' => 'existing.example.com' },
+              { 'route' => 'new.example.com' },
+            ]
+          }
+        end
+
+        it 'is  valid' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+          expect(msg.valid?).to eq(true)
+        end
+      end
+
       context 'when routes is not an array' do
         let(:body) do
           { routes: 'im-so-not-an-array' }

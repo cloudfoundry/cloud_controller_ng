@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'actions/route_update'
+require 'actions/manifest_route_update'
 
 module VCAP::CloudController
-  RSpec.describe RouteUpdate do
+  RSpec.describe ManifestRouteUpdate do
     let(:message) do
       ManifestRoutesUpdateMessage.new(
         routes: [
@@ -28,7 +28,7 @@ module VCAP::CloudController
 
           it 'does not attempt to re-map the route to the app' do
             expect {
-              RouteUpdate.update(app.guid, message, user_audit_info)
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
             }.not_to change { route_mapping.reload.updated_at }
           end
         end
@@ -37,7 +37,7 @@ module VCAP::CloudController
           it 'uses the existing route and creates a new mapping' do
             num_routes = Route.count
             num_maps = app.routes.length
-            RouteUpdate.update(app.guid, message, user_audit_info)
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
 
             routes = app.reload.routes
             expect(routes.length).to eq(num_routes + 0)
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
           it 'creates and maps the route to the app' do
             expect {
-              RouteUpdate.update(app.guid, message, user_audit_info)
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
             }.to change { app.reload.routes.length }.by(1)
             routes = app.reload.routes
             expect(routes.length).to eq 1
@@ -82,7 +82,7 @@ module VCAP::CloudController
 
             it 'creates and maps the route to the app' do
               expect {
-                RouteUpdate.update(app.guid, message, user_audit_info)
+                ManifestRouteUpdate.update(app.guid, message, user_audit_info)
               }.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq 1
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
             it 'creates and maps the route to the app' do
               expect {
-                RouteUpdate.update(app.guid, message, user_audit_info)
+                ManifestRouteUpdate.update(app.guid, message, user_audit_info)
               }.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq 1
@@ -137,7 +137,7 @@ module VCAP::CloudController
 
             it 'creates and maps the route to the app' do
               expect {
-                RouteUpdate.update(app.guid, message, user_audit_info)
+                ManifestRouteUpdate.update(app.guid, message, user_audit_info)
               }.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq 1
@@ -160,7 +160,7 @@ module VCAP::CloudController
 
             it 'raises an error' do
               expect {
-                RouteUpdate.update(app.guid, message, user_audit_info)
+                ManifestRouteUpdate.update(app.guid, message, user_audit_info)
               }.to raise_error(CloudController::Errors::ApiError)
             end
           end
@@ -184,7 +184,7 @@ module VCAP::CloudController
 
             it 'creates and maps the route to the app' do
               expect {
-                RouteUpdate.update(app.guid, message, user_audit_info)
+                ManifestRouteUpdate.update(app.guid, message, user_audit_info)
               }.to change { app.reload.routes.length }.by(1)
               routes = app.reload.routes
               expect(routes.length).to eq(1)
@@ -204,7 +204,7 @@ module VCAP::CloudController
 
             it 'raises an unauthorized error' do
               expect {
-                RouteUpdate.update(app.guid, message, user_audit_info)
+                ManifestRouteUpdate.update(app.guid, message, user_audit_info)
               }.to raise_error(CloudController::Errors::ApiError)
             end
           end
@@ -213,7 +213,7 @@ module VCAP::CloudController
         context 'when the domain does not exist' do
           it 'raises a route invalid error' do
             expect {
-              RouteUpdate.update(app.guid, message, user_audit_info)
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
             }.to raise_error(VCAP::CloudController::RouteValidator::RouteInvalid,
               "no domains exist for route #{message.routes.first[:route]}")
           end
@@ -226,7 +226,7 @@ module VCAP::CloudController
 
           it 'raises an error' do
             expect {
-              RouteUpdate.update(app.guid, message, user_audit_info)
+              ManifestRouteUpdate.update(app.guid, message, user_audit_info)
             }.to raise_error(Route::InvalidOrganizationRelation)
           end
         end
@@ -237,7 +237,7 @@ module VCAP::CloudController
         let!(:broader_domain) { VCAP::CloudController::SharedDomain.make(name: 'avocado-toast.com') }
 
         it 'creates the route in the most specific domain' do
-          RouteUpdate.update(app.guid, message, user_audit_info)
+          ManifestRouteUpdate.update(app.guid, message, user_audit_info)
 
           routes = app.reload.routes
           expect(routes.length).to eq(1)
@@ -252,8 +252,8 @@ module VCAP::CloudController
 
         it('raises an error indicating that a host must be provided') do
           expect {
-            RouteUpdate.update(app.guid, message, user_audit_info)
-          }.to raise_error(RouteUpdate::InvalidRoute, /host is required for shared-domains/)
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /host is required for shared-domains/)
         end
       end
 
@@ -269,8 +269,8 @@ module VCAP::CloudController
 
         it('raises an error indicating that the host format is invalid') do
           expect {
-            RouteUpdate.update(app.guid, message, user_audit_info)
-          }.to raise_error(RouteUpdate::InvalidRoute, /host format/)
+            ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+          }.to raise_error(ManifestRouteUpdate::InvalidRoute, /host format/)
         end
       end
     end
