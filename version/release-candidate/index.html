@@ -7813,6 +7813,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
 </tr>
 <tr>
+<td><strong>routes</strong></td>
+<td>An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: <code class="prettyprint">- route: www.example.com/path</code></td>
+</tr>
+<tr>
 <td><strong>services</strong></td>
 <td>An array of service-instance names to bind to the app.</td>
 </tr>
