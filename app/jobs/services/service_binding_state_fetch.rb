@@ -70,7 +70,7 @@ module VCAP::CloudController
         def set_binding_failed_state(service_binding, logger)
           service_binding.last_operation.update(
             state: 'failed',
-            description: 'The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.'
+            description: 'A valid binding could not be fetched from the service broker.',
           )
           SynchronousOrphanMitigate.new(logger).attempt_unbind(service_binding)
         end

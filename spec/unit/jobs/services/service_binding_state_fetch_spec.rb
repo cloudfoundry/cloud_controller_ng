@@ -101,8 +101,7 @@ module VCAP::CloudController
                   run_job(job)
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(service_binding.last_operation.description).
-                    to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
+                  expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
                 it 'should not create an audit event' do
@@ -141,8 +140,7 @@ module VCAP::CloudController
                   run_job(job)
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(service_binding.last_operation.description).
-                    to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
+                  expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
                 it 'should not create an audit event' do
@@ -181,8 +179,7 @@ module VCAP::CloudController
                   run_job(job)
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
-                  expect(service_binding.last_operation.description).
-                    to eq('The service broker returned an invalid binding, an attempt to delete the binding from the broker has been made.')
+                  expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
                 it 'should not create an audit event' do
