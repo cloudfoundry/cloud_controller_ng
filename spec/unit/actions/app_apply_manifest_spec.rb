@@ -391,6 +391,17 @@ module VCAP::CloudController
             expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
           end
         end
+
+        context 'when the message specifies an empty list of routes' do
+          let(:message) { AppManifestMessage.new({ name: 'blah', random_route: true,
+            routes: [] })
+          }
+
+          it 'ignores the random_route' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
+          end
+        end
       end
 
       describe 'deleting existing routes' do
