@@ -11,9 +11,12 @@ module VCAP::CloudController
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
     let(:process_update) { instance_double(ProcessUpdate) }
     let(:service_binding_create) { instance_double(ServiceBindingCreate) }
+    let(:random_route_generator) { instance_double(RandomRouteGenerator, route: 'spiffy/donut') }
 
     describe '#apply' do
       before do
+        CloudController::DependencyLocator.instance.register(:random_route_generator, random_route_generator)
+
         allow(ProcessScale).
           to receive(:new).and_return(process_scale)
         allow(process_scale).to receive(:scale)
@@ -351,6 +354,45 @@ module VCAP::CloudController
         end
       end
 
+      describe 'updating with a random-route' do
+        let(:message) { AppManifestMessage.new({ name: 'blah', random_route: true }) }
+        let(:manifest_routes_update_message) { message.manifest_routes_update_message }
+        let(:process) { ProcessModel.make }
+        let(:app) { process.app }
+
+        context 'when the app has no routes and the message specifies no routes' do
+          it 'provides a random route' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ManifestRouteUpdate).to have_received(:update) do |guid, msg, audit_info|
+              expect(guid).to eq(app.guid)
+              expect(msg.routes.first[:route]).to eq("#{app.name}-spiffy/donut.#{Domain.first.name}")
+              expect(audit_info).to eq(user_audit_info)
+            end
+          end
+        end
+
+        context 'when the app has existing routes' do
+          let(:route1) { Route.make(space: app.space) }
+          let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: process.type) }
+
+          it 'ignores the random_route' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ManifestRouteUpdate).not_to have_received(:update)
+          end
+        end
+
+        context 'when the message specifies routes' do
+          let(:message) { AppManifestMessage.new({ name: 'blah', random_route: true,
+                                                   routes: [{ route: 'billy.tabasco.com' }] })
+          }
+
+          it 'ignores the random_route but uses the routes' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
+          end
+        end
+      end
+
       describe 'deleting existing routes' do
         let(:manifest_routes_update_message) { message.manifest_routes_update_message }
         let(:process) { ProcessModel.make }
@@ -361,7 +403,7 @@ module VCAP::CloudController
         let!(:route_mapping2) { RouteMappingModel.make(app: app, route: route2, process_type: process.type) }
 
         context 'when no_route is true' do
-          let(:message) { AppManifestMessage.new({ name: 'blah', no_route: true }) }
+          let(:message) { AppManifestMessage.new({ name: 'blah', no_route: true, random_route: true }) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -373,6 +415,11 @@ module VCAP::CloudController
             it 'calls RouteMappingDelete with the routes' do
               app_apply_manifest.apply(app.guid, message)
               expect(route_mapping_delete).to have_received(:delete).with(array_including(route_mapping1, route_mapping2))
+            end
+
+            it 'does not generate a random route' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ManifestRouteUpdate).not_to have_received(:update)
             end
           end
         end

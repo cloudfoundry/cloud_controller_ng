@@ -18,6 +18,7 @@ module VCAP::CloudController
       :instances,
       :memory,
       :no_route,
+      :random_route,
       :routes,
       :services,
       :stack
@@ -57,7 +58,7 @@ module VCAP::CloudController
       validate_process_scale_message!
       validate_process_update_message!
       validate_app_update_message!
-      validate_manifest_routes_update_message! if requested?(:routes) || requested?(:no_route)
+      validate_manifest_routes_update_message! if requested?(:routes) || requested?(:no_route) || requested?(:random_route)
       validate_service_bindings_message! if requested?(:services)
       validate_env_update_message! if requested?(:env)
 
@@ -119,6 +120,7 @@ module VCAP::CloudController
       mapping = {}
       mapping[:routes] = routes if requested?(:routes)
       mapping[:no_route] = no_route if requested?(:no_route)
+      mapping[:random_route] = random_route if requested?(:random_route)
       mapping
     end
 

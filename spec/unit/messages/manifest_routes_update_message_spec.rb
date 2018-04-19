@@ -131,6 +131,18 @@ module VCAP::CloudController
           expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
         end
       end
+
+      context 'when random_route is not a boolean' do
+        let(:body) do
+          { 'random_route' => 'vicuna' }
+        end
+
+        it 'is not valid' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+          expect(msg.valid?).to eq(false)
+          expect(msg.errors.full_messages).to include('Random-route must be a boolean')
+        end
+      end
     end
 
     describe 'route validations' do

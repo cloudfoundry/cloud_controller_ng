@@ -22,12 +22,7 @@ module VCAP::CloudController
 
       ProcessUpdate.new(@user_audit_info).update(app.web_process, message.manifest_process_update_message, ManifestStrategy)
 
-      if message.manifest_routes_update_message.no_route
-        route_mappings_to_delete = RouteMappingModel.where(app_guid: app.guid).to_a
-        RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete)
-      else
-        ManifestRouteUpdate.update(app.guid, message.manifest_routes_update_message, @user_audit_info)
-      end
+      do_route_update(app, message)
 
       AppPatchEnvironmentVariables.new(@user_audit_info).patch(app, message.app_update_environment_variables_message)
       create_service_instances(message, app)
@@ -35,6 +30,29 @@ module VCAP::CloudController
     end
 
     private
+
+    def do_route_update(app, message)
+      update_message = message.manifest_routes_update_message
+      existing_routes = RouteMappingModel.where(app_guid: app.guid).all
+
+      if update_message.no_route
+        RouteMappingDelete.new(@user_audit_info).delete(existing_routes)
+        return
+      end
+
+      if update_message.routes
+        ManifestRouteUpdate.update(app.guid, update_message, @user_audit_info)
+        return
+      end
+
+      if update_message.random_route && existing_routes.size == 0
+        qualifier = CloudController::DependencyLocator.instance.random_route_generator.route
+        domain = Domain.first.name
+        route = "#{app.name}-#{qualifier}.#{domain}"
+        random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
+        ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
+      end
+    end
 
     def create_service_instances(message, app)
       return unless message.services.present?

@@ -235,6 +235,12 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
+  describe '#random_route_generator' do
+    subject { locator.random_route_generator }
+
+    it { is_expected.to be_a(VCAP::CloudController::RandomRouteGenerator) }
+  end
+
   describe '#space_event_repository' do
     subject { locator.space_event_repository }
 

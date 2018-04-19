@@ -79,7 +79,8 @@ RSpec.describe AppManifestsController, type: :controller do
                                  'health-check-http-endpoint' => '/endpoint',
                                  'health-check-type' => 'foo',
                                  'timeout' => -42,
-                                 'routes' => [{ 'route' => 'garbage' }]
+                                 'random-route' => -42,
+                                 'routes' => [{ 'route' => 'garbage' }],
           }] }
         end
 
@@ -87,7 +88,7 @@ RSpec.describe AppManifestsController, type: :controller do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(8)
+          expect(errors.size).to eq(9)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
               'detail' => 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
@@ -121,7 +122,11 @@ RSpec.describe AppManifestsController, type: :controller do
               'detail' => "The route 'garbage' is not a properly formed URL",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
-            }
+            }, {
+            'detail' => 'Random-route must be a boolean',
+            'title' => 'CF-UnprocessableEntity',
+            'code' => 10008
+          }
           ])
         end
       end

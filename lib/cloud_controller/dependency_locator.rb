@@ -62,6 +62,10 @@ module CloudController
       @dependencies[:runners] || register(:runners, VCAP::CloudController::Runners.new(config))
     end
 
+    def random_route_generator
+      @dependencies[:random_route_generator] || register(:random_route_generator, VCAP::CloudController::RandomRouteGenerator.new)
+    end
+
     def stagers
       @dependencies[:stagers] || register(:stagers, VCAP::CloudController::Stagers.new(config))
     end

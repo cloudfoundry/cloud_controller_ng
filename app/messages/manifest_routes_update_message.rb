@@ -3,7 +3,7 @@ require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
   class ManifestRoutesUpdateMessage < BaseMessage
-    register_allowed_keys [:routes, :no_route]
+    register_allowed_keys [:routes, :no_route, :random_route]
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
@@ -25,6 +25,7 @@ module VCAP::CloudController
     validates_with ManifestRoutesYAMLValidator, if: proc { |record| record.requested?(:routes) }
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
+    validate :random_route_is_boolean
     validate :no_route_and_routes_conflict
 
     def manifest_routes
@@ -53,6 +54,14 @@ module VCAP::CloudController
     def no_route_and_routes_conflict
       if no_route && requested?(:routes)
         errors.add(:base, 'Cannot use the combination of properties: no-route, routes')
+      end
+    end
+
+    def random_route_is_boolean
+      return if random_route.nil?
+
+      unless [true, false].include?(random_route)
+        errors.add(:base, 'Random-route must be a boolean')
       end
     end
   end

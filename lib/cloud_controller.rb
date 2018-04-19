@@ -98,6 +98,7 @@ require 'cloud_controller/uaa/uaa_client'
 
 require 'cloud_controller/bits_expiration'
 
+require 'cloud_controller/random_route_generator'
 require 'cloud_controller/routing_api/routing_api_client'
 require 'cloud_controller/routing_api/disabled_routing_api_client'
 require 'cloud_controller/routing_api/router_group'
