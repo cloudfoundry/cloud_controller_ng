@@ -469,10 +469,20 @@ module VCAP::CloudController
               end
 
               it 'adds an HTTP health check definition using the first port' do
+                process.health_check_invocation_timeout = 10
                 lrp        = builder.build_app_lrp
                 http_check = lrp.check_definition.checks.first.http_check
                 expect(http_check.port).to eq(4444)
                 expect(http_check.path).to eq('http-endpoint')
+                expect(http_check.request_timeout_ms).to eq(10000)
+              end
+
+              it 'defaults the HTTP invocation timeout to zero' do
+                lrp        = builder.build_app_lrp
+                http_check = lrp.check_definition.checks.first.http_check
+                expect(http_check.port).to eq(4444)
+                expect(http_check.path).to eq('http-endpoint')
+                expect(http_check.request_timeout_ms).to eq(0)
               end
 
               it 'keeps a TCP health check definition for other ports' do

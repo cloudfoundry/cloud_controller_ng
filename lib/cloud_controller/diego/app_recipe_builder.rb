@@ -226,6 +226,7 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::HTTPCheck.new(
               path: process.health_check_http_endpoint,
               port: port,
+              request_timeout_ms: (process.health_check_invocation_timeout || 0) * 1000
             )
           )
         else
