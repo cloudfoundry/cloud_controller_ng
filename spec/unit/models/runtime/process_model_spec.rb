@@ -276,6 +276,24 @@ module VCAP::CloudController
         end
       end
 
+      describe 'health_check_invocation_timeout' do
+        subject(:process) { ProcessModelFactory.make }
+
+        it 'can be set for http health checks' do
+          process.health_check_type          = 'http'
+          process.health_check_http_endpoint = '/'
+          process.health_check_invocation_timeout = 5
+          expect(process).to be_valid
+        end
+
+        it 'must be a postive integer' do
+          process.health_check_type          = 'http'
+          process.health_check_http_endpoint = '/'
+          process.health_check_invocation_timeout = -13.5
+          expect(process).not_to be_valid
+        end
+      end
+
       describe 'health_check_type' do
         subject(:process) { ProcessModelFactory.make }
 

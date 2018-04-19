@@ -6,7 +6,7 @@ module VCAP::CloudController
     module V3
       class ProcessPresenter < BasePresenter
         def to_hash
-          health_check_data = { timeout: process.health_check_timeout }
+          health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout }
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == 'http'
           {
             guid:         process.guid,

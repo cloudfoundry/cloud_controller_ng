@@ -211,7 +211,7 @@ module VCAP::CloudController
         InstancesPolicy.new(self),
         MaxAppInstancesPolicy.new(self, organization, organization && organization.quota_definition, :app_instance_limit_exceeded),
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
-        HealthCheckPolicy.new(self, health_check_timeout),
+        HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout),
         DockerPolicy.new(self),
         PortsPolicy.new(self),
       ]

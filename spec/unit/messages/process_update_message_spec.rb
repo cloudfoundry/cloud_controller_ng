@@ -16,9 +16,10 @@ module VCAP::CloudController
         expect(message.requested?(:health_check_type)).to be_falsey
         expect(message.requested?(:health_check_timeout)).to be_falsey
 
-        message = ProcessUpdateMessage.new({ health_check: { type: 'type', data: { timeout: 4 } } })
+        message = ProcessUpdateMessage.new({ health_check: { type: 'type', data: { timeout: 4, invocation_timeout: 7 } } })
         expect(message.requested?(:health_check_type)).to be_truthy
         expect(message.requested?(:health_check_timeout)).to be_truthy
+        expect(message.requested?(:health_check_invocation_timeout)).to be_truthy
       end
     end
 
@@ -26,9 +27,9 @@ module VCAP::CloudController
       it 'excludes nested health check keys' do
         message = ProcessUpdateMessage.new(
           {
-            health_check: { type: 'type', data: { timeout: 4, endpoint: 'something' } }
+            health_check: { type: 'type', data: { timeout: 4, endpoint: 'something', invocation_timeout: 7 } }
           })
-        expect(message.audit_hash).to eq({ 'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something' } } })
+        expect(message.audit_hash).to eq({ 'health_check' => { 'type' => 'type', 'data' => { 'timeout' => 4, 'endpoint' => 'something', 'invocation_timeout' => 7 } } })
       end
     end
 
@@ -166,6 +167,46 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors[:health_check_timeout]).to include('must be greater than or equal to 1')
+        end
+      end
+
+      context 'when health_check invocation timeout is not an integer' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'http',
+              data: {
+                invocation_timeout: 0.2
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_invocation_timeout]).to include('must be an integer')
+        end
+      end
+
+      context 'when health_check invocation timeout is less than one' do
+        let(:params) do
+          {
+            health_check: {
+              type: 'http',
+              data: {
+                invocation_timeout: 0
+              }
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
         end
       end
 

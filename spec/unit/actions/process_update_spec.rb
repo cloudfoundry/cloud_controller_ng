@@ -44,7 +44,10 @@ module VCAP::CloudController
         let(:health_check) do
           {
             type: 'http',
-            data: { endpoint: '/healthcheck' }
+            data: {
+              endpoint: '/healthcheck',
+              invocation_timeout: 10
+            }
           }
         end
 
@@ -55,6 +58,7 @@ module VCAP::CloudController
           expect(process.command).to eq('new')
           expect(process.health_check_type).to eq('http')
           expect(process.health_check_http_endpoint).to eq('/healthcheck')
+          expect(process.health_check_invocation_timeout).to eq(10)
         end
       end
 
@@ -87,15 +91,20 @@ module VCAP::CloudController
       end
 
       context 'when no changes are requested' do
-        let(:message) { ProcessUpdateMessage.new({}) }
+        let(:message_without_changes) { ProcessUpdateMessage.new({}) }
+
+        before do
+          process.update(health_check_invocation_timeout: 11)
+        end
 
         it 'does not update the process' do
-          process_update.update(process, message, NonManifestStrategy)
+          process_update.update(process, message_without_changes, NonManifestStrategy)
 
           process.reload
           expect(process.command).to eq('initial command')
           expect(process.health_check_type).to eq('port')
           expect(process.health_check_timeout).to eq(10)
+          expect(process.health_check_invocation_timeout).to eq(11)
         end
       end
 

@@ -62,6 +62,7 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
+                'invocation_timeout' => nil
               }
             },
             'created_at'   => iso8601,
@@ -85,6 +86,7 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
+                'invocation_timeout' => nil
               }
             },
             'created_at'   => iso8601,
@@ -295,6 +297,7 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
+            'invocation_timeout' => nil
           }
         },
         'created_at'   => iso8601,
@@ -472,6 +475,7 @@ RSpec.describe 'Processes' do
           'type' => 'process',
           'data' => {
             'timeout' => 20,
+            'invocation_timeout' => nil
           }
         },
         'created_at'   => iso8601,
@@ -554,6 +558,7 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
+            'invocation_timeout' => nil
           }
         },
         'created_at'   => iso8601,
@@ -688,6 +693,7 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
+                'invocation_timeout' => nil
               }
             },
             'created_at'   => iso8601,
@@ -711,6 +717,7 @@ RSpec.describe 'Processes' do
               'type' => 'port',
               'data' => {
                 'timeout' => nil,
+                'invocation_timeout' => nil
               }
             },
             'created_at'   => iso8601,
@@ -806,6 +813,7 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
+            'invocation_timeout' => nil
           }
         },
         'created_at'   => iso8601,
@@ -880,7 +888,8 @@ RSpec.describe 'Processes' do
           'type' => 'http',
           'data' => {
             'timeout' => 20,
-            'endpoint' => '/healthcheck'
+            'endpoint' => '/healthcheck',
+            'invocation_timeout' => nil
           }
         },
         'created_at'   => iso8601,
@@ -965,6 +974,7 @@ RSpec.describe 'Processes' do
           'type' => 'port',
           'data' => {
             'timeout' => nil,
+            'invocation_timeout' => nil
           }
         },
         'created_at'   => iso8601,

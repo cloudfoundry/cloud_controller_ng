@@ -9,6 +9,7 @@ module VCAP::CloudController
       params = params.deep_symbolize_keys
       @requested_keys << :health_check_type if HashUtils.dig(params, :health_check)&.key?(:type)
       @requested_keys << :health_check_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:timeout)
+      @requested_keys << :health_check_invocation_timeout if HashUtils.dig(params, :health_check, :data)&.key?(:invocation_timeout)
       @requested_keys << :health_check_endpoint if HashUtils.dig(params, :health_check, :data)&.key?(:endpoint)
     end
 
@@ -32,6 +33,11 @@ module VCAP::CloudController
     numericality: { only_integer: true, greater_than_or_equal_to: 1 },
     if: health_check_requested?
 
+    validates :health_check_invocation_timeout,
+    allow_nil: true,
+    numericality: { only_integer: true, greater_than_or_equal_to: 1 },
+    if: health_check_requested?
+
     validates :health_check_endpoint,
     allow_nil: true,
     uri_path: true,
@@ -45,12 +51,16 @@ module VCAP::CloudController
       HashUtils.dig(health_check, :data, :timeout)
     end
 
+    def health_check_invocation_timeout
+      HashUtils.dig(health_check, :data, :invocation_timeout)
+    end
+
     def health_check_endpoint
       HashUtils.dig(health_check, :data, :endpoint)
     end
 
     def audit_hash
-      super(exclude: [:health_check_type, :health_check_timeout, :health_check_endpoint])
+      super(exclude: [:health_check_type, :health_check_timeout, :health_check_invocation_timeout, :health_check_endpoint])
     end
   end
 end
