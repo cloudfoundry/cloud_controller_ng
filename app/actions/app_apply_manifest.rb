@@ -23,7 +23,7 @@ module VCAP::CloudController
       ProcessUpdate.new(@user_audit_info).update(app.web_process, message.manifest_process_update_message, ManifestStrategy)
 
       if message.manifest_routes_update_message.no_route
-        route_mappings_to_delete = RouteMappingModel.where(app_guid: app.guid)
+        route_mappings_to_delete = RouteMappingModel.where(app_guid: app.guid).to_a
         RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete)
       else
         ManifestRouteUpdate.update(app.guid, message.manifest_routes_update_message, @user_audit_info)

@@ -372,7 +372,7 @@ module VCAP::CloudController
 
             it 'calls RouteMappingDelete with the routes' do
               app_apply_manifest.apply(app.guid, message)
-              expect(route_mapping_delete).to have_received(:delete).with([route_mapping1, route_mapping2])
+              expect(route_mapping_delete).to have_received(:delete).with(array_including(route_mapping1, route_mapping2))
             end
           end
         end
