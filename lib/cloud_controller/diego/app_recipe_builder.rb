@@ -254,6 +254,7 @@ module VCAP::CloudController
         extra_args = []
         if process.health_check_type == 'http' && index == 0
           extra_args << "-uri=#{process.health_check_http_endpoint}"
+          extra_args << "-timeout=#{process.health_check_invocation_timeout}s" if process.health_check_invocation_timeout
         end
 
         ::Diego::Bbs::Models::RunAction.new(

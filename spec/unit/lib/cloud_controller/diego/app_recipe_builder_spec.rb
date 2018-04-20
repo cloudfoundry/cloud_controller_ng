@@ -426,6 +426,7 @@ module VCAP::CloudController
               before do
                 process.health_check_type          = 'http'
                 process.health_check_http_endpoint = 'http-endpoint'
+                process.health_check_invocation_timeout = 10
               end
 
               let(:expected_monitor_action) do
@@ -439,7 +440,7 @@ module VCAP::CloudController
                             run_action: ::Diego::Bbs::Models::RunAction.new(
                               user:                'lrp-action-user',
                               path:                '/tmp/lifecycle/healthcheck',
-                              args:                ['-port=4444', '-uri=http-endpoint'],
+                              args:                ['-port=4444', '-uri=http-endpoint', '-timeout=10s'],
                               resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
                               log_source:          HEALTH_LOG_SOURCE,
                               suppress_log_output: true,
@@ -469,7 +470,6 @@ module VCAP::CloudController
               end
 
               it 'adds an HTTP health check definition using the first port' do
-                process.health_check_invocation_timeout = 10
                 lrp        = builder.build_app_lrp
                 http_check = lrp.check_definition.checks.first.http_check
                 expect(http_check.port).to eq(4444)
@@ -478,11 +478,15 @@ module VCAP::CloudController
               end
 
               it 'defaults the HTTP invocation timeout to zero' do
+                process.health_check_invocation_timeout = nil
                 lrp        = builder.build_app_lrp
                 http_check = lrp.check_definition.checks.first.http_check
                 expect(http_check.port).to eq(4444)
                 expect(http_check.path).to eq('http-endpoint')
                 expect(http_check.request_timeout_ms).to eq(0)
+
+                monitor_args = lrp.monitor.timeout_action.action.parallel_action.actions.first.run_action.args
+                expect(monitor_args).to eq(['-port=4444', '-uri=http-endpoint'])
               end
 
               it 'keeps a TCP health check definition for other ports' do
