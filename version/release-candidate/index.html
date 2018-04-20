@@ -7817,6 +7817,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Boolean value. Removes the app&rsquo;s routes if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>. Cannot be used in conjunction with the <code class="prettyprint">routes</code> attribute when set to <code class="prettyprint">true</code>.</td>
 </tr>
 <tr>
+<td><strong>random-route</strong></td>
+<td>Boolean value. Creates a random route for the app if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>, if <code class="prettyprint">routes</code> is specified, if the app already has routes, or if <code class="prettyprint">no-route</code> is specified.</td>
+</tr>
+<tr>
 <td><strong>routes</strong></td>
 <td>An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: <code class="prettyprint">- route: www.example.com/path</code></td>
 </tr>
