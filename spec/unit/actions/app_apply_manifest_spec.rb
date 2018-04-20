@@ -394,7 +394,7 @@ module VCAP::CloudController
 
         context 'when the message specifies an empty list of routes' do
           let(:message) { AppManifestMessage.new({ name: 'blah', random_route: true,
-            routes: [] })
+                                                   routes: [] })
           }
 
           it 'ignores the random_route' do
