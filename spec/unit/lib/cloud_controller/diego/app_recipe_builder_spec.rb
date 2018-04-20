@@ -419,6 +419,33 @@ module VCAP::CloudController
                 lrp       = builder.build_app_lrp
                 tcp_check = lrp.check_definition.checks.first.tcp_check
                 expect(tcp_check.port).to eq(4444)
+                expect(tcp_check.connect_timeout_ms).to eq(0)
+                monitor_args = lrp.monitor.timeout_action.action.parallel_action.actions.first.run_action.args
+                expect(monitor_args).to eq(['-port=4444'])
+              end
+
+              it 'does not set connection timeouts' do
+                lrp       = builder.build_app_lrp
+                tcp_check = lrp.check_definition.checks.first.tcp_check
+                expect(tcp_check.connect_timeout_ms).to eq(0)
+                monitor_args = lrp.monitor.timeout_action.action.parallel_action.actions.first.run_action.args
+                expect(monitor_args).to eq(['-port=4444'])
+              end
+
+              context 'when there is an invocation_timeout' do
+                before do
+                  process.health_check_invocation_timeout = 10
+                end
+
+                it 'sets the connect_timeout_ms' do
+                  lrp = builder.build_app_lrp
+                  tcp_check = lrp.check_definition.checks.first.tcp_check
+                  expect(tcp_check.port).to eq(4444)
+                  expect(tcp_check.connect_timeout_ms).to eq(10_000)
+
+                  monitor_args = lrp.monitor.timeout_action.action.parallel_action.actions.first.run_action.args
+                  expect(monitor_args).to eq(['-port=4444', '-timeout=10s'])
+                end
               end
             end
 
@@ -450,7 +477,7 @@ module VCAP::CloudController
                             run_action: ::Diego::Bbs::Models::RunAction.new(
                               user:                'lrp-action-user',
                               path:                '/tmp/lifecycle/healthcheck',
-                              args:                ['-port=5555'],
+                              args:                ['-port=5555', '-timeout=10s'],
                               resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
                               log_source:          HEALTH_LOG_SOURCE,
                               suppress_log_output: true,

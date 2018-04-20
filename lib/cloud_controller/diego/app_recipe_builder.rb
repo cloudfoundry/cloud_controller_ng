@@ -221,18 +221,21 @@ module VCAP::CloudController
       end
 
       def build_check(port, index)
+        timeout_ms = (process.health_check_invocation_timeout || 0) * 1000
+
         if process.health_check_type == 'http' && index == 0
           ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
               path: process.health_check_http_endpoint,
               port: port,
-              request_timeout_ms: (process.health_check_invocation_timeout || 0) * 1000
+              request_timeout_ms: timeout_ms
             )
           )
         else
           ::Diego::Bbs::Models::Check.new(tcp_check:
             ::Diego::Bbs::Models::TCPCheck.new(
               port: port,
+              connect_timeout_ms: timeout_ms
             )
           )
         end
@@ -254,8 +257,9 @@ module VCAP::CloudController
         extra_args = []
         if process.health_check_type == 'http' && index == 0
           extra_args << "-uri=#{process.health_check_http_endpoint}"
-          extra_args << "-timeout=#{process.health_check_invocation_timeout}s" if process.health_check_invocation_timeout
         end
+
+        extra_args << "-timeout=#{process.health_check_invocation_timeout}s" if process.health_check_invocation_timeout
 
         ::Diego::Bbs::Models::RunAction.new(
           user:                lrp_builder.action_user,
