@@ -74,8 +74,7 @@ module VCAP::Services
             when 201
               IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 202
-              JsonObjectValidator.new(@logger,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              JsonSchemaValidator.new(@logger, async_bind_response_schema, SuccessValidator.new)
             when 204
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 410

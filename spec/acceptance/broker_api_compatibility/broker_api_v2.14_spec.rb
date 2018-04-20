@@ -287,5 +287,26 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
     end
+
+    describe 'deleting service bindings asynchronously' do
+      before do
+        provision_service
+        create_app
+        bind_service
+      end
+
+      context 'when the broker returns synchronously' do
+        it 'performs the synchronous flow' do
+          unbind_service(status: 200, accepts_incomplete: true)
+
+          expect(
+            a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
+          ).to have_been_made
+
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          expect(service_binding).to be_nil
+        end
+      end
+    end
   end
 end

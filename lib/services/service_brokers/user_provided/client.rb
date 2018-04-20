@@ -21,7 +21,11 @@ module VCAP::Services
       end
     end
 
-    def unbind(*); end
+    def unbind(*)
+      {
+        async: false
+      }
+    end
 
     def deprovision(_, _={})
       {

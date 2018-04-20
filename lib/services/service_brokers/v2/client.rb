@@ -153,6 +153,9 @@ module VCAP::Services::ServiceBrokers::V2
       response = @http_client.delete(path, body, user_guid)
 
       @response_parser.parse_unbind(path, response)
+      {
+        async: async_response?(response)
+      }
     rescue => e
       raise e.exception("Service instance #{binding&.service_instance&.name}: #{e.message}")
     end

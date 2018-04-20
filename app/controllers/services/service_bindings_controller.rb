@@ -91,8 +91,8 @@ module VCAP::CloudController
         job = deleter.single_delete_async(binding)
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
-        response_code = accepts_incomplete ? HTTP::ACCEPTED : HTTP::NO_CONTENT
         deleter.single_delete_sync(binding)
+        response_code = accepts_incomplete && binding.exists? ? HTTP::ACCEPTED : HTTP::NO_CONTENT
         [response_code, nil]
       end
     end

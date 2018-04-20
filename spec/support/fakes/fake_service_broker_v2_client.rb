@@ -79,7 +79,11 @@ class FakeServiceBrokerV2Client
     }
   end
 
-  def unbind(*); end
+  def unbind(*)
+    {
+      async: false
+    }
+  end
 
   def fetch_service_instance(_instance)
     parameters

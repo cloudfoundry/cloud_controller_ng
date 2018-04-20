@@ -149,7 +149,7 @@ module VCAP::CloudController
 
         describe 'deleting service bindings' do
           it 'deletes associated service bindings' do
-            allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+            allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
 
             binding = ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space))
 

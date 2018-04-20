@@ -1287,6 +1287,24 @@ module VCAP::Services::ServiceBrokers::V2
             with_message("Service instance #{binding.service_instance.name}: Service broker error: Could not delete instance")
         end
       end
+
+      context 'when the broker responds synchronously' do
+        let(:code) { 200 }
+
+        it 'should return async false' do
+          unbind_response = client.unbind(binding)
+          expect(unbind_response[:async]).to eq(false)
+        end
+      end
+
+      context 'when the broker responds asynchronously' do
+        let(:code) { 202 }
+
+        it 'should return async true' do
+          unbind_response = client.unbind(binding)
+          expect(unbind_response[:async]).to eq(true)
+        end
+      end
     end
 
     describe '#deprovision' do

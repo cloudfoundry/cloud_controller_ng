@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       before do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        allow(client).to receive(:unbind)
+        allow(client).to receive(:unbind).and_return({ async: false })
         stub_request(:delete, service_binding_url_pattern)
       end
 
@@ -75,13 +75,31 @@ module VCAP::CloudController
           }.to raise_error(error)
         end
       end
+
+      context 'when the broker responds asynchronously' do
+        before do
+          allow(client).to receive(:unbind).and_return({ async: true })
+        end
+
+        it 'should keep the service binding' do
+          service_binding_delete.single_delete_sync(service_binding)
+
+          expect(service_binding.exists?).to be_truthy
+        end
+
+        it 'should not immediately create an audit event' do
+          service_binding_delete.single_delete_sync(service_binding)
+
+          expect(Event.last).to be_nil
+        end
+      end
     end
 
     describe '#single_delete_async' do
       let(:service_binding) { ServiceBinding.make }
 
       before do
-        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
       end
 
       it 'returns a delete job for the service binding' do
@@ -99,7 +117,7 @@ module VCAP::CloudController
       let(:service_binding2) { ServiceBinding.make }
 
       before do
-        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
       end
 
       it 'deletes multiple bindings' do

@@ -71,6 +71,10 @@ module VCAP::Services
       it 'exists' do
         client.unbind(binding)
       end
+
+      it 'always returns async false' do
+        expect(client.unbind(binding)[:async]).to eq(false)
+      end
     end
 
     describe '#deprovision' do

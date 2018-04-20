@@ -27,9 +27,11 @@ module VCAP::CloudController
         raise_if_instance_locked(service_binding.service_instance)
         raise_if_binding_locked(service_binding)
 
-        remove_from_broker(service_binding)
-        Repositories::ServiceBindingEventRepository.record_delete(service_binding, @user_audit_info)
-        service_binding.destroy
+        broker_response = remove_from_broker(service_binding)
+        unless broker_response[:async]
+          Repositories::ServiceBindingEventRepository.record_delete(service_binding, @user_audit_info)
+          service_binding.destroy
+        end
       end
 
       errors
