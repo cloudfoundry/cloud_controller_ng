@@ -74,7 +74,7 @@ module VCAP::CloudController
         end
       end
 
-      describe '#purge_and_reseed_started_apps!' do
+      describe '#purge_and_reseed_service_instances!!', isolation: :truncation do
         before do
           3.times do
             ManagedServiceInstance.make
@@ -82,10 +82,6 @@ module VCAP::CloudController
 
           3.times do
             UserProvidedServiceInstance.make
-          end
-
-          allow(ServiceUsageEvent.dataset).to receive(:truncate) do
-            ServiceUsageEvent.dataset.destroy
           end
 
           ManagedServiceInstance.each do |service_instance|

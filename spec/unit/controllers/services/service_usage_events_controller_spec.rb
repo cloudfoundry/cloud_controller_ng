@@ -188,15 +188,9 @@ module VCAP::CloudController
       end
     end
 
-    describe 'POST /v2/service_usage_events/destructively_purge_all_and_reseed_existing_instance' do
+    describe 'POST /v2/service_usage_events/destructively_purge_all_and_reseed_existing_instance', isolation: :truncation do
       let(:user) { User.make }
       let(:instance) { ManagedServiceInstance.make }
-
-      before do
-        allow(ServiceUsageEvent.dataset).to receive(:truncate) do
-          ServiceUsageEvent.dataset.destroy
-        end
-      end
 
       it 'purge all existing events' do
         expect(ServiceUsageEvent.count).not_to eq(0)
