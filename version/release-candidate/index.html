@@ -5695,7 +5695,12 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <tr>
 <td><strong>data.timeout</strong></td>
 <td><em>integer</em></td>
-<td>The duration in seconds that the health check can fail before the process is restarted.</td>
+<td>The duration in seconds that health checks can fail before the process is restarted.</td>
+</tr>
+<tr>
+<td><strong>data.invocation_timeout</strong></td>
+<td><em>integer</em></td>
+<td>The timeout in seconds for individual health check requests for <code class="prettyprint">http</code> health checks.</td>
 </tr>
 <tr>
 <td><strong>data.endpoint</strong></td>
