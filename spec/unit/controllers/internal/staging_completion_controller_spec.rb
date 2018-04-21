@@ -5,7 +5,14 @@ require 'cloud_controller/diego/failure_reason_sanitizer'
 module VCAP::CloudController
   RSpec.describe StagingCompletionController do
     let(:buildpack_name) { 'the-pleasant-buildpack' }
-    let!(:buildpack) { Buildpack.make(name: buildpack_name) }
+    let(:buildpack_other_name) { 'valley' }
+    let(:buildpack_version) { '3.1' }
+    let!(:buildpack) { Buildpack.make(name: buildpack_name, sha256_checksum: 'mammoth') }
+    let(:buildpack2_name) { 'my-brilliant-buildpack' }
+    let(:buildpack2_other_name) { 'launderette' }
+    let(:buildpack2_version) { '95' }
+    let!(:buildpack2) { Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+
     let(:buildpack_key) { buildpack.key }
     let(:detected_buildpack) { 'detected_buildpack' }
     let(:execution_metadata) { 'execution_metadata' }
@@ -222,6 +229,19 @@ module VCAP::CloudController
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
       let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs2', build: build) }
       let(:staging_guid) { build.guid }
+      let(:buildpacks) do [
+        {
+          name: buildpack_other_name,
+          version: buildpack_version,
+          key: "#{buildpack.guid}_#{buildpack.sha256_checksum}",
+        },
+        {
+          name: buildpack2_other_name,
+          version: buildpack2_version,
+          key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+        },
+      ]
+      end
 
       before do
         @internal_user     = 'internal_user'
@@ -252,6 +272,7 @@ module VCAP::CloudController
             lifecycle_metadata: {
               buildpack_key:      buildpack_key,
               detected_buildpack: detected_buildpack,
+              buildpacks: buildpacks,
             },
             execution_metadata: execution_metadata,
             process_types:      { web: 'start me' }
@@ -278,6 +299,20 @@ module VCAP::CloudController
 
           post url, MultiJson.dump(staging_response)
           expect(last_response.status).to eq(200)
+        end
+
+        it 'adds the buildpack info to the droplet' do
+          # expect_any_instance_of(Diego::Stager).to receive(:staging_complete).with(instance_of(BuildModel), { result: staging_result }, false)
+
+          allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
+          post url, MultiJson.dump(staging_response)
+          expect(last_response.status).to eq(200)
+          droplet_buildpacks = droplet.buildpack_lifecycle_data&.buildpack_lifecycle_buildpacks
+          expect(droplet_buildpacks&.size).to eq(2)
+          buildback_lifecycle_buildpack1 = BuildpackLifecycleBuildpackModel.find(buildpack_name: 'valley')
+          buildback_lifecycle_buildpack2 = BuildpackLifecycleBuildpackModel.find(buildpack_name: 'launderette')
+          expect(droplet_buildpacks).to match_array([buildback_lifecycle_buildpack1,
+                                                     buildback_lifecycle_buildpack2])
         end
 
         it 'emits metrics for staging success' do

@@ -18,6 +18,13 @@ module VCAP::CloudController
                 lifecycle_metadata: {
                   optional(:buildpack_key) =>      String,
                   detected_buildpack: String,
+                  optional(:buildpacks) => [
+                    {
+                      key: String,
+                      name: String,
+                      version: String,
+                    }
+                  ]
                 },
                 process_types:      dict(Symbol, String)
               }
@@ -51,6 +58,11 @@ module VCAP::CloudController
               detect_output:       lifecycle_data[:detected_buildpack],
               requested_buildpack: droplet.buildpack_lifecycle_data.buildpacks.first
             )
+            # TODO: What if lifecycle_data[:buildpacks] is nil?  Delete current buildpacks?
+            if lifecycle_data[:buildpacks]
+              droplet.buildpack_lifecycle_data.buildpacks = lifecycle_data[:buildpacks]
+              droplet.buildpack_lifecycle_data.save_changes(raise_on_save_failure: true)
+            end
             droplet.save_changes(raise_on_save_failure: true)
             build.droplet.reload
             droplet.mark_as_staged

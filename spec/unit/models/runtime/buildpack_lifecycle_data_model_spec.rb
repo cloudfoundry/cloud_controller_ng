@@ -85,6 +85,52 @@ module VCAP::CloudController
             expect(lifecycle_data.reload.buildpacks).to eq ['some-buildpack', 'another-buildpack']
           end
 
+          context 'multi-field buildpack-lifecycle-buildpacks' do
+            let(:buildpack1_name) { 'pleasant-valley-buildpack' }
+            let(:buildpack1_other_name) { 'valley' }
+            let(:buildpack1_version) { '3.1' }
+            let!(:buildpack1) { VCAP::CloudController::Buildpack.make(name: buildpack1_name, sha256_checksum: 'mammoth') }
+            let(:buildpack2_name) { 'stepping-stone-buildpack' }
+            let(:buildpack2_other_name) { 'gilooley' }
+            let(:buildpack2_version) { '95' }
+            let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+
+            let(:lifecycle_buildpacks) do
+              [
+                {
+                  name: buildpack1_other_name,
+                  version: buildpack1_version,
+                  key: "#{buildpack1.guid}_#{buildpack1.sha256_checksum}",
+                },
+                {
+                  name: buildpack2_other_name,
+                  version: buildpack2_version,
+                  key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+                },
+              ]
+            end
+
+            it 'persists the multi-field buildpacks and reads them back' do
+              lifecycle_data.buildpacks = lifecycle_buildpacks
+              lifecycle_data.save
+              new_buildpacks = lifecycle_data.reload.buildpacks
+              expect(new_buildpacks.size).to eq(2)
+              expect(new_buildpacks).to match_array(%w/pleasant-valley-buildpack stepping-stone-buildpack/)
+              expect(lifecycle_data.reload.buildpack_lifecycle_buildpacks.
+                      map { |d| { version: d[:version], name: d[:buildpack_name], buildpack_name: d.name } }).
+                to match_array([
+                  { version: '3.1',
+                    name: 'valley',
+                    buildpack_name: 'pleasant-valley-buildpack'
+                  },
+                  { version: '95',
+                    name: 'gilooley',
+                    buildpack_name: 'stepping-stone-buildpack'
+                  },
+                ])
+            end
+          end
+
           context 'when the lifecycle already contains a list of buildpacks' do
             subject(:lifecycle_data) do
               BuildpackLifecycleDataModel.create(buildpacks: ['some-buildpack', 'another-buildpack'])

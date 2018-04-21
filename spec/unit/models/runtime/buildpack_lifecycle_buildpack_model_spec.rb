@@ -51,6 +51,24 @@ module VCAP::CloudController
       end
     end
 
+    describe '#version' do
+      it 'persists the version' do
+        buildpack.buildpack_url = 'http://buildpack.example.com'
+        buildpack.version = '1.2.3'
+        buildpack.save
+        expect(buildpack.reload.version).to eq('1.2.3')
+      end
+    end
+
+    describe '#buildpack_name' do
+      it 'persists the buildpack_name' do
+        buildpack.admin_buildpack_name = 'ruby'
+        buildpack.buildpack_name = 'fez_buildpack'
+        buildpack.save
+        expect(buildpack.reload.buildpack_name).to eq('fez_buildpack')
+      end
+    end
+
     describe '#admin_buildpack_name' do
       it 'persists the buildpack' do
         buildpack.admin_buildpack_name = 'ruby'

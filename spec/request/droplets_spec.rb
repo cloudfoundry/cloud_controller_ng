@@ -31,7 +31,7 @@ RSpec.describe 'Droplets' do
       end
 
       before do
-        droplet_model.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
+        droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ name: 'http://buildpack.git.url.com', version: '0.3', buildpack_name: 'git', oh_carp: 'we need to figure out url buildpacks' }], stack: 'stack-name')
       end
 
       it 'gets a droplet' do
@@ -49,7 +49,7 @@ RSpec.describe 'Droplets' do
             'data' => {}
           },
           'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'version' => '0.3', 'buildpack_name' => 'git' }],
           'stack'              => 'stack-name',
           'execution_metadata' => 'some-data',
           'process_types'      => { 'web' => 'start-command' },

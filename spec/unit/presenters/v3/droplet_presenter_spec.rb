@@ -49,8 +49,16 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:checksum]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
           expect(result[:stack]).to eq('the-happiest-stack')
-          expect(result[:buildpacks]).to match_array([{ name: 'the-happiest-buildpack', detect_output: 'the-happiest-buildpack-detect-output' },
-                                                      { name: 'shaq', detect_output: nil }])
+          expect(result[:buildpacks]).to match_array([{ name: 'the-happiest-buildpack',
+                                                        detect_output: 'the-happiest-buildpack-detect-output',
+                                                        buildpack_name: nil,
+                                                        version: nil,
+                                                      },
+                                                      { name: 'shaq',
+                                                        detect_output: nil,
+                                                        buildpack_name: nil,
+                                                        version: nil,
+                                                      }])
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
@@ -67,8 +75,16 @@ module VCAP::CloudController::Presenters::V3
           let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
 
           it 'obfuscates the username and password' do
-            expect(result[:buildpacks]).to match_array([{ name: 'shaq', detect_output: nil },
-                                                        { name: 'https://***:***@neopets.com', detect_output: 'the-happiest-buildpack-detect-output' }])
+            expect(result[:buildpacks]).to match_array([{ name: 'shaq',
+                                                          detect_output: nil,
+                                                          buildpack_name: nil,
+                                                          version: nil,
+                                                        },
+                                                        { name: 'https://***:***@neopets.com',
+                                                          detect_output: 'the-happiest-buildpack-detect-output',
+                                                          buildpack_name: nil,
+                                                          version: nil,
+                                                        }])
           end
         end
 
@@ -105,6 +121,76 @@ module VCAP::CloudController::Presenters::V3
               expect(result[:links][:package]).to be nil
             end
           end
+        end
+      end
+
+      context 'buildpack lifecycle with versions' do
+        let(:buildpack1_name) { 'rosanna' }
+        let(:buildpack1_other_name) { 'toto' }
+        let(:buildpack1_version) { '1.9.82' }
+        let!(:buildpack1) { VCAP::CloudController::Buildpack.make(name: buildpack1_name, sha256_checksum: 'mammoth') }
+        let(:buildpack2_name) { 'chris-cross' }
+        let(:buildpack2_other_name) { 'sailing' }
+        let(:buildpack2_version) { '1.9.79' }
+        let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+        let(:buildpack_receipt_buildpack) { buildpack2_name }
+        let(:buildpack_receipt_detect_output) { 'black cow' }
+
+        let(:lifecycle_buildpacks) do
+          [
+            {
+              name: buildpack1_other_name,
+              version: buildpack1_version,
+              key: "#{buildpack1.guid}_#{buildpack1.sha256_checksum}",
+            },
+            {
+              name: buildpack2_other_name,
+              version: buildpack2_version,
+              key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+            },
+          ]
+        end
+
+        before do
+          droplet.lifecycle_data.buildpacks       = lifecycle_buildpacks
+          droplet.lifecycle_data.stack            = 'the-happiest-stack'
+          droplet.buildpack_receipt_buildpack     = buildpack_receipt_buildpack
+          droplet.buildpack_receipt_detect_output = buildpack_receipt_detect_output
+          droplet.save
+        end
+
+        it 'presents the droplet as a hash and presents new buildpack info' do
+          links = {
+            self:                   { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+            package:                { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
+            app:                    { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' }
+          }
+
+          expect(result[:guid]).to eq(droplet.guid)
+          expect(result[:state]).to eq('STAGED')
+          expect(result[:error]).to eq('FAILED - things went all sorts of bad')
+
+          expect(result[:lifecycle][:type]).to eq('buildpack')
+          expect(result[:lifecycle][:data]).to eq({})
+
+          expect(result[:checksum]).to eq(type: 'sha256', value: 'droplet-sha256-checksum')
+          expect(result[:stack]).to eq('the-happiest-stack')
+          expect(result[:buildpacks]).to match_array([
+            { name: 'rosanna',
+              detect_output: nil,
+              version: '1.9.82',
+              buildpack_name: 'toto',
+            },
+            { name: 'chris-cross',
+              detect_output: 'black cow',
+              version: '1.9.79',
+              buildpack_name:  'sailing',
+            }])
+
+          expect(result[:created_at]).to be_a(Time)
+          expect(result[:updated_at]).to be_a(Time)
+          expect(result[:links]).to eq(links)
         end
       end
 

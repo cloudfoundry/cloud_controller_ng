@@ -7,6 +7,30 @@ module VCAP::CloudController
       RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
         let(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'lifecycle-bp') }
+
+        let(:buildpack1_name) { 'the-pleasant-buildpack' }
+        let(:buildpack1_other_name) { 'valley' }
+        let(:buildpack1_version) { '3.1' }
+        let!(:buildpack1) { VCAP::CloudController::Buildpack.make(name: buildpack1_name, sha256_checksum: 'mammoth') }
+        let(:buildpack2_name) { 'my-brilliant-buildpack' }
+        let(:buildpack2_other_name) { 'launderette' }
+        let(:buildpack2_version) { '95' }
+        let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+
+        let(:lifecycle_buildpacks) do
+          [
+            {
+              name: buildpack1_other_name,
+              version: buildpack1_version,
+              key: "#{buildpack1.guid}_#{buildpack1.sha256_checksum}",
+            },
+            {
+              name: buildpack2_other_name,
+              version: buildpack2_version,
+              key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+            },
+          ]
+        end
         let(:success_response) do
           {
             result: {
@@ -194,6 +218,13 @@ module VCAP::CloudController
                     expect(droplet.reload.buildpack_receipt_buildpack).to eq('woop')
                     expect(droplet.reload.buildpack_receipt_buildpack_guid).to eq(admin_buildpack.guid)
                   end
+                end
+
+                it 'records the buildpack_lifecycle_buildpacks' do
+                  success_response[:result][:lifecycle_metadata][:buildpacks] = lifecycle_buildpacks
+                  subject.staging_complete(success_response)
+                  expect(droplet.reload.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks).
+                    to match_array(BuildpackLifecycleBuildpackModel.all)
                 end
               end
             end

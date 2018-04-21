@@ -64,7 +64,9 @@ module VCAP::CloudController
             detect_output = droplet.buildpack_receipt_buildpack&.==(name_to_lookup) ? droplet.buildpack_receipt_detect_output : nil
             {
               name: name_to_print,
-              detect_output: detect_output
+              detect_output: detect_output,
+              buildpack_name: buildpack.buildpack_name,
+              version: buildpack.version
             }
           end
         end

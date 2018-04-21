@@ -64,12 +64,14 @@ module VCAP::CloudController
       # During the rolling-deploy transition period, update both old and new columns
       if UriUtils.is_buildpack_uri?(first_buildpack)
         self.legacy_buildpack_url = first_buildpack
-      else
+      elsif first_buildpack.is_a?(String)
         self.legacy_admin_buildpack_name = first_buildpack
+      elsif first_buildpack.nil?
+        self.legacy_admin_buildpack_name = self.legacy_buildpack_url = nil
       end
 
       buildpacks_to_remove = self.buildpack_lifecycle_buildpacks.map { |bp| { id: bp.id, _delete: true } }
-      buildpacks_to_add = new_buildpacks.map { |buildpack_url| attributes_from_name(buildpack_url) }
+      buildpacks_to_add = new_buildpacks.map { |buildpack_url| attributes_from_buildpack(buildpack_url) }
       self.buildpack_lifecycle_buildpacks_attributes = buildpacks_to_add + buildpacks_to_remove
     end
 
@@ -96,11 +98,28 @@ module VCAP::CloudController
 
     private
 
-    def attributes_from_name(name)
-      if UriUtils.is_buildpack_uri?(name)
-        { buildpack_url: name, admin_buildpack_name: nil }
+    def attributes_from_buildpack(buildpack)
+      if buildpack.is_a?(String)
+        if UriUtils.is_buildpack_uri?(buildpack)
+          { buildpack_url: buildpack, admin_buildpack_name: nil }
+        else
+          { buildpack_url: nil, admin_buildpack_name: buildpack }
+        end
+      elsif buildpack.is_a?(Hash)
+        if buildpack[:key]
+          buildpack_guid = buildpack[:key].split('_')[0]
+          actual_buildpack = Buildpack.find(guid: buildpack_guid)
+          buildpack_attributes = attributes_from_buildpack(actual_buildpack.name)
+        else
+          buildpack_attributes = attributes_from_buildpack(buildpack[:name])
+        end
+        {
+          buildpack_name: buildpack[:name],
+          version: buildpack[:version],
+        }.merge(buildpack_attributes)
       else
-        { buildpack_url: nil, admin_buildpack_name: name }
+        # Don't set anything -- this will fail later on a validity check
+        {}
       end
     end
 
