@@ -136,7 +136,7 @@ module VCAP::CloudController
       begin
         AppDelete.new(UserAuditInfo.from_context(SecurityContext)).delete_without_event([process.app])
       rescue Sequel::NoExistingObject
-        raise not_found_exception(guid, AppModel)
+        raise self.class.not_found_exception(guid, AppModel)
       end
 
       @app_event_repository.record_app_delete_request(

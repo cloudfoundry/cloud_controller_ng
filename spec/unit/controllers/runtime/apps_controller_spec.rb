@@ -1064,16 +1064,16 @@ module VCAP::CloudController
         expect(parent_app.exists?).to be_falsey
       end
 
-      it 'throws an exception on a subsequent deletion' do
-        expect(process.exists?).to be_truthy
-        expect(parent_app.exists?).to be_truthy
+      context 'when the app disappears after the find_validate_access_check' do
+        before do
+          allow_any_instance_of(AppDelete).to receive(:delete_without_event).and_raise(Sequel::NoExistingObject)
+        end
 
-        delete_app
-
-        expect(last_response.status).to eq(204)
-        delete_app
-        expect(last_response.status).to eq(404)
-        expect(parsed_response['description']).to eq("The app could not be found: #{parent_app.guid}")
+        it 'throws a not_found_exception' do
+          delete_app
+          expect(last_response.status).to eq(404)
+          expect(parsed_response['description']).to eq("The app could not be found: #{parent_app.guid}")
+        end
       end
 
       context 'non recursive deletion' do
