@@ -8,22 +8,17 @@ require 'securerandom'
 skip_perm_tests = ENV['CF_RUN_PERM_SPECS'] != 'true'
 RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_perm_tests do
   perm_server = nil
-  perm_hostname = nil
-  perm_port = nil
-  ca_certs = []
   perm_config = {}
+  client = nil
 
   ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
   SPACE_ROLES = [:developer, :manager, :auditor].freeze
 
   include ControllerHelpers
 
-  let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
   let(:assignee) { VCAP::CloudController::User.make(username: 'not-really-a-person') }
   let(:uaa_target) { 'test.example.com' }
   let(:uaa_origin) { 'test-origin' }
-
-  let(:client) { CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs) }
 
   let(:issuer) { UAAIssuer::ISSUER }
 
@@ -57,6 +52,8 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       }
 
       ca_certs = [perm_server.tls_ca.clone]
+
+      client = CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs)
 
       config = YAML.load_file('config/cloud_controller.yml')
       config[:perm] = perm_config
@@ -892,12 +889,11 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         }.to_json
 
         response = make_patch_request("/v3/spaces/#{space_guid}/relationships/isolation_segment", body, admin_headers)
-        puts response.body
         expect(response.code).to eq('200')
 
         opts = {
           user_id: user.guid,
-          scope: ['cloud_controller.read', 'cloud_controller.write'],
+          scope: %w(cloud_controller.read cloud_controller.write),
         }
         response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
         expect(response.code).to eq('200')
