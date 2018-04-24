@@ -21,8 +21,8 @@ module VCAP::CloudController
                   optional(:buildpacks) => [
                     {
                       key: String,
-                      name: String,
-                      version: String,
+                      optional(:name) => String,
+                      optional(:version) => String,
                     }
                   ]
                 },

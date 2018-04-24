@@ -237,6 +237,20 @@ module VCAP::CloudController
                   expect(droplet.reload.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks).
                     to match_array(BuildpackLifecycleBuildpackModel.all)
                 end
+
+                context 'when lifecycle buildpacks do not have versions or names' do
+                  let(:lifecycle_buildpacks) do
+                    [{ key: buildpack1_key, }, { key: buildpack2_key, }, { key: buildpack3_key, },]
+                  end
+
+                  it 'accepts the lifecycle buildpacks' do
+                    success_response[:result][:lifecycle_metadata][:buildpacks] = lifecycle_buildpacks
+                    subject.staging_complete(success_response)
+                    expect(droplet.reload.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.size).to eq(lifecycle_buildpacks.size)
+                    expect(droplet.reload.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks).
+                      to match_array(BuildpackLifecycleBuildpackModel.all)
+                  end
+                end
               end
             end
 
