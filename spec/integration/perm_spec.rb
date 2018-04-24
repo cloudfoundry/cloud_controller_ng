@@ -345,18 +345,18 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "assigns the specified user to the org #{role} role" do
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "org.#{role}", resource_id: org_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(false)
 
           put "/v2/organizations/#{org_id}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "org.#{role}", resource_id: org_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(true)
         end
 
         it 'does nothing when the user is assigned to the role a second time' do
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "org.#{role}", resource_id: org_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(false)
 
           put "/v2/organizations/#{org_id}/#{role}s/#{assignee.guid}"
@@ -365,7 +365,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           put "/v2/organizations/#{org_id}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "org.#{role}", resource_id: org_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(true)
         end
       end
@@ -384,12 +384,12 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the org #{role} role" do
-          client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
+          client.assign_role(role_name: role_name, actor_id: assignee.guid, namespace: issuer)
 
           delete "/v2/organizations/#{org.guid}/#{role}s", { 'username' => assignee.username }.to_json
           expect(last_response.status).to eq(204)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: org.guid)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: org.guid)
           expect(has_permission).to eq(false)
         end
 
@@ -463,17 +463,17 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       delete "/v2/organizations/#{org1_id}/users?recursive=true", { 'username' => assignee.username }.to_json
       expect(last_response.status).to eq(204)
 
-      has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: 'org.user', resource_id: org1_id)
+      has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: 'org.user', resource: org1_id)
       expect(has_permission).to eq(false)
 
-      has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: 'org.user', resource_id: org2_id)
+      has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: 'org.user', resource: org2_id)
       expect(has_permission).to eq(true)
 
       SPACE_ROLES.each do |role|
-        has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: org1_space_id)
+        has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: org1_space_id)
         expect(has_permission).to eq(false)
 
-        has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: org2_space_id)
+        has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: org2_space_id)
         expect(has_permission).to eq(true)
       end
     end
@@ -491,12 +491,12 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the org #{role} role" do
-          client.assign_role(role_name: role_name, actor_id: assignee.guid, issuer: issuer)
+          client.assign_role(role_name: role_name, actor_id: assignee.guid, namespace: issuer)
 
           delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(204)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "org.#{role}", resource_id: org.guid)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org.guid)
           expect(has_permission).to eq(false)
         end
 
@@ -705,18 +705,18 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     SPACE_ROLES.each do |role|
       describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
         it "assigns the specified user to the space #{role} role" do
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: space_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(false)
 
           put "/v2/spaces/#{space_id}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: space_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(true)
         end
 
         it 'does nothing when the user is assigned to the role a second time' do
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: space_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(false)
 
           put "/v2/spaces/#{space_id}/#{role}s/#{assignee.guid}"
@@ -725,7 +725,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           put "/v2/spaces/#{space_id}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: space_id)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(true)
         end
       end
@@ -749,12 +749,12 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the space #{role} role" do
-          client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
+          client.assign_role(actor_id: assignee.guid, namespace: issuer, role_name: role_name)
 
           delete "/v2/spaces/#{space.guid}/#{role}s", { 'username' => assignee.username }.to_json
           expect(last_response.status).to eq(200)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: space.guid)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space.guid)
           expect(has_permission).to eq(false)
         end
       end
@@ -778,12 +778,12 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the space #{role} role" do
-          client.assign_role(actor_id: assignee.guid, issuer: issuer, role_name: role_name)
+          client.assign_role(actor_id: assignee.guid, namespace: issuer, role_name: role_name)
 
           delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
           expect(last_response.status).to eq(204)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, issuer: issuer, permission_name: "space.#{role}", resource_id: space.guid)
+          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space.guid)
           expect(has_permission).to eq(false)
         end
 

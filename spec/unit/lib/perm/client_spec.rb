@@ -38,7 +38,7 @@ module VCAP::CloudController::Perm
           role_name: "org-developer-#{org_id}",
           permissions: [
             CloudFoundry::Perm::V1::Models::Permission.new(
-              name: 'org.developer',
+              action: 'org.developer',
               resource_pattern: org_id.to_s
             )
           ]
@@ -135,7 +135,7 @@ module VCAP::CloudController::Perm
         subject.assign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
 
         expect(client).to have_received(:assign_role).
-          with(role_name: "org-developer-#{org_id}", actor_id: user_id, issuer: issuer)
+          with(role_name: "org-developer-#{org_id}", actor_id: user_id, namespace: issuer)
       end
 
       it 'does not fail if the assignment already exists' do
@@ -200,7 +200,7 @@ module VCAP::CloudController::Perm
         subject.unassign_org_role(role: 'developer', org_id: org_id, user_id: user_id, issuer: issuer)
 
         expect(client).to have_received(:unassign_role).
-          with(role_name: "org-developer-#{org_id}", actor_id: user_id, issuer: issuer)
+          with(role_name: "org-developer-#{org_id}", actor_id: user_id, namespace: issuer)
       end
 
       it 'does not fail if something does not exist' do
@@ -265,16 +265,16 @@ module VCAP::CloudController::Perm
 
         [:user, :manager, :billing_manager, :auditor].each do |role|
           expect(client).to have_received(:unassign_role).
-            with(role_name: "org-#{role}-#{org_id}", actor_id: user_id, issuer: issuer)
+            with(role_name: "org-#{role}-#{org_id}", actor_id: user_id, namespace: issuer)
           expect(client).to have_received(:unassign_role).
-            with(role_name: "org-#{role}-#{org_id2}", actor_id: user_id, issuer: issuer)
+            with(role_name: "org-#{role}-#{org_id2}", actor_id: user_id, namespace: issuer)
         end
 
         [:developer, :manager, :auditor].each do |role|
           expect(client).to have_received(:unassign_role).
-            with(role_name: "space-#{role}-#{space_id}", actor_id: user_id, issuer: issuer)
+            with(role_name: "space-#{role}-#{space_id}", actor_id: user_id, namespace: issuer)
           expect(client).to have_received(:unassign_role).
-            with(role_name: "space-#{role}-#{space_id2}", actor_id: user_id, issuer: issuer)
+            with(role_name: "space-#{role}-#{space_id2}", actor_id: user_id, namespace: issuer)
         end
       end
 
@@ -301,7 +301,7 @@ module VCAP::CloudController::Perm
           role_name: "space-developer-#{space_id}",
           permissions: [
             CloudFoundry::Perm::V1::Models::Permission.new(
-              name: 'space.developer',
+              action: 'space.developer',
               resource_pattern: space_id.to_s
             )
           ]
@@ -397,7 +397,7 @@ module VCAP::CloudController::Perm
         subject.assign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
 
         expect(client).to have_received(:assign_role).
-          with(role_name: "space-developer-#{space_id}", actor_id: user_id, issuer: issuer)
+          with(role_name: "space-developer-#{space_id}", actor_id: user_id, namespace: issuer)
       end
 
       it 'does not fail if the assignment already exists' do
@@ -470,7 +470,7 @@ module VCAP::CloudController::Perm
         subject.unassign_space_role(role: 'developer', space_id: space_id, user_id: user_id, issuer: issuer)
 
         expect(client).to have_received(:unassign_role).
-          with(role_name: "space-developer-#{space_id}", actor_id: user_id, issuer: issuer)
+          with(role_name: "space-developer-#{space_id}", actor_id: user_id, namespace: issuer)
       end
 
       it 'does not fail if something does not exist' do
@@ -528,9 +528,9 @@ module VCAP::CloudController::Perm
 
     describe '#has_permission?' do
       it 'returns true if the user has the permission' do
-        allow(client).to receive(:has_permission?).with(permission_name: 'space.developer', resource_id: space_id, actor_id: user_id, issuer: issuer).and_return(true)
+        allow(client).to receive(:has_permission?).with(action: 'space.developer', resource: space_id, actor_id: user_id, namespace: issuer).and_return(true)
 
-        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+        has_permission = subject.has_permission?(action: 'space.developer', resource: space_id, user_id: user_id, issuer: issuer)
 
         expect(has_permission).to equal(true)
       end
@@ -538,13 +538,13 @@ module VCAP::CloudController::Perm
       it 'returns false if the user does not have the permission' do
         allow(client).to receive(:has_permission?).and_return(false)
 
-        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+        has_permission = subject.has_permission?(action: 'space.developer', resource: space_id, user_id: user_id, issuer: issuer)
 
         expect(has_permission).to equal(false)
       end
 
       it 'returns false if disabled' do
-        has_permission = disabled_subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+        has_permission = disabled_subject.has_permission?(action: 'space.developer', resource: space_id, user_id: user_id, issuer: issuer)
 
         expect(has_permission).to equal(false)
 
@@ -554,15 +554,15 @@ module VCAP::CloudController::Perm
       it 'logs Perm errors and returns false' do
         allow(client).to receive(:has_permission?).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
 
-        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+        has_permission = subject.has_permission?(action: 'space.developer', resource: space_id, user_id: user_id, issuer: issuer)
 
         expect(has_permission).to equal(false)
         expect(logger).to have_received(:error).with(
           'has-permission?.bad-status',
-          permission_name: 'space.developer',
+          action: 'space.developer',
           user_id: user_id,
           issuer: issuer,
-          resource_id: space_id,
+          resource: space_id,
           status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
@@ -572,7 +572,7 @@ module VCAP::CloudController::Perm
       it 'logs all other errors' do
         allow(client).to receive(:has_permission?).and_raise(StandardError)
 
-        has_permission = subject.has_permission?(permission_name: 'space.developer', resource_id: space_id, user_id: user_id, issuer: issuer)
+        has_permission = subject.has_permission?(action: 'space.developer', resource: space_id, user_id: user_id, issuer: issuer)
 
         expect(has_permission).to equal(false)
 
@@ -585,13 +585,13 @@ module VCAP::CloudController::Perm
     describe '#has_any_permission?' do
       let(:permissions) {
         [
-          { permission_name: 'space.developer', resource_id: space_id },
-          { permission_name: 'org.manager', resource_id: org_id },
+          { action: 'space.developer', resource: space_id },
+          { action: 'org.manager', resource: org_id },
         ]
       }
       it 'returns true if the user has any of the permission' do
-        allow(client).to receive(:has_permission?).with(permission_name: 'space.developer', resource_id: space_id, actor_id: user_id, issuer: issuer).and_return(true)
-        allow(client).to receive(:has_permission?).with(permission_name: 'org.manager', resource_id: org_id, actor_id: user_id, issuer: issuer).and_return(false)
+        allow(client).to receive(:has_permission?).with(action: 'space.developer', resource: space_id, actor_id: user_id, namespace: issuer).and_return(true)
+        allow(client).to receive(:has_permission?).with(action: 'org.manager', resource: org_id, actor_id: user_id, namespace: issuer).and_return(false)
 
         has_permission = subject.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
 
@@ -622,10 +622,10 @@ module VCAP::CloudController::Perm
         expect(has_permission).to equal(false)
         expect(logger).to have_received(:error).with(
           'has-permission?.bad-status',
-          permission_name: 'space.developer',
+          action: 'space.developer',
           user_id: user_id,
           issuer: issuer,
-          resource_id: space_id,
+          resource: space_id,
           status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,
@@ -633,10 +633,10 @@ module VCAP::CloudController::Perm
 
         expect(logger).to have_received(:error).with(
           'has-permission?.bad-status',
-          permission_name: 'org.manager',
+          action: 'org.manager',
           user_id: user_id,
           issuer: issuer,
-          resource_id: org_id,
+          resource: org_id,
           status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
           code: anything,
           details: anything,

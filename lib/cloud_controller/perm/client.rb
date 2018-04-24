@@ -89,26 +89,26 @@ module VCAP::CloudController
 
       def has_any_permission?(permissions:, user_id:, issuer:)
         if enabled
-          permissions.any? do |p|
-            has_permission?(permission_name: p[:permission_name], resource_id: p[:resource_id], issuer: issuer, user_id: user_id)
+          permissions.any? do |permission|
+            has_permission?(action: permission[:action], resource: permission[:resource], issuer: issuer, user_id: user_id)
           end
         else
           false
         end
       end
 
-      def has_permission?(permission_name:, resource_id:, user_id:, issuer:)
+      def has_permission?(action:, resource:, user_id:, issuer:)
         if enabled
           begin
-            client.has_permission?(actor_id: user_id, issuer: issuer, permission_name: permission_name, resource_id: resource_id)
+            client.has_permission?(actor_id: user_id, namespace: issuer, action: action, resource: resource)
           rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error('has-permission?.bad-status',
-                permission_name: permission_name, resource_id: resource_id, user_id: user_id, issuer: issuer,
+                action: action, resource: resource, user_id: user_id, issuer: issuer,
                 status: e.class.to_s, code: e.code, details: e.details, metadata: e.metadata)
             false
           rescue StandardError => e
             logger.error('has-permission?.failed',
-              permission_name: permission_name, resource_id: resource_id, user_id: user_id, issuer: issuer,
+              action: action, resource: resource, user_id: user_id, issuer: issuer,
               message: e.message)
             false
           end
@@ -135,14 +135,14 @@ module VCAP::CloudController
 
       def org_role_to_permission(role, org_id)
         CloudFoundry::Perm::V1::Models::Permission.new(
-          name: "org.#{role}",
+          action: "org.#{role}",
           resource_pattern: org_id.to_s
         )
       end
 
       def space_role_to_permission(role, space_id)
         CloudFoundry::Perm::V1::Models::Permission.new(
-          name: "space.#{role}",
+          action: "space.#{role}",
           resource_pattern: space_id.to_s
         )
       end
@@ -178,7 +178,7 @@ module VCAP::CloudController
       def assign_role(role:, user_id:, issuer:)
         if enabled
           begin
-            client.assign_role(role_name: role, actor_id: user_id, issuer: issuer)
+            client.assign_role(role_name: role, actor_id: user_id, namespace: issuer)
           rescue CloudFoundry::Perm::V1::Errors::AlreadyExists
             logger.debug('assign-role.assignment-already-exists', role: role, user_id: user_id, issuer: issuer)
           rescue CloudFoundry::Perm::V1::Errors::NotFound
@@ -194,7 +194,7 @@ module VCAP::CloudController
       def unassign_role(role:, user_id:, issuer:)
         if enabled
           begin
-            client.unassign_role(role_name: role, actor_id: user_id, issuer: issuer)
+            client.unassign_role(role_name: role, actor_id: user_id, namespace: issuer)
           rescue CloudFoundry::Perm::V1::Errors::NotFound => e
             logger.error('unassign-role.resource-not-found', role: role, user_id: user_id, issuer: issuer, details: e.details, metadata: e.metadata)
           rescue CloudFoundry::Perm::V1::Errors::BadStatus => e

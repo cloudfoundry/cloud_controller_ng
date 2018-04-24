@@ -26,17 +26,17 @@ module VCAP
 
         def can_read_from_org?(org_id)
           permissions = [
-            { permission_name: 'org.manager', resource_id: org_id },
-            { permission_name: 'org.auditor', resource_id: org_id },
-            { permission_name: 'org.user', resource_id: org_id },
-            { permission_name: 'org.billing_manager', resource_id: org_id },
+            { action: 'org.manager', resource: org_id },
+            { action: 'org.auditor', resource: org_id },
+            { action: 'org.user', resource: org_id },
+            { action: 'org.billing_manager', resource: org_id },
           ]
           can_read_globally? || has_any_permission?(permissions)
         end
 
         def can_write_to_org?(org_id)
           permissions = [
-            { permission_name: 'org.manager', resource_id: org_id },
+            { action: 'org.manager', resource: org_id },
           ]
 
           can_write_globally? || has_any_permission?(permissions)
@@ -44,10 +44,10 @@ module VCAP
 
         def can_read_from_space?(space_id, org_id)
           permissions = [
-            { permission_name: 'space.developer', resource_id: space_id },
-            { permission_name: 'space.manager', resource_id: space_id },
-            { permission_name: 'space.auditor', resource_id: space_id },
-            { permission_name: 'org.manager', resource_id: org_id },
+            { action: 'space.developer', resource: space_id },
+            { action: 'space.manager', resource: space_id },
+            { action: 'space.auditor', resource: space_id },
+            { action: 'org.manager', resource: org_id },
           ]
 
           can_read_globally? || has_any_permission?(permissions)
@@ -55,7 +55,7 @@ module VCAP
 
         def can_see_secrets_in_space?(space_id, org_id)
           permissions = [
-            { permission_name: 'space.developer', resource_id: space_id },
+            { action: 'space.developer', resource: space_id },
           ]
 
           can_read_secrets_globally? || has_any_permission?(permissions)
@@ -63,7 +63,7 @@ module VCAP
 
         def can_write_to_space?(space_id)
           permissions = [
-            { permission_name: 'space.developer', resource_id: space_id },
+            { action: 'space.developer', resource: space_id },
           ]
 
           can_write_globally? || has_any_permission?(permissions)

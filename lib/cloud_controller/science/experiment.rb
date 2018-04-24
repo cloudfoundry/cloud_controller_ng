@@ -6,7 +6,7 @@ module VCAP::CloudController
       include Scientist::Experiment
 
       def initialize(name:, enabled:)
-        @name = name
+        @experiment_name = name
         @enabled = enabled
       end
 
@@ -37,10 +37,10 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :name, :enabled
+      attr_reader :experiment_name, :enabled
 
       def logger
-        @logger ||= Steno.logger("science.#{name}")
+        @logger ||= Steno.logger("science.#{experiment_name}")
       end
 
       def observation_payload(observation)
