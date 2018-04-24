@@ -99,8 +99,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       ORG_ROLES.each do |role|
         role_name = "org-#{role}-#{org_id}"
 
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
+        expect(role_exists(client, role_name)).to eq(true)
       end
     end
 
@@ -128,8 +127,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       ORG_ROLES.each do |role|
         role_name = "org-#{role}-#{org_id}"
 
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
+        expect(role_exists(client, role_name)).to eq(true)
       end
     end
 
@@ -168,9 +166,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           ORG_ROLES.each do |role|
             role_name = "org-#{role}-#{org_id}"
 
-            expect {
-              client.get_role(role_name)
-            }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+            expect(role_exists(client, role_name)).to eq(false)
           end
         end
       end
@@ -195,9 +191,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           ORG_ROLES.each do |role|
             role_name = "org-#{role}-#{org_id}"
 
-            expect {
-              client.get_role(role_name)
-            }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
+            expect(role_exists(client, role_name)).to eq(false)
           end
         end
       end
@@ -213,34 +207,30 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           json_body = JSON.parse(last_response.body)
           org_id = json_body['metadata']['guid']
 
+          post '/v2/spaces', {
+            name: SecureRandom.uuid,
+            organization_guid: org_id
+          }.to_json
+
+          expect(last_response.status).to eq(201)
+
+          json_body = JSON.parse(last_response.body)
+
+          delete "/v2/organizations/#{org_id}?recursive=false"
+
+          expect(last_response.status).to eq(400)
+
           ORG_ROLES.each do |role|
             org_role_name = "org-#{role}-#{org_id}"
 
-            post '/v2/spaces', {
-              name: SecureRandom.uuid,
-              organization_guid: org_id
-            }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-
-            delete "/v2/organizations/#{org_id}?recursive=false"
-
-            expect(last_response.status).to eq(400)
-
-            expect {
-              client.get_role(org_role_name)
-            }.not_to raise_error
+            expect(role_exists(client, org_role_name)).to eq(true)
           end
 
           space_id = json_body['metadata']['guid']
           SPACE_ROLES.each do |role|
             space_role_name = "space-#{role}-#{space_id}"
 
-            expect {
-              client.get_role(space_role_name)
-            }.not_to raise_error
+            expect(role_exists(client, space_role_name)).to eq(true)
           end
         end
       end
@@ -271,17 +261,13 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
             ORG_ROLES.each do |role|
               org_role_name = "org-#{role}-#{org_id}"
 
-              expect {
-                client.get_role(org_role_name)
-              }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+              expect(role_exists(client, org_role_name)).to eq(false)
             end
 
             space_id = json_body['metadata']['guid']
             SPACE_ROLES.each do |role|
               space_role_name = "space-#{role}-#{space_id}"
-              expect {
-                client.get_role(space_role_name)
-              }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+              expect(role_exists(client, space_role_name)).to eq(false)
             end
           end
         end
@@ -315,17 +301,13 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
             ORG_ROLES.each do |role|
               org_role_name = "org-#{role}-#{org_id}"
 
-              expect {
-                client.get_role(org_role_name)
-              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{org_role_name} was not found"
+              expect(role_exists(client, org_role_name)).to eq(false)
             end
 
             space_id = json_body['metadata']['guid']
             SPACE_ROLES.each do |role|
               space_role_name = "space-#{role}-#{space_id}"
-              expect {
-                client.get_role(space_role_name)
-              }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{space_role_name} was not found"
+              expect(role_exists(client, space_role_name)).to eq(false)
             end
           end
         end
@@ -510,10 +492,10 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
       json_body = response.json_body
       space_id = json_body['guid']
+
       SPACE_ROLES.each do |role|
         role_name = "space-#{role}-#{space_id}"
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
+        expect(role_exists(client, role_name)).to eq(true)
       end
     end
 
@@ -554,8 +536,8 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       space_id = json_body['metadata']['guid']
       SPACE_ROLES.each do |role|
         role_name = "space-#{role}-#{space_id}"
-        role = client.get_role(role_name)
-        expect(role.name).to eq(role_name)
+
+        expect(role_exists(client, role_name)).to eq(true)
       end
     end
 
@@ -605,9 +587,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         SPACE_ROLES.each do |role|
           role_name = "space-#{role}-#{space_id}"
 
-          expect {
-            client.get_role(role_name)
-          }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+          expect(role_exists(client, role_name)).to eq(false)
         end
       end
     end
@@ -634,9 +614,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
         SPACE_ROLES.each do |role|
           role_name = "space-#{role}-#{space_id}"
-          expect {
-            client.get_role(role_name)
-          }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
+          expect(role_exists(client, role_name)).to eq(false)
         end
       end
     end
@@ -773,7 +751,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     it 'can read from org (can_read_from_org?)' do
       opts = {
         user_id: user.guid,
-        scope: ['cloud_controller.read', 'cloud_controller.write'],
+        scope: %w(cloud_controller.read cloud_controller.write),
       }
       response = make_get_request("/v3/organizations/#{org_guid}", http_headers(auth_token(opts)))
       expect(response.code).to eq('200')
@@ -802,7 +780,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
       opts = {
         user_id: user.guid,
-        scope: ['cloud_controller.read', 'cloud_controller.write'],
+        scope: %w(cloud_controller.read cloud_controller.write),
       }
       response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
       expect(response.code).to eq('200')
@@ -815,7 +793,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     it 'can create a space in the org (can_write_to_org?)' do
       opts = {
         user_id: user.guid,
-        scope: ['cloud_controller.read', 'cloud_controller.write'],
+        scope: %w(cloud_controller.read cloud_controller.write),
       }
 
       space_name = SecureRandom.uuid
@@ -841,7 +819,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     it 'can read from space (can_read_from_space?)' do
       opts = {
         user_id: user.guid,
-        scope: ['cloud_controller.read', 'cloud_controller.write'],
+        scope: %w(cloud_controller.read cloud_controller.write),
       }
       response = make_get_request("/v3/spaces/#{space_guid}", http_headers(auth_token(opts)))
       expect(response.code).to eq('200')
@@ -892,7 +870,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     it 'can create an app in the space (can_write_to_space?)' do
       opts = {
         user_id: user.guid,
-        scope: ['cloud_controller.read', 'cloud_controller.write'],
+        scope: %w(cloud_controller.read cloud_controller.write),
       }
 
       app_name = SecureRandom.uuid
@@ -1092,5 +1070,16 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   def make_org_user(user, org_guid)
     response = make_put_request("/v2/organizations/#{org_guid}/users/#{user.guid}", {}.to_json, admin_headers)
     expect(response.code).to eq('201')
+  end
+
+  def role_exists(client, role_name)
+    begin
+      client.create_role(role_name: role_name)
+    rescue CloudFoundry::Perm::V1::Errors::AlreadyExists
+      return true
+    end
+
+    client.delete_role(role_name)
+    false
   end
 end
