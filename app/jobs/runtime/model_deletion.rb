@@ -17,12 +17,11 @@ module VCAP::CloudController
           return if model.nil?
 
           model.db.transaction do
-            if model.exists?
-              model.lock!
-
-              model.destroy
-            end
+            model.lock!
+            model.destroy
           end
+        rescue Sequel::NoExistingObject
+          nil
         end
 
         def job_name_in_configuration
