@@ -91,107 +91,113 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
   describe 'Administrative tasks' do
     describe 'POST /v3/organizations' do
-      ORG_ROLES.each do |role|
-        it "creates the org-#{role}-<org_id> role" do
-          body = { name: SecureRandom.uuid }.to_json
-          response = make_post_request('/v3/organizations', body, admin_headers)
+      it 'creates the org roles in perm' do
+        body = { name: SecureRandom.uuid }.to_json
+        response = make_post_request('/v3/organizations', body, admin_headers)
 
-          expect(response.code).to eq('201')
+        expect(response.code).to eq('201')
 
-          json_body = response.json_body
-          org_id = json_body['guid']
+        json_body = response.json_body
+        org_id = json_body['guid']
+
+        ORG_ROLES.each do |role|
           role_name = "org-#{role}-#{org_id}"
 
           role = client.get_role(role_name)
           expect(role.name).to eq(role_name)
         end
+      end
 
-        it 'does not allow the user to create an org that already exists' do
-          body = { name: SecureRandom.uuid }.to_json
-          response = make_post_request('/v3/organizations', body, admin_headers)
+      it 'does not allow the user to create an org that already exists' do
+        body = { name: SecureRandom.uuid }.to_json
+        response = make_post_request('/v3/organizations', body, admin_headers)
 
-          expect(response.code).to eq('201')
+        expect(response.code).to eq('201')
 
-          response = make_post_request('/v3/organizations', body, admin_headers)
+        response = make_post_request('/v3/organizations', body, admin_headers)
 
-          expect(response.code).to eq('422')
-        end
+        expect(response.code).to eq('422')
       end
     end
 
     describe 'POST /v2/organizations' do
-      ORG_ROLES.each do |role|
-        it "creates the org-#{role}-<org_id> role" do
-          post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+      it 'creates the org roles' do
+        post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-          expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(201)
 
-          json_body = JSON.parse(last_response.body)
-          org_id = json_body['metadata']['guid']
+        json_body = JSON.parse(last_response.body)
+        org_id = json_body['metadata']['guid']
+
+        ORG_ROLES.each do |role|
           role_name = "org-#{role}-#{org_id}"
 
           role = client.get_role(role_name)
           expect(role.name).to eq(role_name)
         end
+      end
 
-        it 'does not allow the user to create an org that already exists' do
-          body = { name: SecureRandom.uuid }.to_json
-          post '/v2/organizations', body
+      it 'does not allow the user to create an org that already exists' do
+        body = { name: SecureRandom.uuid }.to_json
+        post '/v2/organizations', body
 
-          expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(201)
 
-          post '/v2/organizations', body
+        post '/v2/organizations', body
 
-          expect(last_response.status).to eq(400)
+        expect(last_response.status).to eq(400)
 
-          json_body = JSON.parse(last_response.body)
-          expect(json_body['error_code']).to eq('CF-OrganizationNameTaken')
-        end
+        json_body = JSON.parse(last_response.body)
+        expect(json_body['error_code']).to eq('CF-OrganizationNameTaken')
       end
     end
 
     describe 'DELETE /v2/organizations/:guid' do
       let(:worker) { Delayed::Worker.new }
 
-      ORG_ROLES.each do |role|
-        describe 'when the org does not have spaces' do
-          describe 'synchronous deletion' do
-            it "deletes the org-#{role}-<org_id> role" do
-              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+      describe 'when the org does not have spaces' do
+        describe 'synchronous deletion' do
+          it 'deletes the org roles' do
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-              expect(last_response.status).to eq(201)
+            expect(last_response.status).to eq(201)
 
-              json_body = JSON.parse(last_response.body)
-              org_id = json_body['metadata']['guid']
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+
+            delete "/v2/organizations/#{org_id}"
+
+            expect(last_response.status).to eq(204)
+
+            ORG_ROLES.each do |role|
               role_name = "org-#{role}-#{org_id}"
-
-              delete "/v2/organizations/#{org_id}"
-
-              expect(last_response.status).to eq(204)
 
               expect {
                 client.get_role(role_name)
               }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
             end
           end
+        end
 
-          describe 'async deletion' do
-            it "deletes the org-#{role}-<org_id> role" do
-              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+        describe 'async deletion' do
+          it 'deletes the org roles' do
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-              expect(last_response.status).to eq(201)
+            expect(last_response.status).to eq(201)
 
-              json_body = JSON.parse(last_response.body)
-              org_id = json_body['metadata']['guid']
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+
+            delete "/v2/organizations/#{org_id}?async=true"
+
+            expect(last_response.status).to eq(202)
+
+            succeeded_jobs, failed_jobs = worker.work_off
+            expect(succeeded_jobs).to be > 0
+            expect(failed_jobs).to equal(0)
+
+            ORG_ROLES.each do |role|
               role_name = "org-#{role}-#{org_id}"
-
-              delete "/v2/organizations/#{org_id}?async=true"
-
-              expect(last_response.status).to eq(202)
-
-              succeeded_jobs, failed_jobs = worker.work_off
-              expect(succeeded_jobs).to be > 0
-              expect(failed_jobs).to equal(0)
 
               expect {
                 client.get_role(role_name)
@@ -199,16 +205,19 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
             end
           end
         end
+      end
 
-        describe 'when the org has spaces' do
-          describe 'without "recursive" param' do
-            it 'alerts the user without deleting any roles' do
-              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+      describe 'when the org has spaces' do
+        describe 'without "recursive" param' do
+          it 'alerts the user without deleting any roles' do
+            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-              expect(last_response.status).to eq(201)
+            expect(last_response.status).to eq(201)
 
-              json_body = JSON.parse(last_response.body)
-              org_id = json_body['metadata']['guid']
+            json_body = JSON.parse(last_response.body)
+            org_id = json_body['metadata']['guid']
+
+            ORG_ROLES.each do |role|
               org_role_name = "org-#{role}-#{org_id}"
 
               post '/v2/spaces', {
@@ -219,8 +228,6 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
               expect(last_response.status).to eq(201)
 
               json_body = JSON.parse(last_response.body)
-              space_id = json_body['metadata']['guid']
-              space_role_name = "space-developer-#{space_id}"
 
               delete "/v2/organizations/#{org_id}?recursive=false"
 
@@ -229,99 +236,117 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
               expect {
                 client.get_role(org_role_name)
               }.not_to raise_error
+            end
+
+            space_id = json_body['metadata']['guid']
+            SPACE_ROLES.each do |role|
+              space_role_name = "space-#{role}-#{space_id}"
+
               expect {
                 client.get_role(space_role_name)
               }.not_to raise_error
             end
           end
+        end
 
-          describe 'with "recursive" param' do
-            describe 'synchronous deletion' do
-              it 'deletes the roles recursively' do
-                post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+        describe 'with "recursive" param' do
+          describe 'synchronous deletion' do
+            it 'deletes the roles recursively' do
+              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-                expect(last_response.status).to eq(201)
+              expect(last_response.status).to eq(201)
 
-                json_body = JSON.parse(last_response.body)
-                org_id = json_body['metadata']['guid']
+              json_body = JSON.parse(last_response.body)
+              org_id = json_body['metadata']['guid']
+
+              post '/v2/spaces', {
+                name: SecureRandom.uuid,
+                organization_guid: org_id
+              }.to_json
+
+              expect(last_response.status).to eq(201)
+
+              json_body = JSON.parse(last_response.body)
+
+              delete "/v2/organizations/#{org_id}?recursive=true"
+
+              expect(last_response.status).to eq(204)
+
+              ORG_ROLES.each do |role|
                 org_role_name = "org-#{role}-#{org_id}"
-
-                post '/v2/spaces', {
-                  name: SecureRandom.uuid,
-                  organization_guid: org_id
-                }.to_json
-
-                expect(last_response.status).to eq(201)
-
-                json_body = JSON.parse(last_response.body)
-                space_id = json_body['metadata']['guid']
-                space_role_name = "space-developer-#{space_id}"
-
-                delete "/v2/organizations/#{org_id}?recursive=true"
-
-                expect(last_response.status).to eq(204)
 
                 expect {
                   client.get_role(org_role_name)
                 }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+              end
+
+              space_id = json_body['metadata']['guid']
+              SPACE_ROLES.each do |role|
+                space_role_name = "space-#{role}-#{space_id}"
                 expect {
                   client.get_role(space_role_name)
                 }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
               end
             end
+          end
 
-            describe 'async deletion' do
-              it 'deletes the roles recursively' do
-                post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+          describe 'async deletion' do
+            it 'deletes the roles recursively' do
+              post '/v2/organizations', { name: SecureRandom.uuid }.to_json
 
-                expect(last_response.status).to eq(201)
+              expect(last_response.status).to eq(201)
 
-                json_body = JSON.parse(last_response.body)
-                org_id = json_body['metadata']['guid']
+              json_body = JSON.parse(last_response.body)
+              org_id = json_body['metadata']['guid']
+
+              post '/v2/spaces', {
+                name: SecureRandom.uuid,
+                organization_guid: org_id
+              }.to_json
+
+              expect(last_response.status).to eq(201)
+
+              json_body = JSON.parse(last_response.body)
+
+              delete "/v2/organizations/#{org_id}?recursive=true&async=true"
+
+              expect(last_response.status).to eq(202)
+
+              succeeded_jobs, failed_jobs = worker.work_off
+              expect(succeeded_jobs).to be > 0
+              expect(failed_jobs).to equal(0)
+
+              ORG_ROLES.each do |role|
                 org_role_name = "org-#{role}-#{org_id}"
-
-                post '/v2/spaces', {
-                  name: SecureRandom.uuid,
-                  organization_guid: org_id
-                }.to_json
-
-                expect(last_response.status).to eq(201)
-
-                json_body = JSON.parse(last_response.body)
-                space_id = json_body['metadata']['guid']
-                space_role_name = "space-developer-#{space_id}"
-
-                delete "/v2/organizations/#{org_id}?recursive=true&async=true"
-
-                expect(last_response.status).to eq(202)
-
-                succeeded_jobs, failed_jobs = worker.work_off
-                expect(succeeded_jobs).to be > 0
-                expect(failed_jobs).to equal(0)
 
                 expect {
                   client.get_role(org_role_name)
                 }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{org_role_name} was not found"
+              end
+
+              space_id = json_body['metadata']['guid']
+              SPACE_ROLES.each do |role|
+                space_role_name = "space-#{role}-#{space_id}"
                 expect {
                   client.get_role(space_role_name)
                 }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{space_role_name} was not found"
               end
             end
           end
+        end
 
-          it 'alerts the user if the org does not exist' do
-            post '/v2/organizations', { name: SecureRandom.uuid }.to_json
-            expect(last_response.status).to eq(201)
+        it 'alerts the user if the org does not exist' do
+          post '/v2/organizations', { name: SecureRandom.uuid }.to_json
+          expect(last_response.status).to eq(201)
 
-            json_body = JSON.parse(last_response.body)
-            org_id = json_body['metadata']['guid']
+          json_body = JSON.parse(last_response.body)
+          org_id = json_body['metadata']['guid']
 
-            delete "/v2/organizations/#{org_id}"
-            expect(last_response.status).to eq(204)
+          delete "/v2/organizations/#{org_id}"
+          expect(last_response.status).to eq(204)
 
-            delete "/v2/organizations/#{org_id}"
-            expect(last_response.status).to eq(404)
-          end
+          delete "/v2/organizations/#{org_id}"
+          expect(last_response.status).to eq(404)
         end
       end
     end
@@ -393,43 +418,43 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           end
         end
       end
+    end
 
-      describe 'DELETE /v2/organizations/:guid/users?recursive=true' do
-        let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-        let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-        let!(:org1_space) { VCAP::CloudController::Space.make(organization: org1) }
-        let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
+    describe 'DELETE /v2/organizations/:guid/users?recursive=true' do
+      let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+      let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+      let!(:org1_space) { VCAP::CloudController::Space.make(organization: org1) }
+      let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
 
-        before do
-          client.create_role(role_name: "org-user-#{org1.guid}")
-          client.assign_role(role_name: "org-user-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)
-          client.create_role(role_name: "org-user-#{org2.guid}")
-          client.assign_role(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)
+      before do
+        client.create_role(role_name: "org-user-#{org1.guid}")
+        client.assign_role(role_name: "org-user-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)
+        client.create_role(role_name: "org-user-#{org2.guid}")
+        client.assign_role(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)
 
-          SPACE_ROLES.each do |role|
-            client.create_role(role_name: "space-#{role}-#{org1_space.guid}")
-            put "/v2/spaces/#{org1_space.guid}/#{role}s/#{assignee.guid}"
-            expect(last_response.status).to eq(201)
-            client.create_role(role_name: "space-#{role}-#{org2_space.guid}")
-            put "/v2/spaces/#{org2_space.guid}/#{role}s/#{assignee.guid}"
-            expect(last_response.status).to eq(201)
-          end
+        SPACE_ROLES.each do |role|
+          client.create_role(role_name: "space-#{role}-#{org1_space.guid}")
+          put "/v2/spaces/#{org1_space.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(201)
+          client.create_role(role_name: "space-#{role}-#{org2_space.guid}")
+          put "/v2/spaces/#{org2_space.guid}/#{role}s/#{assignee.guid}"
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      it 'removes the user from all org and space roles for that org and no other' do
+        delete "/v2/organizations/#{org1.guid}/users?recursive=true", { 'username' => assignee.username }.to_json
+        expect(last_response.status).to eq(204)
+
+        ORG_ROLES.each do |role|
+          expect(client.has_role?(role_name: "org-#{role}-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
         end
 
-        it 'removes the user from all org and space roles for that org and no other' do
-          delete "/v2/organizations/#{org1.guid}/users?recursive=true", { 'username' => assignee.username }.to_json
-          expect(last_response.status).to eq(204)
+        expect(client.has_role?(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
 
-          ORG_ROLES.each do |role|
-            expect(client.has_role?(role_name: "org-#{role}-#{org1.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
-          end
-
-          expect(client.has_role?(role_name: "org-user-#{org2.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
-
-          SPACE_ROLES.each do |role|
-            expect(client.has_role?(role_name: "space-#{role}-#{org1_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
-            expect(client.has_role?(role_name: "space-#{role}-#{org2_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
-          end
+        SPACE_ROLES.each do |role|
+          expect(client.has_role?(role_name: "space-#{role}-#{org1_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(false)
+          expect(client.has_role?(role_name: "space-#{role}-#{org2_space.guid}", actor_id: assignee.guid, issuer: issuer)).to be(true)
         end
       end
     end
@@ -472,93 +497,92 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         org_guid = org.json_body['metadata']['guid']
       end
 
-      SPACE_ROLES.each do |role|
-        it "creates the space-#{role}-<space_id> role" do
-          body = {
-            name: SecureRandom.uuid,
-            relationships: {
-              organization: {
-                data: {
-                  guid: org_guid
-                }
+      it 'creates the space roles' do
+        body = {
+          name: SecureRandom.uuid,
+          relationships: {
+            organization: {
+              data: {
+                guid: org_guid
               }
             }
-          }.to_json
+          }
+        }.to_json
 
-          response = make_post_request('/v3/spaces', body, admin_headers)
-          expect(response.code).to eq('201')
+        response = make_post_request('/v3/spaces', body, admin_headers)
+        expect(response.code).to eq('201')
 
-          json_body = response.json_body
-          space_id = json_body['guid']
+        json_body = response.json_body
+        space_id = json_body['guid']
+        SPACE_ROLES.each do |role|
           role_name = "space-#{role}-#{space_id}"
-
           role = client.get_role(role_name)
           expect(role.name).to eq(role_name)
         end
+      end
 
-        it 'does not allow user to create space that already exists' do
-          body = {
-            name: SecureRandom.uuid,
-            relationships: {
-              organization: {
-                data: {
-                  guid: org_guid
-                }
+      it 'does not allow user to create space that already exists' do
+        body = {
+          name: SecureRandom.uuid,
+          relationships: {
+            organization: {
+              data: {
+                guid: org_guid
               }
             }
-          }.to_json
+          }
+        }.to_json
 
-          response = make_post_request('/v3/spaces', body, admin_headers)
+        response = make_post_request('/v3/spaces', body, admin_headers)
 
-          expect(response.code).to eq('201')
+        expect(response.code).to eq('201')
 
-          response = make_post_request('/v3/spaces', body, admin_headers)
+        response = make_post_request('/v3/spaces', body, admin_headers)
 
-          expect(response.code).to eq('422')
-        end
+        expect(response.code).to eq('422')
       end
     end
+
 
     describe 'POST /v2/spaces' do
       let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
 
-      SPACE_ROLES.each do |role|
-        it "creates the space-#{role}-<space_id> role" do
-          post '/v2/spaces', {
-            name: SecureRandom.uuid,
-            organization_guid: org.guid
-          }.to_json
+      it 'creates the space roles' do
+        post '/v2/spaces', {
+          name: SecureRandom.uuid,
+          organization_guid: org.guid
+        }.to_json
 
-          expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(201)
 
-          json_body = JSON.parse(last_response.body)
-          space_id = json_body['metadata']['guid']
+        json_body = JSON.parse(last_response.body)
+        space_id = json_body['metadata']['guid']
+        SPACE_ROLES.each do |role|
           role_name = "space-#{role}-#{space_id}"
-
           role = client.get_role(role_name)
           expect(role.name).to eq(role_name)
         end
+      end
 
-        it 'does not allow user to create space that already exists' do
-          space_name = SecureRandom.uuid
+      it 'does not allow user to create space that already exists' do
+        space_name = SecureRandom.uuid
 
-          post '/v2/spaces', {
-            name: space_name,
-            organization_guid: org.guid
-          }.to_json
+        post '/v2/spaces', {
+          name: space_name,
+          organization_guid: org.guid
+        }.to_json
 
-          expect(last_response.status).to eq(201)
+        expect(last_response.status).to eq(201)
 
-          post '/v2/spaces', {
-            name: space_name,
-            organization_guid: org.guid
-          }.to_json
+        post '/v2/spaces', {
+          name: space_name,
+          organization_guid: org.guid
+        }.to_json
 
-          expect(last_response.status).to eq(400)
+        expect(last_response.status).to eq(400)
 
-          json_body = JSON.parse(last_response.body)
-          expect(json_body['error_code']).to eq('CF-SpaceNameTaken')
-        end
+        json_body = JSON.parse(last_response.body)
+        expect(json_body['error_code']).to eq('CF-SpaceNameTaken')
       end
     end
 
@@ -567,58 +591,8 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
       let(:worker) { Delayed::Worker.new }
 
-      SPACE_ROLES.each do |role|
-        describe 'synchronous deletion' do
-          it "deletes the space-#{role}-<space_id> role" do
-            post '/v2/spaces', {
-              name: SecureRandom.uuid,
-              organization_guid: org.guid
-            }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-            space_id = json_body['metadata']['guid']
-            role_name = "space-#{role}-#{space_id}"
-
-            delete "/v2/spaces/#{space_id}"
-
-            expect(last_response.status).to eq(204)
-
-            expect {
-              client.get_role(role_name)
-            }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
-          end
-        end
-
-        describe 'async deletion' do
-          it "deletes the space-#{role}-<space_id> role" do
-            post '/v2/spaces', {
-              name: SecureRandom.uuid,
-              organization_guid: org.guid
-            }.to_json
-
-            expect(last_response.status).to eq(201)
-
-            json_body = JSON.parse(last_response.body)
-            space_id = json_body['metadata']['guid']
-            role_name = "space-#{role}-#{space_id}"
-
-            delete "/v2/spaces/#{space_id}?async=true"
-
-            expect(last_response.status).to eq(202)
-
-            succeeded_jobs, failed_jobs = worker.work_off
-            expect(succeeded_jobs).to be > 0
-            expect(failed_jobs).to equal(0)
-
-            expect {
-              client.get_role(role_name)
-            }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
-          end
-        end
-
-        it 'alerts the user if the space does not exist' do
+      describe 'synchronous deletion' do
+        it 'deletes the space roles' do
           post '/v2/spaces', {
             name: SecureRandom.uuid,
             organization_guid: org.guid
@@ -630,11 +604,64 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           space_id = json_body['metadata']['guid']
 
           delete "/v2/spaces/#{space_id}"
+
           expect(last_response.status).to eq(204)
 
-          delete "/v2/spaces/#{space_id}"
-          expect(last_response.status).to eq(404)
+          SPACE_ROLES.each do |role|
+            role_name = "space-#{role}-#{space_id}"
+
+            expect {
+              client.get_role(role_name)
+            }.to raise_error CloudFoundry::Perm::V1::Errors::NotFound
+          end
         end
+      end
+
+      describe 'async deletion' do
+        it 'deletes the space roles' do
+          post '/v2/spaces', {
+            name: SecureRandom.uuid,
+            organization_guid: org.guid
+          }.to_json
+
+          expect(last_response.status).to eq(201)
+
+          json_body = JSON.parse(last_response.body)
+          space_id = json_body['metadata']['guid']
+
+          delete "/v2/spaces/#{space_id}?async=true"
+
+          expect(last_response.status).to eq(202)
+
+          succeeded_jobs, failed_jobs = worker.work_off
+          expect(succeeded_jobs).to be > 0
+          expect(failed_jobs).to equal(0)
+
+          SPACE_ROLES.each do |role|
+            role_name = "space-#{role}-#{space_id}"
+            expect {
+              client.get_role(role_name)
+            }.to raise_error(CloudFoundry::Perm::V1::Errors::NotFound), "Expected that role #{role_name} was not found"
+          end
+        end
+      end
+
+      it 'alerts the user if the space does not exist' do
+        post '/v2/spaces', {
+          name: SecureRandom.uuid,
+          organization_guid: org.guid
+        }.to_json
+
+        expect(last_response.status).to eq(201)
+
+        json_body = JSON.parse(last_response.body)
+        space_id = json_body['metadata']['guid']
+
+        delete "/v2/spaces/#{space_id}"
+        expect(last_response.status).to eq(204)
+
+        delete "/v2/spaces/#{space_id}"
+        expect(last_response.status).to eq(404)
       end
     end
 
@@ -860,7 +887,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
         body = {
           data: {
-             guid: isolation_segment_guid
+            guid: isolation_segment_guid
           }
         }.to_json
 
@@ -1053,7 +1080,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
     def create_org
       body = {
-          name: SecureRandom.uuid
+        name: SecureRandom.uuid
       }.to_json
 
       response = make_post_request('/v3/organizations', body, admin_headers)
@@ -1064,14 +1091,14 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
     def create_space(org_guid)
       body = {
-          name: SecureRandom.uuid,
-          relationships: {
-              organization: {
-                  data: {
-                      guid: org_guid
-                  }
-              }
+        name: SecureRandom.uuid,
+        relationships: {
+          organization: {
+            data: {
+              guid: org_guid
+            }
           }
+        }
       }.to_json
 
       response = make_post_request('/v3/spaces', body, admin_headers)
