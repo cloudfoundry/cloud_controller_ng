@@ -233,12 +233,12 @@ module VCAP::CloudController
         {
           name: buildpack_other_name,
           version: buildpack_version,
-          key: "#{buildpack.guid}_#{buildpack.sha256_checksum}",
+          key: buildpack.key,
         },
         {
           name: buildpack2_other_name,
           version: buildpack2_version,
-          key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+          key: buildpack2.key,
         },
       ]
       end

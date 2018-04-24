@@ -11,23 +11,33 @@ module VCAP::CloudController
         let(:buildpack1_name) { 'the-pleasant-buildpack' }
         let(:buildpack1_other_name) { 'valley' }
         let(:buildpack1_version) { '3.1' }
-        let!(:buildpack1) { VCAP::CloudController::Buildpack.make(name: buildpack1_name, sha256_checksum: 'mammoth') }
+        let(:buildpack1_key) { 'vicuna' }
+        let!(:buildpack1) { VCAP::CloudController::Buildpack.make(key: buildpack1_key, name: buildpack1_name, sha256_checksum: 'mammoth') }
         let(:buildpack2_name) { 'my-brilliant-buildpack' }
         let(:buildpack2_other_name) { 'launderette' }
         let(:buildpack2_version) { '95' }
-        let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
+        let(:buildpack2_key) { 'guanaco' }
+        let!(:buildpack2) { VCAP::CloudController::Buildpack.make(key: buildpack2_key, name: buildpack2_name, sha256_checksum: 'languid') }
+        let(:buildpack3_key) { 'git://my-buildpacks.tv/kate/allie.git' }
+        let(:buildpack3_other_name) { 'hilltop' }
+        let(:buildpack3_version) { 'ME' }
 
         let(:lifecycle_buildpacks) do
           [
             {
               name: buildpack1_other_name,
               version: buildpack1_version,
-              key: "#{buildpack1.guid}_#{buildpack1.sha256_checksum}",
+              key: buildpack1_key,
             },
             {
               name: buildpack2_other_name,
               version: buildpack2_version,
-              key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+              key: buildpack2_key,
+            },
+            {
+              name: buildpack3_other_name,
+              version: buildpack3_version,
+              key: buildpack3_key,
             },
           ]
         end
@@ -223,6 +233,7 @@ module VCAP::CloudController
                 it 'records the buildpack_lifecycle_buildpacks' do
                   success_response[:result][:lifecycle_metadata][:buildpacks] = lifecycle_buildpacks
                   subject.staging_complete(success_response)
+                  expect(droplet.reload.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.size).to eq(lifecycle_buildpacks.size)
                   expect(droplet.reload.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks).
                     to match_array(BuildpackLifecycleBuildpackModel.all)
                 end

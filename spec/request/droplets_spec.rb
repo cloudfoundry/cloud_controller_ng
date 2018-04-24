@@ -31,7 +31,7 @@ RSpec.describe 'Droplets' do
       end
 
       before do
-        droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ name: 'http://buildpack.git.url.com', version: '0.3', buildpack_name: 'git', oh_carp: 'we need to figure out url buildpacks' }], stack: 'stack-name')
+        droplet_model.buildpack_lifecycle_data.update(buildpacks: [{ key: 'http://buildpack.git.url.com', version: '0.3', name: 'git' }], stack: 'stack-name')
       end
 
       it 'gets a droplet' do

@@ -51,13 +51,9 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:stack]).to eq('the-happiest-stack')
           expect(result[:buildpacks]).to match_array([{ name: 'the-happiest-buildpack',
                                                         detect_output: 'the-happiest-buildpack-detect-output',
-                                                        buildpack_name: nil,
-                                                        version: nil,
                                                       },
                                                       { name: 'shaq',
                                                         detect_output: nil,
-                                                        buildpack_name: nil,
-                                                        version: nil,
                                                       }])
 
           expect(result[:created_at]).to be_a(Time)
@@ -77,13 +73,9 @@ module VCAP::CloudController::Presenters::V3
           it 'obfuscates the username and password' do
             expect(result[:buildpacks]).to match_array([{ name: 'shaq',
                                                           detect_output: nil,
-                                                          buildpack_name: nil,
-                                                          version: nil,
                                                         },
                                                         { name: 'https://***:***@neopets.com',
                                                           detect_output: 'the-happiest-buildpack-detect-output',
-                                                          buildpack_name: nil,
-                                                          version: nil,
                                                         }])
           end
         end
@@ -141,12 +133,11 @@ module VCAP::CloudController::Presenters::V3
             {
               name: buildpack1_other_name,
               version: buildpack1_version,
-              key: "#{buildpack1.guid}_#{buildpack1.sha256_checksum}",
+              key: buildpack1.key,
             },
             {
               name: buildpack2_other_name,
-              version: buildpack2_version,
-              key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+              key: buildpack2.key,
             },
           ]
         end
@@ -184,7 +175,6 @@ module VCAP::CloudController::Presenters::V3
             },
             { name: 'chris-cross',
               detect_output: 'black cow',
-              version: '1.9.79',
               buildpack_name:  'sailing',
             }])
 

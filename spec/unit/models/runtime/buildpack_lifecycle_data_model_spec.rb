@@ -95,17 +95,26 @@ module VCAP::CloudController
             let(:buildpack2_version) { '95' }
             let!(:buildpack2) { VCAP::CloudController::Buildpack.make(name: buildpack2_name, sha256_checksum: 'languid') }
 
+            let(:buildpack3_key) { 'git://my-buildpacks.tv/fred/barney.git' }
+            let(:buildpack3_other_name) { 'hilltop' }
+            let(:buildpack3_version) { 'ME' }
+
             let(:lifecycle_buildpacks) do
               [
                 {
                   name: buildpack1_other_name,
                   version: buildpack1_version,
-                  key: "#{buildpack1.guid}_#{buildpack1.sha256_checksum}",
+                  key: buildpack1.key,
                 },
                 {
                   name: buildpack2_other_name,
                   version: buildpack2_version,
-                  key: "#{buildpack2.guid}_#{buildpack2.sha256_checksum}",
+                  key: buildpack2.key,
+                },
+                {
+                  name: buildpack3_other_name,
+                  version: buildpack3_version,
+                  key: buildpack3_key,
                 },
               ]
             end
@@ -114,8 +123,8 @@ module VCAP::CloudController
               lifecycle_data.buildpacks = lifecycle_buildpacks
               lifecycle_data.save
               new_buildpacks = lifecycle_data.reload.buildpacks
-              expect(new_buildpacks.size).to eq(2)
-              expect(new_buildpacks).to match_array(%w/pleasant-valley-buildpack stepping-stone-buildpack/)
+              expect(new_buildpacks.size).to eq(lifecycle_buildpacks.size)
+              expect(new_buildpacks).to match_array(['pleasant-valley-buildpack', 'stepping-stone-buildpack', 'git://my-buildpacks.tv/fred/barney.git'])
               expect(lifecycle_data.reload.buildpack_lifecycle_buildpacks.
                       map { |d| { version: d[:version], name: d[:buildpack_name], buildpack_name: d.name } }).
                 to match_array([
@@ -126,6 +135,10 @@ module VCAP::CloudController
                   { version: '95',
                     name: 'gilooley',
                     buildpack_name: 'stepping-stone-buildpack'
+                  },
+                  { version: 'ME',
+                    name: 'hilltop',
+                    buildpack_name: 'git://my-buildpacks.tv/fred/barney.git'
                   },
                 ])
             end

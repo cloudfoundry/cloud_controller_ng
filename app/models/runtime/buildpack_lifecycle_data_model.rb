@@ -98,25 +98,37 @@ module VCAP::CloudController
 
     private
 
+    def attributes_from_buildpack_name(buildpack_name)
+      if UriUtils.is_buildpack_uri?(buildpack_name)
+        { buildpack_url: buildpack_name, admin_buildpack_name: nil }
+      else
+        { buildpack_url: nil, admin_buildpack_name: buildpack_name }
+      end
+    end
+
+    def attributes_from_buildpack_key(key)
+      admin_buildpack = Buildpack.find(key: key)
+      if admin_buildpack
+        { buildpack_url: nil, admin_buildpack_name: admin_buildpack.name }
+      elsif UriUtils.is_buildpack_uri?(key)
+        { buildpack_url: key, admin_buildpack_name: nil }
+      else
+        {} # Will fail a validity check downstream
+      end
+    end
+
+    def attributes_from_buildpack_hash(buildpack)
+      {
+        buildpack_name: buildpack[:name],
+        version: buildpack[:version],
+      }.merge(buildpack[:key] ? attributes_from_buildpack_key(buildpack[:key]) : attributes_from_buildpack_name(buildpack[:name]))
+    end
+
     def attributes_from_buildpack(buildpack)
       if buildpack.is_a?(String)
-        if UriUtils.is_buildpack_uri?(buildpack)
-          { buildpack_url: buildpack, admin_buildpack_name: nil }
-        else
-          { buildpack_url: nil, admin_buildpack_name: buildpack }
-        end
+        attributes_from_buildpack_name buildpack
       elsif buildpack.is_a?(Hash)
-        if buildpack[:key]
-          buildpack_guid = buildpack[:key].split('_')[0]
-          actual_buildpack = Buildpack.find(guid: buildpack_guid)
-          buildpack_attributes = attributes_from_buildpack(actual_buildpack.name)
-        else
-          buildpack_attributes = attributes_from_buildpack(buildpack[:name])
-        end
-        {
-          buildpack_name: buildpack[:name],
-          version: buildpack[:version],
-        }.merge(buildpack_attributes)
+        attributes_from_buildpack_hash buildpack
       else
         # Don't set anything -- this will fail later on a validity check
         {}

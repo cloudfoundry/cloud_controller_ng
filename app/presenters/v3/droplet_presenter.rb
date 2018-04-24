@@ -65,9 +65,8 @@ module VCAP::CloudController
             {
               name: name_to_print,
               detect_output: detect_output,
-              buildpack_name: buildpack.buildpack_name,
-              version: buildpack.version
-            }
+            }.merge({ buildpack_name: buildpack.buildpack_name,
+                      version: buildpack.version }.compact)
           end
         end
       end
