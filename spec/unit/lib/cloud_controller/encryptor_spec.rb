@@ -164,6 +164,9 @@ module VCAP::CloudController
     let(:klass) do
       Class.new do
         include VCAP::CloudController::Encryptor::FieldEncryptor
+        def self.columns
+          raise '<dynamic class>.columns: not implemented'
+        end
       end
     end
 
@@ -241,7 +244,10 @@ module VCAP::CloudController
 
     describe 'field-specific methods' do
       let(:columns) { [:sekret, :salt, :encryption_key_label] }
-      let(:klass2) { Class.new klass }
+      let(:klass2) { Class.new(klass) do
+                       def db; end
+                     end
+      }
       let(:subject) { klass2.new }
       let(:encryption_args) { {} }
       let(:default_key) { 'somerandomkey' }

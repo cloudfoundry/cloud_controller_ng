@@ -187,7 +187,7 @@ module VCAP::CloudController
 
     describe '#start_thin_server' do
       let(:app) { double(:app) }
-      let(:thin_server) { OpenStruct.new }
+      let(:thin_server) { OpenStruct.new(start!: nil) }
 
       subject(:start_thin_server) do
         runner = Runner.new(argv + ['-c', config_file.path])

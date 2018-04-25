@@ -12,10 +12,6 @@ module VCAP::CloudController
     end
 
     before do
-      allow_any_instance_of(::CloudController::Blobstore::UrlGenerator).
-        to receive(:perma_droplet_download_url).
-        and_return('http://blobsto.re/droplet')
-
       @internal_user     = 'internal_user'
       @internal_password = 'internal_password'
 

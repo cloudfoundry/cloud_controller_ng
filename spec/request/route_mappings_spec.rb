@@ -11,10 +11,6 @@ RSpec.describe 'Route Mappings' do
     headers_for(developer, user_name: user_name)
   end
 
-  before do
-    allow(ApplicationController).to receive(:configuration).and_return(TestConfig.config_instance)
-  end
-
   describe 'POST /v3/route_mappings' do
     it 'creates a route mapping for a specific process on an app on a specific port' do
       body = {

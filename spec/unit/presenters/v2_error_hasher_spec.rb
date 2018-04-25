@@ -28,13 +28,27 @@ RSpec.describe V2ErrorHasher do
     error
   end
 
+  class RuntimeErrorWithToH < RuntimeError
+    def to_h
+      raise '*RuntimeError.to_h: not implemented'
+    end
+  end
+
+  let(:to_provided_h_error) do
+    error = RuntimeErrorWithToH.new('fake message')
+    error.set_backtrace('fake backtrace')
+    allow(error).to receive(:to_h).and_return('arbritratry key' => 'arbritratry value', 'code' => 67890, 'source' => 'fake source')
+    allow(error.class).to receive(:name).and_return('RuntimeError')
+    error
+  end
+
   describe '#unsanitized_hash' do
     subject(:unsanitized_hash) do
       error_hasher.unsanitized_hash
     end
 
     context 'when the error knows how to convert itself into a hash' do
-      let(:error) { to_h_error }
+      let(:error) { to_provided_h_error }
 
       it 'lets the error do the conversion' do
         expect(unsanitized_hash).to eq({
@@ -124,7 +138,7 @@ RSpec.describe V2ErrorHasher do
     end
 
     context 'when the error knows how to convert itself into a hash' do
-      let(:error) { to_h_error }
+      let(:error) { to_provided_h_error }
 
       it 'returns the default hash' do
         expect(sanitized_hash).to eq({

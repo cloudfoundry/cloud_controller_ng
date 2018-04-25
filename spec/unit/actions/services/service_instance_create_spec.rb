@@ -22,7 +22,7 @@ module VCAP::CloudController
       let(:dashboard_url) { 'http://meow.com' }
       let(:broker_response_body) { { credentials: {}, dashboard_url: dashboard_url } }
       let(:last_operation) { { type: 'create', description: '', broker_provided_operation: nil, state: 'succeeded' } }
-      let(:client) { VCAP::Services::ServiceBrokers::V2::Client }
+      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
       before do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)

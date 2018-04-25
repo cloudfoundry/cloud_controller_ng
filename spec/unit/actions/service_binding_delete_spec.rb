@@ -10,7 +10,7 @@ module VCAP::CloudController
     describe '#single_delete_sync' do
       let(:service_binding) { ServiceBinding.make }
       let(:service_instance) { service_binding.service_instance }
-      let(:client) { VCAP::Services::ServiceBrokers::V2::Client }
+      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
       let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
       before do

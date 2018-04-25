@@ -17,6 +17,12 @@ module VCAP::Services
           end
         end
 
+        class InnerValidator
+          def validate(_broker_response)
+            raise NotImpementedError.new('implement this in the spec')
+          end
+        end
+
         describe 'JsonSchemaValidator' do
           let(:json_validator) { ResponseParser::JsonSchemaValidator.new(logger, schema, inner_validator) }
           let(:logger) { instance_double(Steno::Logger, warn: nil) }
@@ -27,7 +33,7 @@ module VCAP::Services
               'properties' => {},
             }
           }
-          let(:inner_validator) { {} }
+          let(:inner_validator) { instance_double(InnerValidator) }
           let(:broker_response) {
             ResponseParser::UnvalidatedResponse.new('GET', 'https://example.com', '/path',
                                                     HttpResponse.new(

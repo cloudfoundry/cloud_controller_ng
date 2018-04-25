@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       let(:app) { AppModel.make }
       let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
-      let(:client) { VCAP::Services::ServiceBrokers::V2::Client }
+      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: {}) }
       let(:request) do
         {
           'type'          => 'app',

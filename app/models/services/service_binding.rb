@@ -70,7 +70,7 @@ module VCAP::CloudController
     end
 
     def in_suspended_org?
-      app.in_suspended_org?
+      space.in_suspended_org?
     end
 
     def space

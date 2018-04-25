@@ -33,9 +33,6 @@ module VCAP::CloudController
         public_url: 'https://some-bucket.example.com/ab/cd/abcdefg',
         key: '123-456',
       })
-      buildpack_blobstore = CloudController::DependencyLocator.instance.buildpack_blobstore
-      allow(buildpack_blobstore).to receive(:files).and_return(double(:files, head: @file, create: {}))
-
       set_current_user_as_admin
     end
 

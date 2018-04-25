@@ -3,7 +3,15 @@ require 'spec_helper'
 RSpec.describe ErrorPresenter do
   subject(:presenter) { ErrorPresenter.new(error, test_mode, error_hasher) }
 
-  let(:error) { StandardError.new }
+  class ResponsiveStandardError < StandardError
+    # With verify-partial-double we can't test dynamic method introspection
+    # So any test that needs to test error#response_code will have to use this class.
+    def response_code
+      raise 'ResponsiveStandardError.response_code: not implemented'
+    end
+  end
+
+  let(:error) { ResponsiveStandardError.new }
   let(:sanitized_error_hash) { { 'fake' => 'sane' } }
   let(:unsanitized_error_hash) { { 'fake' => 'insane' } }
   let(:error_hasher) { double(V2ErrorHasher, unsanitized_hash: unsanitized_error_hash, sanitized_hash: sanitized_error_hash, api_error?: false) }
@@ -28,6 +36,7 @@ RSpec.describe ErrorPresenter do
   end
 
   describe '#log_message' do
+    let(:error) { StandardError.new }
     it 'logs the response code and unsanitized error hash' do
       expect(presenter.log_message).to eq('Request failed: 500: {"fake"=>"insane"}')
     end
@@ -52,6 +61,7 @@ RSpec.describe ErrorPresenter do
     end
 
     context 'when the error does not have an associated response code' do
+      let(:error) { StandardError.new }
       it 'returns 500' do
         expect(presenter.response_code).to eq(500)
       end
@@ -69,7 +79,7 @@ RSpec.describe ErrorPresenter do
 
       context 'when the error is whitelisted to be raised' do
         before do
-          allow(presenter).to receive(:errors_to_raise).and_return([StandardError])
+          allow(presenter).to receive(:errors_to_raise).and_return([ResponsiveStandardError])
         end
 
         context 'and it is not an api_error?' do
