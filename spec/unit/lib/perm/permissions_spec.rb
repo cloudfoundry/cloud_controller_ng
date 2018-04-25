@@ -115,10 +115,10 @@ module VCAP::CloudController::Perm
 
       it 'returns true when the user has any relevant permission' do
         expected_permissions = [
-          { permission_name: 'org.manager', resource_id: org_id },
-          { permission_name: 'org.auditor', resource_id: org_id },
-          { permission_name: 'org.user', resource_id: org_id },
-          { permission_name: 'org.billing_manager', resource_id: org_id },
+          { action: 'org.manager', resource: org_id },
+          { action: 'org.auditor', resource: org_id },
+          { action: 'org.user', resource: org_id },
+          { action: 'org.billing_manager', resource: org_id },
         ]
 
         allow(perm_client).to receive(:has_any_permission?).with(permissions: expected_permissions, user_id: user_id, issuer: issuer).and_return(true)
@@ -151,7 +151,7 @@ module VCAP::CloudController::Perm
 
       it 'returns true when the user has any relevant permission' do
         expected_permissions = [
-          { permission_name: 'org.manager', resource_id: org_id },
+          { action: 'org.manager', resource: org_id },
         ]
 
         allow(perm_client).to receive(:has_any_permission?).with(permissions: expected_permissions, user_id: user_id, issuer: issuer).and_return(true)
@@ -202,10 +202,10 @@ module VCAP::CloudController::Perm
 
       it 'returns true when the user has any relevant permission' do
         expected_permissions = [
-          { permission_name: 'space.developer', resource_id: space_id },
-          { permission_name: 'space.manager', resource_id: space_id },
-          { permission_name: 'space.auditor', resource_id: space_id },
-          { permission_name: 'org.manager', resource_id: org_id },
+          { action: 'space.developer', resource: space_id },
+          { action: 'space.manager', resource: space_id },
+          { action: 'space.auditor', resource: space_id },
+          { action: 'org.manager', resource: org_id },
         ]
 
         allow(perm_client).to receive(:has_any_permission?).with(permissions: expected_permissions, user_id: user_id, issuer: issuer).and_return(true)
@@ -247,7 +247,7 @@ module VCAP::CloudController::Perm
 
       it 'returns true when the user has any relevant permission' do
         expected_permissions = [
-          { permission_name: 'space.developer', resource_id: space_id }
+          { action: 'space.developer', resource: space_id }
         ]
 
         allow(perm_client).to receive(:has_any_permission?).with(permissions: expected_permissions, user_id: user_id, issuer: issuer).and_return(true)
@@ -280,7 +280,7 @@ module VCAP::CloudController::Perm
 
       it 'returns true when the user has any relevant permission' do
         expected_permissions = [
-          { permission_name: 'space.developer', resource_id: space_id }
+          { action: 'space.developer', resource: space_id }
         ]
 
         allow(perm_client).to receive(:has_any_permission?).with(permissions: expected_permissions, user_id: user_id, issuer: issuer).and_return(true)
@@ -343,10 +343,10 @@ module VCAP::CloudController::Perm
         has_permission = permissions.can_read_from_isolation_segment?(isolation_segment)
 
         expected_permissions = [
-          { permission_name: 'space.developer', resource_id: 'some-space-id' },
-          { permission_name: 'space.manager', resource_id: 'some-space-id' },
-          { permission_name: 'space.auditor', resource_id: 'some-space-id' },
-          { permission_name: 'org.manager', resource_id: 'some-org-id' },
+          { action: 'space.developer', resource: 'some-space-id' },
+          { action: 'space.manager', resource: 'some-space-id' },
+          { action: 'space.auditor', resource: 'some-space-id' },
+          { action: 'org.manager', resource: 'some-org-id' },
         ]
 
         expect(has_permission).to equal(true)
@@ -366,10 +366,10 @@ module VCAP::CloudController::Perm
         has_permission = permissions.can_read_from_isolation_segment?(isolation_segment)
 
         expected_permissions = [
-          { permission_name: 'org.manager', resource_id: 'some-org-id' },
-          { permission_name: 'org.auditor', resource_id: 'some-org-id' },
-          { permission_name: 'org.user', resource_id: 'some-org-id' },
-          { permission_name: 'org.billing_manager', resource_id: 'some-org-id' },
+          { action: 'org.manager', resource: 'some-org-id' },
+          { action: 'org.auditor', resource: 'some-org-id' },
+          { action: 'org.user', resource: 'some-org-id' },
+          { action: 'org.billing_manager', resource: 'some-org-id' },
         ]
 
         expect(has_permission).to equal(true)

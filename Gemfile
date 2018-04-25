@@ -55,7 +55,7 @@ gem 'fog-openstack'
 gem 'cf-uaa-lib', '~> 3.13.0'
 gem 'vcap-concurrency', git: 'https://github.com/cloudfoundry/vcap-concurrency.git', ref: '2a5b0179'
 
-gem 'cf-perm', git: 'https://github.com/cloudfoundry-incubator/perm-rb.git', branch: 'master'
+gem 'cf-perm', '~> 0.0.5'
 gem 'scientist'
 
 group :db do
@@ -69,7 +69,7 @@ group :operations do
 end
 
 group :test do
-  gem 'cf-perm-test-helpers', git: 'https://github.com/cloudfoundry-incubator/perm-rb.git', branch: 'master'
+  gem 'cf-perm-test-helpers', '~> 0.0.2'
   gem 'codeclimate-test-reporter', require: false
   gem 'hashdiff'
   gem 'machinist', '~> 1.0.6'

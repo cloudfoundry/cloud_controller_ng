@@ -1,15 +1,4 @@
 GIT
-  remote: https://github.com/cloudfoundry-incubator/perm-rb.git
-  revision: cc623e9368b6eaf132f6559fb4903bdf281bdba0
-  branch: master
-  specs:
-    cf-perm (0.0.0)
-      grpc (~> 1.0)
-    cf-perm-test-helpers (0.0.1)
-      ruby-mysql (~> 2.9.14)
-      subprocess (~> 1)
-
-GIT
   remote: https://github.com/cloudfoundry/vcap-concurrency.git
   revision: 2a5b0179642cb3d3e7f912a6453ec5731979d115
   ref: 2a5b0179
@@ -92,6 +81,11 @@ GEM
     byebug (10.0.2)
     cf-copilot (0.0.3)
       grpc (~> 1.0)
+    cf-perm (0.0.5)
+      grpc (~> 1.0)
+    cf-perm-test-helpers (0.0.2)
+      ruby-mysql (~> 2.9.14)
+      subprocess (~> 1)
     cf-uaa-lib (3.13.0)
       httpclient (~> 2.8, >= 2.8.2.4)
       multi_json (~> 1.12.0, >= 1.12.1)
@@ -436,8 +430,8 @@ DEPENDENCIES
   bits_service_client
   byebug
   cf-copilot
-  cf-perm!
-  cf-perm-test-helpers!
+  cf-perm (~> 0.0.5)
+  cf-perm-test-helpers (~> 0.0.2)
   cf-uaa-lib (~> 3.13.0)
   clockwork
   cloudfront-signer
