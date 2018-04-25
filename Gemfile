@@ -49,7 +49,7 @@ gem 'railties'
 gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
 gem 'bits_service_client', '~> 2.1'
 gem 'fog-aws'
-gem 'fog-azure-rm'
+gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
 gem 'fog-google'
 gem 'fog-local'
 gem 'fog-openstack'
