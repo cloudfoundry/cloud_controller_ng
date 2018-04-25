@@ -1119,7 +1119,7 @@ RSpec.describe 'Apps' do
           'data' => {}
         },
         'checksum'              => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-        'buildpacks'            => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil }],
+        'buildpacks'            => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
         'stack'                 => 'stack-name',
         'execution_metadata'    => 'some-data',
         'process_types'         => { 'web' => 'start-command' },
