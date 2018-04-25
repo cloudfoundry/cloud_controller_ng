@@ -1,0 +1,41 @@
+### Create a Deployment
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/deployments" \
+-X POST \
+-H "Authorization: bearer [token]" \
+-H "Content-type: application/json" \
+-d '{
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "[app-guid]"
+      }
+    }
+  }
+}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 OK
+Content-Type: application/json
+
+<%= yield_content :single_deployment %>
+```
+
+#### Definition
+`POST /v3/deployments`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |
