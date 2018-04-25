@@ -57,6 +57,9 @@ Rails.application.routes.draw do
   get '/builds', to: 'builds#index'
   get '/builds/:guid', to: 'builds#show'
 
+  # deployments
+  post '/deployments', to: 'deployments#create'
+
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'
   post '/droplets', to: 'droplets#copy'

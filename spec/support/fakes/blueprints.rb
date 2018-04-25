@@ -95,6 +95,11 @@ module VCAP::CloudController
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
+  DeploymentModel.blueprint do
+    state { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
+    app { AppModel.make }
+  end
+
   TaskModel.blueprint do
     guid { Sham.guid }
     app { AppModel.make }
