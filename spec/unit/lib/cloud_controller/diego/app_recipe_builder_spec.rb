@@ -146,7 +146,11 @@ module VCAP::CloudController
 
         let(:expected_certificate_properties) do
           ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: ["app:#{process.app.guid}"],
+            organizational_unit: [
+              "organization:#{process.app.organization.guid}",
+              "space:#{process.app.space.guid}",
+              "app:#{process.app.guid}"
+            ],
           )
         end
 
