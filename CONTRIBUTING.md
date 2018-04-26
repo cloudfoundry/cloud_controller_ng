@@ -24,9 +24,10 @@ Follow these steps to make a contribution to any of our open source repositories
 1. Check out `master` of cloud_controller 
 1. Create a feature branch (`git checkout -b better_cloud_controller`)
 1. Make changes on your branch
-1. [Run tests](https://github.com/cloudfoundry/cloud_controller_ng#testing)
-1. [Run static analysis](https://github.com/cloudfoundry/cloud_controller_ng#static-analysis)
-1. If you are deploying to bosh, checkout `develop` of capi-release and `develop` of cf-release
+1. [Run unit tests](https://github.com/cloudfoundry/cloud_controller_ng#unit-tests)
+1. [Run static analysis](https://github.com/cloudfoundry/cloud_controller_ng#running-static-analysis)
+1. If you are deploying to bosh, checkout `develop` of [capi-release](https://github.com/cloudfoundry/capi-release)
+1. [Run CF Acceptance Tests](https://github.com/cloudfoundry/cloud_controller_ng#cf-acceptance-tests-cats)
 1. Push to your fork (`git push origin better_cloud_controller`) and submit a pull request
 
 We favor pull requests with very small, single commits with a single purpose.

@@ -4,7 +4,7 @@
 
 ### [CF Acceptance Tests](https://github.com/cloudfoundry/cf-acceptance-tests/)
 
-These tests run against a full Cloud Foundry deployment. They should be used to test integrations between CC an other Cloud Foundry components. Because they are comparatively more expensive to run than other types of testing, they are typically not used for behavior that is only relevant to the CC.
+These tests run against a full Cloud Foundry deployment. They should be used to test integrations between CC and other Cloud Foundry components. Because they are comparatively more expensive to run than other types of testing, they are typically not used for behavior that is only relevant to the CC.
 
 ### [Sync Integration Tests](https://github.com/cloudfoundry/sync-integration-tests)
 
