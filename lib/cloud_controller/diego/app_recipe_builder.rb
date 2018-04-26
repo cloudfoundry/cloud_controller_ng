@@ -70,7 +70,11 @@ module VCAP::CloudController
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config.get(:diego, :pid_limit),
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: ["app:#{process.app.guid}"]
+            organizational_unit: [
+              "organization:#{process.organization.guid}",
+              "space:#{process.space.guid}",
+              "app:#{process.app.guid}"
+            ]
           ),
           image_username:                   process.current_droplet.docker_receipt_username,
           image_password:                   process.current_droplet.docker_receipt_password,

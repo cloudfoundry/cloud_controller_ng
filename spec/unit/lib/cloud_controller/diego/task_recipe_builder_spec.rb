@@ -90,7 +90,11 @@ module VCAP::CloudController
         end
         let(:certificate_properties) do
           ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: ["app:#{app.guid}"],
+            organizational_unit: [
+              "organization:#{app.organization.guid}",
+              "space:#{app.space.guid}",
+              "app:#{app.guid}"
+            ],
           )
         end
         let(:lifecycle_protocol) do
@@ -408,7 +412,11 @@ module VCAP::CloudController
 
         let(:certificate_properties) do
           ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: ["app:#{task.app.guid}"],
+            organizational_unit: [
+              "organization:#{task.app.organization.guid}",
+              "space:#{task.app.space.guid}",
+              "app:#{task.app.guid}"
+            ],
           )
         end
 
