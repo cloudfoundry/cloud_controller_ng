@@ -130,6 +130,7 @@ includes:
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
   - experimental_resources/deployments/header
+  - experimental_resources/deployments/object
   - experimental_resources/deployments/create
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object

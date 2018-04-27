@@ -1,0 +1,10 @@
+### The deployment object
+
+Name | Type | Description
+---- | ---- | -----------
+**state** | _string_ | The state of the deployment.
+**guid** | _uuid_ | Unique identifier for the deployment.
+**app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**links** | [_links object_](#links) | Links to related resources.
