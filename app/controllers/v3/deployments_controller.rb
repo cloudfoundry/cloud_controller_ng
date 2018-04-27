@@ -11,4 +11,13 @@ class DeploymentsController < ApplicationController
 
     render status: :created, json: response.to_json
   end
+
+  def show
+    deployment = DeploymentModel.find(guid: params[:guid])
+
+    resource_not_found!(:deployment) unless deployment &&
+      can_read?(deployment.app.space.guid, deployment.app.space.organization.guid)
+
+    render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
+  end
 end

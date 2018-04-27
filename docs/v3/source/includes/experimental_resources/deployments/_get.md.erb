@@ -1,0 +1,36 @@
+### Get a deployment
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/deployments/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_deployment %>
+```
+
+#### Definition
+`GET /v3/deployments/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Global Auditor |

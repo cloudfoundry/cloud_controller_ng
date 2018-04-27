@@ -60,4 +60,39 @@ RSpec.describe 'Deployments' do
       })
     end
   end
+
+  describe 'GET /v3/deployments/:guid' do
+    it 'should get and display the deployment' do
+      deployment = VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
+
+      get "/v3/deployments/#{deployment.guid}", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like({
+        'guid' => deployment.guid,
+        'state' => 'DEPLOYING',
+        'droplet' => {
+          'guid' => droplet.guid
+        },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'relationships' => {
+          'app' => {
+            'data' => {
+              'guid' => app_model.guid
+            }
+          }
+        },
+        'links' => {
+          'self' => {
+            'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+          },
+          'app' => {
+            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          }
+        }
+      })
+    end
+  end
 end

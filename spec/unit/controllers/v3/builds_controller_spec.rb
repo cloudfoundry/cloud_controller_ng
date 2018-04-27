@@ -697,6 +697,7 @@ RSpec.describe BuildsController, type: :controller do
         'space_auditor' => 200,
         'admin' => 200,
         'admin_read_only' => 200,
+        'global_auditor' => 200,
         'org_billing_manager' => 404,
         'org_auditor' => 404,
         'org_user' => 404,

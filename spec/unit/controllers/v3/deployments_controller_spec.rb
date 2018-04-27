@@ -2,12 +2,13 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe DeploymentsController, type: :controller do
+  let(:user) { VCAP::CloudController::User.make }
+  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:app_guid) { app.guid }
+  let(:space) { app.space }
+  let(:org) { space.organization }
+
   describe '#create' do
-    let(:user) { VCAP::CloudController::User.make }
-    let(:app) { VCAP::CloudController::AppModel.make }
-    let(:app_guid) { app.guid }
-    let(:space) { app.space }
-    let(:org) { space.organization }
     let(:req_body) do
       {
         relationships: {
@@ -71,6 +72,50 @@ RSpec.describe DeploymentsController, type: :controller do
 
     it 'returns 401 for Unauthenticated requests' do
       post :create, body: req_body
+      expect(response.status).to eq(401)
+    end
+  end
+
+  describe '#show' do
+    let(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app) }
+
+    describe 'for a valid user' do
+      before do
+        set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+      end
+
+      it 'returns a 200 on show existing deployment' do
+        get :show, guid: deployment.guid
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['guid']).to eq(deployment.guid)
+      end
+
+      it 'returns a 404 on bogus deployment' do
+        get :show, guid: 'not a deployment'
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) { {
+        'admin' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'space_developer' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'org_auditor' => 404,
+        'org_billing_manager' => 404,
+      } }
+      let(:api_call) { lambda { get :show, guid: deployment.guid } }
+    end
+
+    it 'returns 401 for Unauthenticated requests' do
+      get :show, guid: deployment.guid
       expect(response.status).to eq(401)
     end
   end
