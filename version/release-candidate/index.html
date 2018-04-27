@@ -8049,6 +8049,49 @@ excluded in the response based on the user&rsquo;s role.</p>
 
           <h2 id="deployments">Deployments</h2>
 
+<p>Deployments are objects for managing updates to applications with zero downtime</p>
+
+          <h3 id="the-deployment-object">The deployment object</h3>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>state</strong></td>
+<td><em>string</em></td>
+<td>The state of the deployment.</td>
+</tr>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the deployment.</td>
+</tr>
+<tr>
+<td><strong>app</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The app the deployment is updating.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
           <h3 id="create-a-deployment">Create a Deployment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
