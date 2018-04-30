@@ -295,6 +295,24 @@ RSpec.describe 'Service Broker API integration' do
         bind_service
       end
 
+      context 'when the broker returns asynchronously' do
+        it 'performs the flow asynchronously and fetches the last operation from the broker' do
+          operation_data = 'some_operation_data'
+
+          stub_async_binding_last_operation(operation_data: operation_data)
+          async_unbind_service(status: 202, response_body: { operation: operation_data })
+
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+
+          Delayed::Worker.new.work_off
+
+          expect(a_request(:get,
+                           "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
+                          )).to have_been_made
+        end
+      end
+
       context 'when the broker returns synchronously' do
         it 'performs the synchronous flow' do
           unbind_service(status: 200, accepts_incomplete: true)

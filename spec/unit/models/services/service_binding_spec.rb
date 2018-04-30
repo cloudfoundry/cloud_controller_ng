@@ -381,7 +381,7 @@ module VCAP::CloudController
 
       context 'when the service binding is being created asynchronously' do
         let(:state) {}
-        let(:operation) { ServiceBindingOperation.make(state: state) }
+        let(:operation) { ServiceBindingOperation.make(type: 'create', state: state) }
 
         before do
           service_binding.service_binding_operation = operation
@@ -408,6 +408,39 @@ module VCAP::CloudController
 
           it 'returns true' do
             expect(service_binding.is_created?).to be true
+          end
+        end
+      end
+
+      context 'when the service binding is being deleted asynchronously' do
+        let(:state) {}
+        let(:operation) { ServiceBindingOperation.make(type: 'delete', state: state) }
+
+        before do
+          service_binding.service_binding_operation = operation
+        end
+
+        context 'and the operation is in progress' do
+          let(:state) { 'in progress' }
+
+          it 'returns true' do
+            expect(service_binding.is_created?).to be true
+          end
+        end
+
+        context 'and the operation has failed' do
+          let(:state) { 'failed' }
+
+          it 'returns true' do
+            expect(service_binding.is_created?).to be true
+          end
+        end
+
+        context 'and the operation has succeeded' do
+          let(:state) { 'succeeded' }
+
+          it 'returns false' do
+            expect(service_binding.is_created?).to be false
           end
         end
       end
@@ -452,9 +485,14 @@ module VCAP::CloudController
       end
 
       context 'when called twice' do
-        it 'does not save two binding operations' do
-          binding.save_with_new_operation({ state: 'in progress', type: 'create' })
-          expect { binding.save_with_new_operation({ state: 'in progress', type: 'create' }) }.to raise_error(Sequel::UniqueConstraintViolation)
+        it 'does saves the second operation' do
+          binding.save_with_new_operation({ state: 'in progress', type: 'create', description: 'description' })
+          binding.save_with_new_operation({ state: 'in progress', type: 'delete' })
+
+          expect(binding.last_operation.state).to eq 'in progress'
+          expect(binding.last_operation.type).to eq 'delete'
+          expect(binding.last_operation.description).to eq nil
+          expect(ServiceBinding.count).to eq(1)
           expect(ServiceBindingOperation.count).to eq(1)
         end
       end

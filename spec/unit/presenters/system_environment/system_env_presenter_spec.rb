@@ -39,8 +39,8 @@ module VCAP::CloudController
           expect(binding[:name]).to eq('elephantsql-vip-uat')
         end
 
-        context 'when a service binding has not been created yet' do
-          let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress') }
+        context 'when a create service binding is in progress' do
+          let(:service_binding_operation) { ServiceBindingOperation.make(type: 'create', state: 'in progress') }
           let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
 
           before do
@@ -60,7 +60,24 @@ module VCAP::CloudController
             service_binding.service_binding_operation = service_binding_operation
           end
 
-          it 'does not include service binding and instance information' do
+          it 'includes service binding and instance information' do
+            expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(1).items
+            binding = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first.to_hash
+
+            expect(binding[:credentials]).to eq(service_binding.credentials)
+            expect(binding[:name]).to eq('elephantsql-vip-uat')
+          end
+        end
+
+        context 'when a delete service binding is in progress' do
+          let(:service_binding_operation) { ServiceBindingOperation.make(type: 'delete', state: 'in progress') }
+          let!(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
+
+          before do
+            service_binding.service_binding_operation = service_binding_operation
+          end
+
+          it 'includes service binding and instance information' do
             expect(system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym]).to have(1).items
             binding = system_env_presenter.system_env[:VCAP_SERVICES][service.label.to_sym].first.to_hash
 

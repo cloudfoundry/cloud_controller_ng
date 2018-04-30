@@ -3,7 +3,8 @@ require 'actions/service_binding_delete'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingDelete do
-    subject(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email)) }
+    subject(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email), accepts_incomplete) }
+    let(:accepts_incomplete) { false }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
 
@@ -34,7 +35,7 @@ module VCAP::CloudController
       end
 
       it 'asks the broker to unbind the instance' do
-        expect(client).to receive(:unbind).with(service_binding, user_guid)
+        expect(client).to receive(:unbind).with(service_binding, user_guid, false)
         service_binding_delete.single_delete_sync(service_binding)
       end
 
@@ -79,6 +80,7 @@ module VCAP::CloudController
       context 'when the broker responds asynchronously' do
         before do
           allow(client).to receive(:unbind).and_return({ async: true })
+          allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
         end
 
         it 'should keep the service binding' do
@@ -113,17 +115,103 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
+      let(:service_binding) { ServiceBinding.make }
+      let(:service_instance) { service_binding.service_instance }
+      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+      let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
+
       let(:service_binding1) { ServiceBinding.make }
       let(:service_binding2) { ServiceBinding.make }
 
       before do
-        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:unbind).and_return({ async: false })
+        stub_request(:delete, service_binding_url_pattern)
       end
 
       it 'deletes multiple bindings' do
         service_binding_delete.delete([service_binding1, service_binding2])
         expect(service_binding1).not_to exist
         expect(service_binding2).not_to exist
+      end
+
+      context 'when accepts_incomplete is true' do
+        let(:accepts_incomplete) { true }
+
+        it 'asks the broker to unbind the instance async' do
+          expect(client).to receive(:unbind).with(service_binding, user_guid, true)
+          service_binding_delete.delete(service_binding)
+        end
+
+        context 'when the broker responds asynchronously' do
+          let(:service_binding_operation) {}
+
+          before do
+            allow(client).to receive(:unbind).and_return({ async: true, operation: '123' })
+            allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
+            service_binding.service_binding_operation = service_binding_operation
+          end
+
+          context 'when the binding already has an operation' do
+            let(:service_binding_operation) { ServiceBindingOperation.make }
+
+            it 'updates the binding operation in the model' do
+              service_binding_delete.delete(service_binding)
+              service_binding.reload
+
+              expect(service_binding.last_operation.type).to eql('delete')
+              expect(service_binding.last_operation.state).to eql('in progress')
+            end
+
+            it 'service binding operation has broker provided operation' do
+              service_binding_delete.delete(service_binding)
+              service_binding.reload
+
+              expect(service_binding.last_operation.broker_provided_operation).to eq('123')
+            end
+          end
+
+          context 'when the binding does not already have an operation' do
+            it 'updates the binding operation in the model' do
+              service_binding_delete.delete(service_binding)
+              service_binding.reload
+
+              expect(service_binding.last_operation.type).to eql('delete')
+              expect(service_binding.last_operation.state).to eql('in progress')
+            end
+
+            it 'service binding operation has broker provided operation' do
+              service_binding_delete.delete(service_binding)
+              service_binding.reload
+
+              expect(service_binding.last_operation.broker_provided_operation).to eq('123')
+            end
+          end
+
+          it 'should not immediately create an audit event' do
+            service_binding_delete.delete(service_binding)
+
+            expect(Event.last).to be_nil
+          end
+        end
+      end
+
+      context 'when accepts_incomplete is false' do
+        let(:accepts_incomplete) { false }
+
+        it 'asks the broker to unbind the instance sync' do
+          expect(client).to receive(:unbind).with(service_binding, user_guid, false)
+          service_binding_delete.delete(service_binding)
+        end
+      end
+
+      context 'when accepts_incomplete is not provided as an argument' do
+        let(:service_binding_delete) { ServiceBindingDelete.new(UserAuditInfo.new(user_guid: user_guid, user_email: user_email)) }
+
+        it 'defaults to false and asks the broker to unbind the instance sync' do
+          expect(client).to receive(:unbind).with(service_binding, user_guid, false)
+          service_binding_delete.delete(service_binding)
+        end
       end
     end
   end

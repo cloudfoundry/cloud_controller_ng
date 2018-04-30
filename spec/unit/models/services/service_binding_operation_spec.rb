@@ -8,24 +8,27 @@ module VCAP::CloudController
       {
         state: 'in progress',
         description: '10%',
+        type: 'create',
       }
     end
 
     let(:operation) { ServiceBindingOperation.make(operation_attributes) }
+
     before do
       operation.this.update(updated_at: updated_at_time, created_at: created_at_time)
       operation.reload
     end
 
     describe '#to_hash' do
-      it 'includes the state, description and updated at' do
+      it 'includes the state, type, description, created_at and updated_at' do
         expect(operation.to_hash).to include({
           'state' => 'in progress',
+          'type' => 'create',
           'description' => '10%',
         })
 
-        expect(operation.to_hash['updated_at'].to_i).to eq(updated_at_time.to_i)
-        expect(operation.to_hash['created_at'].to_i).to eq(created_at_time.to_i)
+        expect(operation.to_hash['updated_at']).to eq(updated_at_time)
+        expect(operation.to_hash['created_at']).to eq(created_at_time)
       end
     end
 

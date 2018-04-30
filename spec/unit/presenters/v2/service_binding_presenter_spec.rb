@@ -55,23 +55,45 @@ module CloudController::Presenters::V2
       end
 
       context 'when there is operation associated with this binding' do
-        let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(state: 'in progress', description: '10% complete') }
+        context 'and the operation type is create' do
+          let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(type: 'create', state: 'in progress', description: '10% complete') }
 
-        before do
-          service_binding.service_binding_operation = binding_operation
+          before do
+            service_binding.service_binding_operation = binding_operation
+          end
+
+          it 'should return its attributes' do
+            expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
+              { 'last_operation' => {
+                'type'        => 'create',
+                'state'       => 'in progress',
+                'description' => '10% complete',
+                'updated_at'  => service_binding.last_operation.updated_at,
+                'created_at'  => service_binding.last_operation.created_at,
+              },
+              }
+            )
+          end
         end
+        context 'and the operation type is delete' do
+          let(:binding_operation) { VCAP::CloudController::ServiceBindingOperation.make(type: 'delete', state: 'in progress', description: '10% complete') }
 
-        it 'should return its attributes' do
-          expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
-            { 'last_operation' => {
-              'type'        => 'create',
-              'state'       => 'in progress',
-              'description' => '10% complete',
-              'updated_at'  => service_binding.last_operation.updated_at,
-              'created_at'  => service_binding.last_operation.created_at,
-            },
-            }
-          )
+          before do
+            service_binding.service_binding_operation = binding_operation
+          end
+
+          it 'should return its attributes' do
+            expect(subject.entity_hash(controller, service_binding, opts, depth, parents, orphans)).to include(
+              { 'last_operation' => {
+                'type'        => 'delete',
+                'state'       => 'in progress',
+                'description' => '10% complete',
+                'updated_at'  => service_binding.last_operation.updated_at,
+                'created_at'  => service_binding.last_operation.created_at,
+              },
+              }
+            )
+          end
         end
       end
 

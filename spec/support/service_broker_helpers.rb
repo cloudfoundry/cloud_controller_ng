@@ -112,10 +112,11 @@ module ServiceBrokerHelpers
     /#{build_broker_url(service_instance.service_broker)}#{path}#{query_params}/
   end
 
-  def unbind_url(service_binding)
+  def unbind_url(service_binding, accepts_incomplete: nil)
     plan = service_binding.service_instance.service_plan
     service = plan.service
-    query = "plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
+    query = 'accepts_incomplete=true&' if accepts_incomplete
+    query = "#{query}plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
     service_binding_url(service_binding, query)
   end
 

@@ -84,9 +84,10 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(binding.space.guid)
 
-      deleter = ServiceBindingDelete.new(UserAuditInfo.from_context(SecurityContext))
-
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+
+      deleter = ServiceBindingDelete.new(UserAuditInfo.from_context(SecurityContext), accepts_incomplete)
+
       if async? && !accepts_incomplete
         job = deleter.single_delete_async(binding)
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]

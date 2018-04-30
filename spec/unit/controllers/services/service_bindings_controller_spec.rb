@@ -60,7 +60,10 @@ module VCAP::CloudController
       service_instance = opts[:service_instance] || service_binding.try(:service_instance)
       service_instance_guid = service_instance.try(:guid) || guid_pattern
       broker = opts[:service_broker] || service_instance.service_plan.service.service_broker
-      %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}}
+      if opts[:accepts_incomplete]
+        query_params = '?accepts_incomplete=true'
+      end
+      %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}#{query_params}}
     end
 
     describe 'Permissions' do
@@ -901,13 +904,24 @@ module VCAP::CloudController
           context 'when accepts_incomplete is true' do
             context 'when the broker responds asynchronously' do
               let(:unbind_status) { 202 }
-              let(:unbind_body) { {} }
 
               it 'returns a 202 status code' do
                 delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
                 expect(last_response).to have_status_code(202)
+              end
 
-                # TODO: Add an expectation that the broker receives accepts_incomplete=true
+              it 'passess accepts_incomplete flag to the broker' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+                expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+              end
+
+              it 'updates the binding operation in the model' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+
+                service_binding.reload
+
+                expect(service_binding.last_operation.type).to eql('delete')
+                expect(service_binding.last_operation.state).to eql('in progress')
               end
             end
 
@@ -927,10 +941,6 @@ module VCAP::CloudController
             it 'returns a 204 status code' do
               delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
               expect(last_response).to have_status_code(204)
-
-              # TODO: Should ensure that the accepts_incomplete reaches the broker
-              # expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}\?accepts\_incomplete\=false})).
-              #   to have_been_made
             end
 
             context 'and the broker only supports asynchronous request' do
@@ -1283,10 +1293,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the binding has last operation' do
+      context 'when the binding has a create operation in progress' do
         before do
           binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
-          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create')
+          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create', description: 'creating')
           set_current_user(developer)
         end
 
@@ -1297,6 +1307,25 @@ module VCAP::CloudController
           service_binding = decoded_response['resources'].first
           expect(service_binding['entity']['last_operation']['type']).to eq('create')
           expect(service_binding['entity']['last_operation']['state']).to eq('in progress')
+          expect(service_binding['entity']['last_operation']['description']).to eq('creating')
+        end
+      end
+
+      context 'when the binding has a delete operation in progress' do
+        before do
+          binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'delete', description: 'deleting')
+          set_current_user(developer)
+        end
+
+        it 'returns the in progress state' do
+          get '/v2/service_bindings?inline-relations-depth=1'
+          expect(last_response).to have_status_code(200)
+
+          service_binding = decoded_response['resources'].first
+          expect(service_binding['entity']['last_operation']['type']).to eq('delete')
+          expect(service_binding['entity']['last_operation']['state']).to eq('in progress')
+          expect(service_binding['entity']['last_operation']['description']).to eq('deleting')
         end
       end
     end
