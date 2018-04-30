@@ -54,7 +54,12 @@ class IsolationSegmentsController < ApplicationController
                 fetcher.fetch_for_organizations(org_guids: readable_org_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/isolation_segments', message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::IsolationSegmentPresenter,
+      dataset: dataset,
+      path: '/v3/isolation_segments',
+      message: message
+    )
   end
 
   def destroy

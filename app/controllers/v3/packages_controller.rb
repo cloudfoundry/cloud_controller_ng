@@ -28,7 +28,12 @@ class PackagesController < ApplicationController
                 end
     end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: base_url(resource: 'packages'), message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::PackagePresenter,
+      dataset: dataset,
+      path: base_url(resource: 'packages'),
+      message: message
+    )
   end
 
   def upload
@@ -46,9 +51,9 @@ class PackagesController < ApplicationController
 
     begin
       PackageUpload.new.upload_async(
-        message:         message,
-        package:         package,
-        config:          configuration,
+        message: message,
+        package: package,
+        config: configuration,
         user_audit_info: user_audit_info
       )
     rescue PackageUpload::InvalidPackage => e
@@ -87,7 +92,7 @@ class PackagesController < ApplicationController
     unauthorized! unless can_write?(package.space.guid)
 
     delete_action = PackageDelete.new(user_audit_info)
-    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(PackageModel, package.guid, delete_action)
     job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
@@ -130,8 +135,8 @@ class PackagesController < ApplicationController
 
     PackageCopy.new.copy(
       destination_app_guid: app_guid,
-      source_package:       source_package,
-      user_audit_info:      user_audit_info
+      source_package: source_package,
+      user_audit_info: user_audit_info
     )
   end
 

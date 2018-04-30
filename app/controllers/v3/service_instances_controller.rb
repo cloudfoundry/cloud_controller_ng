@@ -1,9 +1,9 @@
 require 'messages/to_many_relationship_message'
 require 'messages/service_instances_list_message'
-
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
+require 'presenters/v3/service_instance_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'fetchers/managed_service_instance_list_fetcher'
@@ -20,6 +20,7 @@ class ServiceInstancesV3Controller < ApplicationController
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::ServiceInstancePresenter,
       dataset: dataset,
       path: '/v3/service_instances',
       message: message)

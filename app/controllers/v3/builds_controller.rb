@@ -15,7 +15,12 @@ class BuildsController < ApplicationController
                 build_list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/builds', message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::BuildPresenter,
+      dataset: dataset,
+      path: '/v3/builds',
+      message: message
+    )
   end
 
   def create

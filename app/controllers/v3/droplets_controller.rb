@@ -30,7 +30,12 @@ class DropletsController < ApplicationController
                 end
     end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: base_url(resource: 'droplets'), message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::DropletPresenter,
+      dataset: dataset,
+      path: base_url(resource: 'droplets'),
+      message: message
+    )
   end
 
   def show
@@ -46,7 +51,7 @@ class DropletsController < ApplicationController
     unauthorized! unless can_write?(space.guid)
 
     delete_action = DropletDelete.new(user_audit_info)
-    deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new

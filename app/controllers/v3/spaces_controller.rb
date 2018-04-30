@@ -1,4 +1,5 @@
 require 'presenters/v3/paginated_list_presenter'
+require 'presenters/v3/space_presenter'
 require 'messages/space_create_message'
 require 'messages/space_update_isolation_segment_message'
 require 'messages/spaces_list_message'
@@ -38,6 +39,7 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SpacePresenter,
       dataset: readable_spaces(message: message),
       path: '/v3/spaces',
       message: message

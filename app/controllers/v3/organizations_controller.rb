@@ -6,6 +6,7 @@ require 'messages/organization_create_message'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
 require 'presenters/v3/paginated_list_presenter'
+require 'presenters/v3/organization_presenter'
 require 'presenters/v3/to_one_relationship_presenter'
 
 class OrganizationsV3Controller < ApplicationController
@@ -29,6 +30,7 @@ class OrganizationsV3Controller < ApplicationController
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::OrganizationPresenter,
       dataset: dataset,
       path: base_url(resource: 'organizations'),
       message: message

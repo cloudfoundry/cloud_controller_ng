@@ -13,7 +13,12 @@ class DeploymentsController < ApplicationController
                 deployment_list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
               end
 
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/deployments', message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::DeploymentPresenter,
+      dataset: dataset,
+      path: '/v3/deployments',
+      message: message
+    )
   end
 
   def create

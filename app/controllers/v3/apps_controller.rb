@@ -44,6 +44,7 @@ class AppsV3Controller < ApplicationController
 
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
+             presenter: Presenters::V3::AppPresenter,
              dataset: dataset,
              path: '/v3/apps',
              message: message,
@@ -180,7 +181,12 @@ class AppsV3Controller < ApplicationController
     app, space, org = AppFetcher.new.fetch(params[:guid])
     app_not_found! unless app && can_read?(space.guid, org.guid)
     dataset = AppBuildsListFetcher.new(app.guid, message).fetch_all
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: "/v3/apps/#{app.guid}/builds", message: message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::BuildPresenter,
+      dataset: dataset,
+      path: "/v3/apps/#{app.guid}/builds",
+      message: message
+    )
   end
 
   def show_env
