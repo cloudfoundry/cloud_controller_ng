@@ -110,7 +110,7 @@ class ApplicationController < ActionController::Base
   ###
 
   def can_read?(space_guid, org_guid)
-    permission_queryer.can_read?(space_guid, org_guid)
+    permission_queryer.can_read_from_space?(space_guid, org_guid)
   end
 
   def can_write_to_org?(org_guid)
@@ -138,7 +138,7 @@ class ApplicationController < ActionController::Base
   end
 
   def can_write?(space_guid)
-    permission_queryer.can_write?(space_guid)
+    permission_queryer.can_write_to_space?(space_guid)
   end
 
   def readable_space_guids

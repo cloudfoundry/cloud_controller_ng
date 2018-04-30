@@ -18,7 +18,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def read_access
-      render status: 200, json: can_read?(params[:space_guid], params[:org_guid])
+      render status: 200, json: can_read_from_space?(params[:space_guid], params[:org_guid])
     end
 
     def write_to_org_access
@@ -46,7 +46,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def write_access
-      render status: 200, json: can_write?(params[:space_guid])
+      render status: 200, json: can_write_to_space?(params[:space_guid])
     end
 
     def api_explode

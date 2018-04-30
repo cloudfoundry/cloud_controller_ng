@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#can_read?' do
+    describe '#can_read_from_space?' do
       before do
         allow(perm_permissions).to receive(:can_read_from_space?)
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
       it 'asks for #can_read_from_space? on behalf of the current user' do
         allow(perm_permissions).to receive(:can_read_from_space?).and_return(true)
 
-        queryer.can_read?('space-guid', 'org-guid')
+        queryer.can_read_from_space?('space-guid', 'org-guid')
 
         expect(db_permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
         expect(perm_permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
@@ -81,7 +81,7 @@ module VCAP::CloudController
       it 'skips the experiment if the user is a global reader' do
         allow(db_permissions).to receive(:can_read_globally?).and_return(true)
 
-        queryer.can_read?('space-guid', 'org-guid')
+        queryer.can_read_from_space?('space-guid', 'org-guid')
 
         expect(perm_permissions).not_to have_received(:can_read_from_space?)
       end
@@ -89,7 +89,7 @@ module VCAP::CloudController
       it 'uses the expected branch from the experiment' do
         allow(perm_permissions).to receive(:can_read_from_space?).and_return('not-expected')
 
-        response = queryer.can_read?('space-guid', 'org-guid')
+        response = queryer.can_read_from_space?('space-guid', 'org-guid')
 
         expect(response).to eq(true)
       end
@@ -99,7 +99,7 @@ module VCAP::CloudController
           allow(db_permissions).to receive(:can_read_from_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_space?).and_return(true)
 
-          queryer.can_read?('space-guid', 'org-guid')
+          queryer.can_read_from_space?('space-guid', 'org-guid')
 
           expected_context = {
             current_user_guid: 'some-current-user',
@@ -124,7 +124,7 @@ module VCAP::CloudController
           allow(db_permissions).to receive(:can_read_from_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_space?).and_return('something wrong')
 
-          queryer.can_read?('space-guid', 'org-guid')
+          queryer.can_read_from_space?('space-guid', 'org-guid')
 
           expected_context = {
             current_user_guid: 'some-current-user',
@@ -156,7 +156,7 @@ module VCAP::CloudController
       it 'asks for #can_write_to_space? on behalf of the current user' do
         allow(perm_permissions).to receive(:can_write_to_space?).and_return(true)
 
-        queryer.can_write?('space-guid')
+        queryer.can_write_to_space?('space-guid')
 
         expect(db_permissions).to have_received(:can_write_to_space?).with('space-guid')
         expect(perm_permissions).to have_received(:can_write_to_space?).with('space-guid')
@@ -165,7 +165,7 @@ module VCAP::CloudController
       it 'skips the experiment if the user is a global writer' do
         allow(db_permissions).to receive(:can_write_globally?).and_return(true)
 
-        queryer.can_write?('space-guid')
+        queryer.can_write_to_space?('space-guid')
 
         expect(perm_permissions).not_to have_received(:can_write_to_space?)
       end
@@ -173,7 +173,7 @@ module VCAP::CloudController
       it 'uses the expected branch from the experiment' do
         allow(perm_permissions).to receive(:can_write_to_space?).and_return('not-expected')
 
-        response = queryer.can_write?('space-guid')
+        response = queryer.can_write_to_space?('space-guid')
 
         expect(response).to eq(true)
       end
@@ -183,7 +183,7 @@ module VCAP::CloudController
           allow(db_permissions).to receive(:can_write_to_space?).and_return(true)
           allow(perm_permissions).to receive(:can_write_to_space?).and_return(true)
 
-          queryer.can_write?('space-guid')
+          queryer.can_write_to_space?('space-guid')
 
           expected_context = {
             current_user_guid: 'some-current-user',
@@ -207,7 +207,7 @@ module VCAP::CloudController
           allow(db_permissions).to receive(:can_write_to_space?).and_return(true)
           allow(perm_permissions).to receive(:can_write_to_space?).and_return('something wrong')
 
-          queryer.can_write?('space-guid')
+          queryer.can_write_to_space?('space-guid')
 
           expected_context = {
             current_user_guid: 'some-current-user',
