@@ -80,7 +80,7 @@ module VCAP::CloudController
   DropletModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGED_STATE }
-    app { AppModel.make }
+    app { AppModel.make(droplet_guid: guid) }
     droplet_hash { Sham.guid }
     sha256_checksum { Sham.guid }
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }

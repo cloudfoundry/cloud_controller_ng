@@ -1,6 +1,21 @@
+require 'messages/deployments_list_message'
+require 'fetchers/deployment_list_fetcher'
 require 'presenters/v3/deployment_presenter'
 
 class DeploymentsController < ApplicationController
+  def index
+    message = DeploymentsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+    deployment_list_fetcher = DeploymentListFetcher.new(message: message)
+    dataset = if can_read_globally?
+                deployment_list_fetcher.fetch_all
+              else
+                deployment_list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/deployments', message: message)
+  end
+
   def create
     app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)

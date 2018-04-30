@@ -79,7 +79,7 @@ RSpec.describe BuildsController, type: :controller do
       end
     end
 
-    context 'as admin' do
+    context 'request validity and pagination' do
       before do
         set_current_user_as_admin(user: user)
       end
