@@ -11,11 +11,10 @@ class AppFeaturesController < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
 
     resources = [Presenters::V3::AppFeaturePresenter.new(app)]
-    pagination_presenter = Presenters::V3::PaginationPresenter.new
 
     render status: :ok, json: {
       resources:  resources,
-      pagination: pagination_presenter.present_unpagination_hash(resources, base_url(resource: 'features')),
+      pagination: present_unpagination_hash(resources, base_url(resource: 'features')),
     }
   end
 
@@ -48,5 +47,19 @@ class AppFeaturesController < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
 
     render status: :ok, json: Presenters::V3::AppSshStatusPresenter.new(app, Config.config.get(:allow_app_ssh_access))
+  end
+
+  private
+
+  def present_unpagination_hash(result, path)
+    {
+      total_results: result.length,
+      total_pages:   1,
+
+      first:         { href: path },
+      last:          { href: path },
+      next:          nil,
+      previous:      nil
+    }
   end
 end
