@@ -1,0 +1,36 @@
+### List deployments
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/deployments" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_deployments, '/v3/deployments' %>
+```
+
+Retrieve all builds the user has access to.
+
+#### Definition
+`GET /v3/deployments`
+
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**app_guids** | _list of strings_ | Comma-delimited list of app guids to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.

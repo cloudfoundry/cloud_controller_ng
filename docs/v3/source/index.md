@@ -133,6 +133,7 @@ includes:
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
   - experimental_resources/deployments/get
+  - experimental_resources/deployments/list
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create
