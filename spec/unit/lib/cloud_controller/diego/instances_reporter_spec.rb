@@ -541,6 +541,31 @@ module VCAP::CloudController
           end
         end
 
+        context 'when traffic controller somehow returns a partial response without cpuPercentage' do
+          # We aren't exactly sure how this happens, but it can happen on an overloaded deployment, see #156707836
+          let(:traffic_controller_response) do
+            [
+              ::TrafficController::Models::Envelope.new(
+                origin:          'does-anyone-even-know?',
+                eventType:       ::TrafficController::Models::Envelope::EventType::ContainerMetric,
+                containerMetric: ::TrafficController::Models::ContainerMetric.new(
+                  instanceIndex: 0,
+                  memoryBytes:   564,
+                ),
+              ),
+            ]
+          end
+
+          it 'sets all the stats to zero' do
+            expect(instances_reporter.stats_for_app(process)[0][:stats][:usage]).to eq({
+              time: formatted_current_time,
+              cpu:  0,
+              mem:  0,
+              disk: 0,
+            })
+          end
+        end
+
         context 'when a NoRunningInstances error is thrown' do
           let(:error) { CloudController::Errors::NoRunningInstances.new('ruh roh') }
           let(:expected_stats_response) do

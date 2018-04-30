@@ -109,11 +109,8 @@ module VCAP::CloudController
         envelopes.each do |envelope|
           container_metrics                      = envelope.containerMetric
           stats[container_metrics.instanceIndex] = {
-            time: formatted_current_time,
-            cpu:  container_metrics.cpuPercentage / 100,
-            mem:  container_metrics.memoryBytes,
-            disk: container_metrics.diskBytes,
-          }
+            time: formatted_current_time
+          }.merge(converted_container_metrics(container_metrics))
         end
 
         actual_lrps.each do |actual_lrp|
@@ -169,6 +166,26 @@ module VCAP::CloudController
 
       def nanoseconds_to_seconds(time)
         (time / 1e9).to_i
+      end
+
+      def converted_container_metrics(container_metrics)
+        cpu = container_metrics.cpuPercentage
+        mem = container_metrics.memoryBytes
+        disk = container_metrics.diskBytes
+
+        if cpu.nil? || mem.nil? || disk.nil?
+          {
+            cpu: 0,
+            mem: 0,
+            disk: 0
+          }
+        else
+          {
+            cpu: cpu / 100,
+            mem:  mem,
+            disk: disk
+          }
+        end
       end
 
       def fill_unreported_instances_with_down_instances(reported_instances, process)
