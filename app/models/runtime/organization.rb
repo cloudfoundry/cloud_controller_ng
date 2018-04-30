@@ -3,7 +3,9 @@ require 'models/helpers/process_types'
 module VCAP::CloudController
   class Organization < Sequel::Model
     ORG_NAME_REGEX    = /\A[[:alnum:][:punct:][:print:]]+\Z/
-    ORG_STATUS_VALUES = %w(active suspended).freeze
+    ACTIVE = 'active'.freeze
+    SUSPENDED = 'suspended'.freeze
+    ORG_STATUS_VALUES = [ACTIVE, SUSPENDED].freeze
 
     one_to_many :spaces
 
@@ -213,11 +215,11 @@ module VCAP::CloudController
     end
 
     def active?
-      status == 'active'
+      status == ACTIVE
     end
 
     def suspended?
-      status == 'suspended'
+      status == SUSPENDED
     end
 
     def billing_enabled?
