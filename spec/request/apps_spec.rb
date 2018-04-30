@@ -711,6 +711,7 @@ RSpec.describe 'Apps' do
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+    let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
     let(:user_email) { nil }
 
     it 'deletes an App' do
@@ -725,6 +726,7 @@ RSpec.describe 'Apps' do
       expect(package.exists?).to be_falsey
       expect(droplet.exists?).to be_falsey
       expect(process.exists?).to be_falsey
+      expect(deployment.exists?).to be_falsey
 
       event = VCAP::CloudController::Event.last(2).first
       expect(event.values).to include({

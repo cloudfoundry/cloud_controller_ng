@@ -4,6 +4,7 @@ require 'actions/package_delete'
 require 'actions/task_delete'
 require 'actions/build_delete'
 require 'actions/droplet_delete'
+require 'actions/deployment_delete'
 require 'actions/process_delete'
 require 'actions/route_mapping_delete'
 require 'actions/staging_cancel'
@@ -51,6 +52,7 @@ module VCAP::CloudController
       TaskDelete.new(@user_audit_info).delete(app.tasks)
       BuildDelete.new(StagingCancel.new(stagers)).delete(app.builds)
       DropletDelete.new(@user_audit_info).delete(app.droplets)
+      DeploymentDelete.new.delete(app.deployments)
       RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete(app))
       ProcessDelete.new(@user_audit_info).delete(app.processes)
       errors = ServiceBindingDelete.new(@user_audit_info).delete(app.service_bindings)

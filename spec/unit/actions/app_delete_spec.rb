@@ -82,6 +82,16 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        it 'deletes associated deployments' do
+          deployment = DeploymentModel.make(app: app)
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { DeploymentModel.count }.by(-1)
+          expect(deployment.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+
         describe 'deleting associated routes' do
           let(:process_type) { 'web' }
           let(:process) { ProcessModel.make(app: app, type: process_type) }
