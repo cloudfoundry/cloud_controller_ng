@@ -11,11 +11,11 @@ RSpec.shared_examples 'an access control' do |operation, table|
 
         op_params_if_defined = respond_to?(:op_params) ? op_params : nil
 
-        if op_params_if_defined.present?
-          actual_without_token = subject.can?(operation, object, params=op_params_if_defined)
-        else
-          actual_without_token = subject.can?(operation, object)
-        end
+        actual_without_token = if op_params_if_defined.present?
+                                 subject.can?(operation, object, op_params_if_defined)
+                               else
+                                 subject.can?(operation, object)
+                               end
 
         actual = actual_with_token && actual_without_token
 
@@ -43,11 +43,11 @@ RSpec.shared_examples 'a feature flag-disabled access control' do |operation, ta
         begin
           actual_with_token = subject.can?("#{operation}_with_token".to_sym, object)
 
-          if op_params_if_defined.present?
-            actual_without_token = subject.can?(operation, object, params=op_params_if_defined)
-          else
-            actual_without_token = subject.can?(operation, object)
-          end
+          actual_without_token = if op_params_if_defined.present?
+                                   subject.can?(operation, object, op_params_if_defined)
+                                 else
+                                   subject.can?(operation, object)
+                                 end
 
           actual = actual_with_token && actual_without_token
         rescue => e

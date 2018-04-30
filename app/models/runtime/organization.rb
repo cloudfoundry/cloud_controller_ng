@@ -2,7 +2,7 @@ require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class Organization < Sequel::Model
-    ORG_NAME_REGEX    = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
     ACTIVE = 'active'.freeze
     SUSPENDED = 'suspended'.freeze
     ORG_STATUS_VALUES = [ACTIVE, SUSPENDED].freeze
