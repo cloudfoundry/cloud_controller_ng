@@ -9,216 +9,218 @@ module VCAP::CloudController
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+    let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }
     let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
-    before { set_current_user(user, scopes: scopes) }
+    before(:each) {
+      set_current_user(user, scopes: scopes)
+      flag.save
+    }
 
-    it_behaves_like :admin_read_only_access
+    index_table = {
+      unauthenticated: true,
+      reader_and_writer: true,
+      reader: true,
+      writer: true,
 
-    context 'admin' do
-      include_context :admin_setup
+      admin: true,
+      admin_read_only: true,
+      global_auditor: true,
 
-      before { FeatureFlag.make(name: 'route_creation', enabled: false) }
+      space_developer: true,
+      space_manager: true,
+      space_auditor: true,
+      org_user: true,
+      org_manager: true,
+      org_auditor: true,
+      org_billing_manager: true,
+    }
 
-      it_behaves_like :full_access
-      it { is_expected.to allow_op_on_object :reserved, nil }
+    read_table = {
+      unauthenticated: false,
+      reader_and_writer: false,
+      reader: false,
+      writer: false,
 
-      it 'can create wildcard routes' do
-        object.host = '*'
-        expect(subject.create?(object)).to be_truthy
+      admin: true,
+      admin_read_only: true,
+      global_auditor: true,
+
+      space_developer: true,
+      space_manager: true,
+      space_auditor: true,
+      org_user: false,
+      org_manager: true,
+      org_auditor: true,
+      org_billing_manager: false,
+    }
+
+    reserved_table = {
+      unauthenticated: false,
+      reader_and_writer: true,
+      reader: true,
+      writer: false,
+
+      admin: true,
+      admin_read_only: false,
+      global_auditor: false,
+    }
+
+    write_table = {
+      unauthenticated: false,
+      reader_and_writer: false,
+      reader: false,
+      writer: false,
+
+      admin: true,
+      admin_read_only: false,
+      global_auditor: false,
+
+      space_developer: true,
+      space_manager: false,
+      space_auditor: false,
+      org_user: false,
+      org_manager: false,
+      org_auditor: false,
+      org_billing_manager: false,
+    }
+
+    restricted_write_table = write_table.clone.merge({
+      space_developer: false,
+    })
+
+    describe 'in a suspended org' do
+      before(:each) do
+        org.status = VCAP::CloudController::Organization::SUSPENDED
+        org.save
       end
 
-      it 'can update wildcard routes' do
-        object.host = '*'
-        expect(subject.update?(object)).to be_truthy
-      end
-
-      context 'changing the space' do
-        it 'succeeds even if not a space developer in the new space' do
-          new_space = Space.make(organization: object.space.organization)
-
-          object.space = new_space
-          expect(subject.update?(object)).to be_truthy
-        end
-      end
+      it_behaves_like('an access control', :create, restricted_write_table)
+      it_behaves_like('an access control', :delete, restricted_write_table)
+      it_behaves_like('an access control', :index, index_table)
+      it_behaves_like('an access control', :read, read_table)
+      it_behaves_like('an access control', :read_for_update, restricted_write_table)
+      it_behaves_like('an access control', :reserved, reserved_table)
+      it_behaves_like('an access control', :update, restricted_write_table)
     end
 
-    context 'organization manager' do
-      before { org.add_manager(user) }
-      it_behaves_like :read_only_access
-
-      context 'when the organization is suspended' do
-        before { allow(object).to receive(:in_suspended_org?).and_return(true) }
-        it_behaves_like :read_only_access
-      end
-    end
-
-    context 'organization auditor' do
-      before { org.add_auditor(user) }
-      it_behaves_like :read_only_access
-    end
-
-    context 'organization billing manager' do
-      before { org.add_billing_manager(user) }
-      it_behaves_like :no_access
-    end
-
-    context 'space manager' do
-      before do
-        org.add_user(user)
-        space.add_manager(user)
-      end
-
-      it_behaves_like :read_only_access
-
-      it 'cant create wildcard routes' do
-        object.host = '*'
-        expect(subject.create?(object)).to be_falsey
-      end
-
-      it 'cant update wildcard routes' do
-        object.host = '*'
-        expect(subject.update?(object)).to be_falsey
-      end
-    end
-
-    context 'space developer' do
-      before do
-        org.add_user(user)
-        space.add_developer(user)
-      end
-
-      it_behaves_like :full_access
-
-      it 'can create wildcard routes' do
-        object.host = '*'
-        expect(subject.create?(object)).to be_truthy
-      end
-
-      it 'can update wildcard routes' do
-        object.host = '*'
-        expect(subject.update?(object)).to be_truthy
-      end
-
-      context 'in a shared domain' do
-        before do
-          object.domain = SharedDomain.make
-        end
-
-        it 'cant create wildcard routes for shared domain' do
-          object.host = '*'
-          expect(subject.create?(object)).to be_falsey
-        end
-
-        it 'cant update wildcard routes for shared domain' do
-          object.host = '*'
-          expect(subject.update?(object)).to be_falsey
-        end
-      end
-
-      context 'changing the space' do
-        it 'succeeds if a space developer in the new space' do
-          new_space = Space.make(organization: object.space.organization)
-          new_space.add_developer(user)
-
-          object.space = new_space
-          expect(subject.update?(object)).to be_truthy
+    describe 'in an unsuspended org' do
+      describe 'when route creation is enabled' do
+        before(:each) do
+          flag.enabled = true
+          flag.save
         end
 
-        it 'fails if not a space developer in the new space' do
-          new_space = Space.make(organization: object.space.organization)
+        describe 'in a shared domain' do
+          before(:each) { object.domain = SharedDomain.make }
 
-          object.space = new_space
-          expect(subject.update?(object)).to be_falsey
+          describe 'when the route has a wildcard host' do
+            before(:each) { object.host = '*' }
+
+            it_behaves_like('an access control', :create, restricted_write_table)
+            it_behaves_like('an access control', :delete, restricted_write_table)
+            it_behaves_like('an access control', :index, index_table)
+            it_behaves_like('an access control', :read, read_table)
+            it_behaves_like('an access control', :read_for_update, restricted_write_table)
+            it_behaves_like('an access control', :reserved, reserved_table)
+            it_behaves_like('an access control', :update, restricted_write_table)
+          end
+
+          describe 'when the route does not have a wildcard host' do
+            before(:each) { object.host = 'notawildcard' }
+
+            it_behaves_like('an access control', :create, write_table)
+            it_behaves_like('an access control', :delete, write_table)
+            it_behaves_like('an access control', :index, index_table)
+            it_behaves_like('an access control', :read, read_table)
+            it_behaves_like('an access control', :read_for_update, write_table)
+            it_behaves_like('an access control', :reserved, reserved_table)
+            it_behaves_like('an access control', :update, write_table)
+          end
+        end
+
+        describe 'outside of a shared domain' do
+          describe 'when the route has a wildcard host' do
+            before(:each) { object.host = '*' }
+
+            it_behaves_like('an access control', :create, write_table)
+            it_behaves_like('an access control', :delete, write_table)
+            it_behaves_like('an access control', :index, index_table)
+            it_behaves_like('an access control', :read, read_table)
+            it_behaves_like('an access control', :read_for_update, write_table)
+            it_behaves_like('an access control', :reserved, reserved_table)
+            it_behaves_like('an access control', :update, write_table)
+          end
+
+          describe 'when the route does not have a wildcard host' do
+            before(:each) { object.host = 'notawildcard' }
+
+            it_behaves_like('an access control', :create, write_table)
+            it_behaves_like('an access control', :delete, write_table)
+            it_behaves_like('an access control', :index, index_table)
+            it_behaves_like('an access control', :read, read_table)
+            it_behaves_like('an access control', :read_for_update, write_table)
+            it_behaves_like('an access control', :reserved, reserved_table)
+            it_behaves_like('an access control', :update, write_table)
+          end
         end
       end
 
-      context 'when the route_creation feature flag is disabled' do
-        before { FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil) }
+      describe 'when route creation is disabled' do
+        describe 'in a shared domain' do
+          before(:each) { object.domain = SharedDomain.make }
 
-        it 'raises when attempting to create a route' do
-          expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /route_creation/)
+          describe 'when the route has a wildcard host' do
+            before(:each) { object.host = '*' }
+
+            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
+            it_behaves_like('a feature flag-disabled access control', :delete, restricted_write_table)
+            it_behaves_like('a feature flag-disabled access control', :index, index_table)
+            it_behaves_like('a feature flag-disabled access control', :read, read_table)
+            it_behaves_like('a feature flag-disabled access control', :read_for_update, restricted_write_table)
+            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
+            it_behaves_like('a feature flag-disabled access control', :update, restricted_write_table)
+          end
+
+          describe 'when the route does not have a wildcard host' do
+            before(:each) { object.host = 'notawildcard' }
+
+            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
+            it_behaves_like('a feature flag-disabled access control', :delete, write_table)
+            it_behaves_like('a feature flag-disabled access control', :index, index_table)
+            it_behaves_like('a feature flag-disabled access control', :read, read_table)
+            it_behaves_like('a feature flag-disabled access control', :read_for_update, write_table)
+            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
+            it_behaves_like('a feature flag-disabled access control', :update, write_table)
+          end
         end
 
-        it 'allows all other actions' do
-          expect(subject.read_for_update?(object)).to be_truthy
-          expect(subject.update?(object)).to be_truthy
-          expect(subject.delete?(object)).to be_truthy
+        describe 'outside of a shared domain' do
+          describe 'when the route has a wildcard host' do
+            before(:each) { object.host = '*' }
+
+            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
+            it_behaves_like('a feature flag-disabled access control', :delete, write_table)
+            it_behaves_like('a feature flag-disabled access control', :index, index_table)
+            it_behaves_like('a feature flag-disabled access control', :read, read_table)
+            it_behaves_like('a feature flag-disabled access control', :read_for_update, write_table)
+            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
+            it_behaves_like('a feature flag-disabled access control', :update, write_table)
+          end
+
+          describe 'when the route does not have a wildcard host' do
+            before(:each) { object.host = 'notawildcard' }
+
+            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
+            it_behaves_like('a feature flag-disabled access control', :delete, write_table)
+            it_behaves_like('a feature flag-disabled access control', :index, index_table)
+            it_behaves_like('a feature flag-disabled access control', :read, read_table)
+            it_behaves_like('a feature flag-disabled access control', :read_for_update, write_table)
+            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
+            it_behaves_like('a feature flag-disabled access control', :update, write_table)
+          end
         end
       end
-    end
-
-    context 'space auditor' do
-      before do
-        org.add_user(user)
-        space.add_auditor(user)
-      end
-
-      it_behaves_like :read_only_access
-    end
-
-    context 'organization user (defensive)' do
-      before { org.add_user(user) }
-      it_behaves_like :no_access
-    end
-
-    context 'user in a different organization (defensive)' do
-      before do
-        different_organization = VCAP::CloudController::Organization.make
-        different_organization.add_user(user)
-      end
-
-      it_behaves_like :no_access
-    end
-
-    context 'manager in a different organization (defensive)' do
-      before do
-        different_organization = VCAP::CloudController::Organization.make
-        different_organization.add_manager(user)
-      end
-
-      it_behaves_like :no_access
-    end
-
-    context 'a user that isnt logged in (defensive)' do
-      let(:user) { nil }
-      let(:scopes) { nil }
-      it_behaves_like :no_access
-      it { is_expected.not_to allow_op_on_object :reserved, nil }
-    end
-
-    context 'any user using client without cloud_controller.write' do
-      let(:scopes) { ['cloud_controller.read'] }
-
-      before do
-        org.add_user(user)
-        org.add_manager(user)
-        org.add_billing_manager(user)
-        org.add_auditor(user)
-        space.add_manager(user)
-        space.add_developer(user)
-        space.add_auditor(user)
-      end
-
-      it_behaves_like :read_only_access
-      it { is_expected.to allow_op_on_object :reserved, nil }
-    end
-
-    context 'any user using client without cloud_controller.read' do
-      let(:scopes) { [] }
-
-      before do
-        org.add_user(user)
-        org.add_manager(user)
-        org.add_billing_manager(user)
-        org.add_auditor(user)
-        space.add_manager(user)
-        space.add_developer(user)
-        space.add_auditor(user)
-      end
-
-      it_behaves_like :no_access
-      it { is_expected.not_to allow_op_on_object :reserved, nil }
     end
   end
 end
