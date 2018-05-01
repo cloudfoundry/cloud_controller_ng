@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'fetchers/v2/app_query'
+require 'fetchers/queries/app_query'
 
 module VCAP::RestAPI
   RSpec.describe AppQuery do

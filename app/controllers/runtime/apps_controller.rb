@@ -1,5 +1,5 @@
 require 'presenters/system_environment/system_env_presenter'
-require 'fetchers/v2/app_query'
+require 'fetchers/queries/app_query'
 require 'actions/v2/app_stage'
 require 'actions/v2/app_create'
 require 'actions/v2/app_update'
