@@ -46,7 +46,7 @@ module VCAP::CloudController
 
       describe 'scaling instances' do
         let(:message) { AppManifestMessage.new({ name: 'blah', instances: 4 }) }
-        let(:process_scale_message) { message.process_scale_message }
+        let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
         let(:process) { ProcessModel.make(instances: 1) }
         let(:app) { process.app }
 
@@ -59,14 +59,14 @@ module VCAP::CloudController
 
           it 'calls ProcessScale with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, process_scale_message)
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, an_instance_of(ProcessScaleMessage))
             expect(process_scale).to have_received(:scale)
           end
         end
 
         context 'when process scale raises an exception' do
-          let(:process_scale_message) { instance_double(ProcessScaleMessage) }
-          let(:message) { instance_double(AppManifestMessage, process_scale_message: process_scale_message) }
+          let(:manifest_process_scale_message) { instance_double(ManifestProcessScaleMessage, { type: nil, to_process_scale_message: nil }) }
+          let(:message) { instance_double(AppManifestMessage, manifest_process_scale_messages: [manifest_process_scale_message], manifest_process_update_messages: []) }
 
           before do
             allow(process_scale).
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
       describe 'scaling memory' do
         let(:message) { AppManifestMessage.new({ name: 'blah', memory: '256MB' }) }
-        let(:process_scale_message) { message.process_scale_message }
+        let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
         let(:process) { ProcessModel.make(memory: 512) }
         let(:app) { process.app }
 
@@ -97,13 +97,14 @@ module VCAP::CloudController
 
           it 'calls ProcessScale with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, process_scale_message)
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage))
             expect(process_scale).to have_received(:scale)
           end
         end
 
-        context 'when the request is invalid due to an invalid unit suffix' do
-          let(:message) { AppManifestMessage.new({ name: 'blah', memory: '256BIG' }) }
+        context 'when process scale raises an exception' do
+          let(:manifest_process_scale_message) { instance_double(ManifestProcessScaleMessage, { type: nil, to_process_scale_message: nil }) }
+          let(:message) { instance_double(AppManifestMessage, manifest_process_scale_messages: [manifest_process_scale_message], manifest_process_update_messages: []) }
 
           before do
             allow(process_scale).
@@ -230,7 +231,7 @@ module VCAP::CloudController
 
       describe 'updating command' do
         let(:message) { AppManifestMessage.new({ command: 'new-command' }) }
-        let(:manifest_process_update_message) { message.manifest_process_update_message }
+        let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
         let(:app) { AppModel.make }
 
         context 'when the request is valid' do
@@ -264,58 +265,64 @@ module VCAP::CloudController
         end
       end
 
-      describe 'converting ManifestProcessScaleMessages to ProcessScaleMessages' do
-        let(:message) { AppManifestMessage.new(params) }
-        let(:process_scale_message) { message.process_scale_message }
+      describe 'updating multiple process attributes' do
+        let(:message) { AppManifestMessage.new({
+          processes: [
+            { type: 'web', command: 'web-command', instances: 2 },
+            { type: 'worker', command: 'worker-command', instances: 3 },
+          ] }
+        )
+        }
+        let!(:process1) { ProcessModel.make(type: 'web') }
+        let!(:app) { process1.app }
+        let!(:process2) { ProcessModel.make(app: app, type: 'worker') }
+        let(:manifest_process_update_message1) { message.manifest_process_update_messages.first }
+        let(:manifest_process_update_message2) { message.manifest_process_update_messages.last }
 
-        context 'when all params are given' do
-          let(:params) do { name: 'blah1', instances: 4, disk_quota: '3500MB', memory: '120MB' } end
-          it 'converts them all' do
-            expect(process_scale_message.instances).to eq(4)
-            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
-            expect(process_scale_message.disk_in_mb).to eq(3500)
-            expect(process_scale_message.requested?(:memory)).to be_falsey
-            expect(process_scale_message.memory_in_mb).to eq(120)
+        let(:manifest_process_scale_message1) { message.manifest_process_scale_messages.first }
+        let(:manifest_process_scale_message2) { message.manifest_process_scale_messages.last }
+
+        context 'when the request is valid' do
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls ProcessUpdate with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info).exactly(2).times
+            expect(process_update).to have_received(:update).with(process1, manifest_process_update_message1, ManifestStrategy)
+            expect(process_update).to have_received(:update).with(process2, manifest_process_update_message2, ManifestStrategy)
+          end
+
+          it 'calls ProcessScale with the correct arguments' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process1, instance_of(ProcessScaleMessage))
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process2, instance_of(ProcessScaleMessage))
+            expect(process_scale).to have_received(:scale).exactly(2).times
           end
         end
 
-        context 'when no disk_quota is given' do
-          let(:params) do { name: 'blah2', instances: 4, memory: '120MB' } end
-          it "doesn't set anything for disk_in_mb" do
-            expect(process_scale_message.instances).to eq(4)
-            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
-            expect(process_scale_message.requested?(:disk_in_mb)).to be_falsey
-            expect(process_scale_message.requested?(:memory)).to be_falsey
-            expect(process_scale_message.memory_in_mb).to eq(120)
-          end
-        end
+        context 'when the request is invalid' do
+          let(:message) { AppManifestMessage.new({ command: '' }) }
 
-        context 'when no memory is given' do
-          let(:params) do { name: 'blah3', instances: 4, disk_quota: '3500MB' } end
-          it "doesn't set anything for memory_in_mb" do
-            expect(process_scale_message.instances).to eq(4)
-            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
-            expect(process_scale_message.disk_in_mb).to eq(3500)
-            expect(process_scale_message.requested?(:memory)).to be_falsey
-            expect(process_scale_message.requested?(:memory_in_mb)).to be_falsey
+          before do
+            allow(process_update).
+              to receive(:update).and_raise(ProcessUpdate::InvalidProcess.new('invalid process'))
           end
-        end
 
-        context 'when no scaling fields are given' do
-          let(:params) do { name: 'blah4' } end
-          it "doesn't set any scaling fields" do
-            expect(process_scale_message.requested?(:instances)).to be_falsey
-            expect(process_scale_message.requested?(:disk_quota)).to be_falsey
-            expect(process_scale_message.requested?(:disk_in_mb)).to be_falsey
-            expect(process_scale_message.requested?(:memory)).to be_falsey
-            expect(process_scale_message.requested?(:memory_in_mb)).to be_falsey
+          it 'bubbles up the error' do
+            expect {
+              app_apply_manifest.apply(app.guid, message)
+            }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
           end
         end
       end
 
-      describe 'updating process' do
-        let(:message) { AppManifestMessage.new({ name: 'blah', type: 'process' }) }
-        let(:manifest_process_update_message) { message.manifest_process_update_message }
+      describe 'updating health check type' do
+        let(:message) { AppManifestMessage.new({ name: 'blah', health_check_type: 'process' }) }
+        let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
         let(:process) { ProcessModel.make }
         let(:app) { process.app }
 

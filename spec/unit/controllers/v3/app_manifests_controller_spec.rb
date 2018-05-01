@@ -91,31 +91,31 @@ RSpec.describe AppManifestsController, type: :controller do
           expect(errors.size).to eq(9)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
-              'detail' => 'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+              'detail' => 'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'Instances must be greater than or equal to 0',
+              'detail' => 'Process "web": Instances must be greater than or equal to 0',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'Command must be between 1 and 4096 characters',
+              'detail' => 'Process "web": Command must be between 1 and 4096 characters',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'env must be a hash of keys and values',
+              'detail' => 'Env must be a hash of keys and values',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'Health check type must be "http" to set a health check HTTP endpoint',
+              'detail' => 'Process "web": Health check type must be "http" to set a health check HTTP endpoint',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'Health check type must be "port", "process", or "http"',
+              'detail' => 'Process "web": Health check type must be "port", "process", or "http"',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'Timeout must be greater than or equal to 1',
+              'detail' => 'Process "web": Timeout must be greater than or equal to 1',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {

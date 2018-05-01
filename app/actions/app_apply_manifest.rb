@@ -14,13 +14,20 @@ module VCAP::CloudController
 
     def apply(app_guid, message)
       app = AppModel.find(guid: app_guid)
-      ProcessScale.new(@user_audit_info, app.web_process, message.process_scale_message).scale
+
+      message.manifest_process_update_messages.each do |manifest_process_update_msg|
+        process = ProcessModel.find(app: app, type: manifest_process_update_msg.type)
+        ProcessUpdate.new(@user_audit_info).update(process, manifest_process_update_msg, ManifestStrategy)
+      end
+
+      message.manifest_process_scale_messages.each do |manifest_process_scale_msg|
+        process = ProcessModel.find(app: app, type: manifest_process_scale_msg.type)
+        ProcessScale.new(@user_audit_info, process, manifest_process_scale_msg.to_process_scale_message).scale
+      end
 
       app_update_message = message.app_update_message
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
       AppUpdate.new(@user_audit_info).update(app, app_update_message, lifecycle)
-
-      ProcessUpdate.new(@user_audit_info).update(app.web_process, message.manifest_process_update_message, ManifestStrategy)
 
       do_route_update(app, message)
 

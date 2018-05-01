@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe ManifestProcessScaleMessage do
     describe 'validations' do
       context 'when unexpected keys are requested' do
-        let(:params) { { instances: 3, memory: 6, memory_in_mb: 2048 } } # memory_in_mb is unexpected unlike ProcessScaleMessage
+        let(:params) { { instances: 3, memory: 6, memory_in_mb: 2048 } }
 
         it 'is not valid' do
           message = ManifestProcessScaleMessage.new(params)
@@ -141,6 +141,58 @@ module VCAP::CloudController
             'Disk quota must be greater than 0MB',
             'Memory must be greater than 0MB'
           ])
+        end
+      end
+    end
+
+    describe '#to_process_scale_message' do
+      let(:manifest_message) { ManifestProcessScaleMessage.new(params) }
+
+      context 'when all params are given' do
+        let(:params) { { instances: 3, memory: 1024, disk_quota: 2048 } }
+
+        it 'returns a process_scale_message with the appropriate values' do
+          scale_message = manifest_message.to_process_scale_message
+
+          expect(scale_message.instances).to eq(3)
+          expect(scale_message.memory_in_mb).to eq(1024)
+          expect(scale_message.disk_in_mb).to eq(2048)
+        end
+      end
+
+      context 'when no disk_quota is given' do
+        let(:params) { { instances: 3, memory: 1024 } }
+
+        it 'does not set anything for disk_in_mb' do
+          scale_message = manifest_message.to_process_scale_message
+
+          expect(scale_message.instances).to eq(3)
+          expect(scale_message.memory_in_mb).to eq(1024)
+          expect(scale_message.disk_in_mb).to be_falsey
+        end
+      end
+
+      context 'when no instances is given' do
+        let(:params) { { memory: 1024, disk_quota: 2048 } }
+
+        it 'does not set anything for instances' do
+          scale_message = manifest_message.to_process_scale_message
+
+          expect(scale_message.instances).to be_falsey
+          expect(scale_message.memory_in_mb).to eq(1024)
+          expect(scale_message.disk_in_mb).to eq(2048)
+        end
+      end
+
+      context 'when no memory is given' do
+        let(:params) { { instances: 3, disk_quota: 2048 } }
+
+        it 'does not set anything for memory_in_mb' do
+          scale_message = manifest_message.to_process_scale_message
+
+          expect(scale_message.instances).to eq(3)
+          expect(scale_message.memory_in_mb).to be_falsey
+          expect(scale_message.disk_in_mb).to eq(2048)
         end
       end
     end

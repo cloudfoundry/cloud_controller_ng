@@ -23,7 +23,8 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+            expect(message.errors.full_messages).to include(
+              'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
           end
         end
 
@@ -35,7 +36,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Memory must be greater than 0MB')
+            expect(message.errors.full_messages).to include('Process "web": Memory must be greater than 0MB')
           end
         end
 
@@ -47,7 +48,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Memory must be greater than 0MB')
+            expect(message.errors.full_messages).to include('Process "web": Memory must be greater than 0MB')
           end
         end
       end
@@ -61,7 +62,9 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB')
+            expect(message.errors.full_messages).to include(
+              'Process "web": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB'
+            )
           end
         end
 
@@ -73,7 +76,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Disk quota must be greater than 0MB')
+            expect(message.errors.full_messages).to include('Process "web": Disk quota must be greater than 0MB')
           end
         end
 
@@ -85,7 +88,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Disk quota is not a number')
+            expect(message.errors.full_messages).to include('Process "web": Disk quota is not a number')
           end
         end
       end
@@ -149,7 +152,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Instances is not a number')
+            expect(message.errors.full_messages).to include('Process "web": Instances is not a number')
           end
         end
 
@@ -161,7 +164,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Instances must be an integer')
+            expect(message.errors.full_messages).to include('Process "web": Instances must be an integer')
           end
         end
 
@@ -173,7 +176,7 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Instances must be greater than or equal to 0')
+            expect(message.errors.full_messages).to include('Process "web": Instances must be greater than or equal to 0')
           end
         end
       end
@@ -189,7 +192,7 @@ module VCAP::CloudController
             message = AppManifestMessage.new(params)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('env must be a hash of keys and values')
+            expect(message.errors.full_messages).to include('Env must be a hash of keys and values')
           end
         end
 
@@ -364,6 +367,119 @@ module VCAP::CloudController
         end
       end
 
+      describe 'processes' do
+        context 'when processes is not an array' do
+          let(:params) { { processes: 'string' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Processes must be an array of process configurations')
+          end
+        end
+
+        context 'when any process does not have a type' do
+          let(:params) { { processes: [{ 'instances' => 3 }] } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('All Processes must specify a type')
+          end
+        end
+
+        context 'when any process has a blank type' do
+          let(:params) { { processes: [{ 'type' => '', 'instances' => 3 }] } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('All Processes must specify a type')
+          end
+        end
+
+        context 'when any process fails validation' do
+          let(:params) { { processes: [{ 'type' => 'totally-a-type', 'instances' => -1, 'timeout' => -5 }] } }
+
+          it 'has the type of the process in the error message' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(2)
+            expect(message.errors.full_messages).to include('Process "totally-a-type": Instances must be greater than or equal to 0')
+            expect(message.errors.full_messages).to include('Process "totally-a-type": Timeout must be greater than or equal to 1')
+          end
+
+          context 'when processes attributes are invalid' do
+            let(:process1) do
+              {
+                'type' => 'type1',
+                'instances' => -30,
+                'memory' => 'potato',
+                'disk_quota' => '100',
+                'health_check_type' => 'sweet_potato',
+                'health_check_http_endpoint' => '/healthcheck_potato',
+                'command' => '',
+                'timeout' => 'yam'
+              }
+            end
+            let(:process2) do
+              {
+                'type' => 'type2',
+                'instances' => 'cassava',
+                'memory' => 'potato',
+                'disk_quota' => '100',
+                'health_check_type' => 'sweet_potato',
+                'health_check_http_endpoint' => '/healthcheck_potato',
+                'command' => '',
+                'timeout' => 'yam'
+              }
+            end
+            let(:params) { { processes: [process1, process2] } }
+
+            it 'includes the type of the process in the error message' do
+              message = AppManifestMessage.new(params)
+              expect(message).to_not be_valid
+              expect(message.errors.count).to eq(14)
+              expect(message.errors.full_messages).to match_array([
+                'Process "type1": Command must be between 1 and 4096 characters',
+                'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type1": Instances must be greater than or equal to 0',
+                'Process "type1": Memory is not a number',
+                'Process "type1": Timeout is not a number',
+                'Process "type1": Health check type must be "port", "process", or "http"',
+                'Process "type1": Health check type must be "http" to set a health check HTTP endpoint',
+
+                'Process "type2": Command must be between 1 and 4096 characters',
+                'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'Process "type2": Instances is not a number',
+                'Process "type2": Memory is not a number',
+                'Process "type2": Timeout is not a number',
+                'Process "type2": Health check type must be "port", "process", or "http"',
+                'Process "type2": Health check type must be "http" to set a health check HTTP endpoint',
+              ])
+            end
+          end
+        end
+
+        context 'when there is more than one process with the same type' do
+          let(:params) { { processes: [{ 'type' => 'foo', 'instances' => 3 }, { 'type' => 'foo', 'instances' => 1 },
+                                       { 'type' => 'bob', 'instances' => 5 }, { 'type' => 'bob', 'instances' => 1 }
+          ] }
+          }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(2)
+            expect(message.errors.full_messages).to include('Process "foo" may only be present once')
+            expect(message.errors.full_messages).to include('Process "bob" may only be present once')
+          end
+        end
+      end
+
       context 'when there are multiple errors' do
         let(:params) do
           {
@@ -382,12 +498,12 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors.count).to eq(6)
           expect(message.errors.full_messages).to match_array([
-            'Instances must be greater than or equal to 0',
-            'Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
-            'Disk quota must be greater than 0MB',
+            'Process "web": Instances must be greater than or equal to 0',
+            'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+            'Process "web": Disk quota must be greater than 0MB',
             'Buildpacks can only contain strings',
             'Stack must be a string',
-            'env must be a hash of keys and values',
+            'Env must be a hash of keys and values',
           ])
         end
       end
@@ -413,61 +529,620 @@ module VCAP::CloudController
       end
     end
 
+    describe '.underscore_keys' do
+      let(:parsed_yaml) { { name: 'blah', 'health-check-type': 'port', disk_quota: '23M' } }
+
+      it 'converts all keys to snake case' do
+        expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+          {
+            name: 'blah',
+            health_check_type: 'port',
+            disk_quota: '23M',
+          }
+        )
+      end
+
+      context 'with processes' do
+        let(:parsed_yaml) do
+          { name: 'blah', processes: [
+            { type: 'web', 'health-check-type': 'port', disk_quota: '23M' },
+            { type: 'worker', 'health-check-type': 'port', disk_quota: '23M' },
+          ] }
+        end
+
+        it 'converts the processes keys into snake case for all processes' do
+          expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+            { name: 'blah',
+              processes: [
+                { type: 'web',
+                  health_check_type: 'port',
+                  disk_quota: '23M', },
+                { type: 'worker',
+                  health_check_type: 'port',
+                  disk_quota: '23M', },
+              ]
+            }
+          )
+        end
+      end
+
+      context 'with environment variables' do
+        let(:parsed_yaml) do
+          { name: 'blah', env: { ':ENV_VAR' => 'hunter1' }, processes: [
+            { type: 'web', env: { ':ENV_VAR' => 'hunter2' } },
+            { type: 'worker', env: { ':ENV_VAR' => 'hunter3' } },
+          ] }
+        end
+
+        it 'does NOT try to underscore them (so they do NOT get lowercased)' do
+          expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+            { name: 'blah',
+              env: { ':ENV_VAR' => 'hunter1' },
+              processes: [
+                { type: 'web',
+                  env: { ':ENV_VAR' => 'hunter2' }, },
+                { type: 'worker',
+                  env: { ':ENV_VAR' => 'hunter3' }, },
+              ]
+            }
+          )
+        end
+      end
+
+      context 'with services' do
+        let(:parsed_yaml) do
+          { name: 'blah', services: ['hadoop'], processes: [
+            { type: 'web', services: ['greenplumbdb'] },
+            { type: 'worker', services: ['riak'] },
+          ] }
+        end
+
+        it 'does NOT try to underscore the service names (they are strings not hashes)' do
+          expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+            { name: 'blah',
+              services: ['hadoop'],
+              processes: [
+                { type: 'web',
+                  services: ['greenplumbdb'], },
+                { type: 'worker',
+                  services: ['riak'], },
+              ]
+            }
+          )
+        end
+      end
+
+      context 'when processes is incorrectly not an array' do
+        context 'when nil' do
+          let(:parsed_yaml) do
+            { name: 'blah', processes: nil }
+          end
+
+          it 'does NOT raise an error' do
+            expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+              { name: 'blah',
+                processes: nil
+              }
+            )
+          end
+        end
+
+        context 'when hash' do
+          let(:parsed_yaml) do
+            { name: 'blah', processes: { 'web': { 'woop-de': 'doop' } } }
+          end
+
+          it 'does NOT raise an error, but does not underscore anything' do
+            expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+              { name: 'blah',
+                processes: { 'web': { 'woop-de': 'doop' } }
+              }
+            )
+          end
+        end
+
+        context 'when string' do
+          let(:parsed_yaml) do
+            { name: 'blah', processes: 'i am process' }
+          end
+
+          it 'does NOT raise an error' do
+            expect(AppManifestMessage.underscore_keys(parsed_yaml)).to eq(
+              { name: 'blah',
+                processes: 'i am process'
+              }
+            )
+          end
+        end
+      end
+    end
+
     describe '#process_scale_message' do
-      let(:parsed_yaml) { { 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 } }
-
-      it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
-        message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-        expect(message.manifest_process_scale_message.instances).to eq(5)
-        expect(message.manifest_process_scale_message.memory).to eq(204800)
-        expect(message.manifest_process_scale_message.disk_quota).to eq(1024000)
-      end
-
-      context 'it handles bytes' do
-        let(:parsed_yaml) { { 'disk_quota' => '7340032B', 'memory' => '3145728B', instances: 8 } }
+      context 'from app-level attributes' do
+        let(:parsed_yaml) { { 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 } }
 
         it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
+
           expect(message).to be_valid
-          expect(message.manifest_process_scale_message.instances).to eq(8)
-          expect(message.manifest_process_scale_message.memory).to eq(3)
-          expect(message.manifest_process_scale_message.disk_quota).to eq(7)
+          expect(message.manifest_process_scale_messages.length).to eq(1)
+          expect(message.manifest_process_scale_messages.first.instances).to eq(5)
+          expect(message.manifest_process_scale_messages.first.memory).to eq(204800)
+          expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1024000)
+          expect(message.manifest_process_scale_messages.first.type).to eq('web')
+        end
+
+        context 'it handles bytes' do
+          let(:parsed_yaml) { { 'disk_quota' => '7340032B', 'memory' => '3145728B', instances: 8 } }
+
+          it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.length).to eq(1)
+            expect(message.manifest_process_scale_messages.first.instances).to eq(8)
+            expect(message.manifest_process_scale_messages.first.memory).to eq(3)
+            expect(message.manifest_process_scale_messages.first.disk_quota).to eq(7)
+          end
+        end
+
+        context 'it handles exactly 1MB' do
+          let(:parsed_yaml) { { 'disk_quota' => '1048576B', 'memory' => '1048576B', instances: 8 } }
+
+          it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.length).to eq(1)
+            expect(message.manifest_process_scale_messages.first.instances).to eq(8)
+            expect(message.manifest_process_scale_messages.first.memory).to eq(1)
+            expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1)
+          end
+        end
+
+        context 'it complains about 1MB - 1' do
+          let(:parsed_yaml) { { 'disk_quota' => '1048575B', 'memory' => '1048575B', instances: 8 } }
+
+          it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(2)
+            expect(message.errors.full_messages).to match_array([
+              'Process "web": Memory must be greater than 0MB',
+              'Process "web": Disk quota must be greater than 0MB'])
+          end
+        end
+
+        context 'when attributes are not requested in the manifest' do
+          let(:parsed_yaml) { {} }
+
+          it 'does not create any ManifestProcessScaleMessages' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message.manifest_process_scale_messages.length).to eq(0)
+          end
         end
       end
 
-      context 'it handles exactly 1MB' do
-        let(:parsed_yaml) { { 'disk_quota' => '1048576B', 'memory' => '1048576B', instances: 8 } }
+      context 'from nested process attributes' do
+        let(:parsed_yaml) { { 'processes' => [{ 'type' => 'web', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }] } }
 
         it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
+
           expect(message).to be_valid
-          expect(message.manifest_process_scale_message.instances).to eq(8)
-          expect(message.manifest_process_scale_message.memory).to eq(1)
-          expect(message.manifest_process_scale_message.disk_quota).to eq(1)
+          expect(message.manifest_process_scale_messages.length).to eq(1)
+          expect(message.manifest_process_scale_messages.first.instances).to eq(5)
+          expect(message.manifest_process_scale_messages.first.memory).to eq(204800)
+          expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1024000)
+          expect(message.manifest_process_scale_messages.first.type).to eq('web')
+        end
+
+        context 'it handles bytes' do
+          let(:parsed_yaml) { { 'processes' => [{ 'type' => 'web', 'disk_quota' => '7340032B', 'memory' => '3145728B', instances: 8 }] } }
+
+          it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.length).to eq(1)
+            expect(message.manifest_process_scale_messages.first.instances).to eq(8)
+            expect(message.manifest_process_scale_messages.first.memory).to eq(3)
+            expect(message.manifest_process_scale_messages.first.disk_quota).to eq(7)
+          end
+        end
+
+        context 'it handles exactly 1MB' do
+          let(:parsed_yaml) { { 'processes' => [{ 'type' => 'web', 'disk_quota' => '1048576B', 'memory' => '1048576B', instances: 8 }] } }
+
+          it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).to be_valid
+            expect(message.manifest_process_scale_messages.length).to eq(1)
+            expect(message.manifest_process_scale_messages.first.instances).to eq(8)
+            expect(message.manifest_process_scale_messages.first.memory).to eq(1)
+            expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1)
+          end
+        end
+
+        context 'it complains about 1MB - 1' do
+          let(:parsed_yaml) { { 'processes' => [{ 'type' => 'web', 'disk_quota' => '1048575B', 'memory' => '1048575B', instances: 8 }] } }
+
+          it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(2)
+            expect(message.errors.full_messages).to match_array([
+              'Process "web": Memory must be greater than 0MB',
+              'Process "web": Disk quota must be greater than 0MB'])
+          end
+        end
+
+        context 'when processes and app-level process properties are specified' do
+          context 'there is a web process type on the process level' do
+            let(:parsed_yaml) { { 'memory' => '5GB',
+                                  instances: 1,
+                                  'disk_quota' => '30GB',
+                                  'processes' => [{ 'type' => 'web', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }] }
+            }
+
+            it 'uses the values from the web process and ignores the app-level process properties' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+              expect(message).to be_valid
+              expect(message.manifest_process_scale_messages.length).to eq(1)
+              expect(message.manifest_process_scale_messages.first.instances).to eq(5)
+              expect(message.manifest_process_scale_messages.first.memory).to eq(204800)
+              expect(message.manifest_process_scale_messages.first.disk_quota).to eq(1024000)
+              expect(message.manifest_process_scale_messages.first.type).to eq('web')
+            end
+          end
+
+          context 'there is not a web process type on the process level' do
+            let(:parsed_yaml) { { 'memory' => '5GB',
+                                  instances: 1,
+                                  'disk_quota' => '30GB',
+                                  'processes' => [{ 'type' => 'worker', 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 }] }
+            }
+
+            it 'uses the values from the app-level process for the web process' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+              expect(message).to be_valid
+              expect(message.manifest_process_scale_messages.length).to eq(2)
+
+              expect(message.manifest_process_scale_messages.first.instances).to eq(1)
+              expect(message.manifest_process_scale_messages.first.memory).to eq(5120)
+              expect(message.manifest_process_scale_messages.first.disk_quota).to eq(30720)
+              expect(message.manifest_process_scale_messages.first.type).to eq('web')
+
+              expect(message.manifest_process_scale_messages.last.type).to eq('worker')
+              expect(message.manifest_process_scale_messages.last.instances).to eq(5)
+              expect(message.manifest_process_scale_messages.last.memory).to eq(204800)
+              expect(message.manifest_process_scale_messages.last.disk_quota).to eq(1024000)
+            end
+          end
+        end
+      end
+    end
+
+    describe '#process_update_message' do
+      context 'from app-level attributes' do
+        let(:parsed_yaml) do
+          {
+            'command' => command,
+            'health-check-type' => health_check_type,
+            'health-check-http-endpoint' => health_check_http_endpoint,
+            'timeout' => health_check_timeout
+          }
+        end
+
+        let(:command) { 'new-command' }
+        let(:health_check_type) { 'http' }
+        let(:health_check_http_endpoint) { '/endpoint' }
+        let(:health_check_timeout) { 10 }
+
+        context 'when new properties are specified' do
+          it 'sets the command and health check type fields in the message' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_messages.length).to eq(1)
+            expect(message.manifest_process_update_messages.first.command).to eq('new-command')
+            expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
+            expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/endpoint')
+            expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
+          end
+        end
+
+        context 'health checks' do
+          context 'deprecated health check type none' do
+            let(:parsed_yaml) { { "health-check-type": 'none' } }
+
+            it 'is converted to process' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_type).to eq('process')
+            end
+          end
+
+          context 'health check timeout without other health check parameters' do
+            let(:health_check_timeout) { 10 }
+            let(:parsed_yaml) { { "timeout": health_check_timeout } }
+
+            it 'sets the health check timeout in the message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
+            end
+          end
+
+          context 'when health check type is http and endpoint is not specified' do
+            let(:parsed_yaml) { { 'health-check-type' => 'http' } }
+
+            it 'defaults endpoint to "/"' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
+              expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/')
+            end
+          end
+
+          context 'when health check type is not http and endpoint is not specified' do
+            let(:parsed_yaml) { { 'health-check-type' => 'port' } }
+
+            it 'does not default endpoint to "/"' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_type).to eq('port')
+              expect(message.manifest_process_update_messages.first.health_check_endpoint).to be_nil
+            end
+          end
+
+          context 'when the health check type is nonsense' do
+            let(:parsed_yaml) { { 'health-check-type' => 'nonsense' } }
+
+            it 'returns the error' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to_not be_valid
+              expect(message.errors.full_messages).to include(
+                'Process "web": Health check type must be "port", "process", or "http"'
+              )
+            end
+          end
+        end
+
+        context 'command' do
+          context 'when a string command of value "null" is specified' do
+            let(:command) { 'null' }
+
+            it 'does not set the command field in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.command).to eq('null')
+            end
+          end
+
+          # This happens when users specify `command: ` with no value in the manifest.
+          context 'when a nil command (value nil) is specified' do
+            let(:command) { nil }
+
+            it 'sets the field as null in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.command).to eq('null')
+            end
+          end
+
+          context 'when a default command is specified' do
+            let(:command) { 'default' }
+
+            it 'does not set the command field in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.command).to eq('default')
+            end
+          end
+        end
+
+        context 'when no parameters is specified' do
+          let(:parsed_yaml) do
+            {}
+          end
+
+          it 'does not set a command or health_check_type field' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_messages.length).to eq(0)
+          end
         end
       end
 
-      context 'it complains about 1MB - 1' do
-        let(:parsed_yaml) { { 'disk_quota' => '1048575B', 'memory' => '1048575B', instances: 8 } }
-
-        it 'returns a ManifestProcessScaleMessage containing mapped attributes' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message).not_to be_valid
-          expect(message.errors.count).to eq(2)
-          expect(message.errors.full_messages).to match_array(['Memory must be greater than 0MB', 'Disk quota must be greater than 0MB'])
+      context 'from nested process attributes' do
+        let(:parsed_yaml) do
+          {
+            'processes' => [{
+              'type' => type,
+              'command' => command,
+              'health-check-type' => health_check_type,
+              'health-check-http-endpoint' => health_check_http_endpoint,
+              'timeout' => health_check_timeout
+            }]
+          }
         end
-      end
 
-      context 'when attributes are not requested in the manifest' do
-        let(:parsed_yaml) { {} }
+        let(:type) { 'web' }
+        let(:command) { 'new-command' }
+        let(:health_check_type) { 'http' }
+        let(:health_check_http_endpoint) { '/endpoint' }
+        let(:health_check_timeout) { 10 }
 
-        it 'does not forward missing attributes to the ManifestProcessScaleMessage' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
+        context 'when new properties are specified' do
+          it 'sets the command and health check type fields in the message' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            expect(message).to be_valid
+            expect(message.manifest_process_update_messages.length).to eq(1)
+            expect(message.manifest_process_update_messages.first.command).to eq('new-command')
+            expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
+            expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/endpoint')
+            expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
+          end
+        end
 
-          expect(message.process_scale_message.requested?(:instances)).to be false
-          expect(message.process_scale_message.requested?(:memory)).to be false
-          expect(message.process_scale_message.requested?(:disk_quota)).to be false
+        context 'health checks' do
+          context 'deprecated health check type none' do
+            let(:parsed_yaml) { { "health-check-type": 'none' } }
+
+            it 'is converted to process' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_type).to eq('process')
+            end
+          end
+
+          context 'health check timeout without other health check parameters' do
+            let(:health_check_timeout) { 10 }
+            let(:parsed_yaml) { { "timeout": health_check_timeout } }
+
+            it 'sets the health check timeout in the message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
+            end
+          end
+
+          context 'when health check type is http and endpoint is not specified' do
+            let(:parsed_yaml) { { 'health-check-type' => 'http' } }
+
+            it 'defaults endpoint to "/"' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
+              expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/')
+            end
+          end
+
+          context 'when health check type is not http and endpoint is not specified' do
+            let(:parsed_yaml) { { 'health-check-type' => 'port' } }
+
+            it 'does not default endpoint to "/"' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_type).to eq('port')
+              expect(message.manifest_process_update_messages.first.health_check_endpoint).to be_nil
+            end
+          end
+        end
+
+        context 'command' do
+          context 'when command is not requested' do
+            let(:parsed_yaml) { { 'processes' => [{ 'type' => 'web' }] } }
+
+            it 'does not set the command field in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.requested?(:command)).to be false
+            end
+          end
+
+          context 'when a string command of value "null" is specified' do
+            let(:command) { 'null' }
+
+            it 'does not set the command field in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.command).to eq('null')
+            end
+          end
+
+          # This happens when users specify `command: ` with no value in the manifest.
+          context 'when a nil command (value nil) is specified' do
+            let(:command) { nil }
+
+            it 'sets the field as null in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.command).to eq('null')
+            end
+          end
+
+          context 'when a default command is specified' do
+            let(:command) { 'default' }
+
+            it 'does not set the command field in the process update message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.command).to eq('default')
+            end
+          end
+
+          context 'when processes and app-level process properties are specified' do
+            context 'there is a web process type on the process level' do
+              let(:parsed_yaml) { { 'command' => 'ignoreme',
+                                    'health_check_http_endpoint' => '/not-here',
+                                    'health_check_type' => 'http',
+                                    'timeout' => 5,
+                                    'processes' => [{ 'type' => 'web', 'command' => 'thisone', 'health_check_type' => 'port', 'timeout' => 10 }] }
+              }
+
+              it 'uses the values from the web process and ignores the app-level process properties' do
+                message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+                expect(message).to be_valid
+                expect(message.manifest_process_update_messages.length).to eq(1)
+                expect(message.manifest_process_update_messages.first.type).to eq('web')
+                expect(message.manifest_process_update_messages.first.command).to eq('thisone')
+                expect(message.manifest_process_update_messages.first.health_check_type).to eq('port')
+                expect(message.manifest_process_update_messages.first.health_check_http_endpoint).to be_falsey
+                expect(message.manifest_process_update_messages.first.timeout).to eq(10)
+              end
+            end
+
+            context 'there is not a web process type on the process level' do
+              let(:parsed_yaml) { { 'command' => 'ignoreme',
+                                    'health_check_http_endpoint' => '/not-here',
+                                    'health_check_type' => 'http',
+                                    'timeout' => 5,
+                                    'processes' => [{ 'type' => 'worker', 'command' => 'thisone', 'health_check_type' => 'port', 'timeout' => 10 }] }
+              }
+
+              it 'uses the values from the app-level process for the web process' do
+                message = AppManifestMessage.create_from_yml(parsed_yaml)
+
+                expect(message).to be_valid
+                expect(message.manifest_process_update_messages.length).to eq(2)
+
+                expect(message.manifest_process_update_messages.first.type).to eq('web')
+                expect(message.manifest_process_update_messages.first.command).to eq('ignoreme')
+                expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
+                expect(message.manifest_process_update_messages.first.health_check_http_endpoint).to eq('/not-here')
+                expect(message.manifest_process_update_messages.first.timeout).to eq(5)
+
+                expect(message.manifest_process_update_messages.last.type).to eq('worker')
+                expect(message.manifest_process_update_messages.last.command).to eq('thisone')
+                expect(message.manifest_process_update_messages.last.health_check_type).to eq('port')
+                expect(message.manifest_process_update_messages.last.health_check_http_endpoint).to be_falsey
+                expect(message.manifest_process_update_messages.last.timeout).to eq(10)
+              end
+            end
+          end
         end
       end
     end
@@ -533,201 +1208,6 @@ module VCAP::CloudController
         it 'updates the buildpack_data to be an empty array' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
-        end
-      end
-    end
-
-    describe '#manifest_process_update_message' do
-      let(:parsed_yaml) do
-        {
-          'command' => command,
-          'health-check-type' => health_check_type,
-          'health-check-http-endpoint' => health_check_http_endpoint,
-          'timeout' => health_check_timeout
-        }
-      end
-
-      let(:command) { 'new-command' }
-      let(:health_check_type) { 'http' }
-      let(:health_check_http_endpoint) { '/endpoint' }
-      let(:health_check_timeout) { 10 }
-
-      context 'when new properties are specified' do
-        it 'sets the command and health check type fields in the message' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message).to be_valid
-          expect(message.manifest_process_update_message.command).to eq('new-command')
-          expect(message.manifest_process_update_message.health_check_type).to eq('http')
-          expect(message.manifest_process_update_message.health_check_endpoint).to eq('/endpoint')
-          expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
-        end
-      end
-
-      context 'health checks' do
-        context 'invalid health check type' do
-          let(:health_check_type) { 'foo' }
-
-          it 'is invalid' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(2)
-            expect(message.errors.full_messages).to match_array(['Health check type must be "port", "process", or "http"',
-                                                                 'Health check type must be "http" to set a health check HTTP endpoint'])
-          end
-        end
-
-        context 'deprecated health check type none' do
-          let(:parsed_yaml) { { "health-check-type": 'none' } }
-
-          it 'is converted to process' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.health_check_type).to eq('process')
-          end
-        end
-
-        context 'invalid health check endpoint' do
-          let(:health_check_http_endpoint) { 'invalid' }
-
-          it 'is invalid' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Health check http endpoint must be a valid URI path')
-          end
-        end
-
-        context 'when health check timeout is not a positive integer' do
-          let(:health_check_timeout) { 0 }
-
-          it 'is invalid' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Timeout must be greater than or equal to 1')
-          end
-        end
-
-        context 'when health check timeout is not a number' do
-          let(:health_check_timeout) { 'twenty' }
-
-          it 'is invalid' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Timeout is not a number')
-          end
-        end
-
-        context 'health check timeout without other health check parameters' do
-          let(:health_check_timeout) { 10 }
-          let(:parsed_yaml) { { "timeout": health_check_timeout } }
-
-          it 'sets the health check timeout in the message' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.health_check_timeout).to eq(10)
-          end
-        end
-
-        context 'when health check type is not http and endpoint is specified' do
-          let(:parsed_yaml) { { 'health-check-type' => 'port', 'health-check-http-endpoint' => '/endpoint' } }
-
-          it 'is invalid' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Health check type must be "http" to set a health check HTTP endpoint')
-          end
-        end
-
-        context 'when health check type is http and endpoint is not specified' do
-          let(:parsed_yaml) { { 'health-check-type' => 'http' } }
-
-          it 'defaults endpoint to "/"' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.health_check_type).to eq('http')
-            expect(message.manifest_process_update_message.health_check_endpoint).to eq('/')
-          end
-        end
-
-        context 'when health check type is not http and endpoint is not specified' do
-          let(:parsed_yaml) { { 'health-check-type' => 'port' } }
-
-          it 'does not default endpoint to "/"' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.health_check_type).to eq('port')
-            expect(message.manifest_process_update_message.health_check_endpoint).to be_nil
-          end
-        end
-      end
-
-      context 'command' do
-        context 'when command is not requested' do
-          let(:parsed_yaml) { {} }
-
-          it 'does not set the command field in the process update message' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.requested?(:command)).to be false
-          end
-        end
-
-        context 'when a string command of value "null" is specified' do
-          let(:command) { 'null' }
-
-          it 'does not set the command field in the process update message' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.command).to eq('null')
-          end
-        end
-
-        # This happens when users specify `command: ` with no value in the manifest.
-        context 'when a nil command (value nil) is specified' do
-          let(:command) { nil }
-
-          it 'sets the field as null in the process update message' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.command).to eq('null')
-          end
-        end
-
-        context 'when a default command is specified' do
-          let(:command) { 'default' }
-
-          it 'does not set the command field in the process update message' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).to be_valid
-            expect(message.manifest_process_update_message.command).to eq('default')
-          end
-        end
-
-        context 'when an empty command is specified' do
-          let(:command) { '' }
-
-          it 'is not valid' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-            expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Command must be between 1 and 4096 characters')
-          end
-        end
-      end
-
-      context 'when no parameters is specified' do
-        let(:parsed_yaml) do
-          {}
-        end
-
-        it 'does not set a command or health_check_type field' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message).to be_valid
-          expect(message.manifest_process_update_message.requested?(:command)).to be_falsey
-          expect(message.manifest_process_update_message.requested?(:health_check)).to be_falsey
         end
       end
     end

@@ -112,5 +112,47 @@ RSpec.describe 'App Manifests' do
         expect(app_model.routes).to be_empty
       end
     end
+
+    describe 'multiple processes' do
+      let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, type: 'worker') }
+
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            { 'name' => 'blah',
+              'processes' => [
+                { 'instances' => 4, 'type' => 'web', 'command' => 'new-command', 'memory' => '2048MB', 'health_check_type' => 'http', },
+                { 'instances' => 2, 'type' => 'worker', 'command' => 'bar' },
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      it 'applies the manifest' do
+        web_process = app_model.web_process
+        expect(web_process.instances).to eq(1)
+
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        puts Delayed::Job.all.inspect
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
+
+        web_process.reload
+        expect(web_process.instances).to eq(4)
+        expect(web_process.memory).to eq(2048)
+        expect(web_process.command).to eq('new-command')
+        expect(web_process.health_check_type).to eq('http')
+
+        process2.reload
+        expect(process2.instances).to eq(2)
+        expect(process2.command).to eq('bar')
+      end
+    end
   end
 end

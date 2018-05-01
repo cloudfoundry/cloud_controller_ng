@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class ManifestProcessUpdateMessage < BaseMessage
-    register_allowed_keys [:command, :health_check_type, :health_check_http_endpoint, :timeout]
+    register_allowed_keys [:command, :health_check_type, :health_check_http_endpoint, :timeout, :type]
 
     def self.health_check_endpoint_and_type_requested?
       proc { |a| a.requested?(:health_check_type) && a.requested?(:health_check_http_endpoint) }
