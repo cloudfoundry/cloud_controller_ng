@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
 
-    describe '#single_delete_sync' do
+    describe '#foreground_delete_request' do
       let(:service_binding) { ServiceBinding.make }
       let(:service_instance) { service_binding.service_instance }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
@@ -21,12 +21,12 @@ module VCAP::CloudController
       end
 
       it 'deletes the service binding' do
-        service_binding_delete.single_delete_sync(service_binding)
+        service_binding_delete.foreground_delete_request(service_binding)
         expect(service_binding.exists?).to be_falsey
       end
 
       it 'creates an audit.service_binding.delete event' do
-        service_binding_delete.single_delete_sync(service_binding)
+        service_binding_delete.foreground_delete_request(service_binding)
 
         event = Event.last
         expect(event.type).to eq('audit.service_binding.delete')
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
       it 'asks the broker to unbind the instance' do
         expect(client).to receive(:unbind).with(service_binding, user_guid, false)
-        service_binding_delete.single_delete_sync(service_binding)
+        service_binding_delete.foreground_delete_request(service_binding)
       end
 
       context 'when the service instance has another operation in progress' do
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
         it 'raises an error' do
           expect {
-            service_binding_delete.single_delete_sync(service_binding)
+            service_binding_delete.foreground_delete_request(service_binding)
           }.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
         it 're-raises the same error' do
           expect {
-            service_binding_delete.single_delete_sync(service_binding)
+            service_binding_delete.foreground_delete_request(service_binding)
           }.to raise_error(error)
         end
       end
@@ -84,20 +84,20 @@ module VCAP::CloudController
         end
 
         it 'should keep the service binding' do
-          service_binding_delete.single_delete_sync(service_binding)
+          service_binding_delete.foreground_delete_request(service_binding)
 
           expect(service_binding.exists?).to be_truthy
         end
 
         it 'should not immediately create an audit event' do
-          service_binding_delete.single_delete_sync(service_binding)
+          service_binding_delete.foreground_delete_request(service_binding)
 
           expect(Event.last).to be_nil
         end
       end
     end
 
-    describe '#single_delete_async' do
+    describe '#background_delete_request' do
       let(:service_binding) { ServiceBinding.make }
 
       before do
@@ -105,7 +105,7 @@ module VCAP::CloudController
       end
 
       it 'returns a delete job for the service binding' do
-        job = service_binding_delete.single_delete_async(service_binding)
+        job = service_binding_delete.background_delete_request(service_binding)
 
         expect(job).to be_a_fully_wrapped_job_of(Jobs::DeleteActionJob)
         execute_all_jobs(expected_successes: 1, expected_failures: 0)

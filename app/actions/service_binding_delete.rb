@@ -9,12 +9,12 @@ module VCAP::CloudController
       @accepts_incomplete = accepts_incomplete
     end
 
-    def single_delete_sync(service_binding)
+    def foreground_delete_request(service_binding)
       errors = delete(service_binding)
       raise errors.first unless errors.empty?
     end
 
-    def single_delete_async(service_binding)
+    def background_delete_request(service_binding)
       Jobs::Enqueuer.new(
         Jobs::DeleteActionJob.new(ServiceBinding, service_binding.guid, self),
         queue: 'cc-generic'
