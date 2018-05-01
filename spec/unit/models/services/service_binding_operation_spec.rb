@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceBindingOperation, type: :model do
-    let(:updated_at_time) { Time.now }
-    let(:created_at_time) { Time.now }
+    let(:updated_at_time) { Time.utc(2018, 5, 2, 3, 30, 0) }
+    let(:created_at_time) { Time.utc(2018, 5, 2, 3, 30, 0) }
     let(:operation_attributes) do
       {
         state: 'in progress',
