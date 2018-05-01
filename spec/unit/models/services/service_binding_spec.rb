@@ -490,5 +490,18 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#destroy' do
+      it 'cascade deletes all ServiceBindingOperations for this binding' do
+        binding = ServiceBinding.make
+        last_operation = ServiceBindingOperation.make
+        binding.service_binding_operation = last_operation
+
+        binding.destroy
+
+        expect(ServiceBinding.find(guid: binding.guid)).to be_nil
+        expect(ServiceBindingOperation.find(id: last_operation.id)).to be_nil
+      end
+    end
   end
 end
