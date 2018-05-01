@@ -170,15 +170,16 @@ module VCAP::CloudController::RestController
     def after_update(obj); end
 
     def check_write_permissions!
-      admin       = SecurityContext.roles.admin?
-      write_scope = SecurityContext.scopes.include?('cloud_controller.write')
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !admin && !write_scope
+      return if SecurityContext.roles.admin? || SecurityContext.scopes.include?('cloud_controller.write')
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
     end
 
     def check_read_permissions!
-      admin      = SecurityContext.roles.admin?
-      read_scope = SecurityContext.scopes.include?('cloud_controller.read')
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') if !admin && !read_scope
+      return if SecurityContext.roles.admin? ||
+        SecurityContext.roles.admin_read_only? ||
+        SecurityContext.roles.global_auditor? ||
+        SecurityContext.scopes.include?('cloud_controller.read')
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
     end
 
     def current_user

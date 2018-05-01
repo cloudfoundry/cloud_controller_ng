@@ -493,7 +493,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
               post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
 
               expect(response.status).to eq(expected_return_value),
-                "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+                "Expected role #{role} to get #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
               if expected_return_value == 200
                 expect(parsed_body['data'][0]['guid']).to eq(target_space.guid)
               end

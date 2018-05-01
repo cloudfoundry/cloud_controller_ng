@@ -328,13 +328,37 @@ module VCAP::CloudController
       end
 
       before do
-        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false))
+        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false, admin_read_only?: false, global_auditor?: false))
         allow(SecurityContext).to receive(:scopes).and_return([])
       end
 
       context 'when the user is an admin' do
         before do
-          allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: true))
+          allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: true, admin_read_only?: false, global_auditor?: false))
+        end
+
+        it 'does not raise an error' do
+          expect {
+            base_controller.check_read_permissions!
+          }.not_to raise_error
+        end
+      end
+
+      context 'when the user is a read-only admin' do
+        before do
+          allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false, admin_read_only?: true, global_auditor?: false))
+        end
+
+        it 'does not raise an error' do
+          expect {
+            base_controller.check_read_permissions!
+          }.not_to raise_error
+        end
+      end
+
+      context 'when the user is a global auditor' do
+        before do
+          allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false, admin_read_only?: false, global_auditor?: true))
         end
 
         it 'does not raise an error' do
@@ -371,7 +395,7 @@ module VCAP::CloudController
       end
 
       before do
-        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false))
+        allow(SecurityContext).to receive(:roles).and_return(double(:roles, admin?: false, admin_read_only?: false, global_auditor?: false))
         allow(SecurityContext).to receive(:scopes).and_return([])
       end
 
