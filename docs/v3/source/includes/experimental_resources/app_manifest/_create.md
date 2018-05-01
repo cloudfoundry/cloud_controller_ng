@@ -1,5 +1,7 @@
 ### Apply an app manifest
 
+Apply changes to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
+
 ```
 Example Request
 ```
