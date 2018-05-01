@@ -1,3 +1,5 @@
+require 'presenters/v3/base_presenter'
+
 module VCAP::CloudController::Presenters::V3
   class OrganizationPresenter < BasePresenter
     def to_hash
