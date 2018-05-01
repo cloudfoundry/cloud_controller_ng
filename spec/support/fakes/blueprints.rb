@@ -98,6 +98,7 @@ module VCAP::CloudController
   DeploymentModel.blueprint do
     state { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
     app { AppModel.make }
+    droplet { DropletModel.make(app: app) }
   end
 
   TaskModel.blueprint do

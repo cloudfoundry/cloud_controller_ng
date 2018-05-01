@@ -7,7 +7,7 @@ module VCAP::CloudController::Presenters::V3
         guid: deployment.guid,
         state: deployment.state,
         droplet: {
-          guid: deployment.app.droplet_guid
+          guid: deployment.droplet_guid
         },
         created_at: deployment.created_at,
         updated_at: deployment.updated_at,

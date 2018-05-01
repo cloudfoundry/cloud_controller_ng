@@ -3,7 +3,8 @@ require 'permissions_spec_helper'
 
 RSpec.describe DeploymentsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
-  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:app) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+  let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:app_guid) { app.guid }
   let(:space) { app.space }
   let(:org) { space.organization }
@@ -26,10 +27,20 @@ RSpec.describe DeploymentsController, type: :controller do
         set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
       end
 
-      it 'returns a 201 on create with authorized use' do
+      it 'returns a 201' do
         post :create, body: req_body
 
         expect(response.status).to eq(201)
+      end
+
+      it 'creates a deployment' do
+        expect(VCAP::CloudController::DeploymentModel.count).to eq(0)
+        post :create, body: req_body
+
+        expect(VCAP::CloudController::DeploymentModel.count).to eq(1)
+        deployment = VCAP::CloudController::DeploymentModel.last
+        expect(deployment.app).to eq(app)
+        expect(deployment.droplet).to eq(droplet)
       end
 
       context 'when the app does not exist' do
@@ -39,6 +50,18 @@ RSpec.describe DeploymentsController, type: :controller do
           post :create, body: req_body
           expect(response.status).to eq 422
           expect(response.body).to include('Unable to use app. Ensure that the app exists and you have access to it.')
+        end
+      end
+
+      context 'when the app does not have a droplet set' do
+        let(:app) { VCAP::CloudController::AppModel.make }
+
+        it 'sets the droplet on the deployment to nil' do
+          post :create, body: req_body
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+          expect(deployment.app).to eq(app)
+          expect(deployment.droplet).to be_nil
         end
       end
     end
@@ -77,7 +100,7 @@ RSpec.describe DeploymentsController, type: :controller do
   end
 
   describe '#show' do
-    let(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app) }
+    let(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app, droplet: droplet) }
 
     describe 'for a valid user' do
       before do
@@ -96,6 +119,21 @@ RSpec.describe DeploymentsController, type: :controller do
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
+      end
+
+      context 'when the current droplet changes on the app' do
+        let(:new_droplet) { VCAP::CloudController::DropletModel.make }
+
+        it 'shows the droplet guid for the droplet the deployment was created with' do
+          app.update(droplet: new_droplet)
+
+          get :show, guid: deployment.guid
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['guid']).to eq(deployment.guid)
+          expect(parsed_body['relationships']['app']['data']['guid']).to eq(app.guid)
+          expect(parsed_body['droplet']['guid']).to eq(droplet.guid)
+        end
       end
     end
 

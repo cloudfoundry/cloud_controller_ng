@@ -4,12 +4,8 @@ require 'presenters/v3/deployment_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe DeploymentPresenter do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:deployment) { VCAP::CloudController::DeploymentModel.make(app: droplet.app) }
-
-    before do
-      # set current_droplet for app
-      droplet.app.update(droplet_guid: droplet.guid)
-    end
+    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app, droplet: droplet) }
 
     describe '#to_hash' do
       it 'presents the deployment as json' do
