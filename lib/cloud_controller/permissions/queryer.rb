@@ -13,7 +13,7 @@ class VCAP::CloudController::Permissions::Queryer
       perm_client: perm_client,
       roles: security_context.roles,
       user_id: security_context.current_user_guid,
-      issuer: security_context.token['iss'],
+      issuer: security_context.issuer,
     )
 
     self.new(

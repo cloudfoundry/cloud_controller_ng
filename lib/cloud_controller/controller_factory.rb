@@ -24,6 +24,7 @@ module CloudController
 
     def default_dependencies
       {
+        permissions_queryer: dependency_locator.permissions_queryer,
         object_renderer:     dependency_locator.object_renderer,
         collection_renderer: dependency_locator.paginated_collection_renderer,
       }

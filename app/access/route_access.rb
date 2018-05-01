@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class RouteAccess < BaseAccess
     def create?(route, params=nil)
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
       return false if route.in_suspended_org?
       return false if route.wildcard_host? && route.domain.shared?
       FeatureFlag.raise_unless_enabled!(:route_creation)

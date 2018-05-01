@@ -47,7 +47,8 @@ module VCAP::CloudController
       let(:collection_renderer) { double :collection_renderer }
       let(:dependencies) { {
           object_renderer: object_renderer,
-          collection_renderer: collection_renderer
+          collection_renderer: collection_renderer,
+          permissions_queryer: double(Permissions::Queryer)
       }}
       let(:logger) { Steno.logger('vcap_spec') }
 

@@ -17,7 +17,9 @@ module VCAP::CloudController
         {},
         {},
         nil,
-        {},
+        {
+          permissions_queryer: double(Permissions::Queryer)
+        },
       )
     end
 

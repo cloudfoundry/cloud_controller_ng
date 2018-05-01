@@ -51,7 +51,10 @@ module VCAP::CloudController::RestController
         @opts = common_params.parse(params, query_string)
       end
       @sinatra = sinatra
-      @access_context = Security::AccessContext.new
+
+      @access_context = Security::AccessContext.new(
+        dependencies.fetch(:permissions_queryer)
+      )
 
       inject_dependencies(dependencies)
     end

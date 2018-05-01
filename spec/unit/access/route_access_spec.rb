@@ -2,8 +2,10 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteAccess, type: :access do
-    subject(:access) { RouteAccess.new(Security::AccessContext.new) }
-    let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
+    let(:queryer) { spy(Permissions::Queryer) }
+
+    subject(:access) { RouteAccess.new(Security::AccessContext.new(queryer)) }
+    let(:scopes) { %w(cloud_controller.read cloud_controller.write) }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
@@ -173,25 +175,25 @@ module VCAP::CloudController
           describe 'when the route has a wildcard host' do
             before(:each) { object.host = '*' }
 
-            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
-            it_behaves_like('a feature flag-disabled access control', :delete, restricted_write_table)
-            it_behaves_like('a feature flag-disabled access control', :index, index_table)
-            it_behaves_like('a feature flag-disabled access control', :read, read_table)
-            it_behaves_like('a feature flag-disabled access control', :read_for_update, restricted_write_table)
-            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
-            it_behaves_like('a feature flag-disabled access control', :update, restricted_write_table)
+            it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :delete, restricted_write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read_for_update, restricted_write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :update, restricted_write_table, CloudController::Errors::ApiError)
           end
 
           describe 'when the route does not have a wildcard host' do
             before(:each) { object.host = 'notawildcard' }
 
-            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
-            it_behaves_like('a feature flag-disabled access control', :delete, write_table)
-            it_behaves_like('a feature flag-disabled access control', :index, index_table)
-            it_behaves_like('a feature flag-disabled access control', :read, read_table)
-            it_behaves_like('a feature flag-disabled access control', :read_for_update, write_table)
-            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
-            it_behaves_like('a feature flag-disabled access control', :update, write_table)
+            it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read_for_update, write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :update, write_table, CloudController::Errors::ApiError)
           end
         end
 
@@ -199,25 +201,25 @@ module VCAP::CloudController
           describe 'when the route has a wildcard host' do
             before(:each) { object.host = '*' }
 
-            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
-            it_behaves_like('a feature flag-disabled access control', :delete, write_table)
-            it_behaves_like('a feature flag-disabled access control', :index, index_table)
-            it_behaves_like('a feature flag-disabled access control', :read, read_table)
-            it_behaves_like('a feature flag-disabled access control', :read_for_update, write_table)
-            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
-            it_behaves_like('a feature flag-disabled access control', :update, write_table)
+            it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read_for_update, write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :update, write_table, CloudController::Errors::ApiError)
           end
 
           describe 'when the route does not have a wildcard host' do
             before(:each) { object.host = 'notawildcard' }
 
-            it_behaves_like('a feature flag-disabled access control', :create, restricted_write_table)
-            it_behaves_like('a feature flag-disabled access control', :delete, write_table)
-            it_behaves_like('a feature flag-disabled access control', :index, index_table)
-            it_behaves_like('a feature flag-disabled access control', :read, read_table)
-            it_behaves_like('a feature flag-disabled access control', :read_for_update, write_table)
-            it_behaves_like('a feature flag-disabled access control', :reserved, reserved_table)
-            it_behaves_like('a feature flag-disabled access control', :update, write_table)
+            it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :read_for_update, write_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
+            it_behaves_like('an access control', :update, write_table, CloudController::Errors::ApiError)
           end
         end
       end

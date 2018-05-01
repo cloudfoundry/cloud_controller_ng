@@ -30,11 +30,13 @@ module UserHelpers
 
   # rubocop:disable all
   def set_current_user_as_unauthenticated(opts={})
+    # rubocop:enable all
     set_current_user(nil, opts)
   end
 
   # rubocop:disable all
   def set_current_user_as_reader_and_writer(opts={})
+    # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
     scopes = { scopes: %w(cloud_controller.read cloud_controller.write) }
     set_current_user(user, scopes.merge(opts))
@@ -42,6 +44,7 @@ module UserHelpers
 
   # rubocop:disable all
   def set_current_user_as_reader(opts={})
+    # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
     scopes = { scopes: %w(cloud_controller.read) }
     set_current_user(user, scopes.merge(opts))
@@ -49,6 +52,7 @@ module UserHelpers
 
   # rubocop:disable all
   def set_current_user_as_writer(opts={})
+    # rubocop:enable all
     user = opts.delete(:user) || VCAP::CloudController::User.make
     scopes = { scopes: %w(cloud_controller.write) }
     set_current_user(user, scopes.merge(opts))

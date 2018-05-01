@@ -71,5 +71,10 @@ module VCAP::CloudController
     def self.current_user_has_email?(email)
       current_user_email && current_user_email.downcase == email.downcase
     end
+
+    def self.issuer
+      return token['iss'] if valid_token?
+      ''
+    end
   end
 end

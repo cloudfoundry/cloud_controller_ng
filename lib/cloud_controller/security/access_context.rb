@@ -3,6 +3,12 @@ module VCAP::CloudController
     class AccessContext
       include ::Allowy::Context
 
+      attr_reader :queryer
+
+      def initialize(queryer=nil)
+        @queryer = queryer
+      end
+
       def admin_override
         VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only? || VCAP::CloudController::SecurityContext.global_auditor?
       end

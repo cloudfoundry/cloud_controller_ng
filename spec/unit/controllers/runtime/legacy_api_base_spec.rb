@@ -5,11 +5,14 @@ module VCAP::CloudController
     let(:user) { User.make(admin: true, active: true) }
     let(:logger) { Steno.logger('vcap_spec') }
     let(:fake_req) { '' }
+    let(:dependencies) do
+      { permissions_queryer: double(Permissions::Queryer) }
+    end
 
     describe '#has_default_space' do
       it 'should raise NotAuthorized if the user is nil' do
         SecurityContext.set(nil)
-        api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req)
+        api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         expect { api.has_default_space? }.to raise_error(CloudController::Errors::ApiError, /not authorized/)
       end
 
@@ -18,7 +21,7 @@ module VCAP::CloudController
         let(:as) { Space.make(organization: org) }
         let(:api) {
           SecurityContext.set(user)
-          LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req)
+          LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         }
 
         before do
@@ -44,13 +47,13 @@ module VCAP::CloudController
     describe '#default_space' do
       it 'should raise NotAuthorized if the user is nil' do
         SecurityContext.set(nil)
-        api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req)
+        api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         expect { api.default_space }.to raise_error(CloudController::Errors::ApiError, /not authorized/)
       end
 
       it 'should raise LegacyApiWithoutDefaultSpace if the user has no app spaces' do
         SecurityContext.set(user)
-        api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req)
+        api = LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         expect {
           api.default_space
         }.to raise_error(CloudController::Errors::ApiError, /legacy api call requiring a default app space was called/)
@@ -62,7 +65,7 @@ module VCAP::CloudController
         let(:as2) { Space.make(organization: org) }
         let(:api) {
           SecurityContext.set(user)
-          LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req)
+          LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
         }
 
         before do

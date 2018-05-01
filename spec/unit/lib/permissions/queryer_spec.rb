@@ -34,12 +34,11 @@ module VCAP::CloudController
         allow(security_context).to receive(:roles).and_return(roles)
 
         issuer = 'some-issuer'
-        token = { 'iss' => issuer }
-        allow(security_context).to receive(:token).and_return(token)
 
         current_user = spy(:current_user)
         allow(security_context).to receive(:current_user_guid).and_return(current_user_guid)
         allow(security_context).to receive(:current_user).and_return(current_user)
+        allow(security_context).to receive(:issuer).and_return(issuer)
 
         allow(VCAP::CloudController::Permissions).to receive(:new).and_return(db_permissions)
         allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)

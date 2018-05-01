@@ -4,6 +4,13 @@ require 'stringio'
 module VCAP::CloudController
   RSpec.describe RestController::ModelController do
     let(:user) { User.make(active: true) }
+    let(:dep) do
+      {
+        object_renderer: nil,
+        collection_renderer: nil,
+        permissions_queryer: double(Permissions::Queryer)
+      }
+    end
 
     describe '#validate_access' do
       let(:access_context) { Security::AccessContext.new }
@@ -13,7 +20,6 @@ module VCAP::CloudController
       before do
         allow(Security::AccessContext).to receive(:new).and_return(access_context)
 
-        dep = { object_renderer: nil, collection_renderer: nil }
         @model_controller = RestController::ModelController.new(
           nil, FakeLogger.new([]), {}, {}, nil, nil, dep
         )
@@ -88,7 +94,7 @@ module VCAP::CloudController
         it 'should return 401' do
           set_current_user(nil)
           get '/v2/test_models'
-          expect(last_response.status).to eq(401)
+          expect(last_response.status).to eq(401), last_response.body
         end
       end
     end
@@ -810,7 +816,6 @@ module VCAP::CloudController
     end
 
     describe 'attributes censoring' do
-      let(:dep) { { object_renderer: nil, collection_renderer: nil } }
       let(:model_controller) { TestModelRedactController.new(nil, FakeLogger.new([]), {}, {}, nil, nil, dep) }
 
       context 'when the request contains sensitive attributes' do

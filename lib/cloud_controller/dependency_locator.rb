@@ -114,6 +114,10 @@ module CloudController
       @dependencies[:perm_client] || register(:perm_client, build_perm_client)
     end
 
+    def permissions_queryer
+      @dependencies[:permissions_queryer] || register(:permissions_queryer, build_permissions_queryer)
+    end
+
     def droplet_blobstore
       options = config.get(:droplets)
 
@@ -436,6 +440,15 @@ module CloudController
 
     def build_perm_client
       VCAP::CloudController::Perm::Client.build_from_config(config, File)
+    end
+
+    def build_permissions_queryer
+      VCAP::CloudController::Permissions::Queryer.build(
+        perm_client,
+        VCAP::CloudController::SecurityContext,
+        config.get(:perm, :enabled),
+        config.get(:perm, :query_enabled),
+      )
     end
   end
 end
