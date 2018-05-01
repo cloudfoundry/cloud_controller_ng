@@ -476,8 +476,8 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         role_to_expected_http_response = {
           'admin'               => 200,
           'space_developer'     => 200,
-          'admin_read_only'     => 422,
-          'global_auditor'      => 422,
+          'admin_read_only'     => 403,
+          'global_auditor'      => 403,
           'space_manager'       => 422,
           'space_auditor'       => 422,
           'org_manager'         => 422,

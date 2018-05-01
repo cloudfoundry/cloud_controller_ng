@@ -29,36 +29,77 @@ module UserHelpers
   end
 
   # rubocop:disable all
+  def set_current_user_as_unauthenticated(opts={})
+    set_current_user(nil, opts)
+  end
+
+  # rubocop:disable all
+  def set_current_user_as_reader_and_writer(opts={})
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    scopes = { scopes: %w(cloud_controller.read cloud_controller.write) }
+    set_current_user(user, scopes.merge(opts))
+  end
+
+  # rubocop:disable all
+  def set_current_user_as_reader(opts={})
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    scopes = { scopes: %w(cloud_controller.read) }
+    set_current_user(user, scopes.merge(opts))
+  end
+
+  # rubocop:disable all
+  def set_current_user_as_writer(opts={})
+    user = opts.delete(:user) || VCAP::CloudController::User.make
+    scopes = { scopes: %w(cloud_controller.write) }
+    set_current_user(user, scopes.merge(opts))
+  end
+
+  # rubocop:disable all
   def set_current_user_as_role(role:, org: nil, space: nil, user: nil, scopes: nil)
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
-    set_current_user(current_user, scopes: scopes)
+    current_user = set_current_user(current_user, scopes: scopes)
 
-    if org && !%w(admin admin_read_only global_auditor).include?(role)
+    scope_roles = %w(admin admin_read_only global_auditor reader_and_writer reader writer)
+    if org && !scope_roles.include?(role)
       org.add_user(current_user)
     end
 
     case role.to_s
     when 'admin'
-      set_current_user_as_admin(user: current_user, scopes: scopes)
+      set_current_user_as_admin(user: current_user, scopes: scopes || [])
     when 'admin_read_only'
-      set_current_user_as_admin_read_only(user: current_user, scopes: scopes)
+      set_current_user_as_admin_read_only(user: current_user, scopes: scopes || [])
     when 'global_auditor'
-      set_current_user_as_global_auditor(user: current_user, scopes: scopes)
+      set_current_user_as_global_auditor(user: current_user, scopes: scopes || [])
     when 'space_developer'
       space.add_developer(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
     when 'space_auditor'
       space.add_auditor(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
     when 'space_manager'
       space.add_manager(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
     when 'org_user'
       nil
     when 'org_auditor'
       org.add_auditor(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
     when 'org_billing_manager'
       org.add_billing_manager(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
     when 'org_manager'
       org.add_manager(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'unauthenticated'
+      set_current_user_as_unauthenticated
+    when 'reader_and_writer'
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'reader'
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'writer'
+      set_current_user_as_writer
     else
       fail("Unknown role '#{role}'")
     end

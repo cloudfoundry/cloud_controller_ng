@@ -83,7 +83,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
     context 'when the user does not have permission' do
       before do
-        set_current_user(user, admin_read_only: true)
+        set_current_user(user, scopes: %w(cloud_controller.write))
       end
 
       it 'returns 422 with an error message' do
