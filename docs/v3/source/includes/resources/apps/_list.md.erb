@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps" \
+curl "https://api.example.org/v3/apps?include=space" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -18,7 +18,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :paginated_list_of_apps, '/v3/apps' %>
+<%= yield_content :paginated_list_of_apps_include_space, '/v3/apps' %>
 ```
 
 Retrieve all apps the user has access to.
@@ -37,3 +37,4 @@ Name | Type | Description
 **page** | _integer_ | Page to display. Valid values are integers >= 1.
 **per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
 **order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`, `name`.
+**include** | _string_ | **Experimental** - Optionally include a list of unique related resources in the response. <br>Valid value is `space`
