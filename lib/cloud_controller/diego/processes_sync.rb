@@ -62,7 +62,7 @@ module VCAP::CloudController
         bump_freshness = false
         raise
       ensure
-        workpool.exit_all!
+        workpool.drain
         if bump_freshness
           bbs_apps_client.bump_freshness
           logger.info('finished-process-sync')

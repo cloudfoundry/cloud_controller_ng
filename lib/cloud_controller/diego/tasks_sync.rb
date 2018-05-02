@@ -59,7 +59,7 @@ module VCAP::CloudController
         logger.info('sync-failed', error: e.class.name, error_message: e.message)
         raise
       ensure
-        workpool.exit_all!
+        workpool.drain
       end
 
       private

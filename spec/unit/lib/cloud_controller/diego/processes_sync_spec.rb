@@ -21,7 +21,7 @@ module VCAP::CloudController
       end
 
       describe '#sync' do
-        let(:workpool) { instance_double(WorkPool, submit: nil, exceptions: nil, drain: nil, exit_all!: nil) }
+        let(:workpool) { instance_double(WorkPool, submit: nil, exceptions: nil, drain: nil) }
 
         it 'bumps freshness' do
           subject.sync
@@ -209,12 +209,6 @@ module VCAP::CloudController
               'ignore-existing-resource', error: error.name, error_message: error.message
             )
           end
-
-          it 'exits the workpool threads' do
-            subject.sync
-
-            expect(workpool).to have_received(:exit_all!)
-          end
         end
 
         context 'when CC does not know about a LRP' do
@@ -277,9 +271,9 @@ module VCAP::CloudController
             expect(bbs_apps_client).not_to receive(:bump_freshness)
           end
 
-          it 'exits the workpool threads' do
+          it 'drains the workpool threads to prevent thread leakage' do
             expect { subject.sync }.to raise_error(error)
-            expect(workpool).to have_received(:exit_all!)
+            expect(workpool).to have_received(:drain)
           end
         end
 
