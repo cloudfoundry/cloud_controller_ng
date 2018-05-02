@@ -211,7 +211,7 @@ module VCAP::CloudController
             it 'should raise an error' do
               expect {
                 service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-              }.to raise_error(ServiceBindingCreate::ServiceBrokerInvalidBindigsRetrievable)
+              }.to raise_error(ServiceBindingCreate::ServiceBrokerInvalidBindingsRetrievable)
             end
 
             it 'should trigger orphan mitigation' do
@@ -219,7 +219,7 @@ module VCAP::CloudController
 
               begin
                 service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-              rescue ServiceBindingCreate::ServiceBrokerInvalidBindigsRetrievable
+              rescue ServiceBindingCreate::ServiceBrokerInvalidBindingsRetrievable
                 # tested elsewhere
               end
             end

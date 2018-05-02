@@ -4,8 +4,8 @@ module VCAP::CloudController
       class ServiceBindingStateFetch < VCAP::CloudController::Jobs::CCJob
         def initialize(service_binding_guid, user_info, request_attrs)
           @service_binding_guid = service_binding_guid
-          @end_timestamp = Time.now + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
-          @poll_interval = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds)
+          @end_timestamp = Time.now + Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
+          @poll_interval = Config.config.get(:broker_client_default_async_poll_interval_seconds)
           @user_audit_info = user_info
           @request_attrs = request_attrs
         end
@@ -64,7 +64,7 @@ module VCAP::CloudController
 
         def enqueue_again
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
-          VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
+          Jobs::Enqueuer.new(self, opts).enqueue
         end
 
         def set_binding_failed_state(service_binding, logger)

@@ -8,7 +8,7 @@ module VCAP::CloudController
     class InvalidServiceBinding < StandardError; end
     class ServiceInstanceNotBindable < InvalidServiceBinding; end
     class ServiceBrokerInvalidSyslogDrainUrl < InvalidServiceBinding; end
-    class ServiceBrokerInvalidBindigsRetrievable < InvalidServiceBinding; end
+    class ServiceBrokerInvalidBindingsRetrievable < InvalidServiceBinding; end
     class VolumeMountServiceDisabled < InvalidServiceBinding; end
     class SpaceMismatch < InvalidServiceBinding; end
 
@@ -41,10 +41,10 @@ module VCAP::CloudController
 
       begin
         if binding_result[:async]
-          raise ServiceBrokerInvalidBindigsRetrievable.new unless binding.service.bindings_retrievable
+          raise ServiceBrokerInvalidBindingsRetrievable.new unless binding.service.bindings_retrievable
 
           binding.save_with_new_operation({ type: 'create', state: 'in progress', broker_provided_operation: binding_result[:operation] })
-          job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(binding.guid, @user_audit_info, message.audit_hash)
+          job = Jobs::Services::ServiceBindingStateFetch.new(binding.guid, @user_audit_info, message.audit_hash)
           enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
           enqueuer.enqueue
         else
