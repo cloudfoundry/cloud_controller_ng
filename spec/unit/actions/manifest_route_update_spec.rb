@@ -214,8 +214,8 @@ module VCAP::CloudController
           it 'raises a route invalid error' do
             expect {
               ManifestRouteUpdate.update(app.guid, message, user_audit_info)
-            }.to raise_error(VCAP::CloudController::RouteValidator::RouteInvalid,
-              "no domains exist for route #{message.routes.first[:route]}")
+            }.to raise_error(VCAP::CloudController::ManifestRouteUpdate::InvalidRoute,
+              "No domains exist for route #{message.routes.first[:route]}")
           end
         end
 

@@ -72,6 +72,15 @@ module VCAP::CloudController
         end
       end
 
+      context 'when an ManifestRouteUpdate::InvalidRoute error occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(ManifestRouteUpdate::InvalidRoute, 'Invalid route')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /Invalid route/)
+        end
+      end
+
       context 'when an ServiceBindingCreate::InvalidServiceBinding error occurs' do
         it 'wraps the error in an ApiError' do
           allow(apply_manifest_action).to receive(:apply).and_raise(ServiceBindingCreate::InvalidServiceBinding, 'Invalid binding name')

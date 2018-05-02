@@ -20,7 +20,7 @@ module VCAP::CloudController
           if route
             routes_to_map << route
           else
-            raise RouteValidator::RouteInvalid.new("no domains exist for route #{manifest_route}")
+            raise InvalidRoute.new("No domains exist for route #{manifest_route}")
           end
         end
 
