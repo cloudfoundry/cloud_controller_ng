@@ -29,10 +29,9 @@ class BuildsController < ApplicationController
 
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
-    unprocessable_package! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    unprocessable_package! unless package && can_read?(package.space.guid, package.space.organization.guid) && can_write?(package.space.guid)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
-    unauthorized! unless can_write?(package.space.guid)
 
     lifecycle = LifecycleProvider.provide(package, message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?

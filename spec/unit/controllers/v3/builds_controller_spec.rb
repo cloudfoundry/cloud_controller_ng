@@ -556,12 +556,12 @@ RSpec.describe BuildsController, type: :controller do
         let(:roles_to_http_responses) do
           {
             'admin' => 201,
-            'admin_read_only' => 403,
-            'global_auditor' => 403,
+            'admin_read_only' => 422,
+            'global_auditor' => 422,
             'space_developer' => 201,
-            'space_manager' => 403,
-            'space_auditor' => 403,
-            'org_manager' => 403,
+            'space_manager' => 422,
+            'space_auditor' => 422,
+            'org_manager' => 422,
             'org_auditor' => 422,
             'org_billing_manager' => 422,
           }
@@ -569,9 +569,9 @@ RSpec.describe BuildsController, type: :controller do
         let(:api_call) { lambda { post :create, body: req_body } }
       end
 
-      context 'when the user is an org auditor' do
+      context 'when the user does not have write permissions for the resource' do
         before do
-          set_current_user(make_auditor_for_org(org))
+          set_current_user_as_admin_read_only
         end
 
         it 'returns the correct error message' do
@@ -582,7 +582,7 @@ RSpec.describe BuildsController, type: :controller do
         end
       end
 
-      context 'when the user is an org billing manager' do
+      context 'when the user does not have read permissions for the resource' do
         before do
           set_current_user(make_billing_manager_for_org(org))
         end
