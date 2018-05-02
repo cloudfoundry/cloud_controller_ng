@@ -29,8 +29,7 @@ class BuildsController < ApplicationController
 
     package = PackageModel.where(guid: message.package_guid).
               eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
-    unprocessable_package! unless package
-    package_not_accessible! unless can_read?(package.space.guid, package.space.organization.guid)
+    unprocessable_package! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
     FeatureFlag.raise_unless_enabled!(:diego_docker) if package.type == PackageModel::DOCKER_TYPE
     unauthorized! unless can_write?(package.space.guid)
@@ -38,9 +37,7 @@ class BuildsController < ApplicationController
     lifecycle = LifecycleProvider.provide(package, message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    build = BuildCreate.new.create_and_stage(
-      package: package,
-      lifecycle: lifecycle)
+    build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle)
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e
@@ -69,10 +66,6 @@ class BuildsController < ApplicationController
 
   def build_not_found!
     resource_not_found!(:build)
-  end
-
-  def package_not_accessible!
-    resource_not_found!(:package)
   end
 
   def unprocessable_package!

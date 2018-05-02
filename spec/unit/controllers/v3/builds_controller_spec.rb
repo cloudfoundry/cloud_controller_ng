@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe BuildsController, type: :controller do
   describe '#index' do
@@ -152,6 +153,7 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#create' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
@@ -550,102 +552,46 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     describe 'permissions' do
-      context 'when the user is an admin' do
-        before do
-          set_current_user_as_admin
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 201,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 201,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 403,
+            'org_auditor' => 422,
+            'org_billing_manager' => 422,
+          }
         end
-
-        it 'returns a 201 Created response' do
-          post :create, body: req_body
-          expect(response.status).to eq 201
-        end
+        let(:api_call) { lambda { post :create, body: req_body } }
       end
 
-      context 'when the user is a space developer' do
-        before do
-          set_current_user(make_developer_for_space(space))
-        end
-
-        it 'returns 201' do
-          post :create, body: req_body
-          expect(response.status).to eq 201
-        end
-      end
-
-      context 'when the user is a read only admin' do
-        before do
-          set_current_user(VCAP::CloudController::User.make, admin_read_only: true)
-        end
-
-        it 'returns 403' do
-          post :create, body: req_body
-          expect(response.status).to eq 403
-        end
-      end
-
-      context 'when the user is a global auditor' do
-        before do
-          set_current_user_as_global_auditor
-        end
-
-        it 'returns 403' do
-          post :create, body: req_body
-          expect(response.status).to eq 403
-        end
-      end
-
-      context 'when the user is a space manager' do
-        before do
-          set_current_user(make_manager_for_space(space))
-        end
-
-        it 'returns 403' do
-          post :create, body: req_body
-          expect(response.status).to eq 403
-        end
-      end
-
-      context 'when the user is a space auditor' do
-        before do
-          set_current_user(make_auditor_for_space(space))
-        end
-
-        it 'returns 403' do
-          post :create, body: req_body
-          expect(response.status).to eq 403
-        end
-      end
-
-      context 'when the user is a org manager' do
-        before do
-          set_current_user(make_manager_for_org(org))
-        end
-
-        it 'returns 403' do
-          post :create, body: req_body
-          expect(response.status).to eq 403
-        end
-      end
-
-      context 'when the user is a org auditor' do
+      context 'when the user is an org auditor' do
         before do
           set_current_user(make_auditor_for_org(org))
         end
 
-        it 'returns 404' do
+        it 'returns the correct error message' do
           post :create, body: req_body
-          expect(response.status).to eq 404
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
         end
       end
 
-      context 'when the user is a org billing manager' do
+      context 'when the user is an org billing manager' do
         before do
           set_current_user(make_billing_manager_for_org(org))
         end
 
-        it 'returns 404' do
+        it 'returns the correct error message' do
           post :create, body: req_body
-          expect(response.status).to eq 404
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
         end
       end
     end
