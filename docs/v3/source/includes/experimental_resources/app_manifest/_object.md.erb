@@ -56,12 +56,12 @@ Field | Description
 #### Process-level configuration
 This configuration is for the individual process.
 
-> **Note:** With the exception of "type", process-level fields can also be provided at the top-level and will apply to the "web" process only. When both top-level and "web" process are specified, the top-level process configuration is ignored.
+> **Note:** With the exception of "type", process-level fields can also be provided at the top-level and will apply to the "web" process only. <br/><br/> If there is a process with "type: web" defined in the processes section, then all top level process configuration will be ignored.
 
 Field | Description
 ---- | -----------
 **type** | **(Required)** Process type. The identifier for the processes to be configured.
-**command** | The command used to start the process.
+**command** | The command used to start the process. This overrides start commands from [Procfiles](#procfiles) and buildpacks.
 **disk_quota** | The disk limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
 **health-check-http-endpoint** | Endpoint called to determine if the app is healthy.
 **health-check-type** | Type of health check to perform. `none` is deprecated and an alias to `process`.
