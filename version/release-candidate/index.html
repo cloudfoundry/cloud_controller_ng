@@ -7885,7 +7885,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <p>This configuration is for the individual process.</p>
 
 <blockquote>
-<p><strong>Note:</strong> With the exception of &ldquo;type&rdquo;, process-level fields can also be provided at the top-level and will apply to the &ldquo;web&rdquo; process only. When both top-level and &ldquo;web&rdquo; process are specified, the top-level process configuration is ignored.</p>
+<p><strong>Note:</strong> With the exception of &ldquo;type&rdquo;, process-level fields can also be provided at the top-level and will apply to the &ldquo;web&rdquo; process only. <br/><br/> If there is a process with &ldquo;type: web&rdquo; defined in the processes section, then all top level process configuration will be ignored.</p>
 </blockquote>
 
 <table><thead>
@@ -7900,7 +7900,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td><strong>command</strong></td>
-<td>The command used to start the process.</td>
+<td>The command used to start the process. This overrides start commands from <a href="#procfiles">Procfiles</a> and buildpacks.</td>
 </tr>
 <tr>
 <td><strong>disk_quota</strong></td>
@@ -7929,6 +7929,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tbody></table>
 
           <h3 id="apply-an-app-manifest">Apply an app manifest</h3>
+
+<blockquote>
+<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on application restart.</p>
+</blockquote>
 
 <p>Apply changes to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
 <pre class="highlight plaintext"><code>Example Request
