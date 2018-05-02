@@ -48,8 +48,9 @@ module VCAP::CloudController
       let(:dependencies) { {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer,
-          permissions_queryer: double(Permissions::Queryer)
+          perm_client: double(Perm::Client)
       }}
+      let(:config) { double(Config, get: nil) }
       let(:logger) { Steno.logger('vcap_spec') }
 
       it 'contains services_event_repository in the dependencies' do
@@ -57,7 +58,7 @@ module VCAP::CloudController
       end
 
       it 'injects the services_event_repository dependency' do
-        expect { ServiceKeysController.new(nil, logger, {}, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
+        expect { ServiceKeysController.new(config, logger, {}, {}, nil, nil, dependencies) }.to raise_error KeyError, 'key not found: :services_event_repository'
       end
     end
 

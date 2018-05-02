@@ -110,6 +110,16 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_read_route?(space_guid, org_guid)
+    science 'can_read_route?' do |e|
+      e.context(space_guid: space_guid, org_guid: org_guid, action: 'route.read')
+      e.use { db_permissions.can_read_route?(space_guid, org_guid) }
+      e.try { perm_permissions.can_read_route?(space_guid, org_guid) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
   def readable_space_guids
     science 'readable_space_guids' do |e|
       e.use { db_permissions.readable_space_guids }

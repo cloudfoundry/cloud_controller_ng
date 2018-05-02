@@ -8,9 +8,10 @@ module VCAP::CloudController
       {
         object_renderer: nil,
         collection_renderer: nil,
-        permissions_queryer: double(Permissions::Queryer)
+        perm_client: double(Perm::Client)
       }
     end
+    let(:config) { double(Config, get: nil) }
 
     describe '#validate_access' do
       let(:access_context) { Security::AccessContext.new }
@@ -21,7 +22,7 @@ module VCAP::CloudController
         allow(Security::AccessContext).to receive(:new).and_return(access_context)
 
         @model_controller = RestController::ModelController.new(
-          nil, FakeLogger.new([]), {}, {}, nil, nil, dep
+          config, FakeLogger.new([]), {}, {}, nil, nil, dep
         )
       end
 
@@ -816,7 +817,7 @@ module VCAP::CloudController
     end
 
     describe 'attributes censoring' do
-      let(:model_controller) { TestModelRedactController.new(nil, FakeLogger.new([]), {}, {}, nil, nil, dep) }
+      let(:model_controller) { TestModelRedactController.new(config, FakeLogger.new([]), {}, {}, nil, nil, dep) }
 
       context 'when the request contains sensitive attributes' do
         let(:request_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'password' } }

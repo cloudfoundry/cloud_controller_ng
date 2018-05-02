@@ -91,6 +91,10 @@ module VCAP::CloudController
       space_developer: false,
     })
 
+    it_behaves_like('an access control', :index, index_table)
+    it_behaves_like('an access control', :read, read_table)
+    it_behaves_like('an access control', :reserved, reserved_table)
+
     describe 'in a suspended org' do
       before(:each) do
         org.status = VCAP::CloudController::Organization::SUSPENDED
@@ -99,10 +103,7 @@ module VCAP::CloudController
 
       it_behaves_like('an access control', :create, restricted_write_table)
       it_behaves_like('an access control', :delete, restricted_write_table)
-      it_behaves_like('an access control', :index, index_table)
-      it_behaves_like('an access control', :read, read_table)
       it_behaves_like('an access control', :read_for_update, restricted_write_table)
-      it_behaves_like('an access control', :reserved, reserved_table)
       it_behaves_like('an access control', :update, restricted_write_table)
     end
 
@@ -121,10 +122,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, restricted_write_table)
             it_behaves_like('an access control', :delete, restricted_write_table)
-            it_behaves_like('an access control', :index, index_table)
-            it_behaves_like('an access control', :read, read_table)
             it_behaves_like('an access control', :read_for_update, restricted_write_table)
-            it_behaves_like('an access control', :reserved, reserved_table)
             it_behaves_like('an access control', :update, restricted_write_table)
           end
 
@@ -133,10 +131,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
-            it_behaves_like('an access control', :index, index_table)
-            it_behaves_like('an access control', :read, read_table)
             it_behaves_like('an access control', :read_for_update, write_table)
-            it_behaves_like('an access control', :reserved, reserved_table)
             it_behaves_like('an access control', :update, write_table)
           end
         end
@@ -147,10 +142,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
-            it_behaves_like('an access control', :index, index_table)
-            it_behaves_like('an access control', :read, read_table)
             it_behaves_like('an access control', :read_for_update, write_table)
-            it_behaves_like('an access control', :reserved, reserved_table)
             it_behaves_like('an access control', :update, write_table)
           end
 
@@ -159,10 +151,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, write_table)
             it_behaves_like('an access control', :delete, write_table)
-            it_behaves_like('an access control', :index, index_table)
-            it_behaves_like('an access control', :read, read_table)
             it_behaves_like('an access control', :read_for_update, write_table)
-            it_behaves_like('an access control', :reserved, reserved_table)
             it_behaves_like('an access control', :update, write_table)
           end
         end
@@ -177,10 +166,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, restricted_write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :read_for_update, restricted_write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :update, restricted_write_table, CloudController::Errors::ApiError)
           end
 
@@ -189,10 +175,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :read_for_update, write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :update, write_table, CloudController::Errors::ApiError)
           end
         end
@@ -203,10 +186,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :read_for_update, write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :update, write_table, CloudController::Errors::ApiError)
           end
 
@@ -215,10 +195,7 @@ module VCAP::CloudController
 
             it_behaves_like('an access control', :create, restricted_write_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :delete, write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :index, index_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :read, read_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :read_for_update, write_table, CloudController::Errors::ApiError)
-            it_behaves_like('an access control', :reserved, reserved_table, CloudController::Errors::ApiError)
             it_behaves_like('an access control', :update, write_table, CloudController::Errors::ApiError)
           end
         end

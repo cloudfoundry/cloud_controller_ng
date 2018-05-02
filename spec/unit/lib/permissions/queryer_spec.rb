@@ -624,6 +624,90 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_read_route?' do
+      before do
+        allow(perm_permissions).to receive(:can_read_route?)
+
+        allow(db_permissions).to receive(:can_read_route?).and_return(true)
+        allow(db_permissions).to receive(:can_read_globally?).and_return(false)
+      end
+
+      it 'asks for #can_read_route? on behalf of the current user' do
+        allow(perm_permissions).to receive(:can_read_route?).and_return(true)
+
+        queryer.can_read_route?('some-space-guid', 'some-organization-guid')
+
+        expect(db_permissions).to have_received(:can_read_route?).with('some-space-guid', 'some-organization-guid')
+        expect(perm_permissions).to have_received(:can_read_route?).with('some-space-guid', 'some-organization-guid')
+      end
+
+      it 'skips the experiment if the user is a global reader' do
+        allow(db_permissions).to receive(:can_read_globally?).and_return(true)
+
+        queryer.can_read_route?('some-space-guid', 'some-organization-guid')
+
+        expect(perm_permissions).not_to have_received(:can_read_route?)
+      end
+
+      it 'uses the expected branch from the experiment' do
+        allow(perm_permissions).to receive(:can_read_route?).and_return('not-expected')
+
+        response = queryer.can_read_route?('some-space-guid', 'some-organization-guid')
+
+        expect(response).to eq(true)
+      end
+
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_route?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_route?).and_return(true)
+
+          queryer.can_read_route?('some-space-guid', 'some-organization-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'some-space-guid',
+            org_guid: 'some-organization-guid',
+            action: 'route.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: true },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          allow(db_permissions).to receive(:can_read_route?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_route?).and_return('something wrong')
+
+          queryer.can_read_route?('some-space-guid', 'some-organization-guid')
+
+          expected_context = {
+            current_user_guid: 'some-current-user',
+            space_guid: 'some-space-guid',
+            org_guid: 'some-organization-guid',
+            action: 'route.read',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: true },
+              candidate: { value: 'something wrong' },
+            }
+          )
+        end
+      end
+    end
+
     describe '#readable_space_guids' do
       before do
         allow(db_permissions).to receive(:readable_space_guids)

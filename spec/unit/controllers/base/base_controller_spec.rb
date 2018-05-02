@@ -6,8 +6,9 @@ module VCAP::CloudController
     let(:params) { {} }
     let(:env) { {} }
     let(:sinatra) { nil }
+    let(:config) { double(Config, get: nil) }
     let(:dependencies) do
-      { permissions_queryer: double(VCAP::CloudController::Permissions::Queryer) }
+      { perm_client: double(Perm::Client) }
     end
 
     class TestController < RestController::BaseController
@@ -145,7 +146,7 @@ module VCAP::CloudController
         let(:env) { double(:env) }
         let(:app) do
           RestController::BaseController.new(
-            double(:config),
+            config,
             logger, env, double(:params, :[] => nil),
             double(:body),
             sinatra,
@@ -232,7 +233,7 @@ module VCAP::CloudController
 
     describe '#recursive_delete?' do
       subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil, dependencies)
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
       end
 
       context 'when the recursive flag is present' do
@@ -254,7 +255,7 @@ module VCAP::CloudController
 
     describe '#v2_api?' do
       subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil, dependencies)
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
       end
       context 'when the endpoint is v2' do
         let(:env) { { 'PATH_INFO' => '/v2/foobar' } }
@@ -279,7 +280,7 @@ module VCAP::CloudController
 
     describe '#unversioned_api?' do
       subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil, dependencies)
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
       end
       context 'when the endpoint is unversioned' do
         let(:env) { { 'PATH_INFO' => '/foobar' } }
@@ -294,7 +295,7 @@ module VCAP::CloudController
 
     describe '#async?' do
       subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil, dependencies)
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
       end
       context 'when the async flag is present' do
         context 'and the flag is true' do
@@ -328,7 +329,7 @@ module VCAP::CloudController
 
     describe '#check_read_permissions!' do
       subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil, dependencies)
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
       end
 
       before do
@@ -395,7 +396,7 @@ module VCAP::CloudController
 
     describe '#check_write_permissions!' do
       subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil, dependencies)
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
       end
 
       before do

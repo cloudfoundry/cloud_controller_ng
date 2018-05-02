@@ -76,6 +76,16 @@ class VCAP::CloudController::Permissions
     membership.org_guids_for_roles(ROLES_FOR_ORG_READING)
   end
 
+  def can_read_route?(space_guid, org_guid)
+    return true if can_read_globally?
+
+    space = VCAP::CloudController::Space.where(guid: space_guid).first
+    org = space.organization
+
+    space.has_member?(@user) || @user.managed_organizations.include?(org) ||
+      @user.audited_organizations.include?(org)
+  end
+
   private
 
   def membership

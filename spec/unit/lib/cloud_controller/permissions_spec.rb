@@ -446,5 +446,74 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#can_read_route?' do
+      it 'returns true if user is an admin' do
+        set_current_user(user, { admin: true })
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true if user is a read-only admin' do
+        set_current_user(user, { admin_read_only: true })
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true if user is a global auditor' do
+        set_current_user_as_global_auditor
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space developer' do
+        org.add_user(user)
+        space.add_developer(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space manager' do
+        org.add_user(user)
+        space.add_manager(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for space auditor' do
+        org.add_user(user)
+        space.add_auditor(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for org manager' do
+        org.add_user(user)
+        org.add_manager(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns true for org auditor' do
+        org.add_user(user)
+        org.add_auditor(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be true
+      end
+
+      it 'returns false for org billing manager' do
+        org.add_user(user)
+        org.add_billing_manager(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+      end
+
+      it 'returns false for regular org member' do
+        org.add_user(user)
+
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+      end
+
+      it 'returns false for other user' do
+        expect(permissions.can_read_route?(space_guid, org_guid)).to be false
+      end
+    end
   end
 end

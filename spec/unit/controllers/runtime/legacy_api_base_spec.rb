@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:logger) { Steno.logger('vcap_spec') }
     let(:fake_req) { '' }
     let(:dependencies) do
-      { permissions_queryer: double(Permissions::Queryer) }
+      { perm_client: double(Perm::Client) }
     end
 
     describe '#has_default_space' do

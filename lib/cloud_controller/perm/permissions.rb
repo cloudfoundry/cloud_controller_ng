@@ -75,6 +75,18 @@ module VCAP
             isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
         end
 
+        def can_read_route?(space_id, org_id)
+          permissions = [
+            { action: 'space.developer', resource: space_id },
+            { action: 'space.manager', resource: space_id },
+            { action: 'space.auditor', resource: space_id },
+            { action: 'org.manager', resource: org_id },
+            { action: 'org.auditor', resource: org_id },
+          ]
+
+          can_read_globally? || has_any_permission?(permissions)
+        end
+
         private
 
         attr_reader :perm_client, :user_id, :roles, :issuer

@@ -53,7 +53,12 @@ module VCAP::CloudController::RestController
       @sinatra = sinatra
 
       @access_context = Security::AccessContext.new(
-        dependencies.fetch(:permissions_queryer)
+        VCAP::CloudController::Permissions::Queryer.build(
+          dependencies.fetch(:perm_client),
+          VCAP::CloudController::SecurityContext,
+          config.get(:perm, :enabled),
+          config.get(:perm, :query_enabled),
+        )
       )
 
       inject_dependencies(dependencies)

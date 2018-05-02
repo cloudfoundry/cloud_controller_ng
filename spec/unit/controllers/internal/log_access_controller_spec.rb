@@ -11,14 +11,14 @@ module VCAP::CloudController
 
     let(:log_access_controller) do
       LogAccessController.new(
-        {},
+        double(Config, get: nil),
         logger,
         {},
         {},
         {},
         nil,
         {
-          permissions_queryer: double(Permissions::Queryer)
+          perm_client: double(Perm::Client)
         },
       )
     end
