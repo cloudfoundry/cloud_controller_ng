@@ -140,7 +140,6 @@ RSpec.describe 'App Manifests' do
         expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
 
         Delayed::Worker.new.work_off
-        puts Delayed::Job.all.inspect
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
 
         web_process.reload
