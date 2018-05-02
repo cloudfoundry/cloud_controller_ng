@@ -1,5 +1,6 @@
 require 'actions/v2/route_mapping_create'
 require 'models/helpers/process_types'
+require 'fetchers/queries/route_mapping_query'
 
 module VCAP::CloudController
   class RouteMappingsController < RestController::ModelController
@@ -69,10 +70,14 @@ module VCAP::CloudController
       [HTTP::NOT_FOUND]
     end
 
+    private
+
+    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+      RouteMappingQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
+    end
+
     define_messages
     define_routes
-
-    private
 
     def filter_dataset(dataset)
       dataset.where("#{RouteMappingModel.table_name}__process_type".to_sym => ProcessTypes::WEB)
