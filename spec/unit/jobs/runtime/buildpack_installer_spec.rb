@@ -21,7 +21,7 @@ module VCAP::CloudController
           let(:options) { { locked: true } }
 
           context 'buildpack zip does not specify stack' do
-            it 'creates a new buildpack with default stack' do
+            it 'creates a new buildpack with nil stack' do
               expect {
                 job.perform
               }.to change { Buildpack.count }.from(0).to(1)
@@ -29,7 +29,7 @@ module VCAP::CloudController
               buildpack = Buildpack.first
               expect(buildpack).to_not be_nil
               expect(buildpack.name).to eq(buildpack_name)
-              expect(buildpack.stack).to eq(Stack.default.name)
+              expect(buildpack.stack).to be_nil
               expect(buildpack.key).to start_with(buildpack.guid)
               expect(buildpack.filename).to end_with(File.basename(zipfile))
               expect(buildpack).to be_locked
