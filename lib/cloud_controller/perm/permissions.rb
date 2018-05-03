@@ -2,6 +2,15 @@ module VCAP
   module CloudController
     module Perm
       class Permissions
+        ORG_AUDITOR_ACTION = 'org.auditor'.freeze
+        ORG_BILLING_MANAGER_ACTION = 'org.billing_manager'.freeze
+        ORG_MANAGER_ACTION = 'org.manager'.freeze
+        ORG_USER_ACTION = 'org.user'.freeze
+
+        SPACE_AUDITOR_ACTION = 'space.auditor'.freeze
+        SPACE_DEVELOPER_ACTION = 'space.developer'.freeze
+        SPACE_MANAGER_ACTION = 'space.manager'.freeze
+
         def initialize(perm_client:, user_id:, issuer:, roles:)
           @perm_client = perm_client
           @user_id = user_id
@@ -26,17 +35,17 @@ module VCAP
 
         def can_read_from_org?(org_id)
           permissions = [
-            { action: 'org.manager', resource: org_id },
-            { action: 'org.auditor', resource: org_id },
-            { action: 'org.user', resource: org_id },
-            { action: 'org.billing_manager', resource: org_id },
+            { action: ORG_MANAGER_ACTION, resource: org_id },
+            { action: ORG_AUDITOR_ACTION, resource: org_id },
+            { action: ORG_USER_ACTION, resource: org_id },
+            { action: ORG_BILLING_MANAGER_ACTION, resource: org_id },
           ]
           can_read_globally? || has_any_permission?(permissions)
         end
 
         def can_write_to_org?(org_id)
           permissions = [
-            { action: 'org.manager', resource: org_id },
+            { action: ORG_MANAGER_ACTION, resource: org_id },
           ]
 
           can_write_globally? || has_any_permission?(permissions)
@@ -44,10 +53,10 @@ module VCAP
 
         def can_read_from_space?(space_id, org_id)
           permissions = [
-            { action: 'space.developer', resource: space_id },
-            { action: 'space.manager', resource: space_id },
-            { action: 'space.auditor', resource: space_id },
-            { action: 'org.manager', resource: org_id },
+            { action: SPACE_DEVELOPER_ACTION, resource: space_id },
+            { action: SPACE_MANAGER_ACTION, resource: space_id },
+            { action: SPACE_AUDITOR_ACTION, resource: space_id },
+            { action: ORG_MANAGER_ACTION, resource: org_id },
           ]
 
           can_read_globally? || has_any_permission?(permissions)
@@ -55,7 +64,7 @@ module VCAP
 
         def can_read_secrets_in_space?(space_id, org_id)
           permissions = [
-            { action: 'space.developer', resource: space_id },
+            { action: SPACE_DEVELOPER_ACTION, resource: space_id },
           ]
 
           can_read_secrets_globally? || has_any_permission?(permissions)
@@ -63,7 +72,7 @@ module VCAP
 
         def can_write_to_space?(space_id)
           permissions = [
-            { action: 'space.developer', resource: space_id },
+            { action: SPACE_DEVELOPER_ACTION, resource: space_id },
           ]
 
           can_write_globally? || has_any_permission?(permissions)
@@ -77,11 +86,11 @@ module VCAP
 
         def can_read_route?(space_id, org_id)
           permissions = [
-            { action: 'space.developer', resource: space_id },
-            { action: 'space.manager', resource: space_id },
-            { action: 'space.auditor', resource: space_id },
-            { action: 'org.manager', resource: org_id },
-            { action: 'org.auditor', resource: org_id },
+            { action: SPACE_DEVELOPER_ACTION, resource: space_id },
+            { action: SPACE_MANAGER_ACTION, resource: space_id },
+            { action: SPACE_AUDITOR_ACTION, resource: space_id },
+            { action: ORG_MANAGER_ACTION, resource: org_id },
+            { action: ORG_AUDITOR_ACTION, resource: org_id },
           ]
 
           can_read_globally? || has_any_permission?(permissions)
