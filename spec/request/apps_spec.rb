@@ -1295,41 +1295,6 @@ RSpec.describe 'Apps' do
         }
       })
     end
-
-    it 'creates audit.app.process.delete events' do
-      process_to_delete = VCAP::CloudController::ProcessModel.make(app: app_model, type: 'bob')
-
-      droplet = VCAP::CloudController::DropletModel.make(
-        app:           app_model,
-        process_types: { web: 'rackup' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE
-      )
-
-      request_body = { data: { guid: droplet.guid } }
-
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
-
-      expect(last_response.status).to eq(200)
-
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
-
-      expect(app_model.reload.processes.count).to eq(1)
-
-      delete_event = events.find { |e| e.metadata['process_guid'] == process_to_delete.guid }
-      expect(delete_event.values).to include({
-        type:              'audit.app.process.delete',
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        'my_app',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
-      expect(delete_event.metadata).to eq({ 'process_guid' => process_to_delete.guid, 'process_type' => 'bob' })
-    end
   end
 
   describe 'PATCH /v3/apps/:guid/environment_variables' do

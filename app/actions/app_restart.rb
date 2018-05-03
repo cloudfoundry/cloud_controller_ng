@@ -1,4 +1,4 @@
-require 'actions/current_process_types'
+require 'actions/process_upsert_from_droplet'
 
 module VCAP::CloudController
   class AppRestart

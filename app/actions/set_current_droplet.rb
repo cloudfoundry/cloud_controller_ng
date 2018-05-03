@@ -39,7 +39,7 @@ module VCAP::CloudController
     private
 
     def setup_processes(app)
-      CurrentProcessTypes.new(@user_audit_info).process_current_droplet(app)
+      ProcessUpsertFromDroplet.new(@user_audit_info).process_current_droplet(app)
     end
 
     def droplet_associated?(app, droplet)

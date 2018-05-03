@@ -136,9 +136,9 @@ module VCAP::CloudController
 
           app.update(droplet: droplet)
 
-          app.processes.each do |p|
-            p.lock!
-            Repositories::AppUsageEventRepository.new.create_from_process(p, 'BUILDPACK_SET')
+          app.processes.each do |process|
+            process.lock!
+            Repositories::AppUsageEventRepository.new.create_from_process(process, 'BUILDPACK_SET')
           end
         end
 

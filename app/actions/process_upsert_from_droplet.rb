@@ -1,13 +1,13 @@
 require 'actions/process_create'
 
 module VCAP::CloudController
-  class CurrentProcessTypes
+  class ProcessUpsertFromDroplet
     class DropletNotFound < StandardError; end
     class ProcessTypesNotFound < StandardError; end
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
-      @logger = Steno.logger('cc.action.current_process_types')
+      @logger = Steno.logger('cc.action.process_upsert_from_droplet')
     end
 
     def process_current_droplet(app)
@@ -31,9 +31,6 @@ module VCAP::CloudController
         types << type
         add_or_update_process(app, type, command)
       end
-
-      processes = app.processes_dataset.where(Sequel.~(type: types))
-      ProcessDelete.new(@user_audit_info).delete(processes.all)
     end
 
     def add_or_update_process(app, type, command)
