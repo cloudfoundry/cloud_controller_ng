@@ -5,6 +5,7 @@ require 'actions/service_binding_create'
 require 'actions/manifest_route_update'
 require 'cloud_controller/strategies/manifest_strategy'
 require 'cloud_controller/app_manifest/manifest_route'
+require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   class AppApplyManifest
@@ -33,10 +34,11 @@ module VCAP::CloudController
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
       AppUpdate.new(@user_audit_info).update(app, app_update_message, lifecycle)
 
-      do_route_update(app, message)
+      update_routes(app, message)
 
       AppPatchEnvironmentVariables.new(@user_audit_info).patch(app, message.app_update_environment_variables_message)
-      create_service_instances(message, app)
+
+      create_service_bindings(message.services, app) if message.services.present?
       app
     end
 
@@ -53,7 +55,7 @@ module VCAP::CloudController
       })
     end
 
-    def do_route_update(app, message)
+    def update_routes(app, message)
       update_message = message.manifest_routes_update_message
       existing_routes = RouteMappingModel.where(app_guid: app.guid).all
 
@@ -67,20 +69,19 @@ module VCAP::CloudController
         return
       end
 
-      if update_message.random_route && existing_routes.size == 0
-        qualifier = CloudController::DependencyLocator.instance.random_route_generator.route
-        domain = Domain.first.name
-        route = "#{app.name}-#{qualifier}.#{domain}"
+      if update_message.random_route && existing_routes.empty?
+        random_host = "#{app.name}-#{RandomRouteGenerator.new.route}"
+        domain = SharedDomain.first.name
+        route = "#{random_host}.#{domain}"
+
         random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
         ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
       end
     end
 
-    def create_service_instances(message, app)
-      return unless message.services.present?
-
+    def create_service_bindings(services, app)
       action = ServiceBindingCreate.new(@user_audit_info)
-      message.services.each do |name|
+      services.each do |name|
         service_instance = ServiceInstance.find(name: name)
         service_instance_not_found!(name) unless service_instance
         next if binding_exists?(service_instance, app)

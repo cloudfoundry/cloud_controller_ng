@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     describe '#apply' do
       before do
-        CloudController::DependencyLocator.instance.register(:random_route_generator, random_route_generator)
+        allow(RandomRouteGenerator).to receive(:new).and_return(random_route_generator)
 
         allow(ProcessScale).
           to receive(:new).and_return(process_scale)

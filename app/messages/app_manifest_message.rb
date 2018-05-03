@@ -273,10 +273,10 @@ module VCAP::CloudController
 
     def validate_processes!
       if processes.is_a? Array
-        errors.add(:base, 'All Processes must specify a type') if processes.one? { |p| p[:type].blank? }
+        errors.add(:base, 'All Processes must specify a type') if processes.any? { |p| p[:type].blank? }
 
         processes.group_by { |p| p[:type] }.
-          select { |k, v| v.length > 1 }.
+          select { |_, v| v.length > 1 }.
           each_key { |k| errors.add(:base, %(Process "#{k}" may only be present once)) }
 
       else

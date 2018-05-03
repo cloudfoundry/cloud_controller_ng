@@ -391,7 +391,7 @@ module VCAP::CloudController
         end
 
         context 'when any process has a blank type' do
-          let(:params) { { processes: [{ 'type' => '', 'instances' => 3 }] } }
+          let(:params) { { processes: [{ 'type' => '', 'instances' => 3 }, { 'type' => nil, 'instances' => 2 }] } }
 
           it 'is not valid' do
             message = AppManifestMessage.new(params)

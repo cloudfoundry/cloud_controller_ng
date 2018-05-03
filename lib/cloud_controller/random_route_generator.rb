@@ -1,5 +1,3 @@
-require 'set'
-
 module VCAP::CloudController
   class RandomRouteGenerator
     ADJECTIVES = %w(accountable
