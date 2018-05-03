@@ -25,6 +25,25 @@ module VCAP::CloudController
         expect(process.command).to eq('rackup')
       end
 
+      context 'if the command is nil' do
+        let(:message) do
+          {
+            type:    'web',
+            command: nil
+          }
+        end
+
+        it 'creates the process with no command' do
+          process = process_create.create(app, message)
+
+          app.reload
+          expect(app.processes.count).to eq(1)
+          expect(app.processes.first.guid).to eq(process.guid)
+          expect(process.type).to eq('web')
+          expect(process.command).to eq(nil)
+        end
+      end
+
       it 'adds existing routes to the process' do
         route = Route.make(space: app.space)
         RouteMappingModel.make(route: route, app: app, process_type: 'web')

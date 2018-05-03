@@ -1,4 +1,6 @@
+require 'actions/process_create'
 require 'actions/process_scale'
+require 'actions/process_update'
 require 'actions/service_binding_create'
 require 'actions/manifest_route_update'
 require 'cloud_controller/strategies/manifest_strategy'
@@ -16,12 +18,14 @@ module VCAP::CloudController
       app = AppModel.find(guid: app_guid)
 
       message.manifest_process_update_messages.each do |manifest_process_update_msg|
-        process = ProcessModel.find(app: app, type: manifest_process_update_msg.type)
+        process_type = manifest_process_update_msg.type
+        process = find_process(app, process_type) || create_process(app, manifest_process_update_msg, process_type)
+
         ProcessUpdate.new(@user_audit_info).update(process, manifest_process_update_msg, ManifestStrategy)
       end
 
       message.manifest_process_scale_messages.each do |manifest_process_scale_msg|
-        process = ProcessModel.find(app: app, type: manifest_process_scale_msg.type)
+        process = find_process(app, manifest_process_scale_msg.type)
         ProcessScale.new(@user_audit_info, process, manifest_process_scale_msg.to_process_scale_message).scale
       end
 
@@ -37,6 +41,17 @@ module VCAP::CloudController
     end
 
     private
+
+    def find_process(app, process_type)
+      ProcessModel.find(app: app, type: process_type)
+    end
+
+    def create_process(app, manifest_process_update_msg, process_type)
+      ProcessCreate.new(@user_audit_info).create(app, {
+        type: process_type,
+        command: manifest_process_update_msg.command
+      })
+    end
 
     def do_route_update(app, message)
       update_message = message.manifest_routes_update_message

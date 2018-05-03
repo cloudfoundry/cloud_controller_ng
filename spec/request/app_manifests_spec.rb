@@ -114,43 +114,110 @@ RSpec.describe 'App Manifests' do
     end
 
     describe 'multiple processes' do
-      let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, type: 'worker') }
+      let(:web_process) do
+        {
+          'type' => 'web',
+          'instances' => 4,
+          'command' => 'new-command',
+          'memory' => '2048MB',
+          'disk_quota' => '256MB',
+          'health-check-type' => 'http',
+          'health-check-http-endpoint' => '/test',
+          'timeout' => 10,
+        }
+      end
+
+      let(:worker_process) do
+        {
+          'type' => 'worker',
+          'instances' => 2,
+          'command' => 'bar',
+          'memory' => '512MB',
+          'disk_quota' => '1024M',
+          'health-check-type' => 'port',
+          'timeout' => 150
+        }
+      end
 
       let(:yml_manifest) do
         {
           'applications' => [
-            { 'name' => 'blah',
-              'processes' => [
-                { 'instances' => 4, 'type' => 'web', 'command' => 'new-command', 'memory' => '2048MB', 'health_check_type' => 'http', },
-                { 'instances' => 2, 'type' => 'worker', 'command' => 'bar' },
-              ]
+            {
+              'name' => 'blah',
+              'processes' => [web_process, worker_process]
             }
           ]
         }.to_yaml
       end
 
-      it 'applies the manifest' do
-        web_process = app_model.web_process
-        expect(web_process.instances).to eq(1)
+      context 'when all the process types already exist' do
+        let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, type: 'worker') }
 
-        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+        it 'applies the manifest' do
+          web_process = app_model.web_process
+          expect(web_process.instances).to eq(1)
 
-        expect(last_response.status).to eq(202)
-        job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
 
-        Delayed::Worker.new.work_off
-        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
 
-        web_process.reload
-        expect(web_process.instances).to eq(4)
-        expect(web_process.memory).to eq(2048)
-        expect(web_process.command).to eq('new-command')
-        expect(web_process.health_check_type).to eq('http')
+          Delayed::Worker.new.work_off
+          background_job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+          expect(background_job).to be_complete, "Failed due to: #{background_job.cf_api_error}"
 
-        process2.reload
-        expect(process2.instances).to eq(2)
-        expect(process2.command).to eq('bar')
+          web_process.reload
+          expect(web_process.instances).to eq(4)
+          expect(web_process.memory).to eq(2048)
+          expect(web_process.disk_quota).to eq(256)
+          expect(web_process.command).to eq('new-command')
+          expect(web_process.health_check_type).to eq('http')
+          expect(web_process.health_check_http_endpoint).to eq('/test')
+          expect(web_process.health_check_timeout).to eq(10)
+
+          process2.reload
+          expect(process2.instances).to eq(2)
+          expect(process2.memory).to eq(512)
+          expect(process2.disk_quota).to eq(1024)
+          expect(process2.command).to eq('bar')
+          expect(process2.health_check_type).to eq('port')
+          expect(process2.health_check_timeout).to eq(150)
+        end
+      end
+
+      context 'when some of the process types do NOT exist for the app yet' do
+        it 'creates the processes and applies the manifest' do
+          web_process = app_model.web_process
+          expect(web_process.instances).to eq(1)
+
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+          Delayed::Worker.new.work_off
+          background_job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+          expect(background_job).to be_complete, "Failed due to: #{background_job.cf_api_error}"
+
+          web_process.reload
+          expect(web_process.instances).to eq(4)
+          expect(web_process.memory).to eq(2048)
+          expect(web_process.disk_quota).to eq(256)
+          expect(web_process.command).to eq('new-command')
+          expect(web_process.health_check_type).to eq('http')
+          expect(web_process.health_check_http_endpoint).to eq('/test')
+          expect(web_process.health_check_timeout).to eq(10)
+
+          process2 = VCAP::CloudController::ProcessModel.find(app_guid: app_model.guid, type: 'worker')
+          expect(process2.instances).to eq(2)
+          expect(process2.memory).to eq(512)
+          expect(process2.disk_quota).to eq(1024)
+          expect(process2.command).to eq('bar')
+          expect(process2.health_check_type).to eq('port')
+          expect(process2.health_check_timeout).to eq(150)
+        end
       end
     end
   end

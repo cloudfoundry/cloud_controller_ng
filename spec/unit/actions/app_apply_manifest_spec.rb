@@ -10,6 +10,7 @@ module VCAP::CloudController
     let(:app_update) { instance_double(AppUpdate) }
     let(:app_patch_env) { instance_double(AppPatchEnvironmentVariables) }
     let(:process_update) { instance_double(ProcessUpdate) }
+    let(:process_create) { instance_double(ProcessCreate) }
     let(:service_binding_create) { instance_double(ServiceBindingCreate) }
     let(:random_route_generator) { instance_double(RandomRouteGenerator, route: 'spiffy/donut') }
 
@@ -20,6 +21,10 @@ module VCAP::CloudController
         allow(ProcessScale).
           to receive(:new).and_return(process_scale)
         allow(process_scale).to receive(:scale)
+
+        allow(ProcessCreate).
+          to receive(:new).and_return(process_create)
+        allow(process_create).to receive(:create)
 
         allow(AppUpdate).
           to receive(:new).and_return(app_update)
@@ -316,6 +321,60 @@ module VCAP::CloudController
             expect {
               app_apply_manifest.apply(app.guid, message)
             }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+          end
+        end
+      end
+
+      describe 'creating a new process' do
+        let(:message) do
+          AppManifestMessage.new({
+            processes: [
+              { type: 'potato', command: 'potato-command', instances: 3 },
+            ] }
+          )
+        end
+
+        let!(:app) { AppModel.make }
+        let(:update_message) { message.manifest_process_update_messages.first }
+        let(:scale_message) { message.manifest_process_scale_messages.first }
+
+        context 'when the request is valid' do
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+          end
+
+          it 'calls ProcessCreate with command and type' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ProcessCreate).to have_received(:new).with(user_audit_info)
+            expect(process_create).to have_received(:create).with(app, { type: 'potato', command: 'potato-command' })
+          end
+
+          it 'updates and scales the newly created process with all the other properties' do
+            app_apply_manifest.apply(app.guid, message)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
+            process = ProcessModel.last
+            expect(process_update).to have_received(:update).with(process, update_message, ManifestStrategy)
+
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage))
+            expect(process_scale).to have_received(:scale)
+          end
+
+          context 'when there is no command specified in the manifest' do
+            let(:message) do
+              AppManifestMessage.new({
+                processes: [
+                  { type: 'potato', instances: 3 },
+                ] }
+              )
+            end
+
+            it 'sets the command to nil' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ProcessCreate).to have_received(:new).with(user_audit_info)
+              expect(process_create).to have_received(:create).with(app, { type: 'potato', command: nil })
+            end
           end
         end
       end
