@@ -69,7 +69,7 @@ module VCAP::CloudController
 
     def determine_new_stack(buildpack, bits_file_path)
       extracted_stack = Buildpacks::StackNameExtractor.extract_from_file(bits_file_path)
-      [extracted_stack, buildpack.stack, Stack.default.name].find(&:present?)
+      [extracted_stack, buildpack.stack].find(&:present?)
     rescue CloudController::Errors::BuildpackError => e
       raise CloudController::Errors::ApiError.new_from_details('BuildpackZipError', e.message)
     end

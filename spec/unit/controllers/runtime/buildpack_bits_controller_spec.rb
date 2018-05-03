@@ -128,12 +128,12 @@ module VCAP::CloudController
           expect(buildpack.stack).to be_nil
         end
 
-        it 'sets the buildpack stack to default if it is unset and NOT in buildpack manifest' do
+        it 'sets the buildpack stack to nil if it is unset and NOT in buildpack manifest' do
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip, buildpack_name: valid_zip.path }
           expect(last_response.status).to eql 201
 
           buildpack = Buildpack.find(name: 'upload_binary_buildpack')
-          expect(buildpack.stack).to eq('default-stack-name')
+          expect(buildpack.stack).to be_nil
         end
 
         it 'requires an existing stack to be the same as one in the manifest if it exists' do
