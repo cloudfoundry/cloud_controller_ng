@@ -29,16 +29,20 @@ class VCAP::CloudController::Permissions
     @user = user
   end
 
-  def can_write_globally?
-    roles.admin?
-  end
-
   def can_read_globally?
     roles.admin? || roles.admin_read_only? || roles.global_auditor?
   end
 
   def can_read_secrets_globally?
     roles.admin? || roles.admin_read_only?
+  end
+
+  def can_write_globally?
+    roles.admin?
+  end
+
+  def readable_org_guids
+    membership.org_guids_for_roles(ROLES_FOR_ORG_READING)
   end
 
   def can_read_from_org?(org_guid)
@@ -49,10 +53,8 @@ class VCAP::CloudController::Permissions
     can_write_globally? || membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
   end
 
-  def can_read_from_isolation_segment?(isolation_segment)
-    can_read_globally? ||
-      isolation_segment.spaces.any? { |space| can_read_from_space?(space.guid, space.organization.guid) } ||
-      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+  def readable_space_guids
+    membership.space_guids_for_roles(ROLES_FOR_READING)
   end
 
   def can_read_from_space?(space_guid, org_guid)
@@ -68,12 +70,10 @@ class VCAP::CloudController::Permissions
     can_write_globally? || membership.has_any_roles?(ROLES_FOR_WRITING, space_guid)
   end
 
-  def readable_space_guids
-    membership.space_guids_for_roles(ROLES_FOR_READING)
-  end
-
-  def readable_org_guids
-    membership.org_guids_for_roles(ROLES_FOR_ORG_READING)
+  def can_read_from_isolation_segment?(isolation_segment)
+    can_read_globally? ||
+      isolation_segment.spaces.any? { |space| can_read_from_space?(space.guid, space.organization.guid) } ||
+      isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
   end
 
   def can_read_route?(space_guid, org_guid)
