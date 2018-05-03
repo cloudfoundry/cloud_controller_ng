@@ -84,25 +84,18 @@ module VCAP::CloudController
         service_instance = ServiceInstance.find(name: name)
         service_instance_not_found!(name) unless service_instance
         next if binding_exists?(service_instance, app)
-        binding_message = service_binding_message(app, service_instance)
-        action.create(app, service_instance, binding_message, volume_services_enabled?)
+
+        action.create(
+          app,
+          service_instance,
+          ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE),
+          volume_services_enabled?
+        )
       end
     end
 
     def binding_exists?(service_instance, app)
-      ServiceBinding.find(service_instance: service_instance, app: app)
-    end
-
-    # ServiceBindingCreate uses the app_guid and service_instance_guid for audit_hash, but there is different story for audit events
-    # In manifests, unlike in the API endpoint, these parameters must be fetched from DB
-    def service_binding_message(app, service)
-      ServiceBindingCreateMessage.new({
-        type: SERVICE_BINDING_TYPE,
-        relationships: {
-        },
-        data: {
-        }
-      })
+      ServiceBinding.where(service_instance: service_instance, app: app).present?
     end
 
     def service_instance_not_found!(name)
