@@ -7,10 +7,12 @@ module VCAP::CloudController
 
     def self.list_admin_buildpacks(stack_name=nil)
       scoped = exclude(key: nil).exclude(key: '')
-      scoped = scoped.filter(Sequel.or([
-        [:stack, stack_name],
-        [:stack, nil]
-      ])) if stack_name.present?
+      if stack_name.present?
+        scoped = scoped.filter(Sequel.or([
+          [:stack, stack_name],
+          [:stack, nil]
+        ]))
+      end
       scoped.order(:position).all
     end
 
