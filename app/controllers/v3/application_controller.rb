@@ -133,7 +133,7 @@ class ApplicationController < ActionController::Base
   end
 
   def can_see_secrets?(space)
-    permission_queryer.can_read_secrets_in_space?(space)
+    permission_queryer.can_read_secrets_in_space?(space.guid, space.organization.guid)
   end
 
   def can_write?(space_guid)

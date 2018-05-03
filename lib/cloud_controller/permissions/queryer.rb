@@ -89,11 +89,11 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
-  def can_read_secrets_in_space?(space)
+  def can_read_secrets_in_space?(space_guid, org_guid)
     science 'can_read_secrets_in_space?' do |e|
-      e.context(space_guid: space.guid, org_guid: space.organization.guid, action: 'space.read_secrets')
-      e.use { db_permissions.can_read_secrets_in_space?(space.guid, space.organization.guid) }
-      e.try { perm_permissions.can_read_secrets_in_space?(space.guid, space.organization.guid) }
+      e.context(space_guid: space_guid, org_guid: org_guid, action: 'space.read_secrets')
+      e.use { db_permissions.can_read_secrets_in_space?(space_guid, org_guid) }
+      e.try { perm_permissions.can_read_secrets_in_space?(space_guid, org_guid) }
 
       e.run_if { !db_permissions.can_read_secrets_globally? }
     end

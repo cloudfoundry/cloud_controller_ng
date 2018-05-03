@@ -541,8 +541,6 @@ module VCAP::CloudController
     end
 
     describe '#can_read_secrets_in_space?' do
-      let(:space) { spy(:space, guid: space_guid, organization: spy(:organization, guid: org_guid)) }
-
       before do
         allow(perm_permissions).to receive(:can_read_secrets_in_space?)
 
@@ -553,7 +551,7 @@ module VCAP::CloudController
       it 'asks for #can_read_secrets_in_space? on behalf of the current user' do
         allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
 
-        queryer.can_read_secrets_in_space?(space)
+        queryer.can_read_secrets_in_space?(space_guid, org_guid)
 
         expect(db_permissions).to have_received(:can_read_secrets_in_space?).with(space_guid, org_guid)
         expect(perm_permissions).to have_received(:can_read_secrets_in_space?).with(space_guid, org_guid)
@@ -562,7 +560,7 @@ module VCAP::CloudController
       it 'skips the experiment if the user is a global secrets reader' do
         allow(db_permissions).to receive(:can_read_secrets_globally?).and_return(true)
 
-        queryer.can_read_secrets_in_space?(space)
+        queryer.can_read_secrets_in_space?(space_guid, org_guid)
 
         expect(perm_permissions).not_to have_received(:can_read_secrets_in_space?)
       end
@@ -570,7 +568,7 @@ module VCAP::CloudController
       it 'uses the expected branch from the experiment' do
         allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return('not-expected')
 
-        response = queryer.can_read_secrets_in_space?(space)
+        response = queryer.can_read_secrets_in_space?(space_guid, org_guid)
 
         expect(response).to eq(true)
       end
@@ -580,7 +578,7 @@ module VCAP::CloudController
           allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
 
-          queryer.can_read_secrets_in_space?(space)
+          queryer.can_read_secrets_in_space?(space_guid, org_guid)
 
           expected_context = {
             current_user_guid: current_user_guid,
@@ -605,7 +603,7 @@ module VCAP::CloudController
           allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return('something wrong')
 
-          queryer.can_read_secrets_in_space?(space)
+          queryer.can_read_secrets_in_space?(space_guid, org_guid)
 
           expected_context = {
             current_user_guid: current_user_guid,
