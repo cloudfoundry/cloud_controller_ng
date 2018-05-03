@@ -12,6 +12,8 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness [:name, :stack] }
 
       describe 'stack' do
+        let(:stack) {  Stack.make(name: 'happy') }
+
         it 'can be changed if not set' do
           buildpack = Buildpack.create(name: 'test', stack: nil)
           buildpack.stack = Stack.make.name
@@ -33,6 +35,25 @@ module VCAP::CloudController
 
           expect(buildpack).not_to be_valid
           expect(buildpack.errors.on(:stack)).to include(:buildpack_stack_does_not_exist)
+        end
+
+        it 'validates duplicate buildpacks with the same name and stack' do
+          Buildpack.create(name: 'oscar', stack: stack.name)
+          expect(Buildpack.new(name: 'oscar', stack: stack.name)).not_to be_valid
+        end
+
+        it 'validates duplicate buildpacks with the same name and nil stack' do
+          Buildpack.create(name: 'oscar', stack: nil)
+          expect(Buildpack.new(name: 'oscar', stack: nil)).not_to be_valid
+        end
+
+        context 'when there is a buildpack with nil stack' do
+          let!(:buildpack) { Buildpack.create(name: 'oscar', stack: nil) }
+          it 'will allow updating a different field' do
+            expect {
+              buildpack.update(filename: '/some/file')
+            }.not_to raise_error
+          end
         end
       end
 

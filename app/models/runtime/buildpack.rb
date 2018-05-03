@@ -30,6 +30,7 @@ module VCAP::CloudController
 
       validate_stack_existence
       validate_stack_change
+      validate_multiple_nil_stacks
     end
 
     def locked?
@@ -55,6 +56,11 @@ module VCAP::CloudController
     end
 
     private
+
+    def validate_multiple_nil_stacks
+      return unless stack.nil?
+      errors.add(:stack, :unique) if Buildpack.exclude(guid: guid).where(name: name, stack: nil).present?
+    end
 
     def validate_stack_change
       return if initial_value(:stack).nil?
