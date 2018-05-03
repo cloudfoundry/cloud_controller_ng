@@ -80,7 +80,6 @@ RSpec.describe ApplicationController, type: :controller do
 
     perm_config = TestConfig.config[:perm]
     perm_config[:enabled] = true
-    perm_config[:query_enabled] = true
     TestConfig.override(perm: perm_config)
 
     allow(VCAP::CloudController::Perm::Client).to receive(:new).and_return(perm_client)

@@ -43,7 +43,6 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       perm_port = perm_server.port.clone
       perm_config = {
         enabled: true,
-        query_enabled: true,
         hostname: perm_hostname,
         port: perm_port,
         ca_cert_path: perm_server.tls_ca_path,

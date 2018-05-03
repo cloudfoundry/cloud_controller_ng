@@ -14,7 +14,6 @@ module VCAP::CloudController
         db_permissions: db_permissions,
         perm_permissions: perm_permissions,
         perm_enabled: true,
-        query_enabled: true,
         current_user_guid: current_user_guid
       )
     end
@@ -44,7 +43,7 @@ module VCAP::CloudController
         allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
         allow(VCAP::CloudController::Science::Experiment).to receive(:raise_on_mismatches=)
 
-        queryer = Permissions::Queryer.build(perm_client, security_context, true, true, true)
+        queryer = Permissions::Queryer.build(perm_client, security_context, true, true)
 
         expect(VCAP::CloudController::Permissions).to have_received(:new).with(current_user)
         expect(VCAP::CloudController::Perm::Permissions).to have_received(:new).with(

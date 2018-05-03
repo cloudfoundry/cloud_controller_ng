@@ -57,7 +57,6 @@ module VCAP::CloudController::RestController
           dependencies.fetch(:perm_client),
           VCAP::CloudController::SecurityContext,
           config.get(:perm, :enabled),
-          config.get(:perm, :query_enabled),
         )
       )
 

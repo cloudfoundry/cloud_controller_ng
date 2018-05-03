@@ -333,7 +333,6 @@ pending_builds:
   frequency_in_seconds: 300
 
 perm:
-  query_enabled: false
   enabled: false
   hostname: perm.service.cf.internal
   port: 6283

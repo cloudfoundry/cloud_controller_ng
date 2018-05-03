@@ -288,7 +288,6 @@ module VCAP::CloudController
           },
 
           perm: {
-            query_enabled: bool,
             enabled: bool,
             optional(:hostname) => String,
             optional(:port) => Integer,

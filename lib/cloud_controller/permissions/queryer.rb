@@ -1,7 +1,7 @@
 class VCAP::CloudController::Permissions::Queryer
   attr_reader :perm_permissions, :db_permissions
 
-  def self.build(perm_client, security_context, perm_enabled, query_enabled, query_raise_on_mismatch=false)
+  def self.build(perm_client, security_context, perm_enabled, query_raise_on_mismatch=false)
     VCAP::CloudController::Science::Experiment.raise_on_mismatches = query_raise_on_mismatch
 
     db_permissions =
@@ -20,15 +20,14 @@ class VCAP::CloudController::Permissions::Queryer
       db_permissions: db_permissions,
       perm_permissions: perm_permissions,
       perm_enabled: perm_enabled,
-      query_enabled: query_enabled,
       current_user_guid: security_context.current_user_guid
     )
   end
 
-  def initialize(db_permissions:, perm_permissions:, perm_enabled:, query_enabled:, current_user_guid:)
+  def initialize(db_permissions:, perm_permissions:, perm_enabled:, current_user_guid:)
     @db_permissions = db_permissions
     @perm_permissions = perm_permissions
-    @enabled = perm_enabled && query_enabled
+    @enabled = perm_enabled
     @current_user_guid = current_user_guid
   end
 
