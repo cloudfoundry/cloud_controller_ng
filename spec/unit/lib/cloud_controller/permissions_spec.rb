@@ -234,33 +234,33 @@ module VCAP::CloudController
       end
     end
 
-    describe '#can_see_secrets_in_space?' do
+    describe '#can_read_secrets_in_space?' do
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user_as_admin
-            expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
+            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'returns true' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
+            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
+            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
+            expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
           end
         end
       end
@@ -269,24 +269,24 @@ module VCAP::CloudController
         it 'returns true for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be true
+          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
         end
 
         it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
+          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
+          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for org manager' do
           org.add_manager(user)
-          expect(permissions.can_see_secrets_in_space?(space_guid, org_guid)).to be false
+          expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
         end
       end
     end

@@ -153,7 +153,7 @@ module UserHelpers
   end
 
   def allow_user_secret_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_see_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
+    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
   end
 
   def allow_user_write_access(user, space:)
@@ -195,7 +195,7 @@ module UserHelpers
   end
 
   def disallow_user_secret_access(user, space:)
-    allow(permissions_double(user)).to receive(:can_see_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
+    allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
   end
 
   def disallow_user_write_access(user, space:)

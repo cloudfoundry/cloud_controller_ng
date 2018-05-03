@@ -53,7 +53,7 @@ module VCAP
           can_read_globally? || has_any_permission?(permissions)
         end
 
-        def can_see_secrets_in_space?(space_id, org_id)
+        def can_read_secrets_in_space?(space_id, org_id)
           permissions = [
             { action: 'space.developer', resource: space_id },
           ]

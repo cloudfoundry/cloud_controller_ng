@@ -59,7 +59,7 @@ class VCAP::CloudController::Permissions
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
   end
 
-  def can_see_secrets_in_space?(space_guid, org_guid)
+  def can_read_secrets_in_space?(space_guid, org_guid)
     can_read_secrets_globally? ||
       membership.has_any_roles?(ROLES_FOR_SECRETS, space_guid, org_guid)
   end

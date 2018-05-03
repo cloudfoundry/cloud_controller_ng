@@ -540,47 +540,47 @@ module VCAP::CloudController
       end
     end
 
-    describe '#can_see_secrets?' do
+    describe '#can_read_secrets_in_space?' do
       let(:space) { spy(:space, guid: space_guid, organization: spy(:organization, guid: org_guid)) }
 
       before do
-        allow(perm_permissions).to receive(:can_see_secrets_in_space?)
+        allow(perm_permissions).to receive(:can_read_secrets_in_space?)
 
-        allow(db_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
+        allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
         allow(db_permissions).to receive(:can_read_secrets_globally?).and_return(false)
       end
 
-      it 'asks for #can_see_secrets? on behalf of the current user' do
-        allow(perm_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
+      it 'asks for #can_read_secrets_in_space? on behalf of the current user' do
+        allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
 
-        queryer.can_see_secrets?(space)
+        queryer.can_read_secrets_in_space?(space)
 
-        expect(db_permissions).to have_received(:can_see_secrets_in_space?).with(space_guid, org_guid)
-        expect(perm_permissions).to have_received(:can_see_secrets_in_space?).with(space_guid, org_guid)
+        expect(db_permissions).to have_received(:can_read_secrets_in_space?).with(space_guid, org_guid)
+        expect(perm_permissions).to have_received(:can_read_secrets_in_space?).with(space_guid, org_guid)
       end
 
       it 'skips the experiment if the user is a global secrets reader' do
         allow(db_permissions).to receive(:can_read_secrets_globally?).and_return(true)
 
-        queryer.can_see_secrets?(space)
+        queryer.can_read_secrets_in_space?(space)
 
-        expect(perm_permissions).not_to have_received(:can_see_secrets_in_space?)
+        expect(perm_permissions).not_to have_received(:can_read_secrets_in_space?)
       end
 
       it 'uses the expected branch from the experiment' do
-        allow(perm_permissions).to receive(:can_see_secrets_in_space?).and_return('not-expected')
+        allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return('not-expected')
 
-        response = queryer.can_see_secrets?(space)
+        response = queryer.can_read_secrets_in_space?(space)
 
         expect(response).to eq(true)
       end
 
       context 'when the control and candidate are the same' do
         it 'logs the result' do
-          allow(db_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
-          allow(perm_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
+          allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
 
-          queryer.can_see_secrets?(space)
+          queryer.can_read_secrets_in_space?(space)
 
           expected_context = {
             current_user_guid: current_user_guid,
@@ -602,10 +602,10 @@ module VCAP::CloudController
 
       context 'when the control and candidate are different' do
         it 'logs the result' do
-          allow(db_permissions).to receive(:can_see_secrets_in_space?).and_return(true)
-          allow(perm_permissions).to receive(:can_see_secrets_in_space?).and_return('something wrong')
+          allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return('something wrong')
 
-          queryer.can_see_secrets?(space)
+          queryer.can_read_secrets_in_space?(space)
 
           expected_context = {
             current_user_guid: current_user_guid,

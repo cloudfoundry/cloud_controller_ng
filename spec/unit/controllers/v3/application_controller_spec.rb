@@ -30,7 +30,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     def secret_access
-      render status: 200, json: can_see_secrets?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
+      render status: 200, json: can_read_secrets_in_space?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
     end
 
     def write_globally_access
