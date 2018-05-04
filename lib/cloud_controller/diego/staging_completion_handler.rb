@@ -98,7 +98,6 @@ module VCAP::CloudController
           handle_failure(payload, with_start)
         else
           begin
-            logger.info("TEMP: save_staging_result(payload): #{payload}")
             save_staging_result(payload)
           rescue => e
             logger.error(logger_prefix + 'saving-staging-result-failed',
