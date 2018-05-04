@@ -61,10 +61,13 @@ module VCAP::CloudController
     end
 
     def valid?
+      super
+
+      validate_top_level_web_process!
       validate_processes! if requested?(:processes)
 
-      validate_manifest_process_scale_message!
-      validate_manifest_process_update_message!
+      validate_manifest_process_scale_messages!
+      validate_manifest_process_update_messages!
       validate_app_update_message!
       validate_manifest_routes_update_message! if requested?(:routes) || requested?(:no_route) || requested?(:random_route)
       validate_service_bindings_message! if requested?(:services)
@@ -103,10 +106,8 @@ module VCAP::CloudController
     end
 
     def process_scale_attributes_from_app_level
-      memory_in_mb, memory_error = convert_to_mb(memory, 'Memory')
-      disk_in_mb, disk_error = convert_to_mb(disk_quota, 'Disk quota')
-      add_process_error!(memory_error, 'web') if memory_error
-      add_process_error!(disk_error, 'web') if disk_error
+      memory_in_mb, _ = convert_to_mb(memory, 'Memory')
+      disk_in_mb, _ = convert_to_mb(disk_quota, 'Disk quota')
       {
         instances: instances,
         memory: memory_in_mb,
@@ -116,20 +117,14 @@ module VCAP::CloudController
 
     def process_scale_attributes_from_process(process)
       type = process[:type]
-      memory_in_mb, memory_error = convert_to_mb(process[:memory], 'Memory')
-      disk_in_mb, disk_error = convert_to_mb(process[:disk_quota], 'Disk quota')
-      add_process_error!(memory_error, type) if memory_error
-      add_process_error!(disk_error, type) if disk_error
+      memory_in_mb, _ = convert_to_mb(process[:memory], 'Memory')
+      disk_in_mb, _ = convert_to_mb(process[:disk_quota], 'Disk quota')
       {
         instances: process[:instances],
         memory: memory_in_mb,
         disk_quota: disk_in_mb,
         type: type
       }.compact
-    end
-
-    def add_process_error!(memory_error, type)
-      errors.add(:base, %(Process "#{type}": #{memory_error}))
     end
 
     def process_update_attributes_from_app_level
@@ -219,11 +214,11 @@ module VCAP::CloudController
       ByteConverter.new
     end
 
-    def validate_manifest_process_scale_message!
+    def validate_manifest_process_scale_messages!
       validate_messages!(manifest_process_scale_messages)
     end
 
-    def validate_manifest_process_update_message!
+    def validate_manifest_process_update_messages!
       validate_messages!(manifest_process_update_messages)
     end
 
@@ -279,9 +274,28 @@ module VCAP::CloudController
           select { |_, v| v.length > 1 }.
           each_key { |k| errors.add(:base, %(Process "#{k}" may only be present once)) }
 
+        processes.each do |process|
+          type = process[:type]
+          _, memory_error = convert_to_mb(process[:memory], 'Memory')
+          _, disk_error = convert_to_mb(process[:disk_quota], 'Disk quota')
+          add_process_error!(memory_error, type) if memory_error
+          add_process_error!(disk_error, type) if disk_error
+        end
+
       else
         errors.add(:base, 'Processes must be an array of process configurations')
       end
+    end
+
+    def validate_top_level_web_process!
+      _, memory_error = convert_to_mb(memory, 'Memory')
+      _, disk_error = convert_to_mb(disk_quota, 'Disk quota')
+      add_process_error!(memory_error, 'web') if memory_error
+      add_process_error!(disk_error, 'web') if disk_error
+    end
+
+    def add_process_error!(memory_error, type)
+      errors.add(:base, %(Process "#{type}": #{memory_error}))
     end
   end
 end
