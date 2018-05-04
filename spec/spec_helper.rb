@@ -97,7 +97,7 @@ RSpec.configure do |rspec_config|
     TestConfig.reset
 
     VCAP::CloudController::SecurityContext.clear
-    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return('fake-issuer')
+    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
   end
 
   rspec_config.around :each do |example|

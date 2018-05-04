@@ -137,7 +137,7 @@ module UserHelpers
         email: opts[:email],
         scope: scopes,
         jti: 'some-valid-jti',
-        iss: opts[:iss] || 'fake-issuer'
+        iss: opts[:iss] || UAAIssuer::ISSUER
       }
 
       encoding_opts[:user_name] = opts[:user_name] if opts[:user_name]
