@@ -48,7 +48,7 @@ function first_release_with_sha {
   release=""
 
   pushd "${CAPI_RELEASE_DIR}" > /dev/null
-    for tag in $(git tag | grep -E '^(\d+\.)?(\d+\.)?(\*|\d+)$' | sort -n -t . -k 2); do
+    for tag in $(git tag | grep -E '^([0-9]+)(\.[0-9]+){0,2}$' | sort -n -t . -k 2); do
       exists_on_ref "${tag}" "${sha}"
 
       if [[ "${exists}" -eq 0 ]]; then
