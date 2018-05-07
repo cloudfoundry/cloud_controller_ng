@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'perm'
 require 'perm_test_helpers'
-require 'rails_helper'
 require 'securerandom'
 
 # The `perm` symbol is an rspec tag used in RSpec.configure to set an exclusion_filter to avoid showing pending perm tests.
@@ -10,29 +9,19 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   perm_server = nil
   perm_config = {}
   client = nil
+  user_id = nil
 
   ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
   SPACE_ROLES = [:developer, :manager, :auditor].freeze
 
   include ControllerHelpers
 
-  let(:assignee) { VCAP::CloudController::User.make(username: 'not-really-a-person') }
   let(:uaa_target) { 'test.example.com' }
   let(:uaa_origin) { 'test-origin' }
 
+  let(:username) { 'fake-username' }
+
   let(:issuer) { UAAIssuer::ISSUER }
-
-  def http_headers(token)
-    {
-      'authorization' => "bearer #{token}",
-      'accept' => 'application/json',
-      'content-type' => 'application/json'
-    }
-  end
-
-  def admin_headers
-    http_headers(admin_token)
-  end
 
   if ENV['CF_RUN_PERM_SPECS'] == 'true'
     before(:all) do
@@ -53,22 +42,9 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       ca_certs = [perm_server.tls_ca.clone]
 
       client = CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs)
-
-      config = YAML.load_file('config/cloud_controller.yml')
-      config[:perm] = perm_config
-      config_file = Tempfile.new('perm_config')
-      config_file.write(config.to_json)
-      config_file.flush
-
-      start_cc({ config: config_file.path })
-
-      config_file.unlink
-      config_file.close
     end
 
     after(:all) do
-      stop_cc
-
       perm_server.stop
     end
   end
@@ -76,42 +52,15 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   before do
     TestConfig.config[:perm] = perm_config
 
-    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:origins_for_username).with(assignee.username).and_return([uaa_origin])
-    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([assignee.guid]).and_return({ assignee.guid => assignee.username })
-    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(assignee.username).and_return(assignee.guid)
-    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(assignee.username, origin: nil).and_return(assignee.guid)
-    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
-
     set_current_user_as_admin(iss: issuer)
-  end
 
-  describe 'POST /v3/organizations' do
-    it 'creates the org roles in perm' do
-      body = { name: SecureRandom.uuid }.to_json
-      response = make_post_request('/v3/organizations', body, admin_headers)
+    user_id = create_user
 
-      expect(response.code).to eq('201')
-
-      json_body = response.json_body
-      org_id = json_body['guid']
-
-      ORG_ROLES.each do |role|
-        role_name = "org-#{role}-#{org_id}"
-
-        expect(role_exists(client, role_name)).to eq(true)
-      end
-    end
-
-    it 'does not allow the user to create an org that already exists' do
-      body = { name: SecureRandom.uuid }.to_json
-      response = make_post_request('/v3/organizations', body, admin_headers)
-
-      expect(response.code).to eq('201')
-
-      response = make_post_request('/v3/organizations', body, admin_headers)
-
-      expect(response.code).to eq('422')
-    end
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:origins_for_username).with(username).and_return([uaa_origin])
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).with([user_id]).and_return({ user_id => username })
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(username).and_return(user_id)
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:id_for_username).with(username, origin: nil).and_return(user_id)
+    allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(issuer)
   end
 
   describe 'POST /v2/organizations' do
@@ -344,27 +293,27 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "assigns the specified user to the org #{role} role" do
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(false)
 
-          put "/v2/organizations/#{org_id}/#{role}s/#{assignee.guid}"
+          put "/v2/organizations/#{org_id}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(true)
         end
 
         it 'does nothing when the user is assigned to the role a second time' do
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(false)
 
-          put "/v2/organizations/#{org_id}/#{role}s/#{assignee.guid}"
+          put "/v2/organizations/#{org_id}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(201)
 
-          put "/v2/organizations/#{org_id}/#{role}s/#{assignee.guid}"
+          put "/v2/organizations/#{org_id}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "org.#{role}", resource: org_id)
           expect(has_permission).to eq(true)
         end
       end
@@ -383,17 +332,17 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the org #{role} role" do
-          client.assign_role(role_name: role_name, actor_id: assignee.guid, namespace: issuer)
+          client.assign_role(role_name: role_name, actor_id: user_id, namespace: issuer)
 
-          delete "/v2/organizations/#{org.guid}/#{role}s", { 'username' => assignee.username }.to_json
+          delete "/v2/organizations/#{org.guid}/#{role}s", { 'username' => username }.to_json
           expect(last_response.status).to eq(204)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: org.guid)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: org.guid)
           expect(has_permission).to eq(false)
         end
 
         it "does nothing if the user does not have the org #{role} role" do
-          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          delete "/v2/organizations/#{org.guid}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(204)
         end
       end
@@ -405,8 +354,8 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     org2_id = nil
     org1_space_id = nil
     org2_space_id = nil
-    # let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
-    # let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+    # let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
+    # let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
     # let!(:org1_space) { VCAP::CloudController::Space.make(organization: org1) }
     # let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
 
@@ -423,10 +372,10 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       json_body = JSON.parse(last_response.body)
       org2_id = json_body['metadata']['guid']
 
-      put "/v2/organizations/#{org1_id}/users/#{assignee.guid}"
+      put "/v2/organizations/#{org1_id}/users/#{user_id}"
       expect(last_response.status).to eq(201)
 
-      put "/v2/organizations/#{org2_id}/users/#{assignee.guid}"
+      put "/v2/organizations/#{org2_id}/users/#{user_id}"
       expect(last_response.status).to eq(201)
 
       post '/v2/spaces', {
@@ -450,29 +399,29 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       org2_space_id = json_body['metadata']['guid']
 
       SPACE_ROLES.each do |role|
-        put "/v2/spaces/#{org1_space_id}/#{role}s/#{assignee.guid}"
+        put "/v2/spaces/#{org1_space_id}/#{role}s/#{user_id}"
         expect(last_response.status).to eq(201)
 
-        put "/v2/spaces/#{org2_space_id}/#{role}s/#{assignee.guid}"
+        put "/v2/spaces/#{org2_space_id}/#{role}s/#{user_id}"
         expect(last_response.status).to eq(201)
       end
     end
 
     it 'removes the user from all org and space roles for that org and no other' do
-      delete "/v2/organizations/#{org1_id}/users?recursive=true", { 'username' => assignee.username }.to_json
+      delete "/v2/organizations/#{org1_id}/users?recursive=true", { 'username' => username }.to_json
       expect(last_response.status).to eq(204)
 
-      has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: 'org.user', resource: org1_id)
+      has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: 'org.user', resource: org1_id)
       expect(has_permission).to eq(false)
 
-      has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: 'org.user', resource: org2_id)
+      has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: 'org.user', resource: org2_id)
       expect(has_permission).to eq(true)
 
       SPACE_ROLES.each do |role|
-        has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: org1_space_id)
+        has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: org1_space_id)
         expect(has_permission).to eq(false)
 
-        has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: org2_space_id)
+        has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: org2_space_id)
         expect(has_permission).to eq(true)
       end
     end
@@ -490,79 +439,25 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the org #{role} role" do
-          client.assign_role(role_name: role_name, actor_id: assignee.guid, namespace: issuer)
+          client.assign_role(role_name: role_name, actor_id: user_id, namespace: issuer)
 
-          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          delete "/v2/organizations/#{org.guid}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(204)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "org.#{role}", resource: org.guid)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "org.#{role}", resource: org.guid)
           expect(has_permission).to eq(false)
         end
 
         it "does nothing if the user does not have the org #{role} role" do
-          delete "/v2/organizations/#{org.guid}/#{role}s/#{assignee.guid}"
+          delete "/v2/organizations/#{org.guid}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(204)
         end
       end
     end
   end
 
-  describe 'POST /v3/spaces' do
-    org_guid = nil
-
-    before do
-      org = org_with_default_quota(admin_headers)
-      org_guid = org.json_body['metadata']['guid']
-    end
-
-    it 'creates the space roles' do
-      body = {
-        name: SecureRandom.uuid,
-        relationships: {
-          organization: {
-            data: {
-              guid: org_guid
-            }
-          }
-        }
-      }.to_json
-
-      response = make_post_request('/v3/spaces', body, admin_headers)
-      expect(response.code).to eq('201')
-
-      json_body = response.json_body
-      space_id = json_body['guid']
-
-      SPACE_ROLES.each do |role|
-        role_name = "space-#{role}-#{space_id}"
-        expect(role_exists(client, role_name)).to eq(true)
-      end
-    end
-
-    it 'does not allow user to create space that already exists' do
-      body = {
-        name: SecureRandom.uuid,
-        relationships: {
-          organization: {
-            data: {
-              guid: org_guid
-            }
-          }
-        }
-      }.to_json
-
-      response = make_post_request('/v3/spaces', body, admin_headers)
-
-      expect(response.code).to eq('201')
-
-      response = make_post_request('/v3/spaces', body, admin_headers)
-
-      expect(response.code).to eq('422')
-    end
-  end
-
   describe 'POST /v2/spaces' do
-    let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+    let(:org) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
 
     it 'creates the space roles' do
       post '/v2/spaces', {
@@ -604,7 +499,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'DELETE /v2/spaces/:guid' do
-    let(:org) { VCAP::CloudController::Organization.make(user_guids: [assignee.guid]) }
+    let(:org) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
 
     let(:worker) { Delayed::Worker.new }
 
@@ -697,34 +592,34 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       json_body = JSON.parse(last_response.body)
       space_id = json_body['metadata']['guid']
 
-      put "/v2/organizations/#{org_id}/users/#{assignee.guid}"
+      put "/v2/organizations/#{org_id}/users/#{user_id}"
       expect(last_response.status).to eq(201)
     end
 
     SPACE_ROLES.each do |role|
       describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
         it "assigns the specified user to the space #{role} role" do
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(false)
 
-          put "/v2/spaces/#{space_id}/#{role}s/#{assignee.guid}"
+          put "/v2/spaces/#{space_id}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(true)
         end
 
         it 'does nothing when the user is assigned to the role a second time' do
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(false)
 
-          put "/v2/spaces/#{space_id}/#{role}s/#{assignee.guid}"
+          put "/v2/spaces/#{space_id}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(201)
 
-          put "/v2/spaces/#{space_id}/#{role}s/#{assignee.guid}"
+          put "/v2/spaces/#{space_id}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(201)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space_id)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space_id)
           expect(has_permission).to eq(true)
         end
       end
@@ -748,12 +643,12 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the space #{role} role" do
-          client.assign_role(actor_id: assignee.guid, namespace: issuer, role_name: role_name)
+          client.assign_role(actor_id: user_id, namespace: issuer, role_name: role_name)
 
-          delete "/v2/spaces/#{space.guid}/#{role}s", { 'username' => assignee.username }.to_json
+          delete "/v2/spaces/#{space.guid}/#{role}s", { 'username' => username }.to_json
           expect(last_response.status).to eq(200)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space.guid)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space.guid)
           expect(has_permission).to eq(false)
         end
       end
@@ -777,312 +672,33 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         end
 
         it "removes the user from the space #{role} role" do
-          client.assign_role(actor_id: assignee.guid, namespace: issuer, role_name: role_name)
+          client.assign_role(actor_id: user_id, namespace: issuer, role_name: role_name)
 
-          delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+          delete "/v2/spaces/#{space.guid}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(204)
 
-          has_permission = client.has_permission?(actor_id: assignee.guid, namespace: issuer, action: "space.#{role}", resource: space.guid)
+          has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space.guid)
           expect(has_permission).to eq(false)
         end
 
         it "does nothing if the user does not have the space #{role} role" do
-          delete "/v2/spaces/#{space.guid}/#{role}s/#{assignee.guid}"
+          delete "/v2/spaces/#{space.guid}/#{role}s/#{user_id}"
           expect(last_response.status).to eq(204)
         end
       end
     end
   end
 
-  RSpec.shared_examples 'org reader' do
-    it 'can read from org (can_read_from_org?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/organizations/#{org_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
-
-      expect(response.json_body['guid']).to eq(org_guid)
-    end
-
-    it 'can read an isolation segment entitled to that org (can_read_from_isolation_segment?)' do
-      body = {
-        name: SecureRandom.uuid
-      }.to_json
-
-      response = make_post_request('/v3/isolation_segments', body, admin_headers)
-      expect(response.code).to eq('201')
-      isolation_segment_guid = response.json_body['guid']
-
-      body = {
-        data:
-          [
-            { guid: org_guid }
-          ]
-      }.to_json
-
-      response = make_post_request("/v3/isolation_segments/#{isolation_segment_guid}/relationships/organizations", body, admin_headers)
-      expect(response.code).to eq('200')
-
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
-
-      expect(response.json_body['guid']).to eq(isolation_segment_guid)
-    end
-  end
-
-  RSpec.shared_examples 'org writer' do
-    it 'can create a space in the org (can_write_to_org?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-
-      space_name = SecureRandom.uuid
-      body = {
-        name: space_name,
-        relationships: {
-          organization: {
-            data: {
-              guid: org_guid
-            }
-          }
-        }
-      }.to_json
-
-      response = make_post_request('/v3/spaces', body, http_headers(auth_token(opts)))
-      expect(response.code).to eq('201')
-
-      expect(response.json_body['name']).to eq(space_name)
-    end
-  end
-
-  RSpec.shared_examples 'space reader' do
-    it 'can read from space (can_read_from_space?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/spaces/#{space_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
-
-      expect(response.json_body['guid']).to eq(space_guid)
-    end
-
-    it 'can read an isolation segment entitled to that space (can_read_from_isolation_segment?)' do
-      body = {
-        name: SecureRandom.uuid
-      }.to_json
-
-      response = make_post_request('/v3/isolation_segments', body, admin_headers)
-      expect(response.code).to eq('201')
-      isolation_segment_guid = response.json_body['guid']
-
-      body = {
-        data:
-          [
-            { guid: org_guid }
-          ]
-      }.to_json
-
-      response = make_post_request("/v3/isolation_segments/#{isolation_segment_guid}/relationships/organizations", body, admin_headers)
-      expect(response.code).to eq('200')
-
-      body = {
-        data: {
-          guid: isolation_segment_guid
-        }
-      }.to_json
-
-      response = make_patch_request("/v3/spaces/#{space_guid}/relationships/isolation_segment", body, admin_headers)
-      expect(response.code).to eq('200')
-
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
-
-      expect(response.json_body['guid']).to eq(isolation_segment_guid)
-    end
-  end
-
-  RSpec.shared_examples 'space writer' do
-    it 'can create an app in the space (can_write_to_space?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-
-      app_name = SecureRandom.uuid
-      body = {
-        name: app_name,
-        relationships: {
-          space: {
-            data: {
-              guid: space_guid
-            }
-          }
-        }
-      }.to_json
-
-      response = make_post_request('/v3/apps', body, http_headers(auth_token(opts)))
-      expect(response.code).to eq('201')
-
-      expect(response.json_body['name']).to eq(app_name)
-    end
-  end
-
-  describe 'org manager' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/organizations/#{org_guid}/managers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-    it_behaves_like 'org writer', &setup
-    it_behaves_like 'space reader', &setup
-  end
-
-  describe 'org auditor' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/organizations/#{org_guid}/auditors/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-  end
-
-  describe 'org billing manager' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/organizations/#{org_guid}/billing_managers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-  end
-
-  describe 'org user' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-  end
-
-  describe 'space developer' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/developers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'space reader', &setup
-    it_behaves_like 'space writer', &setup
-  end
-
-  describe 'space manager' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/managers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'space reader', &setup
-  end
-
-  describe 'space auditor' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        set_current_user_as_admin(iss: issuer)
-
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/auditors/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-
-        set_current_user(user, iss: issuer)
-      end
-    }
-
-    it_behaves_like 'space reader', &setup
+  def create_user
+    body = {
+      guid: SecureRandom.uuid
+    }.to_json
+
+    post('/v2/users', body)
+    expect(last_response.status).to eq(201)
+
+    json_body = JSON.parse(last_response.body)
+    json_body['metadata']['guid']
   end
 
   def create_org
@@ -1090,10 +706,11 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       name: SecureRandom.uuid
     }.to_json
 
-    response = make_post_request('/v3/organizations', body, admin_headers)
-    expect(response.code).to eq('201')
+    post '/v2/organizations', body
 
-    response.json_body['guid']
+    expect(last_response.status).to eq(201)
+
+    response.json_body['metadata']['guid']
   end
 
   def create_space(org_guid)
@@ -1108,15 +725,11 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       }
     }.to_json
 
-    response = make_post_request('/v3/spaces', body, admin_headers)
-    expect(response.code).to eq('201')
+    post "/v2/organizations/#{org_guid}/spaces", body
 
-    response.json_body['guid']
-  end
+    expect(last_response.status).to eq(201)
 
-  def make_org_user(user, org_guid)
-    response = make_put_request("/v2/organizations/#{org_guid}/users/#{user.guid}", {}.to_json, admin_headers)
-    expect(response.code).to eq('201')
+    response.json_body['metadata']['guid']
   end
 
   def role_exists(client, role_name)
