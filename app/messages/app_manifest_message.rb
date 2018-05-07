@@ -50,6 +50,19 @@ module VCAP::CloudController
       end
     end
 
+    validate :validate_top_level_web_process!
+    validate :validate_processes!, if: proc { |record| record.requested?(:processes) }
+    validate :validate_manifest_process_scale_messages!
+    validate :validate_manifest_process_update_messages!
+    validate :validate_app_update_message!
+    validate :validate_service_bindings_message!, if: proc { |record| record.requested?(:services) }
+    validate :validate_env_update_message!, if: proc { |record| record.requested?(:env) }
+    validate :validate_manifest_routes_update_message!, if: proc { |record|
+      record.requested?(:routes) ||
+      record.requested?(:no_route) ||
+      record.requested?(:random_route)
+    }
+
     def initialize(params)
       super(params)
       @manifest_process_scale_messages = process_scale_attribute_mappings.map { |mapping| ManifestProcessScaleMessage.new(mapping) }
@@ -58,22 +71,6 @@ module VCAP::CloudController
       @app_update_environment_variables_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
       @manifest_service_bindings_message = ManifestServiceBindingCreateMessage.new(service_bindings_attribute_mapping)
       @manifest_routes_update_message = ManifestRoutesUpdateMessage.new(routes_attribute_mapping)
-    end
-
-    def valid?
-      super
-
-      validate_top_level_web_process!
-      validate_processes! if requested?(:processes)
-
-      validate_manifest_process_scale_messages!
-      validate_manifest_process_update_messages!
-      validate_app_update_message!
-      validate_manifest_routes_update_message! if requested?(:routes) || requested?(:no_route) || requested?(:random_route)
-      validate_service_bindings_message! if requested?(:services)
-      validate_env_update_message! if requested?(:env)
-
-      errors.empty?
     end
 
     private
