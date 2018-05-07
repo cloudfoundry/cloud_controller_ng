@@ -1,8 +1,8 @@
 module VCAP::CloudController
   class UaaClient
-    attr_reader :uaa_target, :client_id, :secret, :ca_file
+    attr_reader :uaa_target, :client_id, :secret, :ca_file, :http_timeout
 
-    def initialize(uaa_target:, client_id:, secret:, ca_file:, http_timeout: 5)
+    def initialize(uaa_target:, client_id:, secret:, ca_file:, http_timeout: 2)
       @uaa_target = uaa_target
       @client_id  = client_id
       @secret     = secret
@@ -80,7 +80,7 @@ module VCAP::CloudController
       {
         skip_ssl_validation: false,
         ssl_ca_file:         ca_file,
-        http_timeout:        @http_timeout
+        http_timeout:        http_timeout
       }
     end
 

@@ -93,7 +93,7 @@ GEM
     cf-perm-test-helpers (0.0.5)
       ruby-mysql (~> 2.9.14)
       subprocess (~> 1)
-    cf-uaa-lib (3.13.0)
+    cf-uaa-lib (3.14.3)
       httpclient (~> 2.8, >= 2.8.2.4)
       multi_json (~> 1.12.0, >= 1.12.1)
     clockwork (2.0.3)
@@ -438,7 +438,7 @@ DEPENDENCIES
   cf-copilot
   cf-perm (~> 0.0.9)
   cf-perm-test-helpers (~> 0.0.5)
-  cf-uaa-lib (~> 3.13.0)
+  cf-uaa-lib (~> 3.14.0)
   clockwork
   cloudfront-signer
   codeclimate-test-reporter

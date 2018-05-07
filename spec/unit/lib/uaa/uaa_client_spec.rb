@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:url) { 'http://uaa.example.com' }
     let(:client_id) { 'client_id' }
     let(:secret) { 'secret_key' }
-    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file', http_timeout: 5 } }
+    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file', http_timeout: 2 } }
 
     subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
     let(:auth_header) { 'bearer STUFF' }
@@ -25,9 +25,8 @@ module VCAP::CloudController
       end
 
       it 'gives the scim a timeout' do
-        pending('bump cf-uaa-lib')
         scim = uaa_client.scim
-        expect(scim.instance_variable_get(:@http_timeout)).to eq(5)
+        expect(scim.instance_variable_get(:@http_timeout)).to eq(2)
       end
 
       it 'caches the scim' do
