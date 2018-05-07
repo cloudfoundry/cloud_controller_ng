@@ -57,6 +57,11 @@ module VCAP::CloudController
       record.requested?(:no_route) ||
       record.requested?(:random_route)
     }
+    validates :buildpack,
+      string:    true,
+      allow_nil: true,
+      length:    { in: 1..4096, message: 'must be between 1 and 4096 characters' },
+      if: proc { |record| record.requested?(:buildpack) }
 
     def manifest_process_scale_messages
       @manifest_process_scale_messages ||= process_scale_attribute_mappings.map { |mapping| ManifestProcessScaleMessage.new(mapping) }
@@ -158,7 +163,7 @@ module VCAP::CloudController
 
     def app_update_attribute_mapping
       mapping = {
-        lifecycle: buildpack_lifecycle_data
+        lifecycle: buildpacks_lifecycle_data
       }.compact
       mapping
     end
@@ -185,7 +190,7 @@ module VCAP::CloudController
       mapping
     end
 
-    def buildpack_lifecycle_data
+    def buildpacks_lifecycle_data
       return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
 
       if requested?(:buildpacks)
@@ -253,8 +258,13 @@ module VCAP::CloudController
     def validate_app_update_message!
       app_update_message.valid?
       app_update_message.errors[:lifecycle].each do |error_message|
-        errors.add(:base, error_message)
+        if error_message.include?('Buildpacks')
+          errors.add(:base, error_message) if requested?(:buildpacks)
+        else
+          errors.add(:base, error_message)
+        end
       end
+
       app_update_message.errors[:command].each do |error_message|
         errors.add(:command, error_message)
       end

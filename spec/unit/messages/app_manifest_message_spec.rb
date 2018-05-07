@@ -113,7 +113,31 @@ module VCAP::CloudController
 
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Buildpacks can only contain strings')
+            expect(message.errors.full_messages).to include('Buildpack must be a string')
+          end
+        end
+
+        context 'when the buildpack has fewer than 0 characters' do
+          let(:params) { { buildpack: '' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Buildpack must be between 1 and 4096 characters')
+          end
+        end
+
+        context 'when the buildpack has more than 4096 characters' do
+          let(:params) { { buildpack: 'a' * 4097 } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Buildpack must be between 1 and 4096 characters')
           end
         end
       end
@@ -541,7 +565,7 @@ module VCAP::CloudController
             'Process "web": Instances must be greater than or equal to 0',
             'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
             'Process "web": Disk quota must be greater than 0MB',
-            'Buildpacks can only contain strings',
+            'Buildpack must be a string',
             'Stack must be a string',
             'Env must be a hash of keys and values',
           ])
