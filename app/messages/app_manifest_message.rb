@@ -27,13 +27,6 @@ module VCAP::CloudController
 
     HEALTH_CHECK_TYPE_MAPPING = { 'none' => 'process' }.freeze
 
-    attr_accessor :manifest_process_scale_messages,
-                  :manifest_process_update_messages,
-                  :app_update_message,
-                  :app_update_environment_variables_message,
-                  :manifest_service_bindings_message,
-                  :manifest_routes_update_message
-
     def self.create_from_yml(parsed_yaml)
       AppManifestMessage.new(underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
@@ -63,21 +56,42 @@ module VCAP::CloudController
       record.requested?(:random_route)
     }
 
-    def initialize(params)
-      super(params)
-      @manifest_process_scale_messages = process_scale_attribute_mappings.map { |mapping| ManifestProcessScaleMessage.new(mapping) }
-      @manifest_process_update_messages = process_update_attribute_mappings.map { |mapping| ManifestProcessUpdateMessage.new(mapping) }
-      @app_update_message = AppUpdateMessage.new(app_update_attribute_mapping)
-      @app_update_environment_variables_message = AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
-      @manifest_service_bindings_message = ManifestServiceBindingCreateMessage.new(service_bindings_attribute_mapping)
-      @manifest_routes_update_message = ManifestRoutesUpdateMessage.new(routes_attribute_mapping)
+    def manifest_process_scale_messages
+      @manifest_process_scale_messages ||= process_scale_attribute_mappings.map { |mapping| ManifestProcessScaleMessage.new(mapping) }
+    end
+
+    def manifest_process_update_messages
+      @manifest_process_update_messages ||= process_update_attribute_mappings.map { |mapping| ManifestProcessUpdateMessage.new(mapping) }
+    end
+
+    def app_update_message
+      @app_update_message ||= AppUpdateMessage.new(app_update_attribute_mapping)
+    end
+
+    def app_update_environment_variables_message
+      @app_update_environment_variables_message ||= AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
+    end
+
+    def manifest_service_bindings_message
+      @manifest_service_bindings_message ||= ManifestServiceBindingCreateMessage.new(service_bindings_attribute_mapping)
+    end
+
+    def manifest_routes_update_message
+      @manifest_routes_update_message ||= ManifestRoutesUpdateMessage.new(routes_attribute_mapping)
     end
 
     private
 
     def process_scale_attribute_mappings
+      process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, instances: instances)
+
       process_attributes(process_scale_attributes_from_app_level) do |process|
-        process_scale_attributes_from_process(process)
+        process_scale_attributes(
+          memory: process[:memory],
+          disk_quota: process[:disk_quota],
+          instances: process[:instances],
+          type: process[:type]
+        )
       end
     end
 
@@ -102,22 +116,11 @@ module VCAP::CloudController
       process_attributes
     end
 
-    def process_scale_attributes_from_app_level
+    def process_scale_attributes(memory:, disk_quota:, instances:, type: nil)
       memory_in_mb = convert_to_mb(memory)
       disk_in_mb = convert_to_mb(disk_quota)
       {
         instances: instances,
-        memory: memory_in_mb,
-        disk_quota: disk_in_mb,
-      }.compact
-    end
-
-    def process_scale_attributes_from_process(process)
-      type = process[:type]
-      memory_in_mb = convert_to_mb(process[:memory])
-      disk_in_mb = convert_to_mb(process[:disk_quota])
-      {
-        instances: process[:instances],
         memory: memory_in_mb,
         disk_quota: disk_in_mb,
         type: type
@@ -161,7 +164,7 @@ module VCAP::CloudController
     def env_update_attribute_mapping
       mapping = {}
       if requested?(:env) && env.is_a?(Hash)
-        mapping[:var] = env.each { |k, v| env[k] = v.to_s }
+        mapping[:var] = env.transform_values(&:to_s)
       end
       mapping
     end
@@ -194,7 +197,7 @@ module VCAP::CloudController
       }
     end
 
-    # none was deprecated in favor of process
+    # 'none' was deprecated in favor of process
     def converted_health_check_type(health_check_type)
       HEALTH_CHECK_TYPE_MAPPING[health_check_type] || health_check_type
     end
@@ -270,23 +273,22 @@ module VCAP::CloudController
     end
 
     def validate_processes!
-      if processes.is_a? Array
-        errors.add(:base, 'All Processes must specify a type') if processes.any? { |p| p[:type].blank? }
+      unless processes.is_a?(Array)
+        return errors.add(:base, 'Processes must be an array of process configurations')
+      end
 
-        processes.group_by { |p| p[:type] }.
-          select { |_, v| v.length > 1 }.
-          each_key { |type| errors.add(:base, %(Process "#{type}" may only be present once)) }
+      errors.add(:base, 'All Processes must specify a type') if processes.any? { |p| p[:type].blank? }
 
-        processes.each do |process|
-          type = process[:type]
-          memory_error = validate_byte_format(process[:memory], 'Memory')
-          disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
-          add_process_error!(memory_error, type) if memory_error
-          add_process_error!(disk_error, type) if disk_error
-        end
+      processes.group_by { |p| p[:type] }.
+        select { |_, v| v.length > 1 }.
+        each_key { |type| errors.add(:base, %(Process "#{type}" may only be present once)) }
 
-      else
-        errors.add(:base, 'Processes must be an array of process configurations')
+      processes.each do |process|
+        type = process[:type]
+        memory_error = validate_byte_format(process[:memory], 'Memory')
+        disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
+        add_process_error!(memory_error, type) if memory_error
+        add_process_error!(disk_error, type) if disk_error
       end
     end
 
