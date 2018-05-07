@@ -118,6 +118,46 @@ module VCAP::CloudController
         end
       end
 
+      describe 'buildpacks' do
+        context 'when providing valid buildpack names' do
+          let(:buildpack) { Buildpack.make }
+          let(:buildpack2) { Buildpack.make }
+          let(:params) { { buildpacks: [buildpack.name, buildpack2.name] } }
+
+          it 'is valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when one of the buildpacks is not a string' do
+          let(:buildpack) { Buildpack.make }
+          let(:params) { { buildpacks: [buildpack.name, 99] } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Buildpacks can only contain strings')
+          end
+        end
+
+        context 'when both buildpack and buildpacks are requested' do
+          let(:buildpack) { Buildpack.make }
+          let(:params) { { buildpacks: [buildpack.name], buildpack: 'some-buildpack' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.new(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Buildpack and Buildpacks fields cannot be used together.')
+          end
+        end
+      end
+
       describe 'stack' do
         context 'when providing a valid stack name' do
           let(:params) { { stack: 'cflinuxfs2' } }

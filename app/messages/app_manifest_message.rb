@@ -9,6 +9,7 @@ module VCAP::CloudController
   class AppManifestMessage < BaseMessage
     register_allowed_keys [
       :buildpack,
+      :buildpacks,
       :command,
       :disk_quota,
       :env,
@@ -48,6 +49,7 @@ module VCAP::CloudController
     validate :validate_manifest_process_scale_messages!
     validate :validate_manifest_process_update_messages!
     validate :validate_app_update_message!
+    validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_service_bindings_message!, if: proc { |record| record.requested?(:services) }
     validate :validate_env_update_message!, if: proc { |record| record.requested?(:env) }
     validate :validate_manifest_routes_update_message!, if: proc { |record|
@@ -184,14 +186,18 @@ module VCAP::CloudController
     end
 
     def buildpack_lifecycle_data
-      return unless requested?(:buildpack) || requested?(:stack)
+      return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
 
-      buildpacks = [buildpack].reject { |x| x == 'default' }.compact if requested?(:buildpack)
+      if requested?(:buildpacks)
+        requested_buildpacks = buildpacks
+      elsif requested?(:buildpack)
+        requested_buildpacks = [buildpack].reject { |x| x == 'default' }.compact
+      end
 
       {
         type: Lifecycles::BUILDPACK,
         data: {
-          buildpacks: buildpacks,
+          buildpacks: requested_buildpacks,
           stack: stack
         }.compact
       }
@@ -297,6 +303,12 @@ module VCAP::CloudController
       disk_error = validate_byte_format(disk_quota, 'Disk quota')
       add_process_error!(memory_error, 'web') if memory_error
       add_process_error!(disk_error, 'web') if disk_error
+    end
+
+    def validate_buildpack_and_buildpacks_combination!
+      if requested?(:buildpack) && requested?(:buildpacks)
+        errors.add(:base, 'Buildpack and Buildpacks fields cannot be used together.')
+      end
     end
 
     def add_process_error!(error_message, type)

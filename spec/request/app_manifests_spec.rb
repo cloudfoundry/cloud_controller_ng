@@ -220,5 +220,38 @@ RSpec.describe 'App Manifests' do
         end
       end
     end
+
+    describe 'multiple buildpacks' do
+      let!(:stack) { VCAP::CloudController::Stack.make }
+      let!(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'blah',
+              'buildpacks' => [buildpack.name, buildpack2.name],
+              'stack' => stack.name
+            }
+          ]
+        }.to_yaml
+      end
+
+      it 'applies the manifest' do
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        background_job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+        expect(background_job).to be_complete, "Failed due to: #{background_job.cf_api_error}"
+
+        app_model.reload
+        lifecycle_data = app_model.lifecycle_data
+        expect(lifecycle_data.buildpacks).to match_array([buildpack.name, buildpack2.name])
+      end
+    end
   end
 end
