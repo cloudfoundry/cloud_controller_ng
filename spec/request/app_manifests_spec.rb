@@ -222,16 +222,14 @@ RSpec.describe 'App Manifests' do
     end
 
     describe 'multiple buildpacks' do
-      let!(:stack) { VCAP::CloudController::Stack.make }
-      let!(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+      let(:buildpack) { VCAP::CloudController::Buildpack.make }
+      let(:buildpack2) { VCAP::CloudController::Buildpack.make }
       let(:yml_manifest) do
         {
           'applications' => [
             {
               'name' => 'blah',
-              'buildpacks' => [buildpack.name, buildpack2.name],
-              'stack' => stack.name
+              'buildpacks' => [buildpack.name, buildpack2.name]
             }
           ]
         }.to_yaml
@@ -250,7 +248,7 @@ RSpec.describe 'App Manifests' do
 
         app_model.reload
         lifecycle_data = app_model.lifecycle_data
-        expect(lifecycle_data.buildpacks).to match_array([buildpack.name, buildpack2.name])
+        expect(lifecycle_data.buildpacks).to eq([buildpack.name, buildpack2.name])
       end
     end
   end
