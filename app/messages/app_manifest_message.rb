@@ -103,8 +103,8 @@ module VCAP::CloudController
     end
 
     def process_scale_attributes_from_app_level
-      memory_in_mb, _ = convert_to_mb(memory, 'Memory')
-      disk_in_mb, _ = convert_to_mb(disk_quota, 'Disk quota')
+      memory_in_mb = convert_to_mb(memory)
+      disk_in_mb = convert_to_mb(disk_quota)
       {
         instances: instances,
         memory: memory_in_mb,
@@ -114,8 +114,8 @@ module VCAP::CloudController
 
     def process_scale_attributes_from_process(process)
       type = process[:type]
-      memory_in_mb, _ = convert_to_mb(process[:memory], 'Memory')
-      disk_in_mb, _ = convert_to_mb(process[:disk_quota], 'Disk quota')
+      memory_in_mb = convert_to_mb(process[:memory])
+      disk_in_mb = convert_to_mb(process[:disk_quota])
       {
         instances: process[:instances],
         memory: memory_in_mb,
@@ -199,12 +199,18 @@ module VCAP::CloudController
       HEALTH_CHECK_TYPE_MAPPING[health_check_type] || health_check_type
     end
 
-    def convert_to_mb(human_readable_byte_value, attribute)
-      return byte_converter.convert_to_mb(human_readable_byte_value), nil
+    def convert_to_mb(human_readable_byte_value)
+      byte_converter.convert_to_mb(human_readable_byte_value)
+    rescue ByteConverter::InvalidUnitsError, ByteConverter::NonNumericError
+    end
+
+    def validate_byte_format(human_readable_byte_value, attribute_name)
+      byte_converter.convert_to_mb(human_readable_byte_value)
+      return
     rescue ByteConverter::InvalidUnitsError
-      return nil, "#{attribute} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
+      "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
     rescue ByteConverter::NonNumericError
-      return nil, "#{attribute} is not a number"
+      "#{attribute_name} is not a number"
     end
 
     def byte_converter
@@ -269,12 +275,12 @@ module VCAP::CloudController
 
         processes.group_by { |p| p[:type] }.
           select { |_, v| v.length > 1 }.
-          each_key { |k| errors.add(:base, %(Process "#{k}" may only be present once)) }
+          each_key { |type| errors.add(:base, %(Process "#{type}" may only be present once)) }
 
         processes.each do |process|
           type = process[:type]
-          _, memory_error = convert_to_mb(process[:memory], 'Memory')
-          _, disk_error = convert_to_mb(process[:disk_quota], 'Disk quota')
+          memory_error = validate_byte_format(process[:memory], 'Memory')
+          disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
           add_process_error!(memory_error, type) if memory_error
           add_process_error!(disk_error, type) if disk_error
         end
@@ -285,14 +291,14 @@ module VCAP::CloudController
     end
 
     def validate_top_level_web_process!
-      _, memory_error = convert_to_mb(memory, 'Memory')
-      _, disk_error = convert_to_mb(disk_quota, 'Disk quota')
+      memory_error = validate_byte_format(memory, 'Memory')
+      disk_error = validate_byte_format(disk_quota, 'Disk quota')
       add_process_error!(memory_error, 'web') if memory_error
       add_process_error!(disk_error, 'web') if disk_error
     end
 
-    def add_process_error!(memory_error, type)
-      errors.add(:base, %(Process "#{type}": #{memory_error}))
+    def add_process_error!(error_message, type)
+      errors.add(:base, %(Process "#{type}": #{error_message}))
     end
   end
 end
