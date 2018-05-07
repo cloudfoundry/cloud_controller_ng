@@ -11,8 +11,8 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   client = nil
   user_id = nil
 
-  ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
-  SPACE_ROLES = [:developer, :manager, :auditor].freeze
+  let(:org_roles) { [:user, :manager, :auditor, :billing_manager].freeze }
+  let(:space_roles) { [:developer, :manager, :auditor].freeze }
 
   include ControllerHelpers
 
@@ -72,7 +72,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       json_body = JSON.parse(last_response.body)
       org_id = json_body['metadata']['guid']
 
-      ORG_ROLES.each do |role|
+      org_roles.each do |role|
         role_name = "org-#{role}-#{org_id}"
 
         expect(role_exists(client, role_name)).to eq(true)
@@ -111,7 +111,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
           expect(last_response.status).to eq(204)
 
-          ORG_ROLES.each do |role|
+          org_roles.each do |role|
             role_name = "org-#{role}-#{org_id}"
 
             expect(role_exists(client, role_name)).to eq(false)
@@ -136,7 +136,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           expect(succeeded_jobs).to be > 0
           expect(failed_jobs).to equal(0)
 
-          ORG_ROLES.each do |role|
+          org_roles.each do |role|
             role_name = "org-#{role}-#{org_id}"
 
             expect(role_exists(client, role_name)).to eq(false)
@@ -168,14 +168,14 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
           expect(last_response.status).to eq(400)
 
-          ORG_ROLES.each do |role|
+          org_roles.each do |role|
             org_role_name = "org-#{role}-#{org_id}"
 
             expect(role_exists(client, org_role_name)).to eq(true)
           end
 
           space_id = json_body['metadata']['guid']
-          SPACE_ROLES.each do |role|
+          space_roles.each do |role|
             space_role_name = "space-#{role}-#{space_id}"
 
             expect(role_exists(client, space_role_name)).to eq(true)
@@ -206,14 +206,14 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
             expect(last_response.status).to eq(204)
 
-            ORG_ROLES.each do |role|
+            org_roles.each do |role|
               org_role_name = "org-#{role}-#{org_id}"
 
               expect(role_exists(client, org_role_name)).to eq(false)
             end
 
             space_id = json_body['metadata']['guid']
-            SPACE_ROLES.each do |role|
+            space_roles.each do |role|
               space_role_name = "space-#{role}-#{space_id}"
               expect(role_exists(client, space_role_name)).to eq(false)
             end
@@ -246,14 +246,14 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
             expect(succeeded_jobs).to be > 0
             expect(failed_jobs).to equal(0)
 
-            ORG_ROLES.each do |role|
+            org_roles.each do |role|
               org_role_name = "org-#{role}-#{org_id}"
 
               expect(role_exists(client, org_role_name)).to eq(false)
             end
 
             space_id = json_body['metadata']['guid']
-            SPACE_ROLES.each do |role|
+            space_roles.each do |role|
               space_role_name = "space-#{role}-#{space_id}"
               expect(role_exists(client, space_role_name)).to eq(false)
             end
@@ -278,7 +278,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'PUT /v2/organizations/:guid/:role/:user_guid' do
-    ORG_ROLES.each do |role|
+    org_roles.each do |role|
       describe "PUT /v2/organizations/:guid/#{role}s/:user_guid" do
         org_id = nil
 
@@ -323,7 +323,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   describe 'DELETE /v2/organizations/:guid/:role' do
     let(:org) { VCAP::CloudController::Organization.make }
 
-    ORG_ROLES.each do |role|
+    org_roles.each do |role|
       describe "DELETE /v2/organizations/:guid/#{role}s" do
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
@@ -398,7 +398,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       json_body = JSON.parse(last_response.body)
       org2_space_id = json_body['metadata']['guid']
 
-      SPACE_ROLES.each do |role|
+      space_roles.each do |role|
         put "/v2/spaces/#{org1_space_id}/#{role}s/#{user_id}"
         expect(last_response.status).to eq(201)
 
@@ -417,7 +417,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: 'org.user', resource: org2_id)
       expect(has_permission).to eq(true)
 
-      SPACE_ROLES.each do |role|
+      space_roles.each do |role|
         has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: org1_space_id)
         expect(has_permission).to eq(false)
 
@@ -430,7 +430,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   describe 'DELETE /v2/organizations/:guid/:role/:user_guid' do
     let(:org) { VCAP::CloudController::Organization.make }
 
-    ORG_ROLES.each do |role|
+    org_roles.each do |role|
       describe "DELETE /v2/organizations/:guid/#{role}s/:user_guid" do
         let(:role_name) { "org-#{role}-#{org.guid}" }
 
@@ -469,7 +469,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
       json_body = JSON.parse(last_response.body)
       space_id = json_body['metadata']['guid']
-      SPACE_ROLES.each do |role|
+      space_roles.each do |role|
         role_name = "space-#{role}-#{space_id}"
 
         expect(role_exists(client, role_name)).to eq(true)
@@ -519,7 +519,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
         expect(last_response.status).to eq(204)
 
-        SPACE_ROLES.each do |role|
+        space_roles.each do |role|
           role_name = "space-#{role}-#{space_id}"
 
           expect(role_exists(client, role_name)).to eq(false)
@@ -547,7 +547,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         expect(succeeded_jobs).to be > 0
         expect(failed_jobs).to equal(0)
 
-        SPACE_ROLES.each do |role|
+        space_roles.each do |role|
           role_name = "space-#{role}-#{space_id}"
           expect(role_exists(client, role_name)).to eq(false)
         end
@@ -596,7 +596,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       expect(last_response.status).to eq(201)
     end
 
-    SPACE_ROLES.each do |role|
+    space_roles.each do |role|
       describe "PUT /v2/spaces/:guid/#{role}s/:user_guid" do
         it "assigns the specified user to the space #{role} role" do
           has_permission = client.has_permission?(actor_id: user_id, namespace: issuer, action: "space.#{role}", resource: space_id)
@@ -634,7 +634,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       )
     }
 
-    SPACE_ROLES.each do |role|
+    space_roles.each do |role|
       describe "DELETE /v2/spaces/:guid/#{role}s" do
         let(:role_name) { "space-#{role}-#{space.guid}" }
 
@@ -663,7 +663,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       )
     }
 
-    SPACE_ROLES.each do |role|
+    space_roles.each do |role|
       describe "DELETE /v2/spaces/:guid/#{role}s/:user_guid" do
         let(:role_name) { "space-#{role}-#{space.guid}" }
 

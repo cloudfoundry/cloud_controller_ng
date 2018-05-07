@@ -11,13 +11,13 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   perm_config = {}
   client = nil
 
-  ORG_ROLES = [:user, :manager, :auditor, :billing_manager].freeze
-  SPACE_ROLES = [:developer, :manager, :auditor].freeze
+  let(:org_roles) { [:user, :manager, :auditor, :billing_manager].freeze }
+  let(:space_roles) { [:developer, :manager, :auditor].freeze }
 
   let(:uaa_target) { 'test.example.com' }
   let(:uaa_origin) { 'test-origin' }
-
   let(:issuer) { UAAIssuer::ISSUER }
+  let(:user_guid) { create_user }
 
   def http_headers(token)
     {
@@ -29,6 +29,10 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
   def admin_headers
     http_headers(admin_token)
+  end
+
+  def user_headers
+    http_headers(user_auth_token(user_guid))
   end
 
   if ENV['CF_RUN_PERM_SPECS'] == 'true'
@@ -82,10 +86,10 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
       expect(response.code).to eq('201')
 
       json_body = response.json_body
-      org_id = json_body['guid']
+      org_guid = json_body['guid']
 
-      ORG_ROLES.each do |role|
-        role_name = "org-#{role}-#{org_id}"
+      org_roles.each do |role|
+        role_name = "org-#{role}-#{org_guid}"
 
         expect(role_exists(client, role_name)).to eq(true)
       end
@@ -103,16 +107,79 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     end
   end
 
-  describe 'POST /v3/spaces' do
-    org_guid = nil
+  describe 'GET /v3/organizations/:org_guid' do
+    let(:org_guid) { create_org }
 
-    before do
-      org = org_with_default_quota(admin_headers)
-      org_guid = org.json_body['metadata']['guid']
+    it 'fails when the user is not associated with the org' do
+      response = make_get_request("/v3/organizations/#{org_guid}", user_headers)
+      expect(response.code).to eq('404')
     end
 
-    it 'creates the space roles' do
+    [:user, :manager, :billing_manager, :auditor].each do |role|
+      it "succeeds when the user is a(n) #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_get_request("/v3/organizations/#{org_guid}", user_headers)
+        expect(response.code).to eq('200')
+
+        expect(response.json_body['guid']).to eq(org_guid)
+      end
+    end
+  end
+
+  describe 'GET /v3/isolation_segments/:isolation_segment_guid' do
+    let(:org_guid) { create_org }
+
+    it 'fails when the user is not associated with any organizations associated with the isolation segment' do
       body = {
+        name: SecureRandom.uuid
+      }.to_json
+
+      response = make_post_request('/v3/isolation_segments', body, admin_headers)
+      expect(response.code).to eq('201')
+
+      isolation_segment_guid = response.json_body['guid']
+
+      response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", user_headers)
+      expect(response.code).to eq('404')
+    end
+
+    it 'succeeds when the user has a role in an organization associated with the isolation segment' do
+      body = {
+        name: SecureRandom.uuid
+      }.to_json
+
+      response = make_post_request('/v3/isolation_segments', body, admin_headers)
+      expect(response.code).to eq('201')
+      isolation_segment_guid = response.json_body['guid']
+
+      body = {
+        data:
+          [
+            { guid: org_guid }
+          ]
+      }.to_json
+
+      response = make_post_request("/v3/isolation_segments/#{isolation_segment_guid}/relationships/organizations", body, admin_headers)
+      expect(response.code).to eq('200')
+
+      [:user, :manager, :billing_manager, :auditor].each do |role|
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", user_headers)
+        expect(response.code).to eq('200')
+
+        expect(response.json_body['guid']).to eq(isolation_segment_guid)
+      end
+    end
+  end
+
+  describe 'POST /v3/spaces' do
+    let(:org_guid) { create_org }
+    let(:body) do
+      {
         name: SecureRandom.uuid,
         relationships: {
           organization: {
@@ -122,31 +189,22 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           }
         }
       }.to_json
+    end
 
+    it 'creates the space roles' do
       response = make_post_request('/v3/spaces', body, admin_headers)
+
       expect(response.code).to eq('201')
 
-      json_body = response.json_body
-      space_id = json_body['guid']
+      space_guid = response.json_body['guid']
 
-      SPACE_ROLES.each do |role|
-        role_name = "space-#{role}-#{space_id}"
+      space_roles.each do |role|
+        role_name = "space-#{role}-#{space_guid}"
         expect(role_exists(client, role_name)).to eq(true)
       end
     end
 
     it 'does not allow user to create space that already exists' do
-      body = {
-        name: SecureRandom.uuid,
-        relationships: {
-          organization: {
-            data: {
-              guid: org_guid
-            }
-          }
-        }
-      }.to_json
-
       response = make_post_request('/v3/spaces', body, admin_headers)
 
       expect(response.code).to eq('201')
@@ -155,137 +213,88 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
       expect(response.code).to eq('422')
     end
-  end
 
-  RSpec.shared_examples 'org reader' do
-    it 'can read from org (can_read_from_org?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/organizations/#{org_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
+    it 'fails if the user is not associated with the organization' do
+      response = make_post_request('/v3/spaces', body, user_headers)
 
-      expect(response.json_body['guid']).to eq(org_guid)
+      expect(response.code).to eq('422')
     end
 
-    it 'can read an isolation segment entitled to that org (can_read_from_isolation_segment?)' do
-      body = {
-        name: SecureRandom.uuid
-      }.to_json
+    [:user, :billing_manager, :auditor].each do |role|
+      it "fails if the user is a(n) #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
 
-      response = make_post_request('/v3/isolation_segments', body, admin_headers)
-      expect(response.code).to eq('201')
-      isolation_segment_guid = response.json_body['guid']
+        response = make_post_request('/v3/spaces', body, user_headers)
+        expect(response.code).to eq('403')
+      end
+    end
 
-      body = {
-        data:
-          [
-            { guid: org_guid }
-          ]
-      }.to_json
+    [:manager].each do |role|
+      it "succeeds if the user is a(n) #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
 
-      response = make_post_request("/v3/isolation_segments/#{isolation_segment_guid}/relationships/organizations", body, admin_headers)
-      expect(response.code).to eq('200')
-
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
-
-      expect(response.json_body['guid']).to eq(isolation_segment_guid)
+        response = make_post_request('/v3/spaces', body, user_headers)
+        expect(response.code).to eq('201')
+      end
     end
   end
 
-  RSpec.shared_examples 'org writer' do
-    it 'can create a space in the org (can_write_to_org?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
+  describe 'GET /v3/spaces/:space_guid' do
+    let(:org_guid) { create_org }
+    let(:space_guid) { create_space(org_guid) }
 
-      space_name = SecureRandom.uuid
-      body = {
-        name: space_name,
-        relationships: {
-          organization: {
-            data: {
-              guid: org_guid
-            }
-          }
-        }
-      }.to_json
+    it 'fails when the user is not associated with the space' do
+      response = make_get_request("/v3/spaces/#{space_guid}", user_headers)
+      expect(response.code).to eq('404')
+    end
 
-      response = make_post_request('/v3/spaces', body, http_headers(auth_token(opts)))
-      expect(response.code).to eq('201')
+    [:manager].each do |role|
+      it "succeeds when the user is a organization #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
 
-      expect(response.json_body['name']).to eq(space_name)
+        response = make_get_request("/v3/spaces/#{space_guid}", user_headers)
+        expect(response.code).to eq('200')
+
+        expect(response.json_body['guid']).to eq(space_guid)
+      end
+    end
+
+    [:user, :billing_manager, :auditor].each do |role|
+      it "fails when the user is an organization #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_get_request("/v3/spaces/#{space_guid}", user_headers)
+        expect(response.code).to eq('404')
+      end
+    end
+
+    [:manager, :developer, :auditor].each do |role|
+      it "succeeds when the user is a space #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/users/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_put_request("/v2/spaces/#{space_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_get_request("/v3/spaces/#{space_guid}", user_headers)
+        expect(response.code).to eq('200')
+
+        expect(response.json_body['guid']).to eq(space_guid)
+      end
     end
   end
 
-  RSpec.shared_examples 'space reader' do
-    it 'can read from space (can_read_from_space?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/spaces/#{space_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
+  describe 'POST /v3/apps' do
+    let(:org_guid) { create_org }
+    let(:space_guid) { create_space(org_guid) }
 
-      expect(response.json_body['guid']).to eq(space_guid)
-    end
-
-    it 'can read an isolation segment entitled to that space (can_read_from_isolation_segment?)' do
-      body = {
-        name: SecureRandom.uuid
-      }.to_json
-
-      response = make_post_request('/v3/isolation_segments', body, admin_headers)
-      expect(response.code).to eq('201')
-      isolation_segment_guid = response.json_body['guid']
-
-      body = {
-        data:
-          [
-            { guid: org_guid }
-          ]
-      }.to_json
-
-      response = make_post_request("/v3/isolation_segments/#{isolation_segment_guid}/relationships/organizations", body, admin_headers)
-      expect(response.code).to eq('200')
-
-      body = {
-        data: {
-          guid: isolation_segment_guid
-        }
-      }.to_json
-
-      response = make_patch_request("/v3/spaces/#{space_guid}/relationships/isolation_segment", body, admin_headers)
-      expect(response.code).to eq('200')
-
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-      response = make_get_request("/v3/isolation_segments/#{isolation_segment_guid}", http_headers(auth_token(opts)))
-      expect(response.code).to eq('200')
-
-      expect(response.json_body['guid']).to eq(isolation_segment_guid)
-    end
-  end
-
-  RSpec.shared_examples 'space writer' do
-    it 'can create an app in the space (can_write_to_space?)' do
-      opts = {
-        user_id: user.guid,
-        scope: %w(cloud_controller.read cloud_controller.write),
-      }
-
-      app_name = SecureRandom.uuid
-      body = {
-        name: app_name,
+    let(:body) do
+      {
+        name: SecureRandom.uuid,
         relationships: {
           space: {
             data: {
@@ -294,125 +303,60 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           }
         }
       }.to_json
+    end
 
-      response = make_post_request('/v3/apps', body, http_headers(auth_token(opts)))
-      expect(response.code).to eq('201')
+    it 'fails if the user is not associated with the space' do
+      response = make_post_request('/v3/apps', body, user_headers)
 
-      expect(response.json_body['name']).to eq(app_name)
+      expect(response.code).to eq('422')
+    end
+
+    [:user, :billing_manager, :auditor, :manager].each do |role|
+      it "fails if the user is an organization #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_post_request('/v3/apps', body, user_headers)
+        expect(response.code).to eq('422')
+      end
+    end
+
+    [:auditor, :manager].each do |role|
+      it "fails when the user is a space #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/users/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_put_request("/v2/spaces/#{space_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_post_request('/v3/apps', body, user_headers)
+        expect(response.code).to eq('422')
+      end
+    end
+
+    [:developer].each do |role|
+      it "succeeds when the user is a space #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid}/users/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_put_request("/v2/spaces/#{space_guid}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_post_request('/v3/apps', body, user_headers)
+        expect(response.code).to eq('201')
+      end
     end
   end
 
-  describe 'org manager' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
+  def create_user
+    body = {
+      guid: SecureRandom.uuid
+    }.to_json
 
-      before do
-        response = make_put_request("/v2/organizations/#{org_guid}/managers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-      end
-    }
+    response = make_post_request('/v2/users', body, admin_headers)
+    expect(response.code).to eq('201')
 
-    it_behaves_like 'org reader', &setup
-    it_behaves_like 'org writer', &setup
-    it_behaves_like 'space reader', &setup
-  end
-
-  describe 'org auditor' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        response = make_put_request("/v2/organizations/#{org_guid}/auditors/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-  end
-
-  describe 'org billing manager' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        response = make_put_request("/v2/organizations/#{org_guid}/billing_managers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-  end
-
-  describe 'org user' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        make_org_user(user, org_guid)
-      end
-    }
-
-    it_behaves_like 'org reader', &setup
-  end
-
-  describe 'space developer' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/developers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-      end
-    }
-
-    it_behaves_like 'space reader', &setup
-    it_behaves_like 'space writer', &setup
-  end
-
-  describe 'space manager' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/managers/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-      end
-    }
-
-    it_behaves_like 'space reader', &setup
-  end
-
-  describe 'space auditor' do
-    setup = ->() {
-      let(:user) { VCAP::CloudController::User.make }
-      let(:org_guid) { create_org }
-      let(:space_guid) { create_space(org_guid) }
-
-      before do
-        make_org_user(user, org_guid)
-
-        response = make_put_request("/v2/spaces/#{space_guid}/auditors/#{user.guid}", '', admin_headers)
-        expect(response.code).to eq('201')
-      end
-    }
-
-    it_behaves_like 'space reader', &setup
+    response.json_body['metadata']['guid']
   end
 
   def create_org

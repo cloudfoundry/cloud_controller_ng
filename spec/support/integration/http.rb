@@ -21,6 +21,13 @@ module IntegrationHttp
     )
   end
 
+  def user_auth_token(user_id)
+    auth_token(
+      user_id: user_id,
+      scope: %w(cloud_controller.read cloud_controller.write)
+    )
+  end
+
   module JsonBody
     def json_body
       @json_body ||= JSON.parse(body)
