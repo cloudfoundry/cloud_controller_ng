@@ -21,7 +21,7 @@ class ServiceInstancesV3Controller < ApplicationController
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
-      dataset: dataset,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_instances',
       message: message)
   end

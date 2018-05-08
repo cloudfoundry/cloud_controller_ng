@@ -46,7 +46,7 @@ class AppsV3Controller < ApplicationController
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
              presenter: Presenters::V3::AppPresenter,
-             dataset: dataset,
+             paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
              path: '/v3/apps',
              message: message,
              decorators: decorators
@@ -184,7 +184,7 @@ class AppsV3Controller < ApplicationController
     dataset = AppBuildsListFetcher.new(app.guid, message).fetch_all
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::BuildPresenter,
-      dataset: dataset,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/apps/#{app.guid}/builds",
       message: message
     )

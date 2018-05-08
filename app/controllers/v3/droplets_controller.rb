@@ -32,7 +32,7 @@ class DropletsController < ApplicationController
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DropletPresenter,
-      dataset: dataset,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: base_url(resource: 'droplets'),
       message: message
     )

@@ -40,7 +40,7 @@ class SpacesV3Controller < ApplicationController
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SpacePresenter,
-      dataset: readable_spaces(message: message),
+      paginated_result: SequelPaginator.new.get_page(readable_spaces(message: message), message.try(:pagination_options)),
       path: '/v3/spaces',
       message: message
     )

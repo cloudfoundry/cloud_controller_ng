@@ -32,7 +32,7 @@ class TasksController < ApplicationController
 
     render :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::TaskPresenter,
-      dataset: dataset,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: base_url(resource: 'tasks'),
       message: message,
       show_secrets: show_secrets

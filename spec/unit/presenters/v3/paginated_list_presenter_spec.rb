@@ -3,18 +3,11 @@ require 'presenters/v3/paginated_list_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe PaginatedListPresenter do
-    subject(:presenter) { PaginatedListPresenter.new(presenter: MonkeyPresenter, dataset: dataset, path: path, message: message) }
+    subject(:presenter) { PaginatedListPresenter.new(presenter: MonkeyPresenter, paginated_result: paginated_result, path: path, message: message) }
     let(:set) { [Monkey.new('bobo'), Monkey.new('george')] }
-    let(:dataset) { double('sequel dataset') }
     let(:message) { double('message', pagination_options: pagination_options, to_param_hash: {}) }
     let(:pagination_options) { double('pagination', per_page: 50, page: 1, order_by: 'monkeys', order_direction: 'asc') }
-    let(:paginator) { instance_double(VCAP::CloudController::SequelPaginator) }
     let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(set, 2, pagination_options) }
-
-    before do
-      allow(VCAP::CloudController::SequelPaginator).to receive(:new).and_return(paginator)
-      allow(paginator).to receive(:get_page).with(dataset, pagination_options).and_return(paginated_result)
-    end
 
     class Monkey
       attr_reader :name
@@ -61,7 +54,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when show_secrets is true' do
         subject(:presenter) do
-          PaginatedListPresenter.new(presenter: MonkeyPresenter, dataset: dataset, path: path, message: message, show_secrets: true)
+          PaginatedListPresenter.new(presenter: MonkeyPresenter, paginated_result: paginated_result, path: path, message: message, show_secrets: true)
         end
 
         it 'sends true for show_secrets' do
@@ -100,7 +93,7 @@ module VCAP::CloudController::Presenters::V3
         subject(:presenter) do
           PaginatedListPresenter.new(
             presenter: MonkeyPresenter,
-            dataset: dataset,
+            paginated_result: paginated_result,
             path: path,
             message: message,
             show_secrets: true,
@@ -127,36 +120,36 @@ module VCAP::CloudController::Presenters::V3
       let(:path) { '/v3/cloudfoundry/is-great' }
 
       it 'includes total_results' do
-        result = presenter.present_pagination_hash(paginated_result, path)
+        result = presenter.present_pagination_hash
 
         tr = result[:total_results]
         expect(tr).to eq(total_results)
       end
 
       it 'includes total_pages' do
-        result = presenter.present_pagination_hash(paginated_result, path)
+        result = presenter.present_pagination_hash
 
         tr = result[:total_pages]
         expect(tr).to eq(total_pages)
       end
 
       it 'includes first_url' do
-        result = presenter.present_pagination_hash(paginated_result, path)
+        result = presenter.present_pagination_hash
 
         first_url = result[:first][:href]
         expect(first_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=1&per_page=#{per_page}")
       end
 
       it 'includes last_url' do
-        result = presenter.present_pagination_hash(paginated_result, path)
+        result = presenter.present_pagination_hash
 
         last_url = result[:last][:href]
         expect(last_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=2&per_page=#{per_page}")
       end
 
       it 'sets first and last page to 1 if there is 1 page' do
-        paginated_result = VCAP::CloudController::PaginatedResult.new([], 0, pagination_options)
-        result = presenter.present_pagination_hash(paginated_result, path)
+        single_page_paginated_result = VCAP::CloudController::PaginatedResult.new([], 0, pagination_options)
+        result = PaginatedListPresenter.new(presenter: MonkeyPresenter, paginated_result: single_page_paginated_result, path: path).present_pagination_hash
 
         last_url  = result[:last][:href]
         first_url = result[:first][:href]
@@ -166,8 +159,7 @@ module VCAP::CloudController::Presenters::V3
 
       it 'includes the filters in the result urls' do
         filters = double('filters', to_param_hash: { facet1: 'value1' })
-        paginated_result = VCAP::CloudController::PaginatedResult.new([], 0, pagination_options)
-        result = presenter.present_pagination_hash(paginated_result, path, filters)
+        result = presenter.present_pagination_hash(filters)
 
         first_url = result[:first][:href]
         expect(first_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?facet1=value1&page=1&per_page=#{per_page}")
@@ -177,7 +169,7 @@ module VCAP::CloudController::Presenters::V3
         let(:page) { 1 }
 
         it 'sets previous_url to nil' do
-          result = presenter.present_pagination_hash(paginated_result, path)
+          result = presenter.present_pagination_hash
 
           previous_url = result[:previous]
           expect(previous_url).to be_nil
@@ -188,7 +180,7 @@ module VCAP::CloudController::Presenters::V3
         let(:page) { 2 }
 
         it 'includes previous_url' do
-          result = presenter.present_pagination_hash(paginated_result, path)
+          result = presenter.present_pagination_hash
 
           previous_url = result[:previous][:href]
           expect(previous_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=1&per_page=#{per_page}")
@@ -200,7 +192,7 @@ module VCAP::CloudController::Presenters::V3
         let(:per_page) { 1 }
 
         it 'sets next_url to nil' do
-          result = presenter.present_pagination_hash(paginated_result, path)
+          result = presenter.present_pagination_hash
 
           next_url = result[:next]
           expect(next_url).to be_nil
@@ -212,7 +204,7 @@ module VCAP::CloudController::Presenters::V3
         let(:per_page) { 1 }
 
         it 'includes next_url' do
-          result = presenter.present_pagination_hash(paginated_result, path)
+          result = presenter.present_pagination_hash
 
           next_url = result[:next][:href]
           expect(next_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=2&per_page=#{per_page}")
@@ -227,7 +219,7 @@ module VCAP::CloudController::Presenters::V3
         let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
 
         it 'does not set order information if both order options are default' do
-          result = presenter.present_pagination_hash(paginated_result, path)
+          result = presenter.present_pagination_hash
 
           first_url = result[:first][:href]
           expect(first_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=1&per_page=#{per_page}")
@@ -237,7 +229,7 @@ module VCAP::CloudController::Presenters::V3
           let(:order_by) { 'created_at' }
 
           it 'sets the pagination options' do
-            result = presenter.present_pagination_hash(paginated_result, path)
+            result = presenter.present_pagination_hash
 
             first_page    = result[:first][:href]
             last_page     = result[:last][:href]
@@ -254,7 +246,7 @@ module VCAP::CloudController::Presenters::V3
             let(:order_direction) { 'desc' }
 
             it 'sets the pagination options' do
-              result = presenter.present_pagination_hash(paginated_result, path)
+              result = presenter.present_pagination_hash
 
               first_page    = result[:first][:href]
               last_page     = result[:last][:href]
