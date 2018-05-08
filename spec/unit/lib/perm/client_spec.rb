@@ -654,5 +654,65 @@ module VCAP::CloudController::Perm
           anything).twice
       end
     end
+
+    describe '#list_resource_patterns' do
+      let(:action1) { 'action1' }
+      let(:action2) { 'action2' }
+      let(:actions) { [action1, action2] }
+      let(:resource_patterns1) { %w(action1_rp1 action1_rp2) }
+      let(:resource_patterns2) { %w(action2_rp1 action2_rp2) }
+      let(:resource_patterns) { resource_patterns1 + resource_patterns2 }
+
+      it 'returns an empty array if Perm is not enabled' do
+        result = disabled_subject.list_resource_patterns(user_id: user_id, issuer: issuer, actions: actions)
+
+        expect(result).to have(0).items
+        expect(client).not_to have_received(:list_resource_patterns)
+      end
+
+      it 'returns a list of resource patterns that the user has access to' do
+        allow(client).to receive(:list_resource_patterns).with(actor_id: user_id, namespace: issuer, action: action1)
+          .and_return(resource_patterns1)
+        allow(client).to receive(:list_resource_patterns).with(actor_id: user_id, namespace: issuer, action: action2)
+          .and_return(resource_patterns2)
+
+        result = subject.list_resource_patterns(user_id: user_id, issuer: issuer, actions: actions)
+
+        expect(result).to match_array(resource_patterns)
+      end
+
+      it 'logs Perm errors and returns an empty array' do
+        allow(client).to receive(:list_resource_patterns).and_raise(CloudFoundry::Perm::V1::Errors::BadStatus, '123')
+
+        result = subject.list_resource_patterns(user_id: user_id, issuer: issuer, actions: actions)
+
+        expect(result).to have(0).items
+        expect(logger).to have_received(:error).with(
+          'list-resource-patterns.bad-status',
+          user_id: user_id,
+          issuer: issuer,
+          actions: actions,
+          status: 'CloudFoundry::Perm::V1::Errors::BadStatus',
+          code: anything,
+          details: anything,
+          metadata: anything
+        )
+      end
+
+      it 'logs non-Perm errors and returns an empty array' do
+        allow(client).to receive(:list_resource_patterns).and_raise(StandardError, '123')
+
+        result = subject.list_resource_patterns(user_id: user_id, issuer: issuer, actions: actions)
+
+        expect(result).to have(0).items
+        expect(logger).to have_received(:error).with(
+          'list-resource-patterns.failed',
+          user_id: user_id,
+          issuer: issuer,
+          actions: actions,
+          message: '123',
+        )
+      end
+    end
   end
 end

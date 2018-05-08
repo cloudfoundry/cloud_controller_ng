@@ -117,6 +117,41 @@ module VCAP::CloudController
         end
       end
 
+      def list_resource_patterns(user_id:, issuer:, actions:)
+        if enabled
+          begin
+            actions.map do |action|
+              list_resource_patterns_for_action(user_id: user_id, issuer: issuer, action: action)
+            end.flatten
+          rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
+            logger.error(
+              'list-resource-patterns.bad-status',
+              user_id: user_id,
+              issuer: issuer,
+              actions: actions,
+              status: e.class.to_s,
+              code: e.code,
+              details: e.details,
+              metadata: e.metadata
+            )
+
+            []
+          rescue StandardError => e
+            logger.error(
+              'list-resource-patterns.failed',
+              user_id: user_id,
+              issuer: issuer,
+              actions: actions,
+              message: e.message,
+            )
+
+            []
+          end
+        else
+          []
+        end
+      end
+
       private
 
       attr_reader :hostname, :port, :enabled, :trusted_cas, :logger_name, :timeout
@@ -203,6 +238,10 @@ module VCAP::CloudController
             logger.error('unassign-role.failed', role: role, message: e.message)
           end
         end
+      end
+
+      def list_resource_patterns_for_action(user_id:, issuer:, action:)
+        client.list_resource_patterns(actor_id: user_id, namespace: issuer, action: action)
       end
 
       # Can't be cached because the Syslog logger doesn't deserialize correctly for delayed jobs :(

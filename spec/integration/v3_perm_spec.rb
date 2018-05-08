@@ -78,6 +78,57 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     TestConfig.config[:perm] = perm_config
   end
 
+  describe 'GET /v3/organizations' do
+    let(:org_guid1) { create_org }
+    let(:org_guid2) { create_org }
+    let(:org_guid3) { create_org }
+    let!(:expected_org_guids) { [org_guid1, org_guid2, org_guid3] }
+
+    it 'returns an empty list when the user is a member of no organizations' do
+      response = make_get_request("/v3/organizations", user_headers)
+      expect(response.code).to eq('200')
+
+      org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+      expect(org_guids).to have(0).items
+    end
+
+    [:admin, :admin_read_only, :global_auditor].each do |role|
+      it "returns all the organizations when the user is a(n) #{role}" do
+        opts = {}
+        opts[role] = true
+
+        # There may be > 50 results (default page size) due to pollution
+        response = make_get_request('/v3/organizations?per_page=5000', http_headers(user_token(VCAP::CloudController::User.make, opts)))
+        expect(response.code).to eq('200')
+
+        org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+        expected_org_guids.each do |expected_org_guid|
+          expect(org_guids).to include(expected_org_guid)
+        end
+      end
+    end
+
+    [:user, :manager, :billing_manager, :auditor].each do |role|
+      it "returns only the organizations that user has access to as a #{role}" do
+        expected_org_guids = [org_guid1, org_guid2]
+
+        expected_org_guids.each do |org_guid|
+          response = make_put_request("/v2/organizations/#{org_guid}/#{role}s/#{user_guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+        end
+
+        response = make_get_request("/v3/organizations", user_headers)
+        expect(response.code).to eq('200')
+
+        org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+        expect(org_guids).to have(expected_org_guids.size).items
+        expected_org_guids.each do |expected_org_guid|
+          expect(org_guids).to include(expected_org_guid)
+        end
+      end
+    end
+  end
+
   describe 'POST /v3/organizations' do
     it 'creates the org roles in perm' do
       body = { name: SecureRandom.uuid }.to_json

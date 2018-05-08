@@ -128,13 +128,119 @@ module VCAP::CloudController
 
     describe '#readable_org_guids' do
       before do
+        allow(perm_permissions).to receive(:readable_org_guids)
         allow(db_permissions).to receive(:readable_org_guids)
+
+        allow(db_permissions).to receive(:can_read_globally?).and_return(false)
       end
 
-      it 'delegates the call to the db permission' do
+      it 'asks for #readable_org_guids on behalf of the current user' do
+        allow(perm_permissions).to receive(:readable_org_guids).and_return([])
+
         queryer.readable_org_guids
 
         expect(db_permissions).to have_received(:readable_org_guids)
+        expect(perm_permissions).to have_received(:readable_org_guids)
+      end
+
+      it 'returns the control org guids' do
+        control_org_guids = [SecureRandom.uuid]
+        candidate_org_guids = [SecureRandom.uuid]
+
+        allow(db_permissions).to receive(:readable_org_guids).and_return(control_org_guids)
+        allow(perm_permissions).to receive(:readable_org_guids).and_return(candidate_org_guids)
+
+        readable_org_guids = queryer.readable_org_guids
+
+        expect(readable_org_guids).to equal(control_org_guids)
+      end
+
+      it 'skips the experiment if the user is a global reader' do
+        allow(db_permissions).to receive(:can_read_globally?).and_return(true)
+
+        queryer.readable_org_guids
+
+        expect(perm_permissions).not_to have_received(:readable_org_guids)
+      end
+
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          org_guids = [SecureRandom.uuid, SecureRandom.uuid]
+
+          allow(db_permissions).to receive(:readable_org_guids).and_return(org_guids)
+          allow(perm_permissions).to receive(:readable_org_guids).and_return(org_guids)
+
+          queryer.readable_org_guids
+
+          expected_context = {
+            current_user_guid: current_user_guid,
+            action: 'org.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: org_guids },
+              candidate: { value: org_guids },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are the same but in a different order' do
+        it 'logs the result' do
+          org_guid1 = SecureRandom.uuid
+          org_guid2 = SecureRandom.uuid
+
+          org_guids_control_order = [org_guid1, org_guid2]
+          org_guids_candidate_order = [org_guid2, org_guid1]
+
+          allow(db_permissions).to receive(:readable_org_guids).and_return(org_guids_control_order)
+          allow(perm_permissions).to receive(:readable_org_guids).and_return(org_guids_candidate_order)
+
+          queryer.readable_org_guids
+
+          expected_context = {
+            current_user_guid: current_user_guid,
+            action: 'org.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: org_guids_control_order },
+              candidate: { value: org_guids_candidate_order },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          control_org_guids = [SecureRandom.uuid, SecureRandom.uuid]
+          candidate_org_guids = [SecureRandom.uuid]
+
+          allow(db_permissions).to receive(:readable_org_guids).and_return(control_org_guids)
+          allow(perm_permissions).to receive(:readable_org_guids).and_return(candidate_org_guids)
+
+          queryer.readable_org_guids
+
+          expected_context = {
+            current_user_guid: current_user_guid,
+            action: 'org.read',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: control_org_guids },
+              candidate: { value: candidate_org_guids },
+            }
+          )
+        end
       end
     end
 

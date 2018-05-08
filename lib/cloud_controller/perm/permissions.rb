@@ -33,6 +33,19 @@ module VCAP
           roles.admin?
         end
 
+        def readable_org_guids
+          perm_client.list_resource_patterns(
+            user_id: user_id,
+            issuer: issuer,
+            actions: [
+              ORG_MANAGER_ACTION,
+              ORG_BILLING_MANAGER_ACTION,
+              ORG_AUDITOR_ACTION,
+              ORG_USER_ACTION
+            ]
+          )
+        end
+
         def can_read_from_org?(org_id)
           permissions = [
             { action: ORG_MANAGER_ACTION, resource: org_id },
