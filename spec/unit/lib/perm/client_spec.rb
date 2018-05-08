@@ -671,10 +671,10 @@ module VCAP::CloudController::Perm
       end
 
       it 'returns a list of resource patterns that the user has access to' do
-        allow(client).to receive(:list_resource_patterns).with(actor_id: user_id, namespace: issuer, action: action1)
-          .and_return(resource_patterns1)
-        allow(client).to receive(:list_resource_patterns).with(actor_id: user_id, namespace: issuer, action: action2)
-          .and_return(resource_patterns2)
+        allow(client).to receive(:list_resource_patterns).with(actor_id: user_id, namespace: issuer, action: action1).
+          and_return(resource_patterns1)
+        allow(client).to receive(:list_resource_patterns).with(actor_id: user_id, namespace: issuer, action: action2).
+          and_return(resource_patterns2)
 
         result = subject.list_resource_patterns(user_id: user_id, issuer: issuer, actions: actions)
 

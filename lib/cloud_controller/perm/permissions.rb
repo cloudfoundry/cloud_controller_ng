@@ -64,6 +64,29 @@ module VCAP
           can_write_globally? || has_any_permission?(permissions)
         end
 
+        def readable_space_guids
+          space_guids = perm_client.list_resource_patterns(
+            user_id: user_id,
+            issuer: issuer,
+            actions: [
+              SPACE_DEVELOPER_ACTION,
+              SPACE_MANAGER_ACTION,
+              SPACE_AUDITOR_ACTION,
+            ]
+          )
+          org_guids = perm_client.list_resource_patterns(
+            user_id: user_id,
+            issuer: issuer,
+            actions: [
+              ORG_MANAGER_ACTION,
+            ]
+          )
+
+          Organization.where(guid: org_guids).all.map do |org|
+            org.spaces.map(&:guid)
+          end.flatten + space_guids
+        end
+
         def can_read_from_space?(space_id, org_id)
           permissions = [
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },

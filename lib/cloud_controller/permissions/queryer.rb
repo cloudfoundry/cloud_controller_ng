@@ -90,7 +90,20 @@ class VCAP::CloudController::Permissions::Queryer
 
   def readable_space_guids
     science 'readable_space_guids' do |e|
+      e.context(action: 'space.read')
+
       e.use { db_permissions.readable_space_guids }
+      e.try { perm_permissions.readable_space_guids }
+
+      e.compare do |control, candidate|
+        if control.is_a?(Array) && candidate.is_a?(Array)
+          control.sort == candidate.sort
+        else
+          control == candidate
+        end
+      end
+
+      e.run_if { !db_permissions.can_read_globally? }
     end
   end
 

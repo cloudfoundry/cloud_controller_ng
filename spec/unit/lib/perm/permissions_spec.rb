@@ -168,6 +168,37 @@ module VCAP::CloudController::Perm
       end
     end
 
+    describe '#readable_space_guids' do
+      it 'returns the list of space guids that the user can read via space roles and as an org manager' do
+        org1 = VCAP::CloudController::Organization.create(name: 'org1')
+        org2 = VCAP::CloudController::Organization.create(name: 'org2')
+        managed_org_guids = [org1.guid, org2.guid]
+
+        space1 = VCAP::CloudController::Space.create(name: 'space1', organization: org1)
+        space2 = VCAP::CloudController::Space.create(name: 'space2', organization: org1)
+        space3 = VCAP::CloudController::Space.create(name: 'space3', organization: org2)
+        space4 = VCAP::CloudController::Space.create(name: 'space4', organization: org2)
+
+        managed_org_space_guids = [space1.guid, space2.guid, space3.guid, space4.guid]
+        org_actions = %w(org.manager)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: org_actions).
+          and_return(managed_org_guids)
+
+        readable_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
+        space_actions = %w(space.developer space.manager space.auditor)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: space_actions).
+          and_return(readable_space_guids)
+
+        expected_space_guids = managed_org_space_guids + readable_space_guids
+
+        expect(permissions.readable_space_guids).to match_array(expected_space_guids)
+      end
+    end
+
     describe '#can_read_from_space?' do
       before do
         allow(roles).to receive(:admin?).and_return(false)

@@ -82,14 +82,14 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     let(:org_guid1) { create_org }
     let(:org_guid2) { create_org }
     let(:org_guid3) { create_org }
-    let!(:expected_org_guids) { [org_guid1, org_guid2, org_guid3] }
+    let!(:org_guids) { [org_guid1, org_guid2, org_guid3] }
 
     it 'returns an empty list when the user is a member of no organizations' do
-      response = make_get_request("/v3/organizations", user_headers)
+      response = make_get_request('/v3/organizations', user_headers)
       expect(response.code).to eq('200')
 
-      org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
-      expect(org_guids).to have(0).items
+      actual_org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+      expect(actual_org_guids).to have(0).items
     end
 
     [:admin, :admin_read_only, :global_auditor].each do |role|
@@ -97,13 +97,16 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         opts = {}
         opts[role] = true
 
+        expected_org_guids = org_guids
+
         # There may be > 50 results (default page size) due to pollution
         response = make_get_request('/v3/organizations?per_page=5000', http_headers(user_token(VCAP::CloudController::User.make, opts)))
         expect(response.code).to eq('200')
 
-        org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+        actual_org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+
         expected_org_guids.each do |expected_org_guid|
-          expect(org_guids).to include(expected_org_guid)
+          expect(actual_org_guids).to include(expected_org_guid)
         end
       end
     end
@@ -117,13 +120,13 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
           expect(response.code).to eq('201')
         end
 
-        response = make_get_request("/v3/organizations", user_headers)
+        response = make_get_request('/v3/organizations', user_headers)
         expect(response.code).to eq('200')
 
-        org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
-        expect(org_guids).to have(expected_org_guids.size).items
+        actual_org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+        expect(actual_org_guids).to have(expected_org_guids.size).items
         expected_org_guids.each do |expected_org_guid|
-          expect(org_guids).to include(expected_org_guid)
+          expect(actual_org_guids).to include(expected_org_guid)
         end
       end
     end
@@ -223,6 +226,100 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         expect(response.code).to eq('200')
 
         expect(response.json_body['guid']).to eq(isolation_segment_guid)
+      end
+    end
+  end
+
+  describe 'GET /v3/spaces' do
+    let(:org_guid1) { create_org }
+    let(:org_guid2) { create_org }
+    let(:org_guid3) { create_org }
+    let(:org_guids) { [org_guid1, org_guid2, org_guid3] }
+    let(:space_guid1) { create_space(org_guid1) }
+    let(:space_guid2) { create_space(org_guid1) }
+    let(:space_guid3) { create_space(org_guid2) }
+    let!(:space_guids) { [space_guid1, space_guid2, space_guid3] }
+
+    it 'returns an empty list when the user is a member of no spaces or orgs' do
+      response = make_get_request('/v3/spaces', user_headers)
+      expect(response.code).to eq('200')
+
+      actual_space_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+      expect(actual_space_guids).to have(0).items
+    end
+
+    [:admin, :admin_read_only, :global_auditor].each do |role|
+      it "returns all the spaces when the user is a(n) #{role}" do
+        opts = {}
+        opts[role] = true
+
+        expected_space_guids = space_guids
+
+        # There may be > 50 results (default page size) due to pollution
+        response = make_get_request('/v3/spaces?per_page=5000', http_headers(user_token(VCAP::CloudController::User.make, opts)))
+        expect(response.code).to eq('200')
+
+        actual_space_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+
+        expected_space_guids.each do |expected_space_guid|
+          expect(actual_space_guids).to include(expected_space_guid)
+        end
+      end
+    end
+
+    [:manager].each do |role|
+      it "returns all the spaces where the user is an organization #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid1}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_get_request('/v3/spaces', user_headers)
+        expect(response.code).to eq('200')
+
+        actual_space_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+        expected_space_guids = [space_guid1, space_guid2]
+
+        expected_space_guids.each do |expected_space_guid|
+          expect(actual_space_guids).to include(expected_space_guid)
+        end
+      end
+    end
+
+    [:user, :billing_manager, :auditor].each do |role|
+      it "does not return spaces where the user is an organization #{role}" do
+        response = make_put_request("/v2/organizations/#{org_guid1}/#{role}s/#{user_guid}", '', admin_headers)
+        expect(response.code).to eq('201')
+
+        response = make_get_request('/v3/spaces', user_headers)
+        expect(response.code).to eq('200')
+
+        actual_space_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+
+        expect(actual_space_guids).to have(0).items
+      end
+    end
+
+    [:developer, :manager, :auditor].each do |role|
+      it "returns spaces where the user is a space #{role}" do
+        org_guids.each do |org_guid|
+          response = make_put_request("/v2/organizations/#{org_guid}/users/#{user_guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+        end
+
+        expected_space_guids = [space_guid1, space_guid3]
+
+        expected_space_guids.each do |space_guid|
+          response = make_put_request("/v2/spaces/#{space_guid}/#{role}s/#{user_guid}", '', admin_headers)
+          expect(response.code).to eq('201')
+        end
+
+        response = make_get_request('/v3/spaces', user_headers)
+        expect(response.code).to eq('200')
+
+        actual_space_guids = response.json_body['resources'].map { |resource| resource['guid'] }
+
+        expected_space_guids.each do |expected_space_guid|
+          expect(actual_space_guids).to include(expected_space_guid)
+        end
       end
     end
   end

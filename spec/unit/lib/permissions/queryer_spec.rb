@@ -410,13 +410,119 @@ module VCAP::CloudController
 
     describe '#readable_space_guids' do
       before do
+        allow(perm_permissions).to receive(:readable_space_guids)
         allow(db_permissions).to receive(:readable_space_guids)
+
+        allow(db_permissions).to receive(:can_read_globally?).and_return(false)
       end
 
-      it 'delegates the call to the db permission' do
+      it 'asks for #readable_space_guids on behalf of the current user' do
+        allow(perm_permissions).to receive(:readable_space_guids).and_return([])
+
         queryer.readable_space_guids
 
         expect(db_permissions).to have_received(:readable_space_guids)
+        expect(perm_permissions).to have_received(:readable_space_guids)
+      end
+
+      it 'returns the control space guids' do
+        control_space_guids = [SecureRandom.uuid]
+        candidate_space_guids = [SecureRandom.uuid]
+
+        allow(db_permissions).to receive(:readable_space_guids).and_return(control_space_guids)
+        allow(perm_permissions).to receive(:readable_space_guids).and_return(candidate_space_guids)
+
+        readable_space_guids = queryer.readable_space_guids
+
+        expect(readable_space_guids).to equal(control_space_guids)
+      end
+
+      it 'skips the experiment if the user is a global reader' do
+        allow(db_permissions).to receive(:can_read_globally?).and_return(true)
+
+        queryer.readable_space_guids
+
+        expect(perm_permissions).not_to have_received(:readable_space_guids)
+      end
+
+      context 'when the control and candidate are the same' do
+        it 'logs the result' do
+          space_guids = [SecureRandom.uuid, SecureRandom.uuid]
+
+          allow(db_permissions).to receive(:readable_space_guids).and_return(space_guids)
+          allow(perm_permissions).to receive(:readable_space_guids).and_return(space_guids)
+
+          queryer.readable_space_guids
+
+          expected_context = {
+            current_user_guid: current_user_guid,
+            action: 'space.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: space_guids },
+              candidate: { value: space_guids },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are the same but in a different order' do
+        it 'logs the result' do
+          space_guid1 = SecureRandom.uuid
+          space_guid2 = SecureRandom.uuid
+
+          space_guids_control_order = [space_guid1, space_guid2]
+          space_guids_candidate_order = [space_guid2, space_guid1]
+
+          allow(db_permissions).to receive(:readable_space_guids).and_return(space_guids_control_order)
+          allow(perm_permissions).to receive(:readable_space_guids).and_return(space_guids_candidate_order)
+
+          queryer.readable_space_guids
+
+          expected_context = {
+            current_user_guid: current_user_guid,
+            action: 'space.read',
+          }
+
+          expect(logger).to have_received(:debug).with(
+            'matched',
+            {
+              context: expected_context,
+              control: { value: space_guids_control_order },
+              candidate: { value: space_guids_candidate_order },
+            }
+          )
+        end
+      end
+
+      context 'when the control and candidate are different' do
+        it 'logs the result' do
+          control_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
+          candidate_space_guids = [SecureRandom.uuid]
+
+          allow(db_permissions).to receive(:readable_space_guids).and_return(control_space_guids)
+          allow(perm_permissions).to receive(:readable_space_guids).and_return(candidate_space_guids)
+
+          queryer.readable_space_guids
+
+          expected_context = {
+            current_user_guid: current_user_guid,
+            action: 'space.read',
+          }
+
+          expect(logger).to have_received(:info).with(
+            'mismatched',
+            {
+              context: expected_context,
+              control: { value: control_space_guids },
+              candidate: { value: candidate_space_guids },
+            }
+          )
+        end
       end
     end
 
