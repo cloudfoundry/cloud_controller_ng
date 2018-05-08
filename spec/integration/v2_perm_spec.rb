@@ -354,10 +354,6 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
     org2_id = nil
     org1_space_id = nil
     org2_space_id = nil
-    # let!(:org1) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
-    # let!(:org2) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
-    # let!(:org1_space) { VCAP::CloudController::Space.make(organization: org1) }
-    # let!(:org2_space) { VCAP::CloudController::Space.make(organization: org2) }
 
     before do
       post '/v2/organizations', { name: SecureRandom.uuid }.to_json
