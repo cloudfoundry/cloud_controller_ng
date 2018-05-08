@@ -1,6 +1,7 @@
 require 'messages/base_message'
 require 'messages/manifest_process_scale_message'
 require 'messages/manifest_process_update_message'
+require 'messages/manifest_buildpack_message'
 require 'messages/manifest_service_binding_create_message'
 require 'messages/manifest_routes_update_message'
 require 'cloud_controller/app_manifest/byte_converter'
@@ -52,16 +53,12 @@ module VCAP::CloudController
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_service_bindings_message!, if: proc { |record| record.requested?(:services) }
     validate :validate_env_update_message!, if: proc { |record| record.requested?(:env) }
+    validate :validate_manifest_singular_buildpack_message!, if: proc { |record| record.requested?(:buildpack) }
     validate :validate_manifest_routes_update_message!, if: proc { |record|
       record.requested?(:routes) ||
       record.requested?(:no_route) ||
       record.requested?(:random_route)
     }
-    validates :buildpack,
-      string:    true,
-      allow_nil: true,
-      length:    { in: 1..4096, message: 'must be between 1 and 4096 characters' },
-      if: proc { |record| record.requested?(:buildpack) }
 
     def manifest_process_scale_messages
       @manifest_process_scale_messages ||= process_scale_attribute_mappings.map { |mapping| ManifestProcessScaleMessage.new(mapping) }
@@ -88,6 +85,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def manifest_buildpack_message
+      @manifest_buildpack_message ||= ManifestBuildpackMessage.new(buildpack: buildpack)
+    end
 
     def process_scale_attribute_mappings
       process_scale_attributes_from_app_level = process_scale_attributes(memory: memory, disk_quota: disk_quota, instances: instances)
@@ -258,7 +259,7 @@ module VCAP::CloudController
     def validate_app_update_message!
       app_update_message.valid?
       app_update_message.errors[:lifecycle].each do |error_message|
-        if error_message.include?('Buildpacks')
+        if error_message.starts_with?('Buildpacks')
           errors.add(:base, error_message) if requested?(:buildpacks)
         else
           errors.add(:base, error_message)
@@ -267,6 +268,13 @@ module VCAP::CloudController
 
       app_update_message.errors[:command].each do |error_message|
         errors.add(:command, error_message)
+      end
+    end
+
+    def validate_manifest_singular_buildpack_message!
+      manifest_buildpack_message.valid?
+      manifest_buildpack_message.errors[:buildpack].each do |error_message|
+        errors.add(:buildpack, error_message)
       end
     end
 
