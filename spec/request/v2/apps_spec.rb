@@ -1004,8 +1004,9 @@ RSpec.describe 'Apps' do
     end
 
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(diego: true, space: space, state: 'STARTED', instances: 2) }
-    let(:two_days_ago_since_epoch_seconds) { 2.days.ago.to_i }
-    let(:two_days_ago_since_epoch_ns) { 2.days.ago.to_f * 1e9 }
+    let(:two_days_ago) { 2.days.ago }
+    let(:two_days_ago_since_epoch_seconds) { two_days_ago.to_i }
+    let(:two_days_ago_since_epoch_ns) { two_days_ago.to_f * 1e9 }
     let(:two_days_in_seconds) { 60 * 60 * 24 * 2 }
     let(:bbs_instances_response) do
       [
@@ -1014,25 +1015,25 @@ RSpec.describe 'Apps' do
       ]
     end
 
-    before do
-      allow_any_instance_of(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:lrp_instances).and_return(bbs_instances_response)
-    end
-
     it 'gets the instance information for a started app' do
-      get "/v2/apps/#{process.guid}/instances", nil, headers_for(user)
-      parsed_response = MultiJson.load(last_response.body)
+      Time.freeze do
+        allow_any_instance_of(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:lrp_instances).and_return(bbs_instances_response)
 
-      expect(last_response.status).to eq(200)
-      expect(parsed_response).to be_a_response_like(
-        {
-          '0' => {
-            'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
-          },
-          '1' => {
-            'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
+        get "/v2/apps/#{process.guid}/instances", nil, headers_for(user)
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(
+          {
+            '0' => {
+              'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
+            },
+            '1' => {
+              'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
+            }
           }
-        }
-      )
+                                   )
+      end
     end
   end
 
