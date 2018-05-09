@@ -32,7 +32,7 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_read_globally?
-    science 'can_read_globally?' do |e|
+    science 'can_read_globally' do |e|
       e.use { db_permissions.can_read_globally? }
       e.try { perm_permissions.can_read_globally? }
 
@@ -41,7 +41,7 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_write_globally?
-    science 'can_write_globally?' do |e|
+    science 'can_write_globally' do |e|
       e.use { db_permissions.can_write_globally? }
       e.try { perm_permissions.can_write_globally? }
 
@@ -51,8 +51,6 @@ class VCAP::CloudController::Permissions::Queryer
 
   def readable_org_guids
     science 'readable_org_guids' do |e|
-      e.context(action: 'org.read')
-
       e.use { db_permissions.readable_org_guids }
       e.try { perm_permissions.readable_org_guids }
 
@@ -69,8 +67,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_read_from_org?(org_guid)
-    science 'can_read_from_org?' do |e|
-      e.context(org_guid: org_guid, action: 'org.read')
+    science 'can_read_from_org' do |e|
+      e.context(org_guid: org_guid)
       e.use { db_permissions.can_read_from_org?(org_guid) }
       e.try { perm_permissions.can_read_from_org?(org_guid) }
 
@@ -79,8 +77,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_write_to_org?(org_guid)
-    science 'can_write_to_org?' do |e|
-      e.context(org_guid: org_guid, action: 'org.write')
+    science 'can_write_to_org' do |e|
+      e.context(org_guid: org_guid)
       e.use { db_permissions.can_write_to_org?(org_guid) }
       e.try { perm_permissions.can_write_to_org?(org_guid) }
 
@@ -90,8 +88,6 @@ class VCAP::CloudController::Permissions::Queryer
 
   def readable_space_guids
     science 'readable_space_guids' do |e|
-      e.context(action: 'space.read')
-
       e.use { db_permissions.readable_space_guids }
       e.try { perm_permissions.readable_space_guids }
 
@@ -108,8 +104,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_read_from_space?(space_guid, org_guid)
-    science 'can_read_from_space?' do |e|
-      e.context(space_guid: space_guid, org_guid: org_guid, action: 'space.read')
+    science 'can_read_from_space' do |e|
+      e.context(space_guid: space_guid, org_guid: org_guid)
       e.use { db_permissions.can_read_from_space?(space_guid, org_guid) }
       e.try { perm_permissions.can_read_from_space?(space_guid, org_guid) }
 
@@ -118,8 +114,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_read_secrets_in_space?(space_guid, org_guid)
-    science 'can_read_secrets_in_space?' do |e|
-      e.context(space_guid: space_guid, org_guid: org_guid, action: 'space.read_secrets')
+    science 'can_read_secrets_in_space' do |e|
+      e.context(space_guid: space_guid, org_guid: org_guid)
       e.use { db_permissions.can_read_secrets_in_space?(space_guid, org_guid) }
       e.try { perm_permissions.can_read_secrets_in_space?(space_guid, org_guid) }
 
@@ -128,8 +124,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_write_to_space?(space_guid)
-    science 'can_write_to_space?' do |e|
-      e.context(space_guid: space_guid, action: 'space.write')
+    science 'can_write_to_space' do |e|
+      e.context(space_guid: space_guid)
       e.use { db_permissions.can_write_to_space?(space_guid) }
       e.try { perm_permissions.can_write_to_space?(space_guid) }
 
@@ -138,8 +134,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_read_from_isolation_segment?(isolation_segment)
-    science 'can_read_from_isolation_segment?' do |e|
-      e.context(isolation_segment_guid: isolation_segment.guid, action: 'isolation_segment.read')
+    science 'can_read_from_isolation_segment' do |e|
+      e.context(isolation_segment_guid: isolation_segment.guid)
       e.use { db_permissions.can_read_from_isolation_segment?(isolation_segment) }
       e.try { perm_permissions.can_read_from_isolation_segment?(isolation_segment) }
 
@@ -148,8 +144,8 @@ class VCAP::CloudController::Permissions::Queryer
   end
 
   def can_read_route?(space_guid, org_guid)
-    science 'can_read_route?' do |e|
-      e.context(space_guid: space_guid, org_guid: org_guid, action: 'route.read')
+    science 'can_read_route' do |e|
+      e.context(space_guid: space_guid, org_guid: org_guid)
       e.use { db_permissions.can_read_route?(space_guid, org_guid) }
       e.try { perm_permissions.can_read_route?(space_guid, org_guid) }
 

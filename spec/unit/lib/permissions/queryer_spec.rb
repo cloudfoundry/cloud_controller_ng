@@ -174,7 +174,6 @@ module VCAP::CloudController
 
           expected_context = {
             current_user_guid: current_user_guid,
-            action: 'org.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -203,7 +202,6 @@ module VCAP::CloudController
 
           expected_context = {
             current_user_guid: current_user_guid,
-            action: 'org.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -229,7 +227,6 @@ module VCAP::CloudController
 
           expected_context = {
             current_user_guid: current_user_guid,
-            action: 'org.read',
           }
 
           expect(logger).to have_received(:info).with(
@@ -287,7 +284,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             org_guid: org_guid,
-            action: 'org.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -311,7 +307,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             org_guid: org_guid,
-            action: 'org.read',
           }
 
           expect(logger).to have_received(:info).with(
@@ -369,7 +364,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             org_guid: org_guid,
-            action: 'org.write',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -393,7 +387,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             org_guid: org_guid,
-            action: 'org.write',
           }
 
           expect(logger).to have_received(:info).with(
@@ -456,7 +449,6 @@ module VCAP::CloudController
 
           expected_context = {
             current_user_guid: current_user_guid,
-            action: 'space.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -485,7 +477,6 @@ module VCAP::CloudController
 
           expected_context = {
             current_user_guid: current_user_guid,
-            action: 'space.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -511,7 +502,6 @@ module VCAP::CloudController
 
           expected_context = {
             current_user_guid: current_user_guid,
-            action: 'space.read',
           }
 
           expect(logger).to have_received(:info).with(
@@ -570,7 +560,6 @@ module VCAP::CloudController
             current_user_guid: current_user_guid,
             space_guid: space_guid,
             org_guid: org_guid,
-            action: 'space.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -595,7 +584,6 @@ module VCAP::CloudController
             current_user_guid: current_user_guid,
             space_guid: space_guid,
             org_guid: org_guid,
-            action: 'space.read',
           }
 
           expect(logger).to have_received(:info).with(
@@ -654,7 +642,6 @@ module VCAP::CloudController
             current_user_guid: current_user_guid,
             space_guid: space_guid,
             org_guid: org_guid,
-            action: 'space.read_secrets',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -679,7 +666,6 @@ module VCAP::CloudController
             current_user_guid: current_user_guid,
             space_guid: space_guid,
             org_guid: org_guid,
-            action: 'space.read_secrets',
           }
 
           expect(logger).to have_received(:info).with(
@@ -737,7 +723,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             space_guid: space_guid,
-            action: 'space.write',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -761,7 +746,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             space_guid: space_guid,
-            action: 'space.write',
           }
 
           expect(logger).to have_received(:info).with(
@@ -821,7 +805,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             isolation_segment_guid: 'some-isolation-segment-guid',
-            action: 'isolation_segment.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -845,7 +828,6 @@ module VCAP::CloudController
           expected_context = {
             current_user_guid: current_user_guid,
             isolation_segment_guid: 'some-isolation-segment-guid',
-            action: 'isolation_segment.read',
           }
 
           expect(logger).to have_received(:info).with(
@@ -904,7 +886,6 @@ module VCAP::CloudController
             current_user_guid: current_user_guid,
             space_guid: space_guid,
             org_guid: org_guid,
-            action: 'route.read',
           }
 
           expect(logger).to have_received(:debug).with(
@@ -929,7 +910,6 @@ module VCAP::CloudController
             current_user_guid: current_user_guid,
             space_guid: space_guid,
             org_guid: org_guid,
-            action: 'route.read',
           }
 
           expect(logger).to have_received(:info).with(
