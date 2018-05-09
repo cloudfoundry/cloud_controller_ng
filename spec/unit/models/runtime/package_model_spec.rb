@@ -52,5 +52,26 @@ module VCAP::CloudController
         let(:attr_salt) { :docker_password_salt }
       end
     end
+
+    describe '#succeed_upload!' do
+      let!(:package) { PackageModel.make state: PackageModel::PENDING_STATE }
+
+      it 'updates the checksums and moves the package state to READY' do
+        package.succeed_upload!(sha1: 'sha-1-checksum', sha256: 'sha-2-checksum')
+        package.reload
+        expect(package.package_hash).to eq('sha-1-checksum')
+        expect(package.sha256_checksum).to eq('sha-2-checksum')
+        expect(package.state).to eq(PackageModel::READY_STATE)
+      end
+
+      context 'when the package has been deleted before finishing upload' do
+        it 'does not error' do
+          PackageModel.find(guid: package.guid).destroy
+          expect {
+            package.succeed_upload!(sha1: 'sha-1-checksum', sha256: 'sha-2-checksum')
+          }.to_not raise_error
+        end
+      end
+    end
   end
 end

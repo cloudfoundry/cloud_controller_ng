@@ -65,6 +65,7 @@ module VCAP::CloudController
     end
 
     def succeed_upload!(checksums)
+      return unless self.exists?
       db.transaction do
         self.lock!
         self.package_hash = checksums[:sha1]
