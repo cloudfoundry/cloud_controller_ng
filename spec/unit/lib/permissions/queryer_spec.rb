@@ -27,6 +27,48 @@ module VCAP::CloudController
       allow(Steno).to receive(:logger).and_return(logger)
     end
 
+    RSpec.shared_examples 'match recorder' do |query_fn, experiment_name, control_value, candidate_value, additional_context={}|
+      it 'logs the match' do
+        query_fn.call(subject)
+
+        expected_context = {
+          current_user_guid: current_user_guid,
+        }.merge(additional_context)
+
+        expect(Steno).to have_received(:logger).with("science.#{experiment_name}")
+
+        expect(logger).to have_received(:debug).with(
+          'matched',
+          {
+            context: expected_context,
+            control: { value: control_value },
+            candidate: { value: candidate_value },
+          }
+        )
+      end
+    end
+
+    RSpec.shared_examples 'mismatch recorder' do |query_fn, experiment_name, control_value, candidate_value, additional_context={}|
+      it 'logs the mismatch' do
+        query_fn.call(subject)
+
+        expected_context = {
+          current_user_guid: current_user_guid,
+        }.merge(additional_context)
+
+        expect(Steno).to have_received(:logger).with("science.#{experiment_name}")
+
+        expect(logger).to have_received(:info).with(
+          'mismatched',
+          {
+            context: expected_context,
+            control: { value: control_value },
+            candidate: { value: candidate_value },
+          }
+        )
+      end
+    end
+
     describe '.build' do
       it 'makes a new queryer object' do
         security_context = class_double(VCAP::CloudController::SecurityContext)
@@ -164,80 +206,41 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
-          org_guids = [SecureRandom.uuid, SecureRandom.uuid]
+        org_guids = [SecureRandom.uuid, SecureRandom.uuid]
 
+        before do
           allow(db_permissions).to receive(:readable_org_guids).and_return(org_guids)
           allow(perm_permissions).to receive(:readable_org_guids).and_return(org_guids)
-
-          subject.readable_org_guids
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: org_guids },
-              candidate: { value: org_guids },
-            }
-          )
         end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_org_guids }, 'readable_org_guids', org_guids, org_guids
       end
 
       context 'when the control and candidate are the same but in a different order' do
-        it 'logs the result' do
-          org_guid1 = SecureRandom.uuid
-          org_guid2 = SecureRandom.uuid
+        org_guid1 = SecureRandom.uuid
+        org_guid2 = SecureRandom.uuid
 
-          org_guids_control_order = [org_guid1, org_guid2]
-          org_guids_candidate_order = [org_guid2, org_guid1]
+        org_guids_control_order = [org_guid1, org_guid2]
+        org_guids_candidate_order = [org_guid2, org_guid1]
 
+        before do
           allow(db_permissions).to receive(:readable_org_guids).and_return(org_guids_control_order)
           allow(perm_permissions).to receive(:readable_org_guids).and_return(org_guids_candidate_order)
-
-          subject.readable_org_guids
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: org_guids_control_order },
-              candidate: { value: org_guids_candidate_order },
-            }
-          )
         end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_org_guids }, 'readable_org_guids', org_guids_control_order, org_guids_candidate_order
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
-          control_org_guids = [SecureRandom.uuid, SecureRandom.uuid]
-          candidate_org_guids = [SecureRandom.uuid]
+        control_org_guids = [SecureRandom.uuid, SecureRandom.uuid]
+        candidate_org_guids = [SecureRandom.uuid]
 
+        before do
           allow(db_permissions).to receive(:readable_org_guids).and_return(control_org_guids)
           allow(perm_permissions).to receive(:readable_org_guids).and_return(candidate_org_guids)
-
-          subject.readable_org_guids
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: control_org_guids },
-              candidate: { value: candidate_org_guids },
-            }
-          )
         end
+
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.readable_org_guids }, 'readable_org_guids', control_org_guids, candidate_org_guids
       end
     end
 
@@ -275,49 +278,25 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
+        org_guid = "read-from-org-#{SecureRandom.uuid}"
+
+        before do
           allow(db_permissions).to receive(:can_read_from_org?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_org?).and_return(true)
-
-          subject.can_read_from_org?(org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: true },
-            }
-          )
         end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.can_read_from_org?(org_guid) }, 'can_read_from_org', true, true, { org_guid: org_guid }
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        org_guid = "can-read-from-org-#{SecureRandom.uuid}"
+
+        before do
           allow(db_permissions).to receive(:can_read_from_org?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_org?).and_return('something wrong')
-
-          subject.can_read_from_org?(org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.can_read_from_org?(org_guid) }, 'can_read_from_org', true, 'something wrong', { org_guid: org_guid }
       end
     end
 
@@ -378,26 +357,14 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        org_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_write_to_org?).and_return(true)
           allow(perm_permissions).to receive(:can_write_to_org?).and_return('something wrong')
-
-          subject.can_write_to_org?(org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.can_write_to_org?(org_guid) }, 'can_write_to_org', true, 'something wrong', { org_guid: org_guid }
       end
     end
 
@@ -439,80 +406,41 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
-          space_guids = [SecureRandom.uuid, SecureRandom.uuid]
+        space_guids = [SecureRandom.uuid, SecureRandom.uuid]
 
+        before do
           allow(db_permissions).to receive(:readable_space_guids).and_return(space_guids)
           allow(perm_permissions).to receive(:readable_space_guids).and_return(space_guids)
-
-          subject.readable_space_guids
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: space_guids },
-              candidate: { value: space_guids },
-            }
-          )
         end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_space_guids }, 'readable_space_guids', space_guids, space_guids
       end
 
       context 'when the control and candidate are the same but in a different order' do
-        it 'logs the result' do
-          space_guid1 = SecureRandom.uuid
-          space_guid2 = SecureRandom.uuid
+        space_guid1 = SecureRandom.uuid
+        space_guid2 = SecureRandom.uuid
 
-          space_guids_control_order = [space_guid1, space_guid2]
-          space_guids_candidate_order = [space_guid2, space_guid1]
+        space_guids_control_order = [space_guid1, space_guid2]
+        space_guids_candidate_order = [space_guid2, space_guid1]
 
+        before do
           allow(db_permissions).to receive(:readable_space_guids).and_return(space_guids_control_order)
           allow(perm_permissions).to receive(:readable_space_guids).and_return(space_guids_candidate_order)
-
-          subject.readable_space_guids
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: space_guids_control_order },
-              candidate: { value: space_guids_candidate_order },
-            }
-          )
         end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_space_guids }, 'readable_space_guids', space_guids_control_order, space_guids_candidate_order
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
-          control_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
-          candidate_space_guids = [SecureRandom.uuid]
+        control_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
+        candidate_space_guids = [SecureRandom.uuid]
 
+        before do
           allow(db_permissions).to receive(:readable_space_guids).and_return(control_space_guids)
           allow(perm_permissions).to receive(:readable_space_guids).and_return(candidate_space_guids)
-
-          subject.readable_space_guids
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: control_space_guids },
-              candidate: { value: candidate_space_guids },
-            }
-          )
         end
+
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.readable_space_guids }, 'readable_space_guids', control_space_guids, candidate_space_guids
       end
     end
 
@@ -550,51 +478,41 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
+        org_guid = SecureRandom.uuid
+        space_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_read_from_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_space?).and_return(true)
-
-          subject.can_read_from_space?(space_guid, org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: true },
-            }
-          )
         end
+
+        it_behaves_like(
+          'match recorder',
+          proc { |queryer| queryer.can_read_from_space?(space_guid, org_guid) },
+          'can_read_from_space',
+          true,
+          true,
+          { space_guid: space_guid, org_guid: org_guid },
+        )
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        org_guid = SecureRandom.uuid
+        space_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_read_from_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_space?).and_return('something wrong')
-
-          subject.can_read_from_space?(space_guid, org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like(
+          'mismatch recorder',
+          proc { |queryer| queryer.can_read_from_space?(space_guid, org_guid) },
+          'can_read_from_space',
+          true,
+          'something wrong',
+          { space_guid: space_guid, org_guid: org_guid },
+        )
       end
     end
 
@@ -632,51 +550,43 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
+        space_guid = SecureRandom.uuid
+        org_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
-
-          subject.can_read_secrets_in_space?(space_guid, org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: true },
-            }
-          )
         end
+
+        it_behaves_like('match recorder',
+          proc { |queryer| queryer.can_read_secrets_in_space?(space_guid, org_guid) },
+          'can_read_secrets_in_space',
+          true,
+          true,
+          {
+            space_guid: space_guid,
+            org_guid: org_guid, }
+        )
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        space_guid = SecureRandom.uuid
+        org_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_read_secrets_in_space?).and_return(true)
           allow(perm_permissions).to receive(:can_read_secrets_in_space?).and_return('something wrong')
-
-          subject.can_read_secrets_in_space?(space_guid, org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like('mismatch recorder',
+          proc { |queryer| queryer.can_read_secrets_in_space?(space_guid, org_guid) },
+          'can_read_secrets_in_space',
+          true,
+          'something wrong',
+          {
+            space_guid: space_guid,
+            org_guid: org_guid, }
+        )
       end
     end
 
@@ -714,53 +624,51 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
+        space_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_write_to_space?).and_return(true)
           allow(perm_permissions).to receive(:can_write_to_space?).and_return(true)
-
-          subject.can_write_to_space?(space_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: true },
-            }
-          )
         end
+
+        it_behaves_like('match recorder',
+          proc { |queryer| queryer.can_write_to_space?(space_guid) },
+          'can_write_to_space',
+          true,
+          true,
+          space_guid: space_guid
+        )
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        space_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_write_to_space?).and_return(true)
           allow(perm_permissions).to receive(:can_write_to_space?).and_return('something wrong')
-
-          subject.can_write_to_space?(space_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like('mismatch recorder',
+          proc { |queryer| queryer.can_write_to_space?(space_guid) },
+          'can_write_to_space',
+          true,
+          'something wrong',
+          space_guid: space_guid
+        )
       end
     end
 
     describe '#can_read_from_isolation_segment?' do
+      class FakeIsolationSegment
+        def initialize(guid)
+          @guid = guid
+        end
+
+        def guid
+          @guid
+        end
+      end
+
       let(:isolation_segment) { spy(:isolation_segment, guid: 'some-isolation-segment-guid') }
 
       before do
@@ -796,49 +704,39 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
+        isolation_segment_guid = SecureRandom.uuid
+        isolation_segment = FakeIsolationSegment.new(isolation_segment_guid)
+
+        before do
           allow(db_permissions).to receive(:can_read_from_isolation_segment?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_isolation_segment?).and_return(true)
-
-          subject.can_read_from_isolation_segment?(isolation_segment)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            isolation_segment_guid: 'some-isolation-segment-guid',
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: true },
-            }
-          )
         end
+
+        it_behaves_like('match recorder',
+          proc { |queryer| queryer.can_read_from_isolation_segment?(isolation_segment) },
+          'can_read_from_isolation_segment',
+          true,
+          true,
+          isolation_segment_guid: isolation_segment_guid
+        )
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        isolation_segment_guid = SecureRandom.uuid
+        isolation_segment = FakeIsolationSegment.new(isolation_segment_guid)
+
+        before do
           allow(db_permissions).to receive(:can_read_from_isolation_segment?).and_return(true)
           allow(perm_permissions).to receive(:can_read_from_isolation_segment?).and_return('something wrong')
-
-          subject.can_read_from_isolation_segment?(isolation_segment)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            isolation_segment_guid: 'some-isolation-segment-guid',
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like('mismatch recorder',
+          proc { |queryer| queryer.can_read_from_isolation_segment?(isolation_segment) },
+          'can_read_from_isolation_segment',
+          true,
+          'something wrong',
+          isolation_segment_guid: isolation_segment_guid
+        )
       end
     end
 
@@ -876,51 +774,43 @@ module VCAP::CloudController
       end
 
       context 'when the control and candidate are the same' do
-        it 'logs the result' do
+        space_guid = SecureRandom.uuid
+        org_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_read_route?).and_return(true)
           allow(perm_permissions).to receive(:can_read_route?).and_return(true)
-
-          subject.can_read_route?(space_guid, org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:debug).with(
-            'matched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: true },
-            }
-          )
         end
+
+        it_behaves_like 'match recorder',
+          proc { |queryer| queryer.can_read_route?(space_guid, org_guid) },
+          'can_read_route',
+          true,
+          true,
+          {
+            space_guid: space_guid,
+            org_guid: org_guid
+          }
       end
 
       context 'when the control and candidate are different' do
-        it 'logs the result' do
+        space_guid = SecureRandom.uuid
+        org_guid = SecureRandom.uuid
+
+        before do
           allow(db_permissions).to receive(:can_read_route?).and_return(true)
           allow(perm_permissions).to receive(:can_read_route?).and_return('something wrong')
-
-          subject.can_read_route?(space_guid, org_guid)
-
-          expected_context = {
-            current_user_guid: current_user_guid,
-            space_guid: space_guid,
-            org_guid: org_guid,
-          }
-
-          expect(logger).to have_received(:info).with(
-            'mismatched',
-            {
-              context: expected_context,
-              control: { value: true },
-              candidate: { value: 'something wrong' },
-            }
-          )
         end
+
+        it_behaves_like 'mismatch recorder',
+          proc { |queryer| queryer.can_read_route?(space_guid, org_guid) },
+          'can_read_route',
+          true,
+          'something wrong',
+          {
+            space_guid: space_guid,
+            org_guid: org_guid
+          }
       end
     end
   end
