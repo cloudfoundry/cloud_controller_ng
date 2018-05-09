@@ -1,16 +1,16 @@
-<% content_for :paginated_list_of_apps_include_space do |base_url| %>
+<% content_for :paginated_list_of_apps do |base_url| %>
   {
     "pagination": {
       "total_results": 3,
       "total_pages": 2,
       "first": {
-        "href": "https://api.example.org<%= base_url %>?include=space&page=1&per_page=2"
+        "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
       },
       "last": {
-        "href": "https://api.example.org<%= base_url %>?include=space&page=2&per_page=2"
+        "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
       },
       "next": {
-        "href": "https://api.example.org<%= base_url %>?include=space&page=2&per_page=2"
+        "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
       },
       "previous": null
     },
@@ -24,9 +24,7 @@
         "lifecycle": {
           "type": "buildpack",
           "data": {
-            "buildpacks": [
-              "java_buildpack"
-            ],
+            "buildpacks": ["java_buildpack"],
             "stack": "cflinuxfs2"
           }
         },
@@ -84,9 +82,7 @@
         "lifecycle": {
           "type": "buildpack",
           "data": {
-            "buildpacks": [
-              "ruby_buildpack"
-            ],
+            "buildpacks": ["ruby_buildpack"],
             "stack": "cflinuxfs2"
           }
         },
@@ -135,32 +131,7 @@
           }
         }
       }
-    ],
-    "included": {
-      "spaces": [
-        {
-          "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576",
-          "created_at": "1970-01-01T00:00:02Z",
-          "updated_at": "2018-05-01T21:05:37Z",
-          "name": "space",
-          "relationships": {
-            "organization": {
-              "data": {
-                "guid": "ee321376-e635-4b48-869c-caad75e9bef3"
-              }
-            }
-          },
-          "links": {
-            "self": {
-              "href": "https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
-            },
-            "organization": {
-              "href": "https://api.example.org/v3/organizations/ee321376-e635-4b48-869c-caad75e9bef3"
-            }
-          }
-        }
-      ]
-    }
+    ]
   }
 <% end %>
 

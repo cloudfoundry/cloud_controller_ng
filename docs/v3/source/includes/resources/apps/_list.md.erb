@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps?include=space" \
+curl "https://api.example.org/v3/apps" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -18,7 +18,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :paginated_list_of_apps_include_space, '/v3/apps' %>
+<%= yield_content :paginated_list_of_apps, '/v3/apps' %>
 ```
 
 Retrieve all apps the user has access to.
