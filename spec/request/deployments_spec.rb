@@ -5,7 +5,7 @@ RSpec.describe 'Deployments' do
   let(:space) { app_model.space }
   let(:app_model) { droplet.app }
   let(:droplet) { VCAP::CloudController::DropletModel.make }
-
+  let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }

@@ -13,6 +13,7 @@ module VCAP::CloudController
 
           http_info = []
           tcp_info = []
+
           process.routes.reject(&:internal?).each do |r|
             route_app_port_map[r.guid].each do |app_port|
               if r.domain.is_a?(SharedDomain) && !r.domain.router_group_guid.nil?

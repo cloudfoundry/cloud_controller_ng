@@ -2,7 +2,8 @@ require 'spec_helper'
 
 RSpec.describe 'Processes' do
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app') }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
+  let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'ProcHudson' }
@@ -669,12 +670,16 @@ RSpec.describe 'Processes' do
       VCAP::CloudController::ProcessModel.make(:process, app: app_model)
     }
 
+    let!(:deployment_process) {
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web-deployment')
+    }
+
     it 'returns a paginated list of processes for an app' do
       get "/v3/apps/#{app_model.guid}/processes?per_page=2", nil, developer_headers
 
       expected_response = {
         'pagination' => {
-          'total_results' => 3,
+          'total_results' => 4,
           'total_pages'   => 2,
           'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=1&per_page=2" },
           'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes?page=2&per_page=2" },

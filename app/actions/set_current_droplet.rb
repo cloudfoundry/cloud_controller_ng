@@ -10,7 +10,6 @@ module VCAP::CloudController
 
     def update_to(app, droplet)
       unable_to_assign! unless droplet.present? && droplet_associated?(app, droplet)
-      app_started! if app.desired_state != ProcessModel::STOPPED
 
       assign_droplet = { droplet_guid: droplet.guid }
 
@@ -48,10 +47,6 @@ module VCAP::CloudController
 
     def unable_to_assign!
       raise Error.new('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
-    end
-
-    def app_started!
-      raise Error.new('Stop the app before changing droplet')
     end
   end
 end

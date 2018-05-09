@@ -1,6 +1,7 @@
 require 'messages/deployments_list_message'
 require 'fetchers/deployment_list_fetcher'
 require 'presenters/v3/deployment_presenter'
+require 'actions/deployment_create'
 
 class DeploymentsController < ApplicationController
   def index
@@ -25,7 +26,8 @@ class DeploymentsController < ApplicationController
     app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && can_write?(app.space.guid)
-    deployment = DeploymentModel.create(app: app, state: DeploymentModel::DEPLOYING_STATE, droplet: app.droplet)
+
+    deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info)
 
     response = Presenters::V3::DeploymentPresenter.new(deployment)
 

@@ -1859,20 +1859,6 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'when the app is not stopped' do
-      before do
-        app_model.update(desired_state: 'STARTED')
-      end
-
-      it 'returns a 422 UnprocessableEntity error' do
-        put :assign_current_droplet, guid: app_model.guid, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'Stop the app before changing droplet'
-      end
-    end
-
     context 'permissions' do
       context 'when the user does not have write permissions' do
         before do

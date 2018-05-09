@@ -53,15 +53,6 @@ module VCAP::CloudController
       end
 
       describe 'error cases' do
-        context 'when the app is not stopped' do
-          it 'raises an error' do
-            app_model.update(desired_state: ProcessModel::STARTED)
-            expect {
-              set_current_droplet.update_to(app_model, droplet)
-            }.to raise_error SetCurrentDroplet::Error, 'Stop the app before changing droplet'
-          end
-        end
-
         context 'when the droplet is not associated with the application' do
           it 'raises an error' do
             other_droplet = DropletModel.make
