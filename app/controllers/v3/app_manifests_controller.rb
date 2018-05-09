@@ -1,11 +1,14 @@
 require 'controllers/v3/mixins/app_sub_resource'
+require 'presenters/v3/app_manifest_presenter'
 
 class AppManifestsController < ApplicationController
   include AppSubResource
 
+  YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
+
   wrap_parameters :body, format: [:yaml]
 
-  before_action :validate_content_type!
+  before_action :validate_content_type!, only: :apply_manifest
 
   def apply_manifest
     message = AppManifestMessage.create_from_yml(parsed_app_manifest_params)
@@ -23,6 +26,17 @@ class AppManifestsController < ApplicationController
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
+  end
+
+  def show
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_see_secrets?(space)
+
+    manifest_presenter = Presenters::V3::AppManifestPresenter.new(app, app.service_bindings, app.routes)
+    manifest_yaml = manifest_presenter.to_hash.deep_stringify_keys.to_yaml
+    render status: :ok, text: manifest_yaml, content_type: YAML_CONTENT_TYPE
   end
 
   private

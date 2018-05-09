@@ -352,5 +352,25 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#current_package' do
+      context 'when the app has a current droplet assigned' do
+        let(:package) { PackageModel.make }
+
+        before do
+          app_model.update(droplet: DropletModel.make(package: package))
+        end
+
+        it 'returns the package from the current droplet' do
+          expect(app_model.current_package).to eq(package)
+        end
+      end
+
+      context 'when the app does not have a current droplet assigned' do
+        it 'returns nil' do
+          expect(app_model.current_package).to be_nil
+        end
+      end
+    end
   end
 end

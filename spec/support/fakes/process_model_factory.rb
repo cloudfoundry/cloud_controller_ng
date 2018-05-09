@@ -65,9 +65,9 @@ module VCAP
           else
             docker_credentials = package_attributes[:docker_credentials].nil? ? {} : package_attributes[:docker_credentials]
             VCAP::CloudController::PackageModel.make(:docker, app: parent_app,
-                                                              docker_image:                                        package_attributes[:docker_image],
-                                                              docker_username:                                     docker_credentials['username'],
-                                                              docker_password:                                     docker_credentials['password'])
+                                                              docker_image: package_attributes[:docker_image],
+                                                              docker_username: docker_credentials['username'],
+                                                              docker_password: docker_credentials['password'])
           end
         end
       end

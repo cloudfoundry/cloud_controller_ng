@@ -77,6 +77,10 @@ module VCAP::CloudController
       app.space
     end
 
+    def service_instance_name
+      service_instance.name
+    end
+
     def after_initialize
       super
       self.guid ||= SecureRandom.uuid

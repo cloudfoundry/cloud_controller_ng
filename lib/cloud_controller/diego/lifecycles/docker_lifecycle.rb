@@ -24,5 +24,9 @@ module VCAP::CloudController
     def errors
       []
     end
+
+    def stack
+      nil
+    end
   end
 end

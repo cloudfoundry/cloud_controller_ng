@@ -24,6 +24,7 @@ Rails.application.routes.draw do
 
   # app manifests
   post '/apps/:guid/actions/apply_manifest', to: 'app_manifests#apply_manifest'
+  get '/apps/:guid/manifest', to: 'app_manifests#show'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'

@@ -288,6 +288,16 @@ module VCAP::CloudController
       end
     end
 
+    describe '#service_instance_name' do
+      let(:v2_app) { ProcessModelFactory.make(state: 'STARTED', instances: 1, type: 'web') }
+      let(:service_instance) { ManagedServiceInstance.make(space: v2_app.space) }
+
+      it 'returns the name of the associated service instance' do
+        binding = ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
+        expect(binding.service_instance_name).to eq(service_instance.name)
+      end
+    end
+
     describe '#user_visibility_filter' do
       let(:app_model) { AppModel.make }
       let!(:service_instance) { ManagedServiceInstance.make }

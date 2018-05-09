@@ -58,6 +58,10 @@ module VCAP::CloudController
       DockerLifecycleDataModel.new
     end
 
+    def current_package
+      droplet&.package
+    end
+
     def database_uri
       service_binding_uris = service_bindings.map do |binding|
         binding.credentials['uri'] if binding.credentials.present?

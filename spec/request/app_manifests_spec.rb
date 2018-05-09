@@ -8,6 +8,7 @@ RSpec.describe 'App Manifests' do
   let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space) }
   let(:second_route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path') }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+
   let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
 
   before do
@@ -249,6 +250,158 @@ RSpec.describe 'App Manifests' do
         app_model.reload
         lifecycle_data = app_model.lifecycle_data
         expect(lifecycle_data.buildpacks).to eq([buildpack.name, buildpack2.name])
+      end
+    end
+  end
+
+  describe 'GET /v3/apps/:guid/manifest' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' }) }
+
+    let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance) }
+    let!(:service_binding2) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance2) }
+    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
+    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: second_route) }
+
+    let!(:worker_process) do
+      VCAP::CloudController::ProcessModelFactory.make(
+        app: app_model,
+        type: 'worker',
+        command: 'Do a thing',
+        health_check_type: 'http',
+        health_check_http_endpoint: '/foobar',
+        health_check_timeout: 5,
+      )
+    end
+
+    context 'for a buildpack' do
+      let!(:buildpack) { VCAP::CloudController::Buildpack.make }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
+
+      let(:expected_yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app_model.name,
+              'env' => {
+                'one' => 'tomato',
+                'two' => 'potato'
+              },
+              'buildpacks' => [buildpack.name, buildpack2.name],
+              'stack' => buildpack.stack,
+              'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
+              'routes' => [
+                { 'route' => "#{route.host}.#{route.domain.name}" },
+                { 'route' => "#{second_route.host}.#{second_route.domain.name}/path" }
+              ],
+              'processes' => [
+                {
+                  'type' => process.type,
+                  'instances' => process.instances,
+                  'memory' => process.memory,
+                  'disk_quota' => process.disk_quota,
+                  'health-check-type' => process.health_check_type,
+                },
+                {
+                  'type' => worker_process.type,
+                  'instances' => worker_process.instances,
+                  'memory' => worker_process.memory,
+                  'disk_quota' => worker_process.disk_quota,
+                  'command' => worker_process.command,
+                  'health-check-type' => worker_process.health_check_type,
+                  'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
+                  'timeout' => worker_process.health_check_timeout,
+                },
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      before do
+        app_model.lifecycle_data.update(
+          buildpacks: [buildpack.name, buildpack2.name],
+          stack: buildpack.stack
+        )
+      end
+
+      it 'retrieves an app manifest for the app' do
+        get "/v3/apps/#{app_model.guid}/manifest", nil, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq(expected_yml_manifest)
+      end
+    end
+
+    context 'for a docker app' do
+      let(:docker_package) do
+        VCAP::CloudController::PackageModel.make(
+          :docker,
+          app: app_model,
+          docker_username: 'xXxMyL1ttlePwnyxXx')
+      end
+
+      let(:droplet) do
+        VCAP::CloudController::DropletModel.make app: app_model, package: docker_package
+      end
+
+      let(:app_model) do
+        VCAP::CloudController::AppModel.make(:docker, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' })
+      end
+
+      before do
+        app_model.update(droplet: droplet)
+      end
+
+      let(:expected_yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => app_model.name,
+              'env' => {
+                'one' => 'tomato',
+                'two' => 'potato'
+              },
+              'docker' => {
+                'image' => docker_package.image,
+                'username' => 'xXxMyL1ttlePwnyxXx'
+              },
+              'services' => [service_binding.service_instance_name, service_binding2.service_instance_name],
+              'routes' => [
+                { 'route' => "#{route.host}.#{route.domain.name}" },
+                { 'route' => "#{second_route.host}.#{second_route.domain.name}/path" }
+              ],
+              'processes' => [
+                {
+                  'type' => process.type,
+                  'instances' => process.instances,
+                  'memory' => process.memory,
+                  'disk_quota' => process.disk_quota,
+                  'health-check-type' => process.health_check_type,
+                },
+                {
+                  'type' => worker_process.type,
+                  'instances' => worker_process.instances,
+                  'memory' => worker_process.memory,
+                  'disk_quota' => worker_process.disk_quota,
+                  'command' => worker_process.command,
+                  'health-check-type' => worker_process.health_check_type,
+                  'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
+                  'timeout' => worker_process.health_check_timeout,
+                },
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      it 'retrieves an app manifest for the app' do
+        get "/v3/apps/#{app_model.guid}/manifest", nil, user_header
+
+        expect(last_response.status).to eq(200)
+        expect(last_response.body).to eq(expected_yml_manifest)
       end
     end
   end
