@@ -498,4 +498,23 @@ RSpec.describe CloudController::DependencyLocator do
       expect(locator.copilot_client).to eq(copilot_client)
     end
   end
+
+  describe '#statsd_client' do
+    it 'returns the statsd client' do
+      host = 'test-host'
+      port = 1234
+
+      TestConfig.override({
+        statsd_host: host,
+        statsd_port: port,
+      })
+
+      expected_client = double(Statsd)
+
+      allow(Statsd).to receive(:new).with(host, port).
+        and_return(expected_client)
+
+      expect(locator.statsd_client).to eq(expected_client)
+    end
+  end
 end

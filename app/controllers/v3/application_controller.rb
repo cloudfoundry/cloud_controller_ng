@@ -93,9 +93,14 @@ class ApplicationController < ActionController::Base
     @perm_client ||= VCAP::CloudController::Perm::Client.build_from_config(configuration, File)
   end
 
+  def statsd_client
+    @statsd_client ||= Statsd.new(config.get(:statsd_host), config.get(:statsd_port))
+  end
+
   def permission_queryer
     @cached_permission_queryer ||= VCAP::CloudController::Permissions::Queryer.build(
       perm_client,
+      statsd_client,
       SecurityContext,
       configuration.get(:perm, :enabled),
       configuration.get(:perm, :query_raise_on_mismatch)

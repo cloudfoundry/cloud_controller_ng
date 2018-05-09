@@ -5,8 +5,9 @@ module VCAP::CloudController
     class Experiment < Scientist::Default
       include Scientist::Experiment
 
-      def initialize(name:, enabled:)
+      def initialize(name:, statsd_client:, enabled:)
         super(name)
+        @statsd_client = statsd_client
         @enabled = enabled
       end
 
@@ -15,7 +16,11 @@ module VCAP::CloudController
       end
 
       def publish(result)
+        success = 0
+
         if result.matched?
+          success = 1
+
           logger.debug(
             'matched',
             {
@@ -33,11 +38,13 @@ module VCAP::CloudController
               candidate: observation_payload(result.candidates.first),
             })
         end
+
+        statsd_client.gauge("cc.perm.experiment.#{name}.match", success)
       end
 
       private
 
-      attr_reader :enabled
+      attr_reader :statsd_client, :enabled
 
       def logger
         @logger ||= Steno.logger("science.#{name}")

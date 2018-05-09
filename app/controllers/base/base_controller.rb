@@ -55,6 +55,7 @@ module VCAP::CloudController::RestController
       @access_context = Security::AccessContext.new(
         VCAP::CloudController::Permissions::Queryer.build(
           dependencies.fetch(:perm_client),
+          dependencies.fetch(:statsd_client),
           VCAP::CloudController::SecurityContext,
           config.get(:perm, :enabled),
         )

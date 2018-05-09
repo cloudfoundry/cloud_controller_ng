@@ -6,6 +6,7 @@ module VCAP::CloudController
     let(:db_permissions) { instance_double(VCAP::CloudController::Permissions) }
     let(:perm_permissions) { instance_double(VCAP::CloudController::Perm::Permissions) }
 
+    let(:statsd_client) { spy(Statsd, gauge: nil) }
     let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil) }
     let(:current_user_guid) { 'some-user-guid' }
 
@@ -16,6 +17,7 @@ module VCAP::CloudController
       Permissions::Queryer.new(
         db_permissions: db_permissions,
         perm_permissions: perm_permissions,
+        statsd_client: statsd_client,
         perm_enabled: true,
         current_user_guid: current_user_guid
       )
@@ -46,6 +48,12 @@ module VCAP::CloudController
           }
         )
       end
+
+      it 'publishes the success to statsd' do
+        query_fn.call(subject)
+
+        expect(statsd_client).to have_received(:gauge).with("cc.perm.experiment.#{experiment_name}.match", 1)
+      end
     end
 
     RSpec.shared_examples 'mismatch recorder' do |query_fn, experiment_name, control_value, candidate_value, additional_context={}|
@@ -66,6 +74,12 @@ module VCAP::CloudController
             candidate: { value: candidate_value },
           }
         )
+      end
+
+      it 'publishes the failure to statsd' do
+        query_fn.call(subject)
+
+        expect(statsd_client).to have_received(:gauge).with("cc.perm.experiment.#{experiment_name}.match", 0)
       end
     end
 
@@ -88,7 +102,21 @@ module VCAP::CloudController
         allow(VCAP::CloudController::Perm::Permissions).to receive(:new).and_return(perm_permissions)
         allow(VCAP::CloudController::Science::Experiment).to receive(:raise_on_mismatches=)
 
-        queryer = Permissions::Queryer.build(perm_client, security_context, true, true)
+        expected_queryer = double(:queryer)
+
+        allow(Permissions::Queryer).to receive(:new).
+          with(
+            db_permissions: db_permissions,
+            perm_permissions: perm_permissions,
+            statsd_client: statsd_client,
+            perm_enabled: true,
+            current_user_guid: current_user_guid,
+          ).
+          and_return(expected_queryer)
+
+        actual_queryer = Permissions::Queryer.build(perm_client, statsd_client, security_context, true, true)
+
+        expect(actual_queryer).to eq(expected_queryer)
 
         expect(VCAP::CloudController::Permissions).to have_received(:new).with(current_user)
         expect(VCAP::CloudController::Perm::Permissions).to have_received(:new).with(
@@ -97,10 +125,6 @@ module VCAP::CloudController
           user_id: current_user_guid,
           issuer: issuer
         )
-        expect(VCAP::CloudController::Science::Experiment).to have_received(:raise_on_mismatches=).with(true)
-
-        expect(queryer.db_permissions).to eq(db_permissions)
-        expect(queryer.perm_permissions).to eq(perm_permissions)
       end
     end
 

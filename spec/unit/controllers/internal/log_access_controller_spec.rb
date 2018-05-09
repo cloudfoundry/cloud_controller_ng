@@ -18,6 +18,7 @@ module VCAP::CloudController
         {},
         nil,
         {
+          statsd_client: double(Statsd),
           perm_client: double(Perm::Client)
         },
       )

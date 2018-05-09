@@ -8,7 +8,10 @@ module VCAP::CloudController
     let(:sinatra) { nil }
     let(:config) { double(Config, get: nil) }
     let(:dependencies) do
-      { perm_client: double(Perm::Client) }
+      {
+        statsd_client: double(Statsd),
+        perm_client: double(Perm::Client),
+      }
     end
 
     class TestController < RestController::BaseController

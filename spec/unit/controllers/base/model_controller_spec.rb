@@ -8,7 +8,8 @@ module VCAP::CloudController
       {
         object_renderer: nil,
         collection_renderer: nil,
-        perm_client: double(Perm::Client)
+        perm_client: double(Perm::Client),
+        statsd_client: double(Statsd),
       }
     end
     let(:config) { double(Config, get: nil) }

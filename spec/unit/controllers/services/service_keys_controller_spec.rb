@@ -48,6 +48,7 @@ module VCAP::CloudController
       let(:dependencies) { {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer,
+          statsd_client: double(Statsd),
           perm_client: double(Perm::Client)
       }}
       let(:config) { double(Config, get: nil) }

@@ -343,6 +343,11 @@ module CloudController
       end
     end
 
+    def statsd_client
+      @dependencies[:statsd_client] ||
+        register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
+    end
+
     private
 
     def build_bbs_stager_client
