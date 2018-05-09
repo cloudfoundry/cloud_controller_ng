@@ -47,21 +47,19 @@ module VCAP
         end
 
         def can_read_from_org?(org_id)
-          permissions = [
+          can_read_globally? ||
+          has_any_permission?([
             { action: ORG_MANAGER_ACTION, resource: org_id },
             { action: ORG_AUDITOR_ACTION, resource: org_id },
             { action: ORG_USER_ACTION, resource: org_id },
             { action: ORG_BILLING_MANAGER_ACTION, resource: org_id },
-          ]
-          can_read_globally? || has_any_permission?(permissions)
+          ])
         end
 
         def can_write_to_org?(org_id)
-          permissions = [
+          can_write_globally? || has_any_permission?([
             { action: ORG_MANAGER_ACTION, resource: org_id },
-          ]
-
-          can_write_globally? || has_any_permission?(permissions)
+          ])
         end
 
         def readable_space_guids
@@ -88,30 +86,24 @@ module VCAP
         end
 
         def can_read_from_space?(space_id, org_id)
-          permissions = [
+          can_read_globally? || has_any_permission?([
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },
             { action: SPACE_MANAGER_ACTION, resource: space_id },
             { action: SPACE_AUDITOR_ACTION, resource: space_id },
             { action: ORG_MANAGER_ACTION, resource: org_id },
-          ]
-
-          can_read_globally? || has_any_permission?(permissions)
+          ])
         end
 
         def can_read_secrets_in_space?(space_id, org_id)
-          permissions = [
+          can_read_secrets_globally? || has_any_permission?([
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },
-          ]
-
-          can_read_secrets_globally? || has_any_permission?(permissions)
+          ])
         end
 
         def can_write_to_space?(space_id)
-          permissions = [
+          can_write_globally? || has_any_permission?([
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },
-          ]
-
-          can_write_globally? || has_any_permission?(permissions)
+          ])
         end
 
         def can_read_from_isolation_segment?(isolation_segment)
@@ -121,15 +113,13 @@ module VCAP
         end
 
         def can_read_route?(space_id, org_id)
-          permissions = [
+          can_read_globally? || has_any_permission?([
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },
             { action: SPACE_MANAGER_ACTION, resource: space_id },
             { action: SPACE_AUDITOR_ACTION, resource: space_id },
             { action: ORG_MANAGER_ACTION, resource: org_id },
             { action: ORG_AUDITOR_ACTION, resource: org_id },
-          ]
-
-          can_read_globally? || has_any_permission?(permissions)
+          ])
         end
 
         private
