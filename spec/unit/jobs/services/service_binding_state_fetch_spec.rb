@@ -74,6 +74,24 @@ module VCAP::CloudController
                 end
               end
 
+              context 'and the broker returns a valid syslog_drain_url' do
+                before do
+                  # executes job and enqueues another job
+                  run_job(job)
+                end
+
+                let(:binding_response) { { 'syslog_drain_url': 'syslog://example.com/awesome-syslog' } }
+
+                it 'should not enqueue another fetch job' do
+                  expect(Delayed::Job.count).to eq 0
+                end
+
+                it 'should update the service binding' do
+                  service_binding.reload
+                  expect(service_binding.syslog_drain_url).to eq('syslog://example.com/awesome-syslog')
+                end
+              end
+
               context 'and the broker returns invalid credentials' do
                 let(:broker_response) {
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(

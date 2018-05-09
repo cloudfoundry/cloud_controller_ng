@@ -26,7 +26,10 @@ module VCAP::CloudController
               logger.error("There was an error while fetching the service binding details: #{e}")
               return
             end
-            service_binding.update({ 'credentials' => binding_response[:credentials] })
+            service_binding.update({
+              'credentials'      => binding_response[:credentials],
+              'syslog_drain_url' => binding_response[:syslog_drain_url]
+            })
             record_event(service_binding, @request_attrs)
           end
 
