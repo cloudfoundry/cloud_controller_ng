@@ -1168,3 +1168,8 @@
   name: BuildpackZipError
   http_code: 422
   message: 'Buildpack zip error: %s'
+
+390014:
+  name: DeploymentsDisabled
+  http_code: 403
+  message: "Deployments cannot be created due to manifest property 'temporary_disable_deployments'"

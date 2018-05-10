@@ -11,6 +11,9 @@ RSpec.describe DeploymentsController, type: :controller do
   let(:org) { space.organization }
 
   describe '#create' do
+    before do
+      TestConfig.override(temporary_disable_deployments: false)
+    end
     let(:req_body) do
       {
         relationships: {
@@ -84,6 +87,26 @@ RSpec.describe DeploymentsController, type: :controller do
     it 'returns 401 for Unauthenticated requests' do
       post :create, body: req_body
       expect(response.status).to eq(401)
+    end
+
+    context 'when temporary_disable_deployments is true' do
+      before do
+        TestConfig.override(temporary_disable_deployments: true)
+        set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+      end
+
+      it 'returns a 403' do
+        post :create, body: req_body
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include("Deployments cannot be created due to manifest property 'temporary_disable_deployments'")
+      end
+
+      it 'does not create a deployment' do
+        expect(VCAP::CloudController::DeploymentCreate).not_to receive(:create)
+
+        post :create, body: req_body
+      end
     end
   end
 

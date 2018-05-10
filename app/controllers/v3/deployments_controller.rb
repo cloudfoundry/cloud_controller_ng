@@ -23,6 +23,7 @@ class DeploymentsController < ApplicationController
   end
 
   def create
+    deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
     app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && can_write?(app.space.guid)
@@ -41,5 +42,11 @@ class DeploymentsController < ApplicationController
       can_read?(deployment.app.space.guid, deployment.app.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
+  end
+
+  private
+
+  def deployments_not_enabled!
+    raise CloudController::Errors::ApiError.new_from_details('DeploymentsDisabled')
   end
 end

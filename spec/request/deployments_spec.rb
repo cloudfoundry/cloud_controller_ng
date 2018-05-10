@@ -11,6 +11,7 @@ RSpec.describe 'Deployments' do
   let(:user_name) { 'some-username' }
 
   before do
+    TestConfig.override(temporary_disable_deployments: false)
     app_model.update(droplet_guid: droplet.guid)
   end
 
