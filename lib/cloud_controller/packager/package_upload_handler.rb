@@ -3,9 +3,6 @@ require 'cloud_controller/dependency_locator'
 module CloudController
   module Packager
     class PackageUploadHandler
-      class PackageNotFound < StandardError
-      end
-
       def initialize(package_guid, uploaded_files_path, cached_files_fingerprints)
         @package_guid              = package_guid
         @uploaded_files_path       = uploaded_files_path
@@ -14,7 +11,7 @@ module CloudController
 
       def pack
         package = VCAP::CloudController::PackageModel.find(guid: @package_guid)
-        raise PackageNotFound unless package
+        return unless package
 
         begin
           checksums = packer_implementation.send_package_to_blobstore(@package_guid, @uploaded_files_path, @cached_files_fingerprints)

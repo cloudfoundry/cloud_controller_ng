@@ -64,9 +64,9 @@ module CloudController::Packager
           package.destroy
         end
 
-        it 'raises an error and removes the compressed path' do
+        it 'succeeds and removes the compressed path' do
           expect(FileUtils).to receive(:rm_f).with(uploaded_files_path)
-          expect { packer.pack }.to raise_error(PackageUploadHandler::PackageNotFound)
+          expect(packer.pack).to eq nil
         end
       end
 
