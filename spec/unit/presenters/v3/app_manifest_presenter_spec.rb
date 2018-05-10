@@ -106,8 +106,8 @@ module VCAP::CloudController::Presenters::V3
             {
               'type' => process1.type,
               'instances' => process1.instances,
-              'memory' => process1.memory,
-              'disk_quota' => process1.disk_quota,
+              'memory' => "#{process1.memory}M",
+              'disk_quota' => "#{process1.disk_quota}M",
               'command' => process1.command,
               'health-check-type' => process1.health_check_type,
               'health-check-http-endpoint' => process1.health_check_http_endpoint,
@@ -116,8 +116,8 @@ module VCAP::CloudController::Presenters::V3
             {
               'type' => process2.type,
               'instances' => process2.instances,
-              'memory' => process2.memory,
-              'disk_quota' => process2.disk_quota,
+              'memory' => "#{process2.memory}M",
+              'disk_quota' => "#{process2.disk_quota}M",
               'health-check-type' => process2.health_check_type,
             }
           ])
@@ -140,15 +140,15 @@ module VCAP::CloudController::Presenters::V3
               {
                 'type' => process1.type,
                 'instances' => process1.instances,
-                'memory' => process1.memory,
-                'disk_quota' => process1.disk_quota,
+                'memory' => "#{process1.memory}M",
+                'disk_quota' => "#{process1.disk_quota}M",
                 'health-check-type' => process1.health_check_type,
               },
               {
                 'type' => process2.type,
                 'instances' => process2.instances,
-                'memory' => process2.memory,
-                'disk_quota' => process2.disk_quota,
+                'memory' => "#{process2.memory}M",
+                'disk_quota' => "#{process2.disk_quota}M",
                 'health-check-type' => process2.health_check_type,
               }
             ])

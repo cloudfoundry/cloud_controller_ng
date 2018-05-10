@@ -68,8 +68,8 @@ module VCAP::CloudController
           {
             'type' => process.type,
             'instances' => process.instances,
-            'memory' => process.memory,
-            'disk_quota' => process.disk_quota,
+            'memory' => add_units(process.memory),
+            'disk_quota' => add_units(process.disk_quota),
             'command' => process.command,
             'health-check-type' => process.health_check_type,
             'health-check-http-endpoint' => process.health_check_http_endpoint,
@@ -79,6 +79,10 @@ module VCAP::CloudController
 
         def alphabetize(array)
           array.sort_by(&:downcase)
+        end
+
+        def add_units(val)
+          "#{val}M"
         end
       end
     end
