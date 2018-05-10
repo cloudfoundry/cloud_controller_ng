@@ -28,7 +28,8 @@ module VCAP::CloudController
             end
             service_binding.update({
               'credentials'      => binding_response[:credentials],
-              'syslog_drain_url' => binding_response[:syslog_drain_url]
+              'syslog_drain_url' => binding_response[:syslog_drain_url],
+              'volume_mounts' => binding_response[:volume_mounts],
             })
             record_event(service_binding, @request_attrs)
           end

@@ -92,6 +92,50 @@ module VCAP::CloudController
                 end
               end
 
+              context 'and the broker returns a valid volume_mounts' do
+                before do
+                  # executes job and enqueues another job
+                  run_job(job)
+                end
+
+                let(:binding_response) do
+                  {
+                    'volume_mounts': [{
+                      'driver': 'cephdriver',
+                      'container_dir': '/data/images',
+                      'mode': 'r',
+                      'device_type': 'shared',
+                      'device': {
+                        'volume_id': 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                        'mount_config': {
+                          'key': 'value'
+                        }
+                      }
+                    }]
+                  }
+                end
+
+                it 'should not enqueue another fetch job' do
+                  expect(Delayed::Job.count).to eq 0
+                end
+
+                it 'should update the service binding' do
+                  service_binding.reload
+                  expect(service_binding.volume_mounts).to eq([{
+                      'driver' => 'cephdriver',
+                      'container_dir' => '/data/images',
+                      'mode' => 'r',
+                      'device_type' => 'shared',
+                      'device' => {
+                        'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                        'mount_config' => {
+                          'key' => 'value'
+                        }
+                      }
+                  }])
+                end
+              end
+
               context 'and the broker returns invalid credentials' do
                 let(:broker_response) {
                   VCAP::Services::ServiceBrokers::V2::HttpResponse.new(
