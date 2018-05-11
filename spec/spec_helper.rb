@@ -60,17 +60,17 @@ init_block = proc do
 
   require 'pry'
 
+  require 'cloud_controller'
   require 'allowy/rspec'
 
   require 'posix/spawn'
 
   require 'rspec_api_documentation'
-  require 'rspec/collection_matchers'
-  require 'rspec/its'
-  require 'cloud_controller'
   require 'services'
 
   require 'support/bootstrap/spec_bootstrap'
+  require 'rspec/collection_matchers'
+  require 'rspec/its'
 end
 
 each_run_block = proc do
