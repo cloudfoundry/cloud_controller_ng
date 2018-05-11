@@ -83,6 +83,83 @@ module VCAP::CloudController
       end
     end
 
+    RSpec.shared_examples 'readable guids' do |name|
+      method = "readable_#{name}_guids"
+      method_sym = method.to_sym
+
+      before do
+        allow(perm_permissions).to receive(method_sym)
+        allow(db_permissions).to receive(method_sym)
+
+        allow(db_permissions).to receive(:can_read_globally?).and_return(false)
+      end
+
+      it "asks for #{method} on behalf of the current user" do
+        subject.send(method_sym)
+
+        expect(db_permissions).to have_received(method_sym)
+        expect(perm_permissions).to have_received(method_sym)
+      end
+
+      it 'returns the control guids' do
+        control_guids = [SecureRandom.uuid]
+        candidate_guids = [SecureRandom.uuid]
+
+        allow(db_permissions).to receive(method_sym).and_return(control_guids)
+        allow(perm_permissions).to receive(method_sym).and_return(candidate_guids)
+
+        readable_guids = subject.send(method_sym)
+
+        expect(readable_guids).to equal(control_guids)
+      end
+
+      it 'skips the experiment if the user is a global reader' do
+        allow(db_permissions).to receive(:can_read_globally?).and_return(true)
+
+        subject.send(method_sym)
+
+        expect(perm_permissions).not_to have_received(method_sym)
+      end
+
+      context 'when the control and candidate are the same' do
+        guids = [SecureRandom.uuid, SecureRandom.uuid]
+
+        before do
+          allow(db_permissions).to receive(method_sym).and_return(guids)
+          allow(perm_permissions).to receive(method_sym).and_return(guids)
+        end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.send(method_sym) }, method, guids, guids
+      end
+
+      context 'when the control and candidate are the same but in a different order' do
+        guid1 = SecureRandom.uuid
+        guid2 = SecureRandom.uuid
+
+        control_order_guids = [guid1, guid2]
+        candidate_order_guids = [guid2, guid1]
+
+        before do
+          allow(db_permissions).to receive(method_sym).and_return(control_order_guids)
+          allow(perm_permissions).to receive(method_sym).and_return(candidate_order_guids)
+        end
+
+        it_behaves_like 'match recorder', proc { |queryer| queryer.send(method_sym) }, method, control_order_guids, candidate_order_guids
+      end
+
+      context 'when the control and candidate are different' do
+        control_guids = [SecureRandom.uuid, SecureRandom.uuid]
+        candidate_guids = [SecureRandom.uuid]
+
+        before do
+          allow(db_permissions).to receive(method_sym).and_return(control_guids)
+          allow(perm_permissions).to receive(method_sym).and_return(candidate_guids)
+        end
+
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.send(method_sym) }, method, control_guids, candidate_guids
+      end
+    end
+
     describe '.build' do
       it 'makes a new queryer object' do
         security_context = class_double(VCAP::CloudController::SecurityContext)
@@ -193,79 +270,7 @@ module VCAP::CloudController
     end
 
     describe '#readable_org_guids' do
-      before do
-        allow(perm_permissions).to receive(:readable_org_guids)
-        allow(db_permissions).to receive(:readable_org_guids)
-
-        allow(db_permissions).to receive(:can_read_globally?).and_return(false)
-      end
-
-      it 'asks for #readable_org_guids on behalf of the current user' do
-        allow(perm_permissions).to receive(:readable_org_guids).and_return([])
-
-        subject.readable_org_guids
-
-        expect(db_permissions).to have_received(:readable_org_guids)
-        expect(perm_permissions).to have_received(:readable_org_guids)
-      end
-
-      it 'returns the control org guids' do
-        control_org_guids = [SecureRandom.uuid]
-        candidate_org_guids = [SecureRandom.uuid]
-
-        allow(db_permissions).to receive(:readable_org_guids).and_return(control_org_guids)
-        allow(perm_permissions).to receive(:readable_org_guids).and_return(candidate_org_guids)
-
-        readable_org_guids = subject.readable_org_guids
-
-        expect(readable_org_guids).to equal(control_org_guids)
-      end
-
-      it 'skips the experiment if the user is a global reader' do
-        allow(db_permissions).to receive(:can_read_globally?).and_return(true)
-
-        subject.readable_org_guids
-
-        expect(perm_permissions).not_to have_received(:readable_org_guids)
-      end
-
-      context 'when the control and candidate are the same' do
-        org_guids = [SecureRandom.uuid, SecureRandom.uuid]
-
-        before do
-          allow(db_permissions).to receive(:readable_org_guids).and_return(org_guids)
-          allow(perm_permissions).to receive(:readable_org_guids).and_return(org_guids)
-        end
-
-        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_org_guids }, 'readable_org_guids', org_guids, org_guids
-      end
-
-      context 'when the control and candidate are the same but in a different order' do
-        org_guid1 = SecureRandom.uuid
-        org_guid2 = SecureRandom.uuid
-
-        org_guids_control_order = [org_guid1, org_guid2]
-        org_guids_candidate_order = [org_guid2, org_guid1]
-
-        before do
-          allow(db_permissions).to receive(:readable_org_guids).and_return(org_guids_control_order)
-          allow(perm_permissions).to receive(:readable_org_guids).and_return(org_guids_candidate_order)
-        end
-
-        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_org_guids }, 'readable_org_guids', org_guids_control_order, org_guids_candidate_order
-      end
-
-      context 'when the control and candidate are different' do
-        control_org_guids = [SecureRandom.uuid, SecureRandom.uuid]
-        candidate_org_guids = [SecureRandom.uuid]
-
-        before do
-          allow(db_permissions).to receive(:readable_org_guids).and_return(control_org_guids)
-          allow(perm_permissions).to receive(:readable_org_guids).and_return(candidate_org_guids)
-        end
-
-        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.readable_org_guids }, 'readable_org_guids', control_org_guids, candidate_org_guids
-      end
+      it_behaves_like 'readable guids', 'org'
     end
 
     describe '#can_read_from_org?' do
@@ -393,79 +398,7 @@ module VCAP::CloudController
     end
 
     describe '#readable_space_guids' do
-      before do
-        allow(perm_permissions).to receive(:readable_space_guids)
-        allow(db_permissions).to receive(:readable_space_guids)
-
-        allow(db_permissions).to receive(:can_read_globally?).and_return(false)
-      end
-
-      it 'asks for #readable_space_guids on behalf of the current user' do
-        allow(perm_permissions).to receive(:readable_space_guids).and_return([])
-
-        subject.readable_space_guids
-
-        expect(db_permissions).to have_received(:readable_space_guids)
-        expect(perm_permissions).to have_received(:readable_space_guids)
-      end
-
-      it 'returns the control space guids' do
-        control_space_guids = [SecureRandom.uuid]
-        candidate_space_guids = [SecureRandom.uuid]
-
-        allow(db_permissions).to receive(:readable_space_guids).and_return(control_space_guids)
-        allow(perm_permissions).to receive(:readable_space_guids).and_return(candidate_space_guids)
-
-        readable_space_guids = subject.readable_space_guids
-
-        expect(readable_space_guids).to equal(control_space_guids)
-      end
-
-      it 'skips the experiment if the user is a global reader' do
-        allow(db_permissions).to receive(:can_read_globally?).and_return(true)
-
-        subject.readable_space_guids
-
-        expect(perm_permissions).not_to have_received(:readable_space_guids)
-      end
-
-      context 'when the control and candidate are the same' do
-        space_guids = [SecureRandom.uuid, SecureRandom.uuid]
-
-        before do
-          allow(db_permissions).to receive(:readable_space_guids).and_return(space_guids)
-          allow(perm_permissions).to receive(:readable_space_guids).and_return(space_guids)
-        end
-
-        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_space_guids }, 'readable_space_guids', space_guids, space_guids
-      end
-
-      context 'when the control and candidate are the same but in a different order' do
-        space_guid1 = SecureRandom.uuid
-        space_guid2 = SecureRandom.uuid
-
-        space_guids_control_order = [space_guid1, space_guid2]
-        space_guids_candidate_order = [space_guid2, space_guid1]
-
-        before do
-          allow(db_permissions).to receive(:readable_space_guids).and_return(space_guids_control_order)
-          allow(perm_permissions).to receive(:readable_space_guids).and_return(space_guids_candidate_order)
-        end
-
-        it_behaves_like 'match recorder', proc { |queryer| queryer.readable_space_guids }, 'readable_space_guids', space_guids_control_order, space_guids_candidate_order
-      end
-
-      context 'when the control and candidate are different' do
-        control_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
-        candidate_space_guids = [SecureRandom.uuid]
-
-        before do
-          allow(db_permissions).to receive(:readable_space_guids).and_return(control_space_guids)
-          allow(perm_permissions).to receive(:readable_space_guids).and_return(candidate_space_guids)
-        end
-
-        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.readable_space_guids }, 'readable_space_guids', control_space_guids, candidate_space_guids
-      end
+      it_behaves_like 'readable guids', 'space'
     end
 
     describe '#can_read_from_space?' do
