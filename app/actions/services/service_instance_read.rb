@@ -18,7 +18,7 @@ module VCAP::CloudController
         raise NotSupportedError.new
       end
 
-      raise_if_locked(service_instance)
+      raise_if_instance_locked(service_instance)
 
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
       client.fetch_service_instance(service_instance)

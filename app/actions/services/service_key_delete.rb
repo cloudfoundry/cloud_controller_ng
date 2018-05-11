@@ -18,7 +18,7 @@ module VCAP::CloudController
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
       begin
-        raise_if_locked(service_instance)
+        raise_if_instance_locked(service_instance)
 
         client.unbind(service_binding)
         service_binding.destroy
