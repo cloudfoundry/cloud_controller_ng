@@ -18,6 +18,9 @@ module VCAP::CloudController
 
         app.reload
         expect(app.processes.count).to eq(2)
+
+        process_create_events = Event.last(2)
+        expect(process_create_events.map(&:type)).to match_array(['audit.app.process.create', 'audit.app.process.create'])
       end
 
       it 'does not delete existing processes' do
@@ -28,11 +31,30 @@ module VCAP::CloudController
         expect(existing_process.exists?).to be true
       end
 
-      it 'updates existing processes' do
-        existing_process = ProcessModel.make(type: 'other', command: 'old', app: app, metadata: {})
-        expect {
-          process_upsert_from_droplet.process_current_droplet(app)
-        }.to change { existing_process.refresh.command }.from('old').to('stuff')
+      context 'when updating existing processes' do
+        let(:process_types) { { other: 'stuff' } }
+        let!(:existing_process) { ProcessModel.make(type: 'other', command: 'old', app: app, metadata: {}) }
+
+        it 'updates the detected command for existing processes without changing command' do
+          updated_process_types = { web: 'thing', other: 'newer-stuff' }
+
+          expect {
+            new_droplet = DropletModel.make(state: DropletModel::STAGED_STATE, process_types: updated_process_types)
+            app.update(droplet: new_droplet)
+            process_upsert_from_droplet.process_current_droplet(app)
+          }.to change { existing_process.refresh.detected_start_command }.from('stuff').to('newer-stuff')
+
+          expect(existing_process.command).to eq('old')
+        end
+
+        it 'creates an empty process.update audit event so users know what processes were affected' do
+          expect {
+            process_upsert_from_droplet.process_current_droplet(app)
+          }.to change { Event.count }.by(1)
+
+          process_update_event = Event.last
+          expect(process_update_event.type).to eq('audit.app.process.update')
+        end
       end
 
       context 'when the app does not have droplet' do
