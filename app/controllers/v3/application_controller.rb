@@ -90,11 +90,11 @@ class ApplicationController < ActionController::Base
   end
 
   def perm_client
-    @perm_client ||= VCAP::CloudController::Perm::Client.build_from_config(configuration, File)
+    @perm_client ||= CloudController::DependencyLocator.instance.perm_client
   end
 
   def statsd_client
-    @statsd_client ||= Statsd.new(config.get(:statsd_host), config.get(:statsd_port))
+    @statsd_client ||= CloudController::DependencyLocator.instance.statsd_client
   end
 
   def permission_queryer
