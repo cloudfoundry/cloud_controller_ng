@@ -13,6 +13,13 @@ GIT
     rubyzip (1.2.1)
 
 GIT
+  remote: https://github.com/sporkrb/spork
+  revision: 224df492657e617a0c93c0319e78f0eefee5b636
+  ref: 224df49
+  specs:
+    spork (1.0.0rc4)
+
+GIT
   remote: https://github.com/zipmark/rspec_api_documentation.git
   revision: de69a7a87adace29f39cbe937ae7bb8da9a4c9c1
   specs:
@@ -491,6 +498,7 @@ DEPENDENCIES
   sequel
   sinatra (~> 1.4)
   sinatra-contrib
+  spork!
   statsd-ruby (~> 1.4.0)
   steno
   talentbox-delayed_job_sequel (~> 4.2.2)
