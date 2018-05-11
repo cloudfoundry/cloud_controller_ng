@@ -34,16 +34,20 @@ module VCAP
         end
 
         def readable_org_guids
-          perm_client.list_resource_patterns(
-            user_id: user_id,
-            issuer: issuer,
-            actions: [
-              ORG_MANAGER_ACTION,
-              ORG_BILLING_MANAGER_ACTION,
-              ORG_AUDITOR_ACTION,
-              ORG_USER_ACTION
-            ]
-          )
+          if can_read_globally?
+            VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
+          else
+            perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                ORG_MANAGER_ACTION,
+                ORG_BILLING_MANAGER_ACTION,
+                ORG_AUDITOR_ACTION,
+                ORG_USER_ACTION
+              ]
+            )
+          end
         end
 
         def can_read_from_org?(org_id)
@@ -63,26 +67,30 @@ module VCAP
         end
 
         def readable_space_guids
-          space_guids = perm_client.list_resource_patterns(
-            user_id: user_id,
-            issuer: issuer,
-            actions: [
-              SPACE_DEVELOPER_ACTION,
-              SPACE_MANAGER_ACTION,
-              SPACE_AUDITOR_ACTION,
-            ]
-          )
-          org_guids = perm_client.list_resource_patterns(
-            user_id: user_id,
-            issuer: issuer,
-            actions: [
-              ORG_MANAGER_ACTION,
-            ]
-          )
+          if can_read_globally?
+            VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+          else
+            space_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                SPACE_DEVELOPER_ACTION,
+                SPACE_MANAGER_ACTION,
+                SPACE_AUDITOR_ACTION,
+              ]
+            )
+            org_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                ORG_MANAGER_ACTION,
+              ]
+            )
 
-          Organization.where(guid: org_guids).all.map do |org|
-            org.spaces.map(&:guid)
-          end.flatten + space_guids
+            Organization.where(guid: org_guids).all.map do |org|
+              org.spaces.map(&:guid)
+            end.flatten + space_guids
+          end
         end
 
         def can_read_from_space?(space_id, org_id)

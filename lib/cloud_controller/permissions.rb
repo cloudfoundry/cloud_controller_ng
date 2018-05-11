@@ -42,7 +42,11 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_org_guids
-    membership.org_guids_for_roles(ROLES_FOR_ORG_READING)
+    if can_read_globally?
+      VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
+    else
+      membership.org_guids_for_roles(ROLES_FOR_ORG_READING)
+    end
   end
 
   def can_read_from_org?(org_guid)
@@ -54,7 +58,11 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_space_guids
-    membership.space_guids_for_roles(ROLES_FOR_READING)
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(ROLES_FOR_READING)
+    end
   end
 
   def can_read_from_space?(space_guid, org_guid)
