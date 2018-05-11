@@ -5,12 +5,6 @@ require 'spork'
 
 run_spork = `ps | grep spork | grep -v grep`.size > 0
 
-if run_spork
-  Spork.each_run do
-    # This code will be run each time you run your specs.
-  end
-end
-
 # --- Instructions ---
 # Sort the contents of this file into a Spork.prefork and a Spork.each_run
 # block.
@@ -66,22 +60,26 @@ init_block = proc do
 
   require 'pry'
 
-  require 'cloud_controller'
   require 'allowy/rspec'
 
   require 'posix/spawn'
 
   require 'rspec_api_documentation'
+  require 'rspec/collection_matchers'
+  require 'rspec/its'
+  require 'cloud_controller'
   require 'services'
 
   require 'support/bootstrap/spec_bootstrap'
-  require 'rspec/collection_matchers'
-  require 'rspec/its'
+end
 
+each_run_block = proc do
+  # Moving this line into the init-block means that changes in code files aren't detected.
   VCAP::CloudController::SpecBootstrap.init
 
   Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
+  # each-run here?
   RSpec.configure do |rspec_config|
     rspec_config.mock_with :rspec do |mocks|
       mocks.verify_partial_doubles = true
@@ -183,11 +181,16 @@ end
 
 if run_spork
   Spork.prefork do
+    # Loading more in this block will cause your tests to run faster. However,
+    # if you change any configuration or code from libraries loaded here, you'll
+    # need to restart spork for it to take effect.
     init_block.call
   end
-  # Loading more in this block will cause your tests to run faster. However,
-  # if you change any configuration or code from libraries loaded here, you'll
-  # need to restart spork for it take effect.
+  Spork.each_run do
+    # This code will be run each time you run your specs.
+    each_run_block.call
+  end
 else
   init_block.call
+  each_run_block.call
 end

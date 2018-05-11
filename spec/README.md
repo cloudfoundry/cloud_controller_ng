@@ -58,3 +58,23 @@ Used to test integration with [NATs](https://github.com/cloudfoundry/nats-releas
 
 Previously used to both generate the v2 API docs and test the user facing JSON response for the v2 API. Instead, write a request spec.
 To view the docs locally, cd into the `docs/v2` folder, run `python -mSimpleHTTPServer`, and navigate to `http://localhost:8000`.
+
+## Running Tests In Preloaded (Fast) Mode:
+
+### The Hondamatic Way
+
+In one terminal, change to the `Cloud Controller` root directory and run `bundle exec spork`
+
+In a separate terminal, you can run selected unit tests quickly by running them with the `--drb` option, as in:
+
+    bundle exec rspec --drb spec/unit/models/services/service_plan_visibility_spec.rb
+
+Press Ctrl-C in the first terminal to stop running `spork`.
+
+### The Automatic Way
+
+In one terminal, change to the `Cloud Controller` root directory and run `bundle exec scripts/chauncey.rb`
+
+As files change, they, or their related spec files, will be run automatically.
+
+Press Ctrl-C to stop running `chauncey`.

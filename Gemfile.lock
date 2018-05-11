@@ -144,6 +144,7 @@ GEM
       http-cookie (~> 1.0.0)
     faraday_middleware (0.12.2)
       faraday (>= 0.7.4, < 1.0)
+    ffi (1.9.18)
     fluent-logger (0.7.1)
       msgpack (>= 1.0.0, < 2)
     fog-aws (2.0.1)
@@ -232,6 +233,9 @@ GEM
       addressable (>= 2.4)
     json_pure (2.1.0)
     jwt (2.1.0)
+    listen (3.0.5)
+      rb-fsevent (>= 0.9.3)
+      rb-inotify (>= 0.9)
     little-plugger (1.1.4)
     logging (2.2.2)
       little-plugger (~> 1.1)
@@ -315,6 +319,9 @@ GEM
     rainbow (2.2.2)
       rake
     rake (12.3.1)
+    rb-fsevent (0.9.6)
+    rb-inotify (0.9.5)
+      ffi (>= 0.5.0)
     representable (3.0.4)
       declarative (< 0.1.0)
       declarative-option (< 0.2.0)
@@ -462,6 +469,7 @@ DEPENDENCIES
   i18n
   json-schema
   json_pure
+  listen
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
   membrane (~> 1.0)

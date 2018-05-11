@@ -90,6 +90,7 @@ end
 group :development do
   gem 'byebug'
   gem 'debase', '>= 0.2.2.beta14'
+  gem 'listen'
   gem 'roodi'
   gem 'ruby-debug-ide', '>= 0.7.0.beta4'
   gem 'spork', git: 'https://github.com/sporkrb/spork', ref: '224df49' # '~> 1.0rc'
