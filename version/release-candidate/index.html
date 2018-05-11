@@ -7949,6 +7949,56 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
+          <h3 id="generate-an-app-manifest">Generate an app manifest</h3>
+
+<p>Generate a manifest for an app and its underlying processes.</p>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/manifest"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/x-yaml</span>
+
+---
+applications:
+- name: my-app
+  stack: cflinuxfs2
+  routes:
+  - route: my-app.example.com
+  processes:
+  - type: web
+    instances: 2
+    memory: 512M
+    disk_quota: 1024M
+    health-check-type: port
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/apps/:guid/manifest</code></p>
+
+<h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+</tbody></table>
+
           <h3 id="apply-an-app-manifest">Apply an app manifest</h3>
 
 <blockquote>
