@@ -491,6 +491,50 @@ module VCAP::CloudController
       end
     end
 
+    describe 'operation_in_progress?' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      context 'when the service binding has been created synchronously' do
+        it 'returns false' do
+          expect(service_binding.operation_in_progress?).to be false
+        end
+      end
+
+      context 'when the service binding is being created asynchronously' do
+        let(:state) {}
+        let(:operation) { ServiceBindingOperation.make(state: state) }
+
+        before do
+          service_binding.service_binding_operation = operation
+        end
+
+        context 'and the operation is in progress' do
+          let(:state) { 'in progress' }
+
+          it 'returns true' do
+            expect(service_binding.operation_in_progress?).to be true
+          end
+        end
+
+        context 'and the operation has failed' do
+          let(:state) { 'failed' }
+
+          it 'returns false' do
+            expect(service_binding.operation_in_progress?).to be false
+          end
+        end
+
+        context 'and the operation has succeeded' do
+          let(:state) { 'succeeded' }
+
+          it 'returns false' do
+            expect(service_binding.operation_in_progress?).to be false
+          end
+        end
+      end
+    end
+
     describe '#destroy' do
       it 'cascade deletes all ServiceBindingOperations for this binding' do
         binding = ServiceBinding.make

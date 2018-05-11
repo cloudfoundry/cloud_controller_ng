@@ -50,6 +50,18 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the service binding has an operation in progress' do
+        before do
+          service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
+        end
+
+        it 'raises an error' do
+          expect {
+            service_binding_delete.single_delete_sync(service_binding)
+          }.to raise_error(CloudController::Errors::ApiError, /in progress/)
+        end
+      end
+
       context 'when the service broker client raises an error' do
         let(:error) { StandardError.new('kablooey') }
 

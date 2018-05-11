@@ -106,6 +106,13 @@ module VCAP::CloudController
       !service_binding_operation || (['succeeded', 'failed'].include? service_binding_operation.state)
     end
 
+    def operation_in_progress?
+      if service_binding_operation && service_binding_operation.state == 'in progress'
+        return true
+      end
+      false
+    end
+
     def save_with_new_operation(last_operation)
       ServiceBinding.db.transaction do
         save_changes

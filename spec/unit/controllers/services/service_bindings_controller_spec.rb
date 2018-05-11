@@ -917,6 +917,22 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a binding has operation in progress' do
+          let(:last_operation) { ServiceBindingOperation.make(state: 'in progress') }
+
+          before do
+            service_binding.service_binding_operation = last_operation
+            service_binding.save
+          end
+
+          it 'should not be able to delete binding' do
+            delete "/v2/service_bindings/#{service_binding.guid}"
+            expect(last_response).to have_status_code 409
+            expect(last_response.body).to match 'AsyncServiceBindingOperationInProgress'
+            expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
+          end
+        end
+
         context 'with ?async=true' do
           it 'returns a job id' do
             delete "/v2/service_bindings/#{service_binding.guid}?async=true"

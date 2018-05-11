@@ -25,6 +25,8 @@ module VCAP::CloudController
 
       errors = each_with_error_aggregation(bindings_to_delete) do |service_binding|
         raise_if_locked(service_binding.service_instance)
+        raise_if_binding_locked(service_binding)
+
         remove_from_broker(service_binding)
         Repositories::ServiceBindingEventRepository.record_delete(service_binding, @user_audit_info)
         service_binding.destroy
