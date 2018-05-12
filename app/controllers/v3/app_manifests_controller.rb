@@ -18,6 +18,7 @@ class AppManifestsController < ApplicationController
 
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
+    unsupported_for_docker_apps!(message) if incompatible_with_buildpacks(app.lifecycle_type, message)
 
     apply_manifest_action = AppApplyManifest.new(user_audit_info)
     apply_manifest_job = VCAP::CloudController::Jobs::ApplyManifestActionJob.new(app.guid, message, apply_manifest_action)
@@ -40,6 +41,15 @@ class AppManifestsController < ApplicationController
   end
 
   private
+
+  def unsupported_for_docker_apps!(manifest)
+    error_message = manifest.buildpacks ? 'Buildpacks' : 'Buildpack'
+    raise unprocessable(error_message + ' cannot be configured for a docker lifecycle app.')
+  end
+
+  def incompatible_with_buildpacks(lifecycle_type, manifest)
+    lifecycle_type == 'docker' && (manifest.buildpack || manifest.buildpacks)
+  end
 
   def compound_error!(error_messages)
     underlying_errors = error_messages.map { |message| unprocessable(message) }
