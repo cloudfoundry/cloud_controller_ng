@@ -43,7 +43,8 @@ This configuration is specified at the top-level and applies to all of the app's
 
 Field | Description
 ---- | -----------
-**buildpack**  | a) Blank OR `default` OR `null` will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.
+**buildpack**  | a) Blank OR `default` OR `null` will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack. <br>DEPRECATED in favor of the `buildpacks` field below.
+**buildpacks**  | Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy `buildpack` field.
 **env** | A key-value hash of environment variables to be used for the app when running.
 **no-route** | Boolean value. Removes the app's routes if `true`; ignored if `false`. Cannot be used in conjunction with the `routes` attribute when set to `true`.
 **processes** | List of configuration for individual process types. See [_Process-level configuration_](#process-level-configuration).
