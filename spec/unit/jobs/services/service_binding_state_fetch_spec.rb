@@ -283,13 +283,16 @@ module VCAP::CloudController
             end
 
             context 'when the user has gone away' do
-              it 'should not create an audit event' do
+              it 'should create an audit event' do
                 allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
                 user.destroy
 
                 run_job(job)
 
-                expect(Event.find(type: 'audit.service_binding.create')).to be_nil
+                event = Event.find(type: 'audit.service_binding.create')
+                expect(event).to be
+                expect(event.actee).to eq(service_binding.guid)
+                expect(event.metadata['request']).to have_key('some_attr')
               end
             end
           end
