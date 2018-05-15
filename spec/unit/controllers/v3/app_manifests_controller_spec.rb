@@ -169,6 +169,25 @@ RSpec.describe AppManifestsController, type: :controller do
         end
       end
 
+      context 'and the value of buildpack is \"null\"' do
+        let(:request_body) do
+          { 'applications' =>
+            [{ 'name' => 'blah', 'instances' => 4, 'buildpack' => 'null' }] }
+        end
+
+        it 'should autodetect the buildpack' do
+          post :apply_manifest, guid: app_model.guid, body: request_body
+
+          expect(response.status).to eq(202)
+          app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+          expect(app_apply_manifest_jobs.count).to eq(1)
+
+          expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |_, message, _|
+            expect(message.app_update_message.buildpack_data.buildpacks).to eq([])
+          end
+        end
+      end
+
       context 'for a docker app' do
         let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
         let(:request_body) do

@@ -1274,6 +1274,14 @@ module VCAP::CloudController
           expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
         end
       end
+
+      context 'when it specifies a "null" buildpack' do
+        let(:parsed_yaml) { { buildpack: 'null' } }
+        it 'updates the buildpack_data to be an empty array' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+        end
+      end
     end
 
     describe '#app_update_environment_variables_message' do

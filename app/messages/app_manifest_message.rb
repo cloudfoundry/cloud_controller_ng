@@ -195,18 +195,23 @@ module VCAP::CloudController
       return unless requested?(:buildpacks) || requested?(:buildpack) || requested?(:stack)
 
       if requested?(:buildpacks)
-        requested_buildpacks = buildpacks
+        requested_buildpacks = @buildpacks
       elsif requested?(:buildpack)
-        requested_buildpacks = [buildpack].reject { |x| x == 'default' }.compact
+        requested_buildpacks = []
+        requested_buildpacks.push(@buildpack) unless should_autodetect?(@buildpack)
       end
 
       {
         type: Lifecycles::BUILDPACK,
         data: {
           buildpacks: requested_buildpacks,
-          stack: stack
+          stack: @stack
         }.compact
       }
+    end
+
+    def should_autodetect?(buildpack)
+      buildpack == 'default' || buildpack == 'null' || buildpack.nil?
     end
 
     # 'none' was deprecated in favor of process
