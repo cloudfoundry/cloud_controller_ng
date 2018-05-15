@@ -66,12 +66,12 @@
   <h1>Organizations API</h1>
 
   <div class="article">
-    <h2>Remove Manager with the Organization by Username</h2>
-    <h3>DELETE v2/organizations/:guid/managers</h3>
+    <h2>Remove Billing Manager from the Organization by Username</h2>
+    <h3>POST v2/organizations/:guid/billing_managers/remove</h3>
 
       <h3>Request</h3>
       <h4>Route</h4>
-      <pre class="request route highlight">DELETE v2/organizations/937e0d78-46e4-4f6f-a348-f96240ee4420/managers</pre>
+      <pre class="request route highlight">POST v2/organizations/aebdec49-ec85-4e94-8815-acdf534a924a/billing_managers/remove</pre>
 
         <h4>Parameters</h4>
         <table class="parameters table table-striped table-bordered table-condensed">
@@ -136,27 +136,50 @@
                 </ul>
               </td>
             </tr>
+            <tr class=" ">
+              <td>
+                <span class="name">origin</span>
+              </td>
+              <td>
+                <span class="description">The UAA origin</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                  <li>ldap</li>
+                  <li>uaa</li>
+                </ul>
+              </td>
+            </tr>
           </tbody>
         </table>
 
         <pre class="request body">{
-  "username": "manage@example.com"
+  "username": "billing_manager@example.com",
+  "origin": "ldap"
 }</pre>
 
       <h4>Headers</h4>
-      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIxNSIsImVtYWlsIjoiZW1haWwtMTYwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.x7bR9ajJdrQFK96z6P9t6lc0RfwRDnzJGGYjYhoRHew
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIwOSIsImVtYWlsIjoiZW1haWwtMTU4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.sG1dKjuOZ8bjduBIm0RjvaNZdgnJzX9-Tah7GQ-TAj4
 Host: example.org
 Content-Type: application/json
 Cookie: </pre>
 
         <h4>cURL</h4>
-        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/organizations/937e0d78-46e4-4f6f-a348-f96240ee4420/managers&quot; -d &#39;{
-  &quot;username&quot;: &quot;manage@example.com&quot;
-}&#39; -X DELETE \
-	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIxNSIsImVtYWlsIjoiZW1haWwtMTYwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.x7bR9ajJdrQFK96z6P9t6lc0RfwRDnzJGGYjYhoRHew&quot; \
-	-H &quot;Host: example.org&quot; \
-	-H &quot;Content-Type: application/json&quot; \
-	-H &quot;Cookie: &quot;</pre>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/organizations/aebdec49-ec85-4e94-8815-acdf534a924a/billing_managers/remove" -d &#39;{
+      &quot;username&quot;: &quot;billing_manager@example.com&quot;,
+      &quot;origin&quot;: &quot;ldap&quot;
+    }&#39; -X POST \
+      -H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIwOSIsImVtYWlsIjoiZW1haWwtMTU4QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.sG1dKjuOZ8bjduBIm0RjvaNZdgnJzX9-Tah7GQ-TAj4&quot; \
+      -H &quot;Host: example.org&quot; \
+      -H &quot;Content-Type: application/json&quot; \
+      -H &quot;Cookie: &quot;</pre>
 
         <h3>Response</h3>
 
@@ -166,7 +189,7 @@ Cookie: </pre>
 
 
         <h4>Headers</h4>
-        <pre class="response headers">X-VCAP-Request-ID: 2c993305-6c73-4d99-aed2-9355f86ff8ff
+        <pre class="response headers">X-VCAP-Request-ID: 3d622ea3-b72f-445c-b58e-e51124f775d0
 X-Content-Type-Options: nosniff</pre>
 
   </div>

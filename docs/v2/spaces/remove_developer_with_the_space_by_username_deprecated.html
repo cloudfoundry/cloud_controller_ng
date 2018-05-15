@@ -66,12 +66,12 @@ p {
       <h1>Spaces API</h1>
 
       <div class="article">
-        <h2>Remove Manager with the Space by Username (Experimental)</h2>
-        <h3>POST v2/spaces/:guid/managers/remove</h3>
+        <h2>Remove Developer with the Space by Username (DEPRECATED)</h2>
+        <h3>DELETE v2/spaces/:guid/developers</h3>
 
         <h3>Request</h3>
         <h4>Route</h4>
-        <pre class="request route highlight">POST v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/managers/remove</pre>
+        <pre class="request route highlight">DELETE v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/developers</pre>
 
         <h4>Parameters</h4>
         <table class="parameters table table-striped table-bordered table-condensed">
@@ -107,74 +107,53 @@ p {
         <h4>Body</h4>
         <table class="fields table table-striped table-bordered table-condensed">
           <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Default</th>
-            <th>Valid Values</th>
-            <th>Example Values</th>
-          </tr>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Default</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
           </thead>
           <tbody>
-          <tr class=" ">
-            <td class="required ">
-              <span class="name">username</span>
-            </td>
-            <td>
-              <span class="description">The user&#39;s name</span>
-            </td>
-            <td>
-              <span class="default"></span>
-            </td>
-            <td>
-              <ul class="valid_values">
-              </ul>
-            </td>
-            <td>
-              <ul class="example_values">
-                <li>user@example.com</li>
-              </ul>
-            </td>
-          </tr>
-          <tr class=" ">
-            <td class="experimental ">
-              <span class="name">origin</span>
-            </td>
-            <td>
-              <span class="description">The UAA origin</span>
-            </td>
-            <td>
-              <span class="default"></span>
-            </td>
-            <td>
-              <ul class="valid_values">
-              </ul>
-            </td>
-            <td>
-              <ul class="example_values">
-                <li>ldap</li>
-                <li>uaa</li>
-              </ul>
-            </td>
-          </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">username</span>
+              </td>
+              <td>
+                <span class="description">The user&#39;s name</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                  <li>user@example.com</li>
+                </ul>
+              </td>
+            </tr>
           </tbody>
         </table>
 
         <pre class="request body">{
-  "username": "manager@example.com"
+  "username": "developer@example.com"
 }</pre>
 
         <h4>Headers</h4>
-        <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM5MiIsImVtYWlsIjoiZW1haWwtMjcwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDF9.MSBZcUZxvdtVkT4eKn4LdtW7wrw_S4qdad9uC5cTUnc
+        <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQwNyIsImVtYWlsIjoiZW1haWwtMjc3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDJ9.QRAN27vW28Wu6cCu0ngDyLVBDG_RcuGfxbae9litcfg
 Host: example.org
 Content-Type: application/json
 Cookie: </pre>
 
         <h4>cURL</h4>
-        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/managers/remove&quot; -d &#39;{
-  &quot;username&quot;: &quot;manager@example.com&quot;
-}&#39; -X POST \
-  -H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTM5MiIsImVtYWlsIjoiZW1haWwtMjcwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDF9.MSBZcUZxvdtVkT4eKn4LdtW7wrw_S4qdad9uC5cTUnc&quot; \
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/developers&quot; -d &#39;{
+  &quot;username&quot;: &quot;developer@example.com&quot;
+}&#39; -X DELETE \
+  -H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQwNyIsImVtYWlsIjoiZW1haWwtMjc3QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDJ9.QRAN27vW28Wu6cCu0ngDyLVBDG_RcuGfxbae9litcfg&quot; \
   -H &quot;Host: example.org&quot; \
   -H &quot;Content-Type: application/json&quot; \
   -H &quot;Cookie: &quot;</pre>
@@ -188,39 +167,39 @@ Cookie: </pre>
 
         <pre class="response body">{
   "metadata": {
-    "guid": "e941b37a-863c-411b-bf5a-9c239cac755d",
-    "url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d",
-    "created_at": "2016-06-08T16:41:41Z",
+    "guid": "72736bea-7c64-4649-8472-bc5dd09b6e87",
+    "url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87",
+    "created_at": "2016-06-08T16:41:42Z",
     "updated_at": "2016-06-08T16:41:26Z"
   },
   "entity": {
-    "name": "name-2113",
-    "organization_guid": "d17da21a-d8e3-4f85-b611-9da8e140c625",
+    "name": "name-2139",
+    "organization_guid": "fc993c26-9a55-4b73-ae44-2e87d607136f",
     "space_quota_definition_guid": null,
     "allow_ssh": true,
-    "organization_url": "/v2/organizations/d17da21a-d8e3-4f85-b611-9da8e140c625",
-    "developers_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/developers",
-    "managers_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/managers",
-    "auditors_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/auditors",
-    "apps_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/apps",
-    "routes_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/routes",
-    "domains_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/domains",
-    "service_instances_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/service_instances",
-    "app_events_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/app_events",
-    "events_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/events",
-    "security_groups_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/security_groups",
-    "staging_security_groups_url": "/v2/spaces/e941b37a-863c-411b-bf5a-9c239cac755d/staging_security_groups"
+    "organization_url": "/v2/organizations/fc993c26-9a55-4b73-ae44-2e87d607136f",
+    "developers_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/developers",
+    "managers_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/managers",
+    "auditors_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/auditors",
+    "apps_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/apps",
+    "routes_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/routes",
+    "domains_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/domains",
+    "service_instances_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/service_instances",
+    "app_events_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/app_events",
+    "events_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/events",
+    "security_groups_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/security_groups",
+    "staging_security_groups_url": "/v2/spaces/72736bea-7c64-4649-8472-bc5dd09b6e87/staging_security_groups"
   }
 }</pre>
 
         <h4>Headers</h4>
         <pre class="response headers">Content-Type: application/json;charset=utf-8
-X-VCAP-Request-ID: 95554fbc-17d0-4c86-b602-ff57f25d9564
+X-VCAP-Request-ID: 3251e6e6-dd80-4c85-a9c7-fa2a1968ce12
 Content-Length: 1278
 X-Content-Type-Options: nosniff</pre>
 
         <h3>Audit Records Created By The Request</h3>
-        <h4>Audit Record: audit.user.space_manager_remove</h4>
+        <h4>Audit Record: audit.user.space_developer_remove</h4>
         <table class="table table-striped table-bordered table-condensed">
           <thead>
             <tr>
@@ -274,7 +253,7 @@ X-Content-Type-Options: nosniff</pre>
                 <span class="name">type</span>
               </td>
               <td>
-                <span class="description">audit.user.space_manager_remove</span>
+                <span class="description">audit.user.space_developer_remove</span>
               </td>
             </tr>
             <tr>

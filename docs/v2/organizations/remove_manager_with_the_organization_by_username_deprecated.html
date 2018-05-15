@@ -66,12 +66,12 @@
   <h1>Organizations API</h1>
 
   <div class="article">
-    <h2>Remove Manager from the Organization by Username (Experimental)</h2>
-    <h3>POST v2/organizations/:guid/managers/remove</h3>
+    <h2>Remove Manager with the Organization by Username (DEPRECATED)</h2>
+    <h3>DELETE v2/organizations/:guid/managers</h3>
 
       <h3>Request</h3>
       <h4>Route</h4>
-      <pre class="request route highlight">POST v2/organizations/937e0d78-46e4-4f6f-a348-f96240ee4420/managers/remove</pre>
+      <pre class="request route highlight">DELETE v2/organizations/937e0d78-46e4-4f6f-a348-f96240ee4420/managers</pre>
 
         <h4>Parameters</h4>
         <table class="parameters table table-striped table-bordered table-condensed">
@@ -136,33 +136,11 @@
                 </ul>
               </td>
             </tr>
-            <tr class=" ">
-              <td class="experimental ">
-                <span class="name">origin</span>
-              </td>
-              <td>
-                <span class="description">The UAA origin</span>
-              </td>
-              <td>
-                <span class="default"></span>
-              </td>
-              <td>
-                <ul class="valid_values">
-                </ul>
-              </td>
-              <td>
-                <ul class="example_values">
-                  <li>ldap</li>
-                  <li>uaa</li>
-                </ul>
-              </td>
-            </tr>
           </tbody>
         </table>
 
         <pre class="request body">{
-  "username": "manager@example.com",
-  "origin": "ldap"
+  "username": "manage@example.com"
 }</pre>
 
       <h4>Headers</h4>
@@ -172,14 +150,13 @@ Content-Type: application/json
 Cookie: </pre>
 
         <h4>cURL</h4>
-        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/organizations/937e0d78-46e4-4f6f-a348-f96240ee4420/managers/remove" -d &#39;{
-    &quot;username&quot;: &quot;manager@example.com&quot;,
-    "origin": "ldap"
-  }&#39; -X POST \
-    -H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIxNSIsImVtYWlsIjoiZW1haWwtMTYwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.x7bR9ajJdrQFK96z6P9t6lc0RfwRDnzJGGYjYhoRHew&quot; \
-    -H &quot;Host: example.org&quot; \
-    -H &quot;Content-Type: application/json&quot; \
-    -H &quot;Cookie: &quot;</pre>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]v2/organizations/937e0d78-46e4-4f6f-a348-f96240ee4420/managers&quot; -d &#39;{
+  &quot;username&quot;: &quot;manage@example.com&quot;
+}&#39; -X DELETE \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTIxNSIsImVtYWlsIjoiZW1haWwtMTYwQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTR9.x7bR9ajJdrQFK96z6P9t6lc0RfwRDnzJGGYjYhoRHew&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/json&quot; \
+	-H &quot;Cookie: &quot;</pre>
 
         <h3>Response</h3>
 
