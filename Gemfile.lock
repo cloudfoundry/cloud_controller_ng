@@ -64,7 +64,7 @@ GEM
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
       nokogiri (~> 1.6)
-    azure-storage (0.15.0.preview)
+    azure-storage (0.14.0.preview)
       azure-core (~> 0.1)
       faraday (~> 0.9)
       faraday_middleware (~> 0.10)
@@ -447,6 +447,7 @@ DEPENDENCIES
   addressable
   allowy
   awesome_print
+  azure-storage (= 0.14.0.preview)
   bits_service_client
   byebug
   cf-copilot
