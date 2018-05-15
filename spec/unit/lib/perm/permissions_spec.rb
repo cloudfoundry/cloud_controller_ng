@@ -297,14 +297,14 @@ module VCAP::CloudController::Perm
       end
 
       it 'returns the list of space guids that the user can read via space roles and as an org manager' do
-        org1 = VCAP::CloudController::Organization.create(name: 'org1')
-        org2 = VCAP::CloudController::Organization.create(name: 'org2')
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
         managed_org_guids = [org1.guid, org2.guid]
 
-        space1 = VCAP::CloudController::Space.create(name: 'space1', organization: org1)
-        space2 = VCAP::CloudController::Space.create(name: 'space2', organization: org1)
-        space3 = VCAP::CloudController::Space.create(name: 'space3', organization: org2)
-        space4 = VCAP::CloudController::Space.create(name: 'space4', organization: org2)
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        space2 = VCAP::CloudController::Space.make(organization: org1)
+        space3 = VCAP::CloudController::Space.make(organization: org2)
+        space4 = VCAP::CloudController::Space.make(organization: org2)
 
         managed_org_space_guids = [space1.guid, space2.guid, space3.guid, space4.guid]
         org_actions = %w(org.manager)
@@ -542,6 +542,112 @@ module VCAP::CloudController::Perm
         has_permission = permissions.can_read_from_isolation_segment?(isolation_segment)
 
         expect(has_permission).to equal(false)
+      end
+    end
+
+    describe '#readable_route_guids' do
+      before do
+        allow(roles).to receive(:admin?).and_return(false)
+        allow(roles).to receive(:admin_read_only?).and_return(false)
+        allow(roles).to receive(:global_auditor?).and_return(false)
+      end
+
+      it 'returns all route guids for admins' do
+        allow(roles).to receive(:admin?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        route1 = VCAP::CloudController::Route.make(space: space1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        route2 = VCAP::CloudController::Route.make(space: space2)
+
+        route_guids = permissions.readable_route_guids
+
+        expect(route_guids).to include(route1.guid)
+        expect(route_guids).to include(route2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns all route guids for read-only admins' do
+        allow(roles).to receive(:admin_read_only?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        route1 = VCAP::CloudController::Route.make(space: space1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        route2 = VCAP::CloudController::Route.make(space: space2)
+
+        route_guids = permissions.readable_route_guids
+
+        expect(route_guids).to include(route1.guid)
+        expect(route_guids).to include(route2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns all route guids for global auditors' do
+        allow(roles).to receive(:global_auditor?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        route1 = VCAP::CloudController::Route.make(space: space1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        route2 = VCAP::CloudController::Route.make(space: space2)
+
+        route_guids = permissions.readable_route_guids
+
+        expect(route_guids).to include(route1.guid)
+        expect(route_guids).to include(route2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns the list of route guids that the user can read via org and space roles' do
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
+        org_guids = [org1.guid, org2.guid]
+
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        route1 = VCAP::CloudController::Route.make(space: space1)
+        route2 = VCAP::CloudController::Route.make(space: space1)
+
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        route3 = VCAP::CloudController::Route.make(space: space2)
+
+        org_route_guids = [route1.guid, route2.guid, route3.guid]
+        org_actions = %w(org.manager org.auditor)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: org_actions).
+          and_return(org_guids)
+
+        org3 = VCAP::CloudController::Organization.make
+        space3 = VCAP::CloudController::Space.make(organization: org3)
+        route4 = VCAP::CloudController::Route.make(space: space3)
+        space4 = VCAP::CloudController::Space.make(organization: org3)
+        route5 = VCAP::CloudController::Route.make(space: space4)
+
+        readable_space_guids = [space3.guid, space4.guid]
+        readable_route_guids = [route4.guid, route5.guid]
+        space_actions = %w(space.developer space.manager space.auditor)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: space_actions).
+          and_return(readable_space_guids)
+
+        expected_route_guids = org_route_guids + readable_route_guids
+
+        expect(permissions.readable_route_guids).to match_array(expected_route_guids)
       end
     end
 

@@ -87,9 +87,9 @@ module VCAP
               ]
             )
 
-            Organization.where(guid: org_guids).all.map do |org|
-              org.spaces.map(&:guid)
-            end.flatten + space_guids
+            Space.join(
+              Organization.where(guid: org_guids).select(:id), id: :organization_id
+            ).select(:spaces__guid).all.map(&:guid) + space_guids
           end
         end
 
@@ -118,6 +118,38 @@ module VCAP
           can_read_globally? ||
             isolation_segment.spaces.any? { |space| can_read_from_space?(space.guid, space.organization.guid) } ||
             isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+        end
+
+        def readable_route_guids
+          if can_read_globally?
+            VCAP::CloudController::Route.select(:guid).all.map(&:guid)
+          else
+            space_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                SPACE_DEVELOPER_ACTION,
+                SPACE_MANAGER_ACTION,
+                SPACE_AUDITOR_ACTION,
+              ]
+            )
+            org_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                ORG_MANAGER_ACTION,
+                ORG_AUDITOR_ACTION,
+              ]
+            )
+
+            route_space_guids = Space.join(
+              Organization.where(guid: org_guids).select(:id), id: :organization_id
+            ).select(:spaces__guid).all.map(&:guid) + space_guids
+
+            Route.join(
+              Space.where(guid: route_space_guids).select(:id), id: :space_id
+            ).select(:routes__guid).all.map(&:guid)
+          end
         end
 
         def can_read_route?(space_id, org_id)

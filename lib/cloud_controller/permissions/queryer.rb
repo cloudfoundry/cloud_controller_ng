@@ -54,13 +54,7 @@ class VCAP::CloudController::Permissions::Queryer
       e.use { db_permissions.readable_org_guids }
       e.try { perm_permissions.readable_org_guids }
 
-      e.compare do |control, candidate|
-        if control.is_a?(Array) && candidate.is_a?(Array)
-          control.sort == candidate.sort
-        else
-          control == candidate
-        end
-      end
+      e.compare { |a, b| compare_arrays(a, b) }
 
       e.run_if { !db_permissions.can_read_globally? }
     end
@@ -91,13 +85,7 @@ class VCAP::CloudController::Permissions::Queryer
       e.use { db_permissions.readable_space_guids }
       e.try { perm_permissions.readable_space_guids }
 
-      e.compare do |control, candidate|
-        if control.is_a?(Array) && candidate.is_a?(Array)
-          control.sort == candidate.sort
-        else
-          control == candidate
-        end
-      end
+      e.compare { |a, b| compare_arrays(a, b) }
 
       e.run_if { !db_permissions.can_read_globally? }
     end
@@ -143,6 +131,17 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def readable_route_guids
+    science 'readable_route_guids' do |e|
+      e.use { db_permissions.readable_route_guids }
+      e.try { perm_permissions.readable_route_guids }
+
+      e.compare { |a, b| compare_arrays(a, b) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
   def can_read_route?(space_guid, org_guid)
     science 'can_read_route' do |e|
       e.context(space_guid: space_guid, org_guid: org_guid)
@@ -166,5 +165,13 @@ class VCAP::CloudController::Permissions::Queryer
     experiment.context(current_user_guid: current_user_guid)
     yield experiment
     experiment.run
+  end
+
+  def compare_arrays(a, b)
+    if a.is_a?(Array) && b.is_a?(Array)
+      a.sort == b.sort
+    else
+      a == b
+    end
   end
 end

@@ -84,6 +84,10 @@ class VCAP::CloudController::Permissions
       isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
   end
 
+  def readable_route_guids
+    VCAP::CloudController::Route.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
   def can_read_route?(space_guid, org_guid)
     return true if can_read_globally?
 

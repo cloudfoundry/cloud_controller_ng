@@ -697,6 +697,10 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_route_guids' do
+      it_behaves_like 'readable guids', 'route'
+    end
+
     describe '#can_read_route?' do
       before do
         allow(perm_permissions).to receive(:can_read_route?)

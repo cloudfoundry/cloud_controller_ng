@@ -381,6 +381,14 @@ module VCAP::CloudController
       end
     end
 
+    def visible_dataset
+      if queryer.can_read_globally?
+        Route.dataset
+      else
+        Route.where(guid: queryer.readable_route_guids)
+      end
+    end
+
     private_class_method :path_errors
   end
 end

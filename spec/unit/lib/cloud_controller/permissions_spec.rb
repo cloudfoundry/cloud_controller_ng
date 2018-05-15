@@ -70,7 +70,7 @@ module VCAP::CloudController
     end
 
     describe '#readable_org_guids' do
-      it 'returns all the orgs for admins' do
+      it 'returns all the org guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
@@ -83,7 +83,7 @@ module VCAP::CloudController
         expect(org_guids).to include(org2_guid)
       end
 
-      it 'returns all the orgs for read-only admins' do
+      it 'returns all the org guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
@@ -96,7 +96,7 @@ module VCAP::CloudController
         expect(org_guids).to include(org2_guid)
       end
 
-      it 'returns all the orgs for global auditors' do
+      it 'returns all the org guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
@@ -227,7 +227,7 @@ module VCAP::CloudController
     end
 
     describe '#readable_space_guids' do
-      it 'returns all the spaces for admins' do
+      it 'returns all the space guids for admins' do
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
@@ -242,7 +242,7 @@ module VCAP::CloudController
         expect(space_guids).to include(space2.guid)
       end
 
-      it 'returns all the spaces for read-only admins' do
+      it 'returns all the space guids for read-only admins' do
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
@@ -257,7 +257,7 @@ module VCAP::CloudController
         expect(space_guids).to include(space2.guid)
       end
 
-      it 'returns all the spaces for global auditors' do
+      it 'returns all the space guids for global auditors' do
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
@@ -528,6 +528,114 @@ module VCAP::CloudController
           org.add_billing_manager(user)
           expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
+      end
+    end
+
+    describe '#readable_route_guids' do
+      it 'returns all the route guids for admins' do
+        user = set_current_user_as_admin
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        route1 = Route.make(space: space1)
+        route2 = Route.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        route3 = Route.make(space: space2)
+
+        route_guids = subject.readable_route_guids
+
+        expect(route_guids).to include(route1.guid)
+        expect(route_guids).to include(route2.guid)
+        expect(route_guids).to include(route3.guid)
+      end
+
+      it 'returns all the route guids for read-only admins' do
+        user = set_current_user_as_admin
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        route1 = Route.make(space: space1)
+        route2 = Route.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        route3 = Route.make(space: space2)
+
+        route_guids = subject.readable_route_guids
+
+        expect(route_guids).to include(route1.guid)
+        expect(route_guids).to include(route2.guid)
+        expect(route_guids).to include(route3.guid)
+      end
+
+      it 'returns all the route guids for global auditors' do
+        user = set_current_user_as_admin
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        route1 = Route.make(space: space1)
+        route2 = Route.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        route3 = Route.make(space: space2)
+
+        route_guids = subject.readable_route_guids
+
+        expect(route_guids).to include(route1.guid)
+        expect(route_guids).to include(route2.guid)
+        expect(route_guids).to include(route3.guid)
+      end
+
+      it 'returns route guids where the user has an appropriate org membership' do
+        manager_org = Organization.make
+        manager_space = Space.make(organization: manager_org)
+        manager_route = Route.make(space: manager_space)
+        manager_org.add_manager(user)
+
+        auditor_org = Organization.make
+        auditor_space = Space.make(organization: auditor_org)
+        auditor_route = Route.make(space: auditor_space)
+        auditor_org.add_auditor(user)
+
+        billing_manager_org = Organization.make
+        billing_manager_space = Space.make(organization: billing_manager_org)
+        billing_manager_route = Route.make(space: billing_manager_space)
+        billing_manager_org.add_billing_manager(user)
+
+        member_org = Organization.make
+        member_space = Space.make(organization: member_org)
+        member_route = Route.make(space: member_space)
+        member_org.add_user(user)
+
+        route_guids = permissions.readable_route_guids
+
+        expect(route_guids).to contain_exactly(manager_route.guid, auditor_route.guid)
+        expect(route_guids).not_to include(billing_manager_route.guid)
+        expect(route_guids).not_to include(member_route.guid)
+      end
+
+      it 'returns route guids where the user has an appropriate space membership' do
+        org = Organization.make
+        org.add_user(user)
+
+        developer_space = Space.make(organization: org)
+        developer_route = Route.make(space: developer_space)
+        developer_space.add_developer(user)
+
+        manager_space = Space.make(organization: org)
+        manager_route = Route.make(space: manager_space)
+        manager_space.add_manager(user)
+
+        auditor_space = Space.make(organization: org)
+        auditor_route = Route.make(space: auditor_space)
+        auditor_space.add_auditor(user)
+
+        route_guids = permissions.readable_route_guids
+
+        expect(route_guids).to contain_exactly(developer_route.guid, manager_route.guid, auditor_route.guid)
       end
     end
 

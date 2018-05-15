@@ -52,14 +52,13 @@ module VCAP::CloudController::RestController
       end
       @sinatra = sinatra
 
-      @access_context = Security::AccessContext.new(
-        VCAP::CloudController::Permissions::Queryer.build(
-          dependencies.fetch(:perm_client),
-          dependencies.fetch(:statsd_client),
-          VCAP::CloudController::SecurityContext,
-          config.get(:perm, :enabled),
-        )
+      @queryer = VCAP::CloudController::Permissions::Queryer.build(
+        dependencies.fetch(:perm_client),
+        dependencies.fetch(:statsd_client),
+        VCAP::CloudController::SecurityContext,
+        config.get(:perm, :enabled),
       )
+      @access_context = Security::AccessContext.new(queryer)
 
       inject_dependencies(dependencies)
     end
@@ -216,7 +215,7 @@ module VCAP::CloudController::RestController
       @request_attrs.freeze
     end
 
-    attr_reader :config, :logger, :env, :params, :body, :request_attrs
+    attr_reader :config, :logger, :env, :params, :body, :request_attrs, :queryer
 
     class << self
       include VCAP::CloudController
