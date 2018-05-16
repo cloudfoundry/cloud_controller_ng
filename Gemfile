@@ -90,6 +90,7 @@ end
 
 group :development do
   gem 'byebug'
+  gem 'colorize'
   gem 'debase', '>= 0.2.2.beta14'
   gem 'listen'
   gem 'roodi'
