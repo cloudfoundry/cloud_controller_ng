@@ -101,6 +101,16 @@ Each link is keyed by its type and will include a `href` for the URL and an opti
 
 #### The link object
 
+```
+Example Link object
+```
+```json
+{
+  "href": "http://example.com/some/endpoint",
+  "method": "GET"
+}
+```
+
 Name | Type | Description
 ---- | ---- | -----------
 **href** | _string_ | The absolute URL.
@@ -374,6 +384,20 @@ Name | Type | Description
 
 ### Buildpack lifecycle
 
+```
+Example Buildpack Lifecycle
+```
+
+```json
+{
+  "type": "buildpack",
+  "data": {
+    "buildpacks": ["java_buildpack"]
+  },
+  "stack": "cflinuxfs2"
+}
+```
+
 This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
 compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
 will be created and the droplet will be expanded inside that container to be executed.
@@ -393,6 +417,17 @@ metadata about the image, such as ports and start command.  When running an app 
 and the docker image is executed inside of it.
 
 #### Docker lifecycle object
+
+```
+Example Docker Lifecycle
+```
+
+```json
+{
+  "type": "docker",
+  "data": {}
+}
+```
 
 Name | Type | Description
 ---- | ---- | -----------
