@@ -61,7 +61,13 @@ To view the docs locally, cd into the `docs/v2` folder, run `python -mSimpleHTTP
 
 ## Running Tests In Preloaded (Fast) Mode:
 
-### The Hondamatic Way
+Running unit tests is a good thing, but it can be annoying waiting for
+the ruby interpreter to load and then initialize `rspec` every single
+time you make a change. Fortunately, many other people have run into
+this same frustration and published their solutions to the problem. We
+use the `spork` library to speed up the `edit-run-fix` cycle.
+
+### Running Individual Tests
 
 In one terminal, change to the `Cloud Controller` root directory and run `bundle exec spork`
 
@@ -69,12 +75,14 @@ In a separate terminal, you can run selected unit tests quickly by running them 
 
     bundle exec rspec --drb spec/unit/models/services/service_plan_visibility_spec.rb
 
+You can configure your IDE to take advantage of spork by inserting the `--drb` option. If `spork` isn't running `rspec` will ignore the `--drb` option and run the test the usual slower way.
+
 Press Ctrl-C in the first terminal to stop running `spork`.
 
-### The Automatic Way
+### Running Tests Automatically When Files Change
 
-In one terminal, change to the `Cloud Controller` root directory and run `bundle exec scripts/chauncey.rb`
+In one terminal, change to the `Cloud Controller` root directory and run `bundle exec scripts/file-watcher.rb`
 
 As files change, they, or their related spec files, will be run automatically.
 
-Press Ctrl-C to stop running `chauncey`.
+Press Ctrl-C to stop running `file-watcher.rb`.

@@ -1,6 +1,6 @@
-# chauncey.rb - "I like to watch"
+# file-watcher.rb - Wait for files to change, and run associated tests
 #
-# usage: bundle exec scripts/chauncey.rb
+# usage: bundle exec scripts/file-watcher.rb
 
 require 'listen'
 
