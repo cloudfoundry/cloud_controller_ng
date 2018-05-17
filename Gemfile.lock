@@ -85,7 +85,7 @@ GEM
     backports (3.6.8)
     beefcake (1.0.0)
     bit-struct (0.16)
-    bits_service_client (0.3.0)
+    bits_service_client (0.3.2)
       activesupport
       steno
     builder (3.2.3)
