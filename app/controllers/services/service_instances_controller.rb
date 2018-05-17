@@ -555,11 +555,6 @@ module VCAP::CloudController
       end
     end
 
-    def convert_flag_to_bool(flag)
-      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
-      flag == 'true'
-    end
-
     def select_spaces_based_on_org_filters(org_filters)
       space_ids = Space.select(:spaces__id).left_join(:organizations, id: :spaces__organization_id)
       org_filters.each do |_, comparison, value|

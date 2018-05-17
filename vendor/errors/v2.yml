@@ -378,6 +378,11 @@
   http_code: 400
   message: "This service does not support fetching service binding parameters."
 
+90008:
+  name: AsyncServiceBindingOperationInProgress
+  http_code: 409
+  message: "An operation for the service binding is in progress."
+
 100001:
   name: AppInvalid
   http_code: 400

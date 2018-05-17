@@ -25,14 +25,14 @@ module VCAP::CloudController
           end
 
           it 'should return the "parameters" key from the broker response' do
-            allow(fake_broker_client).to receive(:fetch_service_binding).with(service_binding).and_return({ 'parameters' => { 'foo' => 'bar' } })
+            allow(fake_broker_client).to receive(:fetch_service_binding).with(service_binding).and_return({ parameters: { foo: 'bar' } })
 
             action = ServiceBindingRead.new
-            expect(action.fetch_parameters(service_binding)).to eql({ 'foo' => 'bar' })
+            expect(action.fetch_parameters(service_binding)).to eql({ foo: 'bar' })
           end
 
           it 'should return empty object when "parameters" key is missing' do
-            allow(fake_broker_client).to receive(:fetch_service_binding).with(service_binding).and_return({ 'missing_parameters' => { 'not' => 'found' } })
+            allow(fake_broker_client).to receive(:fetch_service_binding).with(service_binding).and_return({ missing_parameters: { not: 'found' } })
 
             action = ServiceBindingRead.new
             expect(action.fetch_parameters(service_binding)).to eql({})

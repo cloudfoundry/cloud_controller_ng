@@ -368,5 +368,194 @@ module VCAP::CloudController
         )
       end
     end
+
+    describe 'is_created?' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      context 'when the service binding has been created synchronously' do
+        it 'returns true' do
+          expect(service_binding.is_created?).to be true
+        end
+      end
+
+      context 'when the service binding is being created asynchronously' do
+        let(:state) {}
+        let(:operation) { ServiceBindingOperation.make(state: state) }
+
+        before do
+          service_binding.service_binding_operation = operation
+        end
+
+        context 'and the operation is in progress' do
+          let(:state) { 'in progress' }
+
+          it 'returns false' do
+            expect(service_binding.is_created?).to be false
+          end
+        end
+
+        context 'and the operation has failed' do
+          let(:state) { 'failed' }
+
+          it 'returns false' do
+            expect(service_binding.is_created?).to be false
+          end
+        end
+
+        context 'and the operation has succeeded' do
+          let(:state) { 'succeeded' }
+
+          it 'returns true' do
+            expect(service_binding.is_created?).to be true
+          end
+        end
+      end
+    end
+
+    describe '#save_with_new_operation' do
+      let(:service_instance) { ServiceInstance.make }
+      let(:app) { AppModel.make(space: service_instance.space) }
+      let(:binding) {
+        ServiceBinding.new(
+          service_instance: service_instance,
+          app:              app,
+          credentials:      {},
+          type:             'app',
+          name:             'foo',
+        )
+      }
+
+      it 'creates a new last_operation object and associates it with the binding' do
+        last_operation = {
+          state: 'in progress',
+          type: 'create',
+          description: '10%'
+        }
+        binding.save_with_new_operation(last_operation)
+
+        expect(binding.last_operation.state).to eq 'in progress'
+        expect(binding.last_operation.description).to eq '10%'
+        expect(binding.last_operation.type).to eq 'create'
+        expect(ServiceBinding.count).to eq(1)
+      end
+
+      context 'when saving the binding operation fails' do
+        before do
+          allow(ServiceBindingOperation).to receive(:create).and_raise(Sequel::DatabaseError, 'failed to create new-binding operation')
+        end
+
+        it 'should rollback the binding' do
+          expect { binding.save_with_new_operation({ state: 'will fail' }) }.to raise_error(Sequel::DatabaseError)
+          expect(ServiceBinding.count).to eq(0)
+        end
+      end
+
+      context 'when called twice' do
+        it 'does not save two binding operations' do
+          binding.save_with_new_operation({ state: 'in progress', type: 'create' })
+          expect { binding.save_with_new_operation({ state: 'in progress', type: 'create' }) }.to raise_error(Sequel::UniqueConstraintViolation)
+          expect(ServiceBindingOperation.count).to eq(1)
+        end
+      end
+    end
+
+    describe '#terminal_state?' do
+      let(:service_binding) { ServiceBinding.make }
+      let(:operation) { ServiceBindingOperation.make(state: state) }
+
+      before do
+        service_binding.service_binding_operation = operation
+      end
+
+      context 'when state is succeeded' do
+        let(:state) { 'succeeded' }
+
+        it 'returns true' do
+          expect(service_binding.terminal_state?).to be true
+        end
+      end
+
+      context 'when state is failed' do
+        let(:state) { 'failed' }
+
+        it 'returns true when state is `failed`' do
+          expect(service_binding.terminal_state?).to be true
+        end
+      end
+
+      context 'when state is something else' do
+        let(:state) { 'in progress' }
+
+        it 'returns false' do
+          expect(service_binding.terminal_state?).to be false
+        end
+      end
+
+      context 'when binding operation is missing' do
+        let(:operation) { nil }
+
+        it 'returns true' do
+          expect(service_binding.terminal_state?).to be true
+        end
+      end
+    end
+
+    describe 'operation_in_progress?' do
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
+
+      context 'when the service binding has been created synchronously' do
+        it 'returns false' do
+          expect(service_binding.operation_in_progress?).to be false
+        end
+      end
+
+      context 'when the service binding is being created asynchronously' do
+        let(:state) {}
+        let(:operation) { ServiceBindingOperation.make(state: state) }
+
+        before do
+          service_binding.service_binding_operation = operation
+        end
+
+        context 'and the operation is in progress' do
+          let(:state) { 'in progress' }
+
+          it 'returns true' do
+            expect(service_binding.operation_in_progress?).to be true
+          end
+        end
+
+        context 'and the operation has failed' do
+          let(:state) { 'failed' }
+
+          it 'returns false' do
+            expect(service_binding.operation_in_progress?).to be false
+          end
+        end
+
+        context 'and the operation has succeeded' do
+          let(:state) { 'succeeded' }
+
+          it 'returns false' do
+            expect(service_binding.operation_in_progress?).to be false
+          end
+        end
+      end
+    end
+
+    describe '#destroy' do
+      it 'cascade deletes all ServiceBindingOperations for this binding' do
+        binding = ServiceBinding.make
+        last_operation = ServiceBindingOperation.make
+        binding.service_binding_operation = last_operation
+
+        binding.destroy
+
+        expect(ServiceBinding.find(guid: binding.guid)).to be_nil
+        expect(ServiceBindingOperation.find(id: last_operation.id)).to be_nil
+      end
+    end
   end
 end

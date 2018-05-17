@@ -317,6 +317,38 @@ module VCAP::CloudController
       end
     end
 
+    describe '#convert_flag_to_bool' do
+      let(:base_controller) do
+        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
+      end
+
+      context 'when flag is true' do
+        it 'returns true' do
+          expect(base_controller.convert_flag_to_bool('true')).to eq(true)
+        end
+      end
+
+      context 'when flag is false' do
+        it 'returns false' do
+          expect(base_controller.convert_flag_to_bool('false')).to eq(false)
+        end
+      end
+
+      context 'when flag is nil' do
+        it 'returns false' do
+          expect(base_controller.convert_flag_to_bool(nil)).to eq(false)
+        end
+      end
+
+      context 'when flag is not a bool' do
+        it 'raises a 400 error' do
+          expect {
+            base_controller.convert_flag_to_bool('foo')
+          }.to raise_error(CloudController::Errors::ApiError, 'The request is invalid')
+        end
+      end
+    end
+
     describe '#add_warning' do
       it 'sets warnings in the X-Cf-Warnings header' do
         set_current_user(user)

@@ -272,6 +272,13 @@ module VCAP::CloudController
     updated_at                { Time.now.utc }
   end
 
+  ServiceBindingOperation.blueprint do
+    type                      { 'create' }
+    state                     { 'succeeded' }
+    description               { 'description goes here' }
+    updated_at                { Time.now.utc }
+  end
+
   Stack.blueprint do
     name              { Sham.name }
     description       { Sham.description }

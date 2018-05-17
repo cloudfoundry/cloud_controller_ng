@@ -13,7 +13,7 @@ module VCAP::CloudController
       errors = []
 
       begin
-        raise_if_locked(service_instance)
+        raise_if_instance_locked(service_instance)
 
         service_key = ServiceKey.new(key_attrs)
 

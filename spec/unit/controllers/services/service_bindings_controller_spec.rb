@@ -32,6 +32,8 @@ module VCAP::CloudController
     let(:bind_body) { { credentials: credentials } }
     let(:unbind_status) { 200 }
     let(:unbind_body) { {} }
+    let(:last_operation_status) { 200 }
+    let(:last_operation_body) { { state: 'in progress' } }
     let(:credentials) do
       { 'foo' => 'bar' }
     end
@@ -47,6 +49,9 @@ module VCAP::CloudController
       stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
         with(basic_auth: basic_auth(service_broker: broker)).
         to_return(status: unbind_status, body: unbind_body.to_json)
+      stub_request(:get, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}/last_operation}).
+        with(basic_auth: basic_auth(service_broker: broker)).
+        to_return(status: last_operation_status, body: last_operation_body.to_json)
     end
 
     def bind_url_regex(opts={})
@@ -328,7 +333,9 @@ module VCAP::CloudController
 
       context 'for managed instances' do
         let(:broker) { service_instance.service.service_broker }
-        let(:service_instance) { ManagedServiceInstance.make(space: space) }
+        let(:service) { Service.make(bindings_retrievable: false) }
+        let(:service_plan) { ServicePlan.make(service: service) }
+        let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
         let(:req) do
           {
             app_guid: process.guid,
@@ -363,6 +370,121 @@ module VCAP::CloudController
             expect(service_instance.space.guid).to eq(process.space.guid)
 
             expect(a_request(:put, binding_endpoint).with(body: expected_body)).to have_been_made
+          end
+        end
+
+        describe 'asynchronous binding creation' do
+          context 'when accepts_incomplete is true' do
+            let(:bind_body) { {} }
+
+            before do
+              post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+            end
+
+            context 'when bindings_retrievable is true' do
+              let(:service) { Service.make(bindings_retrievable: true) }
+
+              context 'and the broker returns asynchronously' do
+                let(:bind_status) { 202 }
+
+                it 'returns a 202 status code' do
+                  expect(last_response).to have_status_code(202)
+                end
+
+                it 'saves the binding in the model' do
+                  binding = ServiceBinding.last
+                  expect(binding.last_operation.state).to eql('in progress')
+                end
+
+                it 'returns an in progress service binding response' do
+                  hash_body = JSON.parse(last_response.body)
+                  expect(hash_body['entity']['last_operation']['type']).to eq('create')
+                  expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
+                end
+
+                it 'returns a location header' do
+                  expect(last_response.headers['Location']).to match(%r{^/v2/service_bindings/[[:alnum:]-]+$})
+                end
+
+                context 'when the service broker returns operation state' do
+                  let(:bind_body) { { operation: '123' } }
+
+                  it 'persists the operation state' do
+                    binding = ServiceBinding.last
+                    expect(binding.last_operation.broker_provided_operation).to eq('123')
+                  end
+                end
+
+                context 'when bindings_retrievable is false' do
+                  let(:service) { Service.make(bindings_retrievable: false) }
+
+                  it 'should throw invalid service binding error' do
+                    expect(last_response).to have_status_code(400)
+                    expect(decoded_response['error_code']).to eq 'CF-ServiceBindingInvalid'
+                    expect(decoded_response['description']).to match('Could not create asynchronous binding')
+                  end
+                end
+
+                context 'when attempting to bind and the service binding already exists' do
+                  it 'returns a ServiceBindingAppServiceTaken error' do
+                    post '/v2/service_bindings?accepts_incomplete=true', req.to_json
+
+                    expect(last_response.status).to eq(400)
+                    expect(decoded_response['error_code']).to eq('CF-ServiceBindingAppServiceTaken')
+                    expect(decoded_response['description']).to eq('The app is already bound to the service.')
+                  end
+                end
+              end
+
+              context 'and the broker is synchronous' do
+                let(:bind_status) { 201 }
+
+                it 'returns a 201 status code' do
+                  expect(last_response).to have_status_code(201)
+                end
+              end
+            end
+          end
+
+          context 'when accepts_incomplete is false' do
+            it 'returns a 201 status code' do
+              post '/v2/service_bindings?accepts_incomplete=false', req.to_json
+              expect(last_response).to have_status_code(201)
+            end
+
+            context 'and the broker only supports asynchronous request' do
+              let(:bind_status) { 422 }
+              let(:bind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                post '/v2/service_bindings?accepts_incomplete=false', req.to_json
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+          end
+
+          context 'when accepts_incomplete is not set' do
+            context 'and the broker only supports asynchronous request' do
+              let(:bind_status) { 422 }
+              let(:bind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                post '/v2/service_bindings', req.to_json
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+          end
+
+          context 'when accepts_incomplete is not a bool' do
+            it 'returns a 400 status code' do
+              post '/v2/service_bindings?accepts_incomplete=not_a_bool', req.to_json
+              expect(last_response).to have_status_code(400)
+
+              expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                to_not have_been_made
+            end
           end
         end
 
@@ -795,6 +917,22 @@ module VCAP::CloudController
           end
         end
 
+        context 'when a binding has operation in progress' do
+          let(:last_operation) { ServiceBindingOperation.make(state: 'in progress') }
+
+          before do
+            service_binding.service_binding_operation = last_operation
+            service_binding.save
+          end
+
+          it 'should not be able to delete binding' do
+            delete "/v2/service_bindings/#{service_binding.guid}"
+            expect(last_response).to have_status_code 409
+            expect(last_response.body).to match 'AsyncServiceBindingOperationInProgress'
+            expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
+          end
+        end
+
         context 'with ?async=true' do
           it 'returns a job id' do
             delete "/v2/service_bindings/#{service_binding.guid}?async=true"
@@ -1022,6 +1160,23 @@ module VCAP::CloudController
             expect(entity['name']).to eq('binding')
             expect(entity['service_instance_guid']).to eq(si2.guid)
           end
+        end
+      end
+
+      context 'when the binding has last operation' do
+        before do
+          binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create')
+          set_current_user(developer)
+        end
+
+        it 'returns the in progress state' do
+          get '/v2/service_bindings?inline-relations-depth=1'
+          expect(last_response).to have_status_code(200)
+
+          service_binding = decoded_response['resources'].first
+          expect(service_binding['entity']['last_operation']['type']).to eq('create')
+          expect(service_binding['entity']['last_operation']['state']).to eq('in progress')
         end
       end
     end

@@ -49,13 +49,15 @@ module VCAP::Services
                       SuccessValidator.new(state: 'succeeded')))))
             when 202
               JsonObjectValidator.new(@logger,
-                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                OperationValidator.new(
+                  SuccessValidator.new))
             when 409
               FailingValidator.new(Errors::ServiceBrokerConflict)
             when 422
               FailWhenValidator.new('error',
-                { 'RequiresApp' => Errors::AppRequired },
-                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+                                    { 'RequiresApp' => Errors::AppRequired,
+                                      'AsyncRequired' => Errors::AsyncRequired },
+                                      FailingValidator.new(Errors::ServiceBrokerBadResponse))
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             end
@@ -207,6 +209,10 @@ module VCAP::Services
 
         def parse_fetch_binding_parameters(path, response)
           parse_fetch_parameters(path, response, fetch_binding_parameters_response_schema)
+        end
+
+        def parse_fetch_service_binding_last_operation(path, response)
+          parse_fetch_state(path, response)
         end
 
         def fetch_instance_parameters_response_schema

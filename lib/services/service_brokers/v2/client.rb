@@ -59,7 +59,7 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def fetch_service_instance_state(instance)
+    def fetch_service_instance_last_operation(instance)
       path                = service_instance_last_operation_path(instance)
       response            = @http_client.get(path)
       parsed_response     = @response_parser.parse_fetch_state(path, response)
@@ -98,8 +98,8 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def bind(binding, arbitrary_parameters)
-      path              = service_binding_resource_path(binding.guid, binding.service_instance.guid)
+    def bind(binding, arbitrary_parameters, accepts_incomplete=false)
+      path              = service_binding_resource_path(binding.guid, binding.service_instance.guid, accepts_incomplete: accepts_incomplete)
       body              = {
         service_id:    binding.service.broker_provided_id,
         plan_id:       binding.service_plan.broker_provided_id,
@@ -110,7 +110,8 @@ module VCAP::Services::ServiceBrokers::V2
       body              = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response        = @http_client.put(path, body)
+      response = @http_client.put(path, body)
+
       parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
       attributes = {
@@ -129,7 +130,11 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:volume_mounts] = parsed_response['volume_mounts']
       end
 
-      attributes
+      {
+        async: async_response?(response),
+        binding: attributes,
+        operation: parsed_response['operation']
+      }
     rescue Errors::ServiceBrokerApiTimeout,
            Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerInvalidVolumeMounts,
@@ -150,6 +155,15 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser.parse_unbind(path, response)
     rescue => e
       raise e.exception("Service instance #{binding&.service_instance&.name}: #{e.message}")
+    end
+
+    def fetch_service_binding_last_operation(service_binding)
+      path = service_binding_last_operation_path(service_binding)
+      response = @http_client.get(path)
+
+      last_operation = @response_parser.parse_fetch_service_binding_last_operation(path, response)
+
+      last_operation.deep_symbolize_keys
     end
 
     def deprovision(instance, accepts_incomplete: false)
@@ -231,13 +245,13 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_service_instance(instance)
       path = service_instance_resource_path(instance)
       response = @http_client.get(path)
-      @response_parser.parse_fetch_instance_parameters(path, response)
+      @response_parser.parse_fetch_instance_parameters(path, response).deep_symbolize_keys
     end
 
     def fetch_service_binding(service_binding)
       path = service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)
       response = @http_client.get(path)
-      @response_parser.parse_fetch_binding_parameters(path, response)
+      @response_parser.parse_fetch_binding_parameters(path, response).deep_symbolize_keys
     end
 
     private
@@ -274,8 +288,24 @@ module VCAP::Services::ServiceBrokers::V2
       "#{service_instance_resource_path(instance)}/last_operation?#{query_params.to_query}"
     end
 
-    def service_binding_resource_path(binding_guid, service_instance_guid)
-      "/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_guid}"
+    def service_binding_resource_path(binding_guid, service_instance_guid, opts={})
+      path = "/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_guid}"
+      if opts[:accepts_incomplete]
+        path += '?accepts_incomplete=true'
+      end
+      path
+    end
+
+    def service_binding_last_operation_path(service_binding)
+      query_params = {
+       'service_id' => service_binding.service_instance.service.broker_provided_id,
+       'plan_id' => service_binding.service_instance.service_plan.broker_provided_id
+      }
+
+      if service_binding.last_operation.broker_provided_operation
+        query_params['operation'] = service_binding.last_operation.broker_provided_operation
+      end
+      "#{service_binding_resource_path(service_binding.guid, service_binding.service_instance.guid)}/last_operation?#{query_params.to_query}"
     end
 
     def service_instance_resource_path(instance, opts={})

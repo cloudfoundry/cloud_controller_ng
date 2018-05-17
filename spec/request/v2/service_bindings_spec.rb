@@ -50,6 +50,13 @@ RSpec.describe 'ServiceBindings' do
                 'gateway_name' => '',
                 'syslog_drain_url' => nil,
                 'volume_mounts' => [],
+                'last_operation' => {
+                  'type' => 'create',
+                  'state' => 'succeeded',
+                  'description' => '',
+                  'updated_at' => iso8601,
+                  'created_at' => iso8601,
+                },
                 'app_url' => "/v2/apps/#{process1.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
                 'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters"
@@ -72,6 +79,13 @@ RSpec.describe 'ServiceBindings' do
                 'gateway_name' => '',
                 'syslog_drain_url' => nil,
                 'volume_mounts' => [],
+                'last_operation' => {
+                  'type' => 'create',
+                  'state' => 'succeeded',
+                  'description' => '',
+                  'updated_at' => iso8601,
+                  'created_at' => iso8601,
+                },
                 'app_url' => "/v2/apps/#{process2.guid}",
                 'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
                 'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding2.guid}/parameters"
@@ -125,6 +139,13 @@ RSpec.describe 'ServiceBindings' do
                   'gateway_name' => '',
                   'syslog_drain_url' => nil,
                   'volume_mounts' => [],
+                  'last_operation' => {
+                    'type' => 'create',
+                    'state' => 'succeeded',
+                    'description' => '',
+                    'updated_at' => iso8601,
+                    'created_at' => iso8601,
+                  },
                   'app_url' => "/v2/apps/#{process1.guid}",
                   'app' => {
                     'metadata' => {
@@ -266,6 +287,13 @@ RSpec.describe 'ServiceBindings' do
             'gateway_name' => '',
             'syslog_drain_url' => nil,
             'volume_mounts' => [],
+            'last_operation' => {
+              'type' => 'create',
+              'state' => 'succeeded',
+              'description' => '',
+              'updated_at' => iso8601,
+              'created_at' => iso8601,
+            },
             'app_url' => "/v2/apps/#{process1.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
             'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding1.guid}/parameters"
@@ -305,7 +333,7 @@ RSpec.describe 'ServiceBindings' do
       }.to_json
 
       post '/v2/service_bindings', req_body, headers_for(user)
-      expect(last_response.status).to eq(201)
+      expect(last_response).to have_status_code(201)
 
       service_binding = VCAP::CloudController::ServiceBinding.last
 
@@ -328,6 +356,13 @@ RSpec.describe 'ServiceBindings' do
             'gateway_name' => '',
             'syslog_drain_url' => 'syslog://mydrain.example.com',
             'volume_mounts' => [{ 'container_dir' => 'mount' }],
+            'last_operation' => {
+              'type' => 'create',
+              'state' => 'succeeded',
+              'description' => '',
+              'updated_at' => iso8601,
+              'created_at' => iso8601,
+            },
             'app_url' => "/v2/apps/#{process.guid}",
             'service_instance_url' => "/v2/service_instances/#{service_instance.guid}",
             'service_binding_parameters_url' => "/v2/service_bindings/#{service_binding.guid}/parameters"
@@ -399,12 +434,14 @@ RSpec.describe 'ServiceBindings' do
     before do
       allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new) do |*args, **kwargs, &block|
         fb = FakeServiceBrokerV2Client.new(*args, **kwargs, &block)
-        fb.parameters = { 'parameters' => {
-          'top_level_param' => {
-            'nested_param' => true,
-          },
-          'another_param' => 'some-value',
-        } }
+        fb.parameters = {
+          parameters: {
+            top_level_param: {
+              nested_param: true,
+            },
+            another_param: 'some-value',
+          }
+        }
         fb
       end
     end

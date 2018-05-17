@@ -7,16 +7,14 @@ class SystemEnvPresenter
   end
 
   def system_env
-    { VCAP_SERVICES: service_binding_env_variables(service_bindings) }
+    { VCAP_SERVICES: service_binding_env_variables }
   end
 
   private
 
-  attr_reader :service_bindings
-
-  def service_binding_env_variables(service_bindings)
+  def service_binding_env_variables
     services_hash = {}
-    service_bindings.each do |service_binding|
+    @service_bindings.select(&:is_created?).each do |service_binding|
       service_name = service_binding_label(service_binding)
       services_hash[service_name.to_sym] ||= []
       services_hash[service_name.to_sym] << service_binding_env_values(service_binding)

@@ -19,8 +19,9 @@ class ServiceBindingsController < ApplicationController
     service_instance_not_found! unless service_instance
     unauthorized! unless can_write?(app.space.guid)
 
+    accepts_incomplete = false
     begin
-      service_binding = ServiceBindingCreate.new(user_audit_info).create(app, service_instance, message, volume_services_enabled?)
+      service_binding = ServiceBindingCreate.new(user_audit_info).create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)
       render status: :created, json: Presenters::V3::ServiceBindingPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')

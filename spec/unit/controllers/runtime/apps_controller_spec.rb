@@ -1263,8 +1263,22 @@ module VCAP::CloudController
             get "/v2/apps/#{process.guid}/env"
             expect(last_response.status).to eql(200)
 
-            expect(decoded_response['system_env_json'].size).to eq(1)
-            expect(decoded_response['system_env_json']).to have_key('VCAP_SERVICES')
+            expect(decoded_response['system_env_json']['VCAP_SERVICES']).not_to eq({})
+          end
+
+          context 'when the service binding is being asynchronously created' do
+            let(:operation) { ServiceBindingOperation.make(state: 'in progress') }
+
+            before do
+              service_binding.service_binding_operation = operation
+            end
+
+            it 'does not include the binding in VCAP_SERVICES' do
+              get "/v2/apps/#{process.guid}/env"
+              expect(last_response.status).to eql(200)
+
+              expect(decoded_response['system_env_json']['VCAP_SERVICES']).to eq({})
+            end
           end
         end
 

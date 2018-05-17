@@ -6,6 +6,8 @@ module VCAP::CloudController
 
     plugin :after_initialize
 
+    one_to_one :service_binding_operation
+
     many_to_one :app, class: 'VCAP::CloudController::AppModel', key: :app_guid, primary_key: :guid, without_guid_generation: true
     many_to_one :service_instance, key: :service_instance_guid, primary_key: :guid, without_guid_generation: true
 
@@ -94,6 +96,37 @@ module VCAP::CloudController
       { app_guid: app_guid,
         space_guid: space.guid
       }
+    end
+
+    def last_operation
+      service_binding_operation
+    end
+
+    def is_created?
+      !service_binding_operation || service_binding_operation.state == 'succeeded'
+    end
+
+    def terminal_state?
+      !service_binding_operation || (['succeeded', 'failed'].include? service_binding_operation.state)
+    end
+
+    def operation_in_progress?
+      if service_binding_operation && service_binding_operation.state == 'in progress'
+        return true
+      end
+      false
+    end
+
+    def save_with_new_operation(last_operation)
+      ServiceBinding.db.transaction do
+        save_changes
+
+        # it is important to create the service binding operation with the service binding
+        # instead of doing self.service_binding_operation = x
+        # because mysql will deadlock when requests happen concurrently otherwise.
+        ServiceBindingOperation.create(last_operation.merge(service_binding_id: self.id))
+        self.service_binding_operation(reload: true)
+      end
     end
   end
 end

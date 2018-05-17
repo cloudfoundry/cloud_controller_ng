@@ -49,23 +49,28 @@ module VCAP::CloudController
         }
       })
 
+      accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
+
       app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid']) unless app
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(app.space_guid)
 
       creator = ServiceBindingCreate.new(UserAuditInfo.from_context(SecurityContext))
-      service_binding = creator.create(app, service_instance, message, volume_services_enabled?)
+      service_binding = creator.create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)
       warn_if_user_provided_service_has_parameters!(service_instance)
 
-      [HTTP::CREATED,
-       { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
-       object_renderer.render_json(self.class, service_binding, @opts)
+      [
+        status_from_operation_state(service_binding.last_operation),
+        { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
+        object_renderer.render_json(self.class, service_binding, @opts)
       ]
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')
     rescue ServiceBindingCreate::VolumeMountServiceDisabled
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
+    rescue ServiceBindingCreate::ServiceBrokerInvalidBindingsRetrievable
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'Could not create asynchronous binding when bindings_retrievable is false.')
     rescue ServiceBindingCreate::InvalidServiceBinding => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', e.message)
     end
@@ -121,6 +126,14 @@ module VCAP::CloudController
     def warn_if_user_provided_service_has_parameters!(service_instance)
       if service_instance.user_provided_instance? && @request_attrs['parameters']
         add_warning('Configuration parameters are ignored for bindings to user-provided service instances.')
+      end
+    end
+
+    def status_from_operation_state(last_operation)
+      if last_operation && last_operation.state == 'in progress'
+        HTTP::ACCEPTED
+      else
+        HTTP::CREATED
       end
     end
   end

@@ -80,9 +80,10 @@ module VCAP::CloudController
 
     def bind(binding_obj, arbitrary_parameters)
       service_instance = binding_obj.service_instance
-      raise_if_locked(service_instance)
+      raise_if_instance_locked(service_instance)
       client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
-      client.bind(binding_obj, arbitrary_parameters)
+      broker_response = client.bind(binding_obj, arbitrary_parameters)
+      broker_response[:binding]
     end
 
     def mitigate_orphan(binding)
