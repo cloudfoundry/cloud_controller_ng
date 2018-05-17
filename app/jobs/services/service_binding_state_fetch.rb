@@ -59,11 +59,7 @@ module VCAP::CloudController
         end
 
         def record_event(binding, request_attrs)
-          user = User.find(guid: @user_audit_info.user_guid)
-
-          if user
-            Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, request_attrs)
-          end
+          Repositories::ServiceBindingEventRepository.record_create(binding, @user_audit_info, request_attrs)
         end
 
         def enqueue_again

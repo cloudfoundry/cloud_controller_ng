@@ -198,12 +198,15 @@ module VCAP::CloudController
             end
 
             context 'when the user has gone away' do
-              it 'should not create an audit event' do
+              it 'should create an audit event' do
                 user.destroy
 
                 run_job(job)
 
-                expect(Event.find(type: 'audit.service_instance.create')).to be_nil
+                event = Event.find(type: 'audit.service_instance.create')
+                expect(event).to be
+                expect(event.actee).to eq(service_instance.guid)
+                expect(event.metadata['request']).to have_key('dummy_data')
               end
             end
           end
