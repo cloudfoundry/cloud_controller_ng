@@ -86,6 +86,7 @@ group :test do
   gem 'rubocop'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
+  gem 'colorize'
 end
 
 group :development do
