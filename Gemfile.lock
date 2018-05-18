@@ -109,7 +109,6 @@ GEM
     codeclimate-test-reporter (1.0.8)
       simplecov (<= 0.13)
     coderay (1.1.2)
-    colorize (0.5.8)
     concurrent-ruby (1.0.5)
     cookiejar (0.3.0)
     crack (0.4.3)
@@ -458,7 +457,6 @@ DEPENDENCIES
   clockwork
   cloudfront-signer
   codeclimate-test-reporter
-  colorize
   debase (>= 0.2.2.beta14)
   em-http-request (~> 1.0)
   eventmachine (~> 1.0.9)

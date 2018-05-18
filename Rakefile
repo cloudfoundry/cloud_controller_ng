@@ -10,8 +10,6 @@ require 'sequel'
 require 'steno'
 require 'cloud_controller'
 require_relative 'lib/tasks/rake_config'
-require 'colorize'
-require 'English'
 
 Rails.application.load_tasks
 
@@ -35,12 +33,15 @@ task :rubocop_autocorrect do
 end
 
 task :check_doc_links do
-  puts 'Checkling links in all docs...'.green
+  require 'English'
+  require 'rainbow'
+
+  puts Rainbow('Checking links in all docs...').green
   Bundler.with_clean_env do
     Dir.chdir('docs/v3') do
       status = system('npm install && gulp checkdocs')
       exit $CHILD_STATUS.exitstatus if !status
-      puts 'check_doc_links OK'.green
+      puts Rainbow('check_doc_links OK').green
     end
   end
 end
