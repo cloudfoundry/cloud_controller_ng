@@ -48,6 +48,7 @@ module VCAP::CloudController
             :resource_id => String,
             :internal_url => String,
             :ca_file => String,
+            :client_timeout => Integer,
             optional(:symmetric_secret) => String,
           },
 

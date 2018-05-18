@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:url) { 'http://uaa.example.com' }
     let(:client_id) { 'client_id' }
     let(:secret) { 'secret_key' }
-    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file', http_timeout: 2 } }
+    let(:expected_uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file', http_timeout: TestConfig.config_instance.get(:uaa, :client_timeout) } }
 
     subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
     let(:auth_header) { 'bearer STUFF' }
@@ -13,7 +13,13 @@ module VCAP::CloudController
     let(:token_issuer) { double(CF::UAA::TokenIssuer, client_credentials_grant: token_info) }
 
     before do
-      allow(CF::UAA::TokenIssuer).to receive(:new).with(url, client_id, secret, uaa_options).and_return(token_issuer)
+      allow(CF::UAA::TokenIssuer).to receive(:new).with(url, client_id, secret, expected_uaa_options).and_return(token_issuer)
+    end
+
+    describe 'configuration' do
+      it 'uses default http timeout value' do
+        expect(uaa_client.http_timeout).to eq(TestConfig.config_instance.get(:uaa, :client_timeout))
+      end
     end
 
     describe '#scim' do
@@ -24,9 +30,9 @@ module VCAP::CloudController
         expect(scim.instance_variable_get(:@auth_header)).to eq(auth_header)
       end
 
-      it 'gives the scim a timeout' do
+      it 'gives the scim a timeout from the config uaa client_timeout' do
         scim = uaa_client.scim
-        expect(scim.instance_variable_get(:@http_timeout)).to eq(2)
+        expect(scim.instance_variable_get(:@http_timeout)).to eq(60)
       end
 
       it 'caches the scim' do
@@ -110,8 +116,8 @@ module VCAP::CloudController
             { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
             { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
           ],
-          'schemas'      => ['urn:scim:schemas:core:1.0'],
-          'startindex'   => 1,
+          'schemas' => ['urn:scim:schemas:core:1.0'],
+          'startindex' => 1,
           'itemsperpage' => 100,
           'totalresults' => 2 }
 
@@ -263,8 +269,8 @@ module VCAP::CloudController
               { 'id' => '111', 'origin' => 'larrys_origin', 'username' => username },
               { 'id' => '111', 'origin' => 'larrys_other_origin', 'username' => username }
             ],
-            'schemas'      => ['urn:scim:schemas:core:1.0'],
-            'startindex'   => 1,
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
             'itemsperpage' => 100,
             'totalresults' => 2 }
 
@@ -283,8 +289,8 @@ module VCAP::CloudController
       it 'returns an empty array when the username is not in any origin' do
         response_body = {
           'resources' => [],
-          'schemas'      => ['urn:scim:schemas:core:1.0'],
-          'startindex'   => 1,
+          'schemas' => ['urn:scim:schemas:core:1.0'],
+          'startindex' => 1,
           'itemsperpage' => 100,
           'totalresults' => 0 }
 

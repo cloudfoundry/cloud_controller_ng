@@ -88,6 +88,7 @@ uaa:
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
   ca_file: "spec/fixtures/certs/uaa_ca.crt"
+  client_timeout: 60
 
 routing_api:
   url: "http://localhost:3000"

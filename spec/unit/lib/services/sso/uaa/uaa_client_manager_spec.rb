@@ -20,7 +20,12 @@ module VCAP::Services::SSO::UAA
       before do
         stub_request(:post, tx_url)
 
-        opts = { skip_ssl_validation: false, ssl_ca_file: 'spec/fixtures/certs/uaa_ca.crt', http_timeout: 2 }
+        opts = {
+          skip_ssl_validation: false,
+          ssl_ca_file: 'spec/fixtures/certs/uaa_ca.crt',
+          http_timeout: TestConfig.config_instance.get(:uaa, :client_timeout)
+        }
+
         allow(CF::UAA::TokenIssuer).to receive(:new).with(uaa_uri, 'cc-service-dashboards', 'some-sekret', opts).
           and_return(token_issuer)
       end
