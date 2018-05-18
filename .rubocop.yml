@@ -12,6 +12,9 @@ AllCops:
     - vendor/**/*
     - lib/diego/bbs/models/**/*
 
+Bundler/DuplicatedGem:
+  Enabled: false
+
 Layout/AlignParameters:
   Enabled: false
 

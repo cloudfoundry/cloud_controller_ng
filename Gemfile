@@ -70,13 +70,10 @@ group :operations do
   gem 'pry-byebug'
 end
 
-group :development, :test do
-  gem 'colorize'
-end
-
 group :test do
   gem 'cf-perm-test-helpers', '~> 0.0.5'
   gem 'codeclimate-test-reporter', require: false
+  gem 'colorize'
   gem 'hashdiff'
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
@@ -94,6 +91,7 @@ end
 
 group :development do
   gem 'byebug'
+  gem 'colorize'
   gem 'debase', '>= 0.2.2.beta14'
   gem 'listen'
   gem 'roodi'
