@@ -8232,7 +8232,11 @@ excluded in the response based on the user&rsquo;s role.</p>
 </thead><tbody>
 <tr>
 <td><strong>buildpack</strong></td>
-<td>a) Blank OR <code class="prettyprint">default</code> OR <code class="prettyprint">null</code> will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.</td>
+<td>a) Blank OR <code class="prettyprint">default</code> OR <code class="prettyprint">null</code> will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack. <br>DEPRECATED in favor of the <code class="prettyprint">buildpacks</code> field below.</td>
+</tr>
+<tr>
+<td><strong>buildpacks</strong></td>
+<td>Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy <code class="prettyprint">buildpack</code> field.</td>
 </tr>
 <tr>
 <td><strong>env</strong></td>
@@ -8368,7 +8372,7 @@ applications:
 <p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on application restart.</p>
 </blockquote>
 
-<p>Apply changes to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+<p>Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/apply_manifest"</span> <span class="se">\</span>
