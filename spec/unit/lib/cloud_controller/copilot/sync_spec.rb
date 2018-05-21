@@ -5,7 +5,7 @@ require 'cloud_controller/copilot/sync'
 module VCAP::CloudController
   RSpec.describe Copilot::Sync do
     describe '#sync' do
-      let(:route) { Route.make(domain: domain, host: 'some-host') }
+      let(:route) { Route.make(domain: domain, host: 'some-host', path: '/some/path') }
       let(:domain) { SharedDomain.make(name: 'example.org') }
       let!(:route_mapping) { RouteMappingModel.make(route: route) }
       let!(:web_process_model) { VCAP::CloudController::ProcessModel.make(type: 'web') }
@@ -21,6 +21,7 @@ module VCAP::CloudController
         expect(Copilot::Adapter).to have_received(:bulk_sync) do |args|
           expect(args[:routes].first.guid).to eq(route.guid)
           expect(args[:routes].first.fqdn).to eq('some-host.example.org')
+          expect(args[:routes].first.path).to eq('/some/path')
           expect(args[:route_mappings]).to eq([route_mapping])
           expect(args[:processes]).to eq([web_process_model])
         end
