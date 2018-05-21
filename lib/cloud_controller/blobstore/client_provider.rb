@@ -48,7 +48,7 @@ module CloudController
           # and intermittent GCS blobstore download errors
           errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError,
                     Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable,
-                    Google::Apis::TransmissionError
+                    Google::Apis::ServerError, Google::Apis::TransmissionError
           ]
           retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
