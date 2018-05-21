@@ -5,6 +5,7 @@ require 'cloud_controller/blobstore/fog/error_handling_client'
 require 'cloud_controller/blobstore/webdav/dav_client'
 require 'cloud_controller/blobstore/safe_delete_client'
 require 'bits_service_client'
+require 'google/apis/errors'
 
 module CloudController
   module Blobstore
@@ -44,8 +45,11 @@ module CloudController
           # and Fog raising an EOFError SocketError intermittently
           # and https://github.com/fog/fog-aws/issues/264
           # and https://github.com/fog/fog-aws/issues/265
+          # and intermittent GCS blobstore download errors
           errors = [Excon::Errors::BadRequest, Excon::Errors::SocketError, SystemCallError,
-                    Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable]
+                    Excon::Errors::InternalServerError, Excon::Errors::ServiceUnavailable,
+                    Google::Apis::TransmissionError
+          ]
           retryable_client = RetryableClient.new(client: client, errors: errors, logger: logger)
 
           Client.new(ErrorHandlingClient.new(SafeDeleteClient.new(retryable_client, root_dir)))
