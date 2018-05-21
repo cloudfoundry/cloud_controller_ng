@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "./node_modules/.bin/gulp",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "checkdocs": "./node_modules/.bin/gulp checkdocs"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
     "check-pages": "^0.10.0",
     "glob": "^7.1.2",
     "gulp": "^3.9.1",
+    "gulp-cli": "^2.0.1",
     "gulp-webserver": "^0.9.1"
   },
   "dependencies": {}

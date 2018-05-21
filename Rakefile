@@ -39,7 +39,7 @@ task :check_doc_links do
   puts Rainbow('Checking links in all docs...').green
   Bundler.with_clean_env do
     Dir.chdir('docs/v3') do
-      status = system('npm install && gulp checkdocs')
+      status = system('npm install && npm run checkdocs')
       exit $CHILD_STATUS.exitstatus if !status
       puts Rainbow('check_doc_links OK').green
     end
