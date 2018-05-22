@@ -29,6 +29,9 @@ module VCAP::CloudController
               candidate: observation_payload(result.candidates.first),
             }
           )
+
+          statsd_client.timing("cc.perm.experiment.#{name}.timing.match.control", result.control.duration * 1000)
+          statsd_client.timing("cc.perm.experiment.#{name}.timing.match.candidate", result.candidates.first.duration * 1000)
         else
           logger.info(
             'mismatched',
@@ -37,6 +40,9 @@ module VCAP::CloudController
               control: observation_payload(result.control),
               candidate: observation_payload(result.candidates.first),
             })
+
+          statsd_client.timing("cc.perm.experiment.#{name}.timing.mismatch.control", result.control.duration * 1000)
+          statsd_client.timing("cc.perm.experiment.#{name}.timing.mismatch.candidate", result.candidates.first.duration * 1000)
         end
 
         statsd_client.gauge("cc.perm.experiment.#{name}.match", success)

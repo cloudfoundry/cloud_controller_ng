@@ -29,7 +29,9 @@ module VCAP::CloudController
       allow(Steno).to receive(:logger).and_return(logger)
     end
 
-    RSpec.shared_examples 'match recorder' do |query_fn, experiment_name, control_value, candidate_value, additional_context={}|
+    RSpec.shared_examples 'match recorder' do |query_fn, method, control_value, candidate_value, additional_context={}|
+      experiment_name = method.to_s.delete('?')
+
       it 'logs the match' do
         query_fn.call(subject)
 
@@ -54,9 +56,35 @@ module VCAP::CloudController
 
         expect(statsd_client).to have_received(:gauge).with("cc.perm.experiment.#{experiment_name}.match", 1)
       end
+
+      it 'publishes the performance of both control and candidate' do
+        Timecop.freeze do
+          control_duration = 10
+          candidate_duration = 5
+
+          allow(db_permissions).to receive(method.to_sym) do
+            Timecop.travel(control_duration)
+            true
+          end
+
+          allow(perm_permissions).to receive(method.to_sym) do
+            Timecop.travel(candidate_duration)
+            true
+          end
+
+          query_fn.call(subject)
+
+          expect(statsd_client).to have_received(:timing).
+            with("cc.perm.experiment.#{experiment_name}.timing.match.control", be_within(100).of(control_duration * 1000))
+          expect(statsd_client).to have_received(:timing).
+            with("cc.perm.experiment.#{experiment_name}.timing.match.candidate", be_within(100).of(candidate_duration * 1000))
+        end
+      end
     end
 
-    RSpec.shared_examples 'mismatch recorder' do |query_fn, experiment_name, control_value, candidate_value, additional_context={}|
+    RSpec.shared_examples 'mismatch recorder' do |query_fn, method, control_value, candidate_value, additional_context={}|
+      experiment_name = method.to_s.delete('?')
+
       it 'logs the mismatch' do
         query_fn.call(subject)
 
@@ -80,6 +108,30 @@ module VCAP::CloudController
         query_fn.call(subject)
 
         expect(statsd_client).to have_received(:gauge).with("cc.perm.experiment.#{experiment_name}.match", 0)
+      end
+
+      it 'publishes the performance of both control and candidate' do
+        Timecop.freeze do
+          control_duration = 10
+          candidate_duration = 5
+
+          allow(db_permissions).to receive(method.to_sym) do
+            Timecop.travel(control_duration)
+            :a
+          end
+
+          allow(perm_permissions).to receive(method.to_sym) do
+            Timecop.travel(candidate_duration)
+            :b
+          end
+
+          query_fn.call(subject)
+
+          expect(statsd_client).to have_received(:timing).
+            with("cc.perm.experiment.#{experiment_name}.timing.mismatch.control", be_within(100).of(control_duration * 1000))
+          expect(statsd_client).to have_received(:timing).
+            with("cc.perm.experiment.#{experiment_name}.timing.mismatch.candidate", be_within(100).of(candidate_duration * 1000))
+        end
       end
     end
 
@@ -314,7 +366,7 @@ module VCAP::CloudController
           allow(perm_permissions).to receive(:can_read_from_org?).and_return(true)
         end
 
-        it_behaves_like 'match recorder', proc { |queryer| queryer.can_read_from_org?(org_guid) }, 'can_read_from_org', true, true, { org_guid: org_guid }
+        it_behaves_like 'match recorder', proc { |queryer| queryer.can_read_from_org?(org_guid) }, :can_read_from_org?, true, true, { org_guid: org_guid }
       end
 
       context 'when the control and candidate are different' do
@@ -325,7 +377,7 @@ module VCAP::CloudController
           allow(perm_permissions).to receive(:can_read_from_org?).and_return('something wrong')
         end
 
-        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.can_read_from_org?(org_guid) }, 'can_read_from_org', true, 'something wrong', { org_guid: org_guid }
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.can_read_from_org?(org_guid) }, :can_read_from_org?, true, 'something wrong', { org_guid: org_guid }
       end
     end
 
@@ -393,7 +445,7 @@ module VCAP::CloudController
           allow(perm_permissions).to receive(:can_write_to_org?).and_return('something wrong')
         end
 
-        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.can_write_to_org?(org_guid) }, 'can_write_to_org', true, 'something wrong', { org_guid: org_guid }
+        it_behaves_like 'mismatch recorder', proc { |queryer| queryer.can_write_to_org?(org_guid) }, :can_write_to_org?, true, 'something wrong', { org_guid: org_guid }
       end
     end
 
@@ -446,7 +498,7 @@ module VCAP::CloudController
         it_behaves_like(
           'match recorder',
           proc { |queryer| queryer.can_read_from_space?(space_guid, org_guid) },
-          'can_read_from_space',
+          :can_read_from_space?,
           true,
           true,
           { space_guid: space_guid, org_guid: org_guid },
@@ -465,7 +517,7 @@ module VCAP::CloudController
         it_behaves_like(
           'mismatch recorder',
           proc { |queryer| queryer.can_read_from_space?(space_guid, org_guid) },
-          'can_read_from_space',
+          :can_read_from_space?,
           true,
           'something wrong',
           { space_guid: space_guid, org_guid: org_guid },
@@ -517,7 +569,7 @@ module VCAP::CloudController
 
         it_behaves_like('match recorder',
           proc { |queryer| queryer.can_read_secrets_in_space?(space_guid, org_guid) },
-          'can_read_secrets_in_space',
+          :can_read_secrets_in_space?,
           true,
           true,
           {
@@ -537,7 +589,7 @@ module VCAP::CloudController
 
         it_behaves_like('mismatch recorder',
           proc { |queryer| queryer.can_read_secrets_in_space?(space_guid, org_guid) },
-          'can_read_secrets_in_space',
+          :can_read_secrets_in_space?,
           true,
           'something wrong',
           {
@@ -590,7 +642,7 @@ module VCAP::CloudController
 
         it_behaves_like('match recorder',
           proc { |queryer| queryer.can_write_to_space?(space_guid) },
-          'can_write_to_space',
+          :can_write_to_space?,
           true,
           true,
           space_guid: space_guid
@@ -607,7 +659,7 @@ module VCAP::CloudController
 
         it_behaves_like('mismatch recorder',
           proc { |queryer| queryer.can_write_to_space?(space_guid) },
-          'can_write_to_space',
+          :can_write_to_space?,
           true,
           'something wrong',
           space_guid: space_guid
@@ -671,7 +723,7 @@ module VCAP::CloudController
 
         it_behaves_like('match recorder',
           proc { |queryer| queryer.can_read_from_isolation_segment?(isolation_segment) },
-          'can_read_from_isolation_segment',
+          :can_read_from_isolation_segment?,
           true,
           true,
           isolation_segment_guid: isolation_segment_guid
@@ -689,7 +741,7 @@ module VCAP::CloudController
 
         it_behaves_like('mismatch recorder',
           proc { |queryer| queryer.can_read_from_isolation_segment?(isolation_segment) },
-          'can_read_from_isolation_segment',
+          :can_read_from_isolation_segment?,
           true,
           'something wrong',
           isolation_segment_guid: isolation_segment_guid
@@ -745,7 +797,7 @@ module VCAP::CloudController
 
         it_behaves_like 'match recorder',
           proc { |queryer| queryer.can_read_route?(space_guid, org_guid) },
-          'can_read_route',
+          :can_read_route?,
           true,
           true,
           {
@@ -765,7 +817,7 @@ module VCAP::CloudController
 
         it_behaves_like 'mismatch recorder',
           proc { |queryer| queryer.can_read_route?(space_guid, org_guid) },
-          'can_read_route',
+          :can_read_route?,
           true,
           'something wrong',
           {
