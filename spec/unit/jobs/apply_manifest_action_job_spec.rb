@@ -81,6 +81,15 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a Route::InvalidOrganizationRelation error occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(Route::InvalidOrganizationRelation, 'Organization cannot use domain hello.there')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /Organization cannot use domain hello\.there/)
+        end
+      end
+
       context 'when an ServiceBindingCreate::InvalidServiceBinding error occurs' do
         it 'wraps the error in an ApiError' do
           allow(apply_manifest_action).to receive(:apply).and_raise(ServiceBindingCreate::InvalidServiceBinding, 'Invalid binding name')
