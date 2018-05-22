@@ -11,7 +11,8 @@ module VCAP::CloudController
       let(:message) do
         {
           type:    'web',
-          command: 'rackup'
+          command: 'rackup',
+          instances: 42
         }
       end
 
@@ -23,6 +24,7 @@ module VCAP::CloudController
         expect(app.processes.first.guid).to eq(process.guid)
         expect(process.type).to eq('web')
         expect(process.command).to eq('rackup')
+        expect(process.instances).to eq(42)
       end
 
       context 'if the command is nil' do

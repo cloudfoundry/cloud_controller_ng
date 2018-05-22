@@ -14,9 +14,9 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v3/apps' do
-    it 'creates an app' do
-      buildpack      = VCAP::CloudController::Buildpack.make(stack: stack.name)
-      create_request = {
+    let(:buildpack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+    let(:create_request) do
+      {
         name: 'my_app',
         environment_variables: { open: 'source' },
         lifecycle: {
@@ -34,7 +34,9 @@ RSpec.describe 'Apps' do
           }
         }
       }
+    end
 
+    it 'creates an app' do
       post '/v3/apps', create_request.to_json, user_header
       expect(last_response.status).to eq(201)
 
@@ -92,6 +94,16 @@ RSpec.describe 'Apps' do
         space_guid:        space.guid,
         organization_guid: space.organization.guid,
       })
+    end
+
+    it 'creates an empty web process with the same guid as the app (so it is visible on v2 apps api)' do
+      post '/v3/apps', create_request.to_json, user_header
+      expect(last_response.status).to eq(201)
+
+      parsed_response = MultiJson.load(last_response.body)
+      app_guid        = parsed_response['guid']
+      expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
+      expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
     end
 
     describe 'Docker app' do

@@ -43,6 +43,56 @@ module VCAP::CloudController
           expect(lifecycle).to have_received(:create_lifecycle_data_model).with(app)
         end
 
+        describe 'created process' do
+          before do
+            TestConfig.override(
+              default_app_memory: 393,
+              default_app_disk_in_mb: 71,
+            )
+          end
+
+          it 'has the same guid' do
+            app = app_create.create(message, lifecycle)
+            expect(ProcessModel.find(guid: app.guid)).to_not be_nil
+          end
+
+          it 'has type "web"' do
+            app = app_create.create(message, lifecycle)
+            process = ProcessModel.find(guid: app.guid)
+            expect(process.type).to eq 'web'
+          end
+
+          it 'has nil command' do
+            app = app_create.create(message, lifecycle)
+            process = ProcessModel.find(guid: app.guid)
+            expect(process.command).to eq nil
+          end
+
+          it 'has 0 instances' do
+            app = app_create.create(message, lifecycle)
+            process = ProcessModel.find(guid: app.guid)
+            expect(process.instances).to eq 0
+          end
+
+          it 'has default memory' do
+            app = app_create.create(message, lifecycle)
+            process = ProcessModel.find(guid: app.guid)
+            expect(process.memory).to eq 393
+          end
+
+          it 'has default disk' do
+            app = app_create.create(message, lifecycle)
+            process = ProcessModel.find(guid: app.guid)
+            expect(process.disk_quota).to eq 71
+          end
+
+          it 'has default health check configuration' do
+            app = app_create.create(message, lifecycle)
+            process = ProcessModel.find(guid: app.guid)
+            expect(process.health_check_type).to eq 'port'
+          end
+        end
+
         it 'creates an audit event' do
           expect_any_instance_of(Repositories::AppEventRepository).
             to receive(:record_app_create).with(instance_of(AppModel),
