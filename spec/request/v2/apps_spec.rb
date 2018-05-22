@@ -1023,7 +1023,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'gets the instance information for a started app' do
-      Time.freeze do
+      Timecop.freeze do
         allow_any_instance_of(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:lrp_instances).and_return(bbs_instances_response)
 
         get "/v2/apps/#{process.guid}/instances", nil, headers_for(user)
@@ -1039,7 +1039,7 @@ RSpec.describe 'Apps' do
               'state' => 'RUNNING', 'uptime' => two_days_in_seconds, 'since' => two_days_ago_since_epoch_seconds
             }
           }
-                                   )
+        )
       end
     end
   end
