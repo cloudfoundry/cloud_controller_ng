@@ -219,9 +219,8 @@ module VCAP::Services::ServiceBrokers::V2
         },
       }
 
-      if state == 'succeeded'
-        attributes[:service_plan] = plan
-      elsif state == 'in progress'
+
+      if state == 'in progress'
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
       end
 

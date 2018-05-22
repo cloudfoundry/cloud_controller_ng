@@ -583,12 +583,6 @@ module VCAP::Services::ServiceBrokers::V2
             expect(last_operation[:state]).to eq('succeeded')
             expect(last_operation[:proposed_changes]).to be_nil
           end
-
-          it 'returns the new service_plan in a hash' do
-            attributes, _, err = client.update(instance, new_plan, accepts_incomplete: true)
-            expect(err).to be_nil
-            expect(attributes[:service_plan]).to eq new_plan
-          end
         end
 
         context 'when the broker returns a 202' do
