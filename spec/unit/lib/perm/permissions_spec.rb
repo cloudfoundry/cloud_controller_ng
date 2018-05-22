@@ -705,5 +705,111 @@ module VCAP::CloudController::Perm
         expect(has_permission).to equal(false)
       end
     end
+
+    describe '#readable_app_guids' do
+      before do
+        allow(roles).to receive(:admin?).and_return(false)
+        allow(roles).to receive(:admin_read_only?).and_return(false)
+        allow(roles).to receive(:global_auditor?).and_return(false)
+      end
+
+      it 'returns all app guids for admins' do
+        allow(roles).to receive(:admin?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
+
+        app_guids = permissions.readable_app_guids
+
+        expect(app_guids).to include(app1.guid)
+        expect(app_guids).to include(app2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns all app guids for read-only admins' do
+        allow(roles).to receive(:admin_read_only?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
+
+        app_guids = permissions.readable_app_guids
+
+        expect(app_guids).to include(app1.guid)
+        expect(app_guids).to include(app2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns all app guids for global auditors' do
+        allow(roles).to receive(:global_auditor?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
+
+        app_guids = permissions.readable_app_guids
+
+        expect(app_guids).to include(app1.guid)
+        expect(app_guids).to include(app2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns the list of app guids that the user can read via org and space roles' do
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
+        org_guids = [org1.guid, org2.guid]
+
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        app2 = VCAP::CloudController::AppModel.make(space: space1)
+
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app3 = VCAP::CloudController::AppModel.make(space: space2)
+
+        org_app_guids = [app1.guid, app2.guid, app3.guid]
+        org_actions = %w(org.manager)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: org_actions).
+          and_return(org_guids)
+
+        org3 = VCAP::CloudController::Organization.make
+        space3 = VCAP::CloudController::Space.make(organization: org3)
+        app4 = VCAP::CloudController::AppModel.make(space: space3)
+        space4 = VCAP::CloudController::Space.make(organization: org3)
+        app5 = VCAP::CloudController::AppModel.make(space: space4)
+
+        readable_space_guids = [space3.guid, space4.guid]
+        readable_app_guids = [app4.guid, app5.guid]
+        space_actions = %w(space.developer space.manager space.auditor)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: space_actions).
+          and_return(readable_space_guids)
+
+        expected_app_guids = org_app_guids + readable_app_guids
+
+        expect(permissions.readable_app_guids).to match_array(expected_app_guids)
+      end
+    end
   end
 end

@@ -707,5 +707,108 @@ module VCAP::CloudController
         expect(permissions.can_read_route?(space_guid, org_guid)).to be false
       end
     end
+
+    describe '#readable_app_guids' do
+      it 'returns all the app guids for admins' do
+        user = set_current_user_as_admin
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        app1 = AppModel.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        app2 = AppModel.make(space: space2)
+
+        app_guids = subject.readable_app_guids
+
+        expect(app_guids).to include(app1.guid)
+        expect(app_guids).to include(app2.guid)
+      end
+
+      it 'returns all the app guids for read-only admins' do
+        user = set_current_user_as_admin_read_only
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        app1 = AppModel.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        app2 = AppModel.make(space: space2)
+
+        app_guids = subject.readable_app_guids
+
+        expect(app_guids).to include(app1.guid)
+        expect(app_guids).to include(app2.guid)
+      end
+
+      it 'returns all the app guids for global auditors' do
+        user = set_current_user_as_global_auditor
+        subject = Permissions.new(user)
+
+        org1 = Organization.make
+        space1 = Space.make(organization: org1)
+        app1 = AppModel.make(space: space1)
+        org2 = Organization.make
+        space2 = Space.make(organization: org2)
+        app2 = AppModel.make(space: space2)
+
+        app_guids = subject.readable_app_guids
+
+        expect(app_guids).to include(app1.guid)
+        expect(app_guids).to include(app2.guid)
+      end
+
+      it 'returns app guids where the user has an appropriate org membership' do
+        manager_org = Organization.make
+        manager_space = Space.make(organization: manager_org)
+        manager_app = AppModel.make(space: manager_space)
+        manager_org.add_manager(user)
+
+        auditor_org = Organization.make
+        auditor_space = Space.make(organization: auditor_org)
+        auditor_app = AppModel.make(space: auditor_space)
+        auditor_org.add_auditor(user)
+
+        billing_manager_org = Organization.make
+        billing_manager_space = Space.make(organization: billing_manager_org)
+        billing_manager_app = AppModel.make(space: billing_manager_space)
+        billing_manager_org.add_billing_manager(user)
+
+        member_org = Organization.make
+        member_space = Space.make(organization: member_org)
+        member_app = AppModel.make(space: member_space)
+        member_org.add_user(user)
+
+        app_guids = permissions.readable_app_guids
+
+        expect(app_guids).to contain_exactly(manager_app.guid)
+        expect(app_guids).not_to include(auditor_app.guid)
+        expect(app_guids).not_to include(billing_manager_app.guid)
+        expect(app_guids).not_to include(member_app.guid)
+      end
+
+      it 'returns app guids where the user has an appropriate space membership' do
+        org = Organization.make
+        org.add_user(user)
+
+        developer_space = Space.make(organization: org)
+        developer_app = AppModel.make(space: developer_space)
+        developer_space.add_developer(user)
+
+        manager_space = Space.make(organization: org)
+        manager_app = AppModel.make(space: manager_space)
+        manager_space.add_manager(user)
+
+        auditor_space = Space.make(organization: org)
+        auditor_app = AppModel.make(space: auditor_space)
+        auditor_space.add_auditor(user)
+
+        app_guids = permissions.readable_app_guids
+
+        expect(app_guids).to contain_exactly(developer_app.guid, manager_app.guid, auditor_app.guid)
+      end
+    end
   end
 end

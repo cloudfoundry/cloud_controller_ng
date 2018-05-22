@@ -98,6 +98,10 @@ class VCAP::CloudController::Permissions
       @user.audited_organizations.include?(org)
   end
 
+  def readable_app_guids
+    VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
   private
 
   def membership

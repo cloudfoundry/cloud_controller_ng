@@ -774,5 +774,9 @@ module VCAP::CloudController
           }
       end
     end
+
+    describe '#readable_app_guids' do
+      it_behaves_like 'readable guids', 'app'
+    end
   end
 end

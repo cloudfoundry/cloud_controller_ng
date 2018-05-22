@@ -310,4 +310,76 @@ RSpec.describe 'Routes' do
       )
     end
   end
+
+  describe 'GET /v2/routes/:guid/apps' do
+    let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
+
+    it 'lists the associated apps' do
+      get "/v2/routes/#{route.guid}/apps", nil, headers_for(user)
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'total_results' => 1,
+          'total_pages'   => 1,
+          'prev_url'      => nil,
+          'next_url'      => nil,
+          'resources'     => [
+            {
+              'metadata' => {
+                'guid'       => process.guid,
+                'url'        => "/v2/apps/#{process.guid}",
+                'created_at' => iso8601,
+                'updated_at' => iso8601
+              },
+              'entity' => {
+                'name'                       => process.name,
+                'production'                 => false,
+                'space_guid'                 => space.guid,
+                'stack_guid'                 => process.stack.guid,
+                'buildpack'                  => nil,
+                'detected_buildpack'         => nil,
+                'detected_buildpack_guid'    => nil,
+                'environment_json'           => nil,
+                'memory'                     => 1024,
+                'instances'                  => 1,
+                'disk_quota'                 => 1024,
+                'state'                      => 'STOPPED',
+                'version'                    => process.version,
+                'command'                    => nil,
+                'console'                    => false,
+                'debug'                      => nil,
+                'staging_task_id'            => process.latest_build.guid,
+                'package_state'              => 'STAGED',
+                'health_check_type'          => 'port',
+                'health_check_timeout'       => nil,
+                'health_check_http_endpoint' => nil,
+                'staging_failed_reason'      => nil,
+                'staging_failed_description' => nil,
+                'diego'                      => true,
+                'docker_image'               => nil,
+                'docker_credentials'         => {
+                  'username' => nil,
+                  'password' => nil
+                },
+                'package_updated_at'         => iso8601,
+                'detected_start_command'     => '',
+                'enable_ssh'                 => true,
+                'ports'                      => [8080],
+                'space_url'                  => "/v2/spaces/#{space.guid}",
+                'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
+                'routes_url'                 => "/v2/apps/#{process.guid}/routes",
+                'events_url'                 => "/v2/apps/#{process.guid}/events",
+                'service_bindings_url'       => "/v2/apps/#{process.guid}/service_bindings",
+                'route_mappings_url'         => "/v2/apps/#{process.guid}/route_mappings"
+              }
+            }
+          ]
+        }
+      )
+    end
+  end
 end

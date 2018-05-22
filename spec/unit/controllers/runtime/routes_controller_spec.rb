@@ -1385,6 +1385,37 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/routes/:guid/<related resource>' do
+      let(:route) { Route.make }
+      let(:process1) { ProcessModelFactory.make(space: route.space) }
+      let(:process2) { ProcessModelFactory.make(space: route.space) }
+      let(:developer) { make_developer_for_space(route.space) }
+      let!(:route_mapping1) { RouteMappingModel.make(app: process1.app, route: route, process_type: process1.type) }
+      let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: route, process_type: process2.type) }
+
+      before do
+        set_current_user(developer)
+      end
+
+      it 'returns the apps mapped to the route' do
+        get "/v2/routes/#{route.guid}/apps"
+
+        expect(last_response.status).to eq(200)
+        expect(decoded_response['resources'].length).to eq(2)
+        expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.guid
+        expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.guid
+      end
+
+      it 'returns the route mappings associated with the route' do
+        get "/v2/routes/#{route.guid}/route_mappings"
+
+        expect(last_response.status).to eq(200)
+        expect(decoded_response['resources'].length).to eq(2)
+        expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
+        expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+      end
+    end
+
     describe 'PUT /v2/routes/:guid/apps/:app_guid' do
       let(:route) { Route.make }
       let(:process) { ProcessModelFactory.make(space: route.space) }

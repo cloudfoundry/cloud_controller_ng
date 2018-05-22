@@ -162,6 +162,37 @@ module VCAP
           ])
         end
 
+        def readable_app_guids
+          if can_read_globally?
+            VCAP::CloudController::AppModel.select(:guid).all.map(&:guid)
+          else
+            space_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                SPACE_DEVELOPER_ACTION,
+                SPACE_MANAGER_ACTION,
+                SPACE_AUDITOR_ACTION,
+              ]
+            )
+            org_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                ORG_MANAGER_ACTION,
+              ]
+            )
+
+            app_space_guids = Space.join(
+              Organization.where(guid: org_guids).select(:id), id: :organization_id
+            ).select(:spaces__guid).all.map(&:guid) + space_guids
+
+            AppModel.join(
+              Space.where(guid: app_space_guids).select(:guid), guid: :space_guid
+            ).select(:apps__guid).all.map(&:guid)
+          end
+        end
+
         private
 
         attr_reader :perm_client, :user_id, :roles, :issuer
