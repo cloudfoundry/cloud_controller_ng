@@ -118,10 +118,14 @@ module VCAP::CloudController
       context 'when the app and route are in different spaces' do
         let(:route) { Route.make(space: Space.make) }
 
-        it 'raises InvalidRouteMapping' do
+        it 'raises SpaceMismatch' do
           expect {
             RouteMappingCreate.add(user_audit_info, route, process)
-          }.to raise_error(RouteMappingCreate::InvalidRouteMapping, /the app and route must belong to the same space/)
+          }.to raise_error { |error|
+            expect(error).to be_a(RouteMappingCreate::SpaceMismatch)
+            expect(error.message).to match(/#{route.uri}/)
+            expect(error.message).to match(/because the route is not in this space/)
+          }
           expect(app.reload.routes).to be_empty
         end
       end

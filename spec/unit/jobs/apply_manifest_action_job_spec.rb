@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:user) { User.make(admin: true) }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:app) { AppModel.make(name: Sham.guid) }
-      let(:parsed_app_manifest) { AppManifestMessage.new({ name: 'blah', instances: 4 }) }
+      let(:parsed_app_manifest) { AppManifestMessage.new({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }) }
 
       subject(:job) { ApplyManifestActionJob.new(app.guid, parsed_app_manifest, apply_manifest_action) }
 
@@ -103,6 +103,15 @@ module VCAP::CloudController
               }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
             end
           end
+        end
+      end
+
+      context 'when an RouteMappingCreate::SpaceMismatch error occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(RouteMappingCreate::SpaceMismatch, 'space mismatch message')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /space mismatch message/)
         end
       end
 

@@ -10,7 +10,6 @@ module VCAP::CloudController
     end
 
     DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
-    INVALID_SPACE_MESSAGE = 'the app and route must belong to the same space'.freeze
 
     class << self
       def add(user_audit_info, route, process)
@@ -54,7 +53,9 @@ module VCAP::CloudController
       end
 
       def validate_space!(app, route)
-        raise SpaceMismatch.new(INVALID_SPACE_MESSAGE) unless app.space.guid == route.space.guid
+        return if app.space.guid == route.space.guid
+
+        raise SpaceMismatch.new("The app cannot be mapped to route #{route.uri} because the route is not in this space. Apps must be mapped to routes in the same space.")
       end
 
       def validate_routing_api_enabled!(route)
