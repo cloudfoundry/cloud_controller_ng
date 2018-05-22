@@ -385,7 +385,7 @@ module VCAP::CloudController
     end
 
     def visible_relationship_dataset(relationship_name, route)
-      if relationship_name == "apps"
+      if relationship_name == 'apps'
         if queryer.can_read_globally?
           AppModel.where(route_guid: route.guid)
         else
