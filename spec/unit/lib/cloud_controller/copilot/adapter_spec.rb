@@ -13,14 +13,28 @@ module VCAP::CloudController
     end
 
     describe '#create_route' do
-      let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn') }
+      let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', path: '') }
 
       it 'calls copilot_client.upsert_route' do
         adapter.create_route(route)
         expect(copilot_client).to have_received(:upsert_route).with(
           guid: 'some-route-guid',
-          host: 'some-fqdn'
+          host: 'some-fqdn',
+          path: '',
         )
+      end
+
+      context 'when the route has a path' do
+        let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', path: '/some/path') }
+
+        it 'includes path in upsert call' do
+          adapter.create_route(route)
+          expect(copilot_client).to have_received(:upsert_route).with(
+            guid: 'some-route-guid',
+            host: 'some-fqdn',
+            path: '/some/path',
+          )
+        end
       end
 
       context 'when copilot_client.upsert_route returns an error' do
@@ -155,7 +169,7 @@ module VCAP::CloudController
 
     describe '#bulk_sync' do
       let(:route_guid) { 'some-route-guid' }
-      let(:route) { instance_double(Route, guid: route_guid, fqdn: 'host.example.com') }
+      let(:route) { instance_double(Route, guid: route_guid, fqdn: 'host.example.com', path: '/some/path') }
       let(:capi_process_guid) { 'some-capi-process-guid' }
       let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
       let(:route_mapping) do
@@ -174,7 +188,7 @@ module VCAP::CloudController
       it 'calls copilot_client.bulk_sync' do
         adapter.bulk_sync(routes: [route], route_mappings: [route_mapping], processes: [process])
         expect(copilot_client).to have_received(:bulk_sync).with(
-          routes: [{ guid: 'some-route-guid', host: 'host.example.com' }],
+          routes: [{ guid: 'some-route-guid', host: 'host.example.com', path: '/some/path' }],
           route_mappings: [{ capi_process_guid: capi_process_guid, route_guid: route_guid }],
           capi_diego_process_associations: [{
             capi_process_guid: capi_process_guid,
