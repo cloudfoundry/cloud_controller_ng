@@ -647,6 +647,38 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the broker returns a new dashboard url' do
+        context 'and the response is a 202' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
+
+          let(:response_data) do
+            { dashboard_url: 'http://foo.com',
+              operation: 'a_broker_operation_identifier' }
+          end
+
+          it 'returns immediately with the url from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:dashboard_url]).to eq('http://foo.com')
+          end
+        end
+
+        context 'and the response is 200' do
+          let(:code) { 200 }
+
+          let(:response_data) do
+            { dashboard_url: 'http://foo.com' }
+          end
+
+          it 'returns immediately with the url from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:dashboard_url]).to eq('http://foo.com')
+          end
+        end
+      end
+
       describe 'error handling' do
         let(:response_parser) { instance_double(ResponseParser) }
         before do

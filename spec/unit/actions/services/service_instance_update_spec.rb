@@ -21,9 +21,10 @@ module VCAP::CloudController
                                                          tags: [],
                                                          name: 'Old name')
     }
-    updated_name = 'New name'
-    updated_parameters = { 'thing1' => 'thing2' }
-    updated_tags = ['tag1', 'tag2']
+
+    let(:updated_name) { 'New name' }
+    let(:updated_parameters) { { 'thing1' => 'thing2' } }
+    let(:updated_tags) { ['tag1', 'tag2'] }
     let(:request_attrs) {
       {
         'parameters' => updated_parameters,
@@ -50,15 +51,15 @@ module VCAP::CloudController
         expect(
           a_request(:patch, update_url(service_instance)).with(
             body: hash_including({
-                'parameters' => updated_parameters,
-                'plan_id' => new_service_plan.broker_provided_id,
-                'previous_values' => {
-                  'plan_id' => old_service_plan.broker_provided_id,
-                  'service_id' => service_instance.service.broker_provided_id,
-                  'organization_id' => service_instance.organization.guid,
-                  'space_id' => service_instance.space.guid
-                }
-              })
+              'parameters' => updated_parameters,
+              'plan_id' => new_service_plan.broker_provided_id,
+              'previous_values' => {
+                'plan_id' => old_service_plan.broker_provided_id,
+                'service_id' => service_instance.service.broker_provided_id,
+                'organization_id' => service_instance.organization.guid,
+                'space_id' => service_instance.space.guid
+              }
+            })
           )
         ).to have_been_made.once
       end
@@ -67,9 +68,9 @@ module VCAP::CloudController
         context 'when the update times out' do
           before do
             stub_update(service_instance, body: lambda { |r|
-                                                  sleep 10
-                                                  raise 'Should time out'
-                                                })
+              sleep 10
+              raise 'Should time out'
+            })
           end
 
           it 'should mark the service instance as failed' do
@@ -105,11 +106,6 @@ module VCAP::CloudController
 
           it 'rolls back other changes' do
             old_name = service_instance.name
-            updated_name = 'New name'
-            request_attrs = {
-              'name' => updated_name,
-              'service_plan_guid' => new_service_plan.guid
-            }
 
             expect {
               service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -122,14 +118,17 @@ module VCAP::CloudController
           end
 
           context 'when an updated field fails validations' do
+            let(:request_attrs) {
+              {
+                'name' => 'name' * 1000,
+                'tags' => ['new', 'tags'],
+                'service_plan_guid' => new_service_plan.guid
+              }
+            }
+
             it 'rolls back changes' do
               old_tags = service_instance.tags
               old_name = service_instance.name
-              updated_name = 'name' * 1000
-              request_attrs = {
-                'name' => updated_name,
-                'tags' => ['new', 'tags']
-              }
 
               expect {
                 service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -138,15 +137,10 @@ module VCAP::CloudController
               service_instance.reload
               expect(service_instance.name).to eq(old_name)
               expect(service_instance.tags).to eq(old_tags)
+              expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
             end
 
             it 'does not update the broker' do
-              updated_name = 'name' * 1000
-              request_attrs = {
-                'name' => updated_name,
-                'service_plan_guid' => new_service_plan.guid
-              }
-
               expect {
                 service_instance_update.update_service_instance(service_instance, request_attrs)
               }.to raise_error(Sequel::ValidationFailed, /max_length/)
@@ -154,12 +148,10 @@ module VCAP::CloudController
               expect(
                 a_request(:patch, update_url(service_instance)).with(
                   body: hash_including({
-                      'plan_id' => new_service_plan.broker_provided_id
-                    })
+                    'plan_id' => new_service_plan.broker_provided_id
+                  })
                 )
               ).not_to have_been_made.once
-              service_instance.reload
-              expect(service_instance.service_plan.guid).to eq(old_service_plan.guid)
             end
           end
         end
@@ -172,7 +164,7 @@ module VCAP::CloudController
       end
 
       context 'arbitrary params are the only change' do
-        request_attrs = { 'parameters' => updated_parameters }
+        let(:request_attrs) { { 'parameters' => updated_parameters } }
 
         it 'sends a request to the broker updating only parameters' do
           service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -180,15 +172,15 @@ module VCAP::CloudController
           expect(
             a_request(:patch, update_url(service_instance)).with(
               body: hash_including({
-                  'parameters' => updated_parameters,
+                'parameters' => updated_parameters,
+                'plan_id' => old_service_plan.broker_provided_id,
+                'previous_values' => {
                   'plan_id' => old_service_plan.broker_provided_id,
-                  'previous_values' => {
-                    'plan_id' => old_service_plan.broker_provided_id,
-                    'service_id' => service_instance.service.broker_provided_id,
-                    'organization_id' => service_instance.organization.guid,
-                    'space_id' => service_instance.space.guid
-                  }
-                })
+                  'service_id' => service_instance.service.broker_provided_id,
+                  'organization_id' => service_instance.organization.guid,
+                  'space_id' => service_instance.space.guid
+                }
+              })
             )
           ).to have_been_made.once
         end
@@ -204,14 +196,14 @@ module VCAP::CloudController
             expect(
               a_request(:patch, update_url(service_instance)).with(
                 body: hash_including({
+                  'plan_id' => old_service_plan.broker_provided_id,
+                  'previous_values' => {
                     'plan_id' => old_service_plan.broker_provided_id,
-                    'previous_values' => {
-                      'plan_id' => old_service_plan.broker_provided_id,
-                      'service_id' => service_instance.service.broker_provided_id,
-                      'organization_id' => service_instance.organization.guid,
-                      'space_id' => service_instance.space.guid
-                    }
-                  })
+                    'service_id' => service_instance.service.broker_provided_id,
+                    'organization_id' => service_instance.organization.guid,
+                    'space_id' => service_instance.space.guid
+                  }
+                })
               )
             ).to_not have_been_made
           end
@@ -229,19 +221,137 @@ module VCAP::CloudController
             expect(
               a_request(:patch, update_url(service_instance)).with(
                 body: hash_including({
-                    'plan_id' => new_service_plan.broker_provided_id,
-                    'previous_values' => {
-                      'plan_id' => old_service_plan.broker_provided_id,
-                      'service_id' => service_instance.service.broker_provided_id,
-                      'organization_id' => service_instance.organization.guid,
-                      'space_id' => service_instance.space.guid
-                    }
-                  })
+                  'plan_id' => new_service_plan.broker_provided_id,
+                  'previous_values' => {
+                    'plan_id' => old_service_plan.broker_provided_id,
+                    'service_id' => service_instance.service.broker_provided_id,
+                    'organization_id' => service_instance.organization.guid,
+                    'space_id' => service_instance.space.guid
+                  }
+                })
               )
             ).to have_been_made.once
 
             expect(service_instance.service_plan).to eq(new_service_plan)
           end
+        end
+      end
+    end
+
+    describe 'updating dashboard urls' do
+      context 'when the service instance already has a dashboard url' do
+        before do
+          service_instance.dashboard_url = 'http://previous-dashboard-url.com'
+          service_instance.save
+        end
+
+        context 'and when there is a new dashboard url on update' do
+          before do
+            stub_opts = {
+              status: 202,
+              body: {
+                operation: '123',
+                dashboard_url: 'http://new-dashboard-url.com'
+              }.to_json
+            }
+
+            stub_update(service_instance, stub_opts)
+          end
+
+          it 'updates the service instance model with the new url' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+            service_instance.reload
+
+            expect(service_instance.dashboard_url).to eq 'http://new-dashboard-url.com'
+          end
+        end
+
+        context 'when there is no dashboard url on update' do
+          before do
+            stub_opts = {
+              status: 202,
+              body: {
+                operation: '123',
+              }.to_json
+            }
+
+            stub_update(service_instance, stub_opts)
+          end
+
+          it 'displays the previous dashboard url' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+            service_instance.reload
+
+            expect(service_instance.dashboard_url).to eq 'http://previous-dashboard-url.com'
+          end
+        end
+      end
+
+      context 'when the service instance does not already have a dashboard url' do
+        context 'when there is a new dashboard url on update' do
+          before do
+            stub_opts = {
+              status: 202,
+              body: {
+                operation: '123',
+                dashboard_url: 'http://new-dashboard-url.com'
+              }.to_json
+            }
+
+            stub_update(service_instance, stub_opts)
+          end
+
+          it 'updates the service instance model with the new url' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+            service_instance.reload
+
+            expect(service_instance.dashboard_url).to eq 'http://new-dashboard-url.com'
+          end
+        end
+
+        context 'when there is no dashboard url on update' do
+          before do
+            stub_opts = {
+              status: 202,
+              body: {
+                operation: '123',
+              }.to_json
+            }
+
+            stub_update(service_instance, stub_opts)
+          end
+
+          it 'does not display a url' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+            service_instance.reload
+
+            expect(service_instance.dashboard_url).to be_nil
+          end
+        end
+      end
+
+      context 'when the dashboard url is not a string' do
+        before do
+          stub_opts = {
+            status: 202,
+            body: {
+              operation: '123',
+              dashboard_url: {},
+            }.to_json
+          }
+
+          stub_update(service_instance, stub_opts)
+        end
+
+        it 'fails to update the service instance' do
+          expect {
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed,
+                           %r{The property '#/dashboard_url' .* did not match the following type: string})
+
+          service_instance.reload
+
+          expect(service_instance.dashboard_url).to eq nil
         end
       end
     end

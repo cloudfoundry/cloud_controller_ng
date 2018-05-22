@@ -247,5 +247,45 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
     end
+
+    describe 'update service dashboard url' do
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+      let(:catalog) { default_catalog(plan_updateable: true) }
+
+      before do
+        @service_instance_guid = service_instance.guid
+      end
+
+      context 'when updating the instance asynchronously' do
+        it 'updates the service instance with the new dashboard url' do
+          async_update_service(dashboard_url: 'http://instance-dashboard.com')
+          stub_async_last_operation
+
+          expect(
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+          Delayed::Worker.new.work_off
+
+          expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
+          expect(service_instance.reload.last_operation.state).to eq 'succeeded'
+          expect(service_instance.reload.dashboard_url).to eq 'http://instance-dashboard.com'
+        end
+      end
+
+      context 'when updating the instance synchronously' do
+        it 'updates the service instance with the new dashboard url' do
+          update_service_instance(200, { dashboard_url: 'http://instance-dashboard.com' })
+
+          expect(
+            a_request(:patch, update_url_for_broker(@broker))).to have_been_made
+
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+          expect(service_instance.reload.dashboard_url).to eq 'http://instance-dashboard.com'
+        end
+      end
+    end
   end
 end

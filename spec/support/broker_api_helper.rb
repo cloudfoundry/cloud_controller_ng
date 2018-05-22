@@ -236,7 +236,13 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def update_service_instance(return_code, opts={})
-    stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: '{}')
+    broker_update_response_body = {}
+
+    if opts[:dashboard_url]
+      broker_update_response_body[:dashboard_url] = opts[:dashboard_url]
+    end
+
+    stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: broker_update_response_body.to_json)
 
     body = {
       service_plan_guid: @large_plan_guid
@@ -253,11 +259,19 @@ module VCAP::CloudController::BrokerApiHelper
     )
   end
 
-  def async_update_service(status: 202, operation_data: nil)
-    broker_update_response_body = operation_data.nil? ? '{}' : %({"operation": "#{operation_data}"})
+  def async_update_service(status: 202, operation_data: nil, dashboard_url: nil)
+    broker_update_response_body = {}
+
+    if operation_data
+      broker_update_response_body[:operation] = operation_data
+    end
+
+    if dashboard_url
+      broker_update_response_body[:dashboard_url] = dashboard_url
+    end
 
     stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: status, body: broker_update_response_body)
+      to_return(status: status, body: broker_update_response_body.to_json)
 
     body = {
       service_plan_guid: @large_plan_guid

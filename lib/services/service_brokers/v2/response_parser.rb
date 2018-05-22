@@ -147,12 +147,13 @@ module VCAP::Services
             case unvalidated_response.code
             when 200
               JsonObjectValidator.new(@logger,
-                  SuccessValidator.new(state: 'succeeded'))
+                JsonSchemaValidator.new(@logger, update_service_instance_schema,
+                  SuccessValidator.new(state: 'succeeded')))
             when 201
               IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 202
               JsonObjectValidator.new(@logger,
-                OperationValidator.new(
+                JsonSchemaValidator.new(@logger, update_service_instance_schema,
                   SuccessValidator.new(state: 'in progress')))
             when 422
               FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
@@ -213,6 +214,22 @@ module VCAP::Services
 
         def parse_fetch_service_binding_last_operation(path, response)
           parse_fetch_state(path, response)
+        end
+
+        def update_service_instance_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'dashboard_url' => {
+                'type' => 'string',
+              },
+              'operation' => {
+                'type' => 'string',
+                'maxLength' => 10_000
+              },
+            }
+          }
         end
 
         def fetch_instance_parameters_response_schema

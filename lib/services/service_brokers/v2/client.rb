@@ -209,6 +209,7 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response     = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
       state               = last_operation_hash['state'] || 'succeeded'
+      dashboard_url       = parsed_response['dashboard_url']
 
       attributes = {
         last_operation: {
@@ -219,6 +220,9 @@ module VCAP::Services::ServiceBrokers::V2
         },
       }
 
+      if dashboard_url
+        attributes[:dashboard_url] = dashboard_url
+      end
 
       if state == 'in progress'
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
