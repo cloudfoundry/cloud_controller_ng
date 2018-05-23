@@ -1392,27 +1392,47 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(route.space) }
       let!(:route_mapping1) { RouteMappingModel.make(app: process1.app, route: route, process_type: process1.type) }
       let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: route, process_type: process2.type) }
+      let(:queryer) { instance_double(Permissions::Queryer) }
 
       before do
         set_current_user(developer)
+        allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
+        allow(queryer).to receive(:can_read_globally?).and_return(false)
+        allow(queryer).to receive(:can_read_route?).and_return(true)
       end
 
-      it 'returns the apps mapped to the route' do
-        get "/v2/routes/#{route.guid}/apps"
+      context 'apps' do
+        it 'returns all apps mapped to the route if the user can read globally' do
+          allow(queryer).to receive(:can_read_globally?).and_return(true)
 
-        expect(last_response.status).to eq(200)
-        expect(decoded_response['resources'].length).to eq(2)
-        expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.guid
-        expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.guid
+          get "/v2/routes/#{route.guid}/apps"
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(2)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.guid
+          expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.guid
+        end
+
+        it 'returns the apps mapped to the route that the user has access to' do
+          allow(queryer).to receive(:readable_app_guids).and_return([process2.guid])
+
+          get "/v2/routes/#{route.guid}/apps"
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process2.guid
+        end
       end
 
-      it 'returns the route mappings associated with the route' do
-        get "/v2/routes/#{route.guid}/route_mappings"
+      context 'route mappings' do
+        it 'returns the route mappings associated with the route' do
+          get "/v2/routes/#{route.guid}/route_mappings"
 
-        expect(last_response.status).to eq(200)
-        expect(decoded_response['resources'].length).to eq(2)
-        expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
-        expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(2)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
+          expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+        end
       end
     end
 

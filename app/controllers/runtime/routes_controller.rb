@@ -385,11 +385,11 @@ module VCAP::CloudController
     end
 
     def visible_relationship_dataset(relationship_name, route)
-      if relationship_name == 'apps'
+      if relationship_name.to_s == 'apps'
         if queryer.can_read_globally?
-          AppModel.where(route_guid: route.guid)
+          route.apps_dataset
         else
-          AppModel.where(route_guid: route.guid, guid: queryer.readable_app_guids)
+          route.apps_dataset.filter({ "#{ProcessModel.table_name}__app_guid".to_sym => queryer.readable_app_guids })
         end
       else
         super
