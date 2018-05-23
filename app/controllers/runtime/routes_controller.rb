@@ -380,7 +380,7 @@ module VCAP::CloudController
       if queryer.can_read_globally?
         Route.dataset
       else
-        Route.where(guid: queryer.readable_route_guids)
+        Route.dataset.filter({ "#{Route.table_name}__guid".to_sym => queryer.readable_route_guids })
       end
     end
 

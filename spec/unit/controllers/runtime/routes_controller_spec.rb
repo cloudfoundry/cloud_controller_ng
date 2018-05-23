@@ -58,94 +58,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'Permissions' do
-      context 'with a custom domain' do
-        include_context 'permissions'
-
-        before do
-          @domain_a = PrivateDomain.make(owning_organization: @org_a)
-          @obj_a    = Route.make(domain: @domain_a, space: @space_a)
-
-          @domain_b = PrivateDomain.make(owning_organization: @org_b)
-          @obj_b    = Route.make(domain: @domain_b, space: @space_b)
-        end
-
-        describe 'Org Level Permissions' do
-          describe 'OrgManager' do
-            let(:member_a) { @org_a_manager }
-            let(:member_b) { @org_b_manager }
-
-            include_examples 'permission enumeration', 'OrgManager',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 1
-          end
-
-          describe 'OrgUser' do
-            let(:member_a) { @org_a_member }
-            let(:member_b) { @org_b_member }
-
-            include_examples 'permission enumeration', 'OrgUser',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 0
-          end
-
-          describe 'BillingManager' do
-            let(:member_a) { @org_a_billing_manager }
-            let(:member_b) { @org_b_billing_manager }
-
-            include_examples 'permission enumeration', 'BillingManager',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 0
-          end
-
-          describe 'Auditor' do
-            let(:member_a) { @org_a_auditor }
-            let(:member_b) { @org_b_auditor }
-
-            include_examples 'permission enumeration', 'Auditor',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 1
-          end
-        end
-
-        describe 'App Space Level Permissions' do
-          describe 'SpaceManager' do
-            let(:member_a) { @space_a_manager }
-            let(:member_b) { @space_b_manager }
-
-            include_examples 'permission enumeration', 'SpaceManager',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 1
-          end
-
-          describe 'Developer' do
-            let(:member_a) { @space_a_developer }
-            let(:member_b) { @space_b_developer }
-
-            include_examples 'permission enumeration', 'Developer',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 1
-          end
-
-          describe 'SpaceAuditor' do
-            let(:member_a) { @space_a_auditor }
-            let(:member_b) { @space_b_auditor }
-
-            include_examples 'permission enumeration', 'SpaceAuditor',
-              name:      'route',
-              path:      '/v2/routes',
-              enumerate: 1
-          end
-        end
-      end
-    end
-
     describe 'Associations' do
       it do
         expect(VCAP::CloudController::RoutesController).to have_nested_routes({ apps: [:get], route_mappings: [:get] })
@@ -1009,23 +921,35 @@ module VCAP::CloudController
       let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { Space.make(organization: organization) }
-      let(:route) { Route.make(domain: domain, space: space) }
+      let!(:first_route) { Route.make(domain: domain, space: space) }
+      let!(:second_route) { Route.make(domain: domain, space: space) }
+      let(:queryer) { instance_double(Permissions::Queryer) }
 
-      before { set_current_user_as_admin }
+      before do
+        allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
+        allow(queryer).to receive(:can_read_globally?).and_return(false)
+        set_current_user_as_admin
+      end
 
-      it 'should contain links to the route_mappings resource' do
-        route_guid = route.guid
-        get 'v2/routes'
-        expect(last_response.status).to eq(200), last_response.body
+      context 'related resources' do
+        it 'should contain links to the apps and route_mappings resources' do
+          allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
 
-        expect(decoded_response['resources'].length).to eq(1)
-        expect(decoded_response['resources'][0]['entity']['route_mappings_url']).
-          to eq("/v2/routes/#{route_guid}/route_mappings")
+          get 'v2/routes'
+          expect(last_response.status).to eq(200), last_response.body
+
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(decoded_response['resources'][0]['entity']['route_mappings_url']).
+            to eq("/v2/routes/#{first_route.guid}/route_mappings")
+          expect(decoded_response['resources'][0]['entity']['apps_url']).
+            to eq("/v2/routes/#{first_route.guid}/apps")
+        end
       end
 
       describe 'Filtering with Organization Guid' do
         context 'When Organization Guid Not Present' do
           it 'Return Resource length zero' do
+            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
             get 'v2/routes?q=organization_guid:notpresent'
             expect(last_response.status).to eq(200), last_response.body
             expect(decoded_response['resources'].length).to eq(0)
@@ -1044,10 +968,75 @@ module VCAP::CloudController
           let(:space2) { Space.make(organization: organization2) }
           let(:route2) { Route.make(domain: domain2, space: space2) }
 
+          it 'Allows organization_guid query at any place in query with preceding domain query' do
+            org_guid    = organization.guid
+            route_guid  = first_route.guid
+            domain_guid = domain.guid
+            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
+
+            get "v2/routes?q=domain_guid:#{domain_guid}&q=organization_guid:#{org_guid}"
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(1)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+          end
+
+          it 'Allows organization_guid query at any place in query with all querables' do
+            org_guid    = organization.guid
+            taken_host  = 'someroute'
+            route_temp  = Route.make(host: taken_host, domain: domain, space: space)
+            route_guid  = route_temp.guid
+            domain_guid = domain.guid
+            allow(queryer).to receive(:readable_route_guids).and_return([route_guid])
+
+            get "v2/routes?q=host:#{taken_host}&q=organization_guid:#{org_guid}&q=domain_guid:#{domain_guid}"
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(1)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+          end
+
+          it 'Allows filtering at organization level with a single guid' do
+            org_guid    = organization.guid
+            route_guid  = first_route.guid
+            route1_guid = route1.guid
+            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid, route1.guid])
+
+            get "v2/routes?q=organization_guid:#{org_guid}"
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
+          end
+
+          it 'Allows filtering at organization level with multiple guids' do
+            org_guid    = organization.guid
+            route_guid  = first_route.guid
+            route1_guid = route1.guid
+
+            org2_guid   = organization2.guid
+            route2_guid = route2.guid
+
+            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid, route1.guid, route2.guid])
+
+            get "v2/routes?q=organization_guid%20IN%20#{org_guid},#{org2_guid}"
+
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(3)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
+            expect(third_route_info.fetch('metadata').fetch('guid')).to eq(route2_guid)
+          end
+
           context 'when the details fit on the first page' do
+            before do
+              allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
+            end
+
             it 'Allows filtering by organization_guid' do
               org_guid   = organization.guid
-              route_guid = route.guid
+              route_guid = first_route.guid
 
               get "v2/routes?q=organization_guid:#{org_guid}"
 
@@ -1067,6 +1056,10 @@ module VCAP::CloudController
             let(:domain1) { domain }
             let(:org1) { organization }
             let(:org2) { organization2 }
+
+            before do
+              allow(queryer).to receive(:readable_route_guids).and_return(instances.map(&:guid))
+            end
 
             context 'at page 1' do
               let(:page) { 1 }
@@ -1109,62 +1102,34 @@ module VCAP::CloudController
               end
             end
           end
+        end
+      end
 
-          it 'Allows organization_guid query at any place in query ' do
-            org_guid    = organization.guid
-            route_guid  = route.guid
-            domain_guid = domain.guid
+      context 'when user can read globally' do
+        before do
+          allow(queryer).to receive(:can_read_globally?).and_return(true)
+        end
 
-            get "v2/routes?q=domain_guid:#{domain_guid}&q=organization_guid:#{org_guid}"
+        it 'should return all the routes' do
+          get 'v2/routes'
+          expect(last_response.status).to eq(200), last_response.body
 
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['resources'].length).to eq(1)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
-          end
+          expect(decoded_response['resources'].length).to eq(2)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq(first_route.guid)
+          expect(decoded_response['resources'][1]['metadata']['guid']).to eq(second_route.guid)
+        end
+      end
 
-          it 'Allows organization_guid query at any place in query with all querables' do
-            org_guid    = organization.guid
-            taken_host  = 'someroute'
-            route_temp  = Route.make(host: taken_host, domain: domain, space: space)
-            route_guid  = route_temp.guid
-            domain_guid = domain.guid
+      context 'when user cannot read globally' do
+        it 'should return just the routes the user can access' do
+          allow(queryer).to receive(:readable_route_guids).and_return([second_route.guid])
 
-            get "v2/routes?q=host:#{taken_host}&q=organization_guid:#{org_guid}&q=domain_guid:#{domain_guid}"
+          get 'v2/routes'
 
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['resources'].length).to eq(1)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
-          end
+          expect(last_response.status).to eq(200), last_response.body
 
-          it 'Allows filtering at organization level' do
-            org_guid    = organization.guid
-            route_guid  = route.guid
-            route1_guid = route1.guid
-
-            get "v2/routes?q=organization_guid:#{org_guid}"
-
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['resources'].length).to eq(2)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
-            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
-          end
-
-          it 'Allows filtering at organization level with multiple guids' do
-            org_guid    = organization.guid
-            route_guid  = route.guid
-            route1_guid = route1.guid
-
-            org2_guid   = organization2.guid
-            route2_guid = route2.guid
-
-            get "v2/routes?q=organization_guid%20IN%20#{org_guid},#{org2_guid}"
-
-            expect(last_response.status).to eq(200)
-            expect(decoded_response['resources'].length).to eq(3)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
-            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
-            expect(third_route_info.fetch('metadata').fetch('guid')).to eq(route2_guid)
-          end
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq(second_route.guid)
         end
       end
     end
