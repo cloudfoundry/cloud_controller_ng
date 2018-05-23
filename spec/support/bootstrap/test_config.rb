@@ -81,7 +81,7 @@ module TestConfig
 
     def configure_components(config)
       # Always enable Fog mocking (except when using a local provider, which Fog can't mock).
-      if context != :route_syncer
+      if context != :route_syncer && context != :deployment_updater
         res_pool_connection_provider = config.get(:resource_pool, :fog_connection)[:provider].downcase
         packages_connection_provider = config.get(:packages, :fog_connection)[:provider].downcase
         Fog.mock! unless res_pool_connection_provider == 'local' || packages_connection_provider == 'local'
