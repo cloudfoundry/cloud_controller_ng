@@ -811,5 +811,122 @@ module VCAP::CloudController::Perm
         expect(permissions.readable_app_guids).to match_array(expected_app_guids)
       end
     end
+
+    describe '#readable_route_mapping_guids' do
+      before do
+        allow(roles).to receive(:admin?).and_return(false)
+        allow(roles).to receive(:admin_read_only?).and_return(false)
+        allow(roles).to receive(:global_auditor?).and_return(false)
+      end
+
+      it 'returns all route mapping guids for admins' do
+        allow(roles).to receive(:admin?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
+        route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
+
+        route_mapping_guids = permissions.readable_route_mapping_guids
+
+        expect(route_mapping_guids).to include(route_mapping1.guid)
+        expect(route_mapping_guids).to include(route_mapping2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns all route mapping guids for read-only admins' do
+        allow(roles).to receive(:admin_read_only?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
+        route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
+
+        route_mapping_guids = permissions.readable_route_mapping_guids
+
+        expect(route_mapping_guids).to include(route_mapping1.guid)
+        expect(route_mapping_guids).to include(route_mapping2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns all route mapping guids for global auditors' do
+        allow(roles).to receive(:global_auditor?).and_return(true)
+
+        permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+
+        org1 = VCAP::CloudController::Organization.make
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
+        org2 = VCAP::CloudController::Organization.make
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
+        route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
+
+        route_mapping_guids = permissions.readable_route_mapping_guids
+
+        expect(route_mapping_guids).to include(route_mapping1.guid)
+        expect(route_mapping_guids).to include(route_mapping2.guid)
+
+        expect(perm_client).not_to receive(:list_resource_patterns)
+      end
+
+      it 'returns the list of route mapping guids that the user can read via org and space roles' do
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
+        org_guids = [org1.guid, org2.guid]
+
+        space1 = VCAP::CloudController::Space.make(organization: org1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
+        app2 = VCAP::CloudController::AppModel.make(space: space1)
+        route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
+
+        space2 = VCAP::CloudController::Space.make(organization: org2)
+        app3 = VCAP::CloudController::AppModel.make(space: space2)
+        route_mapping3 = VCAP::CloudController::RouteMappingModel.make(app: app3)
+
+        org_route_mapping_guids = [route_mapping1.guid, route_mapping2.guid, route_mapping3.guid]
+        org_actions = %w(org.manager)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: org_actions).
+          and_return(org_guids)
+
+        org3 = VCAP::CloudController::Organization.make
+        space3 = VCAP::CloudController::Space.make(organization: org3)
+        app4 = VCAP::CloudController::AppModel.make(space: space3)
+        route_mapping4 = VCAP::CloudController::RouteMappingModel.make(app: app4)
+        space4 = VCAP::CloudController::Space.make(organization: org3)
+        app5 = VCAP::CloudController::AppModel.make(space: space4)
+        route_mapping5 = VCAP::CloudController::RouteMappingModel.make(app: app5)
+
+        readable_space_guids = [space3.guid, space4.guid]
+        readable_route_mapping_guids = [route_mapping4.guid, route_mapping5.guid]
+        space_actions = %w(space.developer space.manager space.auditor)
+
+        allow(perm_client).to receive(:list_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: space_actions).
+          and_return(readable_space_guids)
+
+        expected_route_mapping_guids = org_route_mapping_guids + readable_route_mapping_guids
+
+        expect(permissions.readable_route_mapping_guids).to match_array(expected_route_mapping_guids)
+      end
+    end
   end
 end

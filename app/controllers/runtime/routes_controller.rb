@@ -391,6 +391,12 @@ module VCAP::CloudController
         else
           route.apps_dataset.filter({ "#{ProcessModel.table_name}__app_guid".to_sym => queryer.readable_app_guids })
         end
+      elsif relationship_name.to_s == 'route_mappings'
+        if queryer.can_read_globally?
+          route.route_mappings_dataset
+        else
+          route.route_mappings_dataset.filter({ "#{RouteMappingModel.table_name}__guid".to_sym => queryer.readable_route_mapping_guids })
+        end
       else
         super
       end

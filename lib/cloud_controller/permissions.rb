@@ -102,6 +102,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::AppModel.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
+  def readable_route_mapping_guids
+    VCAP::CloudController::RouteMappingModel.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
   private
 
   def membership

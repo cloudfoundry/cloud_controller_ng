@@ -1144,38 +1144,6 @@ module VCAP::CloudController
 
       before { set_current_user_as_admin }
 
-      it 'lists the route mappings' do
-        get "v2/routes/#{route.guid}/route_mappings"
-        expect(last_response).to have_status_code(200)
-        expect(decoded_response['resources'].length).to eq(1)
-        expect(decoded_response['resources'][0]['metadata']['guid']).to eq app_route_mapping.guid
-      end
-
-      context 'when user has no access to the route' do
-        it 'returns forbidden error' do
-          set_current_user(User.make)
-
-          get "v2/routes/#{route.guid}/route_mappings"
-          expect(last_response).to have_status_code(403)
-        end
-      end
-
-      context 'when a route has no route_mappings' do
-        let(:route_2) { Route.make(domain: domain, space: space) }
-
-        it 'returns an empty collection' do
-          get "v2/routes/#{route_2.guid}/route_mappings"
-          expect(last_response).to have_status_code(200)
-          expect(decoded_response['resources'].length).to eq(0)
-        end
-      end
-
-      context 'when an non existing route is specified' do
-        it 'returns resource not found' do
-          get 'v2/routes/non-existing-route-guid/route_mappings'
-          expect(last_response).to have_status_code(404)
-        end
-      end
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid/host/:hostname' do
@@ -1367,11 +1335,28 @@ module VCAP::CloudController
       end
 
       context 'apps' do
+        context 'when user has no access to the route' do
+          it 'returns forbidden error' do
+            allow(queryer).to receive(:can_read_route?).and_return(false)
+
+            get "v2/routes/#{route.guid}/apps"
+            expect(last_response).to have_status_code(403)
+          end
+        end
+
+        context 'when an non existing route is specified' do
+          it 'returns resource not found' do
+            get 'v2/routes/non-existing-route-guid/route_mappings'
+            expect(last_response).to have_status_code(404)
+          end
+        end
+
         it 'returns all apps mapped to the route if the user can read globally' do
           allow(queryer).to receive(:can_read_globally?).and_return(true)
 
           get "/v2/routes/#{route.guid}/apps"
 
+          expect(queryer).to have_received(:can_read_globally?)
           expect(last_response.status).to eq(200)
           expect(decoded_response['resources'].length).to eq(2)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.guid
@@ -1390,13 +1375,42 @@ module VCAP::CloudController
       end
 
       context 'route mappings' do
-        it 'returns the route mappings associated with the route' do
+        context 'when user has no access to the route' do
+          it 'returns forbidden error' do
+            allow(queryer).to receive(:can_read_route?).and_return(false)
+
+            get "v2/routes/#{route.guid}/route_mappings"
+            expect(last_response).to have_status_code(403)
+          end
+        end
+
+        context 'when an non existing route is specified' do
+          it 'returns resource not found' do
+            get 'v2/routes/non-existing-route-guid/route_mappings'
+            expect(last_response).to have_status_code(404)
+          end
+        end
+
+        it 'returns all route_mappings of the route if the user can read globally' do
+          allow(queryer).to receive(:can_read_globally?).and_return(true)
+
           get "/v2/routes/#{route.guid}/route_mappings"
 
+          expect(queryer).to have_received(:can_read_globally?)
           expect(last_response.status).to eq(200)
           expect(decoded_response['resources'].length).to eq(2)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
           expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+        end
+
+        it 'returns the route_mappings of the route that the user has access to' do
+          allow(queryer).to receive(:readable_route_mapping_guids).and_return([route_mapping2.guid])
+
+          get "/v2/routes/#{route.guid}/route_mappings"
+
+          expect(last_response.status).to eq(200)
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping2.guid
         end
       end
     end

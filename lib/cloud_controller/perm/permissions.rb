@@ -146,9 +146,10 @@ module VCAP
               Organization.where(guid: org_guids).select(:id), id: :organization_id
             ).select(:spaces__guid).all.map(&:guid) + space_guids
 
-            Route.join(
-              Space.where(guid: route_space_guids).select(:id), id: :space_id
-            ).select(:routes__guid).all.map(&:guid)
+            Space.where("#{Space.table_name}__guid".to_sym => route_space_guids).
+              join(Route.table_name.to_sym, space_id: :id).
+              select("#{Route.table_name}__guid".to_sym).
+              all.map(&:guid)
           end
         end
 
@@ -187,9 +188,43 @@ module VCAP
               Organization.where(guid: org_guids).select(:id), id: :organization_id
             ).select(:spaces__guid).all.map(&:guid) + space_guids
 
-            AppModel.join(
-              Space.where(guid: app_space_guids).select(:guid), guid: :space_guid
-            ).select(:apps__guid).all.map(&:guid)
+            Space.where("#{Space.table_name}__guid".to_sym => app_space_guids).
+              join(AppModel.table_name.to_sym, space_guid: :guid).
+              select("#{AppModel.table_name}__guid".to_sym).
+              all.map(&:guid)
+          end
+        end
+
+        def readable_route_mapping_guids
+          if can_read_globally?
+            VCAP::CloudController::RouteMappingModel.select(:guid).all.map(&:guid)
+          else
+            space_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                SPACE_DEVELOPER_ACTION,
+                SPACE_MANAGER_ACTION,
+                SPACE_AUDITOR_ACTION,
+              ]
+            )
+            org_guids = perm_client.list_resource_patterns(
+              user_id: user_id,
+              issuer: issuer,
+              actions: [
+                ORG_MANAGER_ACTION,
+              ]
+            )
+
+            route_mapping_space_guids = Space.join(
+              Organization.where(guid: org_guids).select(:id), id: :organization_id
+            ).select(:spaces__guid).all.map(&:guid) + space_guids
+
+            Space.where("#{Space.table_name}__guid".to_sym => route_mapping_space_guids).
+              join(AppModel.table_name.to_sym, space_guid: :guid).
+              join(RouteMappingModel.table_name.to_sym, app_guid: :guid).
+              select("#{RouteMappingModel.table_name}__guid".to_sym).
+              all.map(&:guid)
           end
         end
 

@@ -830,5 +830,9 @@ module VCAP::CloudController
     describe '#readable_app_guids' do
       it_behaves_like 'readable guids', 'app'
     end
+
+    describe '#readable_route_mapping_guids' do
+      it_behaves_like 'readable guids', 'route_mapping'
+    end
   end
 end

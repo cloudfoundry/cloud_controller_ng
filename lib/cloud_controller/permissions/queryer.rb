@@ -163,6 +163,17 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def readable_route_mapping_guids
+    science 'readable_route_mapping_guids' do |e|
+      e.use { db_permissions.readable_route_mapping_guids }
+      e.try { perm_permissions.readable_route_mapping_guids }
+
+      e.compare { |a, b| compare_arrays(a, b) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
   private
 
   attr_reader :perm_permissions, :db_permissions, :statsd_client, :enabled, :current_user_guid
