@@ -7,14 +7,15 @@ module VCAP::CloudController
       @user_audit_info = user_audit_info
     end
 
-    def create(app, message)
-      attrs = message.merge({
+    def create(app, args)
+      type = args[:type]
+      attrs = args.merge({
         diego:             true,
-        instances:         message[:type] == ProcessTypes::WEB ? 1 : 0,
-        health_check_type: message[:type] == ProcessTypes::WEB ? 'port' : 'process',
+        instances:         default_instance_count(type),
+        health_check_type: default_health_check_type(type),
         metadata:          {},
       })
-      attrs[:guid] = app.guid if message[:type] == ProcessTypes::WEB
+      attrs[:guid] = app.guid if type == ProcessTypes::WEB
 
       process = nil
       app.class.db.transaction do
@@ -23,6 +24,16 @@ module VCAP::CloudController
       end
 
       process
+    end
+
+    private
+
+    def default_health_check_type(type)
+      type == ProcessTypes::WEB ? 'port' : 'process'
+    end
+
+    def default_instance_count(type)
+      type == ProcessTypes::WEB ? 1 : 0
     end
   end
 end

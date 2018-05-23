@@ -23,6 +23,7 @@ module VCAP::CloudController
         expect(app.processes.first.guid).to eq(process.guid)
         expect(process.type).to eq('web')
         expect(process.command).to eq('rackup')
+        expect(process.instances).to eq(1)
       end
 
       context 'if the command is nil' do

@@ -1,3 +1,6 @@
+require 'process_create'
+require 'models/helpers/process_types'
+
 module VCAP::CloudController
   class AppCreate
     class InvalidApp < StandardError; end
@@ -19,6 +22,11 @@ module VCAP::CloudController
         lifecycle.create_lifecycle_data_model(app)
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
+
+        ProcessCreate.new(@user_audit_info).create(app, {
+          guid: app.guid,
+          type: ProcessTypes::WEB,
+        })
 
         Repositories::AppEventRepository.new.record_app_create(
           app,
