@@ -70,26 +70,15 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::Space.select(:guid).all.map(&:guid)
           else
-            space_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+            space_guids_for_actions(
+              [
                 SPACE_DEVELOPER_ACTION,
                 SPACE_MANAGER_ACTION,
                 SPACE_AUDITOR_ACTION,
-              ]
-            )
-            org_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+              ],
+              [
                 ORG_MANAGER_ACTION,
-              ]
-            )
-
-            Space.join(
-              Organization.where(guid: org_guids).select(:id), id: :organization_id
-            ).select(:spaces__guid).all.map(&:guid) + space_guids
+              ])
           end
         end
 
@@ -124,27 +113,16 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::Route.select(:guid).all.map(&:guid)
           else
-            space_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+            route_space_guids = space_guids_for_actions(
+              [
                 SPACE_DEVELOPER_ACTION,
                 SPACE_MANAGER_ACTION,
                 SPACE_AUDITOR_ACTION,
-              ]
-            )
-            org_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+              ],
+              [
                 ORG_MANAGER_ACTION,
                 ORG_AUDITOR_ACTION,
-              ]
-            )
-
-            route_space_guids = Space.join(
-              Organization.where(guid: org_guids).select(:id), id: :organization_id
-            ).select(:spaces__guid).all.map(&:guid) + space_guids
+              ])
 
             Space.where("#{Space.table_name}__guid".to_sym => route_space_guids).
               join(Route.table_name.to_sym, space_id: :id).
@@ -167,26 +145,15 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::AppModel.select(:guid).all.map(&:guid)
           else
-            space_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+            app_space_guids = space_guids_for_actions(
+              [
                 SPACE_DEVELOPER_ACTION,
                 SPACE_MANAGER_ACTION,
                 SPACE_AUDITOR_ACTION,
-              ]
-            )
-            org_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+              ],
+              [
                 ORG_MANAGER_ACTION,
-              ]
-            )
-
-            app_space_guids = Space.join(
-              Organization.where(guid: org_guids).select(:id), id: :organization_id
-            ).select(:spaces__guid).all.map(&:guid) + space_guids
+              ])
 
             Space.where("#{Space.table_name}__guid".to_sym => app_space_guids).
               join(AppModel.table_name.to_sym, space_guid: :guid).
@@ -199,26 +166,15 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::RouteMappingModel.select(:guid).all.map(&:guid)
           else
-            space_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+            route_mapping_space_guids = space_guids_for_actions(
+              [
                 SPACE_DEVELOPER_ACTION,
                 SPACE_MANAGER_ACTION,
                 SPACE_AUDITOR_ACTION,
-              ]
-            )
-            org_guids = perm_client.list_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
+              ],
+              [
                 ORG_MANAGER_ACTION,
-              ]
-            )
-
-            route_mapping_space_guids = Space.join(
-              Organization.where(guid: org_guids).select(:id), id: :organization_id
-            ).select(:spaces__guid).all.map(&:guid) + space_guids
+              ])
 
             Space.where("#{Space.table_name}__guid".to_sym => route_mapping_space_guids).
               join(AppModel.table_name.to_sym, space_guid: :guid).
@@ -234,6 +190,23 @@ module VCAP
 
         def has_any_permission?(permissions)
           perm_client.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)
+        end
+
+        def space_guids_for_actions(space_actions, org_actions)
+          space_guids = perm_client.list_resource_patterns(
+            user_id: user_id,
+            issuer: issuer,
+            actions: space_actions
+          )
+          org_guids = perm_client.list_resource_patterns(
+            user_id: user_id,
+            issuer: issuer,
+            actions: org_actions
+          )
+
+          space_guids + Organization.where("#{Organization.table_name}__guid".to_sym => org_guids).
+                        join(Space.table_name.to_sym, organization_id: :id).
+                        select("#{Space.table_name}__guid".to_sym).all.map(&:guid)
         end
       end
     end
