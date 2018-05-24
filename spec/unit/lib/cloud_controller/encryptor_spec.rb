@@ -134,16 +134,30 @@ module VCAP::CloudController
           end
 
           context 'when no key label is passed for decryption' do
-            it 'fails to decrypt' do
+            it 'fails to decrypt the encrypted string successfully' do
               encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
-              expect { Encryptor.decrypt(encrypted_string, salt) }.to raise_error(/bad decrypt/)
+
+              result = begin
+                Encryptor.decrypt(encrypted_string, salt)
+              rescue OpenSSL::Cipher::CipherError => e
+                e.message
+              end
+
+              expect(result).not_to eq(unencrypted_string)
             end
           end
 
           context 'when the wrong label is passed for decryption' do
-            it 'fails to decrypt' do
+            it 'fails to decrypt the encrypted string successfully' do
               encrypted_string = Encryptor.encrypt(unencrypted_string, salt)
-              expect { Encryptor.decrypt(encrypted_string, salt, 'death') }.to raise_error(/bad decrypt/)
+
+              result = begin
+                Encryptor.decrypt(encrypted_string, salt, 'death')
+              rescue OpenSSL::Cipher::CipherError => e
+                e.message
+              end
+
+              expect(result).not_to eq(unencrypted_string)
             end
           end
         end
