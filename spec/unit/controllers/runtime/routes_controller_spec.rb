@@ -1143,7 +1143,6 @@ module VCAP::CloudController
       let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: process.app, process_type: process.type) }
 
       before { set_current_user_as_admin }
-
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid/host/:hostname' do
