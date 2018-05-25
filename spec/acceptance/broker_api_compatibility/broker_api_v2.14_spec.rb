@@ -311,6 +311,36 @@ RSpec.describe 'Service Broker API integration' do
                            "#{service_binding_url(service_binding)}/last_operation?operation=#{operation_data}&plan_id=plan1-guid-here&service_id=service-guid-here"
                           )).to have_been_made
         end
+
+        context 'when the last operation state is successful' do
+          it 'deletes the binding' do
+            operation_data = 'some_operation_data'
+
+            stub_async_binding_last_operation(operation_data: operation_data)
+            async_unbind_service(status: 202, response_body: { operation: operation_data })
+
+            Delayed::Worker.new.work_off
+
+            get("/v2/service_bindings/#{@binding_id}", '', admin_headers)
+
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'when the last operation endpoint returns 410' do
+          it 'deletes the binding' do
+            operation_data = 'some_operation_data'
+
+            stub_async_binding_last_operation(operation_data: operation_data, return_code: 410)
+            async_unbind_service(status: 202, response_body: { operation: operation_data })
+
+            Delayed::Worker.new.work_off
+
+            get("/v2/service_bindings/#{@binding_id}", '', admin_headers)
+
+            expect(last_response.status).to eq(404)
+          end
+        end
       end
 
       context 'when the broker returns synchronously' do

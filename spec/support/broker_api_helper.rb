@@ -193,7 +193,7 @@ module VCAP::CloudController::BrokerApiHelper
         body: fetch_body.to_json)
   end
 
-  def stub_async_binding_last_operation(state: 'succeeded', operation_data: nil)
+  def stub_async_binding_last_operation(state: 'succeeded', operation_data: nil, return_code: 200)
     fetch_body = {
       state: state
     }
@@ -207,7 +207,7 @@ module VCAP::CloudController::BrokerApiHelper
       Regexp.new(url)).
       with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
       to_return(
-        status: 200,
+        status: return_code,
         body: fetch_body.to_json)
   end
 

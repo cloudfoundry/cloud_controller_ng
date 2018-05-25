@@ -5,7 +5,8 @@ module VCAP::CloudController
   module Jobs
     module Services
       RSpec.describe ServiceBindingStateFetch, job_context: :worker do
-        let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress') }
+        let(:operation_type) { 'create' }
+        let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type) }
         let(:service_binding) do
           service_binding = ServiceBinding.make
           service_binding.service_binding_operation = service_binding_operation
@@ -39,21 +40,30 @@ module VCAP::CloudController
           let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
           let(:state) { 'in progress' }
           let(:description) { '10%' }
+          let(:last_operation_response) { { last_operation: { state: state, description: description } } }
           let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 
           before do
             allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-            allow(client).to receive(:fetch_service_binding_last_operation).and_return(last_operation: { state: state, description: description })
+            allow(client).to receive(:fetch_service_binding_last_operation).and_return(last_operation_response)
           end
 
-          context 'when the last_operation state is succeeded' do
-            let(:state) { 'succeeded' }
-            let(:description) { '100%' }
-            let(:binding_response) { {} }
+          context 'when the last_operation type is create' do
+            let(:operation_type) { 'create' }
 
-            context 'it executes a job' do
+            context 'when the last_operation state is succeeded' do
+              let(:state) { 'succeeded' }
+              let(:description) { '100%' }
+              let(:binding_response) { {} }
+
               before do
                 allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
+              end
+
+              it 'should update the service binding operation' do
+                run_job(job)
+                service_binding.reload
+                expect(service_binding.last_operation.state).to eq('succeeded')
               end
 
               context 'and the broker returns valid credentials' do
@@ -122,16 +132,16 @@ module VCAP::CloudController
                 it 'should update the service binding' do
                   service_binding.reload
                   expect(service_binding.volume_mounts).to eq([{
-                      'driver' => 'cephdriver',
-                      'container_dir' => '/data/images',
-                      'mode' => 'r',
-                      'device_type' => 'shared',
-                      'device' => {
-                        'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
-                        'mount_config' => {
-                          'key' => 'value'
-                        }
+                    'driver' => 'cephdriver',
+                    'container_dir' => '/data/images',
+                    'mode' => 'r',
+                    'device_type' => 'shared',
+                    'device' => {
+                      'volume_id' => 'bc2c1eab-05b9-482d-b0cf-750ee07de311',
+                      'mount_config' => {
+                        'key' => 'value'
                       }
+                    }
                   }])
                 end
               end
@@ -161,6 +171,23 @@ module VCAP::CloudController
                   expect(client).to receive(:unbind).with(service_binding)
 
                   run_job(job)
+                  service_binding.reload
+                  expect(service_binding.last_operation.state).to eq('failed')
+                  expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
+                end
+
+                it 'should never show service binding last operation succeeded' do
+                  allow(client).to receive(:fetch_service_binding).with(service_binding) do |service_binding|
+                    service_binding.reload
+                    expect(service_binding.last_operation.state).to eq('in progress')
+
+                    raise response_malformed_exception
+                  end
+
+                  expect(client).to receive(:unbind).with(service_binding)
+
+                  run_job(job)
+
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
@@ -267,32 +294,161 @@ module VCAP::CloudController
               end
 
               context 'when user information is provided' do
-                context 'and the last operation type is create' do
-                  before do
-                    run_job(job)
-                  end
+                before do
+                  run_job(job)
+                end
 
-                  it 'should create audit event' do
-                    event = Event.find(type: 'audit.service_binding.create')
-                    expect(event).to be
-                    expect(event.actee).to eq(service_binding.guid)
-                    expect(event.metadata['request']).to have_key('some_attr')
-                  end
+                it 'should create audit event' do
+                  event = Event.find(type: 'audit.service_binding.create')
+                  expect(event).to be
+                  expect(event.actee).to eq(service_binding.guid)
+                  expect(event.metadata['request']).to have_key('some_attr')
+                end
+              end
+
+              context 'when the user has gone away' do
+                it 'should create an audit event' do
+                  allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
+                  user.destroy
+
+                  run_job(job)
+
+                  event = Event.find(type: 'audit.service_binding.create')
+                  expect(event).to be
+                  expect(event.actee).to eq(service_binding.guid)
+                  expect(event.metadata['request']).to have_key('some_attr')
                 end
               end
             end
 
-            context 'when the user has gone away' do
-              it 'should create an audit event' do
-                allow(client).to receive(:fetch_service_binding).with(service_binding).and_return(binding_response)
-                user.destroy
+            context 'when the last_operation state is in progress' do
+              let(:description) { '50%' }
 
+              before do
+                run_job(job)
+              end
+
+              it 'should not create an audit event' do
+                event = Event.find(type: 'audit.service_binding.create')
+                expect(event).to be_nil
+              end
+
+              it 'should update the service binding operation' do
+                service_binding.reload
+                expect(service_binding.last_operation.description).to eq('50%')
+              end
+            end
+
+            context 'when the last_operation state is failed' do
+              let(:state) { 'failed' }
+              let(:description) { 'something went wrong' }
+
+              before do
+                run_job(job)
+              end
+
+              it 'updates the service binding last operation details' do
+                service_binding.reload
+                expect(service_binding.last_operation.state).to eq('failed')
+                expect(service_binding.last_operation.description).to eq('something went wrong')
+              end
+
+              it 'should not enqueue another fetch job' do
+                expect(Delayed::Job.count).to eq 0
+              end
+            end
+          end
+
+          context 'when the last_operation type is delete' do
+            let(:operation_type) { 'delete' }
+
+            context 'when the last_operation state is succeeded' do
+              let(:state) { 'succeeded' }
+              let(:description) { '100%' }
+
+              it 'deletes the binding' do
+                service_binding_guid = service_binding.guid
                 run_job(job)
 
-                event = Event.find(type: 'audit.service_binding.create')
-                expect(event).to be
+                expect(ServiceBinding.find(guid: service_binding_guid)).to be_nil
+              end
+
+              context 'when user information is provided' do
+                before do
+                  run_job(job)
+                end
+
+                it 'should create audit event' do
+                  event = Event.find(type: 'audit.service_binding.delete')
+                  expect(event).not_to be_nil
+                  expect(event.actee).to eq(service_binding.guid)
+                end
+              end
+
+              context 'when the user has gone away' do
+                it 'should create an audit event' do
+                  user.destroy
+                  run_job(job)
+
+                  event = Event.find(type: 'audit.service_binding.delete')
+                  expect(event).not_to be_nil
+                  expect(event.actee).to eq(service_binding.guid)
+                end
+              end
+            end
+
+            context 'when the last operation response is empty' do
+              let(:last_operation_response) { {} }
+
+              it 'deletes the binding' do
+                service_binding_guid = service_binding.guid
+                run_job(job)
+
+                expect(ServiceBinding.find(guid: service_binding_guid)).to be_nil
+              end
+
+              it 'creates an audit event' do
+                run_job(job)
+                event = Event.find(type: 'audit.service_binding.delete')
+                expect(event).not_to be_nil
                 expect(event.actee).to eq(service_binding.guid)
-                expect(event.metadata['request']).to have_key('some_attr')
+              end
+            end
+
+            context 'when the last_operation state is in progress' do
+              let(:description) { '50%' }
+
+              before do
+                run_job(job)
+              end
+
+              it 'should update the service binding operation' do
+                service_binding.reload
+                expect(service_binding.last_operation.description).to eq('50%')
+              end
+
+              it 'should not create an audit event' do
+                event = Event.find(type: 'audit.service_binding.delete')
+                expect(event).to be_nil
+              end
+            end
+
+            context 'when the last_operation state is failed' do
+              let(:state) { 'failed' }
+              let(:description) { 'something went wrong' }
+
+              before do
+                run_job(job)
+              end
+
+              it 'updates the service binding last operation details' do
+                service_binding.reload
+                expect(service_binding.last_operation.state).to eq('failed')
+                expect(service_binding.last_operation.description).to eq('something went wrong')
+              end
+
+              it 'should not enqueue another fetch job' do
+                expect(Delayed::Job.count).to eq 0
               end
             end
           end
@@ -312,21 +468,6 @@ module VCAP::CloudController
               service_binding.reload
               expect(service_binding.last_operation.state).to eq('in progress')
               expect(service_binding.last_operation.description).to eq('10%')
-            end
-
-            context 'when the broker responds with failed last operation state' do
-              let(:state) { 'failed' }
-              let(:description) { 'something went wrong' }
-
-              it 'updates the service binding last operation details' do
-                service_binding.reload
-                expect(service_binding.last_operation.state).to eq('failed')
-                expect(service_binding.last_operation.description).to eq('something went wrong')
-              end
-
-              it 'should not enqueue another fetch job' do
-                expect(Delayed::Job.count).to eq 0
-              end
             end
 
             context 'when enqueing the job reaches the max poll duration' do

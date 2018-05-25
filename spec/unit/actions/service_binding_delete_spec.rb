@@ -58,7 +58,7 @@ module VCAP::CloudController
 
         it 'raises an error' do
           expect {
-            service_binding_delete.single_delete_sync(service_binding)
+            service_binding_delete.foreground_delete_request(service_binding)
           }.to raise_error(CloudController::Errors::ApiError, /in progress/)
         end
       end
