@@ -21,15 +21,15 @@ module VCAP::CloudController
         2 => { state: 'RUNNING', uptime: 50, since: 2 },
       }
     }
+    let(:instances_reporters) { double(:instance_reporters) }
 
     describe '#update' do
       before do
-        instances_reporters = double(:instances_reporters)
         allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
         allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
       end
 
-      context 'when all original web processes are running' do
+      context 'when all new webish processes are running' do
         context 'deployments in progress' do
           it 'scales the web process down by one' do
             expect {
@@ -82,7 +82,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when one of the app instances is starting' do
+      context 'when one of the webish instances is starting' do
         let(:all_instances_results) {
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2 },
@@ -92,6 +92,50 @@ module VCAP::CloudController
         }
 
         it 'does not scales the process' do
+          expect {
+            deployer.update
+          }.not_to change {
+            web_process.reload.instances
+          }
+
+          expect {
+            deployer.update
+          }.not_to change {
+            webish_process.reload.instances
+          }
+        end
+      end
+
+      context 'when one of the webish instances is failing' do
+        let(:all_instances_results) {
+          {
+            0 => { state: 'RUNNING', uptime: 50, since: 2 },
+            1 => { state: 'FAILING', uptime: 50, since: 2 },
+            2 => { state: 'FAILING', uptime: 50, since: 2 },
+          }
+        }
+
+        it 'does not scale the process' do
+          expect {
+            deployer.update
+          }.not_to change {
+            web_process.reload.instances
+          }
+
+          expect {
+            deployer.update
+          }.not_to change {
+            webish_process.reload.instances
+          }
+        end
+      end
+
+      context 'when diego is unavailable' do
+        before do
+          allow(instances_reporters).to receive(:all_instances_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', 'omg it broke'))
+        end
+
+        it 'does not scale the process' do
           expect {
             deployer.update
           }.not_to change {

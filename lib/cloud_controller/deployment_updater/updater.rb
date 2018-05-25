@@ -19,7 +19,7 @@ module VCAP::CloudController
         webish_process = deployment.webish_process
 
         return unless web_process.instances > 0
-        return unless ready_to_scale?(webish_process)
+        return unless ready_to_scale?(deployment, logger)
 
         if web_process.instances == 1
           web_process.update(instances: web_process.instances - 1)
@@ -33,9 +33,12 @@ module VCAP::CloudController
         logger.info("ran-deployment-update-for-#{deployment.guid}")
       end
 
-      def self.ready_to_scale?(webish_process)
-        instances = instance_reporters.all_instances_for_app(webish_process)
+      def self.ready_to_scale?(deployment, logger)
+        instances = instance_reporters.all_instances_for_app(deployment.webish_process)
         instances.all? { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING }
+      rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
+        logger.info("skipping-deployment-update-for-#{deployment.guid}")
+        return false
       end
 
       def self.instance_reporters
