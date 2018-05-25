@@ -13,5 +13,11 @@ module VCAP::CloudController
       key: :droplet_guid,
       primary_key: :guid,
       without_guid_generation: true
+
+    many_to_one :webish_process,
+      class: 'VCAP::CloudController::ProcessModel',
+      key: :webish_process_guid,
+      primary_key: :guid,
+      without_guid_generation: true
   end
 end

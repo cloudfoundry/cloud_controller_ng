@@ -100,6 +100,7 @@ module VCAP::CloudController
     state { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
     app { AppModel.make }
     droplet { DropletModel.make(app: app) }
+    webish_process { ProcessModel.make(app: app, type: "web-deployment-#{Sham.guid}") }
   end
 
   TaskModel.blueprint do

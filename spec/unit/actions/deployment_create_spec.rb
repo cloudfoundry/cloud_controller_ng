@@ -28,27 +28,34 @@ module VCAP::CloudController
       it 'creates a process of web-deployment-guid type with the same characteristics as the existing web process' do
         deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info)
 
-        new_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
-        expect(new_process.state).to eq ProcessModel::STARTED
-        expect(new_process.command).to eq(web_process.command)
-        expect(new_process.memory).to eq(web_process.memory)
-        expect(new_process.file_descriptors).to eq(web_process.file_descriptors)
-        expect(new_process.disk_quota).to eq(web_process.disk_quota)
-        expect(new_process.metadata).to eq(web_process.metadata)
-        expect(new_process.detected_buildpack).to eq(web_process.detected_buildpack)
-        expect(new_process.health_check_timeout).to eq(web_process.health_check_timeout)
-        expect(new_process.health_check_type).to eq(web_process.health_check_type)
-        expect(new_process.health_check_http_endpoint).to eq(web_process.health_check_http_endpoint)
-        expect(new_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
-        expect(new_process.enable_ssh).to eq(web_process.enable_ssh)
-        expect(new_process.ports).to eq(web_process.ports)
+        webish_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+        expect(webish_process.state).to eq ProcessModel::STARTED
+        expect(webish_process.command).to eq(web_process.command)
+        expect(webish_process.memory).to eq(web_process.memory)
+        expect(webish_process.file_descriptors).to eq(web_process.file_descriptors)
+        expect(webish_process.disk_quota).to eq(web_process.disk_quota)
+        expect(webish_process.metadata).to eq(web_process.metadata)
+        expect(webish_process.detected_buildpack).to eq(web_process.detected_buildpack)
+        expect(webish_process.health_check_timeout).to eq(web_process.health_check_timeout)
+        expect(webish_process.health_check_type).to eq(web_process.health_check_type)
+        expect(webish_process.health_check_http_endpoint).to eq(web_process.health_check_http_endpoint)
+        expect(webish_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
+        expect(webish_process.enable_ssh).to eq(web_process.enable_ssh)
+        expect(webish_process.ports).to eq(web_process.ports)
+      end
+
+      it 'saves the webish process on the deployment' do
+        deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info)
+
+        webish_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+        expect(deployment.webish_process_guid).to eq(webish_process.guid)
       end
 
       it 'creates route mappings for each route mapped to the existing web process' do
         deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info)
-        new_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+        webish_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
 
-        expect(new_process.routes).to contain_exactly(route1, route2)
+        expect(webish_process.routes).to contain_exactly(route1, route2)
       end
 
       context 'when the app does not have a droplet set' do

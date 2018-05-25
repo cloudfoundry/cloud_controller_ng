@@ -3,6 +3,7 @@ require 'vcap/config'
 module VCAP::CloudController
   module ConfigSchemas
     class DeploymentUpdaterSchema < VCAP::Config
+      # rubocop:disable Metrics/BlockLength
       define_schema do
         {
           logging: {
@@ -32,6 +33,33 @@ module VCAP::CloudController
           optional(:database_encryption) => {
               keys: Hash,
               current_key_label: String
+          },
+
+          diego: {
+            bbs: {
+              url: String,
+              ca_file: String,
+              cert_file: String,
+              key_file: String,
+            },
+            cc_uploader_url: String,
+            file_server_url: String,
+            lifecycle_bundles: Hash,
+            pid_limit: Integer,
+            use_privileged_containers_for_running: bool,
+            use_privileged_containers_for_staging: bool,
+            optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+          },
+
+          default_app_memory: Integer,
+          default_app_disk_in_mb: Integer,
+          maximum_app_disk_in_mb: Integer,
+          instance_file_descriptor_limit: Integer,
+
+          # TODO: delete me
+          loggregator: {
+            router: String,
+            internal_url: String,
           },
 
           deployment_updater: {
