@@ -13,10 +13,10 @@ module VCAP::Services
           validator =
             case unvalidated_response.code
             when 200
-              JsonObjectValidator.new(@logger,
+              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
                   SuccessValidator.new(state: 'succeeded'))
             when 201
-              JsonObjectValidator.new(@logger,
+              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
                   SuccessValidator.new(state: 'succeeded'))
             when 202
               JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
@@ -228,6 +228,9 @@ module VCAP::Services
             '$schema' => 'http://json-schema.org/draft-04/schema#',
             'type' => 'object',
             'properties' => {
+              'dashboard_url' => {
+                'type' => 'string',
+              },
               'operation' => {
                 'type' => 'string',
                 'maxLength' => 10_000,
