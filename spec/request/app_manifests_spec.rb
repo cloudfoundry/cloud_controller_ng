@@ -5,8 +5,10 @@ RSpec.describe 'App Manifests' do
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:space) { VCAP::CloudController::Space.make }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space) }
-  let(:second_route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path') }
+  let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
+  let(:second_route) {
+    VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
+  }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
   let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
