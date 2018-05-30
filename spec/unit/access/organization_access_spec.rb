@@ -3,171 +3,239 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe OrganizationAccess, type: :access do
     subject(:access) { OrganizationAccess.new(Security::AccessContext.new) }
-    let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
     let(:user) { VCAP::CloudController::User.make }
-    let(:object) { VCAP::CloudController::Organization.make }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:object) { org }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
 
-    before { set_current_user(user, scopes: scopes) }
-
-    shared_examples :read_and_create_only do
-      it { is_expected.to allow_op_on_object :create, object }
-      it { is_expected.to allow_op_on_object :read, object }
-      it { is_expected.not_to allow_op_on_object :read_for_update, object }
-      # update only runs if read_for_update succeeds
-      it { is_expected.not_to allow_op_on_object :update, object }
-      it { is_expected.not_to allow_op_on_object :delete, object }
-      it { is_expected.to allow_op_on_object :index, object.class }
+    before do
+      flag.save
     end
 
-    it_behaves_like :admin_read_only_access
+    index_table = {
+      unauthenticated: true,
+      reader_and_writer: true,
+      reader: true,
+      writer: true,
 
-    context 'admin' do
-      include_context :admin_setup
-      it_behaves_like :full_access
+      admin: true,
+      admin_read_only: true,
+      global_auditor: true,
 
-      it 'can set billing_enabled' do
-        object.billing_enabled = !object.billing_enabled
-        expect(subject.update?(object)).to be true
-      end
+      space_developer: true,
+      space_manager: true,
+      space_auditor: true,
+      org_user: true,
+      org_manager: true,
+      org_auditor: true,
+      org_billing_manager: true,
+    }
 
-      it 'can set quota_definition' do
-        object.quota_definition = QuotaDefinition.make
-        expect(subject.update?(object)).to be true
-      end
+    read_table = {
+      unauthenticated: false,
+      reader_and_writer: true,
+      reader: true,
+      writer: false,
 
-      it 'can read related objects' do
-        expect(subject.read_related_object_for_update?(object)).to be true
-      end
-    end
+      admin: true,
+      admin_read_only: true,
+      global_auditor: true,
 
-    context 'global auditor' do
-      include_context :global_auditor_setup
+      space_developer: true,
+      space_manager: true,
+      space_auditor: true,
+      org_user: true,
+      org_manager: true,
+      org_auditor: true,
+      org_billing_manager: true,
+    }
 
-      it_behaves_like :read_only_access
-    end
+    write_table = {
+      unauthenticated: false,
+      reader_and_writer: false,
+      reader: false,
+      writer: false,
 
-    context 'a manager for the organization' do
-      before do
-        object.add_manager(user)
-        object.add_manager(User.make)
-      end
+      admin: true,
+      admin_read_only: false,
+      global_auditor: false,
 
-      context 'with an active organization' do
-        it { is_expected.not_to allow_op_on_object :create, object }
-        it { is_expected.not_to allow_op_on_object :delete, object }
-        it { is_expected.to allow_op_on_object :read, object }
-        it { is_expected.to allow_op_on_object :read_for_update, object }
-        it { is_expected.to allow_op_on_object :update, object }
-        it { is_expected.to allow_op_on_object :index, object.class }
-      end
+      space_developer: false,
+      space_manager: false,
+      space_auditor: false,
+      org_user: false,
+      org_manager: false,
+      org_auditor: false,
+      org_billing_manager: false,
+    }
 
-      context 'with a suspended organization' do
-        before { object.status = 'suspended' }
+    update_table = write_table.clone.merge({
+       org_manager: true,
+    })
 
-        it_behaves_like :read_only_access
-      end
+    flag_enabled_create_table = {
+      unauthenticated: false,
+      reader_and_writer: true,
+      reader: false,
+      writer: true,
 
-      it 'cannot set billing_enabled' do
-        object.billing_enabled = !object.billing_enabled
-        expect(subject.read_for_update?(object, { 'billing_enabled' => 1 })).to be false
-      end
+      admin: true,
+      admin_read_only: false,
+      global_auditor: false,
 
-      it 'cannot set quota_definition' do
-        object.quota_definition = QuotaDefinition.make
-        expect(subject.read_for_update?(object, { 'quota_definition_guid' => 1 })).to be false
-      end
+      space_developer: true,
+      space_manager: true,
+      space_auditor: true,
+      org_user: true,
+      org_manager: true,
+      org_auditor: true,
+      org_billing_manager: true,
+    }
 
-      it 'can read related objects' do
-        expect(subject.read_related_object_for_update?(object)).to be true
-      end
-    end
+    flag_disabled_create_table = write_table
 
-    context 'a user in the organization' do
-      before do
-        object.add_user(user)
-        object.status = 'active'
-      end
+    acting_on_self_table = {
+      unauthenticated: false,
+      reader_and_writer: true,
+      reader: false,
+      writer: true,
 
-      it_behaves_like :read_only_access
+      admin: true,
+      admin_read_only: false,
+      global_auditor: false,
 
-      context 'a user' do
-        let(:relation) { :users }
+      space_developer: true,
+      space_manager: true,
+      space_auditor: true,
+      org_user: true,
+      org_manager: true,
+      org_auditor: true,
+      org_billing_manager: true,
+    }
 
-        context 'who is the user' do
-          let(:related) { user }
+    it_behaves_like('an access control', :index, index_table)
 
-          it 'can not read_related_object_for_update? for themselves' do
-            params = { relation: relation, related_guid: related.guid }
-            expect(subject.read_for_update?(object, params)).to be false
-          end
-        end
-
-        context 'who is not the user' do
-          let(:related) { User.make }
-
-          it 'can not can_remove_related_object? for that user' do
-            params = { relation: relation, related_guid: related.guid }
-            expect(subject.can_remove_related_object?(object, params)).to be false
-          end
-        end
-      end
-    end
-
-    context 'a user not in the organization' do
-      context 'when the user_org_creation feature flag is disabled' do
-        it_behaves_like :no_access
-      end
-
-      context 'when the user_org_creation feature flag is enabled' do
+    describe 'user org creation feature flag' do
+      context 'when the flag is enabled' do
         before do
-          FeatureFlag.make(name: 'user_org_creation', enabled: true, error_message: nil)
+          flag.enabled = true
+          flag.save
         end
 
-        it { is_expected.to allow_op_on_object :create, object }
+        it_behaves_like('an access control', :create, flag_enabled_create_table)
+      end
+
+      context 'when the flag is disabled' do
+        it_behaves_like('an access control', :create, flag_disabled_create_table)
       end
     end
 
-    context 'a billing manager for the organization' do
-      before { object.add_billing_manager(user) }
+    describe 'in an unsuspended org' do
+      it_behaves_like('an access control', :read, read_table)
 
-      it_behaves_like :read_only_access
+      it_behaves_like('an access control', :delete, write_table)
+
+      it_behaves_like('an access control', :read_for_update, update_table)
+      it_behaves_like('an access control', :update, update_table)
+
+      describe 'params' do
+        context 'quota_definition_guid param is set' do
+          let(:op_params) { { 'quota_definition_guid' => 'some-guid' } }
+
+          it_behaves_like('an access control', :read_for_update, write_table)
+        end
+
+        context 'billing_enabled param is set' do
+          let(:op_params) { { 'billing_enabled' => 'sure' } }
+
+          it_behaves_like('an access control', :read_for_update, write_table)
+        end
+      end
     end
 
-    context 'an auditor for the organization' do
-      before { object.add_auditor(user) }
-
-      it_behaves_like :read_only_access
-    end
-
-    context 'any user using client without cloud_controller.write' do
-      let(:scopes) { ['cloud_controller.read'] }
-
+    describe 'in a suspended org' do
       before do
-        object.add_user(user)
-        object.add_manager(user)
-        object.add_billing_manager(user)
-        object.add_auditor(user)
+        org.status = VCAP::CloudController::Organization::SUSPENDED
+        org.save
       end
 
-      it { is_expected.not_to allow_op_on_object :create, object }
-      it { is_expected.not_to allow_op_on_object :delete, object }
-      it { is_expected.to allow_op_on_object :read, object }
-      it { is_expected.not_to allow_op_on_object :read_for_update, object }
-      it { is_expected.not_to allow_op_on_object :update, object }
-      it { is_expected.to allow_op_on_object :index, object.class }
+      it_behaves_like('an access control', :read, read_table)
+
+      it_behaves_like('an access control', :delete, write_table)
+      it_behaves_like('an access control', :read_for_update, write_table)
+      it_behaves_like('an access control', :update, write_table)
     end
 
-    context 'any user using client without cloud_controller.read' do
-      let(:scopes) { [] }
+    describe 'related objects' do
+      context 'removing managers' do
+        let(:op_params) { { relation: :managers } }
+        let(:manager) { VCAP::CloudController::User.make }
 
-      before do
-        object.add_user(user)
-        object.add_manager(user)
-        object.add_billing_manager(user)
-        object.add_auditor(user)
+        before do
+          set_current_user(user)
+          org.add_manager(manager)
+        end
+
+        it 'does not allow removal of last manager' do
+          expect {
+            subject.can_remove_related_object?(org, op_params)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
       end
 
-      it_behaves_like :no_access
+      context 'removing billing_managers' do
+        let(:op_params) { { relation: :billing_managers } }
+        let(:billing_manager) { VCAP::CloudController::User.make }
+
+        before do
+          set_current_user(user)
+          org.add_billing_manager(billing_manager)
+        end
+
+        it 'does not allow removal of last billing manager' do
+          expect {
+            subject.can_remove_related_object?(org, op_params)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+
+      context 'removing org users' do
+        let(:org_user) { VCAP::CloudController::User.make }
+        let(:op_params) { { related_guid: org_user.guid, relation: :users } }
+
+        before do
+          org.add_user(org_user)
+        end
+
+        it 'does not allow removal of last user' do
+          expect {
+            subject.can_remove_related_object?(org, op_params)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+
+        it 'does not allow removal of last billing manager' do
+          org.add_billing_manager(org_user)
+
+          expect {
+            subject.can_remove_related_object?(org, op_params)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+
+        it 'does not allow removal of last org manager' do
+          org.add_manager(org_user)
+
+          expect {
+            subject.can_remove_related_object?(org, op_params)
+          }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+
+      context 'acting on themselves' do
+        let(:op_params) { { related_guid: user&.guid, relation: :auditors } }
+
+        it_behaves_like('an access control', :can_remove_related_object, acting_on_self_table, nil)
+      end
     end
   end
 end

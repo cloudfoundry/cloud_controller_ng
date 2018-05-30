@@ -5,7 +5,6 @@ module VCAP::CloudController
     let(:queryer) { spy(Permissions::Queryer) }
 
     subject(:access) { RouteAccess.new(Security::AccessContext.new(queryer)) }
-    let(:scopes) { %w(cloud_controller.read cloud_controller.write) }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
@@ -14,10 +13,9 @@ module VCAP::CloudController
     let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }
     let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
-    before(:each) {
-      set_current_user(user, scopes: scopes)
+    before do
       flag.save
-    }
+    end
 
     index_table = {
       unauthenticated: true,

@@ -101,9 +101,9 @@ module UserHelpers
     when 'reader_and_writer'
       set_current_user_as_reader_and_writer(user: current_user)
     when 'reader'
-      set_current_user_as_reader_and_writer(user: current_user)
+      set_current_user_as_reader(user: current_user)
     when 'writer'
-      set_current_user_as_writer
+      set_current_user_as_writer(user: current_user)
     else
       fail("Unknown role '#{role}'")
     end

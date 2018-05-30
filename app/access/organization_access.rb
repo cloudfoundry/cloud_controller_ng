@@ -32,7 +32,7 @@ module VCAP::CloudController
     private
 
     def user_acting_on_themselves?(options)
-      [:auditors, :billing_managers, :managers, :users].include?(options[:relation]) && context.user.guid == options[:related_guid]
+      [:auditors, :billing_managers, :managers, :users].include?(options[:relation]) && context.user&.guid == options[:related_guid]
     end
 
     def validate!(org, params)
