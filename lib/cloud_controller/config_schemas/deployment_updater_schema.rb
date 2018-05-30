@@ -56,12 +56,6 @@ module VCAP::CloudController
           maximum_app_disk_in_mb: Integer,
           instance_file_descriptor_limit: Integer,
 
-          # TODO: delete me
-          loggregator: {
-            router: String,
-            internal_url: String,
-          },
-
           deployment_updater: {
             update_frequency_in_seconds: Integer,
           },
