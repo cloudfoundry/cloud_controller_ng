@@ -55,6 +55,7 @@ module VCAP::CloudController
         query_fn.call(subject)
 
         expect(statsd_client).to have_received(:gauge).with("cc.perm.experiment.#{experiment_name}.match", 1)
+        expect(statsd_client).to have_received(:gauge).with('cc.perm.experiment.match', 1)
       end
 
       it 'publishes the performance of both control and candidate' do
@@ -108,6 +109,7 @@ module VCAP::CloudController
         query_fn.call(subject)
 
         expect(statsd_client).to have_received(:gauge).with("cc.perm.experiment.#{experiment_name}.match", 0)
+        expect(statsd_client).to have_received(:gauge).with('cc.perm.experiment.match', 0)
       end
 
       it 'publishes the performance of both control and candidate' do

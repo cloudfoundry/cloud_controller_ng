@@ -46,6 +46,7 @@ module VCAP::CloudController
         end
 
         statsd_client.gauge("cc.perm.experiment.#{name}.match", success)
+        statsd_client.gauge('cc.perm.experiment.match', success)
       end
 
       private
