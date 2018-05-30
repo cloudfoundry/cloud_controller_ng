@@ -51,7 +51,7 @@ RSpec.describe 'Service Broker API integration' do
           provision_service
           expect(VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid).service_plan_guid).to eq @plan_guid
 
-          upgrade_service_instance(200)
+          update_service_instance(200)
           expect(last_response.status).to eq 201
           expect(VCAP::CloudController::ServiceInstance.find(guid: @service_instance_guid).service_plan_guid).to eq @large_plan_guid
         end
@@ -61,7 +61,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'returns 502 to the client' do
           provision_service
 
-          upgrade_service_instance(422)
+          update_service_instance(422)
           expect(last_response.status).to eq 502
         end
       end

@@ -285,7 +285,7 @@ RSpec.describe 'Service Broker API integration' do
         let(:user) { VCAP::CloudController::User.make }
         before do
           provision_service(user: user)
-          upgrade_service_instance(200, user: user)
+          update_service_instance(200, user: user)
         end
 
         it 'receives the user_id in the X-Broker-API-Originating-Identity header' do
@@ -450,7 +450,7 @@ RSpec.describe 'Service Broker API integration' do
 
         before do
           provision_service(user: user_a)
-          upgrade_service_instance(200, user: user_b)
+          update_service_instance(200, user: user_b)
           deprovision_service(user: user_c)
         end
 
