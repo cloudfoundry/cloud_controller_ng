@@ -2308,6 +2308,11 @@ module VCAP::CloudController
         expect(process.reload.service_bindings).to be_empty
       end
 
+      it 'has the deprecated warning header' do
+        delete "/v2/apps/not-found/service_bindings/#{service_binding.guid}"
+        expect(last_response).to be_a_deprecated_response
+      end
+
       context 'when the app does not exist' do
         it 'returns 404' do
           delete "/v2/apps/not-found/service_bindings/#{service_binding.guid}"

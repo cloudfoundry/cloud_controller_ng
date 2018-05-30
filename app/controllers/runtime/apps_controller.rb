@@ -333,6 +333,7 @@ module VCAP::CloudController
       [HTTP::NO_CONTENT]
     end
 
+    deprecated_endpoint '/v2/apps/:app_guid/service_bindings/:service_binding_guid'
     delete '/v2/apps/:app_guid/service_bindings/:service_binding_guid', :remove_service_binding
 
     def remove_service_binding(app_guid, service_binding_guid)
