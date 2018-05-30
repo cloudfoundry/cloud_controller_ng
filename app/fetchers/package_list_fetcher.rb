@@ -1,61 +1,64 @@
 module VCAP::CloudController
   class PackageListFetcher
     def fetch_all(message:)
-      app_dataset = AppModel.select(:id)
-      filter(message, app_dataset)
+      filter(message, joined_dataset)
     end
 
     def fetch_for_spaces(message:, space_guids:)
-      app_dataset = AppModel.select(:id).where(space_guid: space_guids)
-
-      filter(message, app_dataset)
+      dataset = joined_dataset.where(table_column_name(AppModel, :space_guid) => space_guids)
+      result = filter(message, dataset)
+      result
     end
 
     def fetch_for_app(message:)
       app_dataset = AppModel.where(guid: message.app_guid).eager(:space, :organization)
       app = app_dataset.first
-      return nil unless app
+      return [nil, nil] unless app
 
-      [app, filter(message, app_dataset)]
+      dataset = PackageModel.dataset.select_all(PackageModel.table_name).
+                join(AppModel.table_name, guid: :app_guid).
+                where(table_column_name(AppModel, :guid) => message.app_guid)
+
+      [app, filter(message, dataset)]
     end
 
     private
 
-    def filter(message, dataset)
-      package_dataset = PackageModel.dataset
-      filter_package_dataset(message, package_dataset).where(app: filter_app_dataset(message, dataset))
+    def table_column_name(table_class, name)
+      "#{table_class.table_name}__#{name}".to_sym
     end
 
-    def filter_package_dataset(message, package_dataset)
+    def joined_dataset
+      PackageModel.dataset.select_all(PackageModel.table_name).
+        join(AppModel.table_name, guid: :app_guid)
+    end
+
+    def filter(message, dataset)
       if message.requested? :states
-        package_dataset = package_dataset.where(state: message.states)
+        dataset = dataset.where(table_column_name(PackageModel, :state) => message.states)
       end
 
       if message.requested? :types
-        package_dataset = package_dataset.where(type: message.types)
+        dataset = dataset.where(table_column_name(PackageModel, :type) => message.types)
       end
 
       if message.requested? :guids
-        package_dataset = package_dataset.where(:"#{PackageModel.table_name}__guid" => message.guids)
+        dataset = dataset.where(table_column_name(PackageModel, :guid) => message.guids)
       end
 
-      package_dataset
-    end
-
-    def filter_app_dataset(message, app_dataset)
       if message.requested? :app_guids
-        app_dataset = app_dataset.where(app_guid: message.app_guids)
+        dataset = dataset.where(table_column_name(AppModel, :guid) => message.app_guids)
       end
 
       if message.requested? :space_guids
-        app_dataset = app_dataset.where(space_guid: message.space_guids)
+        dataset = dataset.where(table_column_name(AppModel, :space_guid) => message.space_guids)
       end
 
       if message.requested? :organization_guids
-        app_dataset = app_dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
+        dataset = dataset.where(table_column_name(AppModel, :space_guid) => Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
       end
 
-      app_dataset
+      dataset
     end
   end
 end

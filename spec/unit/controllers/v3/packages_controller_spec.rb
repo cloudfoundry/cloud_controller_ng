@@ -413,12 +413,16 @@ RSpec.describe PackagesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
+    let(:space1) { VCAP::CloudController::Space.make }
+    let(:space2) { VCAP::CloudController::Space.make }
+    let(:space3) { VCAP::CloudController::Space.make }
+    let(:user_spaces) { [space, space1, space2, space3] }
     let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
-      allow_user_read_access_for(user, spaces: [space])
+      allow_user_read_access_for(user, spaces: user_spaces)
     end
 
     it 'returns 200' do
@@ -446,6 +450,29 @@ RSpec.describe PackagesController, type: :controller do
         VCAP::CloudController::PackageModel.make
 
         get :index, app_guid: app.guid
+
+        expect(response.status).to eq(200)
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([package_1.guid, package_2.guid])
+      end
+
+      it "doesn't allow filtering on space_guids in a nested query" do
+        app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
+
+        get :index, { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
+                      space_guids: user_spaces.map(&:guid).join(',') }
+
+        expect(response.status).to eq(400)
+        expect(response.body).to include("Unknown query parameter(s): \'space_guids\'")
+      end
+
+      it 'uses the app and pagination as query parameters' do
+        app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
+        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-1')
+        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
+        VCAP::CloudController::PackageModel.make
+
+        get :index, { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
