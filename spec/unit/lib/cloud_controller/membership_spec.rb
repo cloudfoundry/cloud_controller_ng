@@ -403,6 +403,17 @@ module VCAP::CloudController
             expect(guids).to eq([organization.guid])
           end
         end
+
+        context 'when the user has multiple roles' do
+          it 'does not return duplicate org guids' do
+            organization.add_auditor(user)
+            organization.add_billing_manager(user)
+
+            guids = membership.org_guids_for_roles([Membership::ORG_BILLING_MANAGER, Membership::ORG_AUDITOR])
+
+            expect(guids).to eq([organization.guid])
+          end
+        end
       end
 
       context 'when the user has no role in any organization' do
@@ -515,13 +526,13 @@ module VCAP::CloudController
           org_managed.add_manager(user)
           org_audited.add_auditor(user)
           space.add_developer(user)
+          space.add_auditor(user)
         end
 
-        it 'returns the correct spaces' do
-          guids = membership.space_guids_for_roles([Membership::ORG_MANAGER, Membership::SPACE_DEVELOPER])
+        it 'returns the correct space guids without duplicates' do
+          guids = membership.space_guids_for_roles([Membership::ORG_MANAGER, Membership::SPACE_DEVELOPER, Membership::SPACE_AUDITOR])
 
-          expect(guids).to include(space1_in_managed_org.guid, space2_in_managed_org.guid, space.guid)
-          expect(guids).not_to include(space_in_audited_org.guid, some_other_space.guid)
+          expect(guids).to contain_exactly(space1_in_managed_org.guid, space2_in_managed_org.guid, space.guid)
         end
       end
     end

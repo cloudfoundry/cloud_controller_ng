@@ -33,7 +33,7 @@ module VCAP::CloudController
         when ORG_MANAGER
           @user.managed_organizations.map(&:guid)
         end
-      end.flatten.compact
+      end.flatten.compact.uniq
     end
 
     def space_guids_for_roles(roles)
@@ -64,7 +64,7 @@ module VCAP::CloudController
             :spaces, spaces__organization_id: :organizations__id
           ).select(:spaces__guid).map(&:guid)
         end
-      end.flatten.compact
+      end.flatten.compact.uniq
     end
 
     private

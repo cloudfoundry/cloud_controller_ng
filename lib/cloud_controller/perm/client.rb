@@ -117,12 +117,12 @@ module VCAP::CloudController
         end
       end
 
-      def list_resource_patterns(user_id:, issuer:, actions:)
+      def list_unique_resource_patterns(user_id:, issuer:, actions:)
         if enabled
           begin
             actions.map do |action|
               list_resource_patterns_for_action(user_id: user_id, issuer: issuer, action: action)
-            end.flatten
+            end.flatten.uniq
           rescue CloudFoundry::Perm::V1::Errors::BadStatus => e
             logger.error(
               'list-resource-patterns.bad-status',

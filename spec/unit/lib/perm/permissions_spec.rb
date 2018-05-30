@@ -101,7 +101,7 @@ module VCAP::CloudController::Perm
         expect(org_guids).to include(org1.guid)
         expect(org_guids).to include(org2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all org guids for read-only admins' do
@@ -117,7 +117,7 @@ module VCAP::CloudController::Perm
         expect(org_guids).to include(org1.guid)
         expect(org_guids).to include(org2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all org guids for global auditors' do
@@ -133,14 +133,14 @@ module VCAP::CloudController::Perm
         expect(org_guids).to include(org1.guid)
         expect(org_guids).to include(org2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns the list of org guids that the user can read' do
         readable_org_guids = [SecureRandom.uuid, SecureRandom.uuid]
 
         actions = %w(org.manager org.billing_manager org.auditor org.user)
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: actions).
           and_return(readable_org_guids)
 
@@ -257,7 +257,7 @@ module VCAP::CloudController::Perm
         expect(space_guids).to include(space1.guid)
         expect(space_guids).to include(space2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all space guids for read-only admins' do
@@ -275,7 +275,7 @@ module VCAP::CloudController::Perm
         expect(space_guids).to include(space1.guid)
         expect(space_guids).to include(space2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all space guids for global auditors' do
@@ -293,7 +293,7 @@ module VCAP::CloudController::Perm
         expect(space_guids).to include(space1.guid)
         expect(space_guids).to include(space2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns the list of space guids that the user can read via space roles and as an org manager' do
@@ -309,14 +309,14 @@ module VCAP::CloudController::Perm
         managed_org_space_guids = [space1.guid, space2.guid, space3.guid, space4.guid]
         org_actions = %w(org.manager)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(managed_org_guids)
 
         readable_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
         space_actions = %w(space.developer space.manager space.auditor)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: space_actions).
           and_return(readable_space_guids)
 
@@ -569,7 +569,7 @@ module VCAP::CloudController::Perm
         expect(route_guids).to include(route1.guid)
         expect(route_guids).to include(route2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all route guids for read-only admins' do
@@ -589,7 +589,7 @@ module VCAP::CloudController::Perm
         expect(route_guids).to include(route1.guid)
         expect(route_guids).to include(route2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all route guids for global auditors' do
@@ -609,7 +609,7 @@ module VCAP::CloudController::Perm
         expect(route_guids).to include(route1.guid)
         expect(route_guids).to include(route2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns the list of route guids that the user can read via org and space roles' do
@@ -627,7 +627,7 @@ module VCAP::CloudController::Perm
         org_route_guids = [route1.guid, route2.guid, route3.guid]
         org_actions = %w(org.manager org.auditor)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(org_guids)
 
@@ -641,7 +641,7 @@ module VCAP::CloudController::Perm
         readable_route_guids = [route4.guid, route5.guid]
         space_actions = %w(space.developer space.manager space.auditor)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: space_actions).
           and_return(readable_space_guids)
 
@@ -730,7 +730,7 @@ module VCAP::CloudController::Perm
         expect(app_guids).to include(app1.guid)
         expect(app_guids).to include(app2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all app guids for read-only admins' do
@@ -750,7 +750,7 @@ module VCAP::CloudController::Perm
         expect(app_guids).to include(app1.guid)
         expect(app_guids).to include(app2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all app guids for global auditors' do
@@ -770,7 +770,7 @@ module VCAP::CloudController::Perm
         expect(app_guids).to include(app1.guid)
         expect(app_guids).to include(app2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns the list of app guids that the user can read via org and space roles' do
@@ -788,7 +788,7 @@ module VCAP::CloudController::Perm
         org_app_guids = [app1.guid, app2.guid, app3.guid]
         org_actions = %w(org.manager)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(org_guids)
 
@@ -802,7 +802,7 @@ module VCAP::CloudController::Perm
         readable_app_guids = [app4.guid, app5.guid]
         space_actions = %w(space.developer space.manager space.auditor)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: space_actions).
           and_return(readable_space_guids)
 
@@ -838,7 +838,7 @@ module VCAP::CloudController::Perm
         expect(route_mapping_guids).to include(route_mapping1.guid)
         expect(route_mapping_guids).to include(route_mapping2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all route mapping guids for read-only admins' do
@@ -860,7 +860,7 @@ module VCAP::CloudController::Perm
         expect(route_mapping_guids).to include(route_mapping1.guid)
         expect(route_mapping_guids).to include(route_mapping2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns all route mapping guids for global auditors' do
@@ -882,7 +882,7 @@ module VCAP::CloudController::Perm
         expect(route_mapping_guids).to include(route_mapping1.guid)
         expect(route_mapping_guids).to include(route_mapping2.guid)
 
-        expect(perm_client).not_to receive(:list_resource_patterns)
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
       it 'returns the list of route mapping guids that the user can read via org and space roles' do
@@ -903,7 +903,7 @@ module VCAP::CloudController::Perm
         org_route_mapping_guids = [route_mapping1.guid, route_mapping2.guid, route_mapping3.guid]
         org_actions = %w(org.manager)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(org_guids)
 
@@ -919,7 +919,7 @@ module VCAP::CloudController::Perm
         readable_route_mapping_guids = [route_mapping4.guid, route_mapping5.guid]
         space_actions = %w(space.developer space.manager space.auditor)
 
-        allow(perm_client).to receive(:list_resource_patterns).
+        allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: space_actions).
           and_return(readable_space_guids)
 

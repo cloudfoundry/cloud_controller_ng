@@ -37,7 +37,7 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
           else
-            perm_client.list_resource_patterns(
+            perm_client.list_unique_resource_patterns(
               user_id: user_id,
               issuer: issuer,
               actions: [
@@ -193,12 +193,12 @@ module VCAP
         end
 
         def space_guids_for_actions(space_actions, org_actions)
-          space_guids = perm_client.list_resource_patterns(
+          space_guids = perm_client.list_unique_resource_patterns(
             user_id: user_id,
             issuer: issuer,
             actions: space_actions
           )
-          org_guids = perm_client.list_resource_patterns(
+          org_guids = perm_client.list_unique_resource_patterns(
             user_id: user_id,
             issuer: issuer,
             actions: org_actions
