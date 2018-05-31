@@ -60,80 +60,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'Permissions' do
-      include_context 'permissions'
-
-      before do
-        @obj_a = @org_a
-        @obj_b = @org_b
-      end
-
-      describe 'Org Level Permissions' do
-        before { set_current_user(member_a) }
-
-        describe 'OrgManager' do
-          let(:member_a) { @org_a_manager }
-          let(:member_b) { @org_b_manager }
-
-          include_examples 'permission enumeration', 'OrgManager',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
-
-          it 'cannot update quota definition' do
-            quota = QuotaDefinition.make
-            expect(@org_a.quota_definition.guid).to_not eq(quota.guid)
-
-            put "/v2/organizations/#{@org_a.guid}", MultiJson.dump(quota_definition_guid: quota.guid)
-
-            @org_a.reload
-            expect(last_response.status).to eq(403)
-            expect(@org_a.quota_definition.guid).to_not eq(quota.guid)
-          end
-
-          it 'cannot update billing_enabled' do
-            billing_enabled_before = @org_a.billing_enabled
-
-            put "/v2/organizations/#{@org_a.guid}", MultiJson.dump(billing_enabled: !billing_enabled_before)
-
-            @org_a.reload
-            expect(last_response.status).to eq(403)
-            expect(@org_a.billing_enabled).to eq(billing_enabled_before)
-          end
-        end
-
-        describe 'OrgUser' do
-          let(:member_a) { @org_a_member }
-          let(:member_b) { @org_b_member }
-
-          include_examples 'permission enumeration', 'OrgUser',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
-        end
-
-        describe 'BillingManager' do
-          let(:member_a) { @org_a_billing_manager }
-          let(:member_b) { @org_b_billing_manager }
-
-          include_examples 'permission enumeration', 'BillingManager',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
-        end
-
-        describe 'Auditor' do
-          let(:member_a) { @org_a_auditor }
-          let(:member_b) { @org_b_auditor }
-
-          include_examples 'permission enumeration', 'Auditor',
-            name: 'organization',
-            path: '/v2/organizations',
-            enumerate: 1
-        end
-      end
-    end
-
     describe 'Associations' do
       it do
         expect(VCAP::CloudController::OrganizationsController).to have_nested_routes(
@@ -984,6 +910,45 @@ module VCAP::CloudController
             guids = decoded_response.fetch('resources').map { |x| x['metadata']['guid'] }
             expect(guids).to include(private_domain.guid)
           end
+        end
+      end
+    end
+
+    describe 'GET /v2/organizations' do
+      let!(:org1) { Organization.make }
+      let!(:org2) { Organization.make }
+      let(:queryer) { instance_double(Permissions::Queryer) }
+
+      before do
+        allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
+        allow(queryer).to receive(:can_read_globally?).and_return(false)
+        set_current_user_as_admin
+      end
+
+      context 'when user can read globally' do
+        before do
+          allow(queryer).to receive(:can_read_globally?).and_return(true)
+        end
+
+        it 'should return all the organizations' do
+          get 'v2/organizations'
+          expect(last_response.status).to eq(200), last_response.body
+
+          expect(decoded_response['resources'].length).to eq(3)
+          expect(decoded_response['resources'].map { |r| r['metadata']['guid'] }).to include(org1.guid, org2.guid)
+        end
+      end
+
+      context 'when user cannot read globally' do
+        it 'should return just the organizations the user can access' do
+          allow(queryer).to receive(:readable_org_guids).and_return([org1.guid])
+
+          get 'v2/organizations'
+
+          expect(last_response.status).to eq(200), last_response.body
+
+          expect(decoded_response['resources'].length).to eq(1)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq(org1.guid)
         end
       end
     end
