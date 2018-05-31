@@ -204,9 +204,12 @@ module VCAP
             actions: org_actions
           )
 
-          space_guids + Organization.where("#{Organization.table_name}__guid".to_sym => org_guids).
-                        join(Space.table_name.to_sym, organization_id: :id).
-                        select("#{Space.table_name}__guid".to_sym).all.map(&:guid)
+          all_guids = space_guids +
+            Organization.where("#{Organization.table_name}__guid".to_sym => org_guids).
+                      join(Space.table_name.to_sym, organization_id: :id).
+                      select("#{Space.table_name}__guid".to_sym).all.map(&:guid)
+
+          all_guids.uniq
         end
       end
     end

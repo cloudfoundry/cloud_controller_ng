@@ -296,7 +296,7 @@ module VCAP::CloudController::Perm
         expect(perm_client).not_to receive(:list_unique_resource_patterns)
       end
 
-      it 'returns the list of space guids that the user can read via space roles and as an org manager' do
+      it 'returns the list of space guids that the user can read via space roles and as an org manager without duplicates' do
         org1 = VCAP::CloudController::Organization.make
         org2 = VCAP::CloudController::Organization.make
         managed_org_guids = [org1.guid, org2.guid]
@@ -318,7 +318,7 @@ module VCAP::CloudController::Perm
 
         allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: space_actions).
-          and_return(readable_space_guids)
+          and_return(readable_space_guids + [space1.guid, space4.guid])
 
         expected_space_guids = managed_org_space_guids + readable_space_guids
 
