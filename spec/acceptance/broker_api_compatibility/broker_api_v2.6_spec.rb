@@ -29,7 +29,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'sends service_id for service instance update' do
-          upgrade_service_instance(200)
+          update_service_instance(200)
           expected_body = hash_including({ 'service_id' => service_id })
 
           expect(

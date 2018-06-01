@@ -235,7 +235,7 @@ module VCAP::CloudController::BrokerApiHelper
     @service_instance_guid = response['metadata']['guid']
   end
 
-  def upgrade_service_instance(return_code, opts={})
+  def update_service_instance(return_code, opts={})
     stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: '{}')
 
     body = {

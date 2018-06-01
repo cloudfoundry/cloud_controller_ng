@@ -25,7 +25,7 @@ RSpec.describe 'Service Broker API integration' do
 
       it 'sends params to broker for service instance update' do
         provision_service
-        upgrade_service_instance(200, parameters: parameters)
+        update_service_instance(200, parameters: parameters)
         expected_body = hash_including({ 'parameters' => parameters })
 
         expect(

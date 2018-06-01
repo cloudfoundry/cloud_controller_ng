@@ -40,7 +40,7 @@ RSpec.describe 'Service Broker API integration' do
     context 'service update request' do
       before do
         provision_service
-        upgrade_service_instance(200)
+        update_service_instance(200)
       end
 
       it 'receives a context object' do
