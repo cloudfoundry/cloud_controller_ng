@@ -420,6 +420,7 @@ module VCAP::CloudController
                 end
 
                 it 'returns an in progress service binding response' do
+                  #TODO can we use decoded_response instead??
                   hash_body = JSON.parse(last_response.body)
                   expect(hash_body['entity']['last_operation']['type']).to eq('create')
                   expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
@@ -922,6 +923,16 @@ module VCAP::CloudController
 
                 expect(service_binding.last_operation.type).to eql('delete')
                 expect(service_binding.last_operation.state).to eql('in progress')
+              end
+
+              it 'indicates the service binding is being deleted' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+
+                expect(last_response.headers['Location']).to eq "/v2/service_bindings/#{service_binding.guid}"
+
+                expect(decoded_response['entity']['last_operation']).to be
+                expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
+                expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
               end
             end
 

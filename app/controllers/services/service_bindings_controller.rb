@@ -80,21 +80,28 @@ module VCAP::CloudController
     delete path_guid, :delete
 
     def delete(guid)
-      binding = ServiceBinding.find(guid: guid)
-      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless binding
-      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(binding.space.guid)
+      service_binding = ServiceBinding.find(guid: guid)
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBindingNotFound', guid) unless service_binding
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(service_binding.space.guid)
 
       accepts_incomplete = convert_flag_to_bool(params['accepts_incomplete'])
 
       deleter = ServiceBindingDelete.new(UserAuditInfo.from_context(SecurityContext), accepts_incomplete)
 
       if async? && !accepts_incomplete
-        job = deleter.background_delete_request(binding)
+        job = deleter.background_delete_request(service_binding)
         [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
       else
-        deleter.foreground_delete_request(binding)
-        response_code = accepts_incomplete && binding.exists? ? HTTP::ACCEPTED : HTTP::NO_CONTENT
-        [response_code, nil]
+        deleter.foreground_delete_request(service_binding)
+
+        if accepts_incomplete && service_binding.exists?
+          [HTTP::ACCEPTED,
+           { 'Location' => "#{self.class.path}/#{service_binding.guid}" },
+           object_renderer.render_json(self.class, service_binding, @opts)
+          ]
+        else
+          [HTTP::NO_CONTENT, nil]
+        end
       end
     end
 
