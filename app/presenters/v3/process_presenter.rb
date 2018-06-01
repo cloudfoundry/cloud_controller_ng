@@ -1,5 +1,6 @@
 require 'cloud_controller/diego/protocol/open_process_ports'
 require 'presenters/v3/base_presenter'
+require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   module Presenters
@@ -7,7 +8,7 @@ module VCAP::CloudController
       class ProcessPresenter < BasePresenter
         def to_hash
           health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout }
-          health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == 'http'
+          health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
           {
             guid:         process.guid,
             type:         process.type,

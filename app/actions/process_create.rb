@@ -1,5 +1,6 @@
 require 'repositories/process_event_repository'
 require 'models/helpers/process_types'
+require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class ProcessCreate
@@ -29,7 +30,7 @@ module VCAP::CloudController
     private
 
     def default_health_check_type(type)
-      type == ProcessTypes::WEB ? 'port' : 'process'
+      type == ProcessTypes::WEB ? HealthCheckTypes::PORT : HealthCheckTypes::PROCESS
     end
 
     def default_instance_count(type)

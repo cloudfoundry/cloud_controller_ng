@@ -6,13 +6,14 @@ require 'cloud_controller/diego/docker/desired_lrp_builder'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
 require 'credhub/config_helpers'
+require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   module Diego
     class AppRecipeBuilder
       include ::Diego::ActionBuilder
 
-      MONITORED_HEALTH_CHECK_TYPES = ['port', 'http', ''].map(&:freeze).freeze
+      MONITORED_HEALTH_CHECK_TYPES = [HealthCheckTypes::PORT, HealthCheckTypes::HTTP, ''].map(&:freeze).freeze
 
       def initialize(config:, process:, ssh_key: SSHKey.new)
         @config  = config
@@ -227,7 +228,7 @@ module VCAP::CloudController
       def build_check(port, index)
         timeout_ms = (process.health_check_invocation_timeout || 0) * 1000
 
-        if process.health_check_type == 'http' && index == 0
+        if process.health_check_type == HealthCheckTypes::HTTP && index == 0
           ::Diego::Bbs::Models::Check.new(http_check:
             ::Diego::Bbs::Models::HTTPCheck.new(
               path: process.health_check_http_endpoint,
@@ -259,7 +260,7 @@ module VCAP::CloudController
 
       def build_action(lrp_builder, port, index)
         extra_args = []
-        if process.health_check_type == 'http' && index == 0
+        if process.health_check_type == HealthCheckTypes::HTTP && index == 0
           extra_args << "-uri=#{process.health_check_http_endpoint}"
         end
 

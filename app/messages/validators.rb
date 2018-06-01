@@ -1,5 +1,6 @@
 require 'active_model'
 require 'utils/uri_utils'
+require 'models/helpers/health_check_types'
 
 module VCAP::CloudController::Validators
   module StandaloneValidator
@@ -85,7 +86,7 @@ module VCAP::CloudController::Validators
 
   class HealthCheckValidator < ActiveModel::Validator
     def validate(record)
-      if record.health_check_type != 'http'
+      if record.health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP
         record.errors.add(:health_check_type, 'must be "http" to set a health check HTTP endpoint')
       end
     end

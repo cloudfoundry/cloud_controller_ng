@@ -5,6 +5,7 @@ require 'messages/manifest_buildpack_message'
 require 'messages/manifest_service_binding_create_message'
 require 'messages/manifest_routes_update_message'
 require 'cloud_controller/app_manifest/byte_converter'
+require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
@@ -27,7 +28,7 @@ module VCAP::CloudController
       :stack,
     ]
 
-    HEALTH_CHECK_TYPE_MAPPING = { 'none' => 'process' }.freeze
+    HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
 
     def self.create_from_yml(parsed_yaml)
       AppManifestMessage.new(underscore_keys(parsed_yaml.deep_symbolize_keys))
@@ -143,7 +144,7 @@ module VCAP::CloudController
 
       if requested?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(health_check_type)
-        mapping[:health_check_http_endpoint] ||= '/' if health_check_type == 'http'
+        mapping[:health_check_http_endpoint] ||= '/' if health_check_type == HealthCheckTypes::HTTP
       end
       mapping
     end
@@ -157,7 +158,7 @@ module VCAP::CloudController
 
       if params.key?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(params[:health_check_type])
-        mapping[:health_check_http_endpoint] ||= '/' if params[:health_check_type] == 'http'
+        mapping[:health_check_http_endpoint] ||= '/' if params[:health_check_type] == HealthCheckTypes::HTTP
       end
       mapping
     end

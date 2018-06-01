@@ -1,3 +1,5 @@
+require 'models/helpers/health_check_types'
+
 module VCAP::CloudController
   class ProcessUpdate
     class InvalidProcess < StandardError; end
@@ -15,7 +17,7 @@ module VCAP::CloudController
         process.health_check_type    = message.health_check_type if message.requested?(:health_check_type)
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)
         process.health_check_invocation_timeout = message.health_check_invocation_timeout if message.requested?(:health_check_invocation_timeout)
-        if message.requested?(:health_check_type) && message.health_check_type != 'http'
+        if message.requested?(:health_check_type) && message.health_check_type != HealthCheckTypes::HTTP
           process.health_check_http_endpoint = nil
         elsif message.requested?(:health_check_endpoint)
           process.health_check_http_endpoint = message.health_check_endpoint

@@ -1,4 +1,5 @@
 require 'messages/base_message'
+require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class ManifestProcessUpdateMessage < BaseMessage
@@ -17,7 +18,10 @@ module VCAP::CloudController
       if:     proc { |a| a.requested?(:command) }
 
     validates :health_check_type,
-      inclusion: { in: %w(port process http), message: 'must be "port", "process", or "http"' },
+      inclusion: {
+        in: [HealthCheckTypes::PORT, HealthCheckTypes::PROCESS, HealthCheckTypes::HTTP],
+        message: 'must be "port", "process", or "http"'
+      },
       if: proc { |a| a.requested?(:health_check_type) }
 
     validates :health_check_http_endpoint,

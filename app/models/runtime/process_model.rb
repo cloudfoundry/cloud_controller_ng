@@ -6,6 +6,7 @@ require 'presenters/v3/cache_key_presenter'
 require 'utils/uri_utils'
 require 'models/runtime/helpers/package_state_calculator.rb'
 require 'models/helpers/process_types'
+require 'models/helpers/health_check_types'
 
 require_relative 'buildpack'
 
@@ -131,7 +132,12 @@ module VCAP::CloudController
     STARTED            = 'STARTED'.freeze
     STOPPED            = 'STOPPED'.freeze
     APP_STATES         = [STARTED, STOPPED].freeze
-    HEALTH_CHECK_TYPES = %w(port none process http).map(&:freeze).freeze
+    HEALTH_CHECK_TYPES = [
+      HealthCheckTypes::PORT,
+      HealthCheckTypes::PROCESS,
+      HealthCheckTypes::HTTP,
+      HealthCheckTypes::NONE,
+    ].freeze
 
     # Last staging response which will contain streaming log url
     attr_accessor :last_stager_response, :skip_process_observer_on_update
@@ -232,7 +238,7 @@ module VCAP::CloudController
     end
 
     def validate_health_check_http_endpoint
-      if health_check_type == 'http' && !UriUtils.is_uri_path?(health_check_http_endpoint)
+      if health_check_type == HealthCheckTypes::HTTP && !UriUtils.is_uri_path?(health_check_http_endpoint)
         errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URI path: #{health_check_http_endpoint}")
       end
     end
@@ -246,7 +252,7 @@ module VCAP::CloudController
 
     def validate_health_check_type_and_port_presence_are_in_agreement
       default_to_port = nil
-      if [default_to_port, 'port'].include?(health_check_type) && ports == []
+      if [default_to_port, HealthCheckTypes::PORT].include?(health_check_type) && ports == []
         errors.add(:ports, 'ports array cannot be empty when health check type is "port"')
       end
     end
