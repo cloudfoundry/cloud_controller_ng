@@ -450,6 +450,11 @@ module VCAP::CloudController
               it 'should not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
               end
+
+              it 'should not create an audit event' do
+                event = Event.find(type: 'audit.service_binding.delete')
+                expect(event).to be_nil
+              end
             end
           end
 
