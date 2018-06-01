@@ -15,6 +15,7 @@ module VCAP::CloudController
               'app_id' => app.guid,
               'space_id' => app.space.guid,
               'org_id' => app.organization.guid,
+              'ports' => app.processes.map { |p| Protocol::OpenProcessPorts.new(p).to_a }.flatten.sort.join(','),
             },
           }
         end
