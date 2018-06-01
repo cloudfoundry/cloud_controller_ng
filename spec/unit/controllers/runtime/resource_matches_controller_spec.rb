@@ -20,7 +20,7 @@ module VCAP::CloudController
       expect(resp).to eq(matches)
     end
 
-    describe 'when the app_bits_upload feature flag is enabed' do
+    describe 'when the app_bits_upload feature flag is enabled' do
       before do
         FeatureFlag.make(name: 'app_bits_upload', enabled: true)
       end
