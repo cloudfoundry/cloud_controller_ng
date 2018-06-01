@@ -6,6 +6,7 @@ require 'messages/manifest_service_binding_create_message'
 require 'messages/manifest_routes_update_message'
 require 'cloud_controller/app_manifest/byte_converter'
 require 'models/helpers/health_check_types'
+require 'presenters/helpers/censorship'
 
 module VCAP::CloudController
   class AppManifestMessage < BaseMessage
@@ -31,7 +32,7 @@ module VCAP::CloudController
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
 
     def self.create_from_yml(parsed_yaml)
-      AppManifestMessage.new(underscore_keys(parsed_yaml.deep_symbolize_keys))
+      AppManifestMessage.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
     def self.underscore_keys(hash)
@@ -61,6 +62,11 @@ module VCAP::CloudController
       record.requested?(:random_route)
     }
 
+    def initialize(original_yaml, attrs={})
+      super(attrs)
+      @original_yaml = original_yaml
+    end
+
     def manifest_process_scale_messages
       @manifest_process_scale_messages ||= process_scale_attribute_mappings.map { |mapping| ManifestProcessScaleMessage.new(mapping) }
     end
@@ -85,7 +91,14 @@ module VCAP::CloudController
       @manifest_routes_update_message ||= ManifestRoutesUpdateMessage.new(routes_attribute_mapping)
     end
 
+    def audit_hash
+      overrides = original_yaml['env'] ? { 'env' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
+      original_yaml.merge(overrides)
+    end
+
     private
+
+    attr_reader :original_yaml
 
     def manifest_buildpack_message
       @manifest_buildpack_message ||= ManifestBuildpackMessage.new(buildpack: buildpack)

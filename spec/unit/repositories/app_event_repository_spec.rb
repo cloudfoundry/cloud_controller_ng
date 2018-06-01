@@ -138,20 +138,40 @@ module VCAP::CloudController
 
       describe '#record_app_map_droplet' do
         let(:space) { Space.make }
-        let(:process) { AppModel.make(space: space) }
+        let(:app) { AppModel.make(space: space) }
 
         it 'creates a new audit.app.droplet.mapped event' do
-          event = app_event_repository.record_app_map_droplet(process, space, user_audit_info, { a: 1 })
+          event = app_event_repository.record_app_map_droplet(app, space, user_audit_info, { a: 1 })
           event.reload
           expect(event.actor).to eq(user_guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
           expect(event.actor_username).to eq(user_name)
           expect(event.type).to eq('audit.app.droplet.mapped')
-          expect(event.actee).to eq(process.guid)
+          expect(event.actee).to eq(app.guid)
           expect(event.actee_type).to eq('app')
-          expect(event.actee_name).to eq(process.name)
+          expect(event.actee_name).to eq(app.name)
           expect(event.metadata).to eq({ 'request' => { 'a' => 1 } })
+        end
+      end
+
+      describe '#record_app_apply_manifest' do
+        let(:space) { Space.make }
+        let(:app) { AppModel.make(space: space) }
+        let(:metadata) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] }.to_yaml }
+
+        it 'creates a new audit.app.apply_manifest event' do
+          event = app_event_repository.record_app_apply_manifest(app, space, user_audit_info, metadata)
+          event.reload
+          expect(event.actor).to eq(user_guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.type).to eq('audit.app.apply_manifest')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.metadata).to eq({ 'request' => { 'manifest' => metadata } })
         end
       end
 

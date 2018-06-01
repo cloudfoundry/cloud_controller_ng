@@ -35,6 +35,14 @@ module VCAP::CloudController
         create_app_audit_event('audit.app.droplet.mapped', app, space, actor, metadata)
       end
 
+      def record_app_apply_manifest(app, space, user_audit_info, manifest_request_yaml)
+        Loggregator.emit(app.guid, "Applied manifest to app with guid #{app.guid} (#{manifest_request_yaml})")
+
+        actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
+        metadata = { request: { manifest: manifest_request_yaml } }
+        create_app_audit_event('audit.app.apply_manifest', app, space, actor, metadata)
+      end
+
       def record_app_create(app, space, user_audit_info, request_attrs)
         Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
 

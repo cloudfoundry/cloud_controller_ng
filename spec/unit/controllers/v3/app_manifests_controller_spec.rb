@@ -438,6 +438,26 @@ RSpec.describe AppManifestsController, type: :controller do
       expect(response.status).to eq(202)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
+
+    describe 'emitting an audit event' do
+      let(:app_event_repository) { instance_double(VCAP::CloudController::Repositories::AppEventRepository) }
+      let(:request_body) do
+        { 'applications' => [{ 'name' => 'blah', 'buildpacks' => ['ruby_buildpack', 'go_buildpack'] }] }
+      end
+
+      before do
+        allow(VCAP::CloudController::Repositories::AppEventRepository).
+          to receive(:new).and_return(app_event_repository)
+        allow(app_event_repository).to receive(:record_app_apply_manifest)
+      end
+
+      it 'emits an "App Apply Manifest" audit event' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(app_event_repository).to have_received(:record_app_apply_manifest).
+          with(app_model, app_model.space, instance_of(VCAP::CloudController::UserAuditInfo), request_body.to_yaml)
+      end
+    end
   end
 
   describe '#show' do
