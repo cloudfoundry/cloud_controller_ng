@@ -6,8 +6,7 @@ module VCAP::CloudController
 
     def fetch_for_spaces(message:, space_guids:)
       dataset = joined_dataset.where(table_column_name(AppModel, :space_guid) => space_guids)
-      result = filter(message, dataset)
-      result
+      filter(message, dataset)
     end
 
     def fetch_for_app(message:)
