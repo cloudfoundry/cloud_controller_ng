@@ -22,7 +22,6 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
           log_level: 'debug',
       }
         # logging.level: 'debug2'
-
       })
       allow_user_read_access_for(user, spaces: user_spaces)
       n.times do |i|
