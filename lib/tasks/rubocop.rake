@@ -11,6 +11,9 @@ begin
       changelist = `git diff --name-only`.chomp.split("\n")
       changelist += `git diff --cached --name-only`.chomp.split("\n")
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
+      if changelist.size == 0
+        abort "No files have changed; consider running rake rubocop:local instead"
+      end
       cli = RuboCop::CLI.new
       exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
       exit(exit_code) if exit_code != 0
@@ -25,6 +28,9 @@ begin
       # git branches shouldn't have shell-hostile characters in them so don't quote
       changelist = `git diff --name-only #{current_branch} #{remote}/#{current_branch}`.chomp.split("\n")
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
+      if changelist.size == 0
+        abort "No local files; consider running rake rubocop:changed instead"
+      end
       cli = RuboCop::CLI.new
       exit_code = cli.run(changelist.uniq.grep(/.*\.rb$/).unshift('--auto-correct'))
       exit(exit_code) if exit_code != 0
