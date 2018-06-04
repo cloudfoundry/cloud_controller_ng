@@ -1303,7 +1303,7 @@ RSpec.describe 'Apps' do
         'process_guid' => process_to_update.guid,
         'process_type' => 'web',
         'request'      => {
-          'command' => 'PRIVATE DATA HIDDEN'
+          'command' => '[PRIVATE DATA HIDDEN]'
         }
       })
     end

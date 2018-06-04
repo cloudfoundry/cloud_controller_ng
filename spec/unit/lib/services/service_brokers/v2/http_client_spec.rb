@@ -265,7 +265,7 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'redacts credentials from response body' do
         make_request
-        expect(fake_logger).to have_received(:debug).with(/"credentials"=>"REDACTED"/)
+        expect(fake_logger).to have_received(:debug).with(/"credentials"=>"\[REDACTED\]"/)
       end
 
       it 'does not redact other keys' do

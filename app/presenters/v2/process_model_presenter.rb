@@ -73,7 +73,7 @@ module CloudController
           if has_permission
             attr
           else
-            { 'redacted_message' => VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN_BRACKETS }
+            { 'redacted_message' => VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN }
           end
         end
       end

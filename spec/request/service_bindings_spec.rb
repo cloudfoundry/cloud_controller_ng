@@ -109,7 +109,7 @@ RSpec.describe 'v3 service bindings' do
                                              },
                                            },
                                          },
-                                         'data' => 'PRIVATE DATA HIDDEN'
+                                         'data' => '[PRIVATE DATA HIDDEN]'
                                        }
                                      })
       end

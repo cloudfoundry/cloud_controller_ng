@@ -63,7 +63,7 @@ module VCAP::CloudController
         metadata = {}
         if client_attrs.key?('redirect_uri')
           metadata = {
-            secret:       Presenters::Censorship::REDACTED_BRACKETS,
+            secret:       Presenters::Censorship::REDACTED,
             redirect_uri: client_attrs['redirect_uri'],
           }
         end
@@ -97,7 +97,7 @@ module VCAP::CloudController
 
         metadata = { request: params.dup }
         if params.key?('credentials')
-          metadata[:request]['credentials'] = Presenters::Censorship::REDACTED_BRACKETS
+          metadata[:request]['credentials'] = Presenters::Censorship::REDACTED
         end
 
         space_data = { space: service_instance.space }
@@ -157,7 +157,7 @@ module VCAP::CloudController
 
       def with_parameters_redacted(params)
         return params unless params.respond_to? :[]=
-        params.dup.tap { |p| p['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN_BRACKETS }
+        params.dup.tap { |p| p['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN }
       end
 
       def event_type(object, object_type)
@@ -173,7 +173,7 @@ module VCAP::CloudController
         [:name, :broker_url, :auth_username].each do |key|
           request_hash[key] = params[key] unless params[key].nil?
         end
-        request_hash[:auth_password] = Presenters::Censorship::REDACTED_BRACKETS if params.key? :auth_password
+        request_hash[:auth_password] = Presenters::Censorship::REDACTED if params.key? :auth_password
 
         metadata = { request: {} }
         if request_hash.length > 0

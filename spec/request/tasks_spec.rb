@@ -597,7 +597,7 @@ RSpec.describe 'Tasks' do
         'task_guid' => guid,
         'request'   => {
           'name'         => 'best task ever',
-          'command'      => 'PRIVATE DATA HIDDEN',
+          'command'      => '[PRIVATE DATA HIDDEN]',
           'memory_in_mb' => 1234,
         }
       })

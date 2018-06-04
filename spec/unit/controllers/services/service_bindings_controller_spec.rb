@@ -232,7 +232,7 @@ module VCAP::CloudController
                   'data' => { 'guid' => req[:service_instance_guid] }
                 },
               },
-              'data' => 'PRIVATE DATA HIDDEN'
+              'data' => '[PRIVATE DATA HIDDEN]'
             }
           })
         end

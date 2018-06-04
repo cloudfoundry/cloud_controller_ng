@@ -750,7 +750,7 @@ module VCAP::CloudController
           'disk_quota' => '1000GB',
           'memory' => '200GB',
           'instances' => 5,
-          'env' => 'PRIVATE DATA HIDDEN',
+          'env' => '[PRIVATE DATA HIDDEN]',
           'health-check-type' => 'port',
           'health-check-http-endpoint' => '/health',
           'routes' => [
@@ -779,7 +779,7 @@ module VCAP::CloudController
           message = AppManifestMessage.create_from_yml(parsed_yaml)
 
           expected_hash = {
-            'env' => 'PRIVATE DATA HIDDEN',
+            'env' => '[PRIVATE DATA HIDDEN]',
           }
 
           expect(message.audit_hash).to eq(expected_hash)

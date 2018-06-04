@@ -39,7 +39,7 @@ module VCAP::CloudController
           expect(event.metadata[:request]).to eq(
             {
               'big'  => 'data',
-              'data' => 'PRIVATE DATA HIDDEN'
+              'data' => '[PRIVATE DATA HIDDEN]'
             }
           )
         end

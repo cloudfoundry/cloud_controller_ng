@@ -516,7 +516,7 @@ RSpec.describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'command'      => 'PRIVATE DATA HIDDEN',
+          'command'      => '[PRIVATE DATA HIDDEN]',
           'health_check' => {
             'type' => 'process',
             'data' => {
@@ -935,7 +935,7 @@ RSpec.describe 'Processes' do
         'process_guid' => process.guid,
         'process_type' => 'web',
         'request'      => {
-          'command'      => 'PRIVATE DATA HIDDEN',
+          'command'      => '[PRIVATE DATA HIDDEN]',
           'health_check' => {
             'type' => 'http',
             'data' => {

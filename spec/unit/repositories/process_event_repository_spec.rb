@@ -117,7 +117,7 @@ module VCAP::CloudController
 
           expect(event.metadata).to match(hash_including(
                                             'request' => {
-                                              'command' => 'PRIVATE DATA HIDDEN'
+                                              'command' => '[PRIVATE DATA HIDDEN]'
                                             }
           ))
         end

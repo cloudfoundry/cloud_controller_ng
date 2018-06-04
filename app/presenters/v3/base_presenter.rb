@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Presenters
     module V3
       class BasePresenter
-        def initialize(resource, show_secrets: true, censored_message: Censorship::PRIVATE_DATA_HIDDEN_BRACKETS, decorators: [])
+        def initialize(resource, show_secrets: true, censored_message: Censorship::PRIVATE_DATA_HIDDEN, decorators: [])
           @resource         = resource
           @show_secrets     = show_secrets
           @censored_message = censored_message

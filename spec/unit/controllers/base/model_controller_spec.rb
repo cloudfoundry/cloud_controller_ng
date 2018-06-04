@@ -822,7 +822,7 @@ module VCAP::CloudController
 
       context 'when the request contains sensitive attributes' do
         let(:request_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'password' } }
-        let(:redacted_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => 'PRIVATE DATA HIDDEN' } }
+        let(:redacted_attributes) { { 'one' => 1, 'two' => 2, 'redacted' => '[PRIVATE DATA HIDDEN]' } }
 
         it 'redacts attributes for censoring' do
           processed_attributes = model_controller.redact_attributes(:create, request_attributes)

@@ -386,7 +386,7 @@ RSpec.describe 'ServiceBindings' do
             },
           },
           'name' => nil,
-          'data' => 'PRIVATE DATA HIDDEN'
+          'data' => '[PRIVATE DATA HIDDEN]'
         }
       })
     end

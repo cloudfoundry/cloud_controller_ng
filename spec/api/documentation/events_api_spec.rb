@@ -171,7 +171,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
     let(:expected_app_request) do
       expected_request                     = app_request
-      expected_request['environment_json'] = 'PRIVATE DATA HIDDEN'
+      expected_request['environment_json'] = '[PRIVATE DATA HIDDEN]'
       expected_request
     end
 

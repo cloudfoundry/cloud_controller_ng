@@ -29,7 +29,7 @@ module VCAP
               {
                 name:         task.name,
                 memory_in_mb: task.memory_in_mb,
-                command:      'PRIVATE DATA HIDDEN'
+                command:      '[PRIVATE DATA HIDDEN]'
               }
             )
             expect(event.space_guid).to eq(task.space.guid)
@@ -54,7 +54,7 @@ module VCAP
               {
                 name:         task.name,
                 memory_in_mb: task.memory_in_mb,
-                command:      'PRIVATE DATA HIDDEN'
+                command:      '[PRIVATE DATA HIDDEN]'
               }
             )
             expect(event.space_guid).to eq(task.space.guid)

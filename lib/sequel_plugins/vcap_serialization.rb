@@ -25,7 +25,7 @@ module Sequel::Plugins::VcapSerialization
           hash[k.to_s] = if value.respond_to?(:nil_object?) && value.nil_object?
                            nil
                          elsif !redact_vals.nil? && redact_vals.include?(k.to_s)
-                           { redacted_message: VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN_BRACKETS }
+                           { redacted_message: VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN }
                          else
                            value
                          end
