@@ -1302,7 +1302,9 @@ RSpec.describe 'Apps' do
       expect(update_event.metadata).to eq({
         'process_guid' => process_to_update.guid,
         'process_type' => 'web',
-        'request'      => {},
+        'request'      => {
+          'command' => 'PRIVATE DATA HIDDEN'
+        }
       })
     end
   end
