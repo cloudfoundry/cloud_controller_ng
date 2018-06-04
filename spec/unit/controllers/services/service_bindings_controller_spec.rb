@@ -420,10 +420,8 @@ module VCAP::CloudController
                 end
 
                 it 'returns an in progress service binding response' do
-                  #TODO can we use decoded_response instead??
-                  hash_body = JSON.parse(last_response.body)
-                  expect(hash_body['entity']['last_operation']['type']).to eq('create')
-                  expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
+                  expect(decoded_response['entity']['last_operation']['type']).to eq('create')
+                  expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
                 end
 
                 it 'returns a location header' do
