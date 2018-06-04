@@ -16,16 +16,16 @@ module VCAP::CloudController
         # skip LRP request if pending to allow:
         # - scaling while a push is in-progress, sync job will eventually scale instances
         # - user specifies the instance count and the app stack in a PUT to update, subsequent `cf start` will submit LRP
-        with_logging('scale') { messenger.send_desire_request(@process, @config) } unless @process.pending?
+        with_logging('scale') { messenger.send_desire_request(@process) } unless @process.pending?
       end
 
       def start(_={})
-        with_logging('start') { messenger.send_desire_request(@process, @config) }
+        with_logging('start') { messenger.send_desire_request(@process) }
       end
 
       def update_routes
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
-        with_logging('update_route') { messenger.send_desire_request(@process, @config) unless @process.staging? }
+        with_logging('update_route') { messenger.send_desire_request(@process) unless @process.staging? }
       end
 
       def desire_app_message

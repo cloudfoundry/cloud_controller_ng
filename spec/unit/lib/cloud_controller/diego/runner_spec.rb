@@ -23,7 +23,7 @@ module VCAP::CloudController
       describe '#scale' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(process, config)
+            expect(messenger).to receive(:send_desire_request).with(process)
             runner.scale
           end
         end
@@ -55,7 +55,7 @@ module VCAP::CloudController
         end
 
         it 'desires an app, relying on its state to convey the change' do
-          expect(messenger).to have_received(:send_desire_request).with(process, config)
+          expect(messenger).to have_received(:send_desire_request).with(process)
         end
       end
 
@@ -86,7 +86,7 @@ module VCAP::CloudController
       describe '#update_routes' do
         context 'when the app is started' do
           it 'desires an app, relying on its state to convey the change' do
-            expect(messenger).to receive(:send_desire_request).with(process, config)
+            expect(messenger).to receive(:send_desire_request).with(process)
             runner.update_routes
           end
         end

@@ -24,12 +24,9 @@ module VCAP::CloudController
         bbs_stager_client.stop_staging(staging_guid)
       end
 
-      def send_desire_request(process, config)
+      def send_desire_request(process)
         logger.info('desire.app.begin', app_guid: process.guid)
-
-        process_guid = ProcessGuid.from_process(process)
-        app_recipe_builder = AppRecipeBuilder.new(config: config, process: process)
-        DesireAppHandler.create_or_update_app(process_guid, app_recipe_builder, bbs_apps_client)
+        DesireAppHandler.create_or_update_app(process, bbs_apps_client)
       end
 
       def send_stop_index_request(process, index)

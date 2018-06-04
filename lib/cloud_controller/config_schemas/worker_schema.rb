@@ -153,6 +153,11 @@ module VCAP::CloudController
             optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
           },
 
+          opi: {
+            enabled: bool,
+            url: String,
+          },
+
           allow_app_ssh_access: bool,
 
           perform_blob_cleanup: bool,

@@ -7,8 +7,8 @@ guard 'rspec', cmd: 'bundle exec rspec --color --format doc --fail-fast', all_on
   watch(%r{^lib/(.+)\.rb$})                      { |m| "spec/#{m[1]}_spec.rb" }
   watch(%r{^lib/cloud_controller/(.+)\.rb$})     { |m| "spec/#{m[1]}_spec.rb" }
   watch(%r{^lib/(?<module>.*/)(?<file>.+)\.rb$}) { |m|
-     "spec/unit/lib/#{m[:module]}#{m[:file]}_spec.rb"
-   }
+    "spec/unit/lib/#{m[:module]}#{m[:file]}_spec.rb"
+  }
 
   watch('spec/spec_helper.rb') { 'spec' }
 

@@ -4,22 +4,20 @@ module VCAP::CloudController
   module Diego
     RSpec.describe DesireAppHandler do
       describe '.create_or_update_app' do
-        let(:recipe_builder) { instance_double(AppRecipeBuilder, build_app_lrp: desired_lrp) }
         let(:client) { instance_double(BbsAppsClient) }
         let(:desired_lrp) { double(:desired_lrp) }
         let(:process_guid) { 'the-process-guid' }
         let(:get_app_response) { nil }
+        let(:process) { ProcessModel.new }
 
         before do
-          allow(client).to receive(:get_app).with('the-process-guid').and_return(get_app_response)
+          allow(client).to receive(:get_app).with(process).and_return(get_app_response)
         end
 
         it 'requests app creation' do
           allow(client).to receive(:desire_app)
-
-          DesireAppHandler.create_or_update_app(process_guid, recipe_builder, client)
-
-          expect(client).to have_received(:desire_app).with(desired_lrp)
+          DesireAppHandler.create_or_update_app(process, client)
+          expect(client).to have_received(:desire_app).with(process)
         end
 
         context 'when the app already exists' do
@@ -27,16 +25,13 @@ module VCAP::CloudController
           let(:get_app_response) { double(:response) }
 
           before do
-            allow(recipe_builder).to receive(:build_app_lrp_update).with(get_app_response).and_return(desired_lrp_update)
-            allow(client).to receive(:get_app).with('the-process-guid').and_return(get_app_response)
             allow(client).to receive(:update_app)
             allow(client).to receive(:desire_app)
           end
 
           it 'updates the app' do
-            DesireAppHandler.create_or_update_app(process_guid, recipe_builder, client)
-
-            expect(client).to have_received(:update_app).with('the-process-guid', desired_lrp_update)
+            DesireAppHandler.create_or_update_app(process, client)
+            expect(client).to have_received(:update_app).with(process, get_app_response)
             expect(client).not_to have_received(:desire_app)
           end
         end
