@@ -29,7 +29,7 @@ module CloudController
           access_context = VCAP::CloudController::Security::AccessContext.new
 
           return obj.credentials if access_context.can?(:read_env, obj)
-          { 'redacted_message' => VCAP::CloudController::Presenters::V3::BasePresenter::REDACTED_MESSAGE }
+          { 'redacted_message' => VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN_BRACKETS }
         end
       end
     end

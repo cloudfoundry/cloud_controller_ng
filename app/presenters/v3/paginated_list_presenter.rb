@@ -1,4 +1,5 @@
 require 'mappers/order_by_mapper'
+require 'presenters/helpers/censorship'
 
 module VCAP::CloudController
   module Presenters
@@ -55,7 +56,7 @@ module VCAP::CloudController
 
         def presented_resources
           @paginated_result.records.map do |resource|
-            @presenter.new(resource, show_secrets: @show_secrets, censored_message: BasePresenter::REDACTED_LIST_MESSAGE).to_hash
+            @presenter.new(resource, show_secrets: @show_secrets, censored_message: Censorship::PRIVATE_DATA_HIDDEN_LIST).to_hash
           end
         end
       end

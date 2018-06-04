@@ -1,8 +1,6 @@
 module VCAP::CloudController
   module Repositories
     class ProcessEventRepository
-      CENSORED_MESSAGE = 'PRIVATE DATA HIDDEN'.freeze
-
       def self.record_create(process, user_audit_info)
         Loggregator.emit(process.app.guid, "Added process: \"#{process.type}\"")
 
@@ -39,7 +37,7 @@ module VCAP::CloudController
         Loggregator.emit(process.app.guid, "Updating process: \"#{process.type}\"")
 
         request           = request.dup.symbolize_keys
-        request[:command] = CENSORED_MESSAGE if request.key?(:command)
+        request[:command] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if request.key?(:command)
 
         create_event(
           process:        process,

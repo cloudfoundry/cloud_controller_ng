@@ -1,3 +1,5 @@
+require 'presenters/helpers/censorship'
+
 module CloudController
   module Presenters
     module V2
@@ -5,8 +7,6 @@ module CloudController
         extend PresenterProvider
 
         present_for_class 'VCAP::CloudController::ProcessModel'
-
-        REDACTED_MESSAGE = '***'.freeze
 
         def entity_hash(controller, process, opts, depth, parents, orphans=nil)
           entity = {
@@ -37,7 +37,7 @@ module CloudController
             'docker_image'               => process.docker_image,
             'docker_credentials'         => {
               'username' => process.docker_username,
-              'password' => process.docker_username && REDACTED_MESSAGE,
+              'password' => process.docker_username && VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
             },
             'package_updated_at'         => process.package_updated_at,
             'detected_start_command'     => process.detected_start_command,
@@ -73,7 +73,7 @@ module CloudController
           if has_permission
             attr
           else
-            { 'redacted_message' => '[PRIVATE DATA HIDDEN]' }
+            { 'redacted_message' => VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN_BRACKETS }
           end
         end
       end

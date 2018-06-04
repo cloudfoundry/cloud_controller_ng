@@ -154,7 +154,7 @@ module VCAP::Services
 
       def redact_credentials(response)
         body = MultiJson.load(response.body)
-        body['credentials'] = 'REDACTED' if body['credentials']
+        body['credentials'] = VCAP::CloudController::Presenters::Censorship::REDACTED if body['credentials']
         body.inspect
       rescue
         'Error parsing body'

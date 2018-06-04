@@ -28,7 +28,7 @@ module VCAP
               request:   {
                 name:                  task.name,
                 memory_in_mb:          task.memory_in_mb,
-                command:               'PRIVATE DATA HIDDEN'
+                command:               Presenters::Censorship::PRIVATE_DATA_HIDDEN
               }
             },
             space_guid:        task.space.guid,

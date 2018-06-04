@@ -6,7 +6,6 @@ module VCAP::CloudController
                            :environment_json,
                            :environment_variables,
                            :docker_credentials].freeze
-      CENSORED_MESSAGE  = 'PRIVATE DATA HIDDEN'.freeze
       SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system', user_name: 'system' }.freeze
 
       def create_app_exit_event(app, droplet_exited_payload)
@@ -153,7 +152,7 @@ module VCAP::CloudController
       def app_audit_hash(request_attrs)
         request_attrs.dup.tap do |changes|
           CENSORED_FIELDS.map(&:to_s).each do |censored|
-            changes[censored] = CENSORED_MESSAGE if changes.key?(censored)
+            changes[censored] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if changes.key?(censored)
           end
 
           v2_buildpack = changes.key?('buildpack')

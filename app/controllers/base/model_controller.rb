@@ -5,8 +5,6 @@ module VCAP::CloudController::RestController
   class ModelController < BaseController
     include Routes
 
-    CENSORED_MESSAGE ||= 'PRIVATE DATA HIDDEN'.freeze
-
     attr_reader :object_renderer, :collection_renderer
 
     def inject_dependencies(dependencies)
@@ -253,7 +251,7 @@ module VCAP::CloudController::RestController
       request_attributes.dup.tap do |changes|
         changes.each_key do |key|
           attrib = self.class.attributes[key.to_sym]
-          changes[key] = CENSORED_MESSAGE if attrib && attrib.redact_in?(op)
+          changes[key] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrib && attrib.redact_in?(op)
         end
       end
     end

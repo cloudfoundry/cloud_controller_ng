@@ -35,7 +35,7 @@ module VCAP::CloudController
       result = super
 
       if result['data']
-        result['data']['password'] = VCAP::CloudController::Presenters::V3::PackagePresenter::REDACTED_MESSAGE
+        result['data']['password'] = VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL
       end
 
       result

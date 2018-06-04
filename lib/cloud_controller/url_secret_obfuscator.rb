@@ -10,8 +10,8 @@ module CloudController
       end
 
       if parsed_url.user
-        parsed_url.user = '***'
-        parsed_url.password = '***'
+        parsed_url.user = VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL
+        parsed_url.password = VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL
       end
 
       parsed_url.to_s
