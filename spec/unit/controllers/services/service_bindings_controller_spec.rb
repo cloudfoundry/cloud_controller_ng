@@ -1320,6 +1320,21 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the service binding has an operation in progress' do
+            let(:last_operation) { ServiceBindingOperation.make(state: 'in progress') }
+
+            before do
+              binding.service_binding_operation = last_operation
+              binding.save
+            end
+
+            it 'should show an error message for get parameter operation' do
+              get "/v2/service_bindings/#{binding.guid}/parameters"
+              expect(last_response).to have_status_code 409
+              expect(last_response.body).to match 'AsyncServiceBindingOperationInProgress'
+            end
+          end
+
           context 'user permissions' do
             let(:user) { User.make }
             let(:body) { {}.to_json }

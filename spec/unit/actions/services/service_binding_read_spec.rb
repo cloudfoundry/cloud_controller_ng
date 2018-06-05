@@ -37,6 +37,17 @@ module VCAP::CloudController
             action = ServiceBindingRead.new
             expect(action.fetch_parameters(service_binding)).to eql({})
           end
+
+          it 'should raise "AsyncServiceBindingOperationInProgress"' do
+            service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
+            service
+
+            action = ServiceBindingRead.new
+            expect { action.fetch_parameters(service_binding) }.to raise_error do |error|
+              expect(error).to be_a(CloudController::Errors::ApiError)
+              expect(error.name).to eql('AsyncServiceBindingOperationInProgress')
+            end
+          end
         end
 
         context 'when the broker has bindings_retrievable disabled' do
