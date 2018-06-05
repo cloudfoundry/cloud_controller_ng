@@ -421,7 +421,7 @@ module VCAP::CloudController
                   it 'should throw invalid service binding error' do
                     expect(last_response).to have_status_code(400)
                     expect(decoded_response['error_code']).to eq 'CF-ServiceBindingInvalid'
-                    expect(decoded_response['description']).to match('Could not create asynchronous binding')
+                    expect(decoded_response['description']).to match('Could not create asynchronous binding when bindings_retrievable is false.')
                   end
                 end
 
@@ -460,6 +460,22 @@ module VCAP::CloudController
                 post '/v2/service_bindings?accepts_incomplete=false', req.to_json
                 expect(last_response).to have_status_code(400)
                 expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+
+            context 'and the broker is spec-incompliant and returns asynchronously anyway' do
+              let(:bind_status) { 202 }
+              let(:service) { Service.make(bindings_retrievable: true) }
+
+              it 'returns a 502 status code' do
+                post '/v2/service_bindings?accepts_incomplete=false', req.to_json
+                expect(last_response).to have_status_code(502)
+                expect(decoded_response['error_code']).to eq 'CF-ServiceBrokerRespondedAsyncWhenNotAllowed'
+                expected_description = 'The service broker responded asynchronously to a request, but the accepts_incomplete query parameter was false or not given.'
+                expect(decoded_response['description']).to eq expected_description
+
+                expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                  to have_been_made
               end
             end
           end

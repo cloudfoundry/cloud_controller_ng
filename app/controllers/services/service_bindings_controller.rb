@@ -71,6 +71,8 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('VolumeMountServiceDisabled')
     rescue ServiceBindingCreate::ServiceBrokerInvalidBindingsRetrievable
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingInvalid', 'Could not create asynchronous binding when bindings_retrievable is false.')
+    rescue ServiceBindingCreate::ServiceBrokerRespondedAsyncWhenNotAllowed
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerRespondedAsyncWhenNotAllowed')
     rescue ServiceBindingCreate::InvalidServiceBinding => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceBindingAppServiceTaken', e.message)
     end
