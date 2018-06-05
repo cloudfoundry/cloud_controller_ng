@@ -39,7 +39,14 @@ class PackagesController < ApplicationController
   def upload
     FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
-    message = PackageUploadMessage.create_from_params(params[:body])
+    opts = params[:body].dup.symbolize_keys
+    begin
+      opts[:resources] = MultiJson.load(opts[:resources]) if opts[:resources].present?
+    rescue MultiJson::ParseError
+      unprocessable!('Resources must be valid JSON.')
+    end
+
+    message = PackageUploadMessage.create_from_params(opts)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first

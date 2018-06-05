@@ -51,7 +51,6 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
       expect(response.status).to eq(200)
       expect(parsed_body['resources'].size).to be(3)
 
-      puts "Elapsed time to get the packages: #{avg_time * 1000}  msec"
       expect(avg_time).to be <= 0.2
     end
   end

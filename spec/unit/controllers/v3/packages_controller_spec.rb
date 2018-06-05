@@ -23,6 +23,64 @@ RSpec.describe PackagesController, type: :controller do
       expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
     end
 
+    context 'when uploading with resources' do
+      let(:params) do
+        { 'bits_path' => 'path/to/bits', guid: package.guid }
+      end
+
+      context 'with unsupported options' do
+        let(:new_options) do {
+          cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
+        }
+        end
+
+        it 'returns a 422 and the package' do
+          post :upload, params.merge(new_options)
+
+          expect(response.status).to eq(422), response.body
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include "Unknown field(s): 'cached_resources'"
+        end
+      end
+
+      context 'with invalid json resources' do
+        let(:new_options) do {
+          resources: '[abcddf]',
+        }
+        end
+
+        it 'returns a 422 and the package' do
+          post :upload, params.merge(new_options)
+
+          expect(response.status).to eq(422), response.body
+          expect(response.body).to include 'UnprocessableEntity'
+        end
+      end
+
+      context 'with correctly named cached resources' do
+        let(:new_options) do {
+          resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
+        }
+        end
+        let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
+
+        before do
+          allow(VCAP::CloudController::PackageUpload).to receive(:new).and_return(uploader)
+        end
+
+        it 'returns a 201 and the package' do
+          post :upload, params.merge(new_options)
+
+          expect(response.status).to eq(200), response.body
+          expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+          expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
+          expect(uploader).to have_received(:upload_async) do |args|
+            expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048 }])
+          end
+        end
+      end
+    end
+
     context 'when app_bits_upload is disabled' do
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)

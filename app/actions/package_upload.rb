@@ -46,7 +46,7 @@ module VCAP::CloudController
     end
 
     def build_job(message, package)
-      Jobs::V3::PackageBits.new(package.guid, message.bits_path, message.cached_resources&.map(&:deep_stringify_keys) || [])
+      Jobs::V3::PackageBits.new(package.guid, message.bits_path, message.resources&.map(&:deep_stringify_keys) || [])
     end
 
     def logger
