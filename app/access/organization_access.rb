@@ -29,7 +29,7 @@ module VCAP::CloudController
       return false unless org.active?
       validate!(org, params)
 
-      user_acting_on_themselves || super
+      user_acting_on_themselves || read_for_update?(org, params)
     end
 
     def update?(org, params=nil)
@@ -40,6 +40,43 @@ module VCAP::CloudController
 
     def delete?(object)
       context.queryer.can_write_globally?
+    end
+
+    def index?(_, params=nil)
+      true
+    end
+
+    def read_with_token?(_)
+      admin_user? || admin_read_only_user? || has_read_scope? || global_auditor?
+    end
+
+    def create_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def read_for_update_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def can_remove_related_object_with_token?(*args)
+      read_for_update_with_token?(*args)
+    end
+
+    def read_related_object_for_update_with_token?(*args)
+      read_for_update_with_token?(*args)
+    end
+
+    def update_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def delete_with_token?(_)
+      admin_user? || has_write_scope?
+    end
+
+    def index_with_token?(_)
+      # This can return true because the index endpoints filter objects based on user visibilities
+      true
     end
 
     private
