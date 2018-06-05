@@ -930,6 +930,17 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the broker_url contains username and password' do
+          before { body_hash[:broker_url] = 'http://basic:auth@cf-service-broker.example.com' }
+
+          it 'returns an error' do
+            put "/v2/service_brokers/#{broker.guid}", body
+
+            expect(last_response).to have_status_code(400)
+            expect(decoded_response.fetch('code')).to eq(270016)
+          end
+        end
       end
     end
   end
