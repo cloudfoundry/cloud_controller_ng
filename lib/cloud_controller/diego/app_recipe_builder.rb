@@ -40,10 +40,8 @@ module VCAP::CloudController
           )
         end
 
-        process_guid = ProcessGuid.from_process(process)
-
         ::Diego::Bbs::Models::DesiredLRP.new(
-          process_guid:                     process_guid,
+          process_guid:                     Diego::ProcessGuid.from_process(process),
           instances:                        process.desired_instances,
           environment_variables:            desired_lrp_builder.global_environment_variables,
           start_timeout_ms:                 health_check_timeout_in_seconds * 1000,
@@ -53,7 +51,7 @@ module VCAP::CloudController
           ports:                            ports,
           log_source:                       LRP_LOG_SOURCE,
           log_guid:                         process.app.guid,
-          metrics_guid:                     process.app.guid,
+          metrics_guid:                     process.guid,
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     generate_egress_rules,
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
