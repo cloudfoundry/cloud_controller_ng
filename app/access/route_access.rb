@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     def reserved_with_token?(_)
-      admin_user? || has_read_scope?
+      context.queryer.can_write_globally? || has_read_scope?
     end
 
     private

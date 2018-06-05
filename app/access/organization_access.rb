@@ -1,14 +1,18 @@
 module VCAP::CloudController
   class OrganizationAccess < BaseAccess
     def create?(org, params=nil)
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
       FeatureFlag.enabled?(:user_org_creation)
     end
 
+    def read?(org)
+      context.queryer.can_read_from_org?(org.guid)
+    end
+
     def read_for_update?(org, params=nil)
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
       return false unless org.active?
-      return false unless org.managers.include?(context.user)
+      return false unless context.queryer.can_write_to_org?(org.guid)
 
       if params.present?
         return false if params.key?(:quota_definition_guid.to_s) || params.key?(:billing_enabled.to_s)
@@ -18,15 +22,24 @@ module VCAP::CloudController
     end
 
     def can_remove_related_object?(org, params={})
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
+
+      user_acting_on_themselves = user_acting_on_themselves?(params)
+      return false unless context.queryer.can_write_to_org?(org.guid) || user_acting_on_themselves
+      return false unless org.active?
       validate!(org, params)
-      user_acting_on_themselves?(params) || super
+
+      user_acting_on_themselves || super
     end
 
     def update?(org, params=nil)
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
       return false unless org.active?
-      org.managers.include?(context.user)
+      context.queryer.can_write_to_org?(org.guid)
+    end
+
+    def delete?(object)
+      context.queryer.can_write_globally?
     end
 
     private

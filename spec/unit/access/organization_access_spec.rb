@@ -2,11 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe OrganizationAccess, type: :access do
-    subject(:access) { OrganizationAccess.new(Security::AccessContext.new) }
+    let(:queryer) { spy(Permissions::Queryer) }
+
+    subject(:access) { OrganizationAccess.new(Security::AccessContext.new(queryer)) }
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:object) { org }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
 
     before do
@@ -23,9 +24,6 @@ module VCAP::CloudController
       admin_read_only: true,
       global_auditor: true,
 
-      space_developer: true,
-      space_manager: true,
-      space_auditor: true,
       org_user: true,
       org_manager: true,
       org_auditor: true,
@@ -42,9 +40,6 @@ module VCAP::CloudController
       admin_read_only: true,
       global_auditor: true,
 
-      space_developer: true,
-      space_manager: true,
-      space_auditor: true,
       org_user: true,
       org_manager: true,
       org_auditor: true,
@@ -61,9 +56,6 @@ module VCAP::CloudController
       admin_read_only: false,
       global_auditor: false,
 
-      space_developer: false,
-      space_manager: false,
-      space_auditor: false,
       org_user: false,
       org_manager: false,
       org_auditor: false,
@@ -72,6 +64,10 @@ module VCAP::CloudController
 
     update_table = write_table.clone.merge({
        org_manager: true,
+    })
+
+    remove_last_remaining_table = write_table.clone.merge({
+      org_manager: false,
     })
 
     flag_enabled_create_table = {
@@ -84,9 +80,6 @@ module VCAP::CloudController
       admin_read_only: false,
       global_auditor: false,
 
-      space_developer: true,
-      space_manager: true,
-      space_auditor: true,
       org_user: true,
       org_manager: true,
       org_auditor: true,
@@ -105,9 +98,6 @@ module VCAP::CloudController
       admin_read_only: false,
       global_auditor: false,
 
-      space_developer: true,
-      space_manager: true,
-      space_auditor: true,
       org_user: true,
       org_manager: true,
       org_auditor: true,
@@ -155,13 +145,9 @@ module VCAP::CloudController
     end
 
     describe 'in a suspended org' do
-      before do
-        org.status = VCAP::CloudController::Organization::SUSPENDED
-        org.save
-      end
+      let(:org) { VCAP::CloudController::Organization.make(status: VCAP::CloudController::Organization::SUSPENDED) }
 
       it_behaves_like('an access control', :read, read_table)
-
       it_behaves_like('an access control', :delete, write_table)
       it_behaves_like('an access control', :read_for_update, write_table)
       it_behaves_like('an access control', :update, write_table)
@@ -169,72 +155,59 @@ module VCAP::CloudController
 
     describe 'related objects' do
       context 'removing managers' do
-        let(:op_params) { { relation: :managers } }
-        let(:manager) { VCAP::CloudController::User.make }
+        context 'when there is a manager other than the current user' do
+          let(:manager) { VCAP::CloudController::User.make }
+          let(:op_params) { { relation: :managers, related_guid: manager.guid } }
 
-        before do
-          set_current_user(user)
-          org.add_manager(manager)
+          before do
+            org.add_manager(manager)
+          end
+
+          it_behaves_like('an access control', :can_remove_related_object, update_table, CloudController::Errors::ApiError)
         end
 
-        it 'does not allow removal of last manager' do
-          expect {
-            subject.can_remove_related_object?(org, op_params)
-          }.to raise_error(CloudController::Errors::ApiError)
+        context 'when there are no managers other than the current user' do
+          let(:op_params) { { relation: :managers } }
+
+          it_behaves_like('an access control', :can_remove_related_object, remove_last_remaining_table, CloudController::Errors::ApiError)
         end
       end
 
       context 'removing billing_managers' do
-        let(:op_params) { { relation: :billing_managers } }
-        let(:billing_manager) { VCAP::CloudController::User.make }
+        context 'when there is only one remaining billing manager' do
+          let(:op_params) { { relation: :managers } }
 
-        before do
-          set_current_user(user)
-          org.add_billing_manager(billing_manager)
-        end
+          before do
+            org.add_billing_manager(user)
+          end
 
-        it 'does not allow removal of last billing manager' do
-          expect {
-            subject.can_remove_related_object?(org, op_params)
-          }.to raise_error(CloudController::Errors::ApiError)
+          it_behaves_like('an access control', :can_remove_related_object, remove_last_remaining_table, CloudController::Errors::ApiError)
         end
       end
 
       context 'removing org users' do
-        let(:org_user) { VCAP::CloudController::User.make }
-        let(:op_params) { { related_guid: org_user.guid, relation: :users } }
+        context 'when there is a manager other than the current user' do
+          let(:org_user) { VCAP::CloudController::User.make }
+          let(:op_params) { { related_guid: org_user.guid, relation: :users } }
 
-        before do
-          org.add_user(org_user)
+          before do
+            org.add_user(org_user)
+          end
+
+          it_behaves_like('an access control', :can_remove_related_object, update_table, CloudController::Errors::ApiError)
         end
 
-        it 'does not allow removal of last user' do
-          expect {
-            subject.can_remove_related_object?(org, op_params)
-          }.to raise_error(CloudController::Errors::ApiError)
-        end
+        context 'when there are no users other than the current user' do
+          let(:op_params) { { related_guid: user.guid, relation: :users } }
 
-        it 'does not allow removal of last billing manager' do
-          org.add_billing_manager(org_user)
-
-          expect {
-            subject.can_remove_related_object?(org, op_params)
-          }.to raise_error(CloudController::Errors::ApiError)
-        end
-
-        it 'does not allow removal of last org manager' do
-          org.add_manager(org_user)
-
-          expect {
-            subject.can_remove_related_object?(org, op_params)
-          }.to raise_error(CloudController::Errors::ApiError)
+          it_behaves_like('an access control', :can_remove_related_object, remove_last_remaining_table, CloudController::Errors::ApiError)
         end
       end
 
       context 'acting on themselves' do
         let(:op_params) { { related_guid: user&.guid, relation: :auditors } }
 
-        it_behaves_like('an access control', :can_remove_related_object, acting_on_self_table, nil)
+        it_behaves_like('an access control', :can_remove_related_object, acting_on_self_table)
       end
     end
   end

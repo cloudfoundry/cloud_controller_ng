@@ -11,23 +11,32 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
           can_read_globally = role == :admin || role == :admin_read_only || role == :global_auditor
           can_write_globally = role == :admin
 
-          can_write_to_space = can_write_globally || space.has_developer?(user)
+          can_write_to_org = can_write_globally
+          can_write_to_space = can_write_globally
 
+          can_read_from_org = can_read_globally
           can_read_route = can_read_globally
 
           if o
+            can_read_from_org ||= user.organizations.include?(o) || user.managed_organizations.include?(o) ||
+              user.audited_organizations.include?(o) || user.billing_managed_organizations.include?(o)
+
+            can_write_to_org ||= user.managed_organizations.include?(o)
             can_read_route = can_read_route || user.managed_organizations.include?(o) ||
               user.audited_organizations.include?(o)
           end
 
           if s
+            can_write_to_space ||= space.has_developer?(user)
             can_read_route ||= space.has_member?(user)
           end
 
           allow(queryer).to receive(:can_read_globally?).and_return(can_read_globally)
           allow(queryer).to receive(:can_write_globally?).and_return(can_write_globally)
 
+          allow(queryer).to receive(:can_write_to_org?).and_return(can_write_to_org)
           allow(queryer).to receive(:can_write_to_space?).and_return(can_write_to_space)
+          allow(queryer).to receive(:can_read_from_org?).and_return(can_read_from_org)
 
           allow(queryer).to receive(:can_read_route?).and_return(can_read_route)
         end
