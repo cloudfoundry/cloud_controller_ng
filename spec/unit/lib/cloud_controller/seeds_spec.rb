@@ -65,65 +65,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'temporary_create_internal_domain' do
-      before do
-        Domain.dataset.destroy
-      end
-
-      context 'temporary_create_internal_domain on' do
-        before do
-          config.set(:temporary_create_internal_domain, true)
-        end
-        context 'when the domain exists' do
-          before do
-            Domain.create(name: 'apps.internal', internal: true)
-          end
-
-          it 'does not create the domain' do
-            expect {
-              Seeds.create_seed_internal_domain(config)
-            }.not_to change { Domain.count }
-          end
-        end
-
-        context 'when the domain does not exist' do
-          it 'creates the domain' do
-            expect {
-              Seeds.create_seed_internal_domain(config)
-            }.to change { Domain.count }.by(1)
-            domain = Domain.last
-            expect(domain.name).to eq('apps.internal')
-            expect(domain.internal).to be_truthy
-            expect(domain.owning_organization_guid).to be_nil
-            expect(domain.router_group_guid).to be_nil
-            expect(domain.wildcard).to be_falsey
-          end
-
-          it 'creates the internal domain after the app domain' do
-            # `cf push` uses the first domain by default when creating routes
-            # we want to make sure that the first domain is an app domain if possible
-
-            Seeds.write_seed_data(config)
-            app_domain_id = Domain.find(name: 'customer-app-domain1.com').id
-            internal_domain_id = Domain.find(name: 'apps.internal').id
-            expect(app_domain_id).to be < internal_domain_id
-          end
-        end
-      end
-
-      context 'temporary_create_internal_domain off' do
-        before do
-          config.set(:temporary_create_internal_domain, false)
-        end
-
-        it 'does not create the domain' do
-          expect {
-            Seeds.create_seed_internal_domain(config)
-          }.not_to change { Domain.count }
-        end
-      end
-    end
-
     describe '.create_seed_quota_definitions' do
       let(:config) do
         Config.new(
