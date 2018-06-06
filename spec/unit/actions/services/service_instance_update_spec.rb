@@ -239,6 +239,13 @@ module VCAP::CloudController
     end
 
     describe 'updating dashboard urls' do
+      let(:broker_body) {}
+      let(:stub_opts) { { status: 202, body: broker_body.to_json } }
+
+      before do
+        stub_update(service_instance, stub_opts)
+      end
+
       context 'when the service instance already has a dashboard url' do
         before do
           service_instance.dashboard_url = 'http://previous-dashboard-url.com'
@@ -246,17 +253,7 @@ module VCAP::CloudController
         end
 
         context 'and when there is a new dashboard url on update' do
-          before do
-            stub_opts = {
-              status: 202,
-              body: {
-                operation: '123',
-                dashboard_url: 'http://new-dashboard-url.com'
-              }.to_json
-            }
-
-            stub_update(service_instance, stub_opts)
-          end
+          let(:broker_body) { { operation: '123', dashboard_url: 'http://new-dashboard-url.com' } }
 
           it 'updates the service instance model with the new url' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -267,18 +264,20 @@ module VCAP::CloudController
         end
 
         context 'when there is no dashboard url on update' do
-          before do
-            stub_opts = {
-              status: 202,
-              body: {
-                operation: '123',
-              }.to_json
-            }
-
-            stub_update(service_instance, stub_opts)
-          end
+          let(:broker_body) { { operation: '123' } }
 
           it 'displays the previous dashboard url' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+            service_instance.reload
+
+            expect(service_instance.dashboard_url).to eq 'http://previous-dashboard-url.com'
+          end
+        end
+
+        context 'when the dashboard url is a blank string on update' do
+          let(:broker_body) { { operation: '123', dashboard_url: "\n" } }
+
+          it 'keeps the previous dashboard url' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
             service_instance.reload
 
@@ -289,17 +288,7 @@ module VCAP::CloudController
 
       context 'when the service instance does not already have a dashboard url' do
         context 'when there is a new dashboard url on update' do
-          before do
-            stub_opts = {
-              status: 202,
-              body: {
-                operation: '123',
-                dashboard_url: 'http://new-dashboard-url.com'
-              }.to_json
-            }
-
-            stub_update(service_instance, stub_opts)
-          end
+          let(:broker_body) { { operation: '123', dashboard_url: 'http://new-dashboard-url.com' } }
 
           it 'updates the service instance model with the new url' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -310,16 +299,7 @@ module VCAP::CloudController
         end
 
         context 'when there is no dashboard url on update' do
-          before do
-            stub_opts = {
-              status: 202,
-              body: {
-                operation: '123',
-              }.to_json
-            }
-
-            stub_update(service_instance, stub_opts)
-          end
+          let(:broker_body) { { operation: '123' } }
 
           it 'does not display a url' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -331,17 +311,7 @@ module VCAP::CloudController
       end
 
       context 'when the dashboard url is not a string' do
-        before do
-          stub_opts = {
-            status: 202,
-            body: {
-              operation: '123',
-              dashboard_url: {},
-            }.to_json
-          }
-
-          stub_update(service_instance, stub_opts)
-        end
+        let(:broker_body) { { operation: '123', dashboard_url: {} } }
 
         it 'fails to update the service instance' do
           expect {

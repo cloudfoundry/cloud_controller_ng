@@ -77,7 +77,7 @@ module VCAP::CloudController
 
       service_instance.last_operation.update_attributes(response[:last_operation])
 
-      if response[:dashboard_url]
+      if response[:dashboard_url] && !response[:dashboard_url].strip.empty?
         service_instance.update_service_instance(dashboard_url: response[:dashboard_url])
       end
 
