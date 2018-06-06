@@ -863,6 +863,11 @@
   http_code: 502
   message: "Service broker returned dashboard client configuration without a dashboard URL"
 
+270016:
+  name: ServiceBrokerUrlBasicAuthNotSupported
+  http_code: 400
+  message: "User name and password fields in the broker URI are not supported"
+
 290000:
   name: BuildpackNameStackTaken
   http_code: 422

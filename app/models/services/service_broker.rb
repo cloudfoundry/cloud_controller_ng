@@ -22,6 +22,7 @@ module VCAP::CloudController
       validates_unique :name
       validates_unique :broker_url
       validates_url :broker_url
+      validates_url_no_basic_auth
     end
 
     def client
@@ -34,6 +35,13 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       { space: user.spaces_dataset }
+    end
+
+    private
+
+    def validates_url_no_basic_auth
+      errors.add(:broker_url, :basic_auth) if URI(broker_url).userinfo
+    rescue ArgumentError, URI::InvalidURIError
     end
   end
 end

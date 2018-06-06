@@ -50,6 +50,9 @@ module VCAP::CloudController
 
         broker.broker_url = 'https://127.0.0.1/api'
         expect(broker).to be_valid
+
+        broker.broker_url = 'https://admin:password@127.0.0.1/api'
+        expect(broker).to_not be_valid
       end
     end
 
