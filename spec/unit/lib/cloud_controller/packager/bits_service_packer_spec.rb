@@ -28,15 +28,9 @@ module CloudController::Packager
     end
 
     describe '#send_package_to_blobstore' do
-      it 'uses the resource_pool to upload the zip file' do
-        expect(resource_pool).to receive(:upload_entries).with(uploaded_files_path)
-        packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
-      end
-
-      it 'merges the bits-service receipt with the cli resources to ask for the bundles' do
-        merged_fingerprints = cached_files_fingerprints + receipt
+      it 'uses the resource_pool to upload the zip file and pass cached fingerprints' do
         expect(resource_pool).to receive(:bundles).
-          with(merged_fingerprints.to_json)
+          with(cached_files_fingerprints.to_json, uploaded_files_path)
         packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
       end
 
@@ -75,7 +69,7 @@ module CloudController::Packager
         end
 
         it 'downloads a bundle with the original fingerprints' do
-          expect(resource_pool).to receive(:bundles).with(cached_files_fingerprints.to_json)
+          expect(resource_pool).to receive(:bundles).with(cached_files_fingerprints.to_json, uploaded_files_path)
           packer.send_package_to_blobstore(blobstore_key, uploaded_files_path, cached_files_fingerprints)
         end
 
@@ -94,15 +88,6 @@ module CloudController::Packager
             sha256: Digester.new(algorithm: Digest::SHA256).digest_file(package_file),
           })
         end
-      end
-
-      context 'when `upload_entries` fails' do
-        before do
-          allow(resource_pool).to receive(:upload_entries).
-            and_raise(BitsService::Errors::UnexpectedResponseCode)
-        end
-
-        it_behaves_like 'a packaging failure'
       end
 
       context 'when `bundles` fails' do
@@ -130,15 +115,6 @@ module CloudController::Packager
 
         before do
           allow(package_blobstore).to receive(:cp_to_blobstore).and_raise(expected_exception)
-        end
-
-        it_behaves_like 'a packaging failure'
-      end
-
-      context 'when the bits service has an internal error on upload_entries' do
-        before do
-          allow(resource_pool).to receive(:upload_entries).
-            and_raise(BitsService::Errors::UnexpectedResponseCode)
         end
 
         it_behaves_like 'a packaging failure'
