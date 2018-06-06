@@ -45,16 +45,35 @@ module VCAP::CloudController
           expect(route_handler).to have_received(:update_route_information).with(perform_validation: false)
         end
 
-        it 'records an event for un mapping a route to an app' do
-          route_mapping_delete.delete(route_mapping)
+        describe 'audit events' do
+          it 'records an event for un mapping a route to an app' do
+            route_mapping_delete.delete(route_mapping)
 
-          expect(event_repository).to have_received(:record_unmap_route).with(
-            app,
-            route,
-            user_audit_info,
-            route_mapping.guid,
-            route_mapping.process_type
-          )
+            expect(event_repository).to have_received(:record_unmap_route).with(
+              app,
+              route,
+              user_audit_info,
+              route_mapping.guid,
+              route_mapping.process_type,
+              manifest_triggered: false
+            )
+          end
+
+          context 'when the event is triggered by a manifest' do
+            subject(:route_mapping_delete) { RouteMappingDelete.new(user_audit_info, manifest_triggered: true) }
+            it 'sends manifest_triggered: true to the event repository' do
+              route_mapping_delete.delete(route_mapping)
+
+              expect(event_repository).to have_received(:record_unmap_route).with(
+                app,
+                route,
+                user_audit_info,
+                route_mapping.guid,
+                route_mapping.process_type,
+                manifest_triggered: true
+              )
+            end
+          end
         end
       end
 
@@ -86,7 +105,8 @@ module VCAP::CloudController
             route,
             user_audit_info,
             route_mapping.guid,
-            route_mapping.process_type
+            route_mapping.process_type,
+            manifest_triggered: false
           )
         end
       end

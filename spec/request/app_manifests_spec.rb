@@ -125,7 +125,7 @@ RSpec.describe 'App Manifests' do
         }.to_yaml
       end
 
-      it 'creates audit events including metadata.manifest_triggered' do
+      it 'creates audit events tagged with metadata.manifest_triggered' do
         expect {
           post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
           Delayed::Worker.new.work_off
@@ -146,6 +146,39 @@ RSpec.describe 'App Manifests' do
 
         other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
         expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
+      end
+
+      context 'when no-route is included and the app has existing routes' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              { 'name' => 'blah',
+                'no-route' => true,
+              }
+            ]
+          }.to_yaml
+        end
+
+        before do
+          VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route)
+        end
+
+        it 'creates audit.app.unmap-route audit events including metadata.manifest_triggered' do
+          expect {
+            post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+            Delayed::Worker.new.work_off
+          }.to change { VCAP::CloudController::Event.count }.by 4
+
+          manifest_triggered_events = VCAP::CloudController::Event.find_all { |event| event.metadata['manifest_triggered'] }
+          expect(manifest_triggered_events.map(&:type)).to match_array([
+            'audit.app.update',
+            'audit.app.update',
+            'audit.app.unmap-route',
+          ])
+
+          other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
+          expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
+        end
       end
     end
 

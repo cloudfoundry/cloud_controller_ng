@@ -62,7 +62,7 @@ module VCAP::CloudController
       existing_routes = RouteMappingModel.where(app_guid: app.guid).all
 
       if update_message.no_route
-        RouteMappingDelete.new(@user_audit_info).delete(existing_routes)
+        RouteMappingDelete.new(@user_audit_info, manifest_triggered: true).delete(existing_routes)
         return
       end
 

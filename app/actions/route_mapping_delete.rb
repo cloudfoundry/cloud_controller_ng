@@ -1,7 +1,8 @@
 module VCAP::CloudController
   class RouteMappingDelete
-    def initialize(user_audit_info)
+    def initialize(user_audit_info, manifest_triggered: false)
       @user_audit_info = user_audit_info
+      @manifest_triggered = manifest_triggered
     end
 
     def delete(route_mappings)
@@ -18,7 +19,8 @@ module VCAP::CloudController
             route_mapping.route,
             @user_audit_info,
             route_mapping.guid,
-            route_mapping.process_type
+            route_mapping.process_type,
+            manifest_triggered: @manifest_triggered
           )
 
           next if RouteMappingModel.find(guid: route_mapping.guid).nil?

@@ -503,6 +503,7 @@ module VCAP::CloudController
 
             it 'calls RouteMappingDelete with the routes' do
               app_apply_manifest.apply(app.guid, message)
+              expect(RouteMappingDelete).to have_received(:new).with(user_audit_info, manifest_triggered: true)
               expect(route_mapping_delete).to have_received(:delete).with(array_including(route_mapping1, route_mapping2))
             end
 

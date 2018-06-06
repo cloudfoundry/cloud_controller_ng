@@ -295,6 +295,18 @@ module VCAP::CloudController
           expect(event.metadata[:route_guid]).to eq(route.guid)
           expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
           expect(event.metadata[:process_type]).to eq('potato')
+          expect(event.metadata[:manifest_triggered]).to eq(nil)
+        end
+
+        context 'when the event is manifest triggered' do
+          it 'includes manifest_triggered in the metadata' do
+            event = app_event_repository.record_unmap_route(process, route, user_audit_info, route_mapping_guid, process_type, manifest_triggered: true)
+
+            expect(event.metadata[:route_guid]).to eq(route.guid)
+            expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
+            expect(event.metadata[:process_type]).to eq('potato')
+            expect(event.metadata[:manifest_triggered]).to eq(true)
+          end
         end
 
         context 'when there is no actor' do
