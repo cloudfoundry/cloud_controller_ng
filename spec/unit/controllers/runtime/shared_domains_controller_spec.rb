@@ -36,27 +36,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'DELETE /v2/domains/:id' do
-      before { set_current_user_as_admin }
-
-      context 'when the domain is internal' do
-        let!(:internal_domain) { Domain.create(name: 'apps.internal', internal: true) }
-
-        it 'fails to delete' do
-          expect {
-            delete "/v2/shared_domains/#{internal_domain.guid}"
-          }.to_not change { Domain.count }
-        end
-
-        it 'returns an error' do
-          delete "/v2/shared_domains/#{internal_domain.guid}"
-          expect(last_response.status).to eq(422)
-          expect(decoded_response['code']).to equal(130009)
-          expect(decoded_response['description']).to match /The domain 'apps.internal' cannot be deleted. It is reserved by the platform./i
-        end
-      end
-    end
-
     context 'router groups' do
       let(:routing_api_client) { double('routing_api_client') }
       before do

@@ -20,9 +20,6 @@ module VCAP::CloudController
 
     def delete(guid)
       domain = find_guid_and_validate_access(:delete, guid)
-      if domain.internal
-        raise CloudController::Errors::ApiError.new_from_details('InternalDomainCannotBeDeleted', domain.name)
-      end
       do_delete(domain)
     end
 
