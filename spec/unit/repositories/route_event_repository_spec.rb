@@ -27,6 +27,14 @@ module VCAP::CloudController
           expect(event.actor_username).to eq(user_name)
           expect(event.metadata).to eq({ 'request' => request_attrs })
         end
+
+        context 'when the event recording is manifest triggered' do
+          it 'tags the event as manifest triggered' do
+            event = route_event_repository.record_route_create(route, actor_audit_info, request_attrs, manifest_triggered: true)
+            event.reload
+            expect(event.metadata['manifest_triggered']).to eq(true)
+          end
+        end
       end
 
       describe '#record_route_update' do

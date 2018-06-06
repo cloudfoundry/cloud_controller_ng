@@ -31,13 +31,27 @@ module VCAP::CloudController
           allow(route_event_repo).to receive(:record_route_create)
         end
 
+        describe 'audit events' do
+          it 'records an audit event' do
+            route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
+            expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
+          end
+
+          context 'when the route create is triggered by applying a manifest' do
+            it 'tags the audit event with manifest_triggered: true' do
+              route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info, manifest_triggered: true)
+              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: true)
+            end
+          end
+        end
+
         context 'when copilot is disabled' do
           it 'creates a route without notifying copilot' do
             expect {
               route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
 
               expect(Copilot::Adapter).not_to have_received(:new)
-              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash)
+              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
               expect(route.host).to eq(host)
               expect(route.path).to eq(path)
             }.to change { Route.count }.by(1)
@@ -57,7 +71,7 @@ module VCAP::CloudController
               route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
 
               expect(Copilot::Adapter).to have_received(:create_route).with(route)
-              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash)
+              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
               expect(route.host).to eq(host)
               expect(route.path).to eq(path)
             }.to change { Route.count }.by(1)

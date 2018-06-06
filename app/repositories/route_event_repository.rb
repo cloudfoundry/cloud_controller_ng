@@ -1,7 +1,11 @@
+require 'repositories/mixins/app_manifest_event_mixins'
+
 module VCAP::CloudController
   module Repositories
     class RouteEventRepository
-      def record_route_create(route, actor_audit_info, request_attrs)
+      include AppManifestEventMixins
+
+      def record_route_create(route, actor_audit_info, request_attrs, manifest_triggered: false)
         Event.create(
           space:          route.space,
           type:           'audit.route.create',
@@ -13,9 +17,9 @@ module VCAP::CloudController
           actor_name:     actor_audit_info.user_email,
           actor_username: actor_audit_info.user_name,
           timestamp:      Sequel::CURRENT_TIMESTAMP,
-          metadata:       {
-            request: request_attrs
-          }
+          metadata:       add_manifest_triggered(manifest_triggered, {
+            request: request_attrs,
+          })
         )
       end
 

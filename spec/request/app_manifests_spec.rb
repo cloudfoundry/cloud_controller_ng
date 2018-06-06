@@ -95,11 +95,41 @@ RSpec.describe 'App Manifests' do
     describe 'audit events' do
       let!(:process) { nil }
 
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            { 'name' => 'blah',
+              'instances' => 4,
+              'memory' => '2048MB',
+              'disk_quota' => '1.5GB',
+              'buildpack' => buildpack.name,
+              'stack' => buildpack.stack,
+              'command' => 'new-command',
+              'health_check_type' => 'http',
+              'health_check_http_endpoint' => '/health',
+              'timeout' => 42,
+              'env' => {
+                'k1' => 'mangos',
+                'k2' => 'pears',
+                'k3' => 'watermelon'
+              },
+              'routes' => [
+                { 'route' => "https://#{route.host}.#{route.domain.name}" },
+                { 'route' => "https://pants.#{second_route.domain.name}/path" }
+              ],
+              'services' => [
+                service_instance.name
+              ]
+            }
+          ]
+        }.to_yaml
+      end
+
       it 'creates audit events including metadata.manifest_triggered' do
         expect {
           post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
           Delayed::Worker.new.work_off
-        }.to change { VCAP::CloudController::Event.count }.by 9
+        }.to change { VCAP::CloudController::Event.count }.by 10
 
         manifest_triggered_events = VCAP::CloudController::Event.find_all { |event| event.metadata['manifest_triggered'] }
         expect(manifest_triggered_events.map(&:type)).to match_array([
@@ -109,6 +139,7 @@ RSpec.describe 'App Manifests' do
           'audit.app.update',
           'audit.app.update',
           'audit.app.map-route',
+          'audit.route.create',
           'audit.app.map-route',
           'audit.service_binding.create',
         ])

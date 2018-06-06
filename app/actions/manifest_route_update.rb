@@ -15,7 +15,7 @@ module VCAP::CloudController
         routes_to_map = []
 
         message.manifest_routes.each do |manifest_route|
-          route = find_valid_route(app, manifest_route.to_hash, user_audit_info)
+          route = find_or_create_valid_route(app, manifest_route.to_hash, user_audit_info)
 
           if route
             routes_to_map << route
@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       private
 
-      def find_valid_route(app, manifest_route, user_audit_info)
+      def find_or_create_valid_route(app, manifest_route, user_audit_info)
         logger = Steno.logger('cc.action.route_update')
 
         manifest_route[:candidate_host_domain_pairs].each do |candidate|
@@ -59,7 +59,7 @@ module VCAP::CloudController
             if host == '*' && existing_domain.shared?
               raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
             end
-            route = V3::RouteCreate.create_route(route_hash: route_hash, user_audit_info: user_audit_info, logger: logger)
+            route = V3::RouteCreate.create_route(route_hash: route_hash, user_audit_info: user_audit_info, logger: logger, manifest_triggered: true)
           end
           return route
         end
