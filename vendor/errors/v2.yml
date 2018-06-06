@@ -313,6 +313,11 @@
   http_code: 400
   message: "Docker apps cannot run on DEAs"
 
+60027:
+  name: RouteServiceNotBindableToApp
+  http_code: 422
+  message: "Route services cannot be bound to apps"
+
 70001:
   name: RuntimeInvalid
   http_code: 400

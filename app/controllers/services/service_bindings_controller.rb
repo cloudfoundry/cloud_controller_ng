@@ -55,6 +55,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', @request_attrs['app_guid']) unless app
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceNotFound', @request_attrs['service_instance_guid']) unless service_instance
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(app.space_guid)
+      raise CloudController::Errors::ApiError.new_from_details('RouteServiceNotBindableToApp') if service_instance.route_service?
 
       creator = ServiceBindingCreate.new(UserAuditInfo.from_context(SecurityContext))
       service_binding = creator.create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)

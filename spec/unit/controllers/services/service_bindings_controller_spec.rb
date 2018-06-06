@@ -331,6 +331,41 @@ module VCAP::CloudController
         end
       end
 
+      context 'for route-services' do
+        let(:req) do
+          {
+            app_guid: process.guid,
+            service_instance_guid: service_instance.guid
+          }
+        end
+
+        context 'when the managed service instance is for a route service' do
+          let(:broker) { service_instance.service.service_broker }
+          let(:service) { Service.make(:routing, bindings_retrievable: false) }
+          let(:service_plan) { ServicePlan.make(service: service) }
+          let(:service_instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
+
+          it 'responds with a 422 and message' do
+            post '/v2/service_bindings', req.to_json
+
+            expect(last_response).to have_status_code(422)
+            expect(decoded_response['description']).to match /Route services cannot be bound to apps/
+            expect(service_instance.refresh.last_operation).to be_nil
+          end
+        end
+
+        context 'when the user-provided service instance is for a route service' do
+          let(:service_instance) { UserProvidedServiceInstance.make(space: space, route_service_url: 'https://example.com/foo') }
+          it 'responds with a 422 and message' do
+            post '/v2/service_bindings', req.to_json
+
+            expect(last_response).to have_status_code(422)
+            expect(decoded_response['description']).to match /Route services cannot be bound to apps/
+            expect(service_instance.refresh.last_operation).to be_nil
+          end
+        end
+      end
+
       context 'for managed instances' do
         let(:broker) { service_instance.service.service_broker }
         let(:service) { Service.make(bindings_retrievable: false) }

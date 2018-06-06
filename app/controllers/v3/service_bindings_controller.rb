@@ -18,6 +18,7 @@ class ServiceBindingsController < ApplicationController
     app_not_found! unless app
     service_instance_not_found! unless service_instance
     unauthorized! unless can_write?(app.space.guid)
+    raise CloudController::Errors::ApiError.new_from_details('RouteServiceNotBindableToApp') if service_instance.route_service?
 
     accepts_incomplete = false
     begin

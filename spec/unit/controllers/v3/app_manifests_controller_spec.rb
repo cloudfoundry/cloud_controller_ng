@@ -404,6 +404,23 @@ RSpec.describe AppManifestsController, type: :controller do
       end
     end
 
+    context 'when the request body includes route services' do
+      let(:route_service) { VCAP::CloudController::ManagedServiceInstance.make(:routing) }
+      let(:non_route_service) { VCAP::CloudController::ManagedServiceInstance.make }
+
+      let(:request_body) do
+        { 'applications' =>
+            [{ 'name' => 'blah', 'services' => [route_service.name, non_route_service.name] }] }
+      end
+
+      it 'raises a 422 error' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include 'RouteServiceNotBindableToApp'
+      end
+    end
+
     it 'successfully scales the app in a background job' do
       post :apply_manifest, guid: app_model.guid, body: request_body
 

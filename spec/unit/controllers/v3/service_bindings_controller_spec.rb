@@ -39,176 +39,26 @@ RSpec.describe ServiceBindingsController, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      stub_bind(service_instance, opts)
-      service_instance.service.requires = ['syslog_drain']
-      service_instance.service.save
     end
 
-    it 'returns a 201 Created and the service binding' do
-      post :create, body: req_body
+    context 'without the broker stubbed' do
+      context 'when the service is a route service' do
+        let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
 
-      service_binding = app_model.service_bindings.last
-
-      expect(response.status).to eq 201
-      expect(parsed_body['guid']).to eq(service_binding.guid)
-      expect(parsed_body['type']).to eq(service_binding_type)
-      expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
-      expect(parsed_body['data']['credentials']).to eq({ 'super' => 'secret' })
-    end
-
-    context 'permissions' do
-      context 'when the user has read, but not write permissions to the space' do
-        before do
-          allow_user_read_access_for(user, spaces: [space])
-          disallow_user_write_access(user, space: space)
-        end
-
-        it 'returns a 403 Not Authorized' do
+        it 'raises a 422 RouteServiceNotBindableToApp' do
           post :create, body: req_body
 
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
-        end
-      end
-
-      context 'when the user does not have write scope' do
-        before do
-          set_current_user(user, scopes: ['cloud_controller.read'])
-        end
-
-        it 'returns a 403 NotAuthorized error' do
-          post :create, body: req_body
-
-          expect(response.status).to eq 403
-          expect(response.body).to include 'NotAuthorized'
+          expect(response.status).to eq 422
+          expect(response.body).to include 'RouteServiceNotBindableToApp'
         end
       end
     end
 
-    context 'when the request is missing required fields' do
-      let(:req_body) do
-        {
-          relationships: {
-            app: { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid }
-          }
-        }
-      end
-
-      it 'raises a 422 UnprocessableEntity' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'UnprocessableEntity'
-      end
-    end
-
-    context 'when the type is invalid' do
-      let(:req_body) do
-        {
-          type: 1234,
-          relationships: {
-            app: { guid: app_model.guid },
-            service_instance: { guid: service_instance.guid }
-          }
-        }
-      end
-
-      it 'raises a 422 UnprocessableEntity' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'UnprocessableEntity'
-      end
-    end
-
-    context 'when the request includes unrecognized fields' do
-      let(:req_body) do
-        {
-          type: 'app',
-          relationships:
-            {
-              app: { guid: app_model.guid },
-              service_instance: { guid: service_instance.guid }
-            },
-          potato: 'tomato'
-        }
-      end
-
-      it 'raises a 422 UnprocessableEntity' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 422
-        expect(response.body).to include 'UnprocessableEntity'
-      end
-    end
-
-    context 'when the app does not exist' do
-      let(:req_body) do
-        {
-          type: service_binding_type,
-          relationships: {
-            app: {
-              data: { guid: 'schmuid' },
-            },
-            service_instance: {
-              data: { guid: service_instance.guid },
-            },
-          }
-        }
-      end
-
-      it 'raises an 404 ResourceNotFound error' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'App not found'
-      end
-    end
-
-    context 'when the service instance does not exist' do
-      let(:req_body) do
-        {
-          type: service_binding_type,
-          relationships: {
-            app: {
-              data: { guid: app_model.guid },
-            },
-            service_instance: {
-              data: { guid: 'schmuid' },
-            },
-          }
-        }
-      end
-
-      it 'raises an 404 ResourceNotFound error' do
-        post :create, body: req_body
-
-        expect(response.status).to eq 404
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'Service instance not found'
-      end
-    end
-
-    context 'when the request includes arbitrary parameter fields' do
-      let(:req_body) do
-        {
-          type: 'app',
-          relationships: {
-            app: {
-              data: { guid: app_model.guid },
-            },
-            service_instance: {
-              data: { guid: service_instance.guid },
-            },
-          },
-          data: {
-            parameters: {
-              banana: 'bread'
-            }
-          }
-        }
+    context 'with the broker stubbed' do
+      before do
+        stub_bind(service_instance, opts)
+        service_instance.service.requires = ['syslog_drain']
+        service_instance.service.save
       end
 
       it 'returns a 201 Created and the service binding' do
@@ -219,24 +69,45 @@ RSpec.describe ServiceBindingsController, type: :controller do
         expect(response.status).to eq 201
         expect(parsed_body['guid']).to eq(service_binding.guid)
         expect(parsed_body['type']).to eq(service_binding_type)
+        expect(parsed_body['data']['syslog_drain_url']).to eq('syslog://syslog-drain.com')
+        expect(parsed_body['data']['credentials']).to eq({ 'super' => 'secret' })
       end
 
-      context 'when data includes unauthorized keys' do
+      context 'permissions' do
+        context 'when the user has read, but not write permissions to the space' do
+          before do
+            allow_user_read_access_for(user, spaces: [space])
+            disallow_user_write_access(user, space: space)
+          end
+
+          it 'returns a 403 Not Authorized' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
+        end
+
+        context 'when the user does not have write scope' do
+          before do
+            set_current_user(user, scopes: ['cloud_controller.read'])
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
+        end
+      end
+
+      context 'when the request is missing required fields' do
         let(:req_body) do
           {
-            type: 'app',
             relationships: {
-              app: {
-                data: { guid: app_model.guid }
-              },
-              service_instance: {
-                data: { guid: service_instance.guid }
-              },
-            },
-            data: {
-              sparameters: {
-                banana: 'bread'
-              }
+              app: { guid: app_model.guid },
+              service_instance: { guid: service_instance.guid }
             }
           }
         end
@@ -248,70 +119,217 @@ RSpec.describe ServiceBindingsController, type: :controller do
           expect(response.body).to include 'UnprocessableEntity'
         end
       end
-    end
 
-    context 'binding errors' do
-      before do
-        stub_request(:delete, service_binding_url_pattern)
-      end
-
-      context 'when attempting to bind an unbindable service' do
-        before do
-          allow_any_instance_of(VCAP::CloudController::ManagedServiceInstance).
-            to receive(:bindable?).and_return(false)
+      context 'when the type is invalid' do
+        let(:req_body) do
+          {
+            type: 1234,
+            relationships: {
+              app: { guid: app_model.guid },
+              service_instance: { guid: service_instance.guid }
+            }
+          }
         end
 
-        it 'raises an UnbindableService 400 error' do
+        it 'raises a 422 UnprocessableEntity' do
           post :create, body: req_body
 
-          expect(response.status).to eq 400
-          expect(response.body).to include 'UnbindableService'
-        end
-      end
-
-      context 'when the instance operation is in progress' do
-        before do
-          VCAP::CloudController::ServiceInstanceOperation.make(
-            service_instance_id: service_instance.id,
-            state: 'in progress')
-        end
-
-        it 'raises an AsyncServiceInstanceOperationInProgress 409 error' do
-          post :create, body: req_body
-
-          expect(response.status).to eq 409
-          expect(response.body).to include 'AsyncServiceInstanceOperationInProgress'
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
         end
       end
 
-      context 'when attempting to bind and the service binding already exists' do
-        before do
-          VCAP::CloudController::ServiceBinding.make(
-            service_instance: service_instance,
-            app: app_model
-          )
+      context 'when the request includes unrecognized fields' do
+        let(:req_body) do
+          {
+            type: 'app',
+            relationships:
+              {
+                app: { guid: app_model.guid },
+                service_instance: { guid: service_instance.guid }
+              },
+            potato: 'tomato'
+          }
         end
 
-        it 'returns a ServiceBindingAppServiceTaken error' do
+        it 'raises a 422 UnprocessableEntity' do
           post :create, body: req_body
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include 'ServiceBindingAppServiceTaken'
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
         end
       end
 
-      context 'when volume_mount is required and volume_services_enabled is disabled' do
-        before do
-          TestConfig.config[:volume_services_enabled] = false
-          service_instance.service.requires = ['volume_mount']
-          service_instance.service.save
+      context 'when the app does not exist' do
+        let(:req_body) do
+          {
+            type: service_binding_type,
+            relationships: {
+              app: {
+                data: { guid: 'schmuid' },
+              },
+              service_instance: {
+                data: { guid: service_instance.guid },
+              },
+            }
+          }
         end
 
-        it 'returns CF-VolumeMountServiceDisabled' do
+        it 'raises an 404 ResourceNotFound error' do
           post :create, body: req_body
 
-          expect(response.status).to eq(403)
-          expect(response.body).to include 'VolumeMountServiceDisabled'
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'App not found'
+        end
+      end
+
+      context 'when the service instance does not exist' do
+        let(:req_body) do
+          {
+            type: service_binding_type,
+            relationships: {
+              app: {
+                data: { guid: app_model.guid },
+              },
+              service_instance: {
+                data: { guid: 'schmuid' },
+              },
+            }
+          }
+        end
+
+        it 'raises an 404 ResourceNotFound error' do
+          post :create, body: req_body
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Service instance not found'
+        end
+      end
+
+      context 'when the request includes arbitrary parameter fields' do
+        let(:req_body) do
+          {
+            type: 'app',
+            relationships: {
+              app: {
+                data: { guid: app_model.guid },
+              },
+              service_instance: {
+                data: { guid: service_instance.guid },
+              },
+            },
+            data: {
+              parameters: {
+                banana: 'bread'
+              }
+            }
+          }
+        end
+
+        it 'returns a 201 Created and the service binding' do
+          post :create, body: req_body
+
+          service_binding = app_model.service_bindings.last
+
+          expect(response.status).to eq 201
+          expect(parsed_body['guid']).to eq(service_binding.guid)
+          expect(parsed_body['type']).to eq(service_binding_type)
+        end
+
+        context 'when data includes unauthorized keys' do
+          let(:req_body) do
+            {
+              type: 'app',
+              relationships: {
+                app: {
+                  data: { guid: app_model.guid }
+                },
+                service_instance: {
+                  data: { guid: service_instance.guid }
+                },
+              },
+              data: {
+                sparameters: {
+                  banana: 'bread'
+                }
+              }
+            }
+          end
+
+          it 'raises a 422 UnprocessableEntity' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+          end
+        end
+      end
+
+      context 'binding errors' do
+        before do
+          stub_request(:delete, service_binding_url_pattern)
+        end
+
+        context 'when attempting to bind an unbindable service' do
+          before do
+            allow_any_instance_of(VCAP::CloudController::ManagedServiceInstance).
+              to receive(:bindable?).and_return(false)
+          end
+
+          it 'raises an UnbindableService 400 error' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 400
+            expect(response.body).to include 'UnbindableService'
+          end
+        end
+
+        context 'when the instance operation is in progress' do
+          before do
+            VCAP::CloudController::ServiceInstanceOperation.make(
+              service_instance_id: service_instance.id,
+              state: 'in progress')
+          end
+
+          it 'raises an AsyncServiceInstanceOperationInProgress 409 error' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 409
+            expect(response.body).to include 'AsyncServiceInstanceOperationInProgress'
+          end
+        end
+
+        context 'when attempting to bind and the service binding already exists' do
+          before do
+            VCAP::CloudController::ServiceBinding.make(
+              service_instance: service_instance,
+              app: app_model
+            )
+          end
+
+          it 'returns a ServiceBindingAppServiceTaken error' do
+            post :create, body: req_body
+
+            expect(response.status).to eq(400)
+            expect(response.body).to include 'ServiceBindingAppServiceTaken'
+          end
+        end
+
+        context 'when volume_mount is required and volume_services_enabled is disabled' do
+          before do
+            TestConfig.config[:volume_services_enabled] = false
+            service_instance.service.requires = ['volume_mount']
+            service_instance.service.save
+          end
+
+          it 'returns CF-VolumeMountServiceDisabled' do
+            post :create, body: req_body
+
+            expect(response.status).to eq(403)
+            expect(response.body).to include 'VolumeMountServiceDisabled'
+          end
         end
       end
     end
