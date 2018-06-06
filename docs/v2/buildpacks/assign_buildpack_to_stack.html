@@ -66,13 +66,12 @@
   <h1>Buildpacks API</h1>
 
   <div class="article">
-    <h2>Change the position of a Buildpack</h2>
+    <h2>Assign a Buildpack to a Stack</h2>
     <h3>PUT /v2/buildpacks/:guid</h3>
       <p class="explanation">
-                  Buildpacks are maintained in an ordered list.  If the target position is already occupied,
-          the entries will be shifted down the list to make room.  If the target position is beyond
-          the end of the current list, the buildpack will be positioned at the end of the list.
-
+        Buildpacks can be assigned to different stacks on the system. Only buildpacks which match the stack of the app will be utilized.
+        Some buildpacks specify a stack via their manifest, and this stack is automatically assigned. It can also be manually assigned via this endpoint.
+        If a buildpack stack field is null, it will be handled as belonging to all stacks on the system.
       </p>
 
       <h3>Request</h3>
@@ -252,7 +251,7 @@ Cookie: </pre>
 
         <h4>cURL</h4>
         <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/buildpacks/591bd6c5-2330-4dc1-9400-a405dc659ee9&quot; -d &#39;{
-  &quot;position&quot;: 3
+  &quot;stack&quot;: "cflinuxfs3"
 }&#39; -X PUT \
 	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE3NiIsImVtYWlsIjoiZW1haWwtMTMxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTF9.CjoftEa2s9Qh96K-G-DZ5ewXTgqDND8fTR6BjpmmxIE&quot; \
 	-H &quot;Host: example.org&quot; \
@@ -275,7 +274,7 @@ Cookie: </pre>
   },
   "entity": {
     "name": "name_1",
-    "stack": "cflinuxfs2",
+    "stack": "cflinuxfs3",
     "position": 3,
     "enabled": true,
     "locked": false,
