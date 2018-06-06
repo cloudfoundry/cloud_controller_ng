@@ -110,10 +110,32 @@
             </tr>
             <tr class=" ">
               <td class=" ">
+                <span class="name">internal</span>
+              </td>
+              <td>
+                <span class="description">Flag that sets the domain as an internal domain.
+                  Internal domains are used for internal app to app networking only.</span>
+              </td>
+              <td>
+                <span class="default">false</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                  <li>true</li>
+                  <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
                 <span class="name">router_group_guid</span>
               </td>
               <td>
-                <span class="description">The guid of the router group.</span>
+                <span class="description">The guid of the router group. Not used with internal domains.</span>
               </td>
               <td>
                 <span class="default"></span>
@@ -167,6 +189,7 @@ Cookie: </pre>
   },
   "entity": {
     "name": "example.com",
+    "internal": false,
     "router_group_guid": "my-random-guid",
     "router_group_type": "tcp"
   }
