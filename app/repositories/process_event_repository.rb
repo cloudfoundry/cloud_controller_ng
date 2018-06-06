@@ -1,8 +1,17 @@
+require 'repositories/mixins/app_manifest_event_mixins'
+
 module VCAP::CloudController
   module Repositories
     class ProcessEventRepository
-      def self.record_create(process, user_audit_info)
+      extend AppManifestEventMixins
+
+      def self.record_create(process, user_audit_info, manifest_triggered: false)
         Loggregator.emit(process.app.guid, "Added process: \"#{process.type}\"")
+
+        metadata = add_manifest_triggered(manifest_triggered, {
+          process_guid: process.guid,
+          process_type: process.type,
+        })
 
         create_event(
           process:        process,
@@ -10,10 +19,7 @@ module VCAP::CloudController
           actor_guid:     user_audit_info.user_guid,
           actor_name:     user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
-          metadata:       {
-            process_guid: process.guid,
-            process_type: process.type
-          }
+          metadata: metadata
         )
       end
 
@@ -33,11 +39,16 @@ module VCAP::CloudController
         )
       end
 
-      def self.record_update(process, user_audit_info, request)
+      def self.record_update(process, user_audit_info, request, manifest_triggered: false)
         Loggregator.emit(process.app.guid, "Updating process: \"#{process.type}\"")
 
         request           = request.dup.symbolize_keys
         request[:command] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if request.key?(:command)
+        metadata = add_manifest_triggered(manifest_triggered, {
+          process_guid: process.guid,
+          process_type: process.type,
+          request: request
+        })
 
         create_event(
           process:        process,
@@ -45,16 +56,18 @@ module VCAP::CloudController
           actor_guid:     user_audit_info.user_guid,
           actor_name:     user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
-          metadata:       {
-            process_guid: process.guid,
-            process_type: process.type,
-            request:      request
-          }
+          metadata: metadata
         )
       end
 
-      def self.record_scale(process, user_audit_info, request)
+      def self.record_scale(process, user_audit_info, request, manifest_triggered: false)
         Loggregator.emit(process.app.guid, "Scaling process: \"#{process.type}\"")
+
+        metadata = add_manifest_triggered(manifest_triggered, {
+          process_guid: process.guid,
+          process_type: process.type,
+          request: request,
+        })
 
         create_event(
           process:        process,
@@ -62,11 +75,7 @@ module VCAP::CloudController
           actor_guid:     user_audit_info.user_guid,
           actor_name:     user_audit_info.user_email,
           actor_username: user_audit_info.user_name,
-          metadata:       {
-            process_guid: process.guid,
-            process_type: process.type,
-            request:      request
-          }
+          metadata: metadata
         )
       end
 

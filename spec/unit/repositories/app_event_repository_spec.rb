@@ -51,8 +51,18 @@ module VCAP::CloudController
           expect(event.actor_name).to eq user_email
           expect(event.actor_username).to eq user_name
 
-          request = event.metadata.fetch('request')
-          expect(request).to eq(expected_request_field)
+          expect(event.metadata.fetch('request')).to eq(expected_request_field)
+          expect(event.metadata.key?('manifest_triggered')).to eq(false)
+        end
+
+        context 'when the event is manifest triggered' do
+          let(:manifest_triggered) { true }
+
+          it 'tags the event for manifest triggered as true' do
+            event = app_event_repository.record_app_update(process, space, user_audit_info, attrs, manifest_triggered: manifest_triggered).reload
+
+            expect(event.metadata.fetch('manifest_triggered')).to eq(true)
+          end
         end
       end
 
@@ -226,6 +236,17 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('app')
           expect(event.actee).to eq(process.guid)
           expect(event.metadata[:route_guid]).to eq(route.guid)
+          expect(event.metadata[:manifest_triggered]).to eq(nil)
+        end
+
+        context 'when the event is manifest triggered' do
+          let(:manifest_triggered) { true }
+
+          it 'tags the event for manifest triggered as true' do
+            event = app_event_repository.record_map_route(process, route, user_audit_info, manifest_triggered: manifest_triggered)
+
+            expect(event.metadata[:manifest_triggered]).to eq(true)
+          end
         end
 
         context 'when there is no actor' do

@@ -22,21 +22,23 @@ module VCAP::CloudController
         process_type = manifest_process_update_msg.type
         process = find_process(app, process_type) || create_process(app, manifest_process_update_msg, process_type)
 
-        ProcessUpdate.new(@user_audit_info).update(process, manifest_process_update_msg, ManifestStrategy)
+        process_update = ProcessUpdate.new(@user_audit_info, manifest_triggered: true)
+        process_update.update(process, manifest_process_update_msg, ManifestStrategy)
       end
 
       message.manifest_process_scale_messages.each do |manifest_process_scale_msg|
         process = find_process(app, manifest_process_scale_msg.type)
-        ProcessScale.new(@user_audit_info, process, manifest_process_scale_msg.to_process_scale_message).scale
+        process_scale = ProcessScale.new(@user_audit_info, process, manifest_process_scale_msg.to_process_scale_message, manifest_triggered: true)
+        process_scale.scale
       end
 
       app_update_message = message.app_update_message
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
-      AppUpdate.new(@user_audit_info).update(app, app_update_message, lifecycle)
+      AppUpdate.new(@user_audit_info, manifest_triggered: true).update(app, app_update_message, lifecycle)
 
       update_routes(app, message)
 
-      AppPatchEnvironmentVariables.new(@user_audit_info).patch(app, message.app_update_environment_variables_message)
+      AppPatchEnvironmentVariables.new(@user_audit_info, manifest_triggered: true).patch(app, message.app_update_environment_variables_message)
 
       create_service_bindings(message.services, app) if message.services.present?
       app
@@ -49,7 +51,7 @@ module VCAP::CloudController
     end
 
     def create_process(app, manifest_process_update_msg, process_type)
-      ProcessCreate.new(@user_audit_info).create(app, {
+      ProcessCreate.new(@user_audit_info, manifest_triggered: true).create(app, {
         type: process_type,
         command: manifest_process_update_msg.command
       })
@@ -80,7 +82,7 @@ module VCAP::CloudController
     end
 
     def create_service_bindings(services, app)
-      action = ServiceBindingCreate.new(@user_audit_info)
+      action = ServiceBindingCreate.new(@user_audit_info, manifest_triggered: true)
       services.each do |name|
         service_instance = ServiceInstance.find(name: name)
         service_instance_not_found!(name) unless service_instance

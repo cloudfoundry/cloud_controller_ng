@@ -20,6 +20,7 @@ RSpec.describe 'App Manifests' do
 
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
     let(:yml_manifest) do
       {
         'applications' => [
@@ -42,9 +43,16 @@ RSpec.describe 'App Manifests' do
               { 'route' => "https://#{route.host}.#{route.domain.name}" },
               { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
             ],
+            'services' => [
+              service_instance.name
+            ]
           }
         ]
       }.to_yaml
+    end
+
+    before do
+      stub_bind(service_instance)
     end
 
     it 'applies the manifest' do
@@ -79,6 +87,35 @@ RSpec.describe 'App Manifests' do
         'k3' => 'watermelon'
       )
       expect(app_model.routes).to match_array([route, second_route])
+
+      expect(app_model.service_bindings.length).to eq 1
+      expect(app_model.service_bindings.first.service_instance).to eq service_instance
+    end
+
+    describe 'audit events' do
+      let!(:process) { nil }
+
+      it 'creates audit events including metadata.manifest_triggered' do
+        expect {
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          Delayed::Worker.new.work_off
+        }.to change { VCAP::CloudController::Event.count }.by 9
+
+        manifest_triggered_events = VCAP::CloudController::Event.find_all { |event| event.metadata['manifest_triggered'] }
+        expect(manifest_triggered_events.map(&:type)).to match_array([
+          'audit.app.process.update',
+          'audit.app.process.create',
+          'audit.app.process.scale',
+          'audit.app.update',
+          'audit.app.update',
+          'audit.app.map-route',
+          'audit.app.map-route',
+          'audit.service_binding.create',
+        ])
+
+        other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
+        expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
+      end
     end
 
     describe 'no-route' do

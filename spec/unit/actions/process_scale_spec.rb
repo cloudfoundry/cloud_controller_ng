@@ -50,18 +50,40 @@ module VCAP::CloudController
         expect(process.disk_quota).to eq(original_value)
       end
 
-      it 'creates a process audit event' do
-        expect(Repositories::ProcessEventRepository).to receive(:record_scale).with(
-          process,
-          user_audit_info,
-          {
-            'instances'    => 2,
-            'memory_in_mb' => 100,
-            'disk_in_mb'   => 200
-          }
-        )
+      describe 'audit events' do
+        it 'creates a process audit event' do
+          expect(Repositories::ProcessEventRepository).to receive(:record_scale).with(
+            process,
+            user_audit_info,
+            {
+              'instances'    => 2,
+              'memory_in_mb' => 100,
+              'disk_in_mb'   => 200
+            },
+            manifest_triggered: false
+          )
 
-        process_scale.scale
+          process_scale.scale
+        end
+
+        context 'when the scale is triggered by applying a manifest' do
+          subject(:process_scale) { ProcessScale.new(user_audit_info, process, message, manifest_triggered: true) }
+
+          it 'sends manifest_triggered: true to the event repository' do
+            expect(Repositories::ProcessEventRepository).to receive(:record_scale).with(
+              process,
+              user_audit_info,
+              {
+                'instances'    => 2,
+                'memory_in_mb' => 100,
+                'disk_in_mb'   => 200
+              },
+              manifest_triggered: true
+            )
+
+            process_scale.scale
+          end
+        end
       end
 
       context 'when the process is invalid' do

@@ -1,8 +1,12 @@
+require 'repositories/mixins/app_manifest_event_mixins'
+
 module VCAP::CloudController
   module Repositories
     class ServiceBindingEventRepository
+      extend AppManifestEventMixins
+
       class << self
-        def record_create(service_binding, user_audit_info, request)
+        def record_create(service_binding, user_audit_info, request, manifest_triggered: false)
           attrs         = request.dup.stringify_keys
           attrs['data'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrs.key?('data')
 
@@ -10,7 +14,7 @@ module VCAP::CloudController
             type:            'audit.service_binding.create',
             service_binding: service_binding,
             user_audit_info: user_audit_info,
-            metadata:        { request: attrs }
+            metadata:        add_manifest_triggered(manifest_triggered, { request: attrs })
           )
         end
 

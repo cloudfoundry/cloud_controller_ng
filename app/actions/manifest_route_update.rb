@@ -29,7 +29,7 @@ module VCAP::CloudController
           route_mapping_exists = RouteMappingModel.find(app: app, route: route)
           next if route_mapping_exists
 
-          RouteMappingCreate.add(user_audit_info, route, app.web_process)
+          RouteMappingCreate.add(user_audit_info, route, app.web_process, manifest_triggered: true)
         end
       rescue Sequel::ValidationFailed => e
         raise InvalidRoute.new(e.message)

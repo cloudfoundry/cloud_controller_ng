@@ -4,8 +4,9 @@ module VCAP::CloudController
   class ProcessUpdate
     class InvalidProcess < StandardError; end
 
-    def initialize(user_audit_info)
+    def initialize(user_audit_info, manifest_triggered: false)
       @user_audit_info = user_audit_info
+      @manifest_triggered = manifest_triggered
     end
 
     def update(process, message, strategy_class)
@@ -25,7 +26,7 @@ module VCAP::CloudController
 
         process.save
 
-        Repositories::ProcessEventRepository.record_update(process, @user_audit_info, message.audit_hash)
+        Repositories::ProcessEventRepository.record_update(process, @user_audit_info, message.audit_hash, manifest_triggered: @manifest_triggered)
       end
     rescue Sequel::ValidationFailed => e
       raise InvalidProcess.new(e.message)

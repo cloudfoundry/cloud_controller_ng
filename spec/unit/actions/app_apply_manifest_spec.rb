@@ -64,7 +64,7 @@ module VCAP::CloudController
 
           it 'calls ProcessScale with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, an_instance_of(ProcessScaleMessage))
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, an_instance_of(ProcessScaleMessage), manifest_triggered: true)
             expect(process_scale).to have_received(:scale)
           end
         end
@@ -108,7 +108,7 @@ module VCAP::CloudController
 
           it 'calls ProcessScale with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage))
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage), manifest_triggered: true)
             expect(process_scale).to have_received(:scale)
           end
         end
@@ -152,7 +152,7 @@ module VCAP::CloudController
 
           it 'calls AppUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(AppUpdate).to have_received(:new).with(user_audit_info)
+            expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(app_update).to have_received(:update).
               with(app, app_update_message, instance_of(AppBuildpackLifecycle))
           end
@@ -188,7 +188,7 @@ module VCAP::CloudController
 
           it 'calls AppUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(AppUpdate).to have_received(:new).with(user_audit_info)
+            expect(AppUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(app_update).to have_received(:update).
               with(app, app_update_message, instance_of(AppBuildpackLifecycle))
           end
@@ -224,7 +224,7 @@ module VCAP::CloudController
 
           it 'calls AppPatchEnvironmentVariables with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(AppPatchEnvironmentVariables).to have_received(:new).with(user_audit_info)
+            expect(AppPatchEnvironmentVariables).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(app_patch_env).to have_received(:patch).
               with(app, app_update_environment_variables_message)
           end
@@ -260,7 +260,7 @@ module VCAP::CloudController
 
           it 'calls ProcessUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(process_update).to have_received(:update).
               with(app.web_process, manifest_process_update_message, ManifestStrategy)
           end
@@ -308,15 +308,15 @@ module VCAP::CloudController
 
           it 'calls ProcessUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessUpdate).to have_received(:new).with(user_audit_info).exactly(2).times
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true).exactly(2).times
             expect(process_update).to have_received(:update).with(process1, manifest_process_update_message1, ManifestStrategy)
             expect(process_update).to have_received(:update).with(process2, manifest_process_update_message2, ManifestStrategy)
           end
 
           it 'calls ProcessScale with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process1, instance_of(ProcessScaleMessage))
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process2, instance_of(ProcessScaleMessage))
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process1, instance_of(ProcessScaleMessage), manifest_triggered: true)
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process2, instance_of(ProcessScaleMessage), manifest_triggered: true)
             expect(process_scale).to have_received(:scale).exactly(2).times
           end
         end
@@ -359,17 +359,17 @@ module VCAP::CloudController
 
           it 'calls ProcessCreate with command and type' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessCreate).to have_received(:new).with(user_audit_info)
+            expect(ProcessCreate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(process_create).to have_received(:create).with(app, { type: 'potato', command: 'potato-command' })
           end
 
           it 'updates and scales the newly created process with all the other properties' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             process = ProcessModel.last
             expect(process_update).to have_received(:update).with(process, update_message, ManifestStrategy)
 
-            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage))
+            expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage), manifest_triggered: true)
             expect(process_scale).to have_received(:scale)
           end
 
@@ -384,7 +384,7 @@ module VCAP::CloudController
 
             it 'sets the command to nil' do
               app_apply_manifest.apply(app.guid, message)
-              expect(ProcessCreate).to have_received(:new).with(user_audit_info)
+              expect(ProcessCreate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
               expect(process_create).to have_received(:create).with(app, { type: 'potato', command: nil })
             end
           end
@@ -406,7 +406,7 @@ module VCAP::CloudController
 
           it 'calls ProcessUpdate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ProcessUpdate).to have_received(:new).with(user_audit_info)
+            expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(process_update).to have_received(:update).with(process, manifest_process_update_message, ManifestStrategy)
           end
         end
@@ -547,7 +547,7 @@ module VCAP::CloudController
 
           it 'calls ServiceBindingCreate with the correct arguments' do
             app_apply_manifest.apply(app.guid, message)
-            expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info)
+            expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
             expect(service_binding_create).to have_received(:create).
               with(app, service_instance, instance_of(ServiceBindingCreateMessage), false, false)
             expect(service_binding_create).to have_received(:create).

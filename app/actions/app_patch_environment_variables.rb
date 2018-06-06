@@ -3,9 +3,10 @@ module VCAP::CloudController
     class InvalidApp < StandardError
     end
 
-    def initialize(user_audit_info)
+    def initialize(user_audit_info, manifest_triggered: false)
       @user_audit_info = user_audit_info
       @logger          = Steno.logger('cc.action.app_update_environment_variables')
+      @manifest_triggered = manifest_triggered
     end
 
     def patch(app, message)
@@ -22,7 +23,8 @@ module VCAP::CloudController
           app,
           app.space,
           @user_audit_info,
-          message.audit_hash
+          message.audit_hash,
+          manifest_triggered: @manifest_triggered,
         )
       end
 

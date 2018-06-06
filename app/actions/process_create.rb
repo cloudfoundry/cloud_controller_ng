@@ -4,8 +4,9 @@ require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class ProcessCreate
-    def initialize(user_audit_info)
+    def initialize(user_audit_info, manifest_triggered: false)
       @user_audit_info = user_audit_info
+      @manifest_triggered = manifest_triggered
     end
 
     def create(app, args)
@@ -21,7 +22,7 @@ module VCAP::CloudController
       process = nil
       app.class.db.transaction do
         process = app.add_process(attrs)
-        Repositories::ProcessEventRepository.record_create(process, @user_audit_info)
+        Repositories::ProcessEventRepository.record_create(process, @user_audit_info, manifest_triggered: @manifest_triggered)
       end
 
       process

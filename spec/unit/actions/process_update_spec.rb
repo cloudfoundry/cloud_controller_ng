@@ -125,20 +125,44 @@ module VCAP::CloudController
         end
       end
 
-      it 'creates an audit event' do
-        expect(Repositories::ProcessEventRepository).to receive(:record_update).with(
-          process,
-          user_audit_info,
-          {
-            'command'      => 'new',
-            'health_check' => {
-              'type' => 'process',
-              'data' => { 'timeout' => 20 }
-            }
-          }
-        )
+      describe 'audit events' do
+        it 'creates an audit event' do
+          expect(Repositories::ProcessEventRepository).to receive(:record_update).with(
+            process,
+            user_audit_info,
+            {
+              'command'      => 'new',
+              'health_check' => {
+                'type' => 'process',
+                'data' => { 'timeout' => 20 }
+              }
+            },
+            manifest_triggered: false
+          )
 
-        process_update.update(process, message, NonManifestStrategy)
+          process_update.update(process, message, NonManifestStrategy)
+        end
+
+        context 'when the update is manifest triggered' do
+          subject(:process_update) { ProcessUpdate.new(user_audit_info, manifest_triggered: true) }
+
+          it 'tags the event as manifest triggered' do
+            expect(Repositories::ProcessEventRepository).to receive(:record_update).with(
+              process,
+              user_audit_info,
+              {
+                'command'      => 'new',
+                'health_check' => {
+                  'type' => 'process',
+                  'data' => { 'timeout' => 20 }
+                }
+              },
+              manifest_triggered: true
+            )
+
+            process_update.update(process, message, ManifestStrategy)
+          end
+        end
       end
 
       context 'when the process is invalid' do

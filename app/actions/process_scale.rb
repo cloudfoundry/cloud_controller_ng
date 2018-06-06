@@ -2,10 +2,11 @@ module VCAP::CloudController
   class ProcessScale
     class InvalidProcess < StandardError; end
 
-    def initialize(user_audit_info, process, message)
+    def initialize(user_audit_info, process, message, manifest_triggered: false)
       @user_audit_info = user_audit_info
       @process    = process
       @message    = message
+      @manifest_triggered = manifest_triggered
     end
 
     def scale
@@ -31,7 +32,8 @@ module VCAP::CloudController
       Repositories::ProcessEventRepository.record_scale(
         @process,
         @user_audit_info,
-        @message.audit_hash
+        @message.audit_hash,
+        manifest_triggered: @manifest_triggered
       )
     end
   end

@@ -48,8 +48,23 @@ module VCAP::CloudController
             app,
             route,
             user_audit_info,
-            route_mapping: route_mapping
+            route_mapping: route_mapping,
+            manifest_triggered: false
           )
+        end
+
+        context 'when the route mapping create is triggered by applying a manifest' do
+          it 'sends manifest_triggered: true to the event repository' do
+            route_mapping = RouteMappingCreate.add(user_audit_info, route, process, manifest_triggered: true)
+
+            expect(event_repository).to have_received(:record_map_route).with(
+              app,
+              route,
+              user_audit_info,
+              route_mapping: route_mapping,
+              manifest_triggered: true
+            )
+          end
         end
       end
 

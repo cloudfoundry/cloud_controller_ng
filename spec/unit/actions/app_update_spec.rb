@@ -26,17 +26,38 @@ module VCAP::CloudController
         })
       end
 
-      it 'creates an audit event' do
-        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
-          app_model,
-          app_model.space,
-          user_audit_info,
-          {
-            'name' => 'new name',
-          }
-        )
+      describe 'audit events' do
+        it 'creates an audit event' do
+          expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
+            app_model,
+            app_model.space,
+            user_audit_info,
+            {
+              'name' => 'new name',
+            },
+            manifest_triggered: false
+          )
 
-        app_update.update(app_model, message, lifecycle)
+          app_update.update(app_model, message, lifecycle)
+        end
+
+        context 'when the app_update is triggered by applying a manifest' do
+          subject(:app_update) { AppUpdate.new(user_audit_info, manifest_triggered: true) }
+
+          it 'sends manifest_triggered: true to the event repository' do
+            expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
+              app_model,
+              app_model.space,
+              user_audit_info,
+              {
+                'name' => 'new name',
+              },
+              manifest_triggered: true
+            )
+
+            app_update.update(app_model, message, lifecycle)
+          end
+        end
       end
 
       describe 'updating the name' do

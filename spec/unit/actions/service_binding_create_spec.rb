@@ -51,13 +51,27 @@ module VCAP::CloudController
         expect(service_binding.name).to eq('named-binding')
       end
 
-      it 'creates an audit.service_binding.create event' do
-        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      describe 'audit events' do
+        it 'creates an audit.service_binding.create event' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
 
-        event = Event.last
-        expect(event.type).to eq('audit.service_binding.create')
-        expect(event.actee).to eq(service_binding.guid)
-        expect(event.actee_type).to eq('service_binding')
+          event = Event.last
+          expect(event.type).to eq('audit.service_binding.create')
+          expect(event.actee).to eq(service_binding.guid)
+          expect(event.actee_type).to eq('service_binding')
+          expect(event.metadata['manifest_triggered']).to eq(nil)
+        end
+
+        context 'when the binding is created by applying a manifest' do
+          subject(:service_binding_create) { ServiceBindingCreate.new(user_audit_info, manifest_triggered: true) }
+
+          it 'tags the event as manifest triggered' do
+            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+            event = Event.last
+            expect(event.metadata['manifest_triggered']).to eq(true)
+          end
+        end
       end
 
       context 'when the instance has another operation in progress' do

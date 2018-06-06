@@ -12,7 +12,7 @@ module VCAP::CloudController
     DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
 
     class << self
-      def add(user_audit_info, route, process)
+      def add(user_audit_info, route, process, manifest_triggered: false)
         validate!(process.app, route)
 
         route_mapping = RouteMappingModel.new(
@@ -32,7 +32,8 @@ module VCAP::CloudController
             process.app,
             route,
             user_audit_info,
-            route_mapping: route_mapping
+            route_mapping: route_mapping,
+            manifest_triggered: manifest_triggered
           )
         end
 

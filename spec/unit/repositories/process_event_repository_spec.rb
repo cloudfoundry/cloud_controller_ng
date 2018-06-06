@@ -32,6 +32,30 @@ module VCAP::CloudController
             'process_type' => 'potato'
           })
         end
+
+        context 'event is manifest triggered' do
+          it 'includes manifest_triggered: true in the metadata' do
+            event = ProcessEventRepository.record_create(process, user_audit_info, manifest_triggered: true)
+            event.reload
+
+            expect(event.type).to eq('audit.app.process.create')
+            expect(event.actor).to eq(user_guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(email)
+            expect(event.actor_username).to eq(user_name)
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq('zach-loves-kittens')
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+
+            expect(event.metadata).to eq({
+              'process_guid' => process.guid,
+              'process_type' => 'potato',
+              'manifest_triggered' => true,
+            })
+          end
+        end
       end
 
       describe '.record_delete' do
@@ -84,6 +108,24 @@ module VCAP::CloudController
             }
           })
         end
+
+        context 'when the scale event is manifest triggered' do
+          it 'includes manifest_triggered: true in the metadata' do
+            request = { instances: 10, memory_in_mb: 512, disk_in_mb: 2048 }
+            event = ProcessEventRepository.record_scale(process, user_audit_info, request, manifest_triggered: true)
+
+            expect(event.metadata).to eq({
+              process_guid: process.guid,
+              process_type: 'potato',
+              request: {
+                instances: 10,
+                memory_in_mb: 512,
+                disk_in_mb: 2048
+              },
+              manifest_triggered: true,
+            })
+          end
+        end
       end
 
       describe '.record_update' do
@@ -120,6 +162,33 @@ module VCAP::CloudController
                                               'command' => '[PRIVATE DATA HIDDEN]'
                                             }
           ))
+        end
+
+        context 'when the update event is manifest triggered' do
+          it 'includes manifest_triggered: true in the metadata' do
+            event = ProcessEventRepository.record_update(process, user_audit_info, { anything: 'whatever' }, manifest_triggered: true)
+            event.reload
+
+            expect(event.type).to eq('audit.app.process.update')
+            expect(event.actor).to eq(user_guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(email)
+            expect(event.actor_username).to eq(user_name)
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq('zach-loves-kittens')
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+
+            expect(event.metadata).to eq({
+              'process_guid' => process.guid,
+              'process_type' => 'potato',
+              'manifest_triggered' => true,
+              'request' => {
+                'anything' => 'whatever'
+              }
+            })
+          end
         end
       end
 

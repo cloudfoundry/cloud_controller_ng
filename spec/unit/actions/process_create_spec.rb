@@ -54,12 +54,27 @@ module VCAP::CloudController
         expect(process.routes).to include(route)
       end
 
-      it 'records an "audit.app.process.create" event' do
-        process = process_create.create(app, message)
+      describe 'audit events' do
+        it 'records an "audit.app.process.create" event' do
+          process = process_create.create(app, message)
 
-        event = Event.last
-        expect(event.type).to eq('audit.app.process.create')
-        expect(event.metadata['process_guid']).to eq(process.guid)
+          event = Event.last
+          expect(event.type).to eq('audit.app.process.create')
+          expect(event.metadata['process_guid']).to eq(process.guid)
+          expect(event.metadata['manifest_triggered']).to eq(nil)
+        end
+
+        context 'when the create is manifest triggered' do
+          subject(:process_create) { ProcessCreate.new(user_audit_info, manifest_triggered: true) }
+
+          it 'tags the event as manifest triggered' do
+            process_create.create(app, message)
+
+            event = Event.last
+            expect(event.type).to eq('audit.app.process.create')
+            expect(event.metadata['manifest_triggered']).to eq(true)
+          end
+        end
       end
 
       describe 'default values for web processes' do

@@ -1,6 +1,10 @@
+require 'repositories/mixins/app_manifest_event_mixins'
+
 module VCAP::CloudController
   module Repositories
     class AppEventRepository
+      include AppManifestEventMixins
+
       CENSORED_FIELDS   = [:encrypted_environment_json,
                            :command,
                            :environment_json,
@@ -16,12 +20,14 @@ module VCAP::CloudController
         create_app_audit_event('app.crash', app, app.space, actor, metadata)
       end
 
-      def record_app_update(app, space, user_audit_info, request_attrs)
+      def record_app_update(app, space, user_audit_info, request_attrs, manifest_triggered: false)
         audit_hash = app_audit_hash(request_attrs)
         Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
-        metadata = { request: audit_hash }
+        metadata = add_manifest_triggered(manifest_triggered, {
+          request: audit_hash,
+        })
         create_app_audit_event('audit.app.update', app, space, actor, metadata)
       end
 
@@ -87,9 +93,11 @@ module VCAP::CloudController
         { guid: user_audit_info.user_guid, name: user_audit_info.user_email, user_name: user_audit_info.user_name, type: 'user' }
       end
 
-      def record_map_route(app, route, user_audit_info, route_mapping: nil)
+      def record_map_route(app, route, user_audit_info, route_mapping: nil, manifest_triggered: false)
         actor_hash = actor_or_system_hash(user_audit_info)
-        metadata   = { route_guid: route.guid }
+        metadata = add_manifest_triggered(manifest_triggered, {
+          route_guid: route.guid
+        })
         if route_mapping
           metadata[:app_port]           = route_mapping.app_port
           metadata[:route_mapping_guid] = route_mapping.guid

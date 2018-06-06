@@ -25,15 +25,34 @@ module VCAP::CloudController
         })
       end
 
-      it 'creates an audit event' do
-        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
-          app_model,
-          app_model.space,
-          user_audit_info,
-          { 'environment_variables' => request_environment_variables.deep_stringify_keys },
-        )
+      describe 'app events' do
+        it 'creates an audit event' do
+          expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
+            app_model,
+            app_model.space,
+            user_audit_info,
+            { 'environment_variables' => request_environment_variables.deep_stringify_keys },
+            manifest_triggered: false,
+          )
 
-        app_update.patch(app_model, message)
+          app_update.patch(app_model, message)
+        end
+
+        context 'when the app_update is triggered by applying a manifest' do
+          subject(:app_update) { AppPatchEnvironmentVariables.new(user_audit_info, manifest_triggered: true) }
+
+          it 'sends manifest_triggered: true to the event repository' do
+            expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
+              app_model,
+              app_model.space,
+              user_audit_info,
+              { 'environment_variables' => request_environment_variables.deep_stringify_keys },
+              manifest_triggered: true
+            )
+
+            app_update.patch(app_model, message)
+          end
+        end
       end
 
       it 'patches the apps environment_variables' do
