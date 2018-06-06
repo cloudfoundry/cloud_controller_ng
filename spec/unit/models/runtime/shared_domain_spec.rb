@@ -77,7 +77,7 @@ module VCAP::CloudController
         context 'and when there is a router_group_guid set' do
           it 'is not valid' do
             subject.router_group_guid = router_group_guid
-            expect { subject.save }.to raise_error(Sequel::ValidationFailed, /cannot specify a router group for internal domains/)
+            expect { subject.save }.to raise_error(Sequel::ValidationFailed, /cannot be specified for internal domains/)
           end
         end
       end
