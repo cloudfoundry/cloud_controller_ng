@@ -91,7 +91,8 @@ RSpec.describe 'Routes' do
                     'updated_at' => iso8601
                   },
                   'entity' => {
-                    'name'              => domain.name,
+                    'name' => domain.name,
+                    'internal' => false,
                     'router_group_guid' => nil,
                     'router_group_type' => nil
                   }

@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     add_association_dependencies routes: :destroy
 
-    export_attributes :name, :router_group_guid, :router_group_type
-    import_attributes :name, :router_group_guid
+    export_attributes :name, :internal, :router_group_guid, :router_group_type
+    import_attributes :name, :internal, :router_group_guid
     strip_attributes :name
     attr_accessor :router_group_type
 
@@ -15,6 +15,7 @@ module VCAP::CloudController
       {
         guid: guid,
         name: name,
+        internal: internal,
         router_group_guid: router_group_guid,
         router_group_type: router_group_type
       }
@@ -46,6 +47,12 @@ module VCAP::CloudController
       raise err
     end
 
+    def validate
+      super
+
+      validate_internal_domain if internal?
+    end
+
     def shared?
       true
     end
@@ -73,6 +80,16 @@ module VCAP::CloudController
 
     def routing_api_client
       @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
+    end
+
+    def internal?
+      internal
+    end
+
+    def validate_internal_domain
+      if router_group_guid.present?
+        errors.add(:router_group_guid, 'cannot specify a router group for internal domains')
+      end
     end
   end
 end

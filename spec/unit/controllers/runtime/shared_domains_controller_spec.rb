@@ -12,14 +12,16 @@ module VCAP::CloudController
       it do
         expect(SharedDomainsController).to have_creatable_attributes({
           name: { type: 'string', required: true },
-          router_group_guid: { type: 'string', required: false }
+          internal: { type: 'bool', required: false },
+          router_group_guid: { type: 'string', required: false },
         })
       end
 
       it 'cannot update its fields' do
         expect(SharedDomainsController).not_to have_updatable_attributes({
           name: { type: 'string' },
-          router_group_guid: { type: 'string' }
+          internal: { type: 'bool' },
+          router_group_guid: { type: 'string' },
         })
       end
     end
@@ -102,6 +104,7 @@ module VCAP::CloudController
 
             domain_hash = JSON.parse(last_response.body)['entity']
             expect(domain_hash['name']).to eq('shareddomain.com')
+            expect(domain_hash['internal']).to eq(false)
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
             expect(domain_hash['router_group_type']).to eq('tcp')
           end
@@ -183,6 +186,7 @@ module VCAP::CloudController
 
           domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
+          expect(domain_hash['internal']).to eq(false)
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
           expect(domain_hash['router_group_type']).to eq('tcp')
         end
@@ -208,6 +212,7 @@ module VCAP::CloudController
 
           domain_hash = JSON.parse(last_response.body)['entity']
           expect(domain_hash['name']).to eq('shareddomain.com')
+          expect(domain_hash['internal']).to eq(false)
           expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
           expect(domain_hash['router_group_type']).to eq('tcp')
         end
@@ -282,6 +287,7 @@ module VCAP::CloudController
             domain_hash = JSON.parse(last_response.body)['resources'].last['entity']
 
             expect(domain_hash['name']).to eq('shareddomain.com')
+            expect(domain_hash['internal']).to eq(false)
             expect(domain_hash['router_group_guid']).to eq('router-group-guid1')
             expect(domain_hash.key?('router_group_type')).to be true
             expect(domain_hash['router_group_type']).to be_nil

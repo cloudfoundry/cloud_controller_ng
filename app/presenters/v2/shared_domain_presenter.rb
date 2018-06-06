@@ -9,6 +9,7 @@ module CloudController
         def entity_hash(controller, domain, opts, depth, parents, orphans=nil)
           entity = {
             'name' => domain.name,
+            'internal' => domain.internal,
             'router_group_guid' => domain.router_group_guid,
             'router_group_type' => domain.router_group_type
           }

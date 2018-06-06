@@ -24,7 +24,8 @@ module CloudController::Presenters::V2
       it 'returns the domain entity and associated urls' do
         expect(subject.entity_hash(controller, domain, opts, depth, parents, orphans)).to eq(
           {
-            'name'              => domain.name,
+            'name' => domain.name,
+            'internal' => false,
             'router_group_guid' => 'tcp-group',
             'router_group_type' => nil,
             'relationship_key' => 'relationship_value'

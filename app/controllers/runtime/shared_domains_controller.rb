@@ -8,6 +8,7 @@ module VCAP::CloudController
 
     define_attributes do
       attribute :name, String, exclude_in: :update
+      attribute :internal, Message::Boolean, exclude_in: :update, default: nil
       attribute :router_group_guid, String, exclude_in: :update, default: nil
     end
 

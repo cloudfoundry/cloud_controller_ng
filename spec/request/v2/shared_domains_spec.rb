@@ -38,7 +38,8 @@ RSpec.describe 'SharedDomains' do
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'              => 'customer-app-domain1.com',
+                'name' => 'customer-app-domain1.com',
+                'internal' => false,
                 'router_group_guid' => nil,
                 'router_group_type' => nil
               }
@@ -51,7 +52,8 @@ RSpec.describe 'SharedDomains' do
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'              => 'customer-app-domain2.com',
+                'name' => 'customer-app-domain2.com',
+                'internal' => false,
                 'router_group_guid' => nil,
                 'router_group_type' => nil
               }
@@ -64,7 +66,8 @@ RSpec.describe 'SharedDomains' do
                 'updated_at' => iso8601
               },
               'entity' => {
-                'name'              => domain.name,
+                'name' => domain.name,
+                'internal' => false,
                 'router_group_guid' => 'tcp-group',
                 'router_group_type' => nil
               }
@@ -92,7 +95,8 @@ RSpec.describe 'SharedDomains' do
             'updated_at' => iso8601
           },
           'entity' => {
-            'name'              => domain.name,
+            'name' => domain.name,
+            'internal' => false,
             'router_group_guid' => 'tcp-group',
             'router_group_type' => nil
           }
@@ -118,7 +122,8 @@ RSpec.describe 'SharedDomains' do
           'updated_at' => iso8601
         },
         'entity' => {
-          'name'              => 'meow.mc.meowerson.com',
+          'name' => 'meow.mc.meowerson.com',
+          'internal' => false,
           'router_group_guid' => nil,
           'router_group_type' => nil
         }
@@ -158,6 +163,7 @@ RSpec.describe 'SharedDomains' do
           },
           'entity' => {
             'name' => 'meow.mc.meowerson.com',
+            'internal' => false,
             'router_group_guid' => 'abc123',
             'router_group_type' => 'http'
           }
@@ -181,6 +187,7 @@ RSpec.describe 'SharedDomains' do
           },
           'entity' => {
             'name' => 'meow.mc.meowerson.com',
+            'internal' => false,
             'router_group_guid' => '9876',
             'router_group_type' => 'tcp'
           }
@@ -206,7 +213,8 @@ RSpec.describe 'SharedDomains' do
           'updated_at' => iso8601
         },
         'entity' => {
-          'name'              => 'my-domain.edu',
+          'name' => 'my-domain.edu',
+          'internal' => false,
           'router_group_guid' => 'tcp-group',
           'router_group_type' => nil
         }

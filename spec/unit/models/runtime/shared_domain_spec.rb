@@ -9,17 +9,19 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :router_group_guid, :router_group_type }
-      it { is_expected.to import_attributes :name, :router_group_guid }
+      it { is_expected.to export_attributes :name, :internal, :router_group_guid, :router_group_type }
+      it { is_expected.to import_attributes :name, :internal, :router_group_guid }
     end
 
     describe '#as_summary_json' do
-      it 'returns a hash containing the guid and name' do
+      it 'returns a hash containing the shared domain attributes' do
         expect(subject.as_summary_json).to eq(
           guid: subject.guid,
           name: 'test.example.com',
+          internal: false,
           router_group_guid: 'my-router-group-guid',
-          router_group_type: 'tcp')
+          router_group_type: 'tcp'
+        )
       end
     end
 
@@ -65,6 +67,19 @@ module VCAP::CloudController
       it 'denies shared foo.com when private foo.com exists' do
         PrivateDomain.make name: 'foo.com'
         expect { SharedDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name unique/)
+      end
+
+      context 'when the domain is internal' do
+        subject { SharedDomain.make(name: 'test.example.com', internal: true) }
+
+        it { is_expected.to be_valid }
+
+        context 'and when there is a router_group_guid set' do
+          it 'is not valid' do
+            subject.router_group_guid = router_group_guid
+            expect { subject.save }.to raise_error(Sequel::ValidationFailed, /cannot specify a router group for internal domains/)
+          end
+        end
       end
     end
 
