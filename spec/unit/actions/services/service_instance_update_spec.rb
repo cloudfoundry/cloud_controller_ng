@@ -274,14 +274,14 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the dashboard url is a blank string on update' do
-          let(:broker_body) { { operation: '123', dashboard_url: "\n" } }
+        context 'when the dashboard url is present' do
+          let(:broker_body) { { operation: '123', dashboard_url: '' } }
 
-          it 'keeps the previous dashboard url' do
+          it 'updates the service instace model with its value' do
             service_instance_update.update_service_instance(service_instance, request_attrs)
             service_instance.reload
 
-            expect(service_instance.dashboard_url).to eq 'http://previous-dashboard-url.com'
+            expect(service_instance.dashboard_url).to eq ''
           end
         end
       end
