@@ -256,6 +256,8 @@ module VCAP::CloudController
       after_update(process)
 
       [HTTP::CREATED, object_renderer.render_json(self.class, process, @opts)]
+    rescue PackageCreate::InvalidPackage => e
+      unprocessable!(e.message)
     end
 
     def create
@@ -279,6 +281,8 @@ module VCAP::CloudController
         { 'Location' => "#{self.class.path}/#{process.guid}" },
         object_renderer.render_json(self.class, process, @opts)
       ]
+    rescue PackageCreate::InvalidPackage => e
+      unprocessable!(e.message)
     end
 
     put '/v2/apps/:app_guid/routes/:route_guid', :add_route
@@ -392,6 +396,10 @@ module VCAP::CloudController
 
     def filter_dataset(dataset)
       dataset.where(type: ProcessTypes::WEB)
+    end
+
+    def unprocessable!(message)
+      raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', message)
     end
 
     define_messages

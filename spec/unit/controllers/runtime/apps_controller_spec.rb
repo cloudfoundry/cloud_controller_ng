@@ -437,6 +437,29 @@ module VCAP::CloudController
           package = v2_app.latest_package
           expect(package.image).to eq('some-image:latest')
         end
+
+        context 'when the package is invalid' do
+          before do
+            allow(VCAP::CloudController::PackageCreate).to receive(:create_without_event).
+              and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('oops'))
+          end
+
+          it 'returns an UnprocessableEntity error' do
+            request = {
+              name:         'maria',
+              space_guid:   space.guid,
+              docker_image: 'some-image:latest',
+            }
+
+            set_current_user(admin_user, admin: true)
+
+            post '/v2/apps', MultiJson.dump(request)
+
+            expect(last_response.status).to eq(422)
+            expect(last_response.body).to match /UnprocessableEntity/
+            expect(last_response.body).to match /oops/
+          end
+        end
       end
 
       context 'when starting an app without a package' do
@@ -910,6 +933,25 @@ module VCAP::CloudController
             })
             expect(process.reload.docker_image).to eq('repo/new-image')
             expect(process.latest_package).not_to eq(original_package)
+          end
+        end
+
+        context 'when the package is invalid' do
+          before do
+            allow(VCAP::CloudController::PackageCreate).to receive(:create_without_event).
+              and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('oops'))
+          end
+
+          it 'returns an UnprocessableEntity error' do
+            set_current_user(admin_user, admin: true)
+            process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+
+            put "/v2/apps/#{process.guid}", MultiJson.dump({ docker_credentials: {username: 'username', password: 'foo'} })
+
+            puts last_response.inspect
+            expect(last_response.status).to eq(422)
+            expect(last_response.body).to match /UnprocessableEntity/
+            expect(last_response.body).to match /oops/
           end
         end
       end
