@@ -5,6 +5,12 @@ module VCAP::CloudController
     class Protocol
       RSpec.describe ContainerNetworkInfo do
         let(:app) { AppModel.make }
+        let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
+        let!(:other_process) { ProcessModel.make(app: app, ports: [8765], type: 'meow') }
+        let!(:no_exposed_port_process) { ProcessModel.make(app: app, type: 'woof') }
+        let!(:docker_process) { ProcessModelFactory.make(app: app, type: 'docker', ports: [1111, 2222]) }
+        let(:ports_str) { '1111,2222,8080,8765' }
+
         subject(:container_info) { ContainerNetworkInfo.new(app) }
 
         describe '#to_h' do
@@ -15,6 +21,7 @@ module VCAP::CloudController
                 'app_id' => app.guid,
                 'space_id' => app.space.guid,
                 'org_id' => app.organization.guid,
+                'ports' => ports_str,
               },
             })
           end
@@ -29,6 +36,7 @@ module VCAP::CloudController
                   ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app.guid),
                   ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
                   ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
+                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ports_str),
                 ]
               )
             )

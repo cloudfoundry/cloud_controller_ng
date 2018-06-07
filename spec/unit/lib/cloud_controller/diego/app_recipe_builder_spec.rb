@@ -65,6 +65,7 @@ module VCAP::CloudController
           r
         end
 
+        let(:ports) { '' }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: [
@@ -72,6 +73,7 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app_model.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app_model.space.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app_model.organization.guid),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ports),
             ]
           )
         end
@@ -247,6 +249,8 @@ module VCAP::CloudController
               start_command:                command,
             )
           end
+
+          let(:ports) { '8080' }
 
           before do
             VCAP::CloudController::BuildpackLifecycleDataModel.make(
