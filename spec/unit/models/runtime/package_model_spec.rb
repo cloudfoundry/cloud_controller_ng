@@ -13,11 +13,11 @@ module VCAP::CloudController
       end
 
       it 'can have a password with length 16k characters' do
-        package = PackageModel.new(type: 'docker', docker_password: 'a' * 1000)
-        package2 = PackageModel.new(type: 'docker', docker_password: 'a' * 1001)
+        package = PackageModel.new(type: 'docker', docker_password: 'a' * 5000)
+        package2 = PackageModel.new(type: 'docker', docker_password: 'a' * 5001)
         expect(package).to be_valid
         expect(package2).to_not be_valid
-        expect(package2.errors.full_messages).to include('docker_password can be up to 1,000 characters')
+        expect(package2.errors.full_messages).to include('docker_password can be up to 5,000 characters')
       end
     end
 

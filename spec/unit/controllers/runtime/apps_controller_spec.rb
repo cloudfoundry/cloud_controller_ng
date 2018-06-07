@@ -944,11 +944,10 @@ module VCAP::CloudController
 
           it 'returns an UnprocessableEntity error' do
             set_current_user(admin_user, admin: true)
-            process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
+            process = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
 
-            put "/v2/apps/#{process.guid}", MultiJson.dump({ docker_credentials: {username: 'username', password: 'foo'} })
+            put "/v2/apps/#{process.guid}", MultiJson.dump({ docker_credentials: { username: 'username', password: 'foo' } })
 
-            puts last_response.inspect
             expect(last_response.status).to eq(422)
             expect(last_response.body).to match /UnprocessableEntity/
             expect(last_response.body).to match /oops/
