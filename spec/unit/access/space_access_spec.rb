@@ -2,7 +2,9 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceAccess, type: :access do
-    subject(:access) { SpaceAccess.new(Security::AccessContext.new) }
+    let(:queryer) { spy(Permissions::Queryer) }
+
+    subject(:access) { SpaceAccess.new(Security::AccessContext.new(queryer)) }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:user) { VCAP::CloudController::User.make }
     let(:scopes) { nil }
@@ -91,9 +93,9 @@ module VCAP::CloudController
               let(:relation) { r }
 
               can_remove_related_object_table = {
-                reader_and_writer: false,
+                reader_and_writer: true,
                 reader: false,
-                writer: false,
+                writer: true,
 
                 admin: true,
                 admin_read_only: false,
@@ -256,7 +258,7 @@ module VCAP::CloudController
       describe '#can_remove_related_object?' do
         let(:op_params) { { relation: relation, related_guid: related_guid } }
 
-        describe "when the user's guid matches the related guid" do
+        describe 'when the user is acting on themselves' do
           let(:related_guid) { user.guid }
 
           [:auditors, :developers, :managers].each do |r|
@@ -264,9 +266,9 @@ module VCAP::CloudController
               let(:relation) { r }
 
               can_remove_related_object_table = {
-                reader_and_writer: false,
+                reader_and_writer: true,
                 reader: false,
-                writer: false,
+                writer: true,
 
                 admin: true,
                 admin_read_only: false,
