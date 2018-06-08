@@ -59,8 +59,8 @@ module CloudController
 
       def error_handling
         yield
-      rescue Excon::Errors::Error => e
-        logger.error("Error with blobstore: #{e.message}")
+      rescue => e
+        logger.error("Error with blobstore: #{e.class} - #{e.message}")
         raise BlobstoreError.new(e.message)
       end
 

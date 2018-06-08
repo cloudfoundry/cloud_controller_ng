@@ -29,7 +29,7 @@ module CloudController
           expect {
             client.delete_all
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -42,7 +42,7 @@ module CloudController
           expect {
             client.delete_all_in_path('sallow\\dossy\\path')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -55,7 +55,7 @@ module CloudController
           expect {
             client.exists?('off')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -68,7 +68,7 @@ module CloudController
           expect {
             client.blob('a minor')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -81,7 +81,7 @@ module CloudController
           expect {
             client.delete_blob('herbie')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -94,7 +94,7 @@ module CloudController
           expect {
             client.cp_file_between_keys('source_key', 'destination_key')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -107,7 +107,7 @@ module CloudController
           expect {
             client.cp_r_to_blobstore('dont/forget/a/source_dir')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -120,7 +120,7 @@ module CloudController
           expect {
             client.download_from_blobstore('some source_key', 'some:destination_path')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -133,7 +133,7 @@ module CloudController
           expect {
             client.delete('a key')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -146,7 +146,7 @@ module CloudController
           expect {
             client.cp_to_blobstore('source_path', 'destination_key')
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
 
@@ -160,7 +160,7 @@ module CloudController
           expect {
             client.files_for(args)
           }.to raise_error(BlobstoreError, 'error message')
-          expect(logger).to have_received(:error).with('Error with blobstore: error message')
+          expect(logger).to have_received(:error).with('Error with blobstore: Excon::Error - error message')
         end
       end
     end
