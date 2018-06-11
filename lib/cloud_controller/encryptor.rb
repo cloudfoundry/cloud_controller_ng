@@ -31,6 +31,10 @@ module VCAP::CloudController
         run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key)
       end
 
+      def encrypted_classes
+        @encrypted_classes ||= []
+      end
+
       attr_writer :db_encryption_key
       attr_writer :database_encryption_keys
       attr_accessor :current_encryption_key_label
@@ -38,6 +42,7 @@ module VCAP::CloudController
       private
 
       attr_reader :db_encryption_key
+      attr_writer :encrypted_classes
 
       def database_encryption_keys
         @database_encryption_keys ||= {}
@@ -97,6 +102,8 @@ module VCAP::CloudController
 
           self.encrypted_fields ||= []
           encrypted_fields << { field_name: field_name, salt_name: salt_name }
+
+          Encryptor.encrypted_classes << self.name
 
           define_method "generate_#{salt_name}" do
             return if send(salt_name).present?
