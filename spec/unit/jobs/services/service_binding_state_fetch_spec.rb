@@ -427,6 +427,33 @@ module VCAP::CloudController
               expect(Delayed::Job.count).to eq 0
             end
           end
+
+          context 'when the poll_interval is changed after the job was created' do
+            let(:new_polling_interval) { default_polling_interval * 2 }
+
+            it 'updates the poll interval after the next run' do
+              Timecop.freeze(Time.now)
+              first_run_time = Time.now
+
+              # Force job to be initialized now, before we modify the test config
+              job
+              TestConfig.override(broker_client_default_async_poll_interval_seconds: new_polling_interval)
+
+              Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+              execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              expect(Delayed::Job.count).to eq(1)
+
+              old_next_run_time = first_run_time + default_polling_interval.seconds + 1.second
+              Timecop.travel(old_next_run_time) do
+                execute_all_jobs(expected_successes: 0, expected_failures: 0)
+              end
+
+              new_next_run_time = first_run_time + new_polling_interval.seconds + 1.second
+              Timecop.travel(new_next_run_time) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+              end
+            end
+          end
         end
       end
     end
