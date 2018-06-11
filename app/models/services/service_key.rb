@@ -75,5 +75,9 @@ module VCAP::CloudController
     def logger
       @logger ||= Steno.logger('cc.models.service_key')
     end
+
+    def operation_in_progress?
+      false
+    end
   end
 end

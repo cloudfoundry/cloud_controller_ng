@@ -33,6 +33,10 @@ module VCAP::CloudController
       { route: route.uri }
     end
 
+    def operation_in_progress?
+      false
+    end
+
     private
 
     def validate_routing_service
