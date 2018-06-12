@@ -5,7 +5,7 @@ module VCAP::CloudController
         logger = Steno.logger('cc.deployment_updater.update')
         logger.info('run-deployment-update')
 
-        deployments = DeploymentModel.all
+        deployments = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE)
 
         deployments.each do |deployment|
           scale_deployment(deployment, logger)
@@ -15,13 +15,21 @@ module VCAP::CloudController
       private_class_method
 
       def self.scale_deployment(deployment, logger)
-        web_process = deployment.app.web_process
+        app = deployment.app
+        web_process = app.web_process
         webish_process = deployment.webish_process
 
-        return unless web_process.instances > 0
         return unless ready_to_scale?(deployment, logger)
 
-        if web_process.instances == 1
+        if web_process.instances == 0
+          ProcessModel.db.transaction do
+            webish_process.update(type: ProcessTypes::WEB)
+            web_process.delete
+            webish_process.update(guid: app.guid)
+
+            deployment.update(webish_process: nil, state: DeploymentModel::DEPLOYED_STATE)
+          end
+        elsif web_process.instances == 1
           web_process.update(instances: web_process.instances - 1)
         else
           ProcessModel.db.transaction do

@@ -579,6 +579,28 @@ module VCAP::CloudController
       }
     end
 
+    describe 'guid validations for AppModels' do
+      let(:app) { AppModel.make(name: 'app', guid: 'the real guid') }
+      let(:process) { ProcessModel.make(app_guid: app.guid, guid: 'bogus guid', state: ProcessModel::STARTED) }
+
+      context 'in a deployment' do
+        let!(:deployment) { DeploymentModel.make(app: app, webish_process: process) }
+
+        it 'can directly update process guid that are part of deployments' do
+          process.update(guid: app.guid)
+          expect(process.guid).to eq(app.guid)
+        end
+      end
+
+      context 'outside a deployment' do
+        it 'fails to update process guids' do
+          expect {
+            process.update(guid: app.guid)
+          }.to raise_error(CloudController::Errors::ApplicationMissing)
+        end
+      end
+    end
+
     describe '#in_suspended_org?' do
       subject(:process) { ProcessModel.make }
 

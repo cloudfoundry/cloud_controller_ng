@@ -58,6 +58,7 @@ module VCAP::CloudController
           deployment_updater: {
             update_frequency_in_seconds: Integer,
           },
+
         }
       end
 
