@@ -1188,3 +1188,8 @@
   name: DeploymentsDisabled
   http_code: 403
   message: "Deployments cannot be created due to manifest property 'temporary_disable_deployments'"
+
+390015:
+  name: NoCurrentEncryptionKey
+  http_code: 422
+  message: "Please set the desired encryption key in the manifest at ‘cc.database_encryption.current_key_label’"

@@ -41,6 +41,18 @@ module VCAP::CloudController
         allow(VCAP::CloudController::Encryptor).to receive(:encrypted_classes).and_return(['VCAP::CloudController::ServiceBinding', 'VCAP::CloudController::AppModel'])
       end
 
+      context 'no current encryption key label is set' do
+        before do
+          allow(VCAP::CloudController::Encryptor).to receive(:current_encryption_key_label).and_return(nil)
+        end
+
+        it 'raises an error' do
+          expect {
+            RotateDatabaseKey.perform(batch_size: 1)
+          }.to raise_error(CloudController::Errors::ApiError, /Please set the desired encryption key/)
+        end
+      end
+
       it 'changes the key label of each model' do
         expect(app.encryption_key_label).to eq('old')
         expect(service_binding.encryption_key_label).to eq('old')
