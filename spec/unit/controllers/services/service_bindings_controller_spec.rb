@@ -952,6 +952,27 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(204)
             end
 
+            context 'when the broker responds asynchronously' do
+              let(:unbind_status) { 202 }
+              let(:params_warning) do
+                CGI.escape(['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
+                            'The service binding may not have been successfully deleted on the service broker.'].join(' '))
+              end
+
+              it 'returns a 204 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+
+                expect(last_response).to have_status_code(204)
+              end
+
+              it 'should warn the user about the misbehave broker' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+
+                expect(last_response.headers).to include('X-Cf-Warnings')
+                expect(last_response.headers['X-Cf-Warnings']).to include(params_warning)
+              end
+            end
+
             context 'and the broker only supports asynchronous request' do
               let(:unbind_status) { 422 }
               let(:unbind_body) { { error: 'AsyncRequired' } }

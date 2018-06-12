@@ -7,6 +7,10 @@ module VCAP::CloudController
     let(:accepts_incomplete) { false }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { 'user@example.com' }
+    let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+    let(:service_binding) { ServiceBinding.make }
+    let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
+    let(:service_instance) { service_binding.service_instance }
 
     describe '#foreground_delete_request' do
       let(:service_binding) { ServiceBinding.make }
@@ -76,25 +80,6 @@ module VCAP::CloudController
           }.to raise_error(error)
         end
       end
-
-      context 'when the broker responds asynchronously' do
-        before do
-          allow(client).to receive(:unbind).and_return({ async: true })
-          allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
-        end
-
-        it 'should keep the service binding' do
-          service_binding_delete.foreground_delete_request(service_binding)
-
-          expect(service_binding.exists?).to be_truthy
-        end
-
-        it 'should not immediately create an audit event' do
-          service_binding_delete.foreground_delete_request(service_binding)
-
-          expect(Event.last).to be_nil
-        end
-      end
     end
 
     describe '#background_delete_request' do
@@ -115,11 +100,6 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      let(:service_binding) { ServiceBinding.make }
-      let(:service_instance) { service_binding.service_instance }
-      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-      let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
-
       let(:service_binding1) { ServiceBinding.make }
       let(:service_binding2) { ServiceBinding.make }
 
@@ -150,6 +130,18 @@ module VCAP::CloudController
             allow(client).to receive(:unbind).and_return({ async: true, operation: '123' })
             allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
             service_binding.service_binding_operation = service_binding_operation
+          end
+
+          it 'should keep the service binding' do
+            service_binding_delete.foreground_delete_request(service_binding)
+
+            expect(service_binding.exists?).to be_truthy
+          end
+
+          it 'should NOT create an audit event' do
+            service_binding_delete.foreground_delete_request(service_binding)
+
+            expect(Event.last).to be_nil
           end
 
           context 'when the binding already has an operation' do
@@ -187,12 +179,6 @@ module VCAP::CloudController
               expect(service_binding.last_operation.broker_provided_operation).to eq('123')
             end
           end
-
-          it 'should not immediately create an audit event' do
-            service_binding_delete.delete(service_binding)
-
-            expect(Event.last).to be_nil
-          end
         end
       end
 
@@ -203,6 +189,30 @@ module VCAP::CloudController
           expect(client).to receive(:unbind).with(service_binding, user_guid, false)
           service_binding_delete.delete(service_binding)
         end
+
+        context 'when the broker unexpectedly responds asynchronously' do
+          let(:service_binding_operation) {}
+
+          before do
+            allow(client).to receive(:unbind).and_return({ async: true })
+            allow(client).to receive(:fetch_service_binding_last_operation).and_return({})
+            service_binding.service_binding_operation = service_binding_operation
+          end
+
+          it 'should immediately delete the binding' do
+            service_binding_delete.delete(service_binding)
+            expect(service_binding.exists?).to be_falsey
+          end
+
+          it 'should create an audit event' do
+            service_binding_delete.delete(service_binding)
+
+            event = Event.last
+            expect(event.type).to eq('audit.service_binding.delete')
+            expect(event.actee).to eq(service_binding.guid)
+            expect(event.actee_type).to eq('service_binding')
+          end
+        end
       end
 
       context 'when accepts_incomplete is not provided as an argument' do
@@ -211,6 +221,71 @@ module VCAP::CloudController
         it 'defaults to false and asks the broker to unbind the instance sync' do
           expect(client).to receive(:unbind).with(service_binding, user_guid, false)
           service_binding_delete.delete(service_binding)
+        end
+      end
+    end
+
+    describe '#broker_responded_async_for_accepts_incomplete_false?' do
+      before do
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        stub_request(:delete, service_binding_url_pattern)
+      end
+
+      context 'when accepts_incomplete is true' do
+        let(:accepts_incomplete) { true }
+
+        context 'when the broker responded sunchronously' do
+          before do
+            allow(client).to receive(:unbind).and_return({ async: false })
+          end
+
+          it 'should say that the broker responded ok' do
+            service_binding_delete.delete(service_binding)
+            expect(service_binding_delete.broker_responded_async_for_accepts_incomplete_false?).to be false
+          end
+        end
+
+        context 'when the broker responds asynchronously' do
+          before do
+            allow(client).to receive(:unbind).and_return({ async: true })
+          end
+
+          it 'should say that the broker responded ok' do
+            service_binding_delete.delete(service_binding)
+            expect(service_binding_delete.broker_responded_async_for_accepts_incomplete_false?).to be false
+          end
+        end
+      end
+
+      context 'when accepts_incomplete is false' do
+        let(:accepts_incomplete) { false }
+
+        context 'when the broker unexpectedly responds asynchronously' do
+          before do
+            allow(client).to receive(:unbind).and_return({ async: true })
+          end
+
+          it 'should say that the broker responded poorly' do
+            service_binding_delete.delete(service_binding)
+            expect(service_binding_delete.broker_responded_async_for_accepts_incomplete_false?).to be true
+          end
+        end
+
+        context 'when the broker responded sunchronously' do
+          before do
+            allow(client).to receive(:unbind).and_return({ async: false })
+          end
+
+          it 'should say that the broker responded ok' do
+            service_binding_delete.delete(service_binding)
+            expect(service_binding_delete.broker_responded_async_for_accepts_incomplete_false?).to be false
+          end
+        end
+      end
+
+      context 'when there is no response from the broker' do
+        it 'should return falsey' do
+          expect(service_binding_delete.broker_responded_async_for_accepts_incomplete_false?).to be_falsey
         end
       end
     end

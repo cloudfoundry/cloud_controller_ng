@@ -28,9 +28,9 @@ module VCAP::CloudController
         raise_if_instance_locked(service_binding.service_instance)
         raise_if_binding_locked(service_binding)
 
-        broker_response = remove_from_broker(service_binding)
-        if broker_response[:async]
-          service_binding.save_with_new_operation({ type: 'delete', state: 'in progress', broker_provided_operation: broker_response[:operation] })
+        @broker_response = remove_from_broker(service_binding)
+        if @broker_response[:async] && @accepts_incomplete
+          service_binding.save_with_new_operation({ type: 'delete', state: 'in progress', broker_provided_operation: @broker_response[:operation] })
 
           job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, @user_audit_info, {})
           enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
@@ -42,6 +42,10 @@ module VCAP::CloudController
       end
 
       errors
+    end
+
+    def broker_responded_async_for_accepts_incomplete_false?
+      @broker_response&.[](:async) && !@accepts_incomplete
     end
 
     private
