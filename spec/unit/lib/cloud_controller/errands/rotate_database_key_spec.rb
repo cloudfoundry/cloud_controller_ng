@@ -45,7 +45,7 @@ module VCAP::CloudController
         expect(app.encryption_key_label).to eq('old')
         expect(service_binding.encryption_key_label).to eq('old')
 
-        RotateDatabaseKey.perform
+        RotateDatabaseKey.perform(batch_size: 1)
 
         expect(app.reload.encryption_key_label).to eq('new')
         expect(service_binding.reload.encryption_key_label).to eq('new')
@@ -61,11 +61,11 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
           with(JSON.dump(volume_mounts), service_binding.volume_mounts_salt).exactly(:twice)
 
-        RotateDatabaseKey.perform
+        RotateDatabaseKey.perform(batch_size: 1)
       end
 
       it 'does not change the decrypted value' do
-        RotateDatabaseKey.perform
+        RotateDatabaseKey.perform(batch_size: 1)
 
         expect(app.environment_variables).to eq(env_vars)
         expect(service_binding.credentials).to eq(credentials)
@@ -82,7 +82,36 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
           with(JSON.dump(volume_mounts_2), service_binding_new_key_label.volume_mounts_salt)
 
-        RotateDatabaseKey.perform
+        RotateDatabaseKey.perform(batch_size: 1)
+      end
+
+      describe 'batching so we do not load entire tables into memory' do
+        let(:app2) { AppModel.make }
+        let(:app3) { AppModel.make }
+
+        before do
+          allow(Encryptor).to receive(:current_encryption_key_label) { 'old' }
+
+          app2.environment_variables = { password: 'hunter2' }
+          app2.save
+
+          app3.environment_variables = { feature: 'activate' }
+          app3.save
+
+          allow(Encryptor).to receive(:current_encryption_key_label) { 'new' }
+        end
+
+        it 'rotates batches until everything is rotated' do
+          expect(app.encryption_key_label).to eq('old')
+          expect(app2.encryption_key_label).to eq('old')
+          expect(app3.encryption_key_label).to eq('old')
+
+          RotateDatabaseKey.perform(batch_size: 1)
+
+          expect(app.reload.encryption_key_label).to eq('new')
+          expect(app2.reload.encryption_key_label).to eq('new')
+          expect(app3.reload.encryption_key_label).to eq('new')
+        end
       end
     end
   end
