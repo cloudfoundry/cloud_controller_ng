@@ -14,7 +14,7 @@ module VCAP::CloudController
       private
 
       def no_encryption_key!
-        raise CloudController::Errors::ApiError.new_from_details("NoCurrentEncryptionKey")
+        raise CloudController::Errors::ApiError.new_from_details('NoCurrentEncryptionKey')
       end
 
       def rotate_for_class(klass, batch_size)
