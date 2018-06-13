@@ -11,7 +11,7 @@ require 'cloud_controller/config_schemas/migrate_schema'
 require 'cloud_controller/config_schemas/route_syncer_schema'
 require 'cloud_controller/config_schemas/worker_schema'
 require 'cloud_controller/config_schemas/deployment_updater_schema'
-require 'cloud_controller/config_schemas/database_key_rotator_schema'
+require 'cloud_controller/config_schemas/rotatate_database_key_schema'
 
 module VCAP::CloudController
   class Config

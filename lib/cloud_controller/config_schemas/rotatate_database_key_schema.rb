@@ -2,7 +2,7 @@ require 'vcap/config'
 
 module VCAP::CloudController
   module ConfigSchemas
-    class DatabaseKeyRotatorSchema < VCAP::Config
+    class RotateDatabaseKeySchema < VCAP::Config
       define_schema do
         {
           logging: {

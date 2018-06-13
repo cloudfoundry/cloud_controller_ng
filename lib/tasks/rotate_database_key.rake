@@ -1,8 +1,8 @@
-namespace :database_key_rotator do
+namespace :rotate_cc_database_key do
   desc 'Rotate database keys'
   task :perform do
     require 'cloud_controller/errands/rotate_database_key'
-    RakeConfig.context = :database_key_rotator
+    RakeConfig.context = :rotate_database_key
     BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
     VCAP::CloudController::RotateDatabaseKey.perform
   end
