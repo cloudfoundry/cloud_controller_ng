@@ -20,6 +20,8 @@ module VCAP::CloudController::Metrics
 
     describe '#complete_request' do
       let(:batch) { double(:batch) }
+      let(:path) { '/v2/some-path' }
+      let(:method) { 'GET' }
       let(:status) { 204 }
 
       before do
@@ -29,7 +31,7 @@ module VCAP::CloudController::Metrics
       end
 
       it 'increments completed, decrements outstanding, increments status for statsd' do
-        request_metrics.complete_request(status)
+        request_metrics.complete_request(path, method, status)
 
         expect(batch).to have_received(:decrement).with('cc.requests.outstanding')
         expect(batch).to have_received(:increment).with('cc.requests.completed')
@@ -37,14 +39,29 @@ module VCAP::CloudController::Metrics
       end
 
       it 'normalizes http status codes in statsd' do
-        request_metrics.complete_request(200)
+        request_metrics.complete_request(path, method, 200)
         expect(batch).to have_received(:increment).with('cc.http_status.2XX')
 
-        request_metrics.complete_request(300)
+        request_metrics.complete_request(path, method, 300)
         expect(batch).to have_received(:increment).with('cc.http_status.3XX')
 
-        request_metrics.complete_request(400)
+        request_metrics.complete_request(path, method, 400)
         expect(batch).to have_received(:increment).with('cc.http_status.4XX')
+      end
+
+      it 'sends extra metrics for /service_instances calls' do
+        request_metrics.complete_request('/v2/service_instances', 'GET', 200)
+        expect(batch).to have_received(:increment).with('cc.requests.service_instances.get.http_status.2XX')
+      end
+
+      it 'sends extra metrics for /service_bindings calls' do
+        request_metrics.complete_request('/v2/service_bindings', 'GET', 200)
+        expect(batch).to have_received(:increment).with('cc.requests.service_bindings.get.http_status.2XX')
+      end
+
+      it 'sends extra metrics for /service_keys calls' do
+        request_metrics.complete_request('/v2/service_keys', 'GET', 200)
+        expect(batch).to have_received(:increment).with('cc.requests.service_keys.get.http_status.2XX')
       end
     end
   end

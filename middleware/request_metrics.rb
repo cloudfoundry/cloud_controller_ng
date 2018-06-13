@@ -11,7 +11,7 @@ module CloudFoundry
 
         status, headers, body = @app.call(env)
 
-        @request_metrics.complete_request(status)
+        @request_metrics.complete_request(env['PATH_INFO'], env['REQUEST_METHOD'], status)
 
         [status, headers, body]
       end
