@@ -312,21 +312,41 @@ module VCAP::CloudController
         let(:req) do
           {
             app_guid:              process.guid,
-            service_instance_guid: service_instance.guid
+            service_instance_guid: service_instance.guid,
+            parameters:            params
           }
         end
+        let(:params) { nil }
 
         it_behaves_like 'BindableServiceInstance'
 
         context 'when the client passes arbitrary params' do
           let(:params_warning) { CGI.escape('Configuration parameters are ignored for bindings to user-provided service instances.') }
+          let(:params) { { 'key' => 'value' } }
 
           it 'does not use the arbitrary params and warns the user' do
-            body = req.merge(parameters: { 'key' => 'value' })
-            post '/v2/service_bindings', body.to_json
+            post '/v2/service_bindings', req.to_json
             expect(last_response).to have_status_code 201
             expect(last_response.headers).to include('X-Cf-Warnings')
             expect(last_response.headers['X-Cf-Warnings']).to include(params_warning)
+          end
+        end
+
+        context 'when the client passes empty params' do
+          let(:params) { {} }
+
+          it 'does not warn the user' do
+            post '/v2/service_bindings', req.to_json
+            expect(last_response).to have_status_code 201
+            expect(last_response.headers).not_to include('X-Cf-Warnings')
+          end
+        end
+
+        context 'when the client passes no params' do
+          it 'does not warn the user' do
+            post '/v2/service_bindings', req.to_json
+            expect(last_response).to have_status_code 201
+            expect(last_response.headers).not_to include('X-Cf-Warnings')
           end
         end
       end
