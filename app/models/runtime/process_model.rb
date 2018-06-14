@@ -335,7 +335,7 @@ module VCAP::CloudController
     end
 
     def scaling_operation?
-      started? && !are_we_deploying?
+      started?
     end
 
     def desired_instances
@@ -547,10 +547,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def are_we_deploying?
-      DeploymentModel.deployment_for?(app_guid)
-    end
 
     def non_unique_process_types
       return [] unless app

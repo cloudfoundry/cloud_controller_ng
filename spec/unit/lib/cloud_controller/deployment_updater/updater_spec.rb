@@ -6,6 +6,10 @@ module VCAP::CloudController
     let(:web_process) { ProcessModel.make(instances: 2) }
     let(:webish_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5) }
 
+    let(:web_process_2) { ProcessModel.make(instances: 2) }
+    let(:webish_process_2) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-2', instances: 5) }
+
+    let!(:finished_deployment) { DeploymentModel.make(app: web_process_2.app, webish_process: webish_process_2, state: 'DEPLOYED') }
     let!(:deployment) { DeploymentModel.make(app: web_process.app, webish_process: webish_process, state: 'DEPLOYING') }
 
     let(:deployer) { DeploymentUpdater::Updater }
@@ -46,7 +50,7 @@ module VCAP::CloudController
 
         context 'the last iteration of deployments in progress' do
           let(:web_process) { ProcessModel.make(instances: 1) }
-          let(:webish_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5, guid: "I'm just a webish guid") }
+          let(:webish_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5) }
 
           it 'scales the web process down by one' do
             expect {
@@ -66,64 +70,15 @@ module VCAP::CloudController
         end
 
         context 'deployments where web process is at zero' do
-          let!(:space) { web_process.space }
-
-          let(:app_guid) { "I'm the real web guid" }
-          let(:the_best_app) { AppModel.make(name: 'clem', guid: app_guid) }
-          let(:web_process) { ProcessModel.make(app: the_best_app, guid: app_guid, instances: 2) }
-
-          let!(:route1) { Route.make(space: space, host: 'hostname1') }
-          let!(:route_mapping1) { RouteMappingModel.make(app: web_process.app, route: route1, process_type: web_process.type) }
-          let!(:route2) { Route.make(space: space, host: 'hostname2') }
-          let!(:route_mapping2) { RouteMappingModel.make(app: webish_process.app, route: route2, process_type: webish_process.type) }
-
           before do
             web_process.update(instances: 0)
           end
 
-          it 'replaces the existing web process with the webish process' do
-            before_webish_guid = webish_process.guid
-            expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-1'])
-            expect(webish_process.instances).to eq(5)
-
-            deployer.update # do the work
-
-            deployment.reload
-            the_best_app.reload
-
-            after_web_process = the_best_app.web_process
-            after_webish_process = deployment.webish_process
-
-            expect(after_webish_process).to be_nil
-            expect(after_web_process.guid).to eq(the_best_app.guid)
-            expect(after_web_process.instances).to eq(5)
-
-            expect(ProcessModel.find(guid: before_webish_guid)).to be_nil
-            expect(ProcessModel.find(guid: the_best_app.guid)).not_to be_nil
-
-            expect(ProcessModel.map(&:type)).to match_array(['web'])
-            expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          it 'does not scale web or webish processes' do
+            deployer.update
+            expect(web_process.reload.instances).to eq(0)
+            expect(webish_process.reload.instances).to eq(5)
           end
-        end
-      end
-
-      context 'when the deployment is in state DEPLOYED' do
-        let(:finished_web_process) { ProcessModel.make(instances: 0) }
-        let(:finished_webish_process) { ProcessModel.make(instances: 2) }
-        let!(:finished_deployment) { DeploymentModel.make(app: finished_web_process.app, webish_process: finished_webish_process, state: 'DEPLOYED') }
-
-        it 'does not scale the deployment' do
-          expect {
-            deployer.update
-          }.not_to change {
-            finished_web_process.reload.instances
-          }
-
-          expect {
-            deployer.update
-          }.not_to change {
-            finished_webish_process.reload.instances
-          }
         end
       end
 
