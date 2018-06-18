@@ -200,6 +200,32 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/spaces/:guid/user_roles' do
+      let(:space_developer_1) { make_developer_for_space(space_one) }
+      let(:space_manager) { make_manager_for_space(space_one) }
+      let(:space_developer_2) { make_developer_for_space(space_one) }
+
+      before do
+        set_current_user_as_admin
+        space_developer_2.update(admin: true, active: true)
+        allow(uaa_client).to receive(:usernames_for_ids).with(a_collection_containing_exactly(space_developer_1.guid,
+                                                               space_manager.guid,
+                                                               space_developer_2.guid)).
+          and_return({ space_developer_1.guid => 'joe',
+                       space_manager.guid => 'trish',
+                       space_developer_2.guid => 'bosco' })
+      end
+
+      context 'for a current space, with an admin' do
+        it 'returns a 200' do
+          get "/v2/spaces/#{space_one.guid}/user_roles"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].
+                  map { |x| (x1 = x['entity']) && [x1['username'], x1['admin'], x1['active']] }).
+            to match_array(
+              [['joe', false, false], ['trish', false, false], ['bosco', true, true]])
+        end
+      end
+
       context 'for an space that does not exist' do
         it 'returns a 404' do
           set_current_user_as_admin
