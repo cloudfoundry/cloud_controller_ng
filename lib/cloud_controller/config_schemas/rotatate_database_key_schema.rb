@@ -33,11 +33,6 @@ module VCAP::CloudController
             keys: Hash,
             current_key_label: String
           },
-
-          default_app_memory: Integer,
-          default_app_disk_in_mb: Integer,
-          maximum_app_disk_in_mb: Integer,
-          instance_file_descriptor_limit: Integer,
         }
       end
 
