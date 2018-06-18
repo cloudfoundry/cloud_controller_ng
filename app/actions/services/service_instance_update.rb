@@ -77,6 +77,10 @@ module VCAP::CloudController
 
       service_instance.last_operation.update_attributes(response[:last_operation])
 
+      if response.key?(:dashboard_url)
+        service_instance.update_service_instance(dashboard_url: response[:dashboard_url])
+      end
+
       err
     end
 

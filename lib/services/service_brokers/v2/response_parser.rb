@@ -13,15 +13,14 @@ module VCAP::Services
           validator =
             case unvalidated_response.code
             when 200
-              JsonObjectValidator.new(@logger,
+              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
                   SuccessValidator.new(state: 'succeeded'))
             when 201
-              JsonObjectValidator.new(@logger,
+              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
                   SuccessValidator.new(state: 'succeeded'))
             when 202
-              JsonObjectValidator.new(@logger,
-                OperationValidator.new(
-                  SuccessValidator.new(state: 'in progress')))
+              JsonSchemaValidator.new(@logger, provision_service_instance_response_schema,
+                  SuccessValidator.new(state: 'in progress'))
             when 409
               FailingValidator.new(Errors::ServiceBrokerConflict)
             when 422
@@ -48,9 +47,7 @@ module VCAP::Services
                     VolumeMountsValidator.new(opts[:service_guid],
                       SuccessValidator.new(state: 'succeeded')))))
             when 202
-              JsonObjectValidator.new(@logger,
-                OperationValidator.new(
-                  SuccessValidator.new))
+              JsonSchemaValidator.new(@logger, async_bind_response_schema, SuccessValidator.new)
             when 409
               FailingValidator.new(Errors::ServiceBrokerConflict)
             when 422
@@ -103,9 +100,8 @@ module VCAP::Services
             when 201
               IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 202
-              JsonObjectValidator.new(@logger,
-                OperationValidator.new(
-                  SuccessValidator.new(state: 'in progress')))
+              JsonSchemaValidator.new(@logger, deprovision_service_instance_response_schema,
+                  SuccessValidator.new(state: 'in progress'))
             when 204
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 410
@@ -146,14 +142,13 @@ module VCAP::Services
           validator =
             case unvalidated_response.code
             when 200
-              JsonObjectValidator.new(@logger,
-                  SuccessValidator.new(state: 'succeeded'))
+              JsonSchemaValidator.new(@logger, update_service_instance_schema,
+                SuccessValidator.new(state: 'succeeded'))
             when 201
               IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 202
-              JsonObjectValidator.new(@logger,
-                OperationValidator.new(
-                  SuccessValidator.new(state: 'in progress')))
+              JsonSchemaValidator.new(@logger, update_service_instance_schema,
+                SuccessValidator.new(state: 'in progress'))
             when 422
               FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
                 FailingValidator.new(Errors::ServiceBrokerRequestRejected))
@@ -213,6 +208,64 @@ module VCAP::Services
 
         def parse_fetch_service_binding_last_operation(path, response)
           parse_fetch_state(path, response)
+        end
+
+        def async_bind_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'operation' => {
+                'type' => 'string',
+                'maxLength' => 10_000,
+              },
+            },
+          }
+        end
+
+        def provision_service_instance_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'dashboard_url' => {
+                'type' => 'string',
+              },
+              'operation' => {
+                'type' => 'string',
+                'maxLength' => 10_000,
+              },
+            },
+          }
+        end
+
+        def deprovision_service_instance_response_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'operation' => {
+                'type' => 'string',
+                'maxLength' => 10_000,
+              },
+            },
+          }
+        end
+
+        def update_service_instance_schema
+          {
+            '$schema' => 'http://json-schema.org/draft-04/schema#',
+            'type' => 'object',
+            'properties' => {
+              'dashboard_url' => {
+                'type' => 'string',
+              },
+              'operation' => {
+                'type' => 'string',
+                'maxLength' => 10_000
+              },
+            }
+          }
         end
 
         def fetch_instance_parameters_response_schema
@@ -372,28 +425,6 @@ module VCAP::Services
           def not_required_error_description
             'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
             'Please contact the service provider.'
-          end
-        end
-
-        class OperationValidator
-          def initialize(validator)
-            @validator = validator
-          end
-
-          def validate(method:, uri:, code:, response:)
-            parsed_response = MultiJson.load(response.body)
-
-            if (operation = parsed_response['operation'])
-              if !operation.is_a?(String)
-                raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response,
-                  'The service broker response contained an operation field that was not a string.')
-              elsif operation.length > 10_000
-                raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response,
-                  'The service broker response contained an operation field exceeding 10k characters.')
-              end
-            end
-
-            @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end
 

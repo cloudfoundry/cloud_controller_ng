@@ -583,12 +583,6 @@ module VCAP::Services::ServiceBrokers::V2
             expect(last_operation[:state]).to eq('succeeded')
             expect(last_operation[:proposed_changes]).to be_nil
           end
-
-          it 'returns the new service_plan in a hash' do
-            attributes, _, err = client.update(instance, new_plan, accepts_incomplete: true)
-            expect(err).to be_nil
-            expect(attributes[:service_plan]).to eq new_plan
-          end
         end
 
         context 'when the broker returns a 202' do
@@ -649,6 +643,38 @@ module VCAP::Services::ServiceBrokers::V2
             attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
 
             expect(attributes[:last_operation][:broker_provided_operation]).to be_nil
+          end
+        end
+      end
+
+      context 'when the broker returns a new dashboard url' do
+        context 'and the response is a 202' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
+
+          let(:response_data) do
+            { dashboard_url: 'http://foo.com',
+              operation: 'a_broker_operation_identifier' }
+          end
+
+          it 'returns immediately with the url from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:dashboard_url]).to eq('http://foo.com')
+          end
+        end
+
+        context 'and the response is 200' do
+          let(:code) { 200 }
+
+          let(:response_data) do
+            { dashboard_url: 'http://foo.com' }
+          end
+
+          it 'returns immediately with the url from the broker response' do
+            client = Client.new(client_attrs)
+            attributes, _ = client.update(instance, new_plan, accepts_incomplete: true)
+            expect(attributes[:dashboard_url]).to eq('http://foo.com')
           end
         end
       end
