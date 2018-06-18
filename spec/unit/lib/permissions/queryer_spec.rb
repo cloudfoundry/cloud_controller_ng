@@ -669,6 +669,74 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_update_space?' do
+      before do
+        allow(perm_permissions).to receive(:can_update_space?)
+
+        allow(db_permissions).to receive(:can_update_space?).and_return(true)
+        allow(db_permissions).to receive(:can_write_globally?).and_return(false)
+      end
+
+      it 'asks for #can_update_space? on behalf of the current user' do
+        allow(perm_permissions).to receive(:can_update_space?).and_return(true)
+
+        subject.can_update_space?(space_guid)
+
+        expect(db_permissions).to have_received(:can_update_space?).with(space_guid)
+        expect(perm_permissions).to have_received(:can_update_space?).with(space_guid)
+      end
+
+      it 'skips the experiment if the user is a global writer' do
+        allow(db_permissions).to receive(:can_write_globally?).and_return(true)
+
+        subject.can_update_space?(space_guid)
+
+        expect(perm_permissions).not_to have_received(:can_update_space?)
+      end
+
+      it 'uses the expected branch from the experiment' do
+        allow(perm_permissions).to receive(:can_update_space?).and_return('not-expected')
+
+        response = subject.can_update_space?(space_guid)
+
+        expect(response).to eq(true)
+      end
+
+      context 'when the control and candidate are the same' do
+        space_guid = SecureRandom.uuid
+
+        before do
+          allow(db_permissions).to receive(:can_update_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_update_space?).and_return(true)
+        end
+
+        it_behaves_like('match recorder',
+          proc { |queryer| queryer.can_update_space?(space_guid) },
+          :can_update_space?,
+          true,
+          true,
+          space_guid: space_guid
+        )
+      end
+
+      context 'when the control and candidate are different' do
+        space_guid = SecureRandom.uuid
+
+        before do
+          allow(db_permissions).to receive(:can_update_space?).and_return(true)
+          allow(perm_permissions).to receive(:can_update_space?).and_return('something wrong')
+        end
+
+        it_behaves_like('mismatch recorder',
+          proc { |queryer| queryer.can_update_space?(space_guid) },
+          :can_update_space?,
+          true,
+          'something wrong',
+          space_guid: space_guid
+        )
+      end
+    end
+
     describe '#can_read_from_isolation_segment?' do
       class FakeIsolationSegment
         def initialize(guid)

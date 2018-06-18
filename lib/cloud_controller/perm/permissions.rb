@@ -103,6 +103,12 @@ module VCAP
           ])
         end
 
+        def can_update_space?(space_id)
+          can_write_globally? || has_any_permission?([
+            { action: SPACE_MANAGER_ACTION, resource: space_id },
+          ])
+        end
+
         def can_read_from_isolation_segment?(isolation_segment)
           can_read_globally? ||
             isolation_segment.spaces.any? { |space| can_read_from_space?(space.guid, space.organization.guid) } ||

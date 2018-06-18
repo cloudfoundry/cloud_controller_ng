@@ -13,32 +13,40 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
 
           can_write_to_org = can_write_globally
           can_write_to_space = can_write_globally
+          can_update_space = can_write_globally
 
           can_read_from_org = can_read_globally
+          can_read_from_space = can_read_globally
           can_read_route = can_read_globally
 
           if o
-            can_read_from_org ||= user.organizations.include?(o) || user.managed_organizations.include?(o) ||
-              user.audited_organizations.include?(o) || user.billing_managed_organizations.include?(o)
+            can_read_from_org ||= o.users.include?(user) || o.managers.include?(user) ||
+              o.auditors.include?(user) || o.billing_managers.include?(user)
+            can_read_from_space ||= o.managers.include?(user)
 
-            can_write_to_org ||= user.managed_organizations.include?(o)
-            can_read_route = can_read_route || user.managed_organizations.include?(o) ||
-              user.audited_organizations.include?(o)
+            can_write_to_org ||= o.managers.include?(user)
+            can_read_route ||= o.managers.include?(user) ||
+              o.auditors.include?(user)
           end
 
           if s
-            can_write_to_space ||= space.has_developer?(user)
-            can_read_route ||= space.has_member?(user)
+            can_read_from_space ||= s.has_member?(user)
+            can_write_to_space ||= s.has_developer?(user)
+            can_update_space ||= s.managers.include?(user)
+
+            can_read_route ||= s.has_member?(user)
           end
 
           allow(queryer).to receive(:can_read_globally?).and_return(can_read_globally)
           allow(queryer).to receive(:can_write_globally?).and_return(can_write_globally)
 
+          allow(queryer).to receive(:can_read_from_org?).and_return(can_read_from_org)
+          allow(queryer).to receive(:can_read_from_space?).and_return(can_read_from_space)
+          allow(queryer).to receive(:can_read_route?).and_return(can_read_route)
+
           allow(queryer).to receive(:can_write_to_org?).and_return(can_write_to_org)
           allow(queryer).to receive(:can_write_to_space?).and_return(can_write_to_space)
-          allow(queryer).to receive(:can_read_from_org?).and_return(can_read_from_org)
-
-          allow(queryer).to receive(:can_read_route?).and_return(can_read_route)
+          allow(queryer).to receive(:can_update_space?).and_return(can_update_space)
         end
 
         saved_error = nil

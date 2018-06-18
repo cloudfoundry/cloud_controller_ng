@@ -1,19 +1,5 @@
 module VCAP::CloudController
   class SpaceAccess < BaseAccess
-    def read?(object)
-      return @ok_read if instance_variable_defined?(:@ok_read)
-      @ok_read = (admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user))
-    end
-
-    def read_related_object_for_update?(object, params=nil)
-      read_for_update?(object, params)
-    end
-
-    def index?(object_class, params=nil)
-      # This can return true because the index endpoints filter objects based on user visibilities
-      true
-    end
-
     # These methods should be called first to determine if the user's token has the appropriate scope for the operation
 
     def read_with_token?(_)
@@ -49,10 +35,23 @@ module VCAP::CloudController
       true
     end
 
+    def index?(object_class, params=nil)
+      # This can return true because the index endpoints filter objects based on user visibilities
+      true
+    end
+
+    def read?(space)
+      context.queryer.can_read_from_space?(space.guid, space.organization.guid)
+    end
+
+    def read_related_object_for_update?(space, params=nil)
+      read_for_update?(space, params)
+    end
+
     def create?(space, params=nil)
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
-      space.organization.managers.include?(context.user)
+      context.queryer.can_write_to_org?(space.organization.guid)
     end
 
     def can_remove_related_object?(space, params)
@@ -61,9 +60,9 @@ module VCAP::CloudController
     end
 
     def read_for_update?(space, params=nil)
-      return true if admin_user?
+      return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
-      space.organization.managers.include?(context.user) || space.managers.include?(context.user)
+      context.queryer.can_write_to_org?(space.organization.guid) || context.queryer.can_update_space?(space.guid)
     end
 
     def update?(space, params=nil)

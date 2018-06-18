@@ -10,18 +10,26 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
 
-  ROLES_FOR_READING ||= [
+  ROLES_FOR_SPACE_READING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
     VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
 
-  ROLES_FOR_SECRETS ||= [
+  ROLES_FOR_SPACE_SECRETS_READING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
 
-  ROLES_FOR_WRITING ||= [
+  ROLES_FOR_SPACE_WRITING ||= [
+    VCAP::CloudController::Membership::SPACE_DEVELOPER,
+  ].freeze
+
+  ROLES_FOR_SPACE_UPDATING ||= [
+    VCAP::CloudController::Membership::SPACE_MANAGER,
+  ].freeze
+
+  ROLES_FOR_ROUTE_WRITING ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
   ].freeze
 
@@ -61,21 +69,25 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
-      membership.space_guids_for_roles(ROLES_FOR_READING)
+      membership.space_guids_for_roles(ROLES_FOR_SPACE_READING)
     end
   end
 
   def can_read_from_space?(space_guid, org_guid)
-    can_read_globally? || membership.has_any_roles?(ROLES_FOR_READING, space_guid, org_guid)
+    can_read_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_READING, space_guid, org_guid)
   end
 
   def can_read_secrets_in_space?(space_guid, org_guid)
     can_read_secrets_globally? ||
-      membership.has_any_roles?(ROLES_FOR_SECRETS, space_guid, org_guid)
+      membership.has_any_roles?(ROLES_FOR_SPACE_SECRETS_READING, space_guid, org_guid)
   end
 
   def can_write_to_space?(space_guid)
-    can_write_globally? || membership.has_any_roles?(ROLES_FOR_WRITING, space_guid)
+    can_write_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_guid)
+  end
+
+  def can_update_space?(space_guid)
+    can_write_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid)
   end
 
   def can_read_from_isolation_segment?(isolation_segment)

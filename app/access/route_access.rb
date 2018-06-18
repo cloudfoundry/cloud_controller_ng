@@ -1,11 +1,7 @@
 module VCAP::CloudController
   class RouteAccess < BaseAccess
     def create?(route, params=nil)
-      return true if context.queryer.can_write_globally?
-      return false if route.in_suspended_org?
-      return false if route.wildcard_host? && route.domain.shared?
-      FeatureFlag.raise_unless_enabled!(:route_creation)
-      context.queryer.can_write_to_space?(route.space.guid)
+      can_write_to_route(route, true)
     end
 
     def read?(route)
@@ -13,15 +9,15 @@ module VCAP::CloudController
     end
 
     def read_for_update?(route, params=nil)
-      can_write_to_route(route)
+      can_write_to_route(route, false)
     end
 
     def update?(route, params=nil)
-      can_write_to_route(route)
+      can_write_to_route(route, false)
     end
 
     def delete?(route)
-      can_write_to_route(route)
+      can_write_to_route(route, false)
     end
 
     def reserved?(_)
@@ -80,10 +76,11 @@ module VCAP::CloudController
 
     private
 
-    def can_write_to_route(route)
+    def can_write_to_route(route, is_create=false)
       return true if context.queryer.can_write_globally?
       return false if route.in_suspended_org?
       return false if route.wildcard_host? && route.domain.shared?
+      FeatureFlag.raise_unless_enabled!(:route_creation) if is_create
       context.queryer.can_write_to_space?(route.space.guid)
     end
   end

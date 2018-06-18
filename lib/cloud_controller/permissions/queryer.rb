@@ -121,6 +121,16 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_update_space?(space_guid)
+    science 'can_update_space' do |e|
+      e.context(space_guid: space_guid)
+      e.use { db_permissions.can_update_space?(space_guid) }
+      e.try { perm_permissions.can_update_space?(space_guid) }
+
+      e.run_if { !db_permissions.can_write_globally? }
+    end
+  end
+
   def can_read_from_isolation_segment?(isolation_segment)
     science 'can_read_from_isolation_segment' do |e|
       e.context(isolation_segment_guid: isolation_segment.guid)

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe OrganizationAccess, type: :access do
-    let(:queryer) { spy(Permissions::Queryer) }
+    let(:queryer) { instance_spy(Permissions::Queryer) }
 
     subject(:access) { OrganizationAccess.new(Security::AccessContext.new(queryer)) }
     let(:user) { VCAP::CloudController::User.make }
