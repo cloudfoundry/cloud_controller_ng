@@ -75,7 +75,7 @@ RSpec.describe 'Spaces' do
         space.add_developer(user)
       end
 
-      it 'lists the isolation segment for SpaceDvelopers' do
+      it 'lists the isolation segment for SpaceDevelopers' do
         get '/v2/spaces', {}, headers_for(user)
 
         expect(last_response.status).to eq(200)
