@@ -222,6 +222,7 @@ module VCAP::CloudController
           {
             'instance' => Sham.guid,
             'index' => 3,
+            'cell_id' => 'some-cell',
             'exit_status' => 137,
             'exit_description' => 'description',
             'reason' => 'CRASHED'

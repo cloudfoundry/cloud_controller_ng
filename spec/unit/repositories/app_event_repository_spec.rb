@@ -191,6 +191,7 @@ module VCAP::CloudController
           {
             'instance' => 'abc',
             'index' => '2',
+            'cell_id' => 'some-cell',
             'exit_status' => '1',
             'exit_description' => 'shut down',
             'reason' => 'evacuation',
@@ -209,6 +210,7 @@ module VCAP::CloudController
           expect(event.actee_name).to eq(exiting_process.name)
           expect(event.metadata['unknown_key']).to eq(nil)
           expect(event.metadata['instance']).to eq('abc')
+          expect(event.metadata['cell_id']).to eq('some-cell')
           expect(event.metadata['index']).to eq('2')
           expect(event.metadata['exit_status']).to eq('1')
           expect(event.metadata['exit_description']).to eq('shut down')
