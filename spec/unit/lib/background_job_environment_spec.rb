@@ -4,7 +4,6 @@ RSpec.describe BackgroundJobEnvironment do
   before do
     allow(Steno).to receive(:init)
     TestConfig.override(
-      db: 'cc-db',
       logging: { level: 'debug2' },
       bits_service: { enabled: false },
     )
