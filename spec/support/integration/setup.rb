@@ -12,10 +12,6 @@ module IntegrationSetup
 
     FileUtils.rm(config['pid_filename']) if File.exist?(config['pid_filename'])
 
-    require 'pp'
-    $stderr.puts "#{"=" * 33} integration/setup #{"=" * 33}"
-    pp(TestConfig.config, out=$stderr, width=60)
-    $stderr.puts ("=" * 66)
     db_connection_string = "#{TestConfig.config[:db][:database]}_integration_cc"
     if !opts[:preserve_database]
       db = /postgres/.match?(db_connection_string) ? 'postgres' : 'mysql'
