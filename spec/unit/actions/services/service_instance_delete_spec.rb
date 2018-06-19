@@ -128,14 +128,39 @@ module VCAP::CloudController
         context 'when there is a service binding' do
           let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
 
-          before do
-            stub_unbind(service_binding, accepts_incomplete: true, status: 202, body: {}.to_json)
+          context 'when the broker responds asynchronously to the unbind call' do
+            before do
+              stub_unbind(service_binding, accepts_incomplete: true, status: 202, body: {}.to_json)
+            end
+
+            it 'passes the accepts_incomplete flag to the client unbind call' do
+              service_instance_delete.delete([service_instance])
+              broker_url = unbind_url(service_binding, accepts_incomplete: true)
+              expect(a_request(:delete, broker_url)).to have_been_made
+            end
+
+            it 'returns an error' do
+              errors, _ = service_instance_delete.delete([service_instance])
+              expect(errors).to match_array([instance_of(ServiceInstanceDelete::AsynchronousBindingOperationInProgress)])
+            end
           end
 
-          it 'passes the accepts_incomplete flag to the client unbind call' do
-            service_instance_delete.delete([service_instance])
-            broker_url = unbind_url(service_binding, accepts_incomplete: true)
-            expect(a_request(:delete, broker_url)).to have_been_made
+          context 'when the broker responds synchronously to the unbind call' do
+            before do
+              stub_unbind(service_binding, accepts_incomplete: true, status: 200, body: {}.to_json)
+            end
+
+            it 'passes the accepts_incomplete flag to the client unbind call' do
+              service_instance_delete.delete([service_instance])
+              broker_url = unbind_url(service_binding, accepts_incomplete: true)
+              expect(a_request(:delete, broker_url)).to have_been_made
+            end
+
+            it 'does not return any errors or warnings' do
+              errors, warnings = service_instance_delete.delete([service_instance])
+              expect(errors).to be_empty
+              expect(warnings).to be_empty
+            end
           end
         end
 

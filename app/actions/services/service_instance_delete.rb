@@ -5,6 +5,8 @@ require 'actions/service_instance_unshare'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
+    class AsynchronousBindingOperationInProgress < StandardError; end
+
     def initialize(accepts_incomplete: false, event_repository:)
       @accepts_incomplete = accepts_incomplete
       @event_repository = event_repository
@@ -94,7 +96,14 @@ module VCAP::CloudController
 
     def delete_service_bindings(service_instance)
       service_binding_deleter = ServiceBindingDelete.new(@event_repository.user_audit_info, @accepts_incomplete)
-      service_binding_deleter.delete(service_instance.service_bindings)
+      errors, warnings = service_binding_deleter.delete(service_instance.service_bindings)
+      async_unbinds = service_instance.service_bindings_dataset.all.select(&:operation_in_progress?)
+
+      if async_unbinds.any?
+        errors << AsynchronousBindingOperationInProgress.new
+      end
+
+      [errors, warnings]
     end
 
     def delete_service_keys(service_instance)

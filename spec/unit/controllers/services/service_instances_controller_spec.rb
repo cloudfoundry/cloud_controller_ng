@@ -2618,6 +2618,36 @@ module VCAP::CloudController
                 end
               end
             end
+
+            context 'and accepts_incomplete=true' do
+              context 'and the broker responds asynchronously to the unbind request' do
+                before do
+                  stub_unbind(service_binding, status: 202, accepts_incomplete: true)
+                end
+
+                context 'and async=false' do
+                  it 'returns a 500 error (for now)' do
+                    delete "/v2/service_instances/#{service_instance.guid}?recursive=true&accepts_incomplete=true&async=false"
+                    expect(last_response).to have_status_code 500
+                    # Returning an error directly from the action here, so it shows up as an unknown error.
+                    # We don't need to return an error here in the future, so it's not worth investing in a "pretty" API error.
+                    expect(last_response.body).to include 'UnknownError'
+                    expect(last_response.body).to include 'CF-AsynchronousBindingOperationInProgress'
+                  end
+                end
+
+                context 'and async=true' do
+                  it 'returns a 202' do
+                    delete "/v2/service_instances/#{service_instance.guid}?recursive=true&accepts_incomplete=true&async=true"
+                    expect(last_response).to have_status_code 500
+                    # Returning an error directly from the action here, so it shows up as an unknown error.
+                    # We don't need to return an error here in the future, so it's not worth investing in a "pretty" API error.
+                    expect(last_response.body).to include 'UnknownError'
+                    expect(last_response.body).to include 'CF-AsynchronousBindingOperationInProgress'
+                  end
+                end
+              end
+            end
           end
         end
 

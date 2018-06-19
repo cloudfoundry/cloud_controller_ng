@@ -178,6 +178,24 @@ module VCAP::CloudController
 
               expect(service_binding.last_operation.broker_provided_operation).to eq('123')
             end
+
+            it 'there should be no warnings or errors' do
+              errors, warnings = service_binding_delete.delete(service_binding)
+              expect(warnings).to be_empty
+              expect(errors).to be_empty
+            end
+          end
+        end
+
+        context 'when the broker responds synchronously' do
+          before do
+            allow(client).to receive(:unbind).and_return({ async: false })
+          end
+
+          it 'there should be no warnings or errors' do
+            errors, warnings = service_binding_delete.delete(service_binding)
+            expect(warnings).to be_empty
+            expect(errors).to be_empty
           end
         end
       end
@@ -192,6 +210,10 @@ module VCAP::CloudController
 
         context 'when the broker unexpectedly responds asynchronously' do
           let(:service_binding_operation) {}
+          let(:expected_warning) do
+            ['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
+             'The service binding may not have been successfully deleted on the service broker.'].join(' ')
+          end
 
           before do
             allow(client).to receive(:unbind).and_return({ async: true })
@@ -212,6 +234,20 @@ module VCAP::CloudController
             expect(event.actee).to eq(service_binding.guid)
             expect(event.actee_type).to eq('service_binding')
           end
+
+          it 'should respond with a warning' do
+            errors, warnings = service_binding_delete.delete(service_binding)
+            expect(warnings).to match_array([expected_warning])
+            expect(errors).to be_empty
+          end
+
+          context 'when delete is called with multiple bindings' do
+            it 'should return warnings for all bindings' do
+              errors, warnings = service_binding_delete.delete([service_binding, ServiceBinding.make])
+              expect(warnings).to match_array([expected_warning, expected_warning])
+              expect(errors).to be_empty
+            end
+          end
         end
       end
 
@@ -221,82 +257,6 @@ module VCAP::CloudController
         it 'defaults to false and asks the broker to unbind the instance sync' do
           expect(client).to receive(:unbind).with(service_binding, user_guid, false)
           service_binding_delete.delete(service_binding)
-        end
-      end
-    end
-
-    describe '#broker_responded_async_for_accepts_incomplete_false?' do
-      before do
-        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        stub_request(:delete, service_binding_url_pattern)
-      end
-
-      context 'when accepts_incomplete is true' do
-        let(:accepts_incomplete) { true }
-
-        context 'when the broker responds synchronously' do
-          before do
-            allow(client).to receive(:unbind).and_return({ async: false })
-          end
-
-          it 'there should be no warnings or errors' do
-            errors, warnings = service_binding_delete.delete(service_binding)
-            expect(warnings).to be_empty
-            expect(errors).to be_empty
-          end
-        end
-
-        context 'when the broker responds asynchronously' do
-          before do
-            allow(client).to receive(:unbind).and_return({ async: true })
-          end
-
-          it 'there should be no warnings or errors' do
-            errors, warnings = service_binding_delete.delete(service_binding)
-            expect(warnings).to be_empty
-            expect(errors).to be_empty
-          end
-        end
-      end
-
-      context 'when accepts_incomplete is false' do
-        let(:accepts_incomplete) { false }
-
-        context 'when the broker unexpectedly responds asynchronously' do
-          let(:expected_warning) do
-            ['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
-             'The service binding may not have been successfully deleted on the service broker.'].join(' ')
-          end
-
-          before do
-            allow(client).to receive(:unbind).and_return({ async: true })
-          end
-
-          it 'should say that the broker responded poorly' do
-            errors, warnings = service_binding_delete.delete(service_binding)
-            expect(warnings).to match_array([expected_warning])
-            expect(errors).to be_empty
-          end
-
-          context 'when delete is called with multiple bindings' do
-            it 'should return warnings for both bindings' do
-              errors, warnings = service_binding_delete.delete([service_binding, ServiceBinding.make])
-              expect(warnings).to match_array([expected_warning, expected_warning])
-              expect(errors).to be_empty
-            end
-          end
-        end
-
-        context 'when the broker responded synchronously' do
-          before do
-            allow(client).to receive(:unbind).and_return({ async: false })
-          end
-
-          it 'there should be no warnings or errors' do
-            errors, warnings = service_binding_delete.delete(service_binding)
-            expect(warnings).to be_empty
-            expect(errors).to be_empty
-          end
         end
       end
     end
