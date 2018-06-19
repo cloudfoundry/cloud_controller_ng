@@ -52,7 +52,7 @@ module CloudFoundry
       end
 
       def root_api?(request)
-        request.fullpath.match(%r{^/$}) || request.fullpath.match(%r{^/v2/info$})
+        request.fullpath.match(%r{\A(?:/v2/info|/v3|/)\z})
       end
 
       def internal_api?(request)
