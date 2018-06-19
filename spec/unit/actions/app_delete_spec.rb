@@ -162,7 +162,7 @@ module VCAP::CloudController
 
           context 'when service binding delete returns errors' do
             before do
-              allow_any_instance_of(ServiceBindingDelete).to receive(:delete).and_return([StandardError.new('first'), StandardError.new('second')])
+              allow_any_instance_of(ServiceBindingDelete).to receive(:delete).and_return([[StandardError.new('first'), StandardError.new('second')], []])
             end
 
             it 'raises the first error in the list' do

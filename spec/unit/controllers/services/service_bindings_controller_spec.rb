@@ -849,6 +849,23 @@ module VCAP::CloudController
           expect(event.metadata).to include({})
         end
 
+        context 'when there are warnings from deleting the binding' do
+          before do
+            service_binding_deleter = instance_double(ServiceBindingDelete)
+
+            allow(ServiceBindingDelete).to receive(:new).and_return(service_binding_deleter)
+            allow(service_binding_deleter).to receive(:foreground_delete_request).and_return(['warning-1', 'warning-2'])
+          end
+
+          it 'includes the warnings in the X-Cf-Warnings header' do
+            delete "/v2/service_bindings/#{service_binding.guid}"
+
+            expect(last_response).to have_status_code(204)
+            expect(last_response.headers).to include('X-Cf-Warnings')
+            expect(last_response.headers['X-Cf-Warnings']).to include('warning-1,warning-2')
+          end
+        end
+
         context 'when the user does not belong to the space' do
           it 'returns a 403' do
             set_current_user(User.make)
@@ -954,7 +971,7 @@ module VCAP::CloudController
 
             context 'when the broker responds asynchronously' do
               let(:unbind_status) { 202 }
-              let(:params_warning) do
+              let(:warning) do
                 CGI.escape(['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
                             'The service binding may not have been successfully deleted on the service broker.'].join(' '))
               end
@@ -965,11 +982,11 @@ module VCAP::CloudController
                 expect(last_response).to have_status_code(204)
               end
 
-              it 'should warn the user about the misbehave broker' do
+              it 'should warn the user about the misbehaving broker' do
                 delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
 
                 expect(last_response.headers).to include('X-Cf-Warnings')
-                expect(last_response.headers['X-Cf-Warnings']).to include(params_warning)
+                expect(last_response.headers['X-Cf-Warnings']).to include(warning)
               end
             end
 

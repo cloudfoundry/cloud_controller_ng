@@ -1384,7 +1384,7 @@ module VCAP::CloudController
             before do
               stub_deprovision(service_instance_2, status: 500, accepts_incomplete: true)
               stub_deprovision(service_instance_3, status: 200, accepts_incomplete: true)
-              stub_unbind(service_binding)
+              stub_unbind(service_binding, accepts_incomplete: true)
             end
 
             it 'does not delete the org or the space' do

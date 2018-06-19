@@ -11,20 +11,27 @@ module VCAP::CloudController
     end
 
     def delete(service_instance_dataset)
-      service_instance_dataset.each_with_object([]) do |service_instance, errors_accumulator|
-        errors = delete_service_bindings(service_instance)
+      service_instance_dataset.each_with_object([[], []]) do |service_instance, errors_and_warnings|
+        errors_accumulator, warnings_accumulator = errors_and_warnings
+        errors, warnings = delete_service_bindings(service_instance)
+
         errors.concat delete_service_keys(service_instance)
         errors.concat delete_route_bindings(service_instance)
 
         errors.concat unshare_from_all_spaces(service_instance)
 
         errors_accumulator.concat(errors)
+        warnings_accumulator.concat(warnings)
 
         if errors.empty?
           instance_errors = delete_service_instance(service_instance)
           errors_accumulator.concat(instance_errors)
         end
       end
+    end
+
+    def can_return_warnings?
+      true
     end
 
     private
@@ -86,7 +93,8 @@ module VCAP::CloudController
     end
 
     def delete_service_bindings(service_instance)
-      ServiceBindingDelete.new(@event_repository.user_audit_info).delete(service_instance.service_bindings)
+      service_binding_deleter = ServiceBindingDelete.new(@event_repository.user_audit_info, @accepts_incomplete)
+      service_binding_deleter.delete(service_instance.service_bindings)
     end
 
     def delete_service_keys(service_instance)

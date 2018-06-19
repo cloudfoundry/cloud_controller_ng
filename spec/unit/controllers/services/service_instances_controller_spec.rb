@@ -2544,6 +2544,25 @@ module VCAP::CloudController
           expect(event.metadata).to have_key('request')
         end
 
+        context 'when the service instance delete returned warnings' do
+          before do
+            allow_any_instance_of(ServiceInstanceDeprovisioner).to receive(:deprovision_service_instance).
+              and_wrap_original do |m, *args|
+                result, _ = m.call(*args)
+                [result, ['warning-1', 'warning-2']]
+              end
+          end
+
+          it 'shows the warnings in the X-Cf-Warnings header' do
+            delete "/v2/service_instances/#{service_instance.guid}"
+            expect(last_response).to have_status_code 204
+
+            expect(last_response.headers).to include('X-Cf-Warnings')
+            warning = last_response.headers['X-Cf-Warnings']
+            expect(warning).to eq('warning-1,warning-2')
+          end
+        end
+
         context 'when the instance has bindings' do
           let(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
 
@@ -2573,9 +2592,31 @@ module VCAP::CloudController
               expect {
                 delete "/v2/service_instances/#{service_instance.guid}?recursive=true"
               }.to change(ServiceBinding, :count).by(-1)
-              expect(last_response.status).to eq(204)
+              expect(last_response).to have_status_code 204
               expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
               expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+            end
+
+            context 'and accepts_incomplete=false' do
+              context 'and the broker responds asynchronously to the unbind request' do
+                before do
+                  stub_unbind(service_binding, status: 202)
+                end
+
+                it 'deletes the associated service bindings and presents a warning to the user' do
+                  expect {
+                    delete "/v2/service_instances/#{service_instance.guid}?recursive=true&accepts_incomplete=false&async=false"
+                  }.to change(ServiceBinding, :count).by(-1)
+                  expect(last_response).to have_status_code 204
+                  expect(ServiceInstance.find(guid: service_instance.guid)).to be_nil
+                  expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
+
+                  expect(last_response.headers).to include('X-Cf-Warnings')
+                  warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                  expect(warning).to match(['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
+                                            'The service binding may not have been successfully deleted on the service broker.'].join(' '))
+                end
+              end
             end
           end
         end

@@ -68,8 +68,9 @@ module ServiceBrokerHelpers
   def stub_unbind(service_binding, opts={})
     status = opts[:status] || 200
     body = opts[:body] || '{}'
+    accepts_incomplete = opts[:accepts_incomplete] || nil
 
-    stub_request(:delete, unbind_url(service_binding)).
+    stub_request(:delete, unbind_url(service_binding, accepts_incomplete: accepts_incomplete)).
       with(basic_auth: basic_auth(service_binding: service_binding)).
       to_return(status: status, body: body)
   end

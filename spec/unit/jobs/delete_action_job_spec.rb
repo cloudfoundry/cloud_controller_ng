@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs
     RSpec.describe DeleteActionJob, job_context: :worker do
       let(:user) { User.make(admin: true) }
-      let(:delete_action) { double(SpaceDelete, delete: []) }
+      let(:delete_action) { instance_double(SpaceDelete, delete: []) }
       let(:space) { Space.make(name: Sham.guid) }
 
       subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
@@ -37,6 +37,25 @@ module VCAP::CloudController
           it 'returns a generic timeout error' do
             expect(job.timeout_error).to be_a(CloudController::Errors::ApiError)
             expect(job.timeout_error.name).to eq('JobTimeout')
+          end
+        end
+      end
+
+      context 'when the action implements can_return_warnings?' do
+        context 'when can_return_warnings? is false' do
+          let(:delete_action) { double(SpaceDelete, delete: [], can_return_warnings?: false) }
+          it 'does not expect warnings' do
+            expect {
+              job.perform
+            }.not_to raise_error
+          end
+        end
+
+        context 'when the delete action returns warnings' do
+          let(:delete_action) { double(SpaceDelete, delete: [[], ['warning-1', 'warning-2']], can_return_warnings?: true) }
+
+          it 'returns the warnings' do
+            expect(job.perform).to match_array(['warning-1', 'warning-2'])
           end
         end
       end

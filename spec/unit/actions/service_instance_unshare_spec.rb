@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         it 'deletes bindings and unshares' do
-          allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([])
+          allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([[], []])
 
           service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
           expect(service_instance.shared_spaces).to be_empty
@@ -56,7 +56,7 @@ module VCAP::CloudController
         context 'when an unbind fails' do
           it 'does not unshare' do
             err = StandardError.new('oops')
-            allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([err])
+            allow(delete_binding_action).to receive(:delete).with([service_binding]).and_return([[err], []])
 
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error)
             expect(service_instance.shared_spaces).to_not be_empty
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
         it 'unshares without deleting the binding' do
           allow(ServiceBindingDelete).to receive(:new) { delete_binding_action }
-          allow(delete_binding_action).to receive(:delete).with([]).and_return([])
+          allow(delete_binding_action).to receive(:delete).with([]).and_return([[], []])
 
           service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
           expect(service_instance.shared_spaces).to be_empty

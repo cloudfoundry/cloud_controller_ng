@@ -4,7 +4,7 @@ module VCAP::CloudController
     end
 
     def unshare(service_instance, target_space, user_audit_info)
-      errors = delete_bindings_in_target_space!(service_instance, target_space, user_audit_info)
+      errors, _ = delete_bindings_in_target_space!(service_instance, target_space, user_audit_info)
       if errors.any?
         error_msg = "Unshare of service instance failed because one or more bindings could not be deleted.\n\n#{errors}"
         error!(error_msg)

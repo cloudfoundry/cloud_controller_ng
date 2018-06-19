@@ -981,9 +981,9 @@ module VCAP::CloudController
             let!(:binding_3) { ServiceBinding.make(service_instance: service_instance_3, app: app_model) }
 
             before do
-              stub_unbind(binding_1)
-              stub_unbind(binding_2, status: 500)
-              stub_unbind(binding_3)
+              stub_unbind(binding_1, accepts_incomplete: true)
+              stub_unbind(binding_2, accepts_incomplete: true, status: 500)
+              stub_unbind(binding_3, accepts_incomplete: true)
             end
 
             it 'deletes the first and third of the instances and their bindings' do

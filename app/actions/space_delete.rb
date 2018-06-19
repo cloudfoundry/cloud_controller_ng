@@ -59,7 +59,7 @@ module VCAP::CloudController
         event_repository: @services_event_repository
       )
 
-      delete_instance_errors = service_instance_deleter.delete(space_model.service_instances_dataset)
+      delete_instance_errors, _ = service_instance_deleter.delete(space_model.service_instances_dataset)
       if delete_instance_errors.empty?
         async_deprovisioning_instances = space_model.service_instances_dataset.all.select(&:operation_in_progress?)
         deprovision_in_progress_errors = async_deprovisioning_instances.map do |service_instance|

@@ -181,7 +181,11 @@ module VCAP::CloudController
       end
 
       deprovisioner = ServiceInstanceDeprovisioner.new(@services_event_repository)
-      delete_job = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+      delete_job, warnings = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+
+      warnings.each do |warning|
+        add_warning(warning)
+      end
 
       if delete_job
         [
