@@ -125,7 +125,7 @@ module VCAP::CloudController
     end
 
     def warn_if_user_provided_service_has_parameters!(service_instance)
-      if service_instance.user_provided_instance? && @request_attrs['parameters']
+      if service_instance.user_provided_instance? && @request_attrs['parameters'] && @request_attrs['parameters'].any?
         add_warning('Configuration parameters are ignored for bindings to user-provided service instances.')
       end
     end
