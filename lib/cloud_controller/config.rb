@@ -39,6 +39,7 @@ module VCAP::CloudController
       def merge_defaults(config)
         config[:db] ||= {}
         config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
+        config[:db][:database_parts] ||= DB.database_parts_from_connection(config[:db][:database])
 
         sanitize(config)
       end

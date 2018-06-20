@@ -8,6 +8,8 @@ module VCAP::CloudController
     #
     # @option opts [String]  :database Database connection string
     #
+    # @option opts [String]  :database_parts Database configuration values hash
+    #
     # @option opts [Symbol]  :log_level Steno log level
     #
     # @option opts  [Integer] :max_connections The maximum number of
@@ -23,8 +25,10 @@ module VCAP::CloudController
         connection_options[key] = opts[key] if opts[key]
       end
 
+      scheme = get_database_scheme(opts)
+
       if opts[:ca_cert_path]
-        if opts[:database].start_with?('mysql')
+        if scheme == 'mysql'
           connection_options[:sslca] = opts[:ca_cert_path]
           if opts[:ssl_verify_hostname]
             connection_options[:sslmode] = :verify_identity
@@ -34,13 +38,13 @@ module VCAP::CloudController
           else
             connection_options[:sslmode] = :verify_ca
           end
-        elsif opts[:database].start_with?('postgres')
+        elsif scheme == 'postgres'
           connection_options[:sslrootcert] = opts[:ca_cert_path]
           connection_options[:sslmode] = opts[:ssl_verify_hostname] ? 'verify-full' : 'verify-ca'
         end
       end
 
-      if opts[:database].index('mysql') == 0
+      if scheme == 'mysql'
         connection_options[:charset] = 'utf8'
       end
 
@@ -53,7 +57,8 @@ module VCAP::CloudController
         end
       end
 
-      db = Sequel.connect(opts[:database], connection_options)
+      db = get_connection(opts, connection_options)
+
       if opts[:log_db_queries]
         db.logger = logger
         db.sql_log_level = opts[:log_level]
@@ -61,6 +66,25 @@ module VCAP::CloudController
       db.default_collate = 'utf8_bin' if db.database_type == :mysql
       add_connection_validator_extension(db, opts)
       db
+    end
+
+    def self.get_database_scheme(opts)
+      scheme = opts.dig(:database_parts, :scheme)
+      return scheme if scheme
+      database = opts[:database]
+      if database.start_with?('mysql')
+        return 'mysql'
+      elsif database.start_with?('postgres')
+        return 'postgres'
+      end
+    end
+
+    def self.get_connection(opts, connection_options)
+      if opts[:database_parts]
+        Sequel.connect(opts[:database_parts].merge(connection_options))
+      else
+        Sequel.connect(opts[:database], connection_options)
+      end
     end
 
     def self.add_connection_validator_extension(db, opts)
@@ -81,6 +105,18 @@ module VCAP::CloudController
 
       require 'models'
       require 'delayed_job_sequel'
+    end
+
+    def self.database_parts_from_connection(connection_string)
+      uri = URI.parse(connection_string)
+      {
+        adapter: uri.scheme,
+        host: uri.host,
+        port: uri.port,
+        user: uri.user,
+        password: uri.password,
+        database: uri.path.sub(%r{^/}, ''),
+      }
     end
   end
 end
