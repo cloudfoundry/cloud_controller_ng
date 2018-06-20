@@ -1,5 +1,9 @@
+require 'controllers/runtime/mixins/find_process_through_app'
+
 module VCAP::CloudController
   class InstancesController < RestController::ModelController
+    include FindProcessThroughApp
+
     def self.dependencies
       [:instances_reporters, :index_stopper]
     end

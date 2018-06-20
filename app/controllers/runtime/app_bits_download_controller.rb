@@ -1,5 +1,9 @@
+require 'controllers/runtime/mixins/find_process_through_app'
+
 module VCAP::CloudController
   class AppBitsDownloadController < RestController::ModelController
+    include FindProcessThroughApp
+
     def self.dependencies
       [:package_blobstore, :missing_blob_handler]
     end

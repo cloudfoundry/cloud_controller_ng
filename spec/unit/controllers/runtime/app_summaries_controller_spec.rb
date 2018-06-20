@@ -50,12 +50,12 @@ module VCAP::CloudController
         before do
           allow(instances_reporters).to receive(:number_of_starting_and_running_instances_for_process).and_return(@process.instances)
 
-          get "/v2/apps/#{@process.guid}/summary"
+          get "/v2/apps/#{@process.app.guid}/summary"
         end
 
         it 'should contain the basic app attributes' do
           expect(last_response.status).to eq(200)
-          expect(decoded_response['guid']).to eq(@process.guid)
+          expect(decoded_response['guid']).to eq(@process.app.guid)
           parse(MultiJson.dump(@process.to_hash)).each do |k, v|
             expect(v).to eql(decoded_response[k.to_s]), "value of field #{k} expected to eql #{v}"
           end

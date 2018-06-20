@@ -244,19 +244,19 @@ module VCAP::CloudController
       @route_event_repository.record_route_update(route, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
-    put '/v2/routes/:route_guid/apps/:process_guid', :add_app
+    put '/v2/routes/:route_guid/apps/:app_guid', :add_app
 
-    def add_app(route_guid, process_guid)
-      logger.debug 'cc.association.add', guid: route_guid, association: 'apps', other_guid: process_guid
-      @request_attrs = { 'app' => process_guid, verb: 'add', relation: 'apps', related_guid: process_guid }
+    def add_app(route_guid, app_guid)
+      logger.debug 'cc.association.add', guid: route_guid, association: 'apps', other_guid: app_guid
+      @request_attrs = { 'app' => app_guid, verb: 'add', relation: 'apps', related_guid: app_guid }
 
       route = find_guid(route_guid, Route)
       validate_access(:read_related_object_for_update, route, request_attrs)
 
       before_update(route)
 
-      process = ProcessModel.find(guid: request_attrs['app'])
-      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process_guid) unless process
+      process = AppModel.find(guid: request_attrs['app']).try(:web_process)
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless process
 
       begin
         V2::RouteMappingCreate.new(UserAuditInfo.from_context(SecurityContext), route, process, request_attrs, logger).add
@@ -273,19 +273,19 @@ module VCAP::CloudController
       [HTTP::CREATED, object_renderer.render_json(self.class, route, @opts)]
     end
 
-    delete '/v2/routes/:route_guid/apps/:process_guid', :remove_app
+    delete '/v2/routes/:route_guid/apps/:app_guid', :remove_app
 
-    def remove_app(route_guid, process_guid)
-      logger.debug 'cc.association.remove', guid: route_guid, association: 'apps', other_guid: process_guid
-      @request_attrs = { 'app' => process_guid, verb: 'remove', relation: 'apps', related_guid: process_guid }
+    def remove_app(route_guid, app_guid)
+      logger.debug 'cc.association.remove', guid: route_guid, association: 'apps', other_guid: app_guid
+      @request_attrs = { 'app' => app_guid, verb: 'remove', relation: 'apps', related_guid: app_guid }
 
       route = find_guid(route_guid, Route)
       validate_access(:can_remove_related_object, route, request_attrs)
 
       before_update(route)
 
-      process = ProcessModel.find(guid: request_attrs['app'])
-      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', process_guid) unless process
+      process = AppModel.find(guid: request_attrs['app']).try(:web_process)
+      raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless process
 
       route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)
       RouteMappingDelete.new(UserAuditInfo.from_context(SecurityContext)).delete(route_mapping)

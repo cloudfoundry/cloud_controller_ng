@@ -6,7 +6,7 @@ module VCAP::CloudController
     before { CloudController::DependencyLocator.instance.register(:app_event_repository, app_event_repository) }
 
     describe 'POST /v2/apps/:id/restage' do
-      subject(:restage_request) { post "/v2/apps/#{process.guid}/restage", {} }
+      subject(:restage_request) { post "/v2/apps/#{process.app.guid}/restage", {} }
       let!(:process) { ProcessModelFactory.make }
       let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
 

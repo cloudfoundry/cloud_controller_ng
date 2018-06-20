@@ -83,7 +83,7 @@ module VCAP::CloudController
           end
 
           it 'associates the route with the app' do
-            put "/v2/routes/#{route.guid}/apps/#{docker_process.guid}", MultiJson.dump(guid: route.guid)
+            put "/v2/routes/#{route.guid}/apps/#{docker_process.app.guid}", MultiJson.dump(guid: route.guid)
 
             expect(last_response.status).to eq(201)
           end
@@ -1358,18 +1358,18 @@ module VCAP::CloudController
           expect(queryer).to have_received(:can_read_globally?)
           expect(last_response.status).to eq(200)
           expect(decoded_response['resources'].length).to eq(2)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.guid
-          expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.guid
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.app.guid
+          expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.app.guid
         end
 
         it 'returns the apps mapped to the route that the user has access to' do
-          allow(queryer).to receive(:readable_app_guids).and_return([process2.guid])
+          allow(queryer).to receive(:readable_app_guids).and_return([process2.app.guid])
 
           get "/v2/routes/#{route.guid}/apps"
 
           expect(last_response.status).to eq(200)
           expect(decoded_response['resources'].length).to eq(1)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process2.guid
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process2.app.guid
         end
       end
 
@@ -1426,7 +1426,7 @@ module VCAP::CloudController
       it 'associates the route and the app' do
         expect(route.reload.apps).to be_empty
 
-        put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+        put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
         expect(last_response.status).to eq(201)
 
         expect(route.reload.apps).to match_array([process])
@@ -1442,7 +1442,7 @@ module VCAP::CloudController
         it 'returns 404' do
           expect(route.reload.apps).to be_empty
 
-          put "/v2/routes/not-a-route/apps/#{process.guid}", nil
+          put "/v2/routes/not-a-route/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(404)
           expect(last_response.body).to include('RouteNotFound')
 
@@ -1470,7 +1470,7 @@ module VCAP::CloudController
         it 'returns 403' do
           expect(route.reload.apps).to be_empty
 
-          put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+          put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(403)
 
           expect(route.reload.apps).to be_empty
@@ -1485,7 +1485,7 @@ module VCAP::CloudController
         it 'reports success' do
           expect(route.reload.apps).to match_array([process])
 
-          put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+          put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
           expect(route.reload.apps).to match_array([process])
@@ -1498,7 +1498,7 @@ module VCAP::CloudController
         it 'raises an error' do
           expect(route.reload.apps).to be_empty
 
-          put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+          put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(400)
           expect(decoded_response['description']).to match(/The requested app relation is invalid: the app and route must belong to the same space/)
 
@@ -1510,7 +1510,7 @@ module VCAP::CloudController
         let(:process) { ProcessModelFactory.make(space: route.space, ports: [9797, 7979]) }
 
         it 'uses the first port for the app as the app_port' do
-          put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+          put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
           mapping = RouteMappingModel.last
@@ -1525,7 +1525,7 @@ module VCAP::CloudController
         it 'associates the route and the app' do
           expect(route.reload.apps).to be_empty
 
-          put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+          put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
           expect(last_response.status).to eq(201)
 
           expect(route.reload.apps).to match_array([process])
@@ -1544,7 +1544,7 @@ module VCAP::CloudController
           end
 
           it 'returns 403 for existing routes' do
-            put "/v2/routes/#{route.guid}/apps/#{process.guid}", nil
+            put "/v2/routes/#{route.guid}/apps/#{process.app.guid}", nil
             expect(last_response).to have_status_code(403)
             expect(decoded_response['description']).to include('Routing API is disabled')
           end
@@ -1565,7 +1565,7 @@ module VCAP::CloudController
       it 'removes the association' do
         expect(route.reload.apps).to match_array([process])
 
-        delete "/v2/routes/#{route.guid}/apps/#{process.guid}"
+        delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
         expect(last_response.status).to eq(204)
 
         expect(route.reload.apps).to be_empty
@@ -1574,7 +1574,7 @@ module VCAP::CloudController
 
       context 'when the route does not exist' do
         it 'returns a 404' do
-          delete "/v2/routes/bogus-guid/apps/#{process.guid}"
+          delete "/v2/routes/bogus-guid/apps/#{process.app.guid}"
           expect(last_response.status).to eq(404)
           expect(last_response.body).to include('RouteNotFound')
         end
@@ -1594,7 +1594,7 @@ module VCAP::CloudController
         it 'succeeds' do
           expect(route.reload.apps).to match_array([])
 
-          delete "/v2/routes/#{route.guid}/apps/#{process.guid}"
+          delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
           expect(last_response.status).to eq(204)
 
           expect(route.reload.apps).to be_empty
@@ -1608,7 +1608,7 @@ module VCAP::CloudController
         end
 
         it 'returns 403' do
-          delete "/v2/routes/#{route.guid}/apps/#{process.guid}"
+          delete "/v2/routes/#{route.guid}/apps/#{process.app.guid}"
           expect(last_response).to have_status_code(403)
         end
       end

@@ -1,8 +1,11 @@
 require 'actions/v2/app_stage'
 require 'actions/staging_cancel'
+require 'controllers/runtime/mixins/find_process_through_app'
 
 module VCAP::CloudController
   class RestagesController < RestController::ModelController
+    include FindProcessThroughApp
+
     def self.dependencies
       [:app_event_repository, :stagers]
     end

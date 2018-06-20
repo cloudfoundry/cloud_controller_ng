@@ -29,7 +29,7 @@ module VCAP::CloudController
       let(:process) { ProcessModel.make }
 
       def make_request
-        put "/v2/apps/#{process.guid}/bits", req_body, form_headers(headers)
+        put "/v2/apps/#{process.app.guid}/bits", req_body, form_headers(headers)
       end
 
       context 'as an admin' do
@@ -208,7 +208,7 @@ module VCAP::CloudController
                   headers = headers_for(user)
 
                   Timecop.travel(Time.now.utc + 1.week + 100.seconds) do
-                    put "/v2/apps/#{process.guid}/bits", req_body, headers
+                    put "/v2/apps/#{process.app.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(201)
                 end
@@ -219,7 +219,7 @@ module VCAP::CloudController
                   headers = headers_for(user)
 
                   Timecop.travel(Time.now.utc + 1.week + 10000.seconds) do
-                    put "/v2/apps/#{process.guid}/bits", req_body, headers
+                    put "/v2/apps/#{process.app.guid}/bits", req_body, headers
                   end
                   expect(last_response.status).to eq(401)
                 end
@@ -299,7 +299,7 @@ module VCAP::CloudController
 
         it 'creates a delayed job' do
           expect {
-            put "/v2/apps/#{process.guid}/bits?async=true", req_body, headers_for(user)
+            put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, headers_for(user)
           }.to change {
             Delayed::Job.count
           }.by(1)
@@ -329,7 +329,7 @@ module VCAP::CloudController
 
             it 'fails to upload' do
               expect {
-                put "/v2/apps/#{process.guid}/bits?async=true", req_body, form_headers(headers_for(user))
+                put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
               }.to change {
                 Delayed::Job.count
               }.by(1)
@@ -352,7 +352,7 @@ module VCAP::CloudController
 
               it 'fails to upload' do
                 expect {
-                  put "/v2/apps/#{process.guid}/bits?async=true", req_body, form_headers(headers_for(user))
+                  put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
                 }.to change {
                   Delayed::Job.count
                 }.by(1)
@@ -370,7 +370,7 @@ module VCAP::CloudController
 
               it 'fails to upload' do
                 expect {
-                  put "/v2/apps/#{process.guid}/bits?async=true", req_body, form_headers(headers_for(user))
+                  put "/v2/apps/#{process.app.guid}/bits?async=true", req_body, form_headers(headers_for(user))
                 }.to change {
                   Delayed::Job.count
                 }.by(1)
@@ -404,7 +404,7 @@ module VCAP::CloudController
     describe 'POST /v2/apps/:guid/copy_bits' do
       let(:dest_process) { ProcessModel.make }
       let(:src_process) { ProcessModelFactory.make }
-      let(:json_payload) { { 'source_app_guid' => src_process.guid }.to_json }
+      let(:json_payload) { { 'source_app_guid' => src_process.app.guid }.to_json }
 
       class FakeCopier
         def initialize(src_process, dest_process, app_event_repo, user, email)
@@ -429,7 +429,7 @@ module VCAP::CloudController
         let(:json_payload) { '{}' }
 
         it 'fails to copy application bits' do
-          post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
+          post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
 
           expect(last_response.status).to eq(400)
 
@@ -441,7 +441,7 @@ module VCAP::CloudController
       context 'when a source guid is supplied' do
         it 'returns a delayed job' do
           expect {
-            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
+            post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
           }.to change {
             Delayed::Job.count
           }.by(1)
@@ -466,13 +466,13 @@ module VCAP::CloudController
 
         it 'records audit events on the source and destination apps' do
           expect {
-            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
+            post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
           }.to change {
             Event.count
           }.by(2)
 
-          source_event = Event.find(actee: src_process.guid)
-          dest_event = Event.find(actee: dest_process.guid)
+          source_event = Event.find(actee: src_process.app.guid)
+          dest_event = Event.find(actee: dest_process.app.guid)
 
           expect(source_event.type).to eq('audit.app.copy-bits')
           expect(dest_event.type).to eq('audit.app.copy-bits')
@@ -481,7 +481,7 @@ module VCAP::CloudController
         context 'validation permissions' do
           it 'allows an admin' do
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
-            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, admin_headers
+            post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, admin_headers
 
             expect(last_response.status).to eq(201)
           end
@@ -490,7 +490,7 @@ module VCAP::CloudController
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
             user = make_developer_for_space(src_process.space)
 
-            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers_for(user)
+            post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, headers_for(user)
 
             expect(last_response.status).to eq(403)
           end
@@ -499,7 +499,7 @@ module VCAP::CloudController
             stub_const('VCAP::CloudController::Jobs::Runtime::AppBitsCopier', FakeCopier)
             user = make_developer_for_space(dest_process.space)
 
-            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers_for(user)
+            post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, headers_for(user)
 
             expect(last_response.status).to eq(403)
           end
@@ -510,7 +510,7 @@ module VCAP::CloudController
             src_process.organization.add_user(user)
             src_process.space.add_developer(user)
 
-            post "/v2/apps/#{dest_process.guid}/copy_bits", json_payload, headers_for(user)
+            post "/v2/apps/#{dest_process.app.guid}/copy_bits", json_payload, headers_for(user)
             expect(last_response.status).to eq(201)
           end
         end

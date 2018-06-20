@@ -5,9 +5,12 @@ require 'actions/v2/app_create'
 require 'actions/v2/app_update'
 require 'actions/v2/route_mapping_create'
 require 'models/helpers/process_types'
+require 'controllers/runtime/mixins/find_process_through_app'
 
 module VCAP::CloudController
   class AppsController < RestController::ModelController
+    include FindProcessThroughApp
+
     model_class_name :ProcessModel
     self.not_found_exception_name = 'AppNotFound'
 

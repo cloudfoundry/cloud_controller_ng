@@ -1,5 +1,9 @@
+require 'controllers/runtime/mixins/find_process_through_app'
+
 module VCAP::CloudController
   class AppSummariesController < RestController::ModelController
+    include FindProcessThroughApp
+
     def self.dependencies
       [:instances_reporters]
     end
@@ -13,7 +17,7 @@ module VCAP::CloudController
       process = find_guid_and_validate_access(:read, guid)
 
       app_info = {
-        'guid'              => process.guid,
+        'guid'              => process.app_guid,
         'name'              => process.name,
         'routes'            => process.routes.map(&:as_summary_json),
         'running_instances' => instances_reporters.number_of_starting_and_running_instances_for_process(process),

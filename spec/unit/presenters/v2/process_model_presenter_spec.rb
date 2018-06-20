@@ -3,7 +3,7 @@ require 'spec_helper'
 module CloudController::Presenters::V2
   RSpec.describe ProcessModelPresenter do
     let(:app_presenter) { ProcessModelPresenter.new }
-    let(:controller) { 'controller' }
+    let(:controller) { double(:controller, url_for_guid: 'controller-url') }
     let(:opts) { {} }
     let(:depth) { 'depth' }
     let(:parents) { 'parents' }
@@ -30,6 +30,8 @@ module CloudController::Presenters::V2
           command:          'start',
           enable_ssh:       true,
           diego:            diego,
+          created_at: Time.now,
+          updated_at: Time.now
         )
       end
       let(:diego) { true }
@@ -90,6 +92,21 @@ module CloudController::Presenters::V2
 
         expect(actual_entity_hash).to be_a_response_like(expected_entity_hash)
         expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
+      end
+
+      it 'displays the app guid in its metadata hash' do
+        v2_process_hash = app_presenter.to_hash(controller, process, opts, depth, parents, orphans)
+
+        expect(v2_process_hash['metadata']).to eq(
+          {
+            'guid'       => process.app.guid,
+            'url'        => 'controller-url',
+            'created_at' => process.created_at,
+            'updated_at' => process.updated_at
+          }
+        )
+
+        expect(controller).to have_received(:url_for_guid).with(process.app.guid, process)
       end
 
       describe 'nil associated objects' do

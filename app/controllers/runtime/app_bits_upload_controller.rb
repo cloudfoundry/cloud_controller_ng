@@ -1,7 +1,10 @@
 require 'presenters/api/job_presenter'
+require 'controllers/runtime/mixins/find_process_through_app'
 
 module VCAP::CloudController
   class AppBitsUploadController < RestController::ModelController
+    include FindProcessThroughApp
+
     def self.dependencies
       [:app_event_repository]
     end
@@ -77,8 +80,8 @@ module VCAP::CloudController
       copier = PackageCopy.new
       copier.copy_without_event(dest_process.app.guid, src_process.latest_package)
 
-      @app_event_repository.record_src_copy_bits(dest_process, src_process, UserAuditInfo.from_context(SecurityContext))
-      @app_event_repository.record_dest_copy_bits(dest_process, src_process, UserAuditInfo.from_context(SecurityContext))
+      @app_event_repository.record_src_copy_bits(dest_process.app, src_process.app, UserAuditInfo.from_context(SecurityContext))
+      @app_event_repository.record_dest_copy_bits(dest_process.app, src_process.app, UserAuditInfo.from_context(SecurityContext))
 
       [HTTP::CREATED, JobPresenter.new(copier.enqueued_job).to_json]
     end
