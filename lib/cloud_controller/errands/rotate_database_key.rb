@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       def rotate_batch(klass, rows)
-        encrypted_fields = klass.encrypted_fields
+        encrypted_fields = klass.all_encrypted_fields
         rows.each do |row|
           encrypt_row(encrypted_fields, row)
           row.save

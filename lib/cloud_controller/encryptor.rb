@@ -81,7 +81,7 @@ module VCAP::CloudController
         return if encryption_key_label == Encryptor.current_encryption_key_label
 
         db.transaction do
-          (self.class.encrypted_fields || []).each do |field|
+          (self.class.all_encrypted_fields || []).each do |field|
             current_value = send("#{field[:field_name]}_with_encryption")
             updated_encrypted_value = Encryptor.encrypt(current_value, send(field[:salt_name]))
             send("#{field[:field_name]}_without_encryption=", updated_encrypted_value)
@@ -91,7 +91,18 @@ module VCAP::CloudController
       end
 
       module ClassMethods
-        attr_accessor :encrypted_fields
+        def all_encrypted_fields
+          if self.superclass.respond_to? :all_encrypted_fields
+            encrypted_fields + self.superclass.all_encrypted_fields
+          else
+            encrypted_fields
+          end
+        end
+
+        def encrypted_fields
+          @encrypted_fields ||= []
+        end
+        private :encrypted_fields
 
         def set_field_as_encrypted(field_name, options={})
           field_name = field_name.to_sym
@@ -100,7 +111,6 @@ module VCAP::CloudController
           raise "Salt field `#{salt_name}` does not exist" unless columns.include?(salt_name)
           raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
 
-          self.encrypted_fields ||= []
           encrypted_fields << { field_name: field_name, salt_name: salt_name }
 
           Encryptor.encrypted_classes << self.name
@@ -130,7 +140,6 @@ module VCAP::CloudController
           end
           alias_method_chain "#{field_name}=", 'encryption'
         end
-
         private :set_field_as_encrypted
       end
     end

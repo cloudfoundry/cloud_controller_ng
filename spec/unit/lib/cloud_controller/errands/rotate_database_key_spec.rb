@@ -8,13 +8,21 @@ module VCAP::CloudController
       let(:env_vars) { { 'environment' => 'vars' } }
       let(:env_vars_2) { { 'vars' => 'environment' } }
 
+      # Service bindings are an example of multiple encrypted fields
       let(:service_binding) { ServiceBinding.make }
       let(:service_binding_new_key_label) { ServiceBinding.make }
       let(:credentials) { { 'secret' => 'creds' } }
       let(:credentials_2) { { 'more' => 'secrets' } }
       let(:volume_mounts) { { 'volume' => 'mount' } }
       let(:volume_mounts_2) { { 'mount' => 'vesuvius' } }
-      let(:database_encryption_keys) { { 'old' => 'old-key', 'new' => 'new-key' } }
+
+      # Service instances are an example of single table inheritance
+      let(:service_instance) { ManagedServiceInstance.make }
+      let(:service_instance_new_key_label) { ManagedServiceInstance.make }
+      let(:instance_credentials) { { 'instance' => 'credentials' } }
+      let(:instance_credentials_2) { { 'instance_credentials' => 'live here' } }
+
+      let(:database_encryption_keys) { { old: 'old-key', new: 'new-key' } }
 
       before do
         allow(Encryptor).to receive(:current_encryption_key_label) { 'old' }
@@ -27,6 +35,9 @@ module VCAP::CloudController
         service_binding.volume_mounts = volume_mounts
         service_binding.save
 
+        service_instance.credentials = instance_credentials
+        service_instance.save
+
         allow(Encryptor).to receive(:current_encryption_key_label) { 'new' }
 
         app_new_key_label.environment_variables = env_vars_2
@@ -36,9 +47,16 @@ module VCAP::CloudController
         service_binding_new_key_label.volume_mounts = volume_mounts_2
         service_binding_new_key_label.save
 
+        service_instance_new_key_label.credentials = instance_credentials_2
+        service_instance_new_key_label.save
+
         allow(VCAP::CloudController::Encryptor).to receive(:encrypt).and_call_original
         allow(VCAP::CloudController::Encryptor).to receive(:decrypt).and_call_original
-        allow(VCAP::CloudController::Encryptor).to receive(:encrypted_classes).and_return(['VCAP::CloudController::ServiceBinding', 'VCAP::CloudController::AppModel'])
+        allow(VCAP::CloudController::Encryptor).to receive(:encrypted_classes).and_return([
+          'VCAP::CloudController::ServiceBinding',
+          'VCAP::CloudController::AppModel',
+          'VCAP::CloudController::ServiceInstance',
+        ])
       end
 
       context 'no current encryption key label is set' do
@@ -56,11 +74,13 @@ module VCAP::CloudController
       it 'changes the key label of each model' do
         expect(app.encryption_key_label).to eq('old')
         expect(service_binding.encryption_key_label).to eq('old')
+        expect(service_instance.encryption_key_label).to eq('old')
 
         RotateDatabaseKey.perform(batch_size: 1)
 
         expect(app.reload.encryption_key_label).to eq('new')
         expect(service_binding.reload.encryption_key_label).to eq('new')
+        expect(service_instance.reload.encryption_key_label).to eq('new')
       end
 
       it 're-encrypts all encrypted fields with the new key for all rows' do
@@ -73,6 +93,9 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
           with(JSON.dump(volume_mounts), service_binding.volume_mounts_salt).exactly(:twice)
 
+        expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
+          with(JSON.dump(instance_credentials), service_instance.salt).exactly(:twice)
+
         RotateDatabaseKey.perform(batch_size: 1)
       end
 
@@ -82,6 +105,7 @@ module VCAP::CloudController
         expect(app.environment_variables).to eq(env_vars)
         expect(service_binding.credentials).to eq(credentials)
         expect(service_binding.volume_mounts).to eq(volume_mounts)
+        expect(service_instance.credentials).to eq(instance_credentials)
       end
 
       it 'does not re-encrypt values that are already encrypted with the new label' do
@@ -93,6 +117,9 @@ module VCAP::CloudController
 
         expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
           with(JSON.dump(volume_mounts_2), service_binding_new_key_label.volume_mounts_salt)
+
+        expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
+          with(JSON.dump(volume_mounts_2), service_instance.credentials)
 
         RotateDatabaseKey.perform(batch_size: 1)
       end
