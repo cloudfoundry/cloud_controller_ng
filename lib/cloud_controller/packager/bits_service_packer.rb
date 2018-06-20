@@ -19,7 +19,8 @@ module CloudController
       private
 
       def create_temp_file_with_content(content)
-        package = Tempfile.new('package.zip').binmode
+        package = Tempfile.new('package.zip')
+        package.binmode
         package.write(content)
         package.close
         package
