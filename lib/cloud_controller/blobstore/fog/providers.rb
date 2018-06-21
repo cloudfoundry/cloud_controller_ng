@@ -1,3 +1,4 @@
+require 'fog/aliyun'
 require 'fog/aws'
 require 'fog/local'
 require 'fog/google'
