@@ -2626,24 +2626,26 @@ module VCAP::CloudController
                 end
 
                 context 'and async=false' do
-                  it 'returns a 500 error (for now)' do
+                  it 'returns a 502 error (for now)' do
                     delete "/v2/service_instances/#{service_instance.guid}?recursive=true&accepts_incomplete=true&async=false"
-                    expect(last_response).to have_status_code 500
-                    # Returning an error directly from the action here, so it shows up as an unknown error.
-                    # We don't need to return an error here in the future, so it's not worth investing in a "pretty" API error.
-                    expect(last_response.body).to include 'UnknownError'
-                    expect(last_response.body).to include 'CF-AsynchronousBindingOperationInProgress'
+                    expect(last_response).to have_status_code 502
+                    body = last_response.body
+                    app = service_binding.app.name
+                    expect(body).to include 'CF-ServiceInstanceRecursiveDeleteFailed'
+                    expect(body).to include "Deletion of service instance #{service_instance.name} failed because one or more associated resources could not be deleted."
+                    expect(body).to include "An operation for the service binding between app #{app} and service instance #{service_instance.name} is in progress."
                   end
                 end
 
                 context 'and async=true' do
-                  it 'returns a 202' do
+                  it 'returns a 502' do
                     delete "/v2/service_instances/#{service_instance.guid}?recursive=true&accepts_incomplete=true&async=true"
-                    expect(last_response).to have_status_code 500
-                    # Returning an error directly from the action here, so it shows up as an unknown error.
-                    # We don't need to return an error here in the future, so it's not worth investing in a "pretty" API error.
-                    expect(last_response.body).to include 'UnknownError'
-                    expect(last_response.body).to include 'CF-AsynchronousBindingOperationInProgress'
+                    expect(last_response).to have_status_code 502
+                    body = last_response.body
+                    app = service_binding.app.name
+                    expect(body).to include 'CF-ServiceInstanceRecursiveDeleteFailed'
+                    expect(body).to include "Deletion of service instance #{service_instance.name} failed because one or more associated resources could not be deleted."
+                    expect(body).to include "An operation for the service binding between app #{app} and service instance #{service_instance.name} is in progress."
                   end
                 end
               end
