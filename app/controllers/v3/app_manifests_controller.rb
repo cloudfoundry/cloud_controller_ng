@@ -20,7 +20,6 @@ class AppManifestsController < ApplicationController
     app_not_found! unless app && can_read?(space.guid, org.guid)
     unauthorized! unless can_write?(space.guid)
     unsupported_for_docker_apps!(message) if incompatible_with_buildpacks(app.lifecycle_type, message)
-    raise CloudController::Errors::ApiError.new_from_details('RouteServiceNotBindableToApp') if has_route_services(message)
 
     apply_manifest_action = AppApplyManifest.new(user_audit_info)
     apply_manifest_job = VCAP::CloudController::Jobs::ApplyManifestActionJob.new(app.guid, message, apply_manifest_action)
@@ -44,14 +43,6 @@ class AppManifestsController < ApplicationController
   end
 
   private
-
-  def has_route_services(message)
-    return unless message.requested?(:services)
-
-    VCAP::CloudController::ServiceInstance.
-      where(name: message.services(&:name)).
-      any?(&:route_service?)
-  end
 
   def record_apply_manifest_audit_event(app, message, space)
     audited_request_yaml = { 'applications' => [message.audit_hash] }.to_yaml
