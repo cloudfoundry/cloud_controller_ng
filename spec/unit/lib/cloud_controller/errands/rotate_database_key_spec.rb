@@ -3,7 +3,9 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe RotateDatabaseKey do
     describe '#perform' do
+      # Apps are an example of a single encrypted field
       let(:app) { AppModel.make }
+      let(:app_the_second) { AppModel.make }
       let(:app_new_key_label) { AppModel.make }
       let(:env_vars) { { 'environment' => 'vars' } }
       let(:env_vars_2) { { 'vars' => 'environment' } }
@@ -22,6 +24,8 @@ module VCAP::CloudController
       let(:instance_credentials) { { 'instance' => 'credentials' } }
       let(:instance_credentials_2) { { 'instance_credentials' => 'live here' } }
 
+      let(:task) { TaskModel.make }
+
       let(:database_encryption_keys) { { old: 'old-key', new: 'new-key' } }
 
       before do
@@ -31,12 +35,18 @@ module VCAP::CloudController
         app.environment_variables = env_vars
         app.save
 
+        app_the_second.environment_variables = env_vars
+        app_the_second.save
+
         service_binding.credentials = credentials
         service_binding.volume_mounts = volume_mounts
         service_binding.save
 
         service_instance.credentials = instance_credentials
         service_instance.save
+
+        task.environment_variables = env_vars
+        task.save
 
         allow(Encryptor).to receive(:current_encryption_key_label) { 'new' }
 
@@ -50,9 +60,9 @@ module VCAP::CloudController
         service_instance_new_key_label.credentials = instance_credentials_2
         service_instance_new_key_label.save
 
-        allow(VCAP::CloudController::Encryptor).to receive(:encrypt).and_call_original
-        allow(VCAP::CloudController::Encryptor).to receive(:decrypt).and_call_original
-        allow(VCAP::CloudController::Encryptor).to receive(:encrypted_classes).and_return([
+        allow(Encryptor).to receive(:encrypt).and_call_original
+        allow(Encryptor).to receive(:decrypt).and_call_original
+        allow(Encryptor).to receive(:encrypted_classes).and_return([
           'VCAP::CloudController::ServiceBinding',
           'VCAP::CloudController::AppModel',
           'VCAP::CloudController::ServiceInstance',
@@ -61,7 +71,7 @@ module VCAP::CloudController
 
       context 'no current encryption key label is set' do
         before do
-          allow(VCAP::CloudController::Encryptor).to receive(:current_encryption_key_label).and_return(nil)
+          allow(Encryptor).to receive(:current_encryption_key_label).and_return(nil)
         end
 
         it 'raises an error' do
@@ -84,16 +94,16 @@ module VCAP::CloudController
       end
 
       it 're-encrypts all encrypted fields with the new key for all rows' do
-        expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
+        expect(Encryptor).to receive(:encrypt).
           with(JSON.dump(env_vars), app.salt).exactly(:twice)
 
-        expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
+        expect(Encryptor).to receive(:encrypt).
           with(JSON.dump(credentials), service_binding.salt).exactly(:twice)
 
-        expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
+        expect(Encryptor).to receive(:encrypt).
           with(JSON.dump(volume_mounts), service_binding.volume_mounts_salt).exactly(:twice)
 
-        expect(VCAP::CloudController::Encryptor).to receive(:encrypt).
+        expect(Encryptor).to receive(:encrypt).
           with(JSON.dump(instance_credentials), service_instance.salt).exactly(:twice)
 
         RotateDatabaseKey.perform(batch_size: 1)
@@ -109,16 +119,16 @@ module VCAP::CloudController
       end
 
       it 'does not re-encrypt values that are already encrypted with the new label' do
-        expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
+        expect(Encryptor).not_to receive(:encrypt).
           with(JSON.dump(env_vars_2), app_new_key_label.salt)
 
-        expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
+        expect(Encryptor).not_to receive(:encrypt).
           with(JSON.dump(credentials_2), service_binding_new_key_label.salt)
 
-        expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
+        expect(Encryptor).not_to receive(:encrypt).
           with(JSON.dump(volume_mounts_2), service_binding_new_key_label.volume_mounts_salt)
 
-        expect(VCAP::CloudController::Encryptor).not_to receive(:encrypt).
+        expect(Encryptor).not_to receive(:encrypt).
           with(JSON.dump(volume_mounts_2), service_instance.credentials)
 
         RotateDatabaseKey.perform(batch_size: 1)
@@ -150,6 +160,66 @@ module VCAP::CloudController
           expect(app.reload.encryption_key_label).to eq('new')
           expect(app2.reload.encryption_key_label).to eq('new')
           expect(app3.reload.encryption_key_label).to eq('new')
+        end
+      end
+
+      describe 'race conditions' do
+        context 'rotates the rest of the members, even if a member of the batch is deleted during a row operation' do
+          RSpec.shared_examples 'a row operation' do |op|
+            it op.to_s do
+              allow(Encryptor).to receive(:encrypted_classes).and_return([
+                'VCAP::CloudController::AppModel',
+              ])
+
+              allow_any_instance_of(VCAP::CloudController::AppModel).to receive(op) do |app|
+                app.delete
+                allow_any_instance_of(VCAP::CloudController::AppModel).to receive(op).and_call_original
+                app.method(op).call
+              end
+
+              expect(app_the_second.encryption_key_label).to eq('old')
+
+              RotateDatabaseKey.perform(batch_size: 3)
+
+              app_the_second.reload
+              expect(app_the_second.encryption_key_label).to eq('new')
+              expect(app_the_second.environment_variables).to eq(env_vars)
+            end
+          end
+
+          it_behaves_like('a row operation', :save)
+          it_behaves_like('a row operation', :lock!)
+        end
+
+        it 'does not roll-back simultaneous changes to models', isolation: :truncation do
+          allow(Encryptor).to receive(:encrypted_classes).and_return([
+            'VCAP::CloudController::TaskModel',
+          ])
+
+          expect(TaskModel.count).to eq(1), 'Test mocking requires that there be only a single task present'
+
+          new_environment_variables = { 'fresh' => 'environment variables' }
+          allow_any_instance_of(TaskModel).to receive(:db) do |task_model|
+            allow_any_instance_of(TaskModel).to receive(:db).and_call_original
+
+            # Opening a new db connection outside of the scope of the key rotator to simulate api user activity
+            # while the rotator errand is running
+            Thread.new {
+              encrypted_new_env_vars = TaskModel.make(salt: task_model.salt, environment_variables: new_environment_variables).environment_variables_without_encryption
+              db = Sequel.connect(task_model.db.opts)
+              db.run("UPDATE tasks SET encryption_key_label = 'new', encrypted_environment_variables = '#{encrypted_new_env_vars}' where guid = '#{task_model.guid}';")
+            }.join
+
+            task_model.method(:db).call
+          end
+
+          expect(task.encryption_key_label).to eq('old')
+
+          RotateDatabaseKey.perform
+
+          task.reload
+          expect(task.encryption_key_label).to eq('new')
+          expect(task.environment_variables).to eq(new_environment_variables)
         end
       end
     end
