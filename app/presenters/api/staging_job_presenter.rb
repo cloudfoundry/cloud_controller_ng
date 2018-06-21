@@ -21,7 +21,7 @@ class StagingJobPresenter < JobPresenter
         port:     config.get(:external_port),
         path:     "/staging/jobs/#{@object.guid}",
       )
-      uri.userinfo = [config.get(:staging, :auth, :user), config.get(:staging, :auth, :password)]
+      uri.userinfo = [config.get(:staging, :auth, :user), CGI.escape(config.get(:staging, :auth, :password))]
       uri.to_s
     end
   end

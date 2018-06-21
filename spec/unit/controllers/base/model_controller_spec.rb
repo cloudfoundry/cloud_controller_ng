@@ -463,7 +463,7 @@ module VCAP::CloudController
         end
 
         it 'returns matching results when querying for greater than or equal' do
-          get escape_query("/v2/test_models?q=created_at>=#{model2.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at>=#{model2.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(2)
           found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
@@ -471,7 +471,7 @@ module VCAP::CloudController
         end
 
         it 'returns matching results when querying for less than or equal' do
-          get escape_query("/v2/test_models?q=created_at<=#{model2.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at<=#{model2.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(2)
           found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
@@ -479,21 +479,21 @@ module VCAP::CloudController
         end
 
         it 'returns matching results when querying for greater than' do
-          get escape_query("/v2/test_models?q=created_at>#{model2.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at>#{model2.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq(model3.guid)
         end
 
         it 'returns matching results when querying for less than' do
-          get escape_query("/v2/test_models?q=created_at<#{model2.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at<#{model2.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq(model1.guid)
         end
 
         it 'returns matching results when querying using IN' do
-          get escape_query("/v2/test_models?q=created_at IN #{model1.created_at.utc.iso8601},#{model3.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at IN #{model1.created_at.utc.iso8601},#{model3.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(2)
           found_guids = decoded_response['resources'].collect { |resource| resource['metadata']['guid'] }
@@ -501,14 +501,14 @@ module VCAP::CloudController
         end
 
         it 'returns matching results when querying by multiple conditions' do
-          get escape_query("/v2/test_models?q=created_at<#{model3.created_at.utc.iso8601}\;created_at>#{model1.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at<#{model3.created_at.utc.iso8601}\;created_at>#{model1.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq(model2.guid)
         end
 
         it 'returns matching results when querying with multiple parameters' do
-          get escape_query("/v2/test_models?q=created_at<#{model3.created_at.utc.iso8601}&q=created_at>#{model1.created_at.utc.iso8601}")
+          get UriUtils.uri_escape("/v2/test_models?q=created_at<#{model3.created_at.utc.iso8601}&q=created_at>#{model1.created_at.utc.iso8601}")
 
           expect(decoded_response['total_results']).to eq(1)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq(model2.guid)

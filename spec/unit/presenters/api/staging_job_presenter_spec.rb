@@ -12,7 +12,7 @@ RSpec.describe StagingJobPresenter do
     let(:user) { TestConfig.config[:staging][:auth][:user] }
     let(:password) { TestConfig.config[:staging][:auth][:password] }
     let(:expected_polling_url) do
-      "http://#{user}:#{password}@#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:external_port]}/staging/jobs/#{job.guid}"
+      "http://#{user}:#{CGI.escape(password)}@#{TestConfig.config[:internal_service_hostname]}:#{TestConfig.config[:external_port]}/staging/jobs/#{job.guid}"
     end
 
     it 'creates a valid JSON with the http internal URL' do

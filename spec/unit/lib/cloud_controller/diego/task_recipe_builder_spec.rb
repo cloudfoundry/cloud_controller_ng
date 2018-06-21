@@ -62,7 +62,7 @@ module VCAP::CloudController
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:tls_port) { '7773' }
         let(:user) { 'user' }
-        let(:password) { 'password' }
+        let(:password) { 'pass[%3a]word' }
         let(:rule_dns_everywhere) do
           ::Diego::Bbs::Models::SecurityGroupRule.new(
             protocol: 'udp',
@@ -150,7 +150,7 @@ module VCAP::CloudController
             expect(result.disk_mb).to eq(51)
             expect(result.cpu_weight).to eq(50)
 
-            expect(result.completion_callback_url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
+            expect(result.completion_callback_url).to eq("https://#{user}:#{CGI.escape(password)}@#{internal_service_hostname}:#{tls_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
 
             timeout_action = result.action.timeout_action
@@ -277,7 +277,7 @@ module VCAP::CloudController
 
           it 'sets the completion callback' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
-            expect(result.completion_callback_url).to eq("https://#{user}:#{password}@#{internal_service_hostname}:#{tls_port}" \
+            expect(result.completion_callback_url).to eq("https://#{user}:#{CGI.escape(password)}@#{internal_service_hostname}:#{tls_port}" \
                                    "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}")
           end
 

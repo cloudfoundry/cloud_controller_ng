@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     authenticate_basic_auth('/staging/*') do
       [VCAP::CloudController::Config.config.get(:staging, :auth, :user),
-       VCAP::CloudController::Config.config.get(:staging, :auth, :password)]
+       CGI.escape(VCAP::CloudController::Config.config.get(:staging, :auth, :password))]
     end
 
     attr_reader :config, :blobstore, :buildpack_cache_blobstore, :package_blobstore

@@ -81,7 +81,7 @@ module VCAP::CloudController
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }
         let(:user) { 'user' }
-        let(:password) { 'password' }
+        let(:password) { 'pass<%3b>word' }
         let(:result) { protocol.stage_package_request(config, staging_details) }
 
         before do
@@ -101,7 +101,7 @@ module VCAP::CloudController
             timeout:             90,
             lifecycle:           lifecycle_type,
             lifecycle_data:      { 'some' => 'data' },
-            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
+            completion_callback: "http://#{user}:#{CGI.escape(password)}@#{internal_service_hostname}:#{external_port}" \
             "/internal/v3/staging/#{droplet.guid}/build_completed?start=#{staging_details.start_after_staging}"
           })
         end

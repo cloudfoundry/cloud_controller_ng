@@ -267,7 +267,7 @@ module VCAP::CloudController
 
       context 'GET /v2/buildpacks/:guid/download' do
         let(:staging_user) { 'user' }
-        let(:staging_password) { 'password' }
+        let(:staging_password) { 'pass[%3a]word' }
         let(:staging_config) do
           {
             staging: { timeout_in_seconds: 240, auth: { user: staging_user, password: staging_password } },

@@ -9,7 +9,7 @@ module VCAP::CloudController
     allow_unauthenticated_access only: :download
     authenticate_basic_auth("#{path}/*/download") do
       [VCAP::CloudController::Config.config.get(:staging, :auth, :user),
-       VCAP::CloudController::Config.config.get(:staging, :auth, :password)]
+       CGI.escape(VCAP::CloudController::Config.config.get(:staging, :auth, :password))]
     end
 
     put "#{path_guid}/bits", :upload

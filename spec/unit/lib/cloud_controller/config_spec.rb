@@ -197,7 +197,7 @@ module VCAP::CloudController
 
             it 'URL-encodes staging auth as necessary' do
               expect(config_load_from_file[:staging][:auth][:user]).to eq('f%40t%3A%25a')
-              expect(config_load_from_file[:staging][:auth][:password]).to eq('m%40%2Fn!')
+              expect(config_load_from_file[:staging][:auth][:password]).to eq('m%40%2Fn%21')
             end
           end
         end

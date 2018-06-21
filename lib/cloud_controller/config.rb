@@ -66,7 +66,7 @@ module VCAP::CloudController
       end
 
       def escape_userinfo(value)
-        URI.escape(value, "%#{URI::REGEXP::PATTERN::RESERVED}")
+        CGI.escape(value)
       end
 
       def valid_in_userinfo?(value)

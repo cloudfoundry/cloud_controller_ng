@@ -94,8 +94,4 @@ module ControllerHelpers
     end
     @admin_headers
   end
-
-  def escape_query(string)
-    URI.encode(string, /[<>;:, ]/)
-  end
 end

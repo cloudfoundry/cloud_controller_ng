@@ -85,4 +85,16 @@ RSpec.describe UriUtils do
       end
     end
   end
+
+  describe '.uri_escape' do
+    it 'return itself if no qeury' do
+      expect(UriUtils.uri_escape('abc')).to eq 'abc'
+    end
+
+    it 'return escaped query' do
+      expect(UriUtils.uri_escape('https://test.com/test?name=test')).to eq 'https://test.com/test?name=test'
+      expect(UriUtils.uri_escape('https://test.com/test?name=/')).to eq 'https://test.com/test?name=%2F'
+      expect(UriUtils.uri_escape('https://test.com/test?name=/?')).to eq 'https://test.com/test?name=%2F%3F'
+    end
+  end
 end

@@ -54,7 +54,7 @@ module VCAP::CloudController
         action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
 
         ::Diego::Bbs::Models::TaskDefinition.new(
-          completion_callback_url:          staging_completion_callback(staging_details, config),
+          completion_callback_url:          staging_completion_callback(config, staging_details),
           cpu_weight:                       STAGING_TASK_CPU_WEIGHT,
           disk_mb:                          staging_details.staging_disk_in_mb,
           egress_rules:                     generate_egress_rules(staging_details),
@@ -83,17 +83,17 @@ module VCAP::CloudController
         )
       end
 
-      def staging_completion_callback(staging_details, config)
+      private
+
+      def staging_completion_callback(config, staging_details)
         port   = config.get(:tls_port)
         scheme = 'https'
 
-        auth      = "#{config.get(:internal_api, :auth_user)}:#{config.get(:internal_api, :auth_password)}"
+        auth      = "#{config.get(:internal_api, :auth_user)}:#{CGI.escape(config.get(:internal_api, :auth_password))}"
         host_port = "#{config.get(:internal_service_hostname)}:#{port}"
         path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
         "#{scheme}://#{auth}@#{host_port}#{path}"
       end
-
-      private
 
       def cpu_weight(task)
         TaskCpuWeightCalculator.new(memory_in_mb: task.memory_in_mb).calculate

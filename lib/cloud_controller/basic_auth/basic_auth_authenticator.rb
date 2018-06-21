@@ -3,8 +3,8 @@ module CloudController
     class BasicAuthAuthenticator
       def self.valid?(rack_env, credentials)
         auth = Rack::Auth::Basic::Request.new(rack_env)
-        decoded_credentials = credentials.map { |encoded_cred| URI.decode(encoded_cred) }
-        auth.provided? && auth.basic? && auth.credentials == decoded_credentials
+        auth.provided? && auth.basic? && \
+            auth.credentials == credentials.map { |encoded_cred| CGI.unescape(encoded_cred) }
       end
     end
   end

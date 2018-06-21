@@ -116,7 +116,7 @@ module VCAP::CloudController
     let(:cc_addr) { '1.2.3.4' }
     let(:cc_port) { 5678 }
     let(:staging_user) { 'user' }
-    let(:staging_password) { 'password' }
+    let(:staging_password) { 'pass[%3a]word' }
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
@@ -330,7 +330,7 @@ module VCAP::CloudController
           config      = VCAP::CloudController::Config.config.config_hash
           user        = config[:staging][:auth][:user]
           password    = config[:staging][:auth][:password]
-          polling_url = "http://#{user}:#{password}@#{config[:internal_service_hostname]}:#{config[:external_port]}/staging/jobs/#{job.guid}"
+          polling_url = "http://#{user}:#{CGI.escape(password)}@#{config[:internal_service_hostname]}:#{config[:external_port]}/staging/jobs/#{job.guid}"
 
           expect(decoded_response.fetch('metadata').fetch('url')).to eql(polling_url)
         end

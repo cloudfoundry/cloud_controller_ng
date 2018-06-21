@@ -80,7 +80,7 @@ Lint/UnusedMethodArgument:
   Enabled: false
 
 Lint/UriEscapeUnescape:
-  Enabled: false
+  Enabled: true
 
 Metrics/AbcSize:
   Enabled: false

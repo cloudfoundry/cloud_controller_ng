@@ -201,10 +201,10 @@ module VCAP::CloudController
 
         context 'when the endpoint requires basic auth' do
           let(:unencoded_password) { "p'a\"ss@:?wo!r$d" }
-          let(:encoded_password) { URI.escape(unencoded_password, "%#{URI::REGEXP::PATTERN::RESERVED}") }
+          let(:encoded_password) { CGI.escape(unencoded_password) }
 
           it 'this is just a check around our encoding and decoding assumptions' do
-            expect(URI.decode(encoded_password)).to eq(unencoded_password)
+            expect(CGI.unescape(encoded_password)).to eq(unencoded_password)
           end
 
           it 'returns NotAuthenticated if username and password are not provided' do
