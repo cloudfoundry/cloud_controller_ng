@@ -35,20 +35,150 @@ module VCAP::CloudController
       let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
       let(:logger) { instance_double(Steno::Logger) }
       let(:arbitrary_parameters) { {} }
+      let(:binding_params) { {} }
 
       before do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        allow(client).to receive(:bind).and_return({ async: false, binding: {} })
+        allow(client).to receive(:bind).and_return({ async: false, binding: binding_params, operation: nil })
       end
 
-      it 'creates a Service Binding' do
-        service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+      context 'when the service broker does not include any additional binding parameters' do
+        it 'creates a plain old Service Binding' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
 
-        expect(ServiceBinding.count).to eq(1)
-        expect(service_binding.app_guid).to eq(app.guid)
-        expect(service_binding.service_instance_guid).to eq(service_instance.guid)
-        expect(service_binding.type).to eq('app')
-        expect(service_binding.name).to eq('named-binding')
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+          expect(service_binding.type).to eq('app')
+          expect(service_binding.name).to eq('named-binding')
+          expect(service_binding.syslog_drain_url).to be_nil
+          expect(service_binding.volume_mounts).to be_nil
+        end
+      end
+
+      context 'when the service broker includes a credentials parameter in the binding response' do
+        let(:expected_credentials) do
+          {
+            'uri' => 'fake-service://general-kenobi:hello-there@fake-host:3306/fake-dbname',
+            'username' => 'general-kenobi',
+            'password' => 'hello-there'
+          }
+        end
+        let(:binding_params) do
+          {
+            credentials: expected_credentials
+          }
+        end
+
+        it 'ignores the route_service_url and creates the Service Binding' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+          expect(service_binding.credentials).to eq(expected_credentials)
+        end
+      end
+
+      context 'when the service broker includes an unexpected binding parameter' do
+        let(:binding_params) { { unexpected: 'very' } }
+
+        it 'ignores the unexpected parameter and creates the Service Binding' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+        end
+      end
+
+      context 'when the service broker includes a route_service_url parameter in the binding response' do
+        let(:binding_params) do
+          {
+            credentials: {
+              'uri' => 'fake-service://general-kenobi:hello-there@fake-host:3306/fake-dbname',
+              'username' => 'general-kenobi',
+              'password' => 'hello-there'
+            },
+            route_service_url: 'https://logging-route-service.example.com'
+          }
+        end
+
+        it 'ignores the route_service_url and creates the Service Binding' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+        end
+      end
+
+      context 'when the service broker includes a syslog_drain_url parameter in the binding response' do
+        let(:expected_syslog_drain_url) { 'https://syslog-drain.example.com' }
+        let(:binding_params) do
+          {
+            syslog_drain_url: expected_syslog_drain_url
+          }
+        end
+
+        it 'creates the Service Binding and sets the syslog_drain_url' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+          expect(service_binding.syslog_drain_url).to eq(expected_syslog_drain_url)
+        end
+      end
+
+      context 'when the service broker includes a volume_mounts parameter in the binding response' do
+        let(:expected_volume_mount_1) do
+          { 'device_type' => 'none', 'device' => { 'volume_id' => 'olympus' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+        end
+        let(:expected_volume_mount_2) do
+          { 'device_type' => 'none', 'device' => { 'volume_id' => 'nikon' }, 'mode' => 'none', 'container_dir' => 'none', 'driver' => 'none' }
+        end
+        let(:binding_params) do
+          {
+            volume_mounts: [expected_volume_mount_1, expected_volume_mount_2]
+          }
+        end
+
+        it 'creates the Service Binding and sets the volume_mounts' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+          expect(service_binding.volume_mounts).to match_array([expected_volume_mount_1, expected_volume_mount_2])
+        end
+      end
+
+      context 'when the service broker includes multiple parameters in the binding response' do
+        let(:expected_syslog_drain_url) { 'https://syslog-drain.example.com' }
+        let(:expected_credentials) do
+          {
+            'uri' => 'fake-service://general-kenobi:hello-there@fake-host:3306/fake-dbname',
+            'username' => 'general-kenobi',
+            'password' => 'hello-there'
+          }
+        end
+        let(:binding_params) do
+          {
+            credentials: expected_credentials,
+            syslog_drain_url: expected_syslog_drain_url
+          }
+        end
+
+        it 'includes them all on the Service Binding' do
+          service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+          expect(ServiceBinding.count).to eq(1)
+          expect(service_binding.app_guid).to eq(app.guid)
+          expect(service_binding.service_instance_guid).to eq(service_instance.guid)
+          expect(service_binding.credentials).to eq(expected_credentials)
+          expect(service_binding.syslog_drain_url).to eq(expected_syslog_drain_url)
+        end
       end
 
       describe 'audit events' do

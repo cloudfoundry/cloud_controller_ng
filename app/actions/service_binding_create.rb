@@ -12,6 +12,8 @@ module VCAP::CloudController
     class VolumeMountServiceDisabled < InvalidServiceBinding; end
     class SpaceMismatch < InvalidServiceBinding; end
 
+    PERMITTED_BINDING_ATTRIBUTES = [:credentials, :syslog_drain_url, :volume_mounts].freeze
+
     include VCAP::CloudController::LockCheck
 
     def initialize(user_audit_info, manifest_triggered: false)
@@ -38,7 +40,7 @@ module VCAP::CloudController
 
       binding_result = request_binding_from_broker(client, binding, message.parameters, accepts_incomplete)
 
-      binding.set(binding_result[:binding])
+      binding.set_fields(binding_result[:binding], PERMITTED_BINDING_ATTRIBUTES)
 
       begin
         if binding_result[:async]
@@ -64,9 +66,7 @@ module VCAP::CloudController
     private
 
     def request_binding_from_broker(client, service_binding, parameters, accepts_incomplete)
-      client.bind(service_binding, parameters, accepts_incomplete).tap do |response|
-        response.delete(:route_service_url)
-      end
+      client.bind(service_binding, parameters, accepts_incomplete)
     end
 
     def mitigate_orphan(binding)
