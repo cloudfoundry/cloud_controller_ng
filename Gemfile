@@ -48,6 +48,7 @@ gem 'railties'
 # Blobstore and Bits Service Dependencies
 gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
 gem 'bits_service_client', '~> 2.1'
+gem 'fog-aliyun'
 gem 'fog-aws'
 gem 'fog-azure-rm'
 gem 'fog-google'
