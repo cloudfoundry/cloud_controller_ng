@@ -16,7 +16,7 @@ module VCAP::CloudController
         Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
 
         actor    = { name: app.name, guid: app.guid, type: 'app' }
-        metadata = droplet_exited_payload.slice('instance', 'index', 'exit_status', 'exit_description', 'reason')
+        metadata = droplet_exited_payload.slice('instance', 'index', 'cell_id', 'exit_status', 'exit_description', 'reason')
         create_app_audit_event('app.crash', app, app.space, actor, metadata)
       end
 
