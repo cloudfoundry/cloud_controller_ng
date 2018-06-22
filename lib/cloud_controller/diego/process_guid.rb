@@ -9,11 +9,11 @@ module VCAP::CloudController
         from(process.guid, process.version)
       end
 
-      def self.app_guid(versioned_guid)
+      def self.cc_process_guid(versioned_guid)
         versioned_guid[0..35]
       end
 
-      def self.app_version(versioned_guid)
+      def self.cc_process_version(versioned_guid)
         versioned_guid[37..-1]
       end
     end

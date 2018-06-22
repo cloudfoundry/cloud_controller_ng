@@ -20,12 +20,12 @@ module VCAP::CloudController
     def crashed(process_guid)
       crash_payload = crashed_request
 
-      app_guid = Diego::ProcessGuid.app_guid(process_guid)
+      app_guid = Diego::ProcessGuid.cc_process_guid(process_guid)
 
       process = ProcessModel.find(guid: app_guid)
       raise CloudController::Errors::NotFound.new_from_details('ProcessNotFound', app_guid) unless process
 
-      crash_payload['version'] = Diego::ProcessGuid.app_version(process_guid)
+      crash_payload['version'] = Diego::ProcessGuid.cc_process_version(process_guid)
 
       Repositories::ProcessEventRepository.record_crash(process, crash_payload)
       Repositories::AppEventRepository.new.create_app_exit_event(process, crash_payload)

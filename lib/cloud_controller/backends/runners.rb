@@ -32,7 +32,7 @@ module VCAP::CloudController
       ProcessModel.select_all(ProcessModel.table_name).
         diego.
         runnable.
-        where("#{ProcessModel.table_name}__guid".to_sym => diego_process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
+        where("#{ProcessModel.table_name}__guid".to_sym => diego_process_guids.map { |pg| Diego::ProcessGuid.cc_process_guid(pg) }).
         order("#{ProcessModel.table_name}__id".to_sym).
         eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all.
