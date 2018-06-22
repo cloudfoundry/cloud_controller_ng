@@ -40,10 +40,6 @@ module VCAP::CloudController
       true
     end
 
-    def read?(space)
-      context.queryer.can_read_from_space?(space.guid, space.organization.guid)
-    end
-
     def read_related_object_for_update?(space, params=nil)
       read_for_update?(space, params)
     end

@@ -693,6 +693,26 @@ module VCAP::CloudController
         end
       end
 
+      context 'for a suspended organization as manager' do
+        let(:mgr) { User.make(guid: 'mgr-lemon') }
+        let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid]) }
+
+        before do
+          allow(uaa_client).to receive(:usernames_for_ids).and_return({})
+          org.update(status: 'suspended')
+        end
+
+        it 'returns a 200 and the expected users and roles' do
+          set_current_user(mgr)
+
+          get "/v2/organizations/#{org.guid}/user_roles"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].size).to eq(1)
+          parts = parsed_response['resources'].map { |res| [res['metadata']['guid'], res['entity']['organization_roles'].sort] }
+          expect(parts).to match_array([[mgr.guid, %w/org_manager org_user/]])
+        end
+      end
+
       context 'for an organization that does not exist' do
         it 'returns a 404' do
           set_current_user_as_admin

@@ -234,6 +234,22 @@ module VCAP::CloudController
         end
       end
 
+      context 'for a current space, with a non-admin and the space is in a suspended org' do
+        before do
+          set_current_user(space_manager)
+          space_one.organization.update(status: 'suspended')
+        end
+
+        it 'returns a 200' do
+          get "/v2/spaces/#{space_one.guid}/user_roles"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].
+            map { |x| (x1 = x['entity']) && [x1['username'], x1['admin'], x1['active']] }).
+            to match_array(
+              [['joe', false, false], ['trish', false, false], ['bosco', true, true]])
+        end
+      end
+
       context 'when the user does not have permissions to read' do
         it 'returns a 403' do
           set_current_user(User.make)

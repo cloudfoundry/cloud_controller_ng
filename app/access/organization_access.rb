@@ -5,10 +5,6 @@ module VCAP::CloudController
       FeatureFlag.enabled?(:user_org_creation)
     end
 
-    def read?(org)
-      context.queryer.can_read_from_org?(org.guid)
-    end
-
     def read_for_update?(org, params=nil)
       return true if context.queryer.can_write_globally?
       return false unless org.active?
