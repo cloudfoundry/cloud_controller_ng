@@ -95,9 +95,9 @@ GEM
     byebug (10.0.2)
     cf-copilot (0.0.5)
       grpc (~> 1.0)
-    cf-perm (0.0.9)
+    cf-perm (0.0.10)
       grpc (~> 1.0)
-    cf-perm-test-helpers (0.0.5)
+    cf-perm-test-helpers (0.0.6)
       ruby-mysql (~> 2.9.14)
       subprocess (~> 1)
     cf-uaa-lib (3.14.3)
@@ -457,8 +457,8 @@ DEPENDENCIES
   bits_service_client (~> 2.1)
   byebug
   cf-copilot
-  cf-perm (~> 0.0.9)
-  cf-perm-test-helpers (~> 0.0.5)
+  cf-perm (~> 0.0.10)
+  cf-perm-test-helpers (~> 0.0.6)
   cf-uaa-lib (~> 3.14.0)
   clockwork
   cloudfront-signer
