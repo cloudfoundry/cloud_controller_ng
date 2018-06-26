@@ -192,33 +192,6 @@ module VCAP::CloudController
       end
     end
 
-    describe 'GET /staging/jobs/:guid' do
-      let(:job) { Delayed::Job.enqueue double(perform: nil) }
-      let(:job_guid) { job.guid }
-
-      context 'when authorized' do
-        before do
-          authorize staging_user, staging_password
-        end
-
-        it 'returns the job' do
-          get "/staging/jobs/#{job_guid}"
-
-          expect(last_response.status).to eq(200)
-          expect(decoded_response(symbolize_keys: true)).to eq(StagingJobPresenter.new(job, 'http').to_hash)
-          expect(decoded_response['metadata']['guid']).to eq(job_guid)
-        end
-      end
-
-      context 'when not authorized' do
-        it 'returns a 401 unauthorized' do
-          get "/staging/jobs/#{job_guid}"
-
-          expect(last_response.status).to eq(401)
-        end
-      end
-    end
-
     describe 'GET /internal/v4/staging_jobs/:guid' do
       let(:job) { Delayed::Job.enqueue double(perform: nil) }
       let(:job_guid) { job.guid }
