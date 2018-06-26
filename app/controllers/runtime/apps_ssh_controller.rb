@@ -42,12 +42,6 @@ module VCAP::CloudController
       raise e
     end
 
-    get '/internal/apps/:guid/ssh_access', :ssh_access
-
-    def ssh_access(guid)
-      ssh_access_with_index(guid, nil)
-    end
-
     private
 
     def record_ssh_unauthorized_event(process, index)

@@ -170,7 +170,7 @@ module VCAP::CloudController
         before { set_current_user(other_user) }
 
         it 'returns a 403' do
-          get "/internal/apps/#{process.guid}/ssh_access"
+          get "/internal/apps/#{process.guid}/ssh_access/#{instance_index}"
           expect(last_response.status).to eq(403)
         end
 
@@ -202,40 +202,6 @@ module VCAP::CloudController
           event = Event.last
           expect(event.type).to eq('audit.app.ssh-unauthorized')
           expect(event.metadata).to eq({ 'index' => instance_index })
-        end
-      end
-    end
-
-    describe 'GET /internal/apps/:guid/ssh_access' do
-      before do
-        space.organization.add_user(user)
-        space.add_developer(user)
-        set_current_user(user)
-      end
-
-      context 'when the user can access the app' do
-        it 'creates an audit event recording this ssh access with an unknown index' do
-          expect {
-            get "/internal/apps/#{process.guid}/ssh_access"
-          }.to change { Event.count }.by(1)
-          event = Event.last
-          expect(event.type).to eq('audit.app.ssh-authorized')
-          expect(event.actor).to eq(user.guid)
-          expect(event.metadata).to eq({ 'index' => 'unknown' })
-        end
-      end
-
-      context 'when the user cannot access the app' do
-        let(:enable_ssh) { false }
-
-        it 'creates an audit event recording this ssh failure with an unknown index' do
-          expect {
-            get "/internal/apps/#{process.guid}/ssh_access"
-          }.to change { Event.count }.by(1)
-          event = Event.last
-          expect(event.type).to eq('audit.app.ssh-unauthorized')
-          expect(event.actor).to eq(user.guid)
-          expect(event.metadata).to eq({ 'index' => 'unknown' })
         end
       end
     end
