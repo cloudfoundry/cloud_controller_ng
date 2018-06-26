@@ -7,18 +7,6 @@ module VCAP::CloudController
   class TasksCompletionController < RestController::BaseController
     allow_unauthenticated_access
 
-    post '/internal/v3/tasks/:task_guid/completed', :v3_complete_task
-    def v3_complete_task(task_guid)
-      auth = Rack::Auth::Basic::Request.new(env)
-      unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
-        raise CloudController::Errors::NotAuthenticated
-      end
-
-      complete_task(task_guid, read_body)
-
-      [200, '{}']
-    end
-
     post '/internal/v4/tasks/:task_guid/completed', :v4_complete_task
     def v4_complete_task(task_guid)
       complete_task(task_guid, read_body)
