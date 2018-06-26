@@ -14,17 +14,6 @@ module VCAP::CloudController
 
     attr_reader :blobstore
 
-    get '/internal/v2/droplets/:guid/:droplet_checksum/download', :download_droplet_http
-
-    def download_droplet_http(guid, droplet_checksum)
-      if @droplet_url_generator.mtls
-        url = @droplet_url_generator.perma_droplet_download_url(guid, droplet_checksum)
-        redirect url
-      else
-        download_droplet(guid, droplet_checksum)
-      end
-    end
-
     get '/internal/v4/droplets/:guid/:droplet_checksum/download', :download_droplet_mtls
 
     def download_droplet_mtls(guid, droplet_checksum)
