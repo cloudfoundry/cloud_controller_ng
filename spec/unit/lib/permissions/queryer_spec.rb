@@ -904,5 +904,22 @@ module VCAP::CloudController
     describe '#readable_route_mapping_guids' do
       it_behaves_like 'readable guids', 'route_mapping'
     end
+
+    describe '#has_permission?' do
+      before do
+        allow(perm_permissions).to receive(:has_permission?).
+          with('permission.i.have', 'my-org-guid').and_return true
+        allow(perm_permissions).to receive(:has_permission?).
+          with('permission.i.do.not.have', 'my-org-guid').and_return false
+      end
+
+      it 'returns true if the user has the supplied permission' do
+        expect(subject.has_permission?('permission.i.have', 'my-org-guid')).to eq(true)
+      end
+
+      it 'returns false if the user does NOT have the supplied permission' do
+        expect(subject.has_permission?('permission.i.do.not.have', 'my-org-guid')).to eq(false)
+      end
+    end
   end
 end

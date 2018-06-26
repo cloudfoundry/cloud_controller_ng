@@ -961,5 +961,24 @@ module VCAP::CloudController::Perm
         expect(permissions.readable_route_mapping_guids).to match_array(expected_route_mapping_guids)
       end
     end
+
+    describe 'has_permission?' do
+      before do
+        allow(perm_client).to receive(:has_any_permission?).
+          with(permissions: [{ action: 'permission.i.have', resource: 'my-org-guid' }], user_id: user_id, issuer: issuer).
+          and_return true
+        allow(perm_client).to receive(:has_any_permission?).
+          with(permissions: [{ action: 'permission.i.do.not.have', resource: 'my-org-guid' }], user_id: user_id, issuer: issuer).
+          and_return false
+      end
+
+      it 'returns true if the user has the supplied permission' do
+        expect(subject.has_permission?('permission.i.have', 'my-org-guid')).to eq(true)
+      end
+
+      it 'returns false if the user does NOT have the supplied permission' do
+        expect(subject.has_permission?('permission.i.do.not.have', 'my-org-guid')).to eq(false)
+      end
+    end
   end
 end

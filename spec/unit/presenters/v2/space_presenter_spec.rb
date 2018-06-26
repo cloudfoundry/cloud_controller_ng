@@ -20,6 +20,33 @@ module CloudController::Presenters::V2
       let(:organization) { VCAP::CloudController::Organization.make }
       let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization) }
 
+      context 'when the user does not have permission to view the containing organization' do
+        let(:space) do
+          s = VCAP::CloudController::Space.make(
+            name: 'the space bar',
+            organization: organization,
+          )
+          VCAP::CloudController::RestController::SecureEagerLoader.new.eager_load_dataset(
+            VCAP::CloudController::Space.dataset,
+            VCAP::CloudController::SpacesController,
+            proc { |ds| ds.filter({ id: [] }) },
+            {},
+            0
+          ).where(id: s.id).all.first
+        end
+
+        it 'returns null for the organization guid' do
+          expected_entity_hash = {
+            'name'                        => space.name,
+            'organization_guid'           => nil,
+          }
+
+          actual_entity_hash = space_presenter.entity_hash(controller, space, opts, depth, parents, orphans)
+
+          expect(actual_entity_hash).to include(expected_entity_hash)
+        end
+      end
+
       context 'when a space is associated to an isolation segment' do
         let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
         let(:space) { VCAP::CloudController::Space.make(

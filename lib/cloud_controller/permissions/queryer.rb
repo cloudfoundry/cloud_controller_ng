@@ -184,6 +184,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def has_permission?(permission, resource)
+    perm_permissions.has_permission?(permission, resource)
+  end
+
   private
 
   attr_reader :perm_permissions, :db_permissions, :statsd_client, :enabled, :current_user_guid

@@ -47,6 +47,7 @@ module VCAP::CloudController
     def create?(space, params=nil)
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
+      return true if context.queryer.has_permission?('space.create', space.organization.guid)
       context.queryer.can_write_to_org?(space.organization.guid)
     end
 
