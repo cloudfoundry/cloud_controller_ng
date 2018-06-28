@@ -44,20 +44,6 @@ module VCAP::CloudController
       @blob_sender.send_blob(blob, self)
     end
 
-    get '/staging/v3/droplets/:guid/download', :download_v3_droplet
-    def download_v3_droplet(guid)
-      raise ApiError.new_from_details('BlobstoreNotLocal') unless @blobstore.local?
-
-      droplet = DropletModel.find(guid: guid)
-      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found') if droplet.nil?
-
-      blob = @blobstore.blob(droplet.blobstore_key)
-      blob_name = "droplet_#{droplet.guid}"
-
-      @missing_blob_handler.handle_missing_blob!(droplet.blobstore_key, blob_name) unless blob
-      @blob_sender.send_blob(blob, self)
-    end
-
     post '/internal/v4/droplets/:guid/upload', :upload_package_droplet_mtls
     def upload_package_droplet_mtls(guid)
       job = upload_droplet(guid)
