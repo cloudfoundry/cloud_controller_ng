@@ -15,9 +15,9 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
-    many_to_one :webish_process,
+    many_to_one :deploying_web_process,
       class: 'VCAP::CloudController::ProcessModel',
-      key: :webish_process_guid,
+      key: :deploying_web_process_guid,
       primary_key: :guid,
       without_guid_generation: true
   end

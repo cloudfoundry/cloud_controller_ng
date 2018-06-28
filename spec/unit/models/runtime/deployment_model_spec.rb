@@ -4,8 +4,8 @@ module VCAP::CloudController
   RSpec.describe DeploymentModel do
     let(:app) { AppModel.make(name: 'rolling-app') }
     let(:droplet) { DropletModel.make(app: app) }
-    let(:webish_process) { ProcessModel.make }
-    let(:deployment) { DeploymentModel.make(app: app, droplet: droplet, webish_process: webish_process) }
+    let(:deploying_web_process) { ProcessModel.make }
+    let(:deployment) { DeploymentModel.make(app: app, droplet: droplet, deploying_web_process: deploying_web_process) }
 
     it 'has an app' do
       expect(deployment.app.name).to eq('rolling-app')
@@ -15,8 +15,8 @@ module VCAP::CloudController
       expect(deployment.droplet).to eq(droplet)
     end
 
-    it 'has a webish process' do
-      expect(deployment.webish_process).to eq(webish_process)
+    it 'has a deploying web process' do
+      expect(deployment.deploying_web_process).to eq(deploying_web_process)
     end
   end
 end

@@ -26,7 +26,7 @@ module VCAP::CloudController
             ports: web_process.ports,
           )
 
-          deployment.update(webish_process: process)
+          deployment.update(deploying_web_process: process)
           web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info, r, process) }
         end
 
