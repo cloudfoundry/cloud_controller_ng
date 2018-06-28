@@ -10,11 +10,7 @@ module CloudController
       end
 
       def droplet_upload_url(droplet_guid)
-        if @blobstore_options[:mtls]
-          https_no_auth_uri("/internal/v4/droplets/#{droplet_guid}/upload")
-        else
-          http_droplet_upload_url(droplet_guid)
-        end
+        https_no_auth_uri("/internal/v4/droplets/#{droplet_guid}/upload")
       end
 
       def buildpack_cache_upload_url(app_guid, stack)
