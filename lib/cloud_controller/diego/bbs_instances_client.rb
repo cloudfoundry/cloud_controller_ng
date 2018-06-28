@@ -12,7 +12,7 @@ module VCAP::CloudController
         process_guid = ProcessGuid.from_process(process)
         logger.info('lrp.instances.request', process_guid: process_guid)
 
-        actual_lrp_groups = handle_diego_errors do
+        actual_lrp_groups = handle_diego_errors(process_guid) do
           response = @client.actual_lrp_groups_by_process_guid(process_guid)
           logger.info('lrp.instances.response', process_guid: process_guid, error: response.error)
           response
@@ -25,7 +25,7 @@ module VCAP::CloudController
 
       def desired_lrp_instance(process)
         process_guid = ProcessGuid.from_process(process)
-        response = handle_diego_errors do
+        response = handle_diego_errors(process_guid) do
           @client.desired_lrp_by_process_guid(process_guid)
         end
         response.desired_lrp
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       private
 
-      def handle_diego_errors
+      def handle_diego_errors(process_guid)
         begin
           response = yield
         rescue ::Diego::Error => e
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
         if response.error
           if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
-            raise CloudController::Errors::NoRunningInstances.new('No running instances found for given process guid')
+            raise CloudController::Errors::NoRunningInstances.new("No running instances found for process guid #{process_guid}")
           else
             raise CloudController::Errors::InstancesUnavailable.new(response.error.message)
           end
