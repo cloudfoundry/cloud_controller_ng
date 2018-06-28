@@ -78,6 +78,30 @@ module VCAP::CloudController
             expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
             expect(config[:db][:database_parts]).to eq(DB.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
           end
+
+          context 'special passwords characters' do
+            let(:uri) { "http://user:#{password}@example.com/databasename" }
+            let(:raw_password) { 'pass@word' }
+
+            context 'unescaped' do
+              let(:password) { raw_password }
+
+              it "can't handle an unescaped @" do
+                expect {
+                  DB.database_parts_from_connection(uri)
+                }.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): #{uri}")
+              end
+            end
+
+            context 'escaped' do
+              let(:password) { CGI.escape(raw_password) }
+
+              it "can't handle an unescaped @" do
+                parts = DB.database_parts_from_connection(uri)
+                expect(parts[:password]).to eq(raw_password)
+              end
+            end
+          end
         end
 
         context 'when config values are provided' do
