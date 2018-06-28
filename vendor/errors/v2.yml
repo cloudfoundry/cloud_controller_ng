@@ -868,6 +868,11 @@
   http_code: 400
   message: "User name and password fields in the broker URI are not supported"
 
+270017:
+  name: ServiceBrokerRespondedAsyncWhenNotAllowed
+  http_code: 502
+  message: "The service broker responded asynchronously to a request, but the accepts_incomplete query parameter was false or not given."
+
 290000:
   name: BuildpackNameStackTaken
   http_code: 422

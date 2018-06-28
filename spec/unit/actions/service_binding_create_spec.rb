@@ -378,6 +378,21 @@ module VCAP::CloudController
           expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), anything, false)
           service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
         end
+
+        context 'and the broker responds asynchronously' do
+          before do
+            allow(client).to receive(:bind).and_return({ async: true, binding: {}, operation: '123' })
+          end
+
+          it 'raises an error' do
+            expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+
+            expect {
+              service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+            }.to raise_error(ServiceBindingCreate::ServiceBrokerRespondedAsyncWhenNotAllowed).
+              and not_change(ServiceBinding, :count)
+          end
+        end
       end
 
       describe 'orphan mitigation situations' do
