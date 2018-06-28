@@ -58,12 +58,6 @@ module VCAP::CloudController
       @blob_sender.send_blob(blob, self)
     end
 
-    post '/staging/v3/droplets/:guid/upload', :upload_package_droplet
-    def upload_package_droplet(guid)
-      job = upload_droplet(guid)
-      [HTTP::OK, StagingJobPresenter.new(job, 'http').to_json]
-    end
-
     post '/internal/v4/droplets/:guid/upload', :upload_package_droplet_mtls
     def upload_package_droplet_mtls(guid)
       job = upload_droplet(guid)
