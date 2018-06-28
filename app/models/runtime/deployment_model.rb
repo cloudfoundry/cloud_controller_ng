@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class DeploymentModel < Sequel::Model(:deployments)
     DEPLOYING_STATE = 'DEPLOYING'.freeze
+    DEPLOYED_STATE = 'DEPLOYED'.freeze
 
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
