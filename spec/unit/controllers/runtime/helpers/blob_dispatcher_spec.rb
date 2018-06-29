@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe BlobDispatcher do
     subject(:dispatcher) { BlobDispatcher.new(blobstore: blobstore, controller: controller) }
 
-    let(:blob_sender) { instance_double(CloudController::BlobSender::DefaultLocalBlobSender, send_blob: nil) }
+    let(:blob_sender) { instance_double(CloudController::BlobSender::NginxLocalBlobSender, send_blob: nil) }
     let(:blobstore) { double(local?: local) }
     let(:controller) { instance_double(RestController::BaseController) }
 
