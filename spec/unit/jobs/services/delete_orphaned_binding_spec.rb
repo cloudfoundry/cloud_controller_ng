@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       describe '#perform' do
         before do
-          allow(client).to receive(:unbind)
+          allow(client).to receive(:unbind).with(binding_info.to_binding, nil, true)
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
         end
 
