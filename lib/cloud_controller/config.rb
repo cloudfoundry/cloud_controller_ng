@@ -38,13 +38,18 @@ module VCAP::CloudController
 
       def merge_defaults(config)
         config[:db] ||= {}
-        config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
-        if config[:db][:database].nil?
-          abort('No database connection set (consider setting DB_CONNECTION_STRING)')
-        end
-        config[:db][:database_parts] ||= DB.database_parts_from_connection(config[:db][:database])
-
+        ensure_config_has_database_parts(config)
         sanitize(config)
+      end
+
+      def ensure_config_has_database_parts(config)
+        abort_no_db_connection! if ENV['DB_CONNECTION_STRING'].nil? && config[:db][:database_parts].nil?
+        config[:db][:database] ||= ENV['DB_CONNECTION_STRING']
+        config[:db][:database_parts] ||= DB.database_parts_from_connection(config[:db][:database])
+      end
+
+      def abort_no_db_connection!
+        abort('No database connection set (consider setting DB_CONNECTION_STRING)')
       end
 
       def sanitize(config)

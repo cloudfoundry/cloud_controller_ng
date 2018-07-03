@@ -69,7 +69,7 @@ module VCAP::CloudController
     end
 
     def self.get_database_scheme(opts)
-      scheme = opts.dig(:database_parts, :scheme)
+      scheme = opts.dig(:database_parts, :adapter)
       return scheme if scheme
       database = opts[:database]
       if database.start_with?('mysql')
