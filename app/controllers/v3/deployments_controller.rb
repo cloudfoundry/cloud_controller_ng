@@ -8,10 +8,10 @@ class DeploymentsController < ApplicationController
     message = DeploymentsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
     deployment_list_fetcher = DeploymentListFetcher.new(message: message)
-    dataset = if can_read_globally?
+    dataset = if permission_queryer.can_read_globally?
                 deployment_list_fetcher.fetch_all
               else
-                deployment_list_fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+                deployment_list_fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -26,7 +26,7 @@ class DeploymentsController < ApplicationController
     deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
     app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
-    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && can_write?(app.space.guid)
+    unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
 
     deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info)
 
@@ -39,7 +39,7 @@ class DeploymentsController < ApplicationController
     deployment = DeploymentModel.find(guid: params[:guid])
 
     resource_not_found!(:deployment) unless deployment &&
-      can_read?(deployment.app.space.guid, deployment.app.space.organization.guid)
+      permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end

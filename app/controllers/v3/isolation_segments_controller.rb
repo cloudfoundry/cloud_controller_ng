@@ -37,7 +37,7 @@ class IsolationSegmentsController < ApplicationController
 
   def show
     isolation_segment_model = find_isolation_segment(params[:guid])
-    resource_not_found!(:isolation_segment) unless can_read_from_isolation_segment?(isolation_segment_model)
+    resource_not_found!(:isolation_segment) unless permission_queryer.can_read_from_isolation_segment?(isolation_segment_model)
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
   end
@@ -48,10 +48,10 @@ class IsolationSegmentsController < ApplicationController
 
     fetcher = IsolationSegmentListFetcher.new(message: message)
 
-    dataset = if can_read_globally?
+    dataset = if permission_queryer.can_read_globally?
                 fetcher.fetch_all
               else
-                fetcher.fetch_for_organizations(org_guids: readable_org_guids)
+                fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -95,10 +95,10 @@ class IsolationSegmentsController < ApplicationController
     resource_not_found!(:isolation_segment) unless can_list_organizations?(isolation_segment_model)
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
-    organizations = if can_read_globally?
+    organizations = if permission_queryer.can_read_globally?
                       fetcher.fetch_all
                     else
-                      fetcher.fetch_for_organizations(org_guids: readable_org_guids)
+                      fetcher.fetch_for_organizations(org_guids: permission_queryer.readable_org_guids)
                     end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
@@ -107,13 +107,13 @@ class IsolationSegmentsController < ApplicationController
 
   def relationships_spaces
     isolation_segment_model = find_isolation_segment(params[:guid])
-    resource_not_found!(:isolation_segment) unless can_read_from_isolation_segment?(isolation_segment_model)
+    resource_not_found!(:isolation_segment) unless permission_queryer.can_read_from_isolation_segment?(isolation_segment_model)
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
-    spaces = if can_read_globally?
+    spaces = if permission_queryer.can_read_globally?
                fetcher.fetch_all
              else
-               fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+               fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
              end
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
@@ -173,7 +173,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def can_list_organizations?(isolation_segment)
-    can_read_globally? || isolation_segment.organizations.any? { |org| can_read_from_org?(org.guid) }
+    permission_queryer.can_read_globally? || isolation_segment.organizations.any? { |org| permission_queryer.can_read_from_org?(org.guid) }
   end
 
   def find_isolation_segment(guid)

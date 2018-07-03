@@ -14,7 +14,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def show
     org = fetch_org(params[:guid])
-    org_not_found! unless org && can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
     render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
   end
@@ -38,7 +38,7 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def create
-    unauthorized! unless can_write_globally? || user_org_creation_enabled?
+    unauthorized! unless permission_queryer.can_write_globally? || user_org_creation_enabled?
 
     message = VCAP::CloudController::OrganizationCreateMessage.new(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -52,7 +52,7 @@ class OrganizationsV3Controller < ApplicationController
 
   def show_default_isolation_segment
     org = fetch_org(params[:guid])
-    org_not_found! unless org && can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
     isolation_segment = fetch_isolation_segment(org.default_isolation_segment_guid)
 
@@ -69,7 +69,7 @@ class OrganizationsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = fetch_org(params[:guid])
-    org_not_found! unless org && can_read_from_org?(org.guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
     unauthorized! unless roles.admin? || org.managers.include?(current_user)
     iso_seg_guid = message.default_isolation_segment_guid
     isolation_segment = fetch_isolation_segment(iso_seg_guid)
@@ -109,20 +109,20 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def fetch_orgs(message)
-    if can_read_globally?
+    if permission_queryer.can_read_globally?
       OrgListFetcher.new.fetch_all(message: message)
     else
-      OrgListFetcher.new.fetch(message: message, guids: readable_org_guids)
+      OrgListFetcher.new.fetch(message: message, guids: permission_queryer.readable_org_guids)
     end
   end
 
   def fetch_orgs_for_isolation_segment(message)
-    if can_read_globally?
+    if permission_queryer.can_read_globally?
       isolation_segment, dataset = OrgListFetcher.new.fetch_all_for_isolation_segment(message: message)
     else
-      isolation_segment, dataset = OrgListFetcher.new.fetch_for_isolation_segment(message: message, guids: readable_org_guids)
+      isolation_segment, dataset = OrgListFetcher.new.fetch_for_isolation_segment(message: message, guids: permission_queryer.readable_org_guids)
     end
-    isolation_segment_not_found! unless isolation_segment && can_read_from_isolation_segment?(isolation_segment)
+    isolation_segment_not_found! unless isolation_segment && permission_queryer.can_read_from_isolation_segment?(isolation_segment)
     dataset
   end
 end

@@ -19,12 +19,12 @@ class RouteMappingsController < ApplicationController
 
     if app_nested?
       app, dataset = fetcher.fetch_for_app(app_guid: params[:app_guid])
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     else
-      dataset = if can_read_globally?
+      dataset = if permission_queryer.can_read_globally?
                   fetcher.fetch_all
                 else
-                  fetcher.fetch_for_spaces(space_guids: readable_space_guids)
+                  fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
                 end
     end
 
@@ -42,8 +42,8 @@ class RouteMappingsController < ApplicationController
 
     app, route, process, space, org = AddRouteFetcher.fetch(message)
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     route_not_found! unless route
 
     begin
@@ -57,15 +57,15 @@ class RouteMappingsController < ApplicationController
 
   def show
     route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
-    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
     render status: :ok, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
   end
 
   def destroy
     route_mapping = RouteMappingModel.where(guid: params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).all.first
 
-    route_mapping_not_found! unless route_mapping && can_read?(route_mapping.space.guid, route_mapping.space.organization.guid)
-    unauthorized! unless can_write?(route_mapping.space.guid)
+    route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)
 
     RouteMappingDelete.new(UserAuditInfo.from_context(SecurityContext)).delete(route_mapping)
     head :no_content

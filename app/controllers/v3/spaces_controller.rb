@@ -12,7 +12,7 @@ class SpacesV3Controller < ApplicationController
   def show
     space = SpaceFetcher.new.fetch(params[:guid])
 
-    space_not_found! unless space && can_read?(space.guid, space.organization.guid)
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
   end
@@ -21,8 +21,8 @@ class SpacesV3Controller < ApplicationController
     message = SpaceCreateMessage.new(params[:body])
     missing_org = 'Invalid organization. Ensure the organization exists and you have access to it.'
 
-    unprocessable!(missing_org) unless can_read_from_org?(message.organization_guid)
-    unauthorized! unless can_write_to_org?(message.organization_guid)
+    unprocessable!(missing_org) unless permission_queryer.can_read_from_org?(message.organization_guid)
+    unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = fetch_organization(message.organization_guid)
@@ -51,7 +51,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
     org = space.organization
     org_not_found! unless org
-    space_not_found! unless can_read?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
     message = SpaceUpdateIsolationSegmentMessage.new(params[:body])
@@ -75,7 +75,7 @@ class SpacesV3Controller < ApplicationController
     space_not_found! unless space
 
     org = space.organization
-    space_not_found! unless can_read?(space.guid, org.guid)
+    space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     isolation_segment = fetch_isolation_segment(space.isolation_segment_guid)
     render status: :ok, json: Presenters::V3::ToOneRelationshipPresenter.new(
@@ -109,10 +109,10 @@ class SpacesV3Controller < ApplicationController
   end
 
   def readable_spaces(message:)
-    if can_read_globally?
+    if permission_queryer.can_read_globally?
       SpaceListFetcher.new.fetch_all(message: message)
     else
-      SpaceListFetcher.new.fetch(message: message, guids: readable_space_guids)
+      SpaceListFetcher.new.fetch(message: message, guids: permission_queryer.readable_space_guids)
     end
   end
 end

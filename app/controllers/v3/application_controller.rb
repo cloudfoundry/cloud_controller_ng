@@ -110,50 +110,6 @@ class ApplicationController < ActionController::Base
   private
 
   ###
-  ### PERMISSIONS
-  ###
-
-  def can_read?(space_guid, org_guid)
-    permission_queryer.can_read_from_space?(space_guid, org_guid)
-  end
-
-  def can_write_to_org?(org_guid)
-    permission_queryer.can_write_to_org?(org_guid)
-  end
-
-  def can_read_from_org?(org_guid)
-    permission_queryer.can_read_from_org?(org_guid)
-  end
-
-  def can_write_globally?
-    permission_queryer.can_write_globally?
-  end
-
-  def can_read_globally?
-    permission_queryer.can_read_globally?
-  end
-
-  def can_read_from_isolation_segment?(isolation_segment)
-    permission_queryer.can_read_from_isolation_segment?(isolation_segment)
-  end
-
-  def can_see_secrets?(space)
-    permission_queryer.can_read_secrets_in_space?(space.guid, space.organization.guid)
-  end
-
-  def can_write?(space_guid)
-    permission_queryer.can_write_to_space?(space_guid)
-  end
-
-  def readable_space_guids
-    permission_queryer.readable_space_guids
-  end
-
-  def readable_org_guids
-    permission_queryer.readable_org_guids
-  end
-
-  ###
   ### FILTERS
   ###
 

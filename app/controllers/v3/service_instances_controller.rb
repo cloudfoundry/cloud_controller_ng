@@ -13,10 +13,10 @@ class ServiceInstancesV3Controller < ApplicationController
     message = ServiceInstancesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = if can_read_globally?
+    dataset = if permission_queryer.can_read_globally?
                 ManagedServiceInstanceListFetcher.new.fetch_all(message: message)
               else
-                ManagedServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: readable_space_guids)
+                ManagedServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -119,15 +119,15 @@ class ServiceInstancesV3Controller < ApplicationController
     readable_spaces = service_instance.shared_spaces + [service_instance.space]
 
     readable_spaces.any? do |space|
-      can_read?(space.guid, space.organization_guid)
+      permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
     end
   end
 
   def can_read_space?(space)
-    can_read?(space.guid, space.organization.guid)
+    permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
   end
 
   def can_write_space?(space)
-    can_write?(space.guid)
+    permission_queryer.can_write_to_space?(space.guid)
   end
 end

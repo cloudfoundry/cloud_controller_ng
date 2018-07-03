@@ -18,15 +18,15 @@ class DropletsController < ApplicationController
 
     if app_nested?
       app, dataset = DropletListFetcher.new(message: message).fetch_for_app
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     elsif package_nested?
       package, dataset = DropletListFetcher.new(message: message).fetch_for_package
-      package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+      package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
     else
-      dataset = if can_read_globally?
+      dataset = if permission_queryer.can_read_globally?
                   DropletListFetcher.new(message: message).fetch_all
                 else
-                  DropletListFetcher.new(message: message).fetch_for_spaces(space_guids: readable_space_guids)
+                  DropletListFetcher.new(message: message).fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
                 end
     end
 
@@ -40,15 +40,15 @@ class DropletsController < ApplicationController
 
   def show
     droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    droplet_not_found! unless droplet && can_read?(droplet.space.guid, droplet.space.organization.guid)
-    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: can_see_secrets?(droplet.space))
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: permission_queryer.can_read_secrets_in_space?(droplet.space.guid, droplet.space.organization.guid))
   end
 
   def destroy
     droplet, space, org = DropletDeleteFetcher.new.fetch(params[:guid])
-    droplet_not_found! unless droplet && can_read?(space.guid, org.guid)
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
-    unauthorized! unless can_write?(space.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     delete_action = DropletDelete.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(DropletModel, droplet.guid, delete_action)
@@ -63,11 +63,11 @@ class DropletsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     source_droplet = DropletModel.where(guid: params[:source_guid]).eager(:space, space: :organization).all.first
-    droplet_not_found! unless source_droplet && can_read?(source_droplet.space.guid, source_droplet.space.organization.guid)
+    droplet_not_found! unless source_droplet && permission_queryer.can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
-    app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
-    unauthorized! unless can_write?(destination_app.space.guid)
+    app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
 
     droplet = DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
 

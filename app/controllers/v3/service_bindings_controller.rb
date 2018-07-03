@@ -17,7 +17,7 @@ class ServiceBindingsController < ApplicationController
     app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
     app_not_found! unless app
     service_instance_not_found! unless service_instance
-    unauthorized! unless can_write?(app.space.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
     accepts_incomplete = false
     begin
@@ -35,18 +35,18 @@ class ServiceBindingsController < ApplicationController
   def show
     service_binding = VCAP::CloudController::ServiceBinding.find(guid: params[:guid])
 
-    binding_not_found! unless service_binding && can_read?(service_binding.space.guid, service_binding.space.organization.guid)
-    render status: :ok, json: Presenters::V3::ServiceBindingPresenter.new(service_binding, show_secrets: can_see_secrets?(service_binding.space))
+    binding_not_found! unless service_binding && permission_queryer.can_read_from_space?(service_binding.space.guid, service_binding.space.organization.guid)
+    render status: :ok, json: Presenters::V3::ServiceBindingPresenter.new(service_binding, show_secrets: permission_queryer.can_read_secrets_in_space?(service_binding.space.guid, service_binding.space.organization.guid))
   end
 
   def index
     message = ServiceBindingsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = if can_read_globally?
+    dataset = if permission_queryer.can_read_globally?
                 ServiceBindingListFetcher.new(message).fetch_all
               else
-                ServiceBindingListFetcher.new(message).fetch(space_guids: readable_space_guids)
+                ServiceBindingListFetcher.new(message).fetch(space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -60,8 +60,8 @@ class ServiceBindingsController < ApplicationController
   def destroy
     binding = VCAP::CloudController::ServiceBinding.where(guid: params[:guid]).eager(service_instance: { space: :organization }).all.first
 
-    binding_not_found! unless binding && can_read?(binding.space.guid, binding.space.organization.guid)
-    unauthorized! unless can_write?(binding.space.guid)
+    binding_not_found! unless binding && permission_queryer.can_read_from_space?(binding.space.guid, binding.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(binding.space.guid)
 
     ServiceBindingDelete.new(user_audit_info).single_delete_sync(binding)
 

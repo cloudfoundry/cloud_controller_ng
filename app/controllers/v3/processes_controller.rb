@@ -26,12 +26,12 @@ class ProcessesController < ApplicationController
 
     if app_nested?
       app, dataset = ProcessListFetcher.new(message).fetch_for_app
-      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     else
-      dataset = if can_read_globally?
+      dataset = if permission_queryer.can_read_globally?
                   ProcessListFetcher.new(message).fetch_all
                 else
-                  ProcessListFetcher.new(message).fetch_for_spaces(space_guids: readable_space_guids)
+                  ProcessListFetcher.new(message).fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
                 end
     end
 
@@ -44,7 +44,8 @@ class ProcessesController < ApplicationController
   end
 
   def show
-    render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process, show_secrets: can_see_secrets?(@space))
+    # TODO
+    render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process, show_secrets: permission_queryer.can_read_secrets_in_space?(@space.guid, @space.organization.guid))
   end
 
   def update
@@ -90,16 +91,16 @@ class ProcessesController < ApplicationController
   def find_process_and_space
     if app_nested?
       @process, app, @space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
-      app_not_found! unless app && can_read?(@space.guid, org.guid)
+      app_not_found! unless app && permission_queryer.can_read_from_space?(@space.guid, org.guid)
       process_not_found! unless @process
     else
       @process, @space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
-      process_not_found! unless @process && can_read?(@space.guid, org.guid)
+      process_not_found! unless @process && permission_queryer.can_read_from_space?(@space.guid, org.guid)
     end
   end
 
   def ensure_can_write
-    unauthorized! unless can_write?(@space.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(@space.guid)
   end
 
   def process_not_found!

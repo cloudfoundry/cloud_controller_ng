@@ -17,8 +17,8 @@ class AppManifestsController < ApplicationController
 
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_write?(space.guid)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     unsupported_for_docker_apps!(message) if incompatible_with_buildpacks(app.lifecycle_type, message)
 
     apply_manifest_action = AppApplyManifest.new(user_audit_info)
@@ -34,8 +34,8 @@ class AppManifestsController < ApplicationController
   def show
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! unless app && can_read?(space.guid, org.guid)
-    unauthorized! unless can_see_secrets?(space)
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
 
     manifest_presenter = Presenters::V3::AppManifestPresenter.new(app, app.service_bindings, app.routes)
     manifest_yaml = manifest_presenter.to_hash.deep_stringify_keys.to_yaml
