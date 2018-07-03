@@ -14,7 +14,7 @@ module VCAP::CloudController
           pid_filename: String, # Pid filename to use
 
           db: {
-            optional(:database) => String, # db connection string for sequel
+            optional(:database_parts) => Hash, # db connection hash for sequel\
             max_connections: Integer, # max connections in the connection pool
             pool_timeout: Integer, # timeout before raising an error when connection can't be established to the db
             log_level: String, # debug, info, etc.
