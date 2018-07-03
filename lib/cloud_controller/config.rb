@@ -43,9 +43,9 @@ module VCAP::CloudController
       end
 
       def ensure_config_has_database_parts(config)
-        abort_no_db_connection! if ENV['DB_CONNECTION_STRING'].nil? && config[:db][:database_parts].nil?
+        abort_no_db_connection! if ENV['DB_CONNECTION_STRING'].nil? && config[:db][:database].nil?
         config[:db][:db_connection_string] ||= ENV['DB_CONNECTION_STRING']
-        config[:db][:database_parts] ||= DB.database_parts_from_connection(config[:db][:db_connection_string])
+        config[:db][:database] ||= DB.database_parts_from_connection(config[:db][:db_connection_string])
       end
 
       def abort_no_db_connection!

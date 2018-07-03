@@ -6,7 +6,7 @@ module VCAP::CloudController
       define_schema do
         {
           db: {
-            optional(:database_parts) => Hash, # db connection hash for sequel
+            optional(:database) => Hash, # db connection hash for sequel
             :max_connections => Integer, # max connections in the connection pool
             :pool_timeout => Integer, # timeout before raising an error when connection can't be established to the db
             :log_level => String, # debug, info, etc.

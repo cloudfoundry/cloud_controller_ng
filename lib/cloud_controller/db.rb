@@ -8,7 +8,7 @@ module VCAP::CloudController
     #
     # @option opts [String]  :database Database connection string
     #
-    # @option opts [String]  :database_parts Database configuration values hash
+    # @option opts [String]  :database Database configuration values hash
     #
     # @option opts [Symbol]  :log_level Steno log level
     #
@@ -69,12 +69,12 @@ module VCAP::CloudController
     end
 
     def self.get_database_scheme(opts)
-      scheme = opts[:database_parts][:adapter]
+      scheme = opts[:database][:adapter]
       scheme.starts_with?('mysql') ? 'mysql' : scheme
     end
 
     def self.get_connection(opts, connection_options)
-      Sequel.connect(opts[:database_parts].merge(connection_options))
+      Sequel.connect(opts[:database].merge(connection_options))
     end
 
     def self.add_connection_validator_extension(db, opts)
