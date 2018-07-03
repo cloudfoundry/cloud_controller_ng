@@ -69,22 +69,12 @@ module VCAP::CloudController
     end
 
     def self.get_database_scheme(opts)
-      scheme = opts.dig(:database_parts, :adapter)
-      return scheme if scheme
-      database = opts[:database]
-      if database.start_with?('mysql')
-        return 'mysql'
-      elsif database.start_with?('postgres')
-        return 'postgres'
-      end
+      scheme = opts[:database_parts][:adapter]
+      scheme.starts_with?('mysql') ? 'mysql' : scheme
     end
 
     def self.get_connection(opts, connection_options)
-      if opts[:database_parts]
-        Sequel.connect(opts[:database_parts].merge(connection_options))
-      else
-        Sequel.connect(opts[:database], connection_options)
-      end
+      Sequel.connect(opts[:database_parts].merge(connection_options))
     end
 
     def self.add_connection_validator_extension(db, opts)

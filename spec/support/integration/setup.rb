@@ -12,7 +12,7 @@ module IntegrationSetup
 
     FileUtils.rm(config['pid_filename']) if File.exist?(config['pid_filename'])
 
-    db_connection_string = "#{TestConfig.config[:db][:database]}_integration_cc"
+    db_connection_string = "#{TestConfig.config[:db][:db_connection_string]}_integration_cc"
     if !opts[:preserve_database]
       db = /postgres/.match?(db_connection_string) ? 'postgres' : 'mysql'
       env = {

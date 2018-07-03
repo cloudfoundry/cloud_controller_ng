@@ -75,7 +75,7 @@ module VCAP::CloudController
           end
 
           it 'sets a default value for database' do
-            expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
+            expect(config[:db][:db_connection_string]).to eq(ENV['DB_CONNECTION_STRING'])
             expect(config[:db][:database_parts]).to eq(DB.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
           end
 
