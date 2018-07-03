@@ -25,7 +25,9 @@ end
 logger = Logger.new(STDOUT)
 
 db_config = @config.set(:db, @config.get(:db).merge(log_level: :debug))
-db_config[:database] ||= DbConfig.new.connection_string
+if defined? DbConfig
+  db_config[:database_parts] ||= DbConfig.new.config[:database_parts]
+end
 
 VCAP::CloudController::DB.load_models_without_migrations_check(db_config, logger)
 @config.configure_components
