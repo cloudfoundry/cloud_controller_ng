@@ -199,11 +199,17 @@ module VCAP::CloudController
           expect(TaskModel.count).to eq(1), 'Test mocking requires that there be only a single task present'
 
           new_environment_variables = { 'fresh' => 'environment variables' }
+
+          # Mocking the TaskModel#db method at this point allows us to inject some simulated API user activity after
+          # the TaskModel instance has been loaded by the Rotator, but before it locks the row
           allow_any_instance_of(TaskModel).to receive(:db) do |task_model|
+            # Unstub the db method so that future calls do not get caught up in here
             allow_any_instance_of(TaskModel).to receive(:db).and_call_original
 
             # Opening a new db connection outside of the scope of the key rotator to simulate api user activity
-            # while the rotator errand is running
+            # while the rotator errand is running. We do this in a separate thread to ensure that the database connection
+            # is distinct from the db connection that `RotateDatabaseKey.perform` is using, not to attempt to update
+            # the TaskModel concurrently
             Thread.new {
               encrypted_new_env_vars = TaskModel.make(salt: task_model.salt, environment_variables: new_environment_variables).environment_variables_without_encryption
               db = Sequel.connect(task_model.db.opts)
