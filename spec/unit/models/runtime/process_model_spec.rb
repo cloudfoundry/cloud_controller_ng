@@ -1732,12 +1732,5 @@ module VCAP::CloudController
         end
       end
     end
-
-    describe 'App alias' do
-      it_should_be_removed(
-        by: '2018/07/05',
-        explanation: 'We renamed App to ProcessModel in July 2017. It should be safe to remove the alias now without breaking DelayedJob jobs during rolling deploys'
-      )
-    end
   end
 end
