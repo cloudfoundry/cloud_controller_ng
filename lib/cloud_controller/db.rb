@@ -8,7 +8,7 @@ module VCAP::CloudController
     #
     # @option opts [String]  :database Database connection string
     #
-    # @option opts [String]  :database Database configuration values hash
+    # @option opts [String]  :database_parts Database configuration values hash
     #
     # @option opts [Symbol]  :log_level Steno log level
     #
@@ -69,12 +69,22 @@ module VCAP::CloudController
     end
 
     def self.get_database_scheme(opts)
-      scheme = opts[:database][:adapter]
-      scheme.starts_with?('mysql') ? 'mysql' : scheme
+      scheme = opts.dig(:database_parts, :adapter)
+      return scheme if scheme
+      database = opts[:database]
+      if database.start_with?('mysql')
+        return 'mysql'
+      elsif database.start_with?('postgres')
+        return 'postgres'
+      end
     end
 
     def self.get_connection(opts, connection_options)
-      Sequel.connect(opts[:database].merge(connection_options))
+      if opts[:database_parts]
+        Sequel.connect(opts[:database_parts].merge(connection_options))
+      else
+        Sequel.connect(opts[:database], connection_options)
+      end
     end
 
     def self.add_connection_validator_extension(db, opts)
@@ -107,6 +117,26 @@ module VCAP::CloudController
         password: uri.password && CGI.unescape(uri.password),
         database: uri.path.sub(%r{^/}, ''),
       }
+    end
+
+    def self.connection_from_database_parts(config)
+      parts = [config[:adapter], '://']
+      if config[:user]
+        parts << config[:user]
+        if config[:password]
+          parts << ':'
+          parts << CGI.escape(config[:password])
+        end
+        parts << '@'
+      end
+      parts << config[:host]
+      if config[:port]
+        parts << ':'
+        parts << config[:port]
+      end
+      parts << '/'
+      parts << config[:database]
+      parts.join('')
     end
   end
 end
