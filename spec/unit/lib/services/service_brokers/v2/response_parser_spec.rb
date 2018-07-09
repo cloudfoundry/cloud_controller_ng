@@ -984,7 +984,7 @@ module VCAP::Services
         test_case(:fetch_service_binding_last_operation, 422, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_binding_last_operation, 422, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_binding_last_operation, 422, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
-        test_common_error_cases(:fetch_state)
+        test_common_error_cases(:fetch_service_binding_last_operation)
         # rubocop:enable Metrics/LineLength
       end
     end

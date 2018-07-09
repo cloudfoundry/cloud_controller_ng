@@ -277,7 +277,7 @@ module VCAP::Services::ServiceBrokers::V2
       if instance.last_operation.type == 'delete'
         'succeeded'
       else
-        'failed'
+        'in progress'
       end
     end
 

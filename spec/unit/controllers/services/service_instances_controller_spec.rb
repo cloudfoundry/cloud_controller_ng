@@ -2156,7 +2156,7 @@ module VCAP::CloudController
               end
 
               service_instance.reload
-              expect(service_instance.last_operation.state).to eq('failed')
+              expect(service_instance.last_operation.state).to eq('in progress')
             end
           end
 
