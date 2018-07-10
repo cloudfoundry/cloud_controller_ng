@@ -1278,7 +1278,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker returns an error' do
         let(:code) { 204 }
         let(:response_data) do
-          { 'description' => 'Could not delete instance' }
+          { 'description' => 'Could not delete binding' }
         end
         let(:response_body) { response_data.to_json }
 
@@ -1286,7 +1286,7 @@ module VCAP::Services::ServiceBrokers::V2
           expect {
             client.unbind(binding)
           }.to raise_error(Errors::ServiceBrokerBadResponse).
-            with_message("Service instance #{binding.service_instance.name}: Service broker error: Could not delete instance")
+            with_message("Service broker failed to delete service binding for instance #{binding.service_instance.name}: Service broker error: Could not delete binding")
         end
       end
 

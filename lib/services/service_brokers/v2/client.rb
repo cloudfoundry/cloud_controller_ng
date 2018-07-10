@@ -160,7 +160,7 @@ module VCAP::Services::ServiceBrokers::V2
         operation: parsed_response['operation']
       }
     rescue => e
-      raise e.exception("Service instance #{service_binding&.service_instance&.name}: #{e.message}")
+      raise e.exception("Service broker failed to delete service binding for instance #{service_binding&.service_instance&.name}: #{e.message}")
     end
 
     def fetch_service_binding_last_operation(service_binding)
