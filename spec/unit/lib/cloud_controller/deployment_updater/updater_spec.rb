@@ -44,11 +44,11 @@ module VCAP::CloudController
           end
         end
 
-        context 'the last iteration of deployments in progress' do
+        context 'the last iteration of a deployment in progress' do
           let(:web_process) { ProcessModel.make(instances: 1) }
           let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5, guid: "I'm just a webish guid") }
 
-          it 'scales the web process down by one' do
+          it 'scales the original web process down by one' do
             expect {
               deployer.update
             }.to change {
@@ -56,7 +56,7 @@ module VCAP::CloudController
             }.by(-1)
           end
 
-          it 'does not scale up more web processes (one was created with the deployment)' do
+          it 'does not scale up the deploying web process' do
             expect {
               deployer.update
             }.not_to change {
@@ -71,6 +71,8 @@ module VCAP::CloudController
           let(:app_guid) { "I'm the real web guid" }
           let(:the_best_app) { AppModel.make(name: 'clem', guid: app_guid) }
           let(:web_process) { ProcessModel.make(app: the_best_app, guid: app_guid, instances: 2) }
+          let!(:non_web_process1) { ProcessModel.make(app: the_best_app, instances: 2, type: 'worker') }
+          let!(:non_web_process2) { ProcessModel.make(app: the_best_app, instances: 2, type: 'clock') }
 
           let!(:route1) { Route.make(space: space, host: 'hostname1') }
           let!(:route_mapping1) { RouteMappingModel.make(app: web_process.app, route: route1, process_type: web_process.type) }
@@ -78,15 +80,16 @@ module VCAP::CloudController
           let!(:route_mapping2) { RouteMappingModel.make(app: deploying_web_process.app, route: route2, process_type: deploying_web_process.type) }
 
           before do
+            allow(ProcessRestart).to receive(:restart)
             web_process.update(instances: 0)
           end
 
           it 'replaces the existing web process with the deploying_web_process' do
             deploying_web_process_guid = deploying_web_process.guid
-            expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-1'])
+            expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-1', 'worker', 'clock'])
             expect(deploying_web_process.instances).to eq(5)
 
-            deployer.update # do the work
+            deployer.update
 
             deployment.reload
             the_best_app.reload
@@ -98,7 +101,36 @@ module VCAP::CloudController
             expect(ProcessModel.find(guid: deploying_web_process_guid)).not_to be_nil
             expect(ProcessModel.find(guid: the_best_app.guid)).to be_nil
 
-            expect(ProcessModel.map(&:type)).to match_array(['web'])
+            expect(ProcessModel.map(&:type)).to match_array(['web', 'worker', 'clock'])
+          end
+
+          it 'puts the deployment into its finished DEPLOYED_STATE' do
+            deployer.update
+            deployment.reload
+
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          end
+
+          it 'restarts the non-web processes, but not the web process' do
+            deployer.update
+            deployment.reload
+
+            expect(ProcessRestart).
+              to have_received(:restart).
+              with(process: non_web_process1, config: TestConfig.config_instance, stop_in_runtime: true)
+
+            expect(ProcessRestart).
+              to have_received(:restart).
+              with(process: non_web_process2, config: TestConfig.config_instance, stop_in_runtime: true)
+
+            expect(ProcessRestart).
+              not_to have_received(:restart).
+              with(process: web_process, config: TestConfig.config_instance, stop_in_runtime: true)
+
+            expect(ProcessRestart).
+              not_to have_received(:restart).
+              with(process: deploying_web_process, config: TestConfig.config_instance, stop_in_runtime: true)
+
             expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
           end
         end

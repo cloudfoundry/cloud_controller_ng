@@ -28,6 +28,14 @@ module VCAP::CloudController
           index: Integer, # Component index (cc-0, cc-1, etc)
           name: String, # Component name (api_z1, api_z2)
 
+          external_port: Integer,
+          tls_port: Integer,
+          internal_service_hostname: String,
+          external_domain: String,
+          external_protocol: String,
+
+          default_health_check_timeout: Integer,
+
           db_encryption_key: enum(String, NilClass),
 
           optional(:database_encryption) => {
@@ -58,6 +66,73 @@ module VCAP::CloudController
 
           deployment_updater: {
             update_frequency_in_seconds: Integer,
+          },
+
+          optional(:copilot) => {
+            enabled: bool,
+            optional(:host) => String,
+            optional(:port) => Integer,
+            optional(:client_ca_file) => String,
+            optional(:client_key_file) => String,
+            optional(:client_chain_file) => String,
+          },
+
+          staging: {
+            timeout_in_seconds: Integer,
+            auth: {
+              user: String,
+              password: String,
+            }
+          },
+
+          resource_pool: {
+            maximum_size: Integer,
+            minimum_size: Integer,
+            resource_directory_key: String,
+            fog_connection: Hash,
+            fog_aws_storage_options: Hash
+          },
+
+          buildpacks: {
+            buildpack_directory_key: String,
+            fog_connection: Hash,
+            fog_aws_storage_options: Hash
+          },
+
+          packages: {
+            max_package_size: Integer,
+            app_package_directory_key: String,
+            fog_connection: Hash,
+            fog_aws_storage_options: Hash
+          },
+
+          droplets: {
+            droplet_directory_key: String,
+            fog_connection: Hash,
+            fog_aws_storage_options: Hash
+          },
+
+          stacks_file: String,
+
+          bits_service: {
+            enabled: bool,
+            optional(:public_endpoint) => enum(String, NilClass),
+            optional(:private_endpoint) => enum(String, NilClass),
+            optional(:username) => enum(String, NilClass),
+            optional(:password) => enum(String, NilClass),
+          },
+
+          skip_cert_verify: bool,
+
+          optional(:credhub_api) => {
+            internal_url: String,
+            ca_cert_path: String,
+          },
+
+          optional(:routing_api) => {
+            url: String,
+            routing_client_name: String,
+            routing_client_secret: String,
           },
         }
       end

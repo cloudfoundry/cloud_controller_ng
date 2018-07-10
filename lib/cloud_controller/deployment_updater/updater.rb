@@ -1,3 +1,5 @@
+require 'actions/process_restart'
+
 module VCAP::CloudController
   module DeploymentUpdater
     class Updater
@@ -27,6 +29,9 @@ module VCAP::CloudController
 
             deploying_web_process.update(type: ProcessTypes::WEB)
             web_process.delete
+
+            app.reload
+            restart_non_web_processes(app)
             deployment.update(state: DeploymentModel::DEPLOYED_STATE)
           end
         elsif web_process.instances == 1
@@ -51,6 +56,14 @@ module VCAP::CloudController
 
       def self.instance_reporters
         CloudController::DependencyLocator.instance.instances_reporters
+      end
+
+      def self.restart_non_web_processes(app)
+        app.processes.each do |process|
+          next if process.web?
+
+          VCAP::CloudController::ProcessRestart.restart(process: process, config: Config.config, stop_in_runtime: true)
+        end
       end
     end
   end

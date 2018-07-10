@@ -239,7 +239,7 @@ module VCAP::CloudController
             file: String,
           },
 
-          :bits_service => {
+          bits_service: {
             enabled: bool,
             optional(:public_endpoint) => enum(String, NilClass),
             optional(:private_endpoint) => enum(String, NilClass),
