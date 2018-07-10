@@ -6,6 +6,20 @@ module VCAP::CloudController::Metrics
     let(:updater) { StatsdUpdater.new(statsd_client) }
     let(:statsd_client) { Statsd.new('localhost', 9999) }
 
+    describe '#update_deploying_count' do
+      before do
+        allow(statsd_client).to receive(:gauge)
+      end
+
+      it 'emits the current number of deployments that are DEPLOYING to statsd' do
+        expected_deploying_count = 7
+
+        updater.update_deploying_count(expected_deploying_count)
+
+        expect(statsd_client).to have_received(:gauge).with('cc.deployments.deploying', expected_deploying_count)
+      end
+    end
+
     describe '#record_user_count' do
       before do
         allow(statsd_client).to receive(:gauge)

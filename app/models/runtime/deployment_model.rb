@@ -20,5 +20,11 @@ module VCAP::CloudController
       key: :deploying_web_process_guid,
       primary_key: :guid,
       without_guid_generation: true
+
+    dataset_module do
+      def deploying_count
+        where(state: DeploymentModel::DEPLOYING_STATE).count
+      end
+    end
   end
 end

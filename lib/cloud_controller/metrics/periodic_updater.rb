@@ -19,6 +19,7 @@ module VCAP::CloudController::Metrics
       EM.add_periodic_timer(30)  { catch_error { update_vitals } }
       EM.add_periodic_timer(30)  { catch_error { update_log_counts } }
       EM.add_periodic_timer(30)  { catch_error { update_task_stats } }
+      EM.add_periodic_timer(30)  { catch_error { update_deploying_count } }
     end
 
     def update!
@@ -29,6 +30,7 @@ module VCAP::CloudController::Metrics
       update_vitals
       update_log_counts
       update_task_stats
+      update_deploying_count
     end
 
     def catch_error
@@ -54,6 +56,12 @@ module VCAP::CloudController::Metrics
       end
 
       @updaters.each { |u| u.update_log_counts(hash) }
+    end
+
+    def update_deploying_count
+      deploying_count = VCAP::CloudController::DeploymentModel.deploying_count
+
+      @updaters.each { |u| u.update_deploying_count(deploying_count) }
     end
 
     def record_user_count

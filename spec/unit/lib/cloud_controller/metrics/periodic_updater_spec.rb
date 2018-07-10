@@ -77,6 +77,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_vitals)
         allow(updater1).to receive(:update_log_counts)
         allow(updater1).to receive(:update_task_stats)
+        allow(updater1).to receive(:update_deploying_count)
 
         allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
@@ -85,6 +86,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_vitals)
         allow(updater2).to receive(:update_log_counts)
         allow(updater2).to receive(:update_task_stats)
+        allow(updater2).to receive(:update_deploying_count)
 
         allow(EventMachine).to receive(:add_periodic_timer)
       end
@@ -121,6 +123,11 @@ module VCAP::CloudController::Metrics
 
       it 'updates the task stats' do
         expect(periodic_updater).to receive(:update_task_stats).once
+        periodic_updater.setup_updates
+      end
+
+      it 'updates the deploying count' do
+        expect(periodic_updater).to receive(:update_deploying_count).once
         periodic_updater.setup_updates
       end
 
@@ -193,6 +200,22 @@ module VCAP::CloudController::Metrics
 
           @periodic_timers[6][:block].call
         end
+      end
+    end
+
+    describe '#update_deploying_count' do
+      let(:deploying_count) { 7 }
+      before do
+        allow(VCAP::CloudController::DeploymentModel).to receive(:deploying_count).and_return(deploying_count)
+        allow(updater1).to receive(:update_deploying_count)
+        allow(updater2).to receive(:update_deploying_count)
+      end
+
+      it 'should send the number of deploying deployments' do
+        periodic_updater.update_deploying_count
+
+        expect(updater1).to have_received(:update_deploying_count).with(deploying_count)
+        expect(updater2).to have_received(:update_deploying_count).with(deploying_count)
       end
     end
 
@@ -446,6 +469,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_vitals)
         allow(updater1).to receive(:update_log_counts)
         allow(updater1).to receive(:update_task_stats)
+        allow(updater1).to receive(:update_deploying_count)
 
         allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
@@ -454,6 +478,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_vitals)
         allow(updater2).to receive(:update_log_counts)
         allow(updater2).to receive(:update_task_stats)
+        allow(updater2).to receive(:update_deploying_count)
       end
 
       it 'calls all update methods' do
@@ -464,6 +489,7 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_vitals).once
         expect(periodic_updater).to receive(:update_log_counts).once
         expect(periodic_updater).to receive(:update_task_stats).once
+        expect(periodic_updater).to receive(:update_deploying_count).once
         periodic_updater.update!
       end
     end
