@@ -3,6 +3,7 @@ require 'vcap/config'
 module VCAP::CloudController
   module ConfigSchemas
     class DeploymentUpdaterSchema < VCAP::Config
+      # rubocop:disable Metrics/BlockLength
       define_schema do
         {
           logging: {
@@ -136,6 +137,7 @@ module VCAP::CloudController
           },
         }
       end
+      # rubocop:enable Metrics/BlockLength
 
       class << self
         def configure_components(config); end
