@@ -130,6 +130,10 @@ module VCAP::CloudController
             ca_cert_path: String,
           },
 
+          credential_references: {
+            interpolate_service_bindings: bool
+          },
+
           optional(:routing_api) => {
             url: String,
             routing_client_name: String,
