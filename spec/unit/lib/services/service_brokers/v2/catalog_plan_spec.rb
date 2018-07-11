@@ -86,6 +86,20 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.errors.messages).to include 'Plan description is required'
       end
 
+      it 'validates that @description is less than 10_001 characters' do
+        plan_attrs['description'] = 'A' * 10_001
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages).to include 'Plan description may not have more than 10000 characters'
+      end
+
+      it 'is valid if @description is 10_000 characters' do
+        plan_attrs['description'] = 'A' * 10_000
+
+        expect(plan).to be_valid
+        expect(plan.errors.messages).to be_empty
+      end
+
       it 'validates that @metadata is a hash' do
         plan_attrs['metadata'] = ['list', 'of', 'strings']
 

@@ -117,7 +117,7 @@ RSpec.describe 'Service Broker' do
             {
               id: 12345,
               name: 'service-1',
-              description: 'A service, duh!',
+              description: 'A' * 10_001,
               bindable: true,
               bindings_retrievable: 'not-a-bool',
               instances_retrievable: 'not-a-bool',
@@ -125,7 +125,7 @@ RSpec.describe 'Service Broker' do
                 {
                   id: 'plan-1',
                   name: 'small',
-                  description: 'A small shared database with 100mb storage quota and 10 connections',
+                  description: 'B' * 10_001,
                   schemas: {
                     service_instance: {
                       create: {
@@ -205,9 +205,11 @@ RSpec.describe 'Service Broker' do
           "Service dashboard_client id must be unique\n" \
           "Service service-1\n" \
           "  Service id must be a string, but has value 12345\n" \
+          "  Service description may not have more than 10000 characters\n" \
           "  Service \"bindings_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
           "  Service \"instances_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
           "  Plan small\n" \
+          "    Plan description may not have more than 10000 characters\n" \
           "    Schemas\n" \
           '      Schema service_instance.create.parameters is not valid. Must conform to JSON Schema Draft 04 (experimental support for later versions): '\
           "The property '#/properties' of type boolean did not match the following type: object in schema "\
