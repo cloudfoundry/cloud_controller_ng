@@ -19,14 +19,12 @@ module VCAP::CloudController
           batch.increment "cc.http_status.#{status.to_s[0]}XX"
 
           pos = path.index('/', 1)
-          if !pos.nil?
-            path_without_version = path[pos + 1..-1]
-            @collect_metrics_for_routes.each do |route|
-              if path_without_version.start_with?(route)
-                batch.increment "cc.requests.#{route}.#{method.downcase}.http_status.#{status.to_s[0]}XX"
-              end
-            end
-          end
+          next if pos.nil?
+
+          path_without_version = path[pos + 1..-1]
+          @collect_metrics_for_routes.
+            select { |route| path_without_version.start_with? route }.
+            each { |route| batch.increment "cc.requests.#{route}.#{method.downcase}.http_status.#{status.to_s[0]}XX" }
         end
       end
     end
