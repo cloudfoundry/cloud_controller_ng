@@ -19,7 +19,7 @@ module VCAP::CloudController
     }
     let(:instances_reporters) { double(:instance_reporters) }
 
-    describe '#update' do
+    describe '.update' do
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
         allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
@@ -204,7 +204,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when diego is unavailable' do
+      context 'when Diego is unavailable while checking instance status' do
         before do
           allow(instances_reporters).to receive(:all_instances_for_app).and_raise(CloudController::Errors::ApiError.new_from_details('InstancesUnavailable', 'omg it broke'))
         end
@@ -221,6 +221,42 @@ module VCAP::CloudController
           }.not_to change {
             deploying_web_process.reload.instances
           }
+        end
+      end
+
+      context 'when an error occurs while scaling a deployment' do
+        let(:failing_process) { ProcessModel.make(app: web_process.app, type: 'failing', instances: 5) }
+        let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
+        let!(:failing_deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }
+
+        before do
+          allow(Steno).to receive(:logger).and_return(fake_logger)
+          allow(deployer).to receive(:scale_deployment).with(deployment, fake_logger).and_call_original
+          allow(deployer).to receive(:scale_deployment).with(failing_deployment, fake_logger).and_raise(StandardError.new('Something real bad happened'))
+        end
+
+        it 'logs the error' do
+          expect {
+            deployer.update
+          }.not_to change {
+            failing_process.reload.instances
+          }
+
+          expect(fake_logger).to have_received(:error).with(
+            'error-scaling-deployment',
+            deployment_guid: failing_deployment.guid,
+            error: 'StandardError',
+            error_message: 'Something real bad happened',
+            backtrace: anything
+          )
+        end
+
+        it 'is able to scale the other deployments' do
+          expect {
+            deployer.update
+          }.to change {
+            deploying_web_process.reload.instances
+          }.by(1)
         end
       end
     end

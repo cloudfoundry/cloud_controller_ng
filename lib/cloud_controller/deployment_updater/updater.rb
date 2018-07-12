@@ -10,7 +10,18 @@ module VCAP::CloudController
         deployments = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE)
 
         deployments.each do |deployment|
-          scale_deployment(deployment, logger)
+          begin
+            scale_deployment(deployment, logger)
+          rescue => e
+            error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
+            logger.error(
+              'error-scaling-deployment',
+              deployment_guid: deployment.guid,
+              error: error_name,
+              error_message: e.message,
+              backtrace: e.backtrace.join("\n")
+            )
+          end
         end
       end
 
