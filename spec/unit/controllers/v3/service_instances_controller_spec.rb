@@ -579,7 +579,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
       context 'and the service broker successfully unbinds' do
         before do
-          stub_unbind(service_binding, status: 200)
+          stub_unbind(service_binding, status: 200, accepts_incomplete: true)
         end
 
         it 'returns 204 and unbinds the app in the target space' do
@@ -591,7 +591,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
       context 'and the service broker fails to unbind' do
         before do
-          stub_unbind(service_binding, status: 500)
+          stub_unbind(service_binding, status: 500, accepts_incomplete: true)
         end
 
         it 'returns 502 and does not unshare the service' do
@@ -599,6 +599,25 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           expect(response.status).to eq(502)
           expect(response.body).to include('ServiceInstanceUnshareFailed')
           expect(test_app.service_bindings).to_not be_empty
+        end
+
+        it 'returns an error with detailed message' do
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          expect(response.body).to include('The service broker returned an invalid response')
+        end
+      end
+
+      context 'and the service broker responds asynchronously to unbinds' do
+        before do
+          stub_unbind(service_binding, status: 202, accepts_incomplete: true)
+        end
+
+        it 'returns an error with message that an operation is in progress' do
+          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+
+          expect(response.status).to eq(502)
+          expect(response.body).to include("The binding between an application and service instance #{service_instance.name}" \
+                                           " in space #{target_space.name} is being deleted asynchronously.")
         end
       end
     end

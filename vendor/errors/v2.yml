@@ -1152,7 +1152,7 @@
 390001:
   name: ServiceInstanceUnshareFailed
   http_code: 502
-  message: "Unshare of service instance failed because one or more bindings could not be deleted.\n\n%s"
+  message: "Unshare of service instance failed: \n\n%s"
 
 390002:
   name: ServiceInstanceDeletionSharesExists
