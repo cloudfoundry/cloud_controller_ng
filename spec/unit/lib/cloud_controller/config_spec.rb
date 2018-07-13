@@ -48,6 +48,11 @@ module VCAP::CloudController
     }
 
     describe '#load_from_file' do
+      it_should_be_removed(
+        by: '2019/07/13',
+        explanation: 'Database parts can now be renamed to database. See story: #158544649'
+      )
+
       it 'raises if the file does not exist' do
         expect {
           Config.load_from_file('nonexistent.yml', context: :worker)
