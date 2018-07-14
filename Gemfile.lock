@@ -6,6 +6,26 @@ GIT
     vcap-concurrency (0.1.0)
 
 GIT
+  remote: https://github.com/fog/fog-azure-rm.git
+  revision: baaf3f4d684f82561aa8695412fec98f363bdd7f
+  branch: fog-arm-cf
+  specs:
+    fog-azure-rm (0.4.7)
+      azure-storage (>= 0.11.5.preview, < 1.0)
+      azure_mgmt_compute (~> 0.9.0)
+      azure_mgmt_dns (~> 0.9.0)
+      azure_mgmt_key_vault (~> 0.9.0)
+      azure_mgmt_network (~> 0.9.0)
+      azure_mgmt_resources (~> 0.9.0)
+      azure_mgmt_sql (~> 0.9.0)
+      azure_mgmt_storage (~> 0.9.0)
+      azure_mgmt_traffic_manager (~> 0.9.0)
+      fog-core (~> 1.43)
+      fog-json (~> 1.0.2)
+      mime-types (~> 3.0)
+      vhd (= 0.0.4)
+
+GIT
   remote: https://github.com/rubyzip/rubyzip.git
   revision: 8887b703490337f7ab68ebfb4880354db28ba648
   ref: 8887b70
@@ -124,7 +144,7 @@ GEM
       activesupport (>= 3.0, < 5.3)
     diff-lcs (1.3)
     docile (1.1.5)
-    domain_name (0.5.20170404)
+    domain_name (0.5.20180417)
       unf (>= 0.0.5, < 1.0.0)
     em-http-request (1.1.3)
       addressable (>= 2.3.4)
@@ -137,7 +157,7 @@ GEM
     erubis (2.7.0)
     eventmachine (1.0.9.1)
     excon (0.62.0)
-    faraday (0.15.1)
+    faraday (0.15.2)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
       faraday (>= 0.7.4)
@@ -157,23 +177,9 @@ GEM
       fog-json (~> 1.0)
       fog-xml (~> 0.1)
       ipaddress (~> 0.8)
-    fog-azure-rm (0.3.2)
-      azure-storage (>= 0.11.5.preview, < 1.0)
-      azure_mgmt_compute (~> 0.9.0)
-      azure_mgmt_dns (~> 0.9.0)
-      azure_mgmt_key_vault (~> 0.9.0)
-      azure_mgmt_network (~> 0.9.0)
-      azure_mgmt_resources (~> 0.9.0)
-      azure_mgmt_sql (~> 0.9.0)
-      azure_mgmt_storage (~> 0.9.0)
-      azure_mgmt_traffic_manager (~> 0.9.0)
-      fog-core (~> 1.43.0)
-      fog-json (~> 1.0)
-      rest-client (~> 2.0.0)
-      vhd (= 0.0.4)
-    fog-core (1.43.0)
+    fog-core (1.45.0)
       builder
-      excon (~> 0.49)
+      excon (~> 0.58)
       formatador (~> 0.2)
     fog-google (1.3.3)
       fog-core
@@ -277,7 +283,6 @@ GEM
     mysql2 (0.4.10)
     net-ssh (4.2.0)
     netaddr (1.5.1)
-    netrc (0.11.0)
     newrelic_rpm (5.0.0.342)
     nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
@@ -331,10 +336,6 @@ GEM
       declarative (< 0.1.0)
       declarative-option (< 0.2.0)
       uber (< 0.2.0)
-    rest-client (2.0.2)
-      http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 4.0)
-      netrc (~> 0.8)
     retriable (3.1.1)
     rfc822 (0.1.5)
     roodi (5.0.0)
@@ -468,7 +469,7 @@ DEPENDENCIES
   eventmachine (~> 1.0.9)
   fog-aliyun
   fog-aws
-  fog-azure-rm
+  fog-azure-rm!
   fog-google
   fog-local
   fog-openstack
