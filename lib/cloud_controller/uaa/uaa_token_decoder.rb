@@ -47,22 +47,7 @@ module VCAP::CloudController
     end
 
     def decode_token_with_asymmetric_key(auth_token)
-      tries      = 2
-      last_error = nil
-      while tries > 0
-        tries -= 1
-        # If we uncover issues due to attempting to decode with every
-        # key, we can revisit: https://www.pivotaltracker.com/story/show/132270761
-        asymmetric_key.value.each do |key|
-          begin
-            return decode_token_with_key(auth_token, pkey: key)
-          rescue CF::UAA::InvalidSignature => e
-            last_error = e
-          end
-        end
-        asymmetric_key.refresh
-      end
-      raise last_error
+      decode_token_with_key(auth_token, info: uaa_client.info)
     end
 
     def decode_token_with_key(auth_token, options)
@@ -81,10 +66,6 @@ module VCAP::CloudController
 
     def symmetric_key
       config[:symmetric_secret]
-    end
-
-    def asymmetric_key
-      @asymmetric_key ||= UaaVerificationKeys.new(uaa_client.info)
     end
 
     def uaa_client

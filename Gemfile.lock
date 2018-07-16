@@ -6,6 +6,15 @@ GIT
     vcap-concurrency (0.1.0)
 
 GIT
+  remote: https://github.com/drnic/cf-uaa-lib
+  revision: c75e8c05e6515cf05680d85ba3e198d14c047934
+  branch: auto-token-keys
+  specs:
+    cf-uaa-lib (3.14.3)
+      httpclient (~> 2.8, >= 2.8.2.4)
+      multi_json (~> 1.12.0, >= 1.12.1)
+
+GIT
   remote: https://github.com/rubyzip/rubyzip.git
   revision: 8887b703490337f7ab68ebfb4880354db28ba648
   ref: 8887b70
@@ -100,9 +109,6 @@ GEM
     cf-perm-test-helpers (0.0.6)
       ruby-mysql (~> 2.9.14)
       subprocess (~> 1)
-    cf-uaa-lib (3.14.3)
-      httpclient (~> 2.8, >= 2.8.2.4)
-      multi_json (~> 1.12.0, >= 1.12.1)
     clockwork (2.0.3)
       tzinfo
     cloudfront-signer (3.0.2)
@@ -459,7 +465,7 @@ DEPENDENCIES
   cf-copilot
   cf-perm (~> 0.0.10)
   cf-perm-test-helpers (~> 0.0.6)
-  cf-uaa-lib (~> 3.14.0)
+  cf-uaa-lib!
   clockwork
   cloudfront-signer
   codeclimate-test-reporter
@@ -527,4 +533,4 @@ DEPENDENCIES
   yajl-ruby
 
 BUNDLED WITH
-   1.16.1
+   1.16.2

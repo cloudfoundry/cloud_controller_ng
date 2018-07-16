@@ -154,7 +154,7 @@ module VCAP::CloudController
         before { uaa_config[:symmetric_secret] = nil }
 
         let(:rsa_key) { OpenSSL::PKey::RSA.new(2048) }
-        before { allow(uaa_info).to receive_messages(validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } }) }
+        before { allow(uaa_info).to receive_messages(cached_validation_keys_hash: { 'key1' => { 'value' => rsa_key.public_key.to_pem } }) }
 
         context 'when token is valid' do
           let(:token_content) do
@@ -174,10 +174,10 @@ module VCAP::CloudController
             it 'successfully decodes token and caches key' do
               token = generate_token(rsa_key, token_content)
 
-              expect(uaa_info).to receive(:validation_keys_hash)
+              expect(uaa_info).to receive(:cached_validation_keys_hash)
               expect(subject.decode_token("bearer #{token}")).to eq(token_content)
 
-              expect(uaa_info).not_to receive(:validation_keys_hash)
+              expect(uaa_info).to receive(:cached_validation_keys_hash)
               expect(subject.decode_token("bearer #{token}")).to eq(token_content)
             end
 
@@ -185,15 +185,15 @@ module VCAP::CloudController
               let(:old_rsa_key) { OpenSSL::PKey::RSA.new(2048) }
 
               it 'retries to decode token with newly fetched asymmetric key' do
-                allow(uaa_info).to receive(:validation_keys_hash).and_return(
+                allow(uaa_info).to receive(:cached_validation_keys_hash).and_return(
                   { 'old_key' => { 'value' => old_rsa_key.public_key.to_pem } },
                   { 'new_key' => { 'value' => rsa_key.public_key.to_pem } }
                 )
-                expect(subject.decode_token("bearer #{generate_token(rsa_key, token_content)}")).to eq(token_content)
+                expect(subject.decode_token("bearer #{generate_token(rsa_key, token_content, kid: 'new_key')}")).to eq(token_content)
               end
 
               it 'stops retrying to decode token with newly fetched asymmetric key after 1 try' do
-                allow(uaa_info).to receive(:validation_keys_hash).and_return({ 'old_key' => { 'value' => old_rsa_key.public_key.to_pem } })
+                allow(uaa_info).to receive(:cached_validation_keys_hash).and_return({ 'old_key' => { 'value' => old_rsa_key.public_key.to_pem } })
 
                 expect(logger).to receive(:warn).with(/invalid bearer token/i)
                 expect {
@@ -328,30 +328,30 @@ module VCAP::CloudController
           end
 
           it 'succeeds when it has first key that is valid' do
-            allow(uaa_info).to receive(:validation_keys_hash).and_return({
+            allow(uaa_info).to receive(:cached_validation_keys_hash).and_return({
               'new_key' => { 'value' => rsa_key.public_key.to_pem },
               'bad_key' => { 'value' => bad_rsa_key.public_key.to_pem } }
             )
-            token = generate_token(rsa_key, token_content)
+            token = generate_token(rsa_key, token_content, kid: 'new_key')
 
-            expect(uaa_info).to receive(:validation_keys_hash)
+            expect(uaa_info).to receive(:cached_validation_keys_hash)
             expect(subject.decode_token("bearer #{token}")).to eq(token_content)
           end
 
           it 'succeeds when subsequent key is valid' do
-            allow(uaa_info).to receive(:validation_keys_hash).and_return({
+            allow(uaa_info).to receive(:cached_validation_keys_hash).and_return({
               'bad_key' => { 'value' => bad_rsa_key.public_key.to_pem },
               'new_key' => { 'value' => rsa_key.public_key.to_pem } }
             )
-            token = generate_token(rsa_key, token_content)
+            token = generate_token(rsa_key, token_content, kid: 'new_key')
 
-            expect(uaa_info).to receive(:validation_keys_hash)
+            expect(uaa_info).to receive(:cached_validation_keys_hash)
             expect(subject.decode_token("bearer #{token}")).to eq(token_content)
           end
 
           it 're-fetches keys when none of the keys are valid' do
             other_bad_key = OpenSSL::PKey::RSA.new(2048)
-            allow(uaa_info).to receive(:validation_keys_hash).and_return(
+            allow(uaa_info).to receive(:cached_validation_keys_hash).and_return(
               {
                 'bad_key'       => { 'value' => bad_rsa_key.public_key.to_pem },
                 'other_bad_key' => { 'value' => other_bad_key.public_key.to_pem }
@@ -360,16 +360,16 @@ module VCAP::CloudController
                 're-fetched_key' => { 'value' => rsa_key.public_key.to_pem }
               }
             )
-            token = generate_token(rsa_key, token_content)
+            token = generate_token(rsa_key, token_content, kid: 're-fetched_key')
 
-            expect(uaa_info).to receive(:validation_keys_hash).twice
+            expect(uaa_info).to receive(:cached_validation_keys_hash).twice
             expect(subject.decode_token("bearer #{token}")).to eq(token_content)
           end
 
           it 'fails when re-fetched keys are also not valid' do
             other_bad_key = OpenSSL::PKey::RSA.new(2048)
             final_bad_key = OpenSSL::PKey::RSA.new(2048)
-            allow(uaa_info).to receive(:validation_keys_hash).and_return(
+            allow(uaa_info).to receive(:cached_validation_keys_hash).and_return(
               {
                 'bad_key'       => { 'value' => bad_rsa_key.public_key.to_pem },
                 'other_bad_key' => { 'value' => other_bad_key.public_key.to_pem }
@@ -380,7 +380,7 @@ module VCAP::CloudController
             )
             token = generate_token(rsa_key, token_content)
 
-            expect(uaa_info).to receive(:validation_keys_hash).twice
+            expect(uaa_info).to receive(:cached_validation_keys_hash).twice
             expect(logger).to receive(:warn).with(/invalid bearer token/i)
             expect {
               subject.decode_token("bearer #{token}")
@@ -437,8 +437,8 @@ module VCAP::CloudController
           end
         end
 
-        def generate_token(rsa_key, content)
-          CF::UAA::TokenCoder.encode(content, pkey: rsa_key, algorithm: 'RS256')
+        def generate_token(rsa_key, content, kid: 'key1')
+          CF::UAA::TokenCoder.encode(content, pkey: rsa_key, algorithm: 'RS256', kid: kid)
         end
       end
     end
