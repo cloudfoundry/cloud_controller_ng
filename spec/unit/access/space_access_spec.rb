@@ -12,10 +12,6 @@ module VCAP::CloudController
     let(:object) { VCAP::CloudController::Space.make(organization: org) }
     let(:space) { object }
 
-    before do
-      allow(queryer).to receive(:has_permission?).and_return false
-    end
-
     describe 'when the parent organization is suspended' do
       before(:each) do
         org.status = VCAP::CloudController::Organization::SUSPENDED
@@ -343,34 +339,6 @@ module VCAP::CloudController
 
               it_behaves_like('an access control', :can_remove_related_object, can_remove_related_object_table)
             end
-          end
-        end
-      end
-    end
-
-    describe 'fine-grained permissions' do
-      before do
-        allow(queryer).to receive(:can_write_globally?).and_return false
-        allow(queryer).to receive(:can_write_to_org?).and_return false
-      end
-
-      describe 'space.create' do
-        before do
-          allow(queryer).to receive(:has_permission?).with('space.create', org.guid).and_return(true)
-        end
-
-        it 'allows user to create a space' do
-          expect(access.create?(space)).to be true
-        end
-
-        context 'suspended org' do
-          before do
-            org.status = VCAP::CloudController::Organization::SUSPENDED
-            org.save
-          end
-
-          it 'does NOT allow user to create a space' do
-            expect(access.create?(space)).to be false
           end
         end
       end

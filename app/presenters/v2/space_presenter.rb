@@ -9,7 +9,7 @@ module CloudController
         def entity_hash(controller, space, opts, depth, parents, orphans=nil)
           entity = {
             'name'                        => space.name,
-            'organization_guid'           => space.organization&.guid,
+            'organization_guid'           => space.organization.guid,
             'space_quota_definition_guid' => space.space_quota_definition_guid,
             'isolation_segment_guid'      => space.isolation_segment_guid,
             'allow_ssh'                   => space.allow_ssh,

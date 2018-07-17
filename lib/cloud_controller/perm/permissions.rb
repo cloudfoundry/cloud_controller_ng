@@ -190,10 +190,6 @@ module VCAP
           end
         end
 
-        def has_permission?(permission, resource)
-          has_any_permission?([{ action: permission, resource: resource }])
-        end
-
         private
 
         attr_reader :perm_client, :user_id, :roles, :issuer
