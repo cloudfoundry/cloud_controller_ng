@@ -41,7 +41,8 @@ class DropletsController < ApplicationController
   def show
     droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
-    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: permission_queryer.can_read_secrets_in_space?(droplet.space.guid, droplet.space.organization.guid))
+    show_secrets = permission_queryer.can_read_secrets_in_space?(droplet.space.guid, droplet.space.organization.guid)
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
   end
 
   def destroy
