@@ -6,25 +6,23 @@ module VCAP::CloudController
 
     context 'when the service broker can only perform async operations' do
       before do
-        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
-          with(query: hash_including({ 'accepts_incomplete' => 'true' })).
-          to_return(status: 202, body: '{}')
-        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
+        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+}).
+          to_return(status: 422, body: '{"error": "AsyncRequired"}')
+        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+}).
           with(query: hash_including({ 'accepts_incomplete' => 'false' })).
           to_return(status: 422, body: '{"error": "AsyncRequired"}')
-        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
-          with(query: hash_excluding('accepts_incomplete')).
-          to_return(status: 422, body: '{"error": "AsyncRequired"}')
+        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+}).
+          with(query: hash_including({ 'accepts_incomplete' => 'true' })).
+          to_return(status: 202, body: '{}')
 
-        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+}).
-          with(query: hash_including({ 'accepts_incomplete' => 'true' })).
-          to_return(status: 202, body: '{}')
-        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+}).
+        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
+          to_return(status: 422, body: '{"error": "AsyncRequired"}')
+        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
           with(query: hash_including({ 'accepts_incomplete' => 'false' })).
           to_return(status: 422, body: '{"error": "AsyncRequired"}')
-        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+}).
-          with(query: hash_excluding('accepts_incomplete')).
-          to_return(status: 422, body: '{"error": "AsyncRequired"}')
+        stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
+          with(query: hash_including({ 'accepts_incomplete' => 'true' })).
+          to_return(status: 202, body: '{}')
       end
 
       context 'when a service instance is shared' do
@@ -39,23 +37,38 @@ module VCAP::CloudController
           let(:target_app) { AppModel.make(space: target_space) }
           let!(:target_binding) { ServiceBinding.make(app: target_app, service_instance: service_instance) }
 
-          it 'can unbind if the service instance is deleted recursively' do
+          it 'can unbind if the service instance is deleted recursively and accepts_incomplete is true' do
             delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
 
-            expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made.times(2)
+            expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made
+            expect(a_request(:delete, deprovision_url(service_instance)).with(query: { accepts_incomplete: true })).not_to have_been_made
+          end
+
+          it 'can unbind if the service instance is deleted recursively and accepts_incomplete is not set' do
+            delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true', admin_headers)
+
+            expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made
             expect(a_request(:delete, deprovision_url(service_instance))).not_to have_been_made
           end
 
-          context 'where there are bindings in the source space' do
+          context 'and when there are bindings in the source space' do
             let(:source_space) { service_instance.space }
             let(:source_app) { AppModel.make(space: source_space) }
             let!(:source_binding) { ServiceBinding.make(app: source_app, service_instance: service_instance) }
 
-            it 'can unbind if the service instance is deleted recursively' do
+            it 'can unbind if the service instance is deleted recursively and accepts_incomplete is true' do
               delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
 
-              expect(a_request(:delete, unbind_url(source_binding)).with(query: { accepts_incomplete: true })).to have_been_made.once
-              expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made.times(2)
+              expect(a_request(:delete, unbind_url(source_binding)).with(query: { accepts_incomplete: true })).to have_been_made
+              expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made
+              expect(a_request(:delete, deprovision_url(service_instance)).with(query: { accepts_incomplete: true })).not_to have_been_made
+            end
+
+            it 'can unbind if the service instance is deleted recursively' do
+              delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true', admin_headers)
+
+              expect(a_request(:delete, unbind_url(source_binding))).to have_been_made
+              expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made
               expect(a_request(:delete, deprovision_url(service_instance))).not_to have_been_made
             end
           end
@@ -64,4 +77,3 @@ module VCAP::CloudController
     end
   end
 end
-

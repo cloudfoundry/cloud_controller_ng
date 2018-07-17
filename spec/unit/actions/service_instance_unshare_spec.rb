@@ -116,7 +116,7 @@ module VCAP::CloudController
 
       it 'unshares without deleting the binding' do
         allow(ServiceBindingDelete).to receive(:new).with(user_audit_info, accepts_incomplete) { delete_binding_action }
-        allow(delete_binding_action).to receive(:delete).with([]).and_return([[],[]])
+        allow(delete_binding_action).to receive(:delete).with([]).and_return([[], []])
 
         service_instance_unshare.unshare(service_instance, target_space, user_audit_info)
         expect(service_instance.shared_spaces).to be_empty
