@@ -164,6 +164,22 @@ Cookie: </pre>
             <tbody>
               <tr class="">
                 <td>
+                    <span class="name">space_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the space being shared to.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
                     <span class="name">space_name</span>
                 </td>
                 <td>
@@ -220,11 +236,13 @@ Cookie: </pre>
    "next_url": null,
    "resources": [
       {
+          "space_guid": "2cf74cc4-a0a8-4b43-a01a-4207a356347d",
           "space_name": "target-space-1",
           "organization_name": "org-name",
           "bound_app_count": 3
       },
       {
+          "space_guid": "880ad078-1cef-4dd3-9902-ba59767bdc63",
           "space_name": "target-space-2",
           "organization_name": "org-name",
           "bound_app_count": 0
@@ -235,7 +253,7 @@ Cookie: </pre>
         <h4>Headers</h4>
         <pre class="response headers">Content-Type: application/json;charset=utf-8
 X-VCAP-Request-ID: febb14ab-a7bc-492d-b017-3db59d83967d
-Content-Length: 378
+Content-Length: 525
 X-Content-Type-Options: nosniff</pre>
 
   </div>
