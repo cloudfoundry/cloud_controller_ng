@@ -442,11 +442,11 @@ module VCAP::Services::ServiceBrokers::V2
             instance.save_with_new_operation({}, { type: 'update' })
           end
 
-          it 'returns attributes to indicate the service instance operation failed' do
+          it 'returns attributes to indicate the service instance operation is in progress' do
             attrs = client.fetch_service_instance_last_operation(instance)
             expect(attrs).to include(
               last_operation: {
-                state: 'failed'
+                state: 'in progress'
               }
             )
           end
