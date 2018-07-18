@@ -409,6 +409,15 @@ module VCAP::CloudController
           expect(a_request(:delete, broker_url_1)).to have_been_made
           expect(a_request(:delete, broker_url_2)).not_to have_been_made
         end
+
+        it 'does not attempt to unshare the service instance' do
+          shared_to_space = Space.make
+          managed_service_instance.add_shared_space(shared_to_space)
+
+          expect_any_instance_of(ServiceInstanceUnshare).not_to receive(:unshare)
+
+          service_instance_delete.delete([managed_service_instance])
+        end
       end
 
       context 'when the broker returns warnings when unbinding' do

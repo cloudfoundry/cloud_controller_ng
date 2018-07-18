@@ -21,10 +21,10 @@ module VCAP::CloudController
 
         errors, warnings = delete_service_bindings(service_instance)
 
+        errors.concat unshare_from_all_spaces(service_instance)
+
         errors.concat delete_service_keys(service_instance)
         errors.concat delete_route_bindings(service_instance)
-
-        errors.concat unshare_from_all_spaces(service_instance)
 
         if errors.empty?
           instance_errors = delete_service_instance(service_instance)
@@ -46,14 +46,19 @@ module VCAP::CloudController
     def unshare_from_all_spaces(service_instance)
       errors = []
 
-      if service_instance.shared?
-        unshare = ServiceInstanceUnshare.new
-        service_instance.shared_spaces.each do |target_space|
-          begin
-            unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
-          rescue => e
-            errors << e
-          end
+      if service_instance.exists?
+        service_instance.reload
+      end
+
+      return errors unless service_instance.service_bindings.empty?
+      return errors unless service_instance.shared?
+
+      unshare = ServiceInstanceUnshare.new
+      service_instance.shared_spaces.each do |target_space|
+        begin
+          unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
+        rescue => e
+          errors << e
         end
       end
 
