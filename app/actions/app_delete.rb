@@ -19,9 +19,12 @@ module VCAP::CloudController
 
     def delete(apps, record_event: true)
       apps.each do |app|
+        logger.info("Deleting app: #{app.guid}")
+
+        delete_non_transactional_subresources(app)
+
         app.db.transaction do
           app.lock!
-          logger.info("Deleting app: #{app.guid}")
 
           delete_subresources(app)
 
@@ -55,9 +58,12 @@ module VCAP::CloudController
       DeploymentDelete.new.delete(app.deployments)
       RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete(app))
       ProcessDelete.new(@user_audit_info).delete(app.processes)
+      delete_buildpack_cache(app)
+    end
+
+    def delete_non_transactional_subresources(app)
       errors, _ = ServiceBindingDelete.new(@user_audit_info).delete(app.service_bindings)
       raise errors.first unless errors.empty?
-      delete_buildpack_cache(app)
     end
 
     def stagers
