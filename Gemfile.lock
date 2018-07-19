@@ -433,7 +433,7 @@ GEM
     vhd (0.0.4)
       bit-struct
     vmstat (2.3.0)
-    webmock (3.3.0)
+    webmock (3.4.2)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff
