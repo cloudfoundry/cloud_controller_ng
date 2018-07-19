@@ -85,7 +85,7 @@ GEM
       ms_rest_azure (~> 0.7.0)
     azure_mgmt_traffic_manager (0.9.0)
       ms_rest_azure (~> 0.7.0)
-    backports (3.6.8)
+    backports (3.11.3)
     beefcake (1.0.0)
     bit-struct (0.16)
     bits_service_client (2.2.0)
