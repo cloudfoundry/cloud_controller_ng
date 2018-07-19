@@ -144,7 +144,7 @@ GEM
       http-cookie (~> 1.0.0)
     faraday_middleware (0.12.2)
       faraday (>= 0.7.4, < 1.0)
-    ffi (1.9.18)
+    ffi (1.9.25)
     fluent-logger (0.7.1)
       msgpack (>= 1.0.0, < 2)
     fog-aliyun (0.2.2)
@@ -528,4 +528,4 @@ DEPENDENCIES
   yajl-ruby
 
 BUNDLED WITH
-   1.16.1
+   1.16.3
