@@ -114,7 +114,7 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     crass (1.0.4)
-    daemons (1.2.4)
+    daemons (1.2.6)
     debase (0.2.2.beta14)
       debase-ruby_core_source (>= 0.9.11)
     debase-ruby_core_source (0.10.2)
@@ -303,7 +303,7 @@ GEM
       byebug (~> 10.0)
       pry (~> 0.10)
     public_suffix (3.0.2)
-    rack (1.6.9)
+    rack (1.6.10)
     rack-protection (1.5.5)
       rack
     rack-test (0.6.3)
@@ -414,7 +414,7 @@ GEM
       delayed_job (~> 4.1.0)
       sequel (>= 3.38, < 5.0)
       tzinfo
-    thin (1.7.0)
+    thin (1.7.2)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0, >= 1.0.4)
       rack (>= 1, < 3)
