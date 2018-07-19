@@ -132,7 +132,7 @@ module VCAP::CloudController
     end
 
     def status_from_operation_state(last_operation)
-      if last_operation && last_operation.state == 'in progress'
+      if last_operation&.state == 'in progress'
         HTTP::ACCEPTED
       else
         HTTP::CREATED
