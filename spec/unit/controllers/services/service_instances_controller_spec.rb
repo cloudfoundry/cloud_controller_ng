@@ -1037,6 +1037,20 @@ module VCAP::CloudController
             end
           end
         end
+        context 'when broker returns a null dashboard_url value' do
+          let(:response_body) do
+            {
+              dashboard_url: nil,
+            }.to_json
+          end
+
+          it 'provisions a service instance successfully' do
+            create_managed_service_instance(accepts_incomplete: 'false')
+
+            expect(last_response).to have_status_code(201)
+            expect(decoded_response['entity']['dashboard_url']).to be_nil
+          end
+        end
       end
     end
 
@@ -1502,7 +1516,7 @@ module VCAP::CloudController
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
       let(:old_service_plan)  { ServicePlan.make(:v2, service: service) }
       let(:new_service_plan)  { ServicePlan.make(:v2, service: service) }
-      let(:service_instance)  { ManagedServiceInstance.make(service_plan: old_service_plan) }
+      let(:service_instance)  { ManagedServiceInstance.make(service_plan: old_service_plan, dashboard_url: 'http://dashboard_url.com') }
 
       let(:body) do
         MultiJson.dump(
@@ -1835,6 +1849,21 @@ module VCAP::CloudController
                 expect(last_response.body).to include "The service instance name is taken: #{service_instance.name}"
               end
             end
+          end
+        end
+
+        context 'when the broker updates the service instances dashboard_url to a null value' do
+          let(:response_body) do
+            {
+              dashboard_url: nil
+            }.to_json
+          end
+
+          it 'succeeds and persists the old dashboard url value' do
+            put "/v2/service_instances/#{service_instance.guid}", body
+
+            expect(last_response).to have_status_code 201
+            expect(decoded_response['entity']['dashboard_url']).to eq 'http://dashboard_url.com'
           end
         end
 
