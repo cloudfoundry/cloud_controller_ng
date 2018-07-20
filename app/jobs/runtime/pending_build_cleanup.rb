@@ -15,7 +15,10 @@ module VCAP::CloudController
             where(state: BuildModel::STAGING_STATE).
             where(updated_at_past_threshold).
             all.
-            map { |build| build.fail_to_stage!('StagingTimeExpired') }
+            map { |build|
+              logger.info("Staging timeout has elapsed for build: #{build.guid}", build_guid: build.guid)
+              build.fail_to_stage!('StagingTimeExpired')
+            }
         end
 
         def job_name_in_configuration
@@ -46,6 +49,10 @@ module VCAP::CloudController
 
         def expiration_threshold
           expiration_in_seconds + ADDITIONAL_EXPIRATION_TIME_IN_SECONDS
+        end
+
+        def logger
+          @logger ||= Steno.logger('cc.background.pending-build-cleanup')
         end
       end
     end

@@ -15,12 +15,14 @@ module VCAP::CloudController
       describe '#perform' do
         let(:expired_time) { Time.now.utc - staging_timeout - PendingBuildCleanup::ADDITIONAL_EXPIRATION_TIME_IN_SECONDS - 1.minute }
         let(:non_expired_time) { Time.now.utc - staging_timeout - 1.minute }
+        let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
 
         context 'with builds which have been staging for too long' do
           let!(:build1) { BuildModel.make(state: BuildModel::STAGING_STATE) }
           let!(:build2) { BuildModel.make(state: BuildModel::STAGING_STATE) }
 
           before do
+            allow(Steno).to receive(:logger).and_return(fake_logger)
             build1.this.update(updated_at: expired_time)
             build2.this.update(updated_at: expired_time)
           end
@@ -30,6 +32,13 @@ module VCAP::CloudController
 
             expect(build1.reload.failed?).to be_truthy
             expect(build2.reload.failed?).to be_truthy
+          end
+
+          it 'logs that it failed the builds' do
+            cleanup_job.perform
+
+            expect(fake_logger).to have_received(:info).with("Staging timeout has elapsed for build: #{build1.guid}", build_guid: build1.guid)
+            expect(fake_logger).to have_received(:info).with("Staging timeout has elapsed for build: #{build2.guid}", build_guid: build2.guid)
           end
 
           it 'sets the error_id' do
