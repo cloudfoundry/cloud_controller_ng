@@ -5,7 +5,7 @@ gem 'allowy'
 gem 'cf-copilot'
 gem 'clockwork', require: false
 gem 'cloudfront-signer'
-gem 'em-http-request', '~> 1.0'
+gem 'em-http-request', '~> 1.1'
 gem 'eventmachine', '~> 1.0.9'
 gem 'httpclient'
 gem 'i18n'
