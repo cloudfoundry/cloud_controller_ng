@@ -316,6 +316,12 @@ module VCAP::Services
           }
         end
 
+        def self.with_null_dashboard_url
+          {
+            'dashboard_url' => nil
+          }
+        end
+
         def self.with_invalid_dashboard_url
           {
             'dashboard_url' =>  {
@@ -637,13 +643,14 @@ module VCAP::Services
         test_case(:provision, 200, broker_empty_json,                                           result: client_result_with_state('succeeded'))
         test_case(:provision, 200, with_dashboard_url.to_json,                                  result: client_result_with_state('succeeded').merge(with_dashboard_url))
         test_pass_through(:provision, 200, with_dashboard_url,                                  expected_state: 'succeeded')
-        test_case(:provision, 200, with_invalid_dashboard_url.to_json,                          error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match the following type: string"))
+        test_case(:provision, 200, with_invalid_dashboard_url.to_json,                          error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match one or more of the following types: string, null"))
         test_case(:provision, 201, broker_partial_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:provision, 201, broker_malformed_json,                                       error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:provision, 201, broker_empty_json,                                           result: client_result_with_state('succeeded'))
         test_case(:provision, 201, with_dashboard_url.to_json,                                  result: client_result_with_state('succeeded').merge(with_dashboard_url))
         test_pass_through(:provision, 201, with_dashboard_url,                                  expected_state: 'succeeded')
-        test_case(:provision, 201, with_invalid_dashboard_url.to_json,                          error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match the following type: string"))
+        test_pass_through(:provision, 201, with_null_dashboard_url,                             expected_state: 'succeeded')
+        test_case(:provision, 201, with_invalid_dashboard_url.to_json,                          error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match one or more of the following types: string, null"))
         test_case(:provision, 202, broker_partial_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:provision, 202, broker_malformed_json,                                       error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:provision, 202, broker_empty_json,                                           result: client_result_with_state('in progress'))
@@ -653,7 +660,8 @@ module VCAP::Services
         test_case(:provision, 202, with_non_string_operation.to_json,                           error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/operation' of type object did not match the following type: string"))
         test_case(:provision, 202, with_long_operation.to_json,                                 error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/operation' was not of a maximum string length of 10000"))
         test_pass_through(:provision, 202, with_dashboard_url,                                  expected_state: 'in progress')
-        test_case(:provision, 202, with_invalid_dashboard_url.to_json,                          error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match the following type: string"))
+        test_pass_through(:provision, 202, with_null_dashboard_url,                             expected_state: 'in progress')
+        test_case(:provision, 202, with_invalid_dashboard_url.to_json,                          error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match one or more of the following types: string, null"))
         test_case(:provision, 204, broker_partial_json,                                         error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_malformed_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:provision, 204, broker_empty_json,                                           error: Errors::ServiceBrokerBadResponse)
@@ -843,9 +851,10 @@ module VCAP::Services
         #
         test_case(:update, 200, broker_partial_json,                                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:update, 200, broker_malformed_json,                                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
-        test_case(:update, 200, with_invalid_dashboard_url.to_json,                             error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match the following type: string"))
+        test_case(:update, 200, with_invalid_dashboard_url.to_json,                             error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match one or more of the following types: string, null"))
         test_case(:update, 200, broker_empty_json,                                              result: client_result_with_state('succeeded'))
         test_case(:update, 200, with_dashboard_url.to_json,                                     result: client_result_with_state('succeeded').merge(with_dashboard_url))
+        test_pass_through(:update, 200, with_null_dashboard_url,                                expected_state: 'succeeded')
         test_pass_through(:update, 200,                                                         expected_state: 'succeeded')
         test_case(:update, 201, broker_partial_json,                                            error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_partial_json, instance_uri))
         test_case(:update, 201, broker_malformed_json,                                          error: Errors::ServiceBrokerBadResponse, description: broker_returned_an_error(201, broker_malformed_json, instance_uri))
@@ -857,7 +866,8 @@ module VCAP::Services
         test_case(:update, 202, broker_non_empty_json,                                          result: client_result_with_state('in progress'))
         test_case(:update, 202, with_operation.to_json,                                         result: client_result_with_state('in progress').merge(with_operation))
         test_case(:update, 202, with_dashboard_url.to_json,                                     result: client_result_with_state('in progress').merge(with_dashboard_url))
-        test_case(:update, 202, with_invalid_dashboard_url.to_json,                             error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match the following type: string"))
+        test_pass_through(:update, 202, with_null_dashboard_url,                                expected_state: 'in progress')
+        test_case(:update, 202, with_invalid_dashboard_url.to_json,                             error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/dashboard_url' of type object did not match one or more of the following types: string, null"))
         test_case(:update, 202, with_non_string_operation.to_json,                              error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/operation' of type object did not match the following type: string"))
         test_case(:update, 202, with_long_operation.to_json,                                    error: Errors::ServiceBrokerResponseMalformed, description: malformed_response_error(instance_uri, "\nThe property '#/operation' was not of a maximum string length of 10000"))
         test_pass_through(:update, 202,                                                         expected_state: 'in progress')
