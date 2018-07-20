@@ -499,7 +499,7 @@ DEPENDENCIES
   rake
   rfc822
   roodi
-  rspec (~> 3.0)
+  rspec
   rspec-collection_matchers
   rspec-instafail
   rspec-its
