@@ -356,6 +356,7 @@ RSpec.describe 'Processes' do
         0 => {
           state: 'RUNNING',
           details: 'some-details',
+          isolation_segment: 'very-isolated',
           stats: {
             name: process.name,
             uris: process.uris,
@@ -385,7 +386,8 @@ RSpec.describe 'Processes' do
         'type'           => 'worker',
         'index'          => 0,
         'state'          => 'RUNNING',
-        'usage'          => {
+        'isolation_segment' => 'very-isolated',
+        'usage' => {
           'time' => usage_time,
           'cpu'  => 80,
           'mem'  => 128,

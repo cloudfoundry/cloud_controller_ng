@@ -45,7 +45,8 @@ module VCAP::CloudController
             uptime:     stats[:stats][:uptime],
             mem_quota:  stats[:stats][:mem_quota],
             disk_quota: stats[:stats][:disk_quota],
-            fds_quota:  stats[:stats][:fds_quota]
+            fds_quota:  stats[:stats][:fds_quota],
+            isolation_segment: stats[:isolation_segment]
           }.tap { |presented_stats| add_port_info(presented_stats, stats) }
         end
 
@@ -54,7 +55,8 @@ module VCAP::CloudController
             type:   @type,
             index:  index,
             state:  stats[:state],
-            uptime: stats[:uptime]
+            uptime: stats[:uptime],
+            isolation_segment: stats[:isolation_segment]
           }
         end
 

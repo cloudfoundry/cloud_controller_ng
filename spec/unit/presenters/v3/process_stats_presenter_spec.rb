@@ -49,6 +49,7 @@ module VCAP::CloudController::Presenters::V3
           0 => {
             state: 'RUNNING',
             details: 'some-details',
+            isolation_segment: 'hecka-compliant',
             stats: {
               name: process.name,
               uris: process.uris,
@@ -98,6 +99,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[0][:type]).to eq(process.type)
         expect(result[0][:index]).to eq(0)
         expect(result[0][:state]).to eq('RUNNING')
+        expect(result[0][:isolation_segment]).to eq('hecka-compliant')
         expect(result[0][:host]).to eq('myhost')
         expect(result[0][:instance_ports]).to eq(instance_ports_1)
         expect(result[0][:uptime]).to eq(12345)
@@ -112,6 +114,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[1][:type]).to eq(process.type)
         expect(result[1][:index]).to eq(1)
         expect(result[1][:state]).to eq('CRASHED')
+        expect(result[1][:isolation_segment]).to eq(nil)
         expect(result[1][:host]).to eq('toast')
         expect(result[1][:instance_ports]).to eq(instance_ports_2)
         expect(result[1][:uptime]).to eq(42)
@@ -124,7 +127,8 @@ module VCAP::CloudController::Presenters::V3
           type:  process.type,
           index: 2,
           state: 'DOWN',
-          uptime: 0
+          uptime: 0,
+          isolation_segment: nil
         )
       end
     end
