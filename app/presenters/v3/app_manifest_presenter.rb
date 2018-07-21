@@ -1,7 +1,23 @@
+require 'presenters/v3/app_manifest_parsers/name_env_parser'
+require 'presenters/v3/app_manifest_parsers/docker_parser'
+require 'presenters/v3/app_manifest_parsers/buildpack_parser'
+require 'presenters/v3/app_manifest_parsers/services_properties_parser'
+require 'presenters/v3/app_manifest_parsers/route_properties_parser'
+require 'presenters/v3/app_manifest_parsers/process_properties_parser'
+
 module VCAP::CloudController
   module Presenters
     module V3
       class AppManifestPresenter
+        PROPERTY_PARSERS = [
+          AppManifestParsers::NameEnvParser.new,
+          AppManifestParsers::DockerParser.new,
+          AppManifestParsers::BuildpackParser.new,
+          AppManifestParsers::ServicesPropertiesParser.new,
+          AppManifestParsers::RoutePropertiesParser.new,
+          AppManifestParsers::ProcessPropertiesParser.new,
+        ].freeze
+
         def initialize(app, service_bindings, routes)
           @app = app
           @service_bindings = service_bindings
@@ -11,15 +27,9 @@ module VCAP::CloudController
         def to_hash
           {
             applications: [
-              {
-                name: app.name,
-                env: app.environment_variables.presence,
-              }.
-                merge(lifecycle_properties).
-                merge(services_properties).
-                merge(routes_properties).
-                merge(processes_properties).
-                compact
+              PROPERTY_PARSERS.each_with_object({}) do |parser, acc|
+                acc.merge!(parser.parse(app, service_bindings, routes))
+              end.compact
             ]
           }
         end
@@ -28,62 +38,6 @@ module VCAP::CloudController
 
         attr_reader :app, :service_bindings, :routes
 
-        def services_properties
-          service_instance_names = service_bindings.map(&:service_instance_name)
-          { services: alphabetize(service_instance_names).presence, }
-        end
-
-        def routes_properties
-          route_hashes = alphabetize(routes.map(&:uri)).map { |uri| { route: uri } }
-          { routes: route_hashes.presence, }
-        end
-
-        def lifecycle_properties
-          app.docker? ? docker_lifecycle_properties : buildpack_lifecycle_properties
-        end
-
-        def buildpack_lifecycle_properties
-          {
-            buildpacks: app.lifecycle_data.buildpacks.presence,
-            stack: app.lifecycle_data.stack,
-          }
-        end
-
-        def docker_lifecycle_properties
-          return {} unless app.current_package
-          {
-            docker: {
-              image: app.current_package.image,
-              username: app.current_package.docker_username
-            }.compact
-          }
-        end
-
-        def processes_properties
-          processes = app.processes.sort_by(&:type).map { |process| process_hash(process) }
-          { processes: processes.presence }
-        end
-
-        def process_hash(process)
-          {
-            'type' => process.type,
-            'instances' => process.instances,
-            'memory' => add_units(process.memory),
-            'disk_quota' => add_units(process.disk_quota),
-            'command' => process.command,
-            'health-check-type' => process.health_check_type,
-            'health-check-http-endpoint' => process.health_check_http_endpoint,
-            'timeout' => process.health_check_timeout,
-          }.compact
-        end
-
-        def alphabetize(array)
-          array.sort_by(&:downcase)
-        end
-
-        def add_units(val)
-          "#{val}M"
-        end
       end
     end
   end

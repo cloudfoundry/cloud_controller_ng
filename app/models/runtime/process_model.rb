@@ -377,6 +377,7 @@ module VCAP::CloudController
     end
 
     def detected_start_command
+      return nil unless self.type
       type_for_detected_command = ProcessTypes.webish?(self.type) ? ProcessTypes::WEB : self.type
       current_droplet.try(:process_types).try(:[], type_for_detected_command) || ''
     end

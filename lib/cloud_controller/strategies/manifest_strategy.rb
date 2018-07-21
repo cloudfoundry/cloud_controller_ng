@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     def updated_command
       if NULL_START_COMMANDS.include?(@message.command)
-        @process.detected_start_command
+        nil
       elsif @message.command
         @message.command
       end
