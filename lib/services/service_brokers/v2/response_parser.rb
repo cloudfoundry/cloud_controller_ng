@@ -229,7 +229,7 @@ module VCAP::Services
             'type' => 'object',
             'properties' => {
               'dashboard_url' => {
-                'type' => 'string',
+                'type' => ['string', 'null'],
               },
               'operation' => {
                 'type' => 'string',
@@ -258,7 +258,7 @@ module VCAP::Services
             'type' => 'object',
             'properties' => {
               'dashboard_url' => {
-                'type' => 'string',
+                'type' => ['string', 'null'],
               },
               'operation' => {
                 'type' => 'string',
