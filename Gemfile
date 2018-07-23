@@ -83,7 +83,7 @@ group :test do
   gem 'rspec-instafail'
   gem 'rspec-its'
   gem 'rspec-rails'
-  gem 'rspec_api_documentation', git: 'https://github.com/zipmark/rspec_api_documentation.git'
+  gem 'rspec_api_documentation'
   gem 'rubocop'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
