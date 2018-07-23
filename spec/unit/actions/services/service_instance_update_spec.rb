@@ -317,7 +317,7 @@ module VCAP::CloudController
           expect {
             service_instance_update.update_service_instance(service_instance, request_attrs)
           }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerResponseMalformed,
-                           %r{The property '#/dashboard_url' .* did not match the following type: string})
+                           %r{The property '#/dashboard_url' .* did not match one or more of the following types: string, null})
 
           service_instance.reload
 
