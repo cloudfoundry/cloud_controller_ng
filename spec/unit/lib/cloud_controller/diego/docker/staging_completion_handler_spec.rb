@@ -15,7 +15,7 @@ module VCAP::CloudController
 
         before do
           allow(Steno).to receive(:logger).and_return(logger)
-          allow(Loggregator).to receive(:emit_error)
+          allow(VCAP::Loggregator).to receive(:emit_error)
           set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
         end
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
                 it 'logs an error for the CF user' do
                   handler.staging_complete(payload)
 
-                  expect(Loggregator).to have_received(:emit_error).with(build.guid, /No process types returned from stager/)
+                  expect(VCAP::Loggregator).to have_received(:emit_error).with(build.guid, /No process types returned from stager/)
                 end
               end
 
@@ -229,7 +229,7 @@ module VCAP::CloudController
               end
 
               it 'should emit a loggregator error' do
-                expect(Loggregator).to receive(:emit_error).with(build.guid, /Insufficient resources/)
+                expect(VCAP::Loggregator).to receive(:emit_error).with(build.guid, /Insufficient resources/)
                 handler.staging_complete(payload)
               end
             end
@@ -263,7 +263,7 @@ module VCAP::CloudController
               end
 
               it 'logs an error for the CF user' do
-                expect(Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
+                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
               end
 
               it 'should mark the build as failed' do
@@ -292,7 +292,7 @@ module VCAP::CloudController
                   handler.staging_complete(payload)
                 }.to raise_error(CloudController::Errors::ApiError)
 
-                expect(Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
+                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
               end
 
               it 'logs an error for the CF operator' do

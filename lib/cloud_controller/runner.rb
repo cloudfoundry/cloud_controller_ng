@@ -151,8 +151,8 @@ module VCAP::CloudController
 
     def setup_loggregator_emitter
       if @config.get(:loggregator) && @config.get(:loggregator, :router)
-        Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config.get(:loggregator, :router), 'cloud_controller', 'API', @config.get(:index))
-        Loggregator.logger = logger
+        VCAP::Loggregator.emitter = LoggregatorEmitter::Emitter.new(@config.get(:loggregator, :router), 'cloud_controller', 'API', @config.get(:index))
+        VCAP::Loggregator.logger = logger
       end
     end
 

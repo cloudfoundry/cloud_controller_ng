@@ -197,6 +197,17 @@ module VCAP::CloudController
             max_inline_relations_depth: Integer,
           },
 
+          logcache: {
+            host: String,
+            port: Integer,
+          },
+
+          logcache_tls: {
+            key_file: String,
+            cert_file: String,
+            ca_file: String,
+          },
+
           loggregator: {
             router: String,
             internal_url: String,

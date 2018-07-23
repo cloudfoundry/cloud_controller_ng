@@ -463,6 +463,25 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
+  context '#traffic_controller_client' do
+    it 'returns the tc client' do
+      expect(locator.traffic_controller_client).to be_an_instance_of(TrafficController::Client)
+    end
+  end
+
+  context 'logcache_client' do
+    let(:logcache_client) { instance_double(Logcache::Client) }
+    before do
+      allow(Logcache::Client).to receive(:new).and_return(logcache_client)
+    end
+
+    context '#traffic_controller_compatible_logcache_client' do
+      it 'returns the tc-decorated client' do
+        expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      end
+    end
+  end
+
   describe '#perm_client' do
     it 'returns the perm client' do
       expect(locator.perm_client).to be_an_instance_of(VCAP::CloudController::Perm::Client)

@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem 'googleapis-common-protos'
+
 gem 'addressable'
 gem 'allowy'
 gem 'cf-copilot'

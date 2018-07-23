@@ -19,7 +19,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(14)
+      expect(parsed_response.length).to eq(15)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -117,6 +117,13 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/service_instance_sharing'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'temporary_use_logcache',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/temporary_use_logcache'
         })
     end
   end
@@ -359,6 +366,23 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/service_instance_sharing'
+        })
+    end
+  end
+
+  get '/v2/config/feature_flags/temporary_use_logcache' do
+    example 'Get the Temporary Use Logcache feature flag (temporary)' do
+      explanation 'When enabled, use the log cache for getting container metrics.
+                   When disabled, continue to use the trafficcontroller.'
+      client.get '/v2/config/feature_flags/temporary_use_logcache', {}, headers
+
+      expect(status).to eq(200)
+      expect(parsed_response).to eq(
+        {
+          'name'          => 'temporary_use_logcache',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/temporary_use_logcache'
         })
     end
   end

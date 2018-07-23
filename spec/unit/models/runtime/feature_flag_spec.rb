@@ -7,7 +7,7 @@ module VCAP::CloudController
        :app_scaling, :route_creation, :service_instance_creation,
        :diego_docker, :set_roles_by_username, :unset_roles_by_username,
        :task_creation, :env_var_visibility, :space_scoped_private_broker_creation,
-       :space_developer_env_var_visibility, :service_instance_sharing]
+       :space_developer_env_var_visibility, :service_instance_sharing, :temporary_use_logcache]
     end
     let(:feature_flag) { FeatureFlag.make }
 

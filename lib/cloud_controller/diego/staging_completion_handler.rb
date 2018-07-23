@@ -69,7 +69,7 @@ module VCAP::CloudController
           )
         end
 
-        Loggregator.emit_error(build.guid, "Failed to stage build: #{payload[:error][:message]}")
+        VCAP::Loggregator.emit_error(build.guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
       def handle_success(payload, with_start)

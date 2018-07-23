@@ -13,7 +13,7 @@ module VCAP::CloudController
       SYSTEM_ACTOR_HASH = { guid: 'system', type: 'system', name: 'system', user_name: 'system' }.freeze
 
       def create_app_exit_event(app, droplet_exited_payload)
-        Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
+        VCAP::Loggregator.emit(app.guid, "App instance exited with guid #{app.guid} payload: #{droplet_exited_payload}")
 
         actor    = { name: app.name, guid: app.guid, type: 'app' }
         metadata = droplet_exited_payload.slice('instance', 'index', 'cell_id', 'exit_status', 'exit_description', 'reason')
@@ -22,7 +22,7 @@ module VCAP::CloudController
 
       def record_app_update(app, space, user_audit_info, request_attrs, manifest_triggered: false)
         audit_hash = app_audit_hash(request_attrs)
-        Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
+        VCAP::Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = add_manifest_triggered(manifest_triggered, {
@@ -33,7 +33,7 @@ module VCAP::CloudController
 
       def record_app_map_droplet(app, space, user_audit_info, request_attrs)
         audit_hash = app_audit_hash(request_attrs)
-        Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
+        VCAP::Loggregator.emit(app.guid, "Updated app with guid #{app.guid} (#{audit_hash})")
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = { request: audit_hash }
@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       def record_app_apply_manifest(app, space, user_audit_info, manifest_request_yaml)
-        Loggregator.emit(app.guid, "Applied manifest to app with guid #{app.guid} (#{manifest_request_yaml})")
+        VCAP::Loggregator.emit(app.guid, "Applied manifest to app with guid #{app.guid} (#{manifest_request_yaml})")
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = { request: { manifest: manifest_request_yaml } }
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       def record_app_create(app, space, user_audit_info, request_attrs)
-        Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
+        VCAP::Loggregator.emit(app.guid, "Created app with guid #{app.guid}")
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = { request: app_audit_hash(request_attrs) }
@@ -57,28 +57,28 @@ module VCAP::CloudController
       end
 
       def record_app_start(app, user_audit_info)
-        Loggregator.emit(app.guid, "Starting app with guid #{app.guid}")
+        VCAP::Loggregator.emit(app.guid, "Starting app with guid #{app.guid}")
 
         actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.start', app, app.space, actor, nil)
       end
 
       def record_app_restart(app, user_audit_info)
-        Loggregator.emit(app.guid, "Restarted app with guid #{app.guid}")
+        VCAP::Loggregator.emit(app.guid, "Restarted app with guid #{app.guid}")
 
         actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, type: 'user', user_name: user_audit_info.user_name }
         create_app_audit_event('audit.app.restart', app, app.space, actor, nil)
       end
 
       def record_app_stop(app, user_audit_info)
-        Loggregator.emit(app.guid, "Stopping app with guid #{app.guid}")
+        VCAP::Loggregator.emit(app.guid, "Stopping app with guid #{app.guid}")
 
         actor = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         create_app_audit_event('audit.app.stop', app, app.space, actor, nil)
       end
 
       def record_app_delete_request(app, space, user_audit_info, recursive=nil)
-        Loggregator.emit(app.guid, "Deleted app with guid #{app.guid}")
+        VCAP::Loggregator.emit(app.guid, "Deleted app with guid #{app.guid}")
 
         actor    = { name: user_audit_info.user_email, guid: user_audit_info.user_guid, user_name: user_audit_info.user_name, type: 'user' }
         metadata = nil
