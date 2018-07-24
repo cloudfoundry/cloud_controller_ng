@@ -1,21 +1,21 @@
-require 'presenters/v3/app_manifest_parsers/name_env_parser'
-require 'presenters/v3/app_manifest_parsers/docker_parser'
-require 'presenters/v3/app_manifest_parsers/buildpack_parser'
-require 'presenters/v3/app_manifest_parsers/services_properties_parser'
-require 'presenters/v3/app_manifest_parsers/route_properties_parser'
-require 'presenters/v3/app_manifest_parsers/process_properties_parser'
+require 'presenters/v3/app_manifest_presenters/name_env_presenter'
+require 'presenters/v3/app_manifest_presenters/docker_presenter'
+require 'presenters/v3/app_manifest_presenters/buildpack_presenter'
+require 'presenters/v3/app_manifest_presenters/services_properties_presenter'
+require 'presenters/v3/app_manifest_presenters/route_properties_presenter'
+require 'presenters/v3/app_manifest_presenters/process_properties_presenter'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class AppManifestPresenter
-        PROPERTY_PARSERS = [
-          AppManifestParsers::NameEnvParser.new,
-          AppManifestParsers::DockerParser.new,
-          AppManifestParsers::BuildpackParser.new,
-          AppManifestParsers::ServicesPropertiesParser.new,
-          AppManifestParsers::RoutePropertiesParser.new,
-          AppManifestParsers::ProcessPropertiesParser.new,
+        PROPERTY_PRESENTERS = [
+          AppManifestPresenters::NameEnvPresenter.new,
+          AppManifestPresenters::DockerPresenter.new,
+          AppManifestPresenters::BuildpackPresenter.new,
+          AppManifestPresenters::ServicesPropertiesPresenter.new,
+          AppManifestPresenters::RoutePropertiesPresenter.new,
+          AppManifestPresenters::ProcessPropertiesPresenter.new,
         ].freeze
 
         def initialize(app, service_bindings, routes)
@@ -27,8 +27,8 @@ module VCAP::CloudController
         def to_hash
           {
             applications: [
-              PROPERTY_PARSERS.each_with_object({}) do |parser, acc|
-                acc.merge!(parser.parse(app, service_bindings, routes))
+              PROPERTY_PRESENTERS.each_with_object({}) do |presenter, acc|
+                acc.merge!(presenter.to_hash(app: app, service_bindings: service_bindings, routes: routes))
               end.compact
             ]
           }
@@ -37,7 +37,6 @@ module VCAP::CloudController
         private
 
         attr_reader :app, :service_bindings, :routes
-
       end
     end
   end

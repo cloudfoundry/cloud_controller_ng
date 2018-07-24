@@ -1,10 +1,9 @@
 require 'spec_helper'
 
-module VCAP::CloudController::Presenters::V3::AppManifestParsers
-  RSpec.describe ProcessPropertiesParser do
+module VCAP::CloudController::Presenters::V3::AppManifestPresenters
+  RSpec.describe ProcessPropertiesPresenter do
     describe 'command' do
-
-      let(:app) { VCAP::CloudController::AppModel.make() }
+      let(:app) { VCAP::CloudController::AppModel.make }
 
       context 'when a process does not have a user-specified command' do
         before do
@@ -14,8 +13,8 @@ module VCAP::CloudController::Presenters::V3::AppManifestParsers
         end
 
         it 'should not include "command" in the output' do
-          expect(subject.parse(app, nil, nil)[:processes].first)
-            .not_to have_key('command')
+          expect(subject.to_hash(app: app, service_bindings: nil, routes: nil)[:processes].first).
+            not_to have_key('command')
         end
       end
 
@@ -28,10 +27,10 @@ module VCAP::CloudController::Presenters::V3::AppManifestParsers
         end
 
         it 'should include the command in the output' do
-          expect(subject.parse(app, nil, nil)[:processes].first['command']).to eq('Do it now!')
+          expect(subject.to_hash(app: app, service_bindings: nil, routes: nil)[:processes].first['command']).
+            to eq('Do it now!')
         end
       end
     end
   end
-
 end

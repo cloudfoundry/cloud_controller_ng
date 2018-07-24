@@ -1,11 +1,11 @@
 module VCAP::CloudController
   module Presenters
     module V3
-      module AppManifestParsers
-        class ProcessPropertiesParser
-          def parse(app, _, _)
-            processes = app.processes.sort_by(&:type).map {|process| process_hash(process)}
-            {processes: processes.presence}
+      module AppManifestPresenters
+        class ProcessPropertiesPresenter
+          def to_hash(app:, **_)
+            processes = app.processes.sort_by(&:type).map { |process| process_hash(process) }
+            { processes: processes.presence }
           end
 
           def process_hash(process)
