@@ -4025,6 +4025,14 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
 
+      context 'when the service instance does not exist' do
+        it 'returns a 404' do
+          set_current_user_as_admin
+          get '/v2/service_instances/fake-guid/shared_from'
+          expect(last_response.status).to eql(404)
+        end
+      end
+
       context 'when the service instance is not shared' do
         it 'returns no content' do
           set_current_user_as_admin
@@ -4139,6 +4147,14 @@ module VCAP::CloudController
         get "/v2/service_instances/#{instance.guid}/shared_to"
         expect(last_response.status).to eql(200)
         expect(JSON.parse(last_response.body)['resources']).to eq([])
+      end
+
+      context 'when the service instance does not exist' do
+        it 'returns a 404' do
+          set_current_user_as_admin
+          get '/v2/service_instances/fake-guid/shared_to'
+          expect(last_response.status).to eql(404)
+        end
       end
 
       context 'when the service instance is shared into multiple spaces' do
@@ -4815,6 +4831,18 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/service_instances/:service_instance_guid/service_bindings' do
+      let(:space) { service_instance.space }
+      let(:developer) { make_developer_for_space(space) }
+
+      context 'when the service instance does not exist' do
+        it 'returns a 404' do
+          set_current_user_as_admin
+          get '/v2/service_instances/fake-guid/service_bindings'
+          expect(last_response.status).to eql(404)
+        end
+      end
+    end
     describe 'Validation messages' do
       let(:paid_quota) { QuotaDefinition.make(total_services: 1) }
       let(:free_quota_with_no_services) do
