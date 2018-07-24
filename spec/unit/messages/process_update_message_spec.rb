@@ -59,11 +59,10 @@ module VCAP::CloudController
       context 'when command is nil' do
         let(:params) { { command: nil } }
 
-        it 'is not valid' do
+        it 'it is valid' do
           message = ProcessUpdateMessage.new(params)
 
-          expect(message).not_to be_valid
-          expect(message.errors[:command]).to include('must be a string')
+          expect(message).to be_valid
         end
       end
 

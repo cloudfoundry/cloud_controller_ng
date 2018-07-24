@@ -23,6 +23,7 @@ module VCAP::CloudController
     validates :command,
     string: true,
     length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },
+    allow_nil: true,
     if:     proc { |a| a.requested?(:command) }
 
     validates :health_check_type,
