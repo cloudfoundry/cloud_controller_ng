@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # file-watcher.rb - Wait for files to change, and run associated tests
 #
 # usage: bundle exec scripts/file-watcher.rb
