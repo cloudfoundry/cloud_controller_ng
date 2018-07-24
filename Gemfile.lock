@@ -78,7 +78,7 @@ GEM
     backports (3.11.3)
     beefcake (1.0.0)
     bit-struct (0.16)
-    bits_service_client (3.0.0)
+    bits_service_client (3.1.0)
       activesupport
       steno
     builder (3.2.3)
@@ -135,7 +135,7 @@ GEM
     faraday_middleware (0.12.2)
       faraday (>= 0.7.4, < 1.0)
     ffi (1.9.25)
-    fluent-logger (0.7.1)
+    fluent-logger (0.7.2)
       msgpack (>= 1.0.0, < 2)
     fog-aliyun (0.2.2)
       fog-core (~> 1.27)
@@ -257,7 +257,7 @@ GEM
       faraday (~> 0.9)
       faraday-cookie_jar (~> 0.0.6)
       ms_rest (~> 0.6.3)
-    msgpack (1.1.0)
+    msgpack (1.2.4)
     multi_json (1.12.2)
     multipart-parser (0.1.1)
     multipart-post (2.0.0)
