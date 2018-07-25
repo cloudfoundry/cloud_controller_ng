@@ -154,21 +154,14 @@ module VCAP::CloudController
         end
       end
 
-      context 'when unbinding a service instance times out' do
+      context 'when unbinding a service instance fails' do
         before do
-          stub_unbind(service_binding_1, body: lambda { |r|
-            sleep 10
-            raise 'Should time out'
-          })
+          stub_unbind(service_binding_1, status: 500)
         end
 
         it 'should leave the service instance unchanged' do
           original_attrs = managed_service_instance.as_json
-          expect {
-            Timeout.timeout(0.5.second) do
-              service_instance_delete.delete(service_instance_dataset)
-            end
-          }.to raise_error(Timeout::Error)
+          service_instance_delete.delete(service_instance_dataset)
 
           managed_service_instance.reload
 
@@ -180,21 +173,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'when deprovisioning a service instance times out' do
+      context 'when deprovisioning a service instance fails' do
         before do
-          stub_deprovision(route_service_instance, body: lambda { |r|
-            sleep 10
-            raise 'Should time out'
-          })
+          stub_deprovision(route_service_instance, status: 500)
         end
 
         it 'should mark the service instance as failed' do
-          expect {
-            Timeout.timeout(0.5.second) do
-              service_instance_delete.delete(service_instance_dataset)
-            end
-          }.to raise_error(Timeout::Error)
-
+          service_instance_delete.delete(service_instance_dataset)
           route_service_instance.reload
 
           expect(a_request(:delete, deprovision_url(route_service_instance))).
