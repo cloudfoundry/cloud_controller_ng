@@ -26,7 +26,16 @@ module VCAP::CloudController
       end
 
       context 'when all new deploying_web_processes are running' do
-        context 'deployments in progress' do
+        context 'when a deployment is in flight' do
+          it 'is locked' do
+            allow(DeploymentModel).to receive(:where).and_return([deployment])
+            allow(deployment).to receive(:lock!).and_call_original
+
+            deployer.update
+
+            expect(deployment).to have_received(:lock!)
+          end
+
           it 'scales the web process down by one' do
             expect {
               deployer.update
@@ -44,7 +53,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'the last iteration of a deployment in progress' do
+        context 'when a deployment is in its final iteration' do
           let(:web_process) { ProcessModel.make(instances: 1) }
           let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5, guid: "I'm just a webish guid") }
 

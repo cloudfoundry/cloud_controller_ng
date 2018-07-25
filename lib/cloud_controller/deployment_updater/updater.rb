@@ -28,28 +28,29 @@ module VCAP::CloudController
       private_class_method
 
       def self.scale_deployment(deployment, logger)
-        app = deployment.app
-        web_process = app.web_process
-        deploying_web_process = deployment.deploying_web_process
+        deployment.db.transaction do
+          deployment.lock!
 
-        return unless ready_to_scale?(deployment, logger)
+          app = deployment.app
+          original_web_process = app.web_process
+          deploying_web_process = deployment.deploying_web_process
 
-        if web_process.instances == 0
-          ProcessModel.db.transaction do
-            deployment.lock!
+          app.lock!
+          original_web_process.lock!
+          deploying_web_process.lock!
 
-            deploying_web_process.update(type: ProcessTypes::WEB)
-            web_process.delete
+          return unless ready_to_scale?(deployment, logger)
 
-            app.reload
+          case original_web_process.instances
+          when 0 # deploying web process is fully scaled
+            promote_deploying_web_process(deploying_web_process, original_web_process)
+
             restart_non_web_processes(app)
             deployment.update(state: DeploymentModel::DEPLOYED_STATE)
-          end
-        elsif web_process.instances == 1
-          web_process.update(instances: web_process.instances - 1)
-        else
-          ProcessModel.db.transaction do
-            web_process.update(instances: web_process.instances - 1)
+          when 1 # do not increment deploying web process because upon deploy, an initial deploying web process was created
+            original_web_process.update(instances: original_web_process.instances - 1)
+          else
+            original_web_process.update(instances: original_web_process.instances - 1)
             deploying_web_process.update(instances: deploying_web_process.instances + 1)
           end
         end
@@ -69,10 +70,13 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.instances_reporters
       end
 
-      def self.restart_non_web_processes(app)
-        app.processes.each do |process|
-          next if process.web?
+      def self.promote_deploying_web_process(deploying_web_process, original_web_process)
+        deploying_web_process.update(type: ProcessTypes::WEB)
+        original_web_process.delete
+      end
 
+      def self.restart_non_web_processes(app)
+        app.processes.reject(&:web?).each do |process|
           VCAP::CloudController::ProcessRestart.restart(process: process, config: Config.config, stop_in_runtime: true)
         end
       end
