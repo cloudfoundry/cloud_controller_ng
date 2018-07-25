@@ -83,6 +83,7 @@ group :test do
   gem 'rspec-instafail'
   gem 'rspec-its'
   gem 'rspec-rails'
+  gem 'rspec-wait'
   gem 'rspec_api_documentation'
   gem 'rubocop'
   gem 'timecop'

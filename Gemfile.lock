@@ -355,6 +355,8 @@ GEM
       rspec-mocks (~> 3.7.0)
       rspec-support (~> 3.7.0)
     rspec-support (3.7.1)
+    rspec-wait (0.0.9)
+      rspec (>= 3, < 4)
     rspec_api_documentation (4.4.0)
       activesupport (>= 3.0.0)
       json (~> 1.4, >= 1.4.6)
@@ -501,6 +503,7 @@ DEPENDENCIES
   rspec-instafail
   rspec-its
   rspec-rails
+  rspec-wait
   rspec_api_documentation
   rubocop
   ruby-debug-ide (>= 0.7.0.beta4)

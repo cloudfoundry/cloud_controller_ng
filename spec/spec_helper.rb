@@ -76,6 +76,7 @@ init_block = proc do
   require 'support/bootstrap/spec_bootstrap'
   require 'rspec/collection_matchers'
   require 'rspec/its'
+  require 'rspec/wait'
 end
 
 each_run_block = proc do

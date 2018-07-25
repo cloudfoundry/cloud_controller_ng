@@ -56,9 +56,8 @@ RSpec.describe Locket::LockRunner do
       allow(client).to receive(:sleep)
 
       client.start
-      sleep 0.1
 
-      expect(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
+      wait_for(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
     end
 
     it 'raises an error when restarted after it has already been started' do
@@ -89,27 +88,27 @@ RSpec.describe Locket::LockRunner do
         it 'does not report that it has a lock' do
           error = GRPC::BadStatus.new(GRPC::AlreadyExists)
           client.instance_variable_set(:@lock_acquired, true)
-          allow(locket_service).to receive(:lock).
-            and_raise(error)
+          allow(locket_service).to receive(:lock).and_raise(error)
 
           client.start
-          sleep 0.1
 
-          expect(client.lock_acquired?).to be(false)
-          expect(fake_logger).to have_received(:debug).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").at_least(:once)
+          with_wait(delay: 0.5) do
+            wait_for(fake_logger).to have_received(:debug).with("Failed to acquire lock '#{key}' for owner '#{owner}': #{error.message}").at_least(:once)
+            wait_for(client.lock_acquired?).to be(false)
+          end
         end
       end
 
       context 'when it does acquire a lock' do
         it 'reports that it has a lock' do
-          allow(locket_service).to receive(:lock).
-            and_return(Models::LockResponse)
+          allow(locket_service).to receive(:lock).and_return(Models::LockResponse)
 
           client.start
-          sleep 0.1
 
-          expect(client.lock_acquired?).to be(true)
-          expect(fake_logger).to have_received(:debug).with("Acquired lock '#{key}' for owner '#{owner}'").at_least(:once)
+          with_wait(delay: 0.5) do
+            wait_for(fake_logger).to have_received(:debug).with("Acquired lock '#{key}' for owner '#{owner}'").at_least(:once)
+            wait_for(client.lock_acquired?).to be(true)
+          end
         end
       end
     end
