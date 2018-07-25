@@ -67,6 +67,16 @@ module VCAP::CloudController
 
           deployment_updater: {
             update_frequency_in_seconds: Integer,
+            lock_key: String,
+            lock_owner: String
+          },
+
+          locket: {
+            host: String,
+            port: Integer,
+            ca_file: String,
+            cert_file: String,
+            key_file: String
           },
 
           optional(:copilot) => {

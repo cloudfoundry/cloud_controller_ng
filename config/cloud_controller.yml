@@ -10,6 +10,8 @@ external_domain: api2.vcap.me
 temporary_disable_deployments: true
 deployment_updater:
   update_frequency_in_seconds: 30
+  lock_key: 'cf-deployment-updater'
+  lock_owner: 'cf_deployment_updater.bosh-vm-id'
 internal_service_hostname: api.internal.cf
 
 system_domain_organization: the-system_domain-org-name
@@ -358,3 +360,10 @@ copilot:
   client_key_file: 'spec/fixtures/certs/copilot.key'
   client_chain_file: 'spec/fixtures/certs/copilot.crt'
   sync_frequency_in_seconds: 30
+
+locket:
+  host: 'locket.service.cf.internal'
+  port: 8891
+  ca_file: 'spec/fixtures/certs/bbs_ca.crt'
+  cert_file: 'spec/fixtures/certs/bbs_client.crt'
+  key_file: 'spec/fixtures/certs/bbs_client.key'

@@ -22,6 +22,8 @@ RSpec.describe Locket::LockRunner do
 
   let(:client) do
     Locket::LockRunner.new(
+      key: key,
+      owner: owner,
       host: host,
       port: port,
       client_ca_path: client_ca_path,
@@ -53,16 +55,18 @@ RSpec.describe Locket::LockRunner do
       allow(locket_service).to receive(:lock)
       allow(client).to receive(:sleep)
 
-      client.start(key, owner)
+      client.start
       sleep 0.1
 
       expect(locket_service).to have_received(:lock).with(lock_request).at_least(3).times
     end
 
     it 'raises an error when restarted after it has already been started' do
-      client.start(key, owner)
+      client.start
 
-      expect { client.start(key, owner) }.to raise_error(Locket::LockRunner::Error, 'Cannot start more than once')
+      expect {
+        client.start
+      }.to raise_error(Locket::LockRunner::Error, 'Cannot start more than once')
     end
   end
 
@@ -88,7 +92,7 @@ RSpec.describe Locket::LockRunner do
           allow(locket_service).to receive(:lock).
             and_raise(error)
 
-          client.start(key, owner)
+          client.start
           sleep 0.1
 
           expect(client.lock_acquired?).to be(false)
@@ -101,7 +105,7 @@ RSpec.describe Locket::LockRunner do
           allow(locket_service).to receive(:lock).
             and_return(Models::LockResponse)
 
-          client.start(key, owner)
+          client.start
           sleep 0.1
 
           expect(client.lock_acquired?).to be(true)
