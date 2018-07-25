@@ -25,7 +25,7 @@ module VCAP::CloudController
           assign_droplet
         )
 
-        setup_processes(app)
+        create_missing_processes(app)
 
         app.save
       end
@@ -37,8 +37,8 @@ module VCAP::CloudController
 
     private
 
-    def setup_processes(app)
-      ProcessUpsertFromDroplet.new(@user_audit_info).process_current_droplet(app)
+    def create_missing_processes(app)
+      MissingProcessCreate.new(@user_audit_info).create_from_current_droplet(app)
     end
 
     def droplet_associated?(app, droplet)

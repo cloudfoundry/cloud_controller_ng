@@ -1,5 +1,3 @@
-require 'actions/process_upsert_from_droplet'
-
 module VCAP::CloudController
   class AppStart
     class InvalidApp < StandardError; end

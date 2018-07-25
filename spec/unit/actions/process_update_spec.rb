@@ -201,27 +201,27 @@ module VCAP::CloudController
       end
 
       context 'ManifestStrategy command' do
-        context 'when the new command is null' do
+        context 'when the new command is "null"' do
           let(:message) { ProcessUpdateMessage.new({ command: 'null' }) }
 
-          it 'favors the detected buildpack command' do
+          it 'removes the previous command' do
             process_update.update(process, message, ManifestStrategy)
 
             process.reload
-            expect(process.command).to eq('BE rackup')
-            expect(process.command_without_fallback).to eq(nil)
+            expect(process.command).to be_nil
+            expect(process.command_without_fallback).to be_nil
           end
         end
 
-        context 'when the new command is default' do
+        context 'when the new command is "default"' do
           let(:message) { ProcessUpdateMessage.new({ command: 'default' }) }
 
-          it 'resets the command to the detected buildpack command' do
+          it 'removes the previous command' do
             process_update.update(process, message, ManifestStrategy)
 
             process.reload
-            expect(process.command).to eq('BE rackup')
-            expect(process.command_without_fallback).to eq(nil)
+            expect(process.command).to be_nil
+            expect(process.command_without_fallback).to be_nil
           end
         end
       end

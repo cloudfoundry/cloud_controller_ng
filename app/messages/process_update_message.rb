@@ -18,13 +18,17 @@ module VCAP::CloudController
       @health_check_requested ||= proc { |a| a.requested?(:health_check) }
     end
 
+    def self.command_requested?
+      @command_requested ||= proc { |a| a.requested?(:command) }
+    end
+
     validates_with NoAdditionalKeysValidator
 
     validates :command,
     string: true,
     length: { in: 1..4096, message: 'must be between 1 and 4096 characters' },
     allow_nil: true,
-    if:     proc { |a| a.requested?(:command) }
+    if: command_requested?
 
     validates :health_check_type,
     inclusion: {

@@ -22,8 +22,8 @@ module VCAP::CloudController
     end
 
     def expect_no_validator(validator_class)
-      matching_validitor = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
-      expect(matching_validitor).to be_empty
+      matching_validator = subject.validation_policies.select { |validator| validator.is_a?(validator_class) }
+      expect(matching_validator).to be_empty
     end
 
     before do

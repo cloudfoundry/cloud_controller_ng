@@ -11,7 +11,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:current_process_types) { double(:current_process_types) }
 
-    describe '.update_to' do
+    describe '#update_to' do
       let(:droplet) do
         DropletModel.make(
           state: DropletModel::STAGED_STATE,
@@ -24,14 +24,14 @@ module VCAP::CloudController
 
       before do
         app_model.add_droplet_by_guid(droplet_guid)
-        allow(ProcessUpsertFromDroplet).to receive(:new).with(user_audit_info).and_return(current_process_types)
-        allow(current_process_types).to receive(:process_current_droplet).with(app_model)
+        allow(MissingProcessCreate).to receive(:new).with(user_audit_info).and_return(current_process_types)
+        allow(current_process_types).to receive(:create_from_current_droplet).with(app_model)
       end
 
       it 'sets the desired droplet guid' do
         updated_app = set_current_droplet.update_to(app_model, droplet)
         expect(updated_app.droplet_guid).to eq(droplet_guid)
-        expect(current_process_types).to have_received(:process_current_droplet).once
+        expect(current_process_types).to have_received(:create_from_current_droplet).once
       end
 
       it 'creates an audit event' do
