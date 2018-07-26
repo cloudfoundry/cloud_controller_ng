@@ -70,11 +70,12 @@ module VCAP::CloudController
         system_domain = config.get(:system_domain)
 
         domains.each do |domain|
-          domain_name = domain['name']
-
-          router_group_guid = find_routing_guid(domain)
-
-          SharedDomain.find_or_create(domain_name, router_group_guid)
+          attrs = {
+            name: domain['name'],
+            router_group_guid: find_routing_guid(domain),
+            internal: domain['internal']
+          }
+          SharedDomain.find_or_create(attrs.compact)
         end
 
         if CloudController::DomainDecorator.new(system_domain).has_sub_domain?(test_domains: domains.map { |domain_hash| domain_hash['name'] })
@@ -85,7 +86,7 @@ module VCAP::CloudController
           end
 
           router_group_guid = find_routing_guid({ 'name' => system_domain })
-          SharedDomain.find_or_create(system_domain, router_group_guid)
+          SharedDomain.find_or_create(name: system_domain, router_group_guid: router_group_guid)
         else
           raise 'A system_domain_organization must be provided if the system_domain is not shared with (in the list of) app_domains' unless system_org
 

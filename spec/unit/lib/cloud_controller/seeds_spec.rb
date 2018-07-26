@@ -278,6 +278,16 @@ module VCAP::CloudController
           Seeds.create_seed_domains(config, system_org)
         end
 
+        context 'when an app domain is an internal domain' do
+          let(:app_domains) { ['app.some-other-domain.com', { 'name' => 'internal.domain.name', 'internal' => true }] }
+
+          it 'creates an internal shared domain' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to eq(['app.some-other-domain.com', 'internal.domain.name'])
+            expect(SharedDomain.first(name: 'internal.domain.name')).to be_internal
+          end
+        end
+
         context 'when the app domains include a subdomain of the system domain' do
           let(:app_domains) { ['app.example.com'] }
           let(:system_domain) { 'example.com' }

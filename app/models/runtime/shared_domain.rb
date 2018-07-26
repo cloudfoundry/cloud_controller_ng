@@ -21,7 +21,7 @@ module VCAP::CloudController
       }
     end
 
-    def self.find_or_create(name, rtr_guid=nil)
+    def self.find_or_create(name:, router_group_guid: nil, internal: false)
       logger = Steno.logger('cc.db.domain')
       domain = nil
 
@@ -30,10 +30,11 @@ module VCAP::CloudController
 
         if domain
           logger.info "reusing default serving domain: #{name}"
-        elsif rtr_guid
-          domain = SharedDomain.new(name: name, router_group_guid: rtr_guid)
+          if !domain.internal? && internal
+            logger.warn("Domain '#{name}' was marked internal, but a non-internal domain of that name already exists. Skipping.")
+          end
         else
-          domain = SharedDomain.new(name: name)
+          domain = SharedDomain.new(name: name, router_group_guid: router_group_guid, internal: internal)
         end
 
         logger.info "creating shared serving domain: #{name}"
@@ -76,14 +77,14 @@ module VCAP::CloudController
       router_group_type.blank? ? [] : [:router_group_type]
     end
 
+    def internal?
+      !!internal
+    end
+
     private
 
     def routing_api_client
       @routing_api_client ||= CloudController::DependencyLocator.instance.routing_api_client
-    end
-
-    def internal?
-      internal
     end
 
     def validate_internal_domain

@@ -171,7 +171,7 @@ module VCAP::CloudController
           expected_error.set_backtrace(['original', 'backtrace'])
           allow(SharedDomain).to receive(:new).and_raise(expected_error)
 
-          expect { SharedDomain.find_or_create('invalid_domain') }.to raise_error do |e|
+          expect { SharedDomain.find_or_create(name: 'invalid_domain') }.to raise_error do |e|
             expect(e).to be_a(StandardError)
             expect(e.message).to eq('Error for shared domain name invalid_domain: original message')
             expect(e.backtrace).to eq(['original', 'backtrace'])
@@ -186,7 +186,7 @@ module VCAP::CloudController
           end
 
           it 'creates the domains' do
-            SharedDomain.find_or_create('some-domain.com', 'some-guid')
+            SharedDomain.find_or_create(name: 'some-domain.com', router_group_guid: 'some-guid')
             expect(SharedDomain.count).to eq(1)
             expect(SharedDomain.last[:router_group_guid]).to eq('some-guid')
             expect(SharedDomain.last[:name]).to eq('some-domain.com')
@@ -199,9 +199,39 @@ module VCAP::CloudController
           end
 
           it 'returns the found domain' do
-            domain = SharedDomain.find_or_create('wee.example.com')
+            domain = SharedDomain.find_or_create(name: 'wee.example.com')
             expect(domain[:name]).to eq('wee.example.com')
             expect(domain[:router_group_guid]).to eq('123')
+          end
+        end
+
+        context 'and the domain is internal' do
+          it 'raises an error' do
+            attrs = { name: 'some-domain.com', router_group_guid: 'some-guid', internal: true }
+            expect { SharedDomain.find_or_create(attrs) }.to raise_error do |e|
+              expect(e).to be_a(StandardError)
+              expect(e.message).to eq('Error for shared domain name some-domain.com: router_group_guid cannot be specified for internal domains')
+            end
+          end
+        end
+      end
+
+      context 'internal domains' do
+        context 'when a non-internal domain already exists' do
+          let!(:existing_domain) { SharedDomain.make(name: 'existing.example.com') }
+          let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
+
+          before do
+            allow(Steno).to receive(:logger).and_return(fake_logger)
+          end
+
+          it 'logs a warning message and does not change the existing domain' do
+            attrs = { name: 'existing.example.com', internal: true }
+            SharedDomain.find_or_create(attrs)
+            existing_domain.reload
+            expect(existing_domain).not_to be_internal
+            expect(fake_logger).to have_received(:warn).
+              with("Domain 'existing.example.com' was marked internal, but a non-internal domain of that name already exists. Skipping.")
           end
         end
       end
