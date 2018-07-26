@@ -30,7 +30,7 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
-**command** | _string_ | The command is used to start the process.
+**command** | _string_ or _null_ | The command used to start the process. Use _null_ to revert to the buildpack-detected or procfile-provided start command.
 **health_check** | [_health_check object_](#the-health_check-object) | The health check to perform on the process.
 
 #### Permitted Roles

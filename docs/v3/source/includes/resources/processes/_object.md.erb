@@ -10,10 +10,10 @@ Example Process object
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Process type. A unique identifier for processes belonging to an app.
-**command** | _string_ | The command is used to start the process.
+**command** | _string_ or _null_ | The command used to start the process. Use _null_ to revert to the buildpack-detected or procfile-provided start command.
 **instances** | _integer_ | The number of instances to run.
-**memory_in_mb** | _integer_ | The memory in mb allocated per instance.
-**disk_in_mb** | _integer_ | The disk in mb allocated per instance.
+**memory_in_mb** | _integer_ | The memory in MB allocated per instance.
+**disk_in_mb** | _integer_ | The disk in MB allocated per instance.
 **health_check** | [_health_check object_](#the-health_check-object) | The health check to perform on the process.
 **guid** | _uuid_ | Unique identifier for the process.
 **created_at** | _datetime_ | The time with zone when the object was created.
