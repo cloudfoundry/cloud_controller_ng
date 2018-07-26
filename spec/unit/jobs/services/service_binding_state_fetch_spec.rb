@@ -161,16 +161,20 @@ module VCAP::CloudController
                 end
 
                 it 'should not enqueue another fetch job' do
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
+
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should update the service binding last operation' do
-                  expect(client).to receive(:unbind).with(service_binding)
+                it 'should not perform orphan mitigation' do
+                  expect(client).not_to receive(:unbind)
 
                   run_job(job)
+                end
+
+                it 'should update the service binding last operation' do
+                  run_job(job)
+
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
@@ -184,8 +188,6 @@ module VCAP::CloudController
                     raise response_malformed_exception
                   end
 
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
 
                   service_binding.reload
@@ -194,8 +196,6 @@ module VCAP::CloudController
                 end
 
                 it 'should not create an audit event' do
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
 
                   expect(Event.all.count).to eq 0
@@ -217,24 +217,26 @@ module VCAP::CloudController
                 end
 
                 it 'should not enqueue another fetch job' do
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
+
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should update the service binding last operation' do
-                  expect(client).to receive(:unbind).with(service_binding)
+                it 'should not perform orphan mitigation' do
+                  expect(client).not_to receive(:unbind)
 
                   run_job(job)
+                end
+
+                it 'should update the service binding last operation' do
+                  run_job(job)
+
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
                 it 'should not create an audit event' do
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
 
                   expect(Event.all.count).to eq 0
@@ -256,24 +258,26 @@ module VCAP::CloudController
                 end
 
                 it 'should not enqueue another fetch job' do
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
+
                   expect(Delayed::Job.count).to eq 0
                 end
 
-                it 'should update the service binding last operation' do
-                  expect(client).to receive(:unbind).with(service_binding)
+                it 'should not perform orphan mitigation' do
+                  expect(client).not_to receive(:unbind)
 
                   run_job(job)
+                end
+
+                it 'should update the service binding last operation' do
+                  run_job(job)
+
                   service_binding.reload
                   expect(service_binding.last_operation.state).to eq('failed')
                   expect(service_binding.last_operation.description).to eq('A valid binding could not be fetched from the service broker.')
                 end
 
                 it 'should not create an audit event' do
-                  expect(client).to receive(:unbind).with(service_binding)
-
                   run_job(job)
 
                   expect(Event.all.count).to eq 0

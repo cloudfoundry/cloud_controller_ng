@@ -113,7 +113,6 @@ module VCAP::CloudController
             state: 'failed',
             description: 'A valid binding could not be fetched from the service broker.',
           )
-          SynchronousOrphanMitigate.new(logger).attempt_unbind(service_binding)
         end
 
         def binding_gone(result_from_broker)

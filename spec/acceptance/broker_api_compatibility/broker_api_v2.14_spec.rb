@@ -186,48 +186,45 @@ RSpec.describe 'Service Broker API integration' do
               expect(response['entity']['credentials']).to eql('foo' => true)
             end
 
-            context 'but the get binding response is invalid' do
-              it 'set the last operation status to failed and perform orphan mitigation' do
+            context 'when the get binding response' do
+              let(:service_binding) { VCAP::CloudController::ServiceBinding.find(guid: @binding_id) }
+
+              before do
                 stub_async_binding_last_operation
                 async_bind_service(status: 202, response_body: { operation: 'some-operation' })
-
-                service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
-                stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: 'invalid-response')
-
-                Delayed::Worker.new.work_off
-
-                expect(service_binding.last_operation.state).to eq('failed')
-                expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
               end
-            end
 
-            context 'but the get binding response is not 200' do
-              it 'set the last operation status to failed and perform orphan mitigation' do
-                stub_async_binding_last_operation
-                async_bind_service(status: 202, response_body: { operation: 'some-operation' })
+              context 'is invalid' do
+                it 'set the last operation status to failed and does not perform orphan mitigation' do
+                  stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: 'invalid-response')
 
-                service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
-                stub_request(:get, service_binding_url(service_binding)).to_return(status: 204, body: '{}')
+                  Delayed::Worker.new.work_off
 
-                Delayed::Worker.new.work_off
-
-                expect(service_binding.last_operation.state).to eq('failed')
-                expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
+                  expect(service_binding.last_operation.state).to eq('failed')
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                end
               end
-            end
 
-            context 'but the request to get the binding timed out' do
-              it 'set the last operation status to failed' do
-                stub_async_binding_last_operation
-                async_bind_service(status: 202, response_body: { operation: 'some-operation' })
+              context 'is not 200' do
+                it 'set the last operation status to failed and does not perform orphan mitigation' do
+                  stub_request(:get, service_binding_url(service_binding)).to_return(status: 204, body: '{}')
 
-                service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
-                stub_request(:get, service_binding_url(service_binding)).to_timeout
+                  Delayed::Worker.new.work_off
 
-                Delayed::Worker.new.work_off
+                  expect(service_binding.last_operation.state).to eq('failed')
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                end
+              end
 
-                expect(service_binding.last_operation.state).to eq('failed')
-                expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to have_been_made
+              context 'times out' do
+                it 'set the last operation status to failed and does not perform orphan mitigation' do
+                  stub_request(:get, service_binding_url(service_binding)).to_timeout
+
+                  Delayed::Worker.new.work_off
+
+                  expect(service_binding.last_operation.state).to eq('failed')
+                  expect(a_request(:delete, "#{service_binding_url(service_binding)}?plan_id=plan1-guid-here&service_id=service-guid-here")).to_not have_been_made
+                end
               end
             end
           end
