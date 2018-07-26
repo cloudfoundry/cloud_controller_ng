@@ -505,7 +505,7 @@ DEPENDENCIES
   rspec-rails
   rspec-wait
   rspec_api_documentation
-  rubocop
+  rubocop (~> 0.51.0)
   ruby-debug-ide (>= 0.7.0.beta4)
   rubyzip!
   scientist
