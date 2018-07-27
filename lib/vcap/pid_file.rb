@@ -54,13 +54,13 @@ module VCAP
         if pid == Process.pid
           break
         elsif HostSystem.new.process_running?(pid)
-          raise ProcessRunningError.new(sprintf('Process already running (pid=%d).', pid))
+          raise ProcessRunningError.new(sprintf('Process already running (pid=%<pid>d).', pid: pid))
         end
 
         # We're good to go, write our pid
         f.truncate(0)
         f.rewind
-        f.write(sprintf("%d\n", Process.pid))
+        f.write(sprintf("%<pid>d\n", pid: Process.pid))
         f.flush
       end
     end

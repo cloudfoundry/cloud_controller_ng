@@ -136,7 +136,7 @@ module VCAP::Services::ServiceBrokers
 
     class DeactivatedPlansWarning
       # rubocop:disable LineLength
-      WARNING = "Warning: Service plans are missing from the broker's catalog (%s/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.\n".freeze
+      WARNING = "Warning: Service plans are missing from the broker's catalog (%<broker_url>s/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.\n".freeze
       # rubocop:enable LineLength
       INDENT = '  '.freeze
 
@@ -147,7 +147,7 @@ module VCAP::Services::ServiceBrokers
       def message
         return nil if @nested_warnings.length == 0
 
-        sprintf(WARNING, @broker_url) + format_message
+        sprintf(WARNING, broker_url: @broker_url) + format_message
       end
 
       def add(plan)

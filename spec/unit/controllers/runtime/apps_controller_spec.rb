@@ -100,7 +100,6 @@ module VCAP::CloudController
             docker_image:               { type: 'string' },
             docker_credentials:         { type: 'hash' },
             ports:                      { type: '[integer]' }
-
           })
       end
     end

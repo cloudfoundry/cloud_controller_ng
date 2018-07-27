@@ -515,7 +515,6 @@ module VCAP::CloudController
                 'Process "type1": Timeout is not a number',
                 'Process "type1": Health check type must be "port", "process", or "http"',
                 'Process "type1": Health check type must be "http" to set a health check HTTP endpoint',
-
                 'Process "type2": Command must be between 1 and 4096 characters',
                 'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Instances is not a number',

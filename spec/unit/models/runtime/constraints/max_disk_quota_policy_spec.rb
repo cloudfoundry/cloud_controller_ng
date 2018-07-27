@@ -8,7 +8,7 @@ RSpec.describe MaxDiskQuotaPolicy do
 
   it 'when requested size is larger than the space allocated to the app' do
     allow(process).to receive(:disk_quota).and_return(100)
-    expect(validator).to validate_with_error(process, :disk_quota, sprintf(MaxDiskQuotaPolicy::ERROR_MSG, 100, max_mb))
+    expect(validator).to validate_with_error(process, :disk_quota, sprintf(MaxDiskQuotaPolicy::ERROR_MSG, desired: 100, max: max_mb))
   end
 
   it 'when requested size is smaller than the space allocated to the app' do

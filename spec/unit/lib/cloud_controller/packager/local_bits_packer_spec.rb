@@ -276,7 +276,7 @@ module CloudController::Packager
 
             package_blobstore.download_from_blobstore(blobstore_key, File.join(local_tmp_dir, 'package.zip'))
             `unzip #{local_tmp_dir}/package.zip path/to/content.txt -d #{local_tmp_dir}`
-            expect(sprintf('%o', File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100744')
+            expect(sprintf('%<mode>o', mode: File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100744')
           end
 
           context 'when specific file permissions are requested' do
@@ -291,7 +291,7 @@ module CloudController::Packager
 
               package_blobstore.download_from_blobstore(blobstore_key, File.join(local_tmp_dir, 'package.zip'))
               `unzip #{local_tmp_dir}/package.zip path/to/content.txt -d #{local_tmp_dir}`
-              expect(sprintf('%o', File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100653')
+              expect(sprintf('%<mode>o', mode: File.stat(File.join(local_tmp_dir, 'path/to/content.txt')).mode)).to eq('100653')
             end
 
             describe 'bad file permissions' do

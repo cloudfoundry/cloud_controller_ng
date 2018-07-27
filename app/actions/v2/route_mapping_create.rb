@@ -14,7 +14,7 @@ module VCAP::CloudController
 
       DUPLICATE_MESSAGE                   = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
       INVALID_SPACE_MESSAGE               = 'the app and route must belong to the same space'.freeze
-      UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %s is not available on the app\'s process'.freeze
+      UNAVAILABLE_APP_PORT_MESSAGE_FORMAT = 'Port %<port>s is not available on the app\'s process'.freeze
       NO_PORT_REQUESTED                   = 'Port must be specified when mapping to a non-web process'.freeze
 
       def initialize(user_audit_info, route, process, request_attrs, logger)
@@ -114,7 +114,7 @@ module VCAP::CloudController
       end
 
       def raise_unavailable_port!
-        raise UnavailableAppPort.new(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT % requested_port)
+        raise UnavailableAppPort.new(sprintf(UNAVAILABLE_APP_PORT_MESSAGE_FORMAT, port: requested_port))
       end
 
       def available_ports

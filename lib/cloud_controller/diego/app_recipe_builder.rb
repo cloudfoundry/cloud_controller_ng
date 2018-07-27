@@ -176,7 +176,7 @@ module VCAP::CloudController
                  user:            user,
                  path:            '/tmp/lifecycle/diego-sshd',
                  args:            [
-                   "-address=#{sprintf('0.0.0.0:%d', DEFAULT_SSH_PORT)}",
+                   "-address=#{sprintf('0.0.0.0:%<port>d', port: DEFAULT_SSH_PORT)}",
                    "-hostKey=#{ssh_key.private_key}",
                    "-authorizedKey=#{ssh_key.authorized_key}",
                    '-inheritDaemonEnv',

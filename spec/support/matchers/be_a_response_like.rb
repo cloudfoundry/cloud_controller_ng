@@ -45,7 +45,7 @@ RSpec::Matchers.define :be_a_response_like do |expected, problem_keys=[]|
     end
 
     # ensure there are not extra fields returned unexpectedly
-    actual.each do |actual_key, actual_value|
+    actual.each_key do |actual_key, actual_value|
       expect(expected).to have_key(actual_key)
     end
   end

@@ -20,11 +20,9 @@ module VCAP::CloudController
                     id_map[domain.owning_organization_id] ||= []
                     id_map[domain.owning_organization_id] << domain
                   end
-
                   ds = Space.filter(organization_id: id_map.keys)
                   ds = ds.eager(eo[:associations]) if eo[:associations]
                   ds = eo[:eager_block].call(ds) if eo[:eager_block]
-
                   ds.all do |space|
                     id_map[space.organization_id].each { |domain| domain.associations[:spaces] << space }
                   end

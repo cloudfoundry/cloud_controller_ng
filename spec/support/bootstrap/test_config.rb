@@ -70,7 +70,6 @@ module TestConfig
           fog_connection: fog_connection,
           max_staged_droplets_stored: 42,
         },
-
         db: DbConfig.new.config,
       )
 

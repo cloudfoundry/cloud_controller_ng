@@ -131,7 +131,7 @@ module VCAP::CloudController
 
       CloudController::Errors::ApiError.new_from_details('RouteInvalid', e.errors.full_messages)
     end
-
+    # rubocop:enable Metrics/MethodLength
     # rubocop:enable Metrics/CyclomaticComplexity
 
     def create

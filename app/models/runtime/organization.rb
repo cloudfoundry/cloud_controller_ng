@@ -82,11 +82,9 @@ module VCAP::CloudController
           org.associations[:domains] = []
           id_map[org.id]             = org
         end
-
         ds = Domain.shared_or_owned_by(id_map.keys)
         ds = ds.eager(eo[:associations]) if eo[:associations]
         ds = eo[:eager_block].call(ds) if eo[:eager_block]
-
         ds.all do |domain|
           if domain.shared?
             id_map.each_value { |org| org.associations[:domains] << domain }

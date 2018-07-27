@@ -103,6 +103,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       },
     ]
   end
+  # rubocop:enable Metrics/MethodLength
 
   shared_context 'response_fields' do
     fields_info(false).each do |f|

@@ -76,7 +76,6 @@ module VCAP::CloudController
               memory_limit: 1024,
               total_reserved_route_ports: 10,
             },
-
             'default' => {
               non_basic_services_allowed: true,
               total_routes: 1000,

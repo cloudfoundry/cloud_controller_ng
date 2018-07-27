@@ -83,10 +83,8 @@ module VCAP::CloudController
                 },
             },
             {
-
                 'container_dir' => '/data/videos',
                 'mode' => 'rw',
-
                 'device_type' => 'shared',
                 'device' => {
                   'driver' => 'local',
@@ -107,7 +105,6 @@ module VCAP::CloudController
             {
                 'container_dir' => '/data/videos',
                 'mode' => 'rw',
-
                 'device_type' => 'shared',
                 'device' => {
                     'driver' => 'local',

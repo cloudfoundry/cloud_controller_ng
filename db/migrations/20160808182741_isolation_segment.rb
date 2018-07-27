@@ -11,4 +11,5 @@ Sequel.migration do
       add_unique_constraint :name, name: :isolation_segment_name_unique_constraint
     end
   end
+  # rubocop:enable Lint/BooleanSymbol
 end

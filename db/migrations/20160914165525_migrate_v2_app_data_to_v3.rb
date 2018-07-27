@@ -13,6 +13,8 @@ Sequel.migration do
     ####
     ##  App usage events - Insert STOP events for v3 created processes that will be removed
     ####
+
+    # rubocop:disable Style/FormatStringToken
     transaction do
       generate_stop_events_query = <<-SQL
         INSERT INTO app_usage_events
@@ -33,6 +35,7 @@ Sequel.migration do
         run generate_stop_events_query % 'get_uuid()'
       end
     end
+    # rubocop:enable Style/FormatStringToken
 
     ###
     ##  remove V3 data

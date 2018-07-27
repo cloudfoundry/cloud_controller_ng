@@ -50,11 +50,9 @@ module VCAP::CloudController
                     id_map[service_instance.service_plan_id] ||= []
                     id_map[service_instance.service_plan_id] << service_instance
                   end
-
                   ds = ServicePlan.where(id: id_map.keys)
                   ds = ds.eager(eo[:associations]) if eo[:associations]
                   ds = eo[:eager_block].call(ds) if eo[:eager_block]
-
                   ds.all do |service_plan|
                     id_map[service_plan.id].each { |si| si.associations[:service_plan] = service_plan }
                   end

@@ -220,7 +220,7 @@ module CloudController
                 destination = File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')
                 client.download_from_blobstore(sha_of_content, destination)
 
-                expect(sprintf('%o', File.stat(destination).mode)).to eq('100644')
+                expect(sprintf('%<mode>o', mode: File.stat(destination).mode)).to eq('100644')
               end
             end
 
@@ -229,7 +229,7 @@ module CloudController
                 destination = File.join(local_dir, 'some_directory_to_place_file', 'downloaded_file')
                 client.download_from_blobstore(sha_of_content, destination, mode: 0753)
 
-                expect(sprintf('%o', File.stat(destination).mode)).to eq('100753')
+                expect(sprintf('%<mode>o', mode: File.stat(destination).mode)).to eq('100753')
               end
             end
           end

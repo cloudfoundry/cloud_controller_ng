@@ -17,9 +17,8 @@ module VCAP::CloudController
         expect(decoded_results.count).to eq(1)
         expect(decoded_results).to include(
           {
-            app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
+            app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
                               'hostname' => 'org-1.space-1.app-1' }
-
           }
         )
       end
@@ -35,9 +34,8 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                                'hostname'               => 'org-2.space-2.app-2' }
-
+              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+                                'hostname' => 'org-2.space-2.app-2' }
             }
           )
         end
@@ -54,9 +52,8 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                                'hostname'               => 'org-3.space-3.app-3' }
-
+              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+                                'hostname' => 'org-3.space-3.app-3' }
             }
           )
         end
@@ -73,9 +70,8 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                                'hostname'               => 'org-4.space-4.app-4' }
-
+              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+                                'hostname' => 'org-4.space-4.app-4' }
             }
           )
         end
@@ -98,10 +94,9 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                                'hostname'               => "#{orgName}.#{spaceName}.#{appName}"
+              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+                                'hostname' => "#{orgName}.#{spaceName}.#{appName}"
               }
-
             }
           )
         end
@@ -121,10 +116,9 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains' => match_array(['fishfinger', 'foobar']),
-                                'hostname'               => "#{orgName}.#{spaceName}.#{appName}"
+              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+                                'hostname' => "#{orgName}.#{spaceName}.#{appName}"
               }
-
             }
           )
         end

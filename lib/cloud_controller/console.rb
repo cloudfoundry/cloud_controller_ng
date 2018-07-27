@@ -44,4 +44,5 @@ end
 module VCAP::CloudController
   # rubocop:disable Debugger
   binding.pry quiet: true
+  # rubocop:enable Debugger
 end

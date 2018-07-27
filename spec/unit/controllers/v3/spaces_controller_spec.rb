@@ -138,9 +138,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         get :index
 
         expect(response.status).to eq(200)
-        expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
-
-        ])
+        expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([])
       end
     end
 

@@ -150,7 +150,7 @@ module CloudController
 
               client.download_from_blobstore('foobar', destination_path)
 
-              expect(sprintf('%o', File.stat(destination_path).mode)).to eq('100644')
+              expect(sprintf('%<mode>o', mode: File.stat(destination_path).mode)).to eq('100644')
             end
           end
 
@@ -161,7 +161,7 @@ module CloudController
 
               client.download_from_blobstore('foobar', destination_path, mode: 0753)
 
-              expect(sprintf('%o', File.stat(destination_path).mode)).to eq('100753')
+              expect(sprintf('%<mode>o', mode: File.stat(destination_path).mode)).to eq('100753')
             end
           end
         end

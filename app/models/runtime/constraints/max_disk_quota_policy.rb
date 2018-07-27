@@ -1,5 +1,5 @@
 class MaxDiskQuotaPolicy
-  ERROR_MSG = 'too much disk requested (requested %s MB - must be less than %s MB)'.freeze
+  ERROR_MSG = 'too much disk requested (requested %<desired>s MB - must be less than %<max>s MB)'.freeze
 
   def initialize(app, max_mb)
     @app = app
@@ -10,7 +10,7 @@ class MaxDiskQuotaPolicy
   def validate
     return unless @app.disk_quota
     if @app.disk_quota > @max_mb
-      @errors.add(:disk_quota, sprintf(ERROR_MSG, @app.disk_quota, @max_mb))
+      @errors.add(:disk_quota, sprintf(ERROR_MSG, desired: @app.disk_quota, max: @max_mb))
     end
   end
 end

@@ -105,13 +105,11 @@ module VCAP::CloudController
             errors = org_delete.delete(org_dataset)
             expect(errors.first.message).to include "Deletion of organization #{org_1.name} failed because one or more resources within could not be deleted."
 
-            expect(errors.first.message).to include "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
+            expect(errors.first.message).to include("Deletion of space #{space.name} failed because one or more resources within could not be deleted.")
+            expect(errors.first.message).to include("Service instance #{service_instance.name}: The service broker returned an invalid response for the request")
 
-\tService instance #{service_instance.name}: The service broker returned an invalid response for the request"
-
-            expect(errors.first.message).to include "Deletion of space #{space_2.name} failed because one or more resources within could not be deleted.
-
-\tService instance #{service_instance_2.name}: The service broker returned an invalid response for the request"
+            expect(errors.first.message).to include("Deletion of space #{space_2.name} failed because one or more resources within could not be deleted.")
+            expect(errors.first.message).to include("Service instance #{service_instance_2.name}: The service broker returned an invalid response for the request")
           end
         end
       end
