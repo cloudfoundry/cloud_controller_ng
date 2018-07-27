@@ -961,5 +961,19 @@ module VCAP::CloudController::Perm
         expect(permissions.readable_route_mapping_guids).to match_array(expected_route_mapping_guids)
       end
     end
+
+    describe '#can_read_task?' do
+      it 'returns true when the user has the task.read permission' do
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: space_id, user_id: user_id, issuer: issuer).and_return(true)
+
+        expect(permissions.can_read_task?(space_id)).to equal(true)
+      end
+
+      it 'returns false otherwise' do
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: space_id, user_id: user_id, issuer: issuer).and_return(false)
+
+        expect(permissions.can_read_task?(space_id)).to equal(false)
+      end
+    end
   end
 end

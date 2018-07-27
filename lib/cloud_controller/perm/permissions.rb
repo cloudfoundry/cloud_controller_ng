@@ -190,9 +190,17 @@ module VCAP
           end
         end
 
+        def can_read_task?(space_guid)
+          has_permission?('task.read', space_guid)
+        end
+
         private
 
         attr_reader :perm_client, :user_id, :roles, :issuer
+
+        def has_permission?(action, resource)
+          perm_client.has_permission?(action: action, resource: resource, user_id: user_id, issuer: issuer)
+        end
 
         def has_any_permission?(permissions)
           perm_client.has_any_permission?(permissions: permissions, user_id: user_id, issuer: issuer)

@@ -21,7 +21,7 @@ class TasksController < ApplicationController
     if app_nested?
       app, dataset = TaskListFetcher.new.fetch_for_app(message: message)
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
-      show_secrets = permission_queryer.can_read_secrets_in_space?(app.space.guid, app.organization.guid)
+      show_secrets = can_read_secrets?(app.organization, app.space)
     else
       dataset = if permission_queryer.can_read_globally?
                   TaskListFetcher.new.fetch_all(message: message)
@@ -72,12 +72,20 @@ class TasksController < ApplicationController
 
   def show
     task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
-    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    task_not_found! unless task && can_read_task?(org, space)
 
-    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: permission_queryer.can_read_secrets_in_space?(space.guid, org.guid))
+    render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(org, space))
   end
 
   private
+
+  def can_read_secrets?(org, space)
+    permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+  end
+
+  def can_read_task?(org, space)
+    (permission_queryer.can_read_from_space?(space.guid, org.guid) || permission_queryer.can_read_task?(space.guid))
+  end
 
   def task_not_found!
     resource_not_found!(:task)

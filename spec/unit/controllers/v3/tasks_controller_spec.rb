@@ -290,6 +290,33 @@ RSpec.describe TasksController, type: :controller do
           expect(response.status).to eq 200
         end
       end
+
+      context 'perm permissions' do
+        before do
+          disallow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        context 'when the user has no permissions' do
+          it 'returns a 404' do
+            get :show, task_guid: task.guid
+
+            expect(response.status).to eq 404
+          end
+        end
+
+        context 'when the user has permission to read tasks in the app space' do
+          before do
+            allow_user_perm_permission(:can_read_task?, space: space)
+          end
+
+          it 'returns a 200' do
+            get :show, task_guid: task.guid
+
+            expect(response.status).to eq 200
+          end
+        end
+      end
     end
 
     it 'returns a 404 if the task does not exist' do

@@ -904,5 +904,13 @@ module VCAP::CloudController
     describe '#readable_route_mapping_guids' do
       it_behaves_like 'readable guids', 'route_mapping'
     end
+
+    describe 'can_read_task?' do
+      it 'delegates to perm (and does not check CC permissions)' do
+        allow(perm_permissions).to receive(:can_read_task?)
+        subject.can_read_task?('my-sweet-space-guid')
+        expect(perm_permissions).to have_received(:can_read_task?).with('my-sweet-space-guid')
+      end
+    end
   end
 end

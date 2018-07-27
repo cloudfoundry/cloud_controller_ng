@@ -184,6 +184,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_read_task?(space_guid)
+    perm_permissions.can_read_task?(space_guid)
+  end
+
   private
 
   attr_reader :perm_permissions, :db_permissions, :statsd_client, :enabled, :current_user_guid
