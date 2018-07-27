@@ -84,7 +84,9 @@ class TasksController < ApplicationController
   end
 
   def can_read_task?(org, space)
-    (permission_queryer.can_read_from_space?(space.guid, org.guid) || permission_queryer.can_read_task?(space.guid))
+    permission_queryer.can_read_from_space?(space.guid, org.guid) ||
+      permission_queryer.can_read_task?(space.guid) ||
+      permission_queryer.can_read_task?(org.guid)
   end
 
   def task_not_found!

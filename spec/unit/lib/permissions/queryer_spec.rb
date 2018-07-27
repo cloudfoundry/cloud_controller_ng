@@ -908,8 +908,8 @@ module VCAP::CloudController
     describe 'can_read_task?' do
       it 'delegates to perm (and does not check CC permissions)' do
         allow(perm_permissions).to receive(:can_read_task?)
-        subject.can_read_task?('my-sweet-space-guid')
-        expect(perm_permissions).to have_received(:can_read_task?).with('my-sweet-space-guid')
+        subject.can_read_task?('my-sweet-resource-guid')
+        expect(perm_permissions).to have_received(:can_read_task?).with('my-sweet-resource-guid')
       end
     end
   end

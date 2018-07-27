@@ -210,8 +210,10 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:readable_org_guids).and_return(orgs.map(&:guid))
   end
 
-  def allow_user_perm_permission(permission, space:)
-    allow(perm_permissions_double(user)).to receive(permission).with(space.guid).and_return(true)
+  def allow_user_perm_permission(permission, space_guid: nil, org_guid: nil)
+    resource_guid = space_guid || org_guid
+    allow(perm_permissions_double(user)).to receive(permission).and_return(false)
+    allow(perm_permissions_double(user)).to receive(permission).with(resource_guid).and_return(true)
   end
 
   def permissions_double(user)

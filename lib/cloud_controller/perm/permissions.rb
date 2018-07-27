@@ -190,8 +190,8 @@ module VCAP
           end
         end
 
-        def can_read_task?(space_guid)
-          has_permission?('task.read', space_guid)
+        def can_read_task?(resource_guid)
+          has_permission?('task.read', resource_guid)
         end
 
         private
