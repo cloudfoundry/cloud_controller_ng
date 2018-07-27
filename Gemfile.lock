@@ -433,7 +433,7 @@ GEM
       crack (>= 0.3.2)
       hashdiff
     xml-simple (1.1.5)
-    yajl-ruby (1.4.0)
+    yajl-ruby (1.4.1)
 
 PLATFORMS
   ruby
