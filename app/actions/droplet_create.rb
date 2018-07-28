@@ -1,4 +1,4 @@
-require 'cloud_controller/backends/staging_memory_calculator'
+require 'cloud_controller/backends/quota_validating_staging_memory_calculator'
 require 'cloud_controller/backends/staging_disk_calculator'
 require 'cloud_controller/backends/staging_environment_builder'
 require 'cloud_controller/diego/staging_details'
@@ -15,9 +15,9 @@ module VCAP::CloudController
 
     attr_reader :staging_response
 
-    def initialize(memory_limit_calculator=StagingMemoryCalculator.new,
-      disk_limit_calculator=StagingDiskCalculator.new,
-      environment_presenter=StagingEnvironmentBuilder.new)
+    def initialize(memory_limit_calculator: QuotaValidatingStagingMemoryCalculator.new,
+      disk_limit_calculator: StagingDiskCalculator.new,
+      environment_presenter: StagingEnvironmentBuilder.new)
 
       @memory_limit_calculator = memory_limit_calculator
       @disk_limit_calculator   = disk_limit_calculator
@@ -114,10 +114,10 @@ module VCAP::CloudController
 
     def get_memory_limit(requested_limit, space, org)
       @memory_limit_calculator.get_limit(requested_limit, space, org)
-    rescue StagingMemoryCalculator::SpaceQuotaExceeded
-      raise SpaceQuotaExceeded
-    rescue StagingMemoryCalculator::OrgQuotaExceeded
-      raise OrgQuotaExceeded
+    rescue QuotaValidatingStagingMemoryCalculator::SpaceQuotaExceeded => e
+      raise SpaceQuotaExceeded.new e.message
+    rescue QuotaValidatingStagingMemoryCalculator::OrgQuotaExceeded => e
+      raise OrgQuotaExceeded.new e.message
     end
 
     def logger
