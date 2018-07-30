@@ -95,6 +95,39 @@ module VCAP::CloudController
         end
       end
     end
+
+    context 'when the broker returns 410 on last_operation during binding creation' do
+      before do
+        setup_cc
+        setup_broker(default_catalog(bindings_retrievable: true))
+        provision_service
+        create_app
+
+        stub_async_binding_last_operation(body: {}, return_code: 410)
+      end
+
+      it 'should continue polling' do
+        async_bind_service(status: 202)
+
+        expect(last_response).to have_status_code(202)
+        body = JSON.parse(last_response.body)
+        expect(body['entity']['last_operation']['state']).to eq('in progress')
+
+        Delayed::Worker.new.work_off
+
+        service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+        expect(a_request(:get,
+                         "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
+                        )).to have_been_made
+
+        Timecop.travel(Time.now + 1.minute)
+        Delayed::Worker.new.work_off
+
+        expect(a_request(:get,
+                         "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
+                        )).to have_been_made.twice
+      end
+    end
   end
 
   def async_unbind_in_progress_error(instance_name, app_name)

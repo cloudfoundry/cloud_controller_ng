@@ -29,7 +29,7 @@ module VCAP::CloudController::BrokerApiHelper
         body: catalog.to_json)
   end
 
-  def default_catalog(plan_updateable: false, requires: [], plan_schemas: {})
+  def default_catalog(plan_updateable: false, requires: [], plan_schemas: {}, bindings_retrievable: false)
     {
       services: [
         {
@@ -39,6 +39,7 @@ module VCAP::CloudController::BrokerApiHelper
           bindable: true,
           requires: requires,
           plan_updateable: plan_updateable,
+          bindings_retrievable: bindings_retrievable,
           plans: [
             {
               id: 'plan1-guid-here',
@@ -193,11 +194,7 @@ module VCAP::CloudController::BrokerApiHelper
         body: fetch_body.to_json)
   end
 
-  def stub_async_binding_last_operation(state: 'succeeded', operation_data: nil, return_code: 200)
-    fetch_body = {
-      state: state
-    }
-
+  def stub_async_binding_last_operation(body: { state: 'succeeded' }, operation_data: nil, return_code: 200)
     url = "http://#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+/last_operation"
     if !operation_data.nil?
       url += "\\?operation=#{operation_data}"
@@ -208,7 +205,7 @@ module VCAP::CloudController::BrokerApiHelper
       with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
       to_return(
         status: return_code,
-        body: fetch_body.to_json)
+        body: body.to_json)
   end
 
   def provision_service(opts={})

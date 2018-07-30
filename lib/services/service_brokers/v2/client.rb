@@ -166,10 +166,14 @@ module VCAP::Services::ServiceBrokers::V2
     def fetch_service_binding_last_operation(service_binding)
       path = service_binding_last_operation_path(service_binding)
       response = @http_client.get(path)
+      parsed_response = @response_parser.parse_fetch_service_binding_last_operation(path, response)
+      last_operation_hash = parsed_response.delete('last_operation') || {}
 
-      last_operation = @response_parser.parse_fetch_service_binding_last_operation(path, response)
-
-      last_operation.deep_symbolize_keys
+      {}.tap do |result|
+        result[:last_operation] = {}
+        result[:last_operation][:state] = extract_state(service_binding, last_operation_hash)
+        result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+      end
     end
 
     def deprovision(instance, accepts_incomplete: false)
@@ -277,10 +281,10 @@ module VCAP::Services::ServiceBrokers::V2
       response.code == 202
     end
 
-    def extract_state(instance, last_operation_hash)
+    def extract_state(broker_resource, last_operation_hash)
       return last_operation_hash['state'] unless last_operation_hash.empty?
 
-      if instance.last_operation.type == 'delete'
+      if broker_resource.last_operation.type == 'delete'
         'succeeded'
       else
         'in progress'

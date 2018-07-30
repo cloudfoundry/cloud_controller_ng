@@ -435,6 +435,11 @@ module VCAP::CloudController
                 event = Event.find(type: 'audit.service_binding.delete')
                 expect(event).to be_nil
               end
+
+              it 'should enqueue another fetch job' do
+                expect(Delayed::Job.count).to eq 1
+                expect(Delayed::Job.first).to be_a_fully_wrapped_job_of(ServiceBindingStateFetch)
+              end
             end
 
             context 'when the last_operation state is failed' do
