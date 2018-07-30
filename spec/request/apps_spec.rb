@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'actions/missing_process_create'
 
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
@@ -1265,47 +1266,6 @@ RSpec.describe 'Apps' do
         organization_guid: space.organization.guid
       })
       expect(other_process_event.metadata).to eq({ 'process_guid' => other_process.guid, 'process_type' => 'other' })
-    end
-
-    it 'creates audit.app.process.update events' do
-      process_to_update = VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web', command: 'original')
-
-      droplet = VCAP::CloudController::DropletModel.make(
-        app:           app_model,
-        process_types: { web: 'rackup' },
-        state:         VCAP::CloudController::DropletModel::STAGED_STATE
-      )
-
-      request_body = { data: { guid: droplet.guid } }
-
-      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
-
-      expect(last_response.status).to eq(200)
-
-      events = VCAP::CloudController::Event.where(actor: user.guid).all
-
-      expect(app_model.reload.processes.count).to eq(1)
-
-      update_event = events.find { |e| e.metadata['process_guid'] == process_to_update.guid }
-      expect(update_event.values).to include({
-        type:              'audit.app.process.update',
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        'my_app',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        space_guid:        space.guid,
-        organization_guid: space.organization.guid
-      })
-      expect(update_event.metadata).to eq({
-        'process_guid' => process_to_update.guid,
-        'process_type' => 'web',
-        'request'      => {
-          'command' => '[PRIVATE DATA HIDDEN]'
-        }
-      })
     end
   end
 

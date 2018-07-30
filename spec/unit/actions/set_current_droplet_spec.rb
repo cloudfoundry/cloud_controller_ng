@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/app_update'
+require 'actions/missing_process_create'
 
 module VCAP::CloudController
   RSpec.describe SetCurrentDroplet do
