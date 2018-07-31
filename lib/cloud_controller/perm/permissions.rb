@@ -37,16 +37,12 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
           else
-            perm_client.list_unique_resource_patterns(
-              user_id: user_id,
-              issuer: issuer,
-              actions: [
-                ORG_MANAGER_ACTION,
-                ORG_BILLING_MANAGER_ACTION,
-                ORG_AUDITOR_ACTION,
-                ORG_USER_ACTION
-              ]
-            )
+            resource_guids_for_action([
+              ORG_MANAGER_ACTION,
+              ORG_BILLING_MANAGER_ACTION,
+              ORG_AUDITOR_ACTION,
+              ORG_USER_ACTION
+            ])
           end
         end
 
@@ -83,9 +79,8 @@ module VCAP
         end
 
         def task_readable_space_guids
-          space_guids_for_actions(
+          space_guids_for_generic_actions(
             ['task.read'],
-            [],
           )
         end
 
@@ -214,21 +209,35 @@ module VCAP
         end
 
         def space_guids_for_actions(space_actions, org_actions)
-          space_guids = perm_client.list_unique_resource_patterns(
-            user_id: user_id,
-            issuer: issuer,
-            actions: space_actions
-          )
-          org_guids = perm_client.list_unique_resource_patterns(
-            user_id: user_id,
-            issuer: issuer,
-            actions: org_actions
-          )
+          space_guids = resource_guids_for_action(space_actions)
+          org_guids = resource_guids_for_action(org_actions)
 
+          aggregate_space_guids(org_guids, space_guids)
+        end
+
+        def space_guids_for_generic_actions(actions)
+          resource_guids = resource_guids_for_action(actions)
+
+          space_guids, org_guids = resource_guids.partition do |guid|
+            Space.where(guid: guid).present?
+          end
+
+          aggregate_space_guids(org_guids, space_guids)
+        end
+
+        def resource_guids_for_action(actions)
+          perm_client.list_unique_resource_patterns(
+            user_id: user_id,
+            issuer: issuer,
+            actions: actions
+          )
+        end
+
+        def aggregate_space_guids(org_guids, space_guids)
           all_guids = space_guids +
             Organization.where("#{Organization.table_name}__guid".to_sym => org_guids).
-                      join(Space.table_name.to_sym, organization_id: :id).
-                      select("#{Space.table_name}__guid".to_sym).all.map(&:guid)
+              join(Space.table_name.to_sym, organization_id: :id).
+              select("#{Space.table_name}__guid".to_sym).all.map(&:guid)
 
           all_guids.uniq
         end

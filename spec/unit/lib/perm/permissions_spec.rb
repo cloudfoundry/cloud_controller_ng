@@ -979,15 +979,21 @@ module VCAP::CloudController::Perm
     end
 
     describe '#task_readable_space_guids' do
-      it 'returns the list of task guids that the user has task.read access for' do
-        readable_task_guids = ['task-guid-1', 'task-guid-2']
+      it 'returns the list of space guids that the user has task.read access for either through space or org' do
+        org = VCAP::CloudController::Organization.make(guid: 'org-guid-1')
+        VCAP::CloudController::Space.make(guid: 'space-guid-1')
+        VCAP::CloudController::Space.make(guid: 'space-guid-2')
+        VCAP::CloudController::Space.make(guid: 'space-guid-3', organization: org)
+
+        readable_resource_guids = ['space-guid-1', 'space-guid-2', 'org-guid-1']
+        readable_space_guids = ['space-guid-1', 'space-guid-2', 'space-guid-3']
 
         allow(perm_client).to receive(:list_unique_resource_patterns).and_return([])
         allow(perm_client).to receive(:list_unique_resource_patterns).
           with(user_id: user_id, issuer: issuer, actions: ['task.read']).
-          and_return(readable_task_guids)
+          and_return(readable_resource_guids)
 
-        expect(permissions.task_readable_space_guids).to match_array(readable_task_guids)
+        expect(permissions.task_readable_space_guids).to match_array(readable_space_guids)
       end
     end
   end
