@@ -977,5 +977,18 @@ module VCAP::CloudController::Perm
         expect(permissions.can_read_task?(resource_id)).to equal(false)
       end
     end
+
+    describe '#task_readable_space_guids' do
+      it 'returns the list of task guids that the user has task.read access for' do
+        readable_task_guids = ['task-guid-1', 'task-guid-2']
+
+        allow(perm_client).to receive(:list_unique_resource_patterns).and_return([])
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: ['task.read']).
+          and_return(readable_task_guids)
+
+        expect(permissions.task_readable_space_guids).to match_array(readable_task_guids)
+      end
+    end
   end
 end

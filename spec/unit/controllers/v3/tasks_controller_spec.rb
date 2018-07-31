@@ -469,6 +469,36 @@ RSpec.describe TasksController, type: :controller do
       end
     end
 
+    context 'perm permissions' do
+      before do
+        allow_user_read_access_for(user, spaces: [])
+        VCAP::CloudController::TaskModel.make(app: app_model)
+        VCAP::CloudController::TaskModel.make(app: app_model)
+      end
+
+      context 'when the user has no permissions' do
+        it 'returns no tasks' do
+          get :index
+
+          expect(response.status).to eq 200
+          expect(parsed_body['resources']).to have(0).items
+        end
+      end
+
+      context 'when the user has permission to read tasks in the app space' do
+        before do
+          allow_user_perm_permission_for(:task_readable_space_guids, visible_guids: [space.guid])
+        end
+
+        it 'returns all the tasks in that space' do
+          get :index
+
+          expect(response.status).to eq 200
+          expect(parsed_body['resources']).to have(2).items
+        end
+      end
+    end
+
     describe 'query params errors' do
       context 'invalid param format' do
         it 'returns 400' do

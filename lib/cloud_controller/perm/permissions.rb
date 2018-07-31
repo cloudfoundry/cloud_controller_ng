@@ -82,6 +82,13 @@ module VCAP
           end
         end
 
+        def task_readable_space_guids
+          space_guids_for_actions(
+            ['task.read'],
+            [],
+          )
+        end
+
         def can_read_from_space?(space_id, org_id)
           can_read_globally? || has_any_permission?([
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },

@@ -143,6 +143,7 @@ module VCAP::CloudController
               issuer: issuer,
               actions: actions,
               message: e.message,
+              backtrace: e.backtrace
             )
 
             []

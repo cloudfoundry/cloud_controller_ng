@@ -216,6 +216,10 @@ module UserHelpers
     allow(perm_permissions_double(user)).to receive(permission).with(resource_guid).and_return(true)
   end
 
+  def allow_user_perm_permission_for(method, visible_guids: [])
+    allow(perm_permissions_double(user)).to receive(method).and_return(visible_guids)
+  end
+
   def permissions_double(user)
     @permissions ||= {}
     @permissions[user.guid] ||= begin

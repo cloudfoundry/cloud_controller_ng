@@ -26,7 +26,7 @@ class TasksController < ApplicationController
       dataset = if permission_queryer.can_read_globally?
                   TaskListFetcher.new.fetch_all(message: message)
                 else
-                  TaskListFetcher.new.fetch_for_spaces(message: message, space_guids: permission_queryer.readable_space_guids)
+                  TaskListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
                 end
     end
 
@@ -78,6 +78,10 @@ class TasksController < ApplicationController
   end
 
   private
+
+  def readable_space_guids
+    permission_queryer.readable_space_guids | permission_queryer.task_readable_space_guids
+  end
 
   def can_read_secrets?(org, space)
     permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)

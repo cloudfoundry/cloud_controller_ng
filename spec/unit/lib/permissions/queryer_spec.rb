@@ -905,10 +905,18 @@ module VCAP::CloudController
       it_behaves_like 'readable guids', 'route_mapping'
     end
 
-    describe 'can_read_task?' do
+    describe '#task_readable_space_guids' do
       it 'delegates to perm (and does not check CC permissions)' do
-        allow(perm_permissions).to receive(:can_read_task?)
-        subject.can_read_task?('my-sweet-resource-guid')
+        allow(perm_permissions).to receive(:task_readable_space_guids).and_return(['here-is-a-guid'])
+        expect(subject.task_readable_space_guids).to eq(['here-is-a-guid'])
+        expect(perm_permissions).to have_received(:task_readable_space_guids).once
+      end
+    end
+
+    describe '#can_read_task?' do
+      it 'delegates to perm (and does not check CC permissions)' do
+        allow(perm_permissions).to receive(:can_read_task?).and_return true
+        expect(subject.can_read_task?('my-sweet-resource-guid')).to eq true
         expect(perm_permissions).to have_received(:can_read_task?).with('my-sweet-resource-guid')
       end
     end
