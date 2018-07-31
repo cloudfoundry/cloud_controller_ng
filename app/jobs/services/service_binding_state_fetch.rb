@@ -18,6 +18,7 @@ module VCAP::CloudController
 
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
           last_operation_result = client.fetch_service_binding_last_operation(service_binding)
+          raise "Invalid response from client: #{last_operation_result}" unless valid_client_response?(last_operation_result)
 
           if service_binding.last_operation.type == 'create'
             create_result = process_create_operation(logger, service_binding, last_operation_result)
@@ -66,7 +67,7 @@ module VCAP::CloudController
         end
 
         def process_delete_operation(service_binding, last_operation_result)
-          if binding_gone(last_operation_result) || state_succeeded?(last_operation_result)
+          if state_succeeded?(last_operation_result)
             service_binding.destroy
             record_event(service_binding, @request_attrs)
             return { finished: true }
@@ -115,12 +116,12 @@ module VCAP::CloudController
           )
         end
 
-        def binding_gone(result_from_broker)
-          result_from_broker.empty?
-        end
-
         def state_succeeded?(last_operation_result)
           last_operation_result[:last_operation][:state] == 'succeeded'
+        end
+
+        def valid_client_response?(last_operation_result)
+          last_operation_result.key?(:last_operation)
         end
       end
     end

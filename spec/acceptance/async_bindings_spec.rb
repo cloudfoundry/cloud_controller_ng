@@ -106,7 +106,7 @@ module VCAP::CloudController
         stub_async_binding_last_operation(body: {}, return_code: 410)
       end
 
-      it 'should continue polling' do
+      it 'should continue polling in a new background job' do
         async_bind_service(status: 202)
 
         expect(last_response).to have_status_code(202)

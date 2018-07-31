@@ -401,8 +401,9 @@ module VCAP::CloudController
               end
             end
 
-            context 'when the last operation response is empty' do
-              let(:last_operation_response) { {} }
+            context 'when the last operation state is succeeded' do
+              let(:state) { 'succeeded' }
+              let(:description) { '100%' }
 
               it 'deletes the binding' do
                 service_binding_guid = service_binding.guid
@@ -502,6 +503,24 @@ module VCAP::CloudController
                 expect(service_binding.last_operation.state).to eq('failed')
                 expect(service_binding.last_operation.description).to eq('Service Broker failed to bind within the required time.')
               end
+            end
+          end
+
+          context 'when calling last operation responds without last_operation' do
+            let(:last_operation_response) { {} }
+
+            before do
+              Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+              Delayed::Worker.new.work_off
+            end
+
+            it 'raises informative error' do
+              expect(Delayed::Job.first.last_error).to match(/Invalid response from client/)
+            end
+
+            it 'should not enqueue another fetch job in addition to the failed one' do
+              expect(Delayed::Job.count).to eq 1
+              expect(Delayed::Job.first.failed?).to be true
             end
           end
 

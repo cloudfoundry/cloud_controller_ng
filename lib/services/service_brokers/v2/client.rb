@@ -167,7 +167,7 @@ module VCAP::Services::ServiceBrokers::V2
       path = service_binding_last_operation_path(service_binding)
       response = @http_client.get(path)
       parsed_response = @response_parser.parse_fetch_service_binding_last_operation(path, response)
-      last_operation_hash = parsed_response.delete('last_operation') || {}
+      last_operation_hash = parsed_response['last_operation'] || {}
 
       {}.tap do |result|
         result[:last_operation] = {}
