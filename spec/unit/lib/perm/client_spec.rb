@@ -710,6 +710,7 @@ module VCAP::CloudController::Perm
           issuer: issuer,
           actions: actions,
           message: '123',
+          backtrace: anything,
         )
       end
     end
