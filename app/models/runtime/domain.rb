@@ -1,8 +1,16 @@
+require 'cloud_controller/domain_helper'
+
 module VCAP::CloudController
   class Domain < Sequel::Model
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
 
-    DOMAIN_REGEX = /^(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])$/ix.freeze
+    # The maximum fully-qualified domain length is 255 including separators, but this includes two "invisible"
+    # characters at the beginning and end of the domain, so for string comparisons, the correct length is 253.
+    #
+    # The first character denotes the length of the first label, and the last character denotes the termination
+    # of the domain.
+    MAXIMUM_FQDN_DOMAIN_LENGTH = 253
+    MAXIMUM_DOMAIN_LABEL_LENGTH = 63
 
     dataset.row_proc = proc do |row|
       if row[:owning_organization_id]
@@ -12,7 +20,7 @@ module VCAP::CloudController
       end
     end
 
-    SHARED_DOMAIN_CONDITION =  { owning_organization_id: nil }.freeze
+    SHARED_DOMAIN_CONDITION = { owning_organization_id: nil }.freeze
 
     dataset_module do
       def shared_domains
@@ -59,7 +67,7 @@ module VCAP::CloudController
       join_table: 'organizations_private_domains',
       left_key: :private_domain_id,
       right_key: :organization_id,
-      before_set: :validate_add_shared_organization
+      before_add: :validate_add_shared_organization
     )
 
     add_association_dependencies(
@@ -75,15 +83,16 @@ module VCAP::CloudController
       validates_presence :name
       validates_unique :name, dataset: Domain.dataset
 
-      validates_format DOMAIN_REGEX, :name
-      validates_length_range 3..255, :name
+      validates_format CloudController::DomainHelper::DOMAIN_REGEX, :name,
+        message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
+      validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name, message: "must be no more than #{MAXIMUM_FQDN_DOMAIN_LENGTH} characters"
 
       errors.add(:name, :overlapping_domain) if name_overlaps?
       errors.add(:name, :route_conflict) if routes_match?
     end
 
     def name_overlaps?
-      return true unless intermediate_domains.drop(1).all? do |suffix|
+      return true unless CloudController::DomainHelper.intermediate_domains(name).all? do |suffix|
         d = Domain.find(name: suffix)
         d.nil? || d.owning_organization == owning_organization || d.shared?
       end
@@ -92,7 +101,7 @@ module VCAP::CloudController
     end
 
     def routes_match?
-      return false unless name && name =~ DOMAIN_REGEX
+      return false unless name && name =~ CloudController::DomainHelper::DOMAIN_REGEX
 
       if name.include?('.')
         route_host = name[0, name.index('.')]
@@ -104,14 +113,6 @@ module VCAP::CloudController
       false
     end
 
-    def self.intermediate_domains(name)
-      return [] unless name && name =~ DOMAIN_REGEX
-
-      name.split('.').reverse.inject([]) do |a, e|
-        a.push(a.empty? ? e : "#{e}.#{a.last}")
-      end
-    end
-
     def self.user_visibility_filter(user)
       organizations_filter = dataset.db[:organizations_managers].where(user_id: user.id).select(:organization_id).union(
         dataset.db[:organizations_auditors].where(user_id: user.id).select(:organization_id)
@@ -119,6 +120,8 @@ module VCAP::CloudController
         Space.dataset.join_table(:inner, :spaces_developers, space_id: :spaces__id, user_id: user.id).select(:organization_id)
       ).union(
         Space.dataset.join_table(:inner, :spaces_auditors, space_id: :spaces__id, user_id: user.id).select(:organization_id)
+      ).union(
+        Space.dataset.join_table(:inner, :spaces_managers, space_id: :spaces__id, user_id: user.id).select(:organization_id)
       ).select(:organization_id)
 
       shared_private_domains_filter = dataset.db[:organizations_private_domains].where(organization_id: organizations_filter).select(:private_domain_id)
@@ -151,15 +154,11 @@ module VCAP::CloudController
 
     def validate_change_owning_organization(organization)
       return if self.new? || owning_organization == organization
-      raise VCAP::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
-    end
-
-    def intermediate_domains
-      self.class.intermediate_domains(name)
+      raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
     end
 
     def validate_add_shared_organization(organization)
-      !shared? && !owned_by(organization)
+      !shared? && !owned_by?(organization)
     end
   end
 end

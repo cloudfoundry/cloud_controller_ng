@@ -2,9 +2,8 @@ require 'spec_helper'
 require 'actions/app_update'
 
 module VCAP::CloudController
-  describe AppUpdate do
+  RSpec.describe AppUpdate do
     let(:app_model) { AppModel.make(name: app_name, environment_variables: environment_variables) }
-    let!(:buildpack_lifecycle_model) { BuildpackLifecycleDataModel.make(buildpack: buildpack, stack: Stack.default.name, app: app_model) }
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:app_update) { AppUpdate.new(user, user_email) }
@@ -12,8 +11,12 @@ module VCAP::CloudController
     let(:app_name) { 'original name' }
     let(:environment_variables) { { 'original' => 'value' } }
 
+    before do
+      app_model.lifecycle_data.update(buildpack: buildpack, stack: Stack.default.name)
+    end
+
     describe '#update' do
-      let(:lifecycle) { AppLifecycleProvider.provide(message) }
+      let(:lifecycle) { AppLifecycleProvider.provide_for_update(message, app_model) }
       let(:message) do
         AppUpdateMessage.new({
             name:                  'new name',
@@ -22,15 +25,16 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_update).with(
-            app_model,
-            app_model.space,
-            user.guid,
-            user_email,
-            {
-              'name'                  => 'new name',
-              'environment_variables' => { 'MYVAL' => 'new-val' },
-            })
+        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_update).with(
+          app_model,
+          app_model.space,
+          user.guid,
+          user_email,
+          {
+            'name'                  => 'new name',
+            'environment_variables' => { 'MYVAL' => 'new-val' },
+          }
+        )
 
         app_update.update(app_model, message, lifecycle)
       end

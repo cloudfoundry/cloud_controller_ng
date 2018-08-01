@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe WrappingJob do
+    RSpec.describe WrappingJob do
       describe '#error' do
         context 'when the wrapped job does not have the error method defined' do
           it 'should no raise an exception' do

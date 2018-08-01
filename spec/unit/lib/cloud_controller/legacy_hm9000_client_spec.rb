@@ -1,46 +1,46 @@
 require 'spec_helper'
 
-def generate_hm_api_response(app, running_instances, crash_counts=[])
-  result = {
-    droplet: app.guid,
-    version: app.version,
-    desired: {
-      id: app.guid,
-      version: app.version,
-      instances: app.instances,
-      state: app.state,
-      package_state: app.package_state,
-    },
-    instance_heartbeats: [],
-    crash_counts: []
-  }
-
-  running_instances.each do |running_instance|
-    result[:instance_heartbeats].push({
-                                        droplet: app.guid,
-                                        version: app.version,
-                                        instance: running_instance[:instance_guid] || Sham.guid,
-                                        index: running_instance[:index],
-                                        state: running_instance[:state],
-                                        state_timestamp: 3.141
-                                      })
-  end
-
-  crash_counts.each do |crash_count|
-    result[:crash_counts].push({
-                                  droplet: app.guid,
-                                  version: app.version,
-                                  instance_index: crash_count[:instance_index],
-                                  crash_count: crash_count[:crash_count],
-                                  created_at: 1234567
-                               })
-  end
-
-  JSON.parse(result.to_json)
-end
-
 module VCAP::CloudController
-  describe VCAP::CloudController::Dea::HM9000::LegacyClient do
+  RSpec.describe VCAP::CloudController::Dea::HM9000::LegacyClient do
+    def generate_hm_api_response(app, running_instances, crash_counts=[])
+      result = {
+        droplet: app.guid,
+        version: app.version,
+        desired: {
+          id: app.guid,
+          version: app.version,
+          instances: app.instances,
+          state: app.state,
+          package_state: app.package_state,
+        },
+        instance_heartbeats: [],
+        crash_counts: []
+      }
+
+      running_instances.each do |running_instance|
+        result[:instance_heartbeats].push({
+          droplet: app.guid,
+          version: app.version,
+          instance: running_instance[:instance_guid] || Sham.guid,
+          index: running_instance[:index],
+          state: running_instance[:state],
+          state_timestamp: 3.141
+        })
+      end
+
+      crash_counts.each do |crash_count|
+        result[:crash_counts].push({
+          droplet: app.guid,
+          version: app.version,
+          instance_index: crash_count[:instance_index],
+          crash_count: crash_count[:crash_count],
+          created_at: 1234567
+        })
+      end
+
+      JSON.parse(result.to_json)
+    end
+
     let(:app0instances) { 1 }
     let(:app0) { AppFactory.make(instances: app0instances) }
     let(:app1) { AppFactory.make(instances: 1) }

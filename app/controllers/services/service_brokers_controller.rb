@@ -35,7 +35,8 @@ module VCAP::CloudController
         @services_event_repository,
         self,
         self,
-        route_services_enabled?
+        route_services_enabled?,
+        volume_services_enabled?
       )
 
       broker = create_action.create(params)
@@ -45,7 +46,7 @@ module VCAP::CloudController
       [HTTP::CREATED, headers, body]
     rescue ServiceBrokerCreate::SpaceNotFound => e
       logger.error("Space not found: #{params[:space_guid]}, Vcap-Request-Id: #{VCAP::Request.current_id}, Error: #{e.message}")
-      raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
+      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
     end
 
     def update(guid)
@@ -57,7 +58,8 @@ module VCAP::CloudController
         @service_manager,
         @services_event_repository,
         self,
-        route_services_enabled?
+        route_services_enabled?,
+        volume_services_enabled?
       )
       params = UpdateMessage.decode(body).extract
       broker = update_action.update(guid, params)
@@ -71,21 +73,20 @@ module VCAP::CloudController
       return HTTP::NOT_FOUND unless broker
 
       validate_access(:delete, broker)
-      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(broker, @services_event_repository).execute!
-      @services_event_repository.record_broker_event(:delete, broker, {})
+      VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(@services_event_repository).remove(broker)
 
       HTTP::NO_CONTENT
     rescue Sequel::ForeignKeyConstraintViolation
-      raise VCAP::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable')
+      raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
     end
 
     def self.translate_validation_exception(e, _)
       if e.errors.on(:name) && e.errors.on(:name).include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBrokerNameTaken', e.model.name)
+        CloudController::Errors::ApiError.new_from_details('ServiceBrokerNameTaken', e.model.name)
       elsif e.errors.on(:broker_url) && e.errors.on(:broker_url).include?(:unique)
-        Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', e.model.broker_url)
+        CloudController::Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', e.model.broker_url)
       else
-        Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', e.errors.full_messages)
       end
     end
 
@@ -96,6 +97,10 @@ module VCAP::CloudController
 
     def route_services_enabled?
       @config[:route_services_enabled]
+    end
+
+    def volume_services_enabled?
+      @config[:volume_services_enabled]
     end
 
     def url_of(broker)

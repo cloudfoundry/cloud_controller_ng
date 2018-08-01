@@ -1,4 +1,5 @@
 require 'models/runtime/domain'
+require 'public_suffix'
 
 module VCAP::CloudController
   class PrivateDomain < Domain
@@ -39,9 +40,10 @@ module VCAP::CloudController
 
     def validate
       super
+      errors.add(:name, :reserved) if reserved?
+
       validates_presence :owning_organization
-      exclude_domains_from_same_org = Domain.dataset.exclude(owning_organization_id: owning_organization_id).or(SHARED_DOMAIN_CONDITION)
-      errors.add(:name, :overlapping_domain) if exclude_domains_from_same_org.filter(Sequel.like(:name, "%.#{name}")).count > 0
+      errors.add(:name, :overlapping_domain) if domains_exist_in_other_orgs?
 
       validate_total_private_domains
     end
@@ -68,7 +70,30 @@ module VCAP::CloudController
       false
     end
 
+    class << self
+      def configure(filename)
+        list = nil
+        if filename
+          File.open(filename) do |f|
+            list = PublicSuffix::List.parse(f)
+          end
+        else
+          list = PublicSuffix::List.new
+        end
+
+        PublicSuffix::List.default = list
+      end
+    end
+
     private
+
+    def domains_exist_in_other_orgs?
+      Domain.dataset.
+        exclude(owning_organization_id: owning_organization_id).
+        or(SHARED_DOMAIN_CONDITION).
+        filter(Sequel.like(:name, "%.#{name}")).
+        count > 0
+    end
 
     def shared_by?(org)
       shared_organization_ids.include?(org.id)
@@ -81,6 +106,11 @@ module VCAP::CloudController
       unless private_domains_policy.allow_more_private_domains?(1)
         errors.add(:organization, :total_private_domains_exceeded)
       end
+    end
+
+    def reserved?
+      rule = PublicSuffix::List.default.find(name)
+      !rule.nil? && !rule.allow?(name)
     end
   end
 end

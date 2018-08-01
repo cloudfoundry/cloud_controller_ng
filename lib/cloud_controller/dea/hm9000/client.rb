@@ -6,6 +6,8 @@ module VCAP::CloudController
       class Client
         class UseDeprecatedNATSClient < StandardError; end
 
+        MAX_RETRIES = 3
+
         def initialize(legacy_client, config)
           @legacy_client = legacy_client
           @config = config
@@ -56,25 +58,33 @@ module VCAP::CloudController
 
         private
 
-        def post_bulk_app_state(body)
-          uri              = URI(@config[:hm9000][:url])
-          username         = @config[:internal_api][:auth_user]
-          password         = @config[:internal_api][:auth_password]
-          skip_cert_verify = @config[:skip_cert_verify]
-          use_ssl          = uri.scheme.to_s.downcase == 'https'
-
+        def post_bulk_app_state(body, use_internal_address=true)
+          uri = use_internal_address ? URI(@config[:hm9000][:internal_url]) : URI(@config[:hm9000][:url])
           uri.path = '/bulk_app_state'
+          response = http_client.post(uri, body)
 
-          client = HTTPClient.new
-          client.ssl_config.set_default_paths
-          if username && password
-            client.set_auth(nil, username, password)
-          end
-          if use_ssl
-            client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+          if response.status == 401
+            logger.error('authentication failed connecting to hm9000', { response: response.body })
           end
 
-          client.post(uri, body)
+          response
+        end
+
+        def http_client
+          if !@http_client
+            @http_client = HTTPClient.new
+            username         = @config[:internal_api][:auth_user]
+            password         = @config[:internal_api][:auth_password]
+            skip_cert_verify = @config[:skip_cert_verify]
+
+            if username && password
+              @http_client.force_basic_auth = true
+              @http_client.set_auth(nil, username, password)
+            end
+            @http_client.ssl_config.verify_mode = skip_cert_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+            @http_client.ssl_config.set_default_paths
+          end
+          @http_client
         end
 
         def app_message(app)
@@ -94,10 +104,34 @@ module VCAP::CloudController
         def make_request(message)
           logger.info('requesting bulk_app_state', message: message)
 
-          response = post_bulk_app_state(message.to_json)
+          response = nil
+
+          internal_address_errored = false
+
+          (1..MAX_RETRIES).each do |i|
+            begin
+              response = post_bulk_app_state(message.to_json, true)
+              if response.ok?
+                break
+              end
+            rescue SocketError => se
+              internal_address_errored = true
+              logger.error('failed to connect to hm9000 via consul', { error: se.message })
+              break
+            end
+
+            if i == MAX_RETRIES
+              internal_address_errored = true
+            end
+          end
+
+          response = post_bulk_app_state(message.to_json, false) if internal_address_errored
           raise UseDeprecatedNATSClient if response.status == 404
 
-          return {} unless response.ok?
+          if !response.ok?
+            logger.info('received bulk_app_state failed', { message: message })
+            return {}
+          end
 
           responses = JSON.parse(response.body)
 

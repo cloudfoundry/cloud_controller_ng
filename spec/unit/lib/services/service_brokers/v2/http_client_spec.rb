@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe HttpClient do
+  RSpec.describe HttpClient do
     let(:auth_username) { 'me' }
     let(:auth_password) { 'abc123' }
     let(:request_id) { Sham.guid }
@@ -42,7 +42,7 @@ module VCAP::Services::ServiceBrokers::V2
         make_request
         expect(a_request(http_method, full_url).
           with(query: hash_including({})).
-          with(headers: { 'X-Broker-Api-Version' => '2.8' })).
+          with(headers: { 'X-Broker-Api-Version' => '2.10' })).
           to have_been_made
       end
 
@@ -72,9 +72,9 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'logs the default headers' do
         make_request
-        expect(fake_logger).to have_received(:debug).with(match(/Accept"=>"application\/json/))
+        expect(fake_logger).to have_received(:debug).with(match(%r{Accept"=>"application/json}))
         expect(fake_logger).to have_received(:debug).with(match(/X-VCAP-Request-ID"=>"[[:alnum:]-]+/))
-        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.8/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.10/))
         expect(fake_logger).to have_received(:debug).with(match(%r{X-Api-Info-Location"=>"api2\.vcap\.me/v2/info}))
       end
 
@@ -102,13 +102,14 @@ module VCAP::Services::ServiceBrokers::V2
               :request => response)
           end
 
-          let(:response) { double(:response, code: nil, reason: nil, body: nil, headers: nil) }
+          let(:response) { double(:response, code: nil, reason: nil, body: {}.to_json, headers: nil) }
           let(:ssl_config) { double(:ssl_config, :verify_mode= => nil) }
 
           before do
             allow(VCAP::CloudController::Config).to receive(:config).and_return(config)
             allow(HTTPClient).to receive(:new).and_return(http_client)
             allow(http_client).to receive(http_method)
+            allow(ssl_config).to receive(:set_default_paths)
           end
 
           context 'and the skip_cert_verify is set to true' do
@@ -117,7 +118,7 @@ module VCAP::Services::ServiceBrokers::V2
             it 'accepts self-signed cert from the broker' do
               make_request
 
-              expect(http_client).to have_received(:ssl_config)
+              expect(http_client).to have_received(:ssl_config).exactly(2).times
               expect(ssl_config).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
             end
           end
@@ -128,7 +129,7 @@ module VCAP::Services::ServiceBrokers::V2
             it 'does not accept self-signed cert from the broker' do
               make_request
 
-              expect(http_client).to have_received(:ssl_config)
+              expect(http_client).to have_received(:ssl_config).exactly(2).times
               expect(ssl_config).to have_received(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
             end
           end
@@ -206,9 +207,39 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker client timeout is set' do
         let(:config) { { broker_client_timeout_seconds: 100 } }
 
+        before do
+          allow(http_client).to receive(http_method)
+          allow(ssl_config).to receive(:set_default_paths)
+        end
+
         it 'sets HTTP timeouts on request' do
           request
           expect_timeout_to_be 100
+        end
+      end
+    end
+
+    shared_examples 'logging' do
+      let(:fake_logger) { instance_double(Steno::Logger, debug: nil) }
+      let(:response_body) { { syslog_drain_url: 'example.com/1234', credentials: { secrets: '1234' } }.to_json }
+
+      it 'redacts credentials from response body' do
+        make_request
+        expect(fake_logger).to have_received(:debug).with(/"credentials"=>"REDACTED"/)
+      end
+
+      it 'does not redact other keys' do
+        make_request
+        expect(fake_logger).to have_received(:debug).with(%r{"syslog_drain_url"=>"example.com/1234"})
+      end
+
+      context 'non-json responses' do
+        let(:response_body) { '<xml></xml>' }
+
+        it 'does not blow up when parsing' do
+          response = make_request
+          expect(response.code).to eq(200)
+          expect(fake_logger).to have_received(:debug).with(/Error parsing body/)
         end
       end
     end
@@ -301,9 +332,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.get(path) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:get, full_url).to_return(status: 200, body: {}.to_json)
+          stub_request(:get, full_url).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct GET http request' do
@@ -329,6 +361,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it_behaves_like 'a basic successful request'
+
+        it_behaves_like 'logging'
       end
 
       describe 'handling errors' do
@@ -358,9 +392,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.put(path, message) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:put, full_url).to_return(status: 200, body: {}.to_json)
+          stub_request(:put, full_url).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct PUT http request' do
@@ -377,7 +412,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'logs the Content-Type Header' do
           make_request
-          expect(fake_logger).to have_received(:debug).with(match(/"Content-Type"=>"application\/json"/))
+          expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type"=>"application/json"}))
         end
 
         it 'has a content body' do
@@ -390,6 +425,8 @@ module VCAP::Services::ServiceBrokers::V2
             to have_been_made
         end
 
+        it_behaves_like 'logging'
+
         it_behaves_like 'a basic successful request'
       end
 
@@ -401,6 +438,13 @@ module VCAP::Services::ServiceBrokers::V2
 
       it_behaves_like 'timeout behavior' do
         let(:request) { client.put(path, message) }
+        let(:ssl_config) { double(:ssl_config, :verify_mode= => nil) }
+
+        before do
+          allow(HTTPClient).to receive(:new).and_return(http_client)
+          allow(http_client).to receive(http_method)
+          allow(ssl_config).to receive(:set_default_paths)
+        end
       end
 
       it_behaves_like 'client that maps status codes to status code messages' do
@@ -420,9 +464,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.patch(path, message) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:patch, full_url).to_return(status: 200, body: {}.to_json)
+          stub_request(:patch, full_url).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct PATCH http request' do
@@ -439,7 +484,7 @@ module VCAP::Services::ServiceBrokers::V2
 
         it 'logs the Content-Type Header' do
           make_request
-          expect(fake_logger).to have_received(:debug).with(match(/"Content-Type"=>"application\/json"/))
+          expect(fake_logger).to have_received(:debug).with(match(%r{"Content-Type"=>"application/json"}))
         end
 
         it 'has a content body' do
@@ -453,6 +498,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it_behaves_like 'a basic successful request'
+
+        it_behaves_like 'logging'
       end
 
       describe 'handling errors' do
@@ -481,9 +528,10 @@ module VCAP::Services::ServiceBrokers::V2
 
       describe 'http request' do
         let(:make_request) { client.delete(path, message) }
+        let(:response_body) { {}.to_json }
 
         before do
-          stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: {}.to_json)
+          stub_request(:delete, full_url).with(query: message).to_return(status: 200, body: response_body)
         end
 
         it 'makes the correct DELETE http request' do
@@ -510,6 +558,8 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it_behaves_like 'a basic successful request'
+
+        it_behaves_like 'logging'
       end
 
       describe 'handling errors' do

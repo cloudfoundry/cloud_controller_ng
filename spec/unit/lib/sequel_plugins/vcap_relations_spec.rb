@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Sequel::Plugins::VcapRelations' do
+RSpec.describe 'Sequel::Plugins::VcapRelations' do
   def define_model(name) # we need new classes each time to reset the class level state
     model_klass = Class.new(Sequel::Model) do
       plugin :vcap_relations
@@ -135,11 +135,11 @@ describe 'Sequel::Plugins::VcapRelations' do
     end
 
     it 'raises an error on add using the <relation>_guids=' do
-      expect { @o.dog_guids = ['bogus-guid'] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+      expect { @o.dog_guids = ['bogus-guid'] }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
     end
 
     it 'raises an error using the remove_<relation>_by_guid' do
-      expect { @o.remove_dog_by_guid('bogus-guid') }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+      expect { @o.remove_dog_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
     end
   end
 
@@ -291,11 +291,11 @@ describe 'Sequel::Plugins::VcapRelations' do
     end
 
     it 'raises an error on add using the <relation>_guids=' do
-      expect { @d1.name_guids = ['bogus-guid'] }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+      expect { @d1.name_guids = ['bogus-guid'] }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
     end
 
     it 'raises an error using the remove_<relation>_by_guid' do
-      expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+      expect { @d1.remove_name_by_guid('bogus-guid') }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
     end
   end
 
@@ -358,11 +358,7 @@ describe 'Sequel::Plugins::VcapRelations' do
       bottom_klass.many_to_one :middle
     end
 
-    let!(:bottoms) do
-      10.times.collect do
-        bottom_klass.create
-      end
-    end
+    let!(:bottoms) { Array.new(10) { bottom_klass.create } }
 
     let!(:middle) do
       middle_klass.create.tap do |m|
@@ -401,11 +397,7 @@ describe 'Sequel::Plugins::VcapRelations' do
     let!(:middle) { middle_klass.create(guid: 'middle-guid') }
     let!(:other_middle) { middle_klass.create(guid: 'other_middle_guid') }
 
-    let!(:bottoms) do
-      10.times.collect do
-        bottom_klass.create(middle: middle)
-      end
-    end
+    let!(:bottoms) { Array.new(1) { bottom_klass.create(middle: middle) } }
 
     context 'the default behaviour' do
       def initialize_relations
@@ -446,7 +438,7 @@ describe 'Sequel::Plugins::VcapRelations' do
 
       it 'raises an error' do
         bottom = bottoms.first
-        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(VCAP::Errors::ApiError, /Invalid relation/)
+        expect { bottom.middle_guid = 'bogus-guid' }.to raise_error(CloudController::Errors::ApiError, /Invalid relation/)
       end
     end
   end

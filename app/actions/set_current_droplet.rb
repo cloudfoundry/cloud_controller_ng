@@ -5,16 +5,29 @@ module VCAP::CloudController
     class InvalidApp < StandardError; end
 
     def initialize(user, user_email)
-      @user = user
+      @user       = user
       @user_email = user_email
-      @logger = Steno.logger('cc.action.procfile_parse')
+      @logger     = Steno.logger('cc.action.procfile_parse')
     end
 
     def update_to(app, droplet)
+      assign_droplet = { droplet_guid: droplet.guid }
+
       app.db.transaction do
         app.lock!
-        update_app(app, { droplet_guid: droplet.guid })
-        current_process_types.process_current_droplet(app)
+
+        app.update(assign_droplet)
+
+        Repositories::AppEventRepository.new.record_app_map_droplet(
+          app,
+          app.space,
+          @user.guid,
+          @user_email,
+          assign_droplet
+        )
+
+        setup_processes(app)
+
         app.save
       end
 
@@ -25,19 +38,8 @@ module VCAP::CloudController
 
     private
 
-    def current_process_types
-      CurrentProcessTypes.new(@user.guid, @user_email)
-    end
-
-    def update_app(app, fields)
-      app.update(fields)
-      Repositories::Runtime::AppEventRepository.new.record_app_map_droplet(
-          app,
-          app.space,
-          @user.guid,
-          @user_email,
-          fields
-      )
+    def setup_processes(app)
+      CurrentProcessTypes.new(@user.guid, @user_email).process_current_droplet(app)
     end
   end
 end

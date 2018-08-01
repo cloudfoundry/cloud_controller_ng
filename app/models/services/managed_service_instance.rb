@@ -2,55 +2,6 @@ require 'vcap/request'
 
 module VCAP::CloudController
   class ManagedServiceInstance < ServiceInstance
-    class ServiceGatewayError < StandardError; end
-
-    class NGServiceGatewayClient
-      attr_accessor :service, :token, :service_id
-
-      def initialize(service, service_id)
-        @service = service
-        @token   = service.service_auth_token
-        @service_id = service_id
-        unless token
-          raise VCAP::Errors::ApiError.new_from_details('MissingServiceAuthToken', service)
-        end
-      end
-
-      def create_snapshot(name)
-        payload = VCAP::Services::Api::CreateSnapshotV2Request.new(name: name).encode
-        response = do_request(:post, payload)
-        VCAP::Services::Api::SnapshotV2.decode(response)
-      end
-
-      def enum_snapshots
-        list = VCAP::Services::Api::SnapshotListV2.decode(do_request(:get))
-        list.snapshots.collect { |e| VCAP::Services::Api::SnapshotV2.new(e) }
-      end
-
-      private
-
-      def do_request(method, payload=nil)
-        client = HTTPClient.new
-        u = URI.parse(service.url)
-        u.path = "/gateway/v2/configurations/#{service_id}/snapshots"
-
-        response = client.public_send(
-          method,
-          u,
-          header: {
-            VCAP::Services::Api::GATEWAY_TOKEN_HEADER => token.token,
-            'Content-Type' => 'application/json'
-          },
-          body: payload
-        )
-        if response.ok?
-          response.body
-        else
-          raise ServiceGatewayError.new("Service gateway upstream failure, responded with #{response.status}: #{response.body}")
-        end
-      end
-    end
-
     IN_PROGRESS_STRING = 'in progress'.freeze
 
     many_to_one :service_plan
@@ -67,9 +18,6 @@ module VCAP::CloudController
     plugin :after_initialize
 
     serialize_attributes :json, :tags
-
-    # This only applies to V1 services
-    alias_attribute :broker_provided_id, :gateway_name
 
     delegate :client, to: :service_plan
 
@@ -155,12 +103,8 @@ module VCAP::CloudController
       service.route_service?
     end
 
-    def create_snapshot(name)
-      NGServiceGatewayClient.new(service, gateway_name).create_snapshot(name)
-    end
-
-    def enum_snapshots
-      NGServiceGatewayClient.new(service, gateway_name).enum_snapshots
+    def volume_service?
+      service.volume_service?
     end
 
     def logger
@@ -176,7 +120,8 @@ module VCAP::CloudController
     end
 
     def dashboard_url
-      unless VCAP::CloudController::SecurityContext.admin? || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
+      admin_context = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
+      unless admin_context || space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
         return ''
       end
       super
@@ -204,7 +149,11 @@ module VCAP::CloudController
         self.last_operation.destroy
       end
 
-      self.service_instance_operation = ServiceInstanceOperation.new(last_operation)
+      # it is important to create the service instance operation with the service instance
+      # instead of doing self.service_instance_operation = x
+      # because mysql will deadlock when requests happen concurrently otherwise.
+      ServiceInstanceOperation.create(last_operation.merge(service_instance_id: self.id))
+      self.service_instance_operation(true) # reload service_instance_operation association
     end
 
     def update_service_instance(attributes_to_update)

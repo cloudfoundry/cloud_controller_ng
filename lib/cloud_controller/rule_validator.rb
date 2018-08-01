@@ -3,7 +3,7 @@ module CloudController
     class_attribute :required_fields, :optional_fields
 
     self.required_fields = ['protocol', 'destination']
-    self.optional_fields = ['log']
+    self.optional_fields = ['log', 'description']
 
     def self.validate(rule)
       errs = validate_fields(rule)
@@ -18,6 +18,10 @@ module CloudController
         errs << 'contains invalid log value'
       end
 
+      if rule.key?('description') && !rule['description'].is_a?(String)
+        errs << 'contains invalid description'
+      end
+
       errs
     end
 
@@ -27,6 +31,7 @@ module CloudController
     end
 
     def self.validate_destination(destination)
+      return false if destination.empty?
       address_list = destination.split('-')
 
       return false if address_list.length > 2

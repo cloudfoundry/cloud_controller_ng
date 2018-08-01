@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Service Keys', type: [:api, :legacy_api] do
+RSpec.resource 'Service Keys', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
   let(:service_key) { VCAP::CloudController::ServiceKey.make }

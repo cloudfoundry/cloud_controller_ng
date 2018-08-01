@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Blobstores', type: :api do
+RSpec.resource 'Blobstores', type: :api do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:request_headers) { { 'AUTHORIZATION' => admin_auth_header } }
   let(:file) { File.expand_path('../../fixtures/good.zip', File.dirname(__FILE__)) }
@@ -57,8 +57,7 @@ resource 'Blobstores', type: :api do
 
       expect(status).to eq 202
 
-      successes, failures = Delayed::Worker.new.work_off
-      expect([successes, failures]).to eq [1, 0]
+      execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
       expect(blobstore.exists?(key)).to be_falsey
     end

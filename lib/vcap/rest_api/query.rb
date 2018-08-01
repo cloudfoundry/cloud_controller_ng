@@ -91,7 +91,7 @@ module VCAP::RestAPI
         comparison = '=' if comparison == ':'
 
         unless queryable_attributes.include?(key)
-          raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', key)
+          raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', key)
         end
 
         [key.to_sym, comparison, value]
@@ -100,11 +100,7 @@ module VCAP::RestAPI
 
     def query_filter(key, comparison, val)
       foreign_key_association = foreign_key_association(key)
-      if comparison == ' IN '
-        values = val.split(',')
-      else
-        values = [val]
-      end
+      values = (comparison == ' IN ') ? val.split(',') : [val]
 
       return clean_up_foreign_key(key, values, foreign_key_association) if foreign_key_association
 
@@ -178,7 +174,7 @@ module VCAP::RestAPI
       # that a query key came in for an attribute that is explicitly
       # in the queryable_attributes, but is not a column or an association.
 
-      raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', query_key) unless column
+      raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', query_key) unless column
     end
 
     attr_accessor :model, :access_filter, :queryable_attributes, :query

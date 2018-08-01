@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppEventAccess, type: :access do
+  RSpec.describe AppEventAccess, type: :access do
     subject(:access) { AppEventAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
@@ -20,6 +20,7 @@ module VCAP::CloudController
     end
 
     it_should_behave_like :admin_full_access
+    it_should_behave_like :admin_read_only_access
 
     context 'organization manager' do
       before { org.add_manager(user) }

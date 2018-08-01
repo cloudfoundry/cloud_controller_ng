@@ -1,11 +1,11 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Diego
-  describe StagerClient do
+  RSpec.describe StagerClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
-    let(:app) { VCAP::CloudController::AppFactory.make(staging_task_id: 'staging-task-id') }
-    let(:staging_guid) { StagingGuid.from_app(app) }
-    let(:staging_url) { "#{TestConfig.config[:diego_stager_url]}/v1/staging/#{staging_guid}" }
+    let(:app) { VCAP::CloudController::AppFactory.make }
+    let(:staging_guid) { app.latest_droplet.guid }
+    let(:staging_url) { "#{TestConfig.config[:diego][:stager_url]}/v1/staging/#{staging_guid}" }
 
     subject(:client) { StagerClient.new(TestConfig.config) }
 
@@ -28,7 +28,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises StagerUnavailable' do
             stub = stub_request(:put, staging_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -39,7 +39,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises StagerUnavailable' do
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /staging failed: 500/i)
           end
         end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises Stager failed with message' do
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: missing docker registry/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /staging failed: missing docker registry/i)
           end
         end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises Stager failed with code' do
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /staging failed: 500/i)
           end
         end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises Stager failed with code' do
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /staging failed: 500/i)
           end
         end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises Stager failed with code' do
-            expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /staging failed: 500/i)
+            expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /staging failed: 500/i)
           end
         end
 
@@ -108,11 +108,11 @@ module VCAP::CloudController::Diego
 
       context 'when the stager url is missing' do
         before do
-          TestConfig.override(diego_stager_url: nil)
+          TestConfig.override(diego: { stager_url: nil })
         end
 
         it 'raises StagerUnavailable' do
-          expect { client.stage(staging_guid, staging_message) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
+          expect { client.stage(staging_guid, staging_message) }.to raise_error(CloudController::Errors::ApiError, /invalid config/)
         end
       end
     end
@@ -144,7 +144,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises StagerUnavailable' do
             stub = stub_request(:delete, staging_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stop_staging(staging_guid) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.stop_staging(staging_guid) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -152,11 +152,11 @@ module VCAP::CloudController::Diego
 
       context 'when the stager url is missing' do
         before do
-          TestConfig.override(diego_stager_url: nil)
+          TestConfig.override(diego: { stager_url: nil })
         end
 
         it 'raises StagerUnavailable' do
-          expect { client.stop_staging(staging_guid) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
+          expect { client.stop_staging(staging_guid) }.to raise_error(CloudController::Errors::ApiError, /invalid config/)
         end
       end
     end

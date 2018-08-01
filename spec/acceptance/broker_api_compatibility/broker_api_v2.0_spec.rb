@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Service Broker API integration' do
+RSpec.describe 'Service Broker API integration' do
   describe 'v2.0' do
     include VCAP::CloudController::BrokerApiHelper
 
@@ -23,7 +23,7 @@ describe 'Service Broker API integration' do
     def request_has_version_header(method, url)
       expect(a_request(method, url).
           with { |request| expect(request.headers[api_header]).to match(api_accepted_version) }).
-          to have_been_made
+        to have_been_made
     end
 
     shared_examples 'broker errors' do
@@ -113,10 +113,10 @@ describe 'Service Broker API integration' do
         end
 
         context 'when update-service-broker' do
-          before { setup_broker }
           after { delete_broker }
 
           before do
+            setup_broker
             stub_catalog_fetch(broker_response_status)
 
             put("/v2/service_brokers/#{@broker_guid}",
@@ -345,9 +345,7 @@ describe 'Service Broker API integration' do
         include_examples 'broker errors'
 
         it 'sends all required fields' do
-          # rubocop:disable Metrics/LineLength
           expected_url = %r{broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}\?plan_id=plan1-guid-here&service_id=service-guid-here}
-          # rubocop:enable Metrics/LineLength
           expect(a_request(:delete, expected_url)).to have_been_made
         end
 

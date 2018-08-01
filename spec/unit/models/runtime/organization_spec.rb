@@ -1,8 +1,10 @@
 # encoding: utf-8
 require 'spec_helper'
 
+require 'isolation_segment_assign'
+
 module VCAP::CloudController
-  describe Organization, type: :model do
+  RSpec.describe Organization, type: :model do
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
@@ -29,21 +31,67 @@ module VCAP::CloudController
         expect(organization.apps).to include(app.reload)
       end
 
+      it 'does not associate non-web v2 apps' do
+        app_model = AppModel.make
+        org = app_model.space.organization
+        app1 = App.make(type: 'web', app: app_model)
+        App.make(type: 'other', app: app_model)
+        expect(org.apps).to match_array([app1])
+      end
+
+      it 'has associated app models' do
+        app_model = AppModel.make
+        organization = app_model.space.organization
+        expect(organization.app_models).to include(app_model.reload)
+      end
+
       it 'has associated service_instances' do
         service_instance = ManagedServiceInstance.make
         organization = service_instance.space.organization
         expect(organization.service_instances).to include(service_instance.reload)
       end
+
+      it 'has associated tasks' do
+        task = TaskModel.make
+        organization = task.space.organization
+
+        expect(organization.tasks).to include(task.reload)
+      end
+    end
+
+    describe 'destroying' do
+      context 'when there are isolation segments in the allowed list' do
+        let(:org) { Organization.make }
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:assigner) { IsolationSegmentAssign.new }
+
+        before do
+          assigner.assign(isolation_segment_model, [org])
+          assigner.assign(isolation_segment_model2, [org])
+          org.update(default_isolation_segment_model: isolation_segment_model)
+          org.reload
+
+          expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+          expect(org.isolation_segment_models).to match_array([isolation_segment_model, isolation_segment_model2])
+        end
+
+        it 'removes the assignment records' do
+          org.destroy
+          isolation_segment_model.reload
+          expect(isolation_segment_model.organizations).to be_empty
+        end
+      end
     end
 
     describe 'Validations' do
+      let(:org) { Organization.make }
+
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_uniqueness :name }
       it { is_expected.to strip_whitespace :name }
 
       describe 'name' do
-        subject(:org) { Organization.make }
-
         it 'should allow standard ascii characters' do
           org.name = "A -_- word 2!?()\'\"&+."
           expect {
@@ -80,16 +128,40 @@ module VCAP::CloudController
         end
       end
 
+      describe 'isolation_segments' do
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:assigner) { IsolationSegmentAssign.new }
+
+        context 'when adding isolation segments to the allowed list' do
+          it 'raises an ApiError' do
+            expect {
+              org.add_isolation_segment_model(isolation_segment_model)
+            }.to raise_error(CloudController::Errors::ApiError)
+          end
+        end
+
+        context 'when removing isolation segments from the allowed list' do
+          before do
+            assigner.assign(isolation_segment_model, [org])
+          end
+
+          it 'removing raises an ApiError' do
+            expect {
+              org.remove_isolation_segment_model(isolation_segment_model)
+            }.to raise_error(CloudController::Errors::ApiError)
+          end
+        end
+      end
+
       describe 'space_quota_definitions' do
         it 'adds when in this org' do
-          org = Organization.make
           quota = SpaceQuotaDefinition.make(organization: org)
 
           expect { org.add_space_quota_definition(quota) }.to_not raise_error
         end
 
         it 'does not add when quota is in a different org' do
-          org = Organization.make
           quota = SpaceQuotaDefinition.make
 
           expect { org.add_space_quota_definition(quota) }.to raise_error(Sequel::HookFailed)
@@ -98,14 +170,12 @@ module VCAP::CloudController
 
       describe 'private_domains' do
         it 'allowed when the organization is not the owner' do
-          org = Organization.make
           domain = PrivateDomain.make
 
           expect { org.add_private_domain(domain) }.to_not raise_error
         end
 
         it 'does not add when the organization is the owner' do
-          org = Organization.make
           domain = PrivateDomain.make(owning_organization: org)
 
           org.add_private_domain(domain)
@@ -113,7 +183,6 @@ module VCAP::CloudController
         end
 
         it 'lists all private domains owned and shared' do
-          org = Organization.make
           owned_domain = PrivateDomain.make(owning_organization: org)
           domain = PrivateDomain.make
           org.add_private_domain(domain)
@@ -137,8 +206,6 @@ module VCAP::CloudController
       end
 
       describe 'status' do
-        subject(:org) { Organization.make }
-
         it "should allow 'active' and 'suspended'" do
           ['active', 'suspended'].each do |status|
             org.status = status
@@ -163,12 +230,176 @@ module VCAP::CloudController
           }.to raise_error(Sequel::ValidationFailed)
         end
       end
+
+      describe 'default_isolation_segment' do
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+        context 'assigning the default isolation segment' do
+          context 'and the default is not in the allowed list' do
+            it 'raises an InvalidRelation' do
+              expect {
+                org.update(default_isolation_segment_model: isolation_segment_model)
+              }.to raise_error(CloudController::Errors::ApiError, /Could not find Isolation Segment with guid: #{isolation_segment_model.guid}/)
+
+              org.reload
+              expect(org.default_isolation_segment_model).to eq(nil)
+            end
+          end
+
+          context 'and the default is in the allowed list' do
+            before do
+              assigner.assign(isolation_segment_model, [org])
+            end
+
+            it 'sets the default isolation segment' do
+              org.update(default_isolation_segment_model: isolation_segment_model)
+              org.reload
+
+              expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+            end
+
+            context 'when there are spaces in the org' do
+              let!(:space) { Space.make(organization: org) }
+              let(:shared_segment) { IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
+
+              it 'sets the default Isolation Segment' do
+                org.update(default_isolation_segment_model: isolation_segment_model)
+                org.reload
+
+                expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+              end
+
+              context 'and the org has an assigned default that is not the shared segment' do
+                before do
+                  org.update(default_isolation_segment_model: isolation_segment_model)
+                  org.reload
+                end
+
+                context 'and a space has an app' do
+                  before do
+                    AppModel.make(space: space)
+                  end
+
+                  it 'cannot change the default isolation segment to the shared segment' do
+                    expect {
+                      assigner.assign(shared_segment, [org])
+                      org.update(default_isolation_segment_model: shared_segment)
+                    }.to raise_error(CloudController::Errors::ApiError, /Please delete all Apps from Space/)
+
+                    org.reload
+                    expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                  end
+                end
+              end
+
+              context 'and a space has an app' do
+                it 'raises an UnableToPerform exception and does not set the default' do
+                  AppModel.make(space: space)
+                  expect {
+                    org.update(default_isolation_segment_guid: isolation_segment_model.guid)
+                  }.to raise_error(CloudController::Errors::ApiError, /Please delete all Apps from Space/)
+
+                  org.reload
+                  expect(org.default_isolation_segment_model).to eq(nil)
+                end
+
+                it 'sets the default when assigning the shared segment as the default' do
+                  AppModel.make(space: space)
+                  expect {
+                    assigner.assign(shared_segment, [org])
+                  }.to_not raise_error
+
+                  org.reload
+                  expect(org.default_isolation_segment_model).to eq(shared_segment)
+                end
+
+                context 'and the space has an assigned isolation segment' do
+                  let(:isolation_segment_model2) { IsolationSegmentModel.make }
+
+                  before do
+                    assigner.assign(isolation_segment_model2, [org])
+                    space.update(isolation_segment_model: isolation_segment_model2)
+                    AppModel.make(space: space)
+                  end
+
+                  it 'sets the default Isolation Segment' do
+                    org.update(default_isolation_segment_model: isolation_segment_model)
+                    org.reload
+
+                    expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        context 'unassigning the default isolation segment' do
+          before do
+            assigner.assign(isolation_segment_model, [org])
+            org.update(default_isolation_segment_model: isolation_segment_model)
+          end
+
+          context 'and there are no other isolation segments in the allowed list' do
+            it 'succeeds' do
+              org.update(default_isolation_segment_model: nil)
+              org.reload
+
+              expect(org.default_isolation_segment_guid).to be_nil
+            end
+
+            context 'and there are spaces in the organization' do
+              let!(:space) { Space.make(organization: org) }
+
+              it 'unassigns the default isolation segment' do
+                org.update(default_isolation_segment_model: nil)
+                org.reload
+
+                expect(org.default_isolation_segment_guid).to be_nil
+              end
+
+              context 'and the space has apps' do
+                before do
+                  AppModel.make(space: space)
+                end
+
+                it 'raises a 400 UnableToPerform' do
+                  expect {
+                    org.update(default_isolation_segment_model: nil)
+                  }.to raise_error(CloudController::Errors::ApiError, /Removing default Isolation Segment/)
+
+                  org.reload
+                  expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+                end
+              end
+            end
+          end
+
+          context 'and there are more that one isolation segments in the allowed list' do
+            let(:isolation_segment_model_2) { IsolationSegmentModel.make }
+
+            before do
+              assigner.assign(isolation_segment_model_2, [org])
+            end
+
+            it 'raises a 400 UnableToPerform' do
+              expect {
+                org.update(default_isolation_segment_model: nil)
+              }.to raise_error(CloudController::Errors::ApiError, /Please change the Default Isolation Segment for your Organization/)
+
+              org.reload
+              expect(org.default_isolation_segment_model).to eq(isolation_segment_model)
+            end
+          end
+        end
+      end
     end
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :billing_enabled, :quota_definition_guid, :status }
       it { is_expected.to import_attributes :name, :billing_enabled, :user_guids, :manager_guids, :billing_manager_guids,
-                                    :auditor_guids, :quota_definition_guid, :status
+                                    :auditor_guids, :quota_definition_guid, :status, :default_isolation_segment_guid
       }
     end
 
@@ -197,7 +428,7 @@ module VCAP::CloudController
         QuotaDefinition.make(memory_limit: 500)
       end
 
-      it 'should return the memory available when no apps are running' do
+      it 'should return the memory available when no processes are running' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
         AppFactory.make(space: space, memory: 200, instances: 2)
@@ -206,15 +437,75 @@ module VCAP::CloudController
         expect(org.has_remaining_memory(501)).to eq(false)
       end
 
-      it 'should return the memory remaining when apps are consuming memory' do
+      it 'should return the memory remaining when processes are consuming memory' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)
 
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
         AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(org.has_remaining_memory(50)).to eq(true)
         expect(org.has_remaining_memory(51)).to eq(false)
+      end
+    end
+
+    describe '#instance_memory_limit' do
+      let(:quota) { QuotaDefinition.make(instance_memory_limit: 50) }
+      let(:org) { Organization.make quota_definition: quota }
+
+      it 'returns the instance memory limit from the quota' do
+        expect(org.instance_memory_limit).to eq(50)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:quota) { nil }
+
+        it 'returns unlimited' do
+          expect(org.instance_memory_limit).to eq(QuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
+    describe '#app_task_limit' do
+      let(:quota) { QuotaDefinition.make(app_task_limit: 2) }
+      let(:org) { Organization.make quota_definition: quota }
+
+      it 'returns the app task limit from the quota' do
+        expect(org.app_task_limit).to eq(2)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:quota) { nil }
+
+        it 'returns unlimited' do
+          expect(org.app_task_limit).to eq(QuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
+    describe '#meets_max_task_limit?' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:quota) { QuotaDefinition.make(app_task_limit: 2) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+
+      before do
+        org.quota_definition = quota
+      end
+
+      it 'returns false when the app task limit is not exceeded' do
+        expect(org.meets_max_task_limit?).to be false
+      end
+
+      context 'number of pending and running tasks equals the limit' do
+        before do
+          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
+          TaskModel.make(app: app_model, state: TaskModel::PENDING_STATE)
+        end
+
+        it 'returns true' do
+          expect(org.meets_max_task_limit?).to be true
+        end
       end
     end
 
@@ -404,21 +695,21 @@ module VCAP::CloudController
           space_1.add_developer(user)
           space_1.refresh
           expect(user.spaces).to include(space_1)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it "should raise an error if the user's managed space is associated with an organization's space" do
           space_1.add_manager(user)
           space_1.refresh
           expect(user.managed_spaces).to include(space_1)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it "should raise an error if the user's audited space is associated with an organization's space" do
           space_1.add_auditor(user)
           space_1.refresh
           expect(user.audited_spaces).to include(space_1)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it "should raise an error if any of the user's spaces are associated with any of the organization's spaces" do
@@ -426,7 +717,7 @@ module VCAP::CloudController
           space_2.add_manager(user)
           space_2.refresh
           expect(user.managed_spaces).to include(space_2)
-          expect { org.remove_user(user) }.to raise_error(VCAP::Errors::ApiError)
+          expect { org.remove_user(user) }.to raise_error(CloudController::Errors::ApiError)
         end
 
         it 'should remove the user from an organization if they are not associated with any spaces' do
@@ -475,6 +766,62 @@ module VCAP::CloudController
           [space_1, space_2].each(&:refresh)
           [space_1, space_2].each { |space| expect(space.auditors).not_to include(user) }
         end
+
+        context 'when the user also has other org roles' do
+          before do
+            org.add_manager(user)
+            org.add_billing_manager(user)
+            org.refresh
+          end
+
+          it 'should remove all org roles from the user' do
+            expect(org.users).to include(user)
+            expect(org.managers).to include(user)
+            expect(org.billing_managers).to include(user)
+
+            org.remove_user_recursive(user)
+
+            expect(org.users).to_not include(user)
+            expect(org.managers).to_not include(user)
+            expect(org.billing_managers).to_not include(user)
+            expect(user.reload.organizations).to_not include(org)
+          end
+        end
+
+        context 'when the user only has non-user org roles' do
+          let(:user) { User.make }
+          before do
+            org.add_manager(user)
+            org.add_auditor(user)
+          end
+
+          it 'should remove all roles' do
+            expect(org.managers).to include(user)
+            expect(org.auditors).to include(user)
+
+            org.remove_user_recursive(user)
+
+            expect(org.managers).to_not include(user)
+            expect(org.auditors).to_not include(user)
+            expect(user.reload.organizations).to_not include(org)
+          end
+        end
+
+        context 'when the user only has an org-user role' do
+          let(:user) { User.make }
+          before do
+            org.add_user(user)
+          end
+
+          it 'should remove that role' do
+            expect(org.users).to include(user)
+
+            org.remove_user_recursive(user)
+
+            expect(org.users).to_not include(user)
+            expect(user.reload.organizations).to_not include(org)
+          end
+        end
       end
     end
 
@@ -494,7 +841,7 @@ module VCAP::CloudController
           end
 
           it 'raises an exception' do
-            expect { org.save }.to raise_error(VCAP::Errors::ApiError, /Quota Definition could not be found: default/)
+            expect { org.save }.to raise_error(CloudController::Errors::ApiError, /Quota Definition could not be found: default/)
           end
         end
       end
@@ -518,7 +865,7 @@ module VCAP::CloudController
           it 'uses what is provided' do
             expect {
               org.save
-            }.to raise_error(VCAP::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::QuotaDefinition with guid: #{quota_definition_guid}/)
+            }.to raise_error(CloudController::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::QuotaDefinition with guid: #{quota_definition_guid}/)
           end
         end
       end

@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogService
     include CatalogValidationHelper
 
-    SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding']
+    SUPPORTED_REQUIRES_VALUES = ['syslog_drain', 'route_forwarding', 'volume_mount'].freeze
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
       :description, :bindable, :tags, :plans, :requires, :dashboard_client, :errors, :plan_updateable
@@ -42,6 +42,10 @@ module VCAP::Services::ServiceBrokers::V2
 
     def route_service?
       requires.include?('route_forwarding')
+    end
+
+    def volume_mount_service?
+      requires.include?('volume_mount')
     end
 
     private
@@ -97,11 +101,11 @@ module VCAP::Services::ServiceBrokers::V2
     def build_plans
       return unless plans_data
 
-      if plans_data.is_a?(Array)
-        @plans = @plans_data.map { |attrs| CatalogPlan.new(self, attrs) }
-      else
-        @plans = @plans_data
-      end
+      @plans = if plans_data.is_a?(Array)
+                 @plans_data.map { |attrs| CatalogPlan.new(self, attrs) }
+               else
+                 @plans_data
+               end
     end
 
     def validate_at_least_one_plan_present!

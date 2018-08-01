@@ -15,16 +15,16 @@ module VCAP::CloudController
     put "#{path_guid}/bits", :upload
     def upload(guid)
       buildpack = find_guid_and_validate_access(:upload, guid)
-      raise Errors::ApiError.new_from_details('BuildpackLocked') if buildpack.locked?
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackLocked') if buildpack.locked?
 
       uploaded_file = upload_handler.uploaded_file(params, 'buildpack')
       uploaded_filename = upload_handler.uploaded_filename(params, 'buildpack')
 
       logger.info "Uploading bits for #{buildpack.name}, file: uploaded_filename"
 
-      raise Errors::ApiError.new_from_details('BuildpackBitsUploadInvalid', 'a filename must be specified') if uploaded_filename.to_s == ''
-      raise Errors::ApiError.new_from_details('BuildpackBitsUploadInvalid', 'only zip files allowed') unless File.extname(uploaded_filename) == '.zip'
-      raise Errors::ApiError.new_from_details('BuildpackBitsUploadInvalid', 'a file must be provided') if uploaded_file.to_s == ''
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackBitsUploadInvalid', 'a filename must be specified') if uploaded_filename.to_s == ''
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackBitsUploadInvalid', 'only zip files allowed') unless File.extname(uploaded_filename) == '.zip'
+      raise CloudController::Errors::ApiError.new_from_details('BuildpackBitsUploadInvalid', 'a file must be provided') if uploaded_file.to_s == ''
 
       uploaded_filename = File.basename(uploaded_filename)
 
@@ -42,35 +42,23 @@ module VCAP::CloudController
     get "#{path_guid}/download", :download
     def download(guid)
       obj = Buildpack.find(guid: guid)
-
-      blob = buildpack_blobstore.blob(obj.key) if obj && obj.key
-      raise Errors::ApiError.new_from_details('NotFound', guid) unless blob
-
-      if @buildpack_blobstore.local?
-        send_local_blob(blob)
-      else
-        return [HTTP::FOUND, { 'Location' => blob.download_url }, nil]
-      end
+      blob_dispatcher.send_or_redirect(guid: obj.key)
+    rescue CloudController::Errors::BlobNotFound
+      raise CloudController::Errors::ApiError.new_from_details('NotFound', guid)
     end
 
     private
 
     attr_reader :buildpack_blobstore, :upload_handler
 
+    def blob_dispatcher
+      BlobDispatcher.new(blobstore: buildpack_blobstore, controller: self)
+    end
+
     def inject_dependencies(dependencies)
       super
       @buildpack_blobstore = dependencies[:buildpack_blobstore]
       @upload_handler = dependencies[:upload_handler]
-    end
-
-    def send_local_blob(blob)
-      if @config[:nginx][:use_nginx]
-        url = blob.download_url
-        logger.debug "nginx redirect #{url}"
-        return [200, { 'X-Accel-Redirect' => url }, '']
-      else
-        return send_file blob.local_path
-      end
     end
   end
 end

@@ -1,9 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Dea::Client do
+  RSpec.describe VCAP::CloudController::Dea::Client do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
-    let(:stager_pool) { double(:stager_pool) }
     let(:dea_pool) { double(:dea_pool) }
     let(:num_service_instances) { 3 }
     let(:app) do
@@ -11,7 +10,7 @@ module VCAP::CloudController
         num_service_instances.times do
           instance = ManagedServiceInstance.make(space: app.space)
           binding = ServiceBinding.make(
-            app: app,
+            app: app.app,
             service_instance: instance
           )
           app.add_service_binding(binding)
@@ -19,12 +18,54 @@ module VCAP::CloudController
       end
     end
 
+    let(:dea_id) { 'dea_123' }
+    let(:dea_http_id) { 'def' }
+    let(:dea_http_uri) { 'https://host:1234' }
+    let(:dea_ad) { create_ad(dea_id) }
+    let(:abc_ad) { create_ad('abc') }
+    let(:def_ad) { create_ad(dea_http_id, dea_http_uri) }
+
     let(:blobstore_url_generator) do
       double('blobstore_url_generator', droplet_download_url: 'app_uri')
     end
 
+    let(:http_overrides) do
+      {
+        dea_client: {
+          key_file: File.join(Paths::FIXTURES, 'certs/dea_client.key'),
+          cert_file: File.join(Paths::FIXTURES, 'certs/dea_client.crt'),
+          ca_file: File.join(Paths::FIXTURES, 'certs/dea_ca.crt'),
+        }
+      }
+    end
+    let(:overrides) { {} }
+
+    def create_ad(id, url=nil)
+      hash = { 'id' => id }
+      hash['url'] = url if url
+      Dea::NatsMessages::DeaAdvertisement.new(hash, nil)
+    end
+
+    let(:http_client) { HTTPClient.new }
+
     before do
-      Dea::Client.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+      allow(HTTPClient).to receive(:new).and_return(http_client)
+      TestConfig.override(overrides)
+      Dea::Client.configure(TestConfig.config, message_bus, dea_pool, blobstore_url_generator)
+    end
+
+    describe '#enabled?' do
+      it 'returns false by default' do
+        expect(Dea::Client.enabled?).to be_falsey
+      end
+
+      context 'when configured for http' do
+        let(:overrides) { http_overrides }
+
+        it 'returns true' do
+          expect(Dea::Client.enabled?).to be_truthy
+        end
+      end
     end
 
     describe '.run' do
@@ -36,13 +77,13 @@ module VCAP::CloudController
 
     describe 'update_uris' do
       it "does not update deas if app isn't staged" do
-        app.update(package_state: 'PENDING')
+        app.current_droplet.destroy
+        app.reload
         expect(message_bus).not_to receive(:publish)
         Dea::Client.update_uris(app)
       end
 
       it 'sends a dea update message' do
-        app.update(package_state: 'STAGED')
         expect(message_bus).to receive(:publish).with(
           'dea.update',
           hash_including(
@@ -55,163 +96,103 @@ module VCAP::CloudController
       end
     end
 
-    describe 'start_instances' do
-      it 'should send a start messages to deas with message override' do
-        app.instances = 3
+    describe '#stage' do
+      let(:stager_url) { 'https://host:1234' }
+      let(:staging_msg) { 'staging message' }
+      let(:overrides) { http_overrides }
+      let(:post_url) { "#{stager_url}/v1/stage" }
 
-        expect(dea_pool).to receive(:find_dea).twice.and_return('dea_123')
-        expect(dea_pool).to receive(:mark_app_started).twice.with(dea_id: 'dea_123', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).twice.with('dea_123', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).twice.with('dea_123', app.memory)
-        expect(message_bus).to receive(:publish).with(
-          'dea.dea_123.start',
-          hash_including(
-            index: 1,
-          )
-        ).ordered
-
-        expect(message_bus).to receive(:publish).with(
-          'dea.dea_123.start',
-          hash_including(
-            index: 2,
-          )
-        ).ordered
-
-        Dea::Client.start_instances(app, [1, 2])
+      it 'sends a stage message to the dea' do
+        stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [202, 'Accepted'])
+        expect(Dea::Client.stage(stager_url, staging_msg)).to be 202
       end
 
-      context 'when the DEAs have insufficient capacity to start all the indices' do
-        it 'attempts to find DEAs for all indices and raises an InsufficientRunningResourcesAvailable error' do
-          app.instances = 4
-          expect(dea_pool).to receive(:find_dea).and_return(nil, nil, 'dea_123')
-          expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: 'dea_123', app_id: app.guid)
-          expect(dea_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
-          expect(stager_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
+      context 'when an error occurs' do
+        context 'when we get a status of 404' do
+          it 'returns 404' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [404, 'Not Found'])
+            expect(Dea::Client.stage(stager_url, staging_msg)).to eq 404
+          end
+        end
 
-          expect(message_bus).to receive(:publish).once.with(
-            'dea.dea_123.start',
-            hash_including(
-              index: 3,
-            )
-          )
+        context 'when we get a status other than 202, 404 or 503' do
+          it 'raises an error' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [500, 'Internal Server Error'])
+            expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error CloudController::Errors::ApiError, /received 500 from #{post_url}/
+          end
+        end
 
-          expect {
-            Dea::Client.start_instances(app, [1, 2, 3])
-          }.to raise_error Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
+        context 'when an exception occurs' do
+          it 'raises an appropriate error' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_raise 'failed to connect'
+            expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error CloudController::Errors::ApiError, /#{stager_url}.*failed to connect/
+          end
+        end
+
+        context 'when we get a 503' do
+          it 'returns a 503' do
+            stub_request(:post, post_url).with(body: /#{staging_msg}/, headers: { 'Content-Type' => 'application/json' }).to_return(status: [503, 'Service Unavailable'])
+            expect(Dea::Client.stage(stager_url, staging_msg)).to eq 503
+          end
+        end
+      end
+
+      context 'when not configured for HTTP' do
+        before do
+          allow(Dea::Client).to receive(:enabled?).and_return(false)
+        end
+        it 'raises an error' do
+          expect { Dea::Client.stage(stager_url, staging_msg) }.to raise_error { |error|
+            expect(error).to be_an_instance_of(CloudController::Errors::ApiError)
+            expect(error.name).to eq('StagerError')
+            expect(error.message).to eq('Stager error: Client not HTTP enabled')
+          }
         end
       end
     end
 
-    describe 'start_instance_at_index' do
-      it 'should send a start messages to deas with message override' do
-        app.instances = 2
+    describe 'send_start' do
+      let(:message) { instance_double(Dea::StartAppMessage) }
 
-        expect(dea_pool).to receive(:find_dea).once.and_return('dea_123')
-        expect(dea_pool).to receive(:mark_app_started).once.with(dea_id: 'dea_123', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).once.with('dea_123', app.memory)
-        expect(message_bus).to receive(:publish).with(
-          'dea.dea_123.start',
-          hash_including(
-            index: 1,
-          )
-        )
+      context 'when CC is configured to use http' do
+        let(:overrides) { http_overrides }
 
-        Dea::Client.start_instance_at_index(app, 1)
-      end
+        context 'when DEA accepts http' do
+          let(:to_uri) { "#{dea_http_uri}/v1/apps" }
 
-      context 'when droplet is missing' do
-        let(:blobstore_url_generator) do
-          double('blobstore_url_generator', droplet_download_url: nil)
+          before do
+            stub_request(:post, 'https://host:1234/v1/apps').to_return(status: 202)
+          end
+
+          it 'sends the message to the correct uri' do
+            expect(http_client).to receive(:post_async).with(to_uri, kind_of(Hash))
+            expect(message_bus).to_not receive(:publish).with("dea.#{dea_http_id}.start", kind_of(Hash))
+            stub_request(:post, to_uri).with(body: /\{.*\}/, headers: { 'Content-Type' => 'application/json' })
+            Dea::Client.send_start(def_ad, message)
+          end
+
+          it 'returns the connection status from the callback' do
+            callback = Dea::Client.send_start(def_ad, message)
+
+            expect(callback.call).to eq(202)
+          end
         end
 
-        it 'should raise an error if the droplet is missing' do
-          expect {
-            Dea::Client.start_instance_at_index(app, 1)
-          }.to raise_error Errors::ApiError, "The app package could not be found: #{app.guid}"
+        context 'when DEA does not accept http' do
+          it 'sends using NATS' do
+            expect(http_client).to_not receive(:post_async)
+            expect(message_bus).to receive(:publish).with("dea.#{dea_id}.start", message)
+            Dea::Client.send_start(dea_ad, message)
+          end
         end
       end
 
-      context 'when no DEA is available' do
-        it 'raises a InsufficientRunningResourcesAvailable error and logs without passwords' do
-          logger = double(Steno)
-          allow(Dea::Client).to receive(:logger).and_return(logger)
-
-          expect(dea_pool).to receive(:find_dea).once.and_return(nil)
-          expect(logger).to receive(:error) { |msg, data|
-            expect(data[:message]).not_to include(:services, :env, :executableUri)
-          }.once
-
-          expect {
-            Dea::Client.start_instance_at_index(app, 1)
-          }.to raise_error Errors::ApiError, 'One or more instances could not be started because of insufficient running resources.'
+      context 'when CC is not configured to use http' do
+        it 'sends using NATS' do
+          expect(http_client).to_not receive(:post_async)
+          expect(message_bus).to receive(:publish).with("dea.#{dea_http_id}.start", message)
+          Dea::Client.send_start(def_ad, message)
         end
-      end
-    end
-
-    describe 'start' do
-      it 'should send start messages to deas' do
-        app.instances = 2
-        expect(dea_pool).to receive(:find_dea).and_return('abc')
-        expect(dea_pool).to receive(:find_dea).and_return('def')
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('def', app.memory)
-        expect(message_bus).to receive(:publish).with('dea.abc.start', kind_of(Hash))
-        expect(message_bus).to receive(:publish).with('dea.def.start', kind_of(Hash))
-
-        Dea::Client.start(app)
-      end
-
-      it 'should start the specified number of instances' do
-        app.instances = 2
-        allow(dea_pool).to receive(:find_dea).and_return('abc', 'def')
-
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).not_to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(dea_pool).not_to receive(:reserve_app_memory).with('def', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).not_to receive(:reserve_app_memory).with('def', app.memory)
-
-        Dea::Client.start(app, instances_to_start: 1)
-      end
-
-      it 'sends a dea start message that includes cc_partition' do
-        TestConfig.override(cc_partition: 'ngFTW')
-        Dea::Client.configure(TestConfig.config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
-
-        app.instances = 1
-        expect(dea_pool).to receive(:find_dea).and_return('abc')
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(message_bus).to receive(:publish).with('dea.abc.start', hash_including(cc_partition: 'ngFTW'))
-
-        Dea::Client.start(app)
-      end
-
-      it 'includes memory in find_dea request' do
-        app.instances = 1
-        app.memory = 512
-        expect(dea_pool).to receive(:find_dea).with(include(mem: 512)).and_return('abc')
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        Dea::Client.start(app)
-      end
-
-      it 'includes disk in find_dea request' do
-        app.instances = 1
-        app.disk_quota = 13
-        expect(dea_pool).to receive(:find_dea).with(include(disk: 13)).and_return('abc')
-        expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
-        expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        expect(stager_pool).to receive(:reserve_app_memory).with('abc', app.memory)
-        Dea::Client.start(app)
       end
     end
 
@@ -318,7 +299,7 @@ module VCAP::CloudController
 
         expect(Dea::Client.find_instances(app, { other_opt: 'value' },
                                    { result_count: 5, timeout: 10 })).
-                                   to eq(['instance', 'instance'])
+          to eq(['instance', 'instance'])
       end
     end
 
@@ -334,7 +315,7 @@ module VCAP::CloudController
 
         expect {
           Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-        }.to raise_error Errors::ApiError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
+        }.to raise_error CloudController::Errors::ApiError, "File error: Request failed for app: #{app.name} path: #{path} as the app is in stopped state."
       end
 
       it 'should raise an error if the instance is out of range' do
@@ -346,7 +327,7 @@ module VCAP::CloudController
         expect {
           Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
         }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error).to be_an_instance_of CloudController::Errors::ApiError
           expect(error.name).to eq('FileError')
 
           msg = "File error: Request failed for app: #{app.name}"
@@ -442,7 +423,7 @@ module VCAP::CloudController
 
         expect {
           Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-        }.to raise_error Errors::ApiError, msg
+        }.to raise_error CloudController::Errors::ApiError, msg
 
         expect(message_bus).to have_requested_synchronous_messages('dea.find.droplet', search_options, { timeout: 2 })
       end
@@ -461,7 +442,7 @@ module VCAP::CloudController
 
         expect {
           Dea::Client.get_file_uri_by_instance_guid(app, path, instance_id)
-        }.to raise_error Errors::ApiError, msg
+        }.to raise_error CloudController::Errors::ApiError, msg
       end
 
       it 'should return the file uri if the required instance is found via DEA v1' do
@@ -544,7 +525,7 @@ module VCAP::CloudController
         expect {
           Dea::Client.get_file_uri_by_instance_guid(app, path, instance_id)
         }.to raise_error { |error|
-          expect(error).to be_an_instance_of Errors::ApiError
+          expect(error).to be_an_instance_of CloudController::Errors::ApiError
           expect(error.name).to eq('FileError')
 
           msg = "File error: Request failed for app: #{app.name}"
@@ -698,7 +679,7 @@ module VCAP::CloudController
           version: app.version,
         }
 
-        starting_instance  = {
+        starting_instance = {
           'index' => 1,
           'state' => 'STARTING',
           'state_timestamp' => 2,
@@ -708,7 +689,7 @@ module VCAP::CloudController
           'console_port' => 1002,
         }
 
-        running_instance  = {
+        running_instance = {
           'index' => 2,
           'state' => 'RUNNING',
           'state_timestamp' => 3,
@@ -758,8 +739,8 @@ module VCAP::CloudController
           version: app.version,
         }
 
-        starting_instance  = {
-          'index' => -1,  # -1 is out of range.
+        starting_instance = {
+          'index' => -1, # -1 is out of range.
           'state_timestamp' => 1,
           'debug_ip' => '1.2.3.4',
           'debug_port' => 1001,
@@ -767,8 +748,8 @@ module VCAP::CloudController
           'console_port' => 1002,
         }
 
-        running_instance  = {
-          'index' => 2,  # 2 is out of range.
+        running_instance = {
+          'index' => 2, # 2 is out of range.
           'state' => 'RUNNING',
           'state_timestamp' => 2,
           'debug_ip' => '2.3.4.5',
@@ -829,10 +810,12 @@ module VCAP::CloudController
 
     describe 'change_running_instances' do
       context 'increasing the instance count' do
+        let(:efg_ad) { create_ad('efg') }
+
         it 'should issue a start command with extra indices' do
-          expect(dea_pool).to receive(:find_dea).and_return('abc')
-          expect(dea_pool).to receive(:find_dea).and_return('def')
-          expect(dea_pool).to receive(:find_dea).and_return('efg')
+          expect(dea_pool).to receive(:find_dea).and_return(abc_ad)
+          expect(dea_pool).to receive(:find_dea).and_return(def_ad)
+          expect(dea_pool).to receive(:find_dea).and_return(efg_ad)
           expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'abc', app_id: app.guid)
           expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'def', app_id: app.guid)
           expect(dea_pool).to receive(:mark_app_started).with(dea_id: 'efg', app_id: app.guid)
@@ -840,16 +823,10 @@ module VCAP::CloudController
           expect(dea_pool).to receive(:reserve_app_memory).with('abc', app.memory)
           expect(dea_pool).to receive(:reserve_app_memory).with('def', app.memory)
           expect(dea_pool).to receive(:reserve_app_memory).with('efg', app.memory)
-          expect(stager_pool).
-              to receive(:reserve_app_memory).with('abc', app.memory)
-          expect(stager_pool).
-              to receive(:reserve_app_memory).with('def', app.memory)
-          expect(stager_pool).
-              to receive(:reserve_app_memory).with('efg', app.memory)
 
           expect(message_bus).to receive(:publish).with('dea.abc.start', kind_of(Hash))
-          expect(message_bus).to receive(:publish).with('dea.def.start', kind_of(Hash))
           expect(message_bus).to receive(:publish).with('dea.efg.start', kind_of(Hash))
+          expect(message_bus).to receive(:publish).with('dea.def.start', kind_of(Hash))
 
           app.instances = 4
           app.save

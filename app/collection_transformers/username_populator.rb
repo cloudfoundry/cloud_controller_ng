@@ -6,7 +6,8 @@ module VCAP::CloudController
       @uaa_client = uaa_client
     end
 
-    def transform(users, opts={})
+    def transform(users, _opts={})
+      users = Array(users)
       user_ids = users.collect(&:guid)
       username_mapping = uaa_client.usernames_for_ids(user_ids)
       users.each { |user| user.username = username_mapping[user.guid] }

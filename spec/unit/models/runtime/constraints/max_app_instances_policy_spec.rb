@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MaxAppInstancesPolicy do
+RSpec.describe MaxAppInstancesPolicy do
   let(:max_apps) { 8 }
   let(:current_org_instances) { 3 }
   let(:app) { VCAP::CloudController::AppFactory.make(instances: 1, state: 'STARTED') }

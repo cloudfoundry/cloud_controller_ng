@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/base_message'
 
 module VCAP::CloudController
-  describe BaseMessage do
+  RSpec.describe BaseMessage do
     describe '#requested?' do
       it 'returns true if the key was requested, false otherwise' do
         FakeClass = Class.new(BaseMessage) do
@@ -38,6 +38,12 @@ module VCAP::CloudController
         response = message.audit_hash
         expect(response).to eq({ 'field1' => 'value1', 'field2' => { 'subfield' => 'subfield' } })
       end
+
+      it 'excludes keys' do
+        message  = AuditMessage.new({ field1: 'value1', field2: { 'subfield' => 'subfield' } })
+        response = message.audit_hash(exclude: [:field2])
+        expect(response).to eq({ 'field1' => 'value1' })
+      end
     end
 
     describe '#to_param_hash' do
@@ -58,9 +64,9 @@ module VCAP::CloudController
         }
       end
 
-      it 'returns query param hash with escaped array members' do
+      it 'returns query param hash with escaped commas in array members' do
         expected_params = {
-          array_field:  'st+ate1,sta%2Cte2',
+          array_field:  'st ate1,sta%2Cte2',
           num_field:    1.2,
           string_field: 'stringval&',
           nil_field:    nil,
@@ -71,7 +77,7 @@ module VCAP::CloudController
       it 'does not return params that are not requested during initialization' do
         opts.delete(:nil_field)
         expected_params = {
-          array_field:  'st+ate1,sta%2Cte2',
+          array_field:  'st ate1,sta%2Cte2',
           num_field:    1.2,
           string_field: 'stringval&',
         }
@@ -80,7 +86,7 @@ module VCAP::CloudController
 
       it 'can exclude params' do
         expected_params = {
-          array_field:  'st+ate1,sta%2Cte2',
+          array_field:  'st ate1,sta%2Cte2',
           string_field: 'stringval&',
           nil_field:    nil,
         }

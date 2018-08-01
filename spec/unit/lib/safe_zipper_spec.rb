@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'cloud_controller/safe_zipper'
 
-describe SafeZipper do
+RSpec.describe SafeZipper do
   around do |example|
     Dir.mktmpdir('foo') do |tmpdir|
       @tmpdir = tmpdir
@@ -31,7 +31,7 @@ describe SafeZipper do
         [
           "Archive:\n Filename\n ---\n 0  09-15-15 17:44 foo\n ---\n10000000001 1 file\n",
           nil,
-          double('status', :success? => true)]
+          double('status', success?: true)]
       )
       expect(SafeZipper.unzip(zip_path, zip_destination)).to eq 10_000_000_001
     end
@@ -40,7 +40,7 @@ describe SafeZipper do
       let(:zip_destination) { 'bar' }
 
       it 'raises an exception' do
-        expect { unzip }.to raise_exception VCAP::Errors::ApiError, /destination does not exist/i
+        expect { unzip }.to raise_exception CloudController::Errors::ApiError, /destination does not exist/i
       end
     end
 
@@ -48,7 +48,7 @@ describe SafeZipper do
       let(:zip_path) { File.expand_path('../../fixtures/missing.zip', File.dirname(__FILE__)) }
 
       it 'raises an exception' do
-        expect { unzip }.to raise_exception VCAP::Errors::ApiError, /unzipping had errors\n STDOUT: ""\n STDERR: "unzip:\s+cannot find or open/im
+        expect { unzip }.to raise_exception CloudController::Errors::ApiError, /unzipping had errors\n STDOUT: ""\n STDERR: "unzip:\s+cannot find or open/im
       end
     end
 
@@ -56,7 +56,7 @@ describe SafeZipper do
       let(:zip_path) { File.expand_path('../../fixtures/empty.zip', File.dirname(__FILE__)) }
 
       it 'raises an exception' do
-        expect { unzip }.to raise_exception VCAP::Errors::ApiError, /unzipping had errors/i
+        expect { unzip }.to raise_exception CloudController::Errors::ApiError, /unzipping had errors/i
       end
     end
 
@@ -74,7 +74,7 @@ describe SafeZipper do
         let(:zip_path) { File.expand_path('../../fixtures/bad_symlinks.zip', File.dirname(__FILE__)) }
 
         it 'raises an exception' do
-          expect { unzip }.to raise_exception VCAP::Errors::ApiError, /symlink.+outside/i
+          expect { unzip }.to raise_exception CloudController::Errors::ApiError, /symlink.+outside/i
         end
       end
     end
@@ -93,7 +93,7 @@ describe SafeZipper do
         let(:zip_path) { File.expand_path('../../fixtures/bad_relative_paths.zip', File.dirname(__FILE__)) }
 
         it 'raises an exception' do
-          expect { unzip }.to raise_exception VCAP::Errors::ApiError, /relative path.+outside/i
+          expect { unzip }.to raise_exception CloudController::Errors::ApiError, /relative path.+outside/i
         end
       end
 
@@ -101,7 +101,7 @@ describe SafeZipper do
         let(:zip_path) { File.expand_path('../../fixtures/bad_relative_paths_with_spaces.zip', File.dirname(__FILE__)) }
 
         it 'raises an exception' do
-          expect { unzip }.to raise_exception VCAP::Errors::ApiError, /relative path.+outside/i
+          expect { unzip }.to raise_exception CloudController::Errors::ApiError, /relative path.+outside/i
         end
       end
     end
@@ -111,15 +111,16 @@ describe SafeZipper do
     let(:root_path) { File.expand_path('../../fixtures/fake_package/', File.dirname(__FILE__)) }
     let(:tmp_zip) { File.join(@tmpdir, 'tmp.zip') }
 
-    it 'zips the file' do
+    it 'zips the file without directory listings' do
       SafeZipper.zip(root_path, tmp_zip)
 
       output = `zipinfo #{tmp_zip}`
       expect(output).not_to include './'
       expect(output).not_to include 'spec/fixtures/fake_package'
+      expect(output).not_to match %r{subdir/$}
       expect(output).to include 'subdir/there'
       expect(output).to match /^l.+coming_from_inside$/
-      expect(output).to include '4 files'
+      expect(output).to include '3 files'
     end
 
     context 'when the root path is empty' do
@@ -128,7 +129,7 @@ describe SafeZipper do
       it 'will raise an error' do
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::ApiError, /path does not exist/i
+        }.to raise_exception CloudController::Errors::ApiError, /path does not exist/i
       end
     end
 
@@ -138,7 +139,7 @@ describe SafeZipper do
       it 'will raise an error' do
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::ApiError, /path does not exist/i
+        }.to raise_exception CloudController::Errors::ApiError, /path does not exist/i
       end
     end
 
@@ -150,7 +151,7 @@ describe SafeZipper do
 
         expect {
           SafeZipper.zip(root_path, tmp_zip)
-        }.to raise_exception VCAP::Errors::ApiError, /could not zip the package\n STDOUT: "zip .+?"\n STDERR: ""/im
+        }.to raise_exception CloudController::Errors::ApiError, /could not zip the package\n STDOUT: "zip .+?"\n STDERR: ""/im
       end
     end
   end

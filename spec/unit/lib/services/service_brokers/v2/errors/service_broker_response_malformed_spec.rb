@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe ServiceBrokerResponseMalformed do
+        RSpec.describe ServiceBrokerResponseMalformed do
           let(:uri) { 'http://uri.example.com' }
           let(:method) { 'POST' }
           let(:error) { StandardError.new }
@@ -15,7 +15,7 @@ module VCAP::Services
           it 'initializes the base class correctly' do
             exception = ServiceBrokerResponseMalformed.new(uri, method, response, description)
             expect(exception.message).to eq(
-                'The service broker returned an invalid response for the request to http://uri.example.com: this is the error description'
+              'The service broker returned an invalid response for the request to http://uri.example.com: this is the error description'
             )
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)

@@ -5,17 +5,17 @@ require 'cloud_controller/backends/stagers'
 require 'cloud_controller/backends/runners'
 require 'cloud_controller/index_stopper'
 require 'cloud_controller/backends/instances_reporters'
-require 'repositories/services/event_repository'
+require 'repositories/service_event_repository'
 
 # Config template for cloud controller
 module VCAP::CloudController
-  # rubocop:disable ClassLength
   class Config < VCAP::Config
     define_schema do
       {
         :external_port => Integer,
+        :tls_port => Integer,
         :external_protocol => String,
-        optional(:internal_service_hostname) => String,
+        :internal_service_hostname => String,
         :info => {
           name: String,
           build: String,
@@ -29,7 +29,7 @@ module VCAP::CloudController
 
         :system_domain => String,
         :system_domain_organization => enum(String, NilClass),
-        :app_domains => [String],
+        :app_domains => Array,
         :app_events => {
           cutoff_age_in_days: Fixnum
         },
@@ -42,6 +42,9 @@ module VCAP::CloudController
         :failed_jobs => {
           cutoff_age_in_days: Fixnum
         },
+        :completed_tasks => {
+          cutoff_age_in_days: Fixnum
+        },
         :default_app_memory => Fixnum,
         :default_app_disk_in_mb => Fixnum,
         optional(:maximum_app_disk_in_mb) => Fixnum,
@@ -50,20 +53,31 @@ module VCAP::CloudController
 
         optional(:instance_file_descriptor_limit) => Fixnum,
 
-        optional(:allow_debug) => bool,
+        optional(:bits_service) => {
+          enabled: bool,
+        },
 
         optional(:login) => {
           url: String
         },
 
         :hm9000 => {
-          url: String
+          url: String,
+          internal_url: String
+        },
+
+        optional(:dea_client) => {
+          ca_file: String,
+          cert_file: String,
+          key_file: String,
         },
 
         :uaa => {
-          :url                => String,
-          :resource_id        => String,
-          optional(:symmetric_secret)   => String,
+          :url                        => String,
+          :resource_id                => String,
+          optional(:symmetric_secret) => String,
+          :internal_url               => String,
+          :ca_file                    => String,
         },
 
         :logging => {
@@ -161,20 +175,28 @@ module VCAP::CloudController
           optional(:maximum_size) => Integer,
           optional(:minimum_size) => Integer,
           :resource_directory_key => String,
-          :fog_connection => Hash
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
+        },
+
+        :buildpacks => {
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
         },
 
         :packages => {
           optional(:max_package_size) => Integer,
           optional(:max_valid_packages_stored) => Integer,
           :app_package_directory_key => String,
-          :fog_connection => Hash
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
         },
 
         :droplets => {
           droplet_directory_key: String,
           optional(:max_staged_droplets_stored) => Integer,
-          fog_connection: Hash
+          :fog_connection => Hash,
+          optional(:fog_aws_storage_options) => Hash
         },
 
         :db_encryption_key => String,
@@ -229,9 +251,8 @@ module VCAP::CloudController
 
         optional(:dea_advertisement_timeout_in_seconds) => Integer,
         optional(:placement_top_stager_percentage) => Integer,
+        optional(:minimum_candidate_stagers) => Integer,
 
-        optional(:diego_stager_url) => String,
-        optional(:diego_tps_url) => String,
         optional(:users_can_select_backend) => bool,
         optional(:default_to_diego_backend) => bool,
         optional(:routing_api) => {
@@ -240,7 +261,49 @@ module VCAP::CloudController
           routing_client_secret: String,
         },
 
-        optional(:route_services_enabled) => bool
+        optional(:route_services_enabled) => bool,
+        optional(:volume_services_enabled) => bool,
+
+        optional(:reserved_private_domains) => String,
+
+        optional(:security_event_logging) => {
+          enabled: bool
+        },
+
+        optional(:bits_service) => {
+          enabled: bool,
+          optional(:public_endpoint) => String,
+          optional(:private_endpoint) => String
+        },
+
+        optional(:rate_limiter) => {
+          enabled: bool,
+          optional(:general_limit) => Integer,
+          optional(:unauthenticated_limit) => Integer,
+          optional(:reset_interval_in_minutes) => Integer,
+        },
+        :shared_isolation_segment_name => String,
+
+        optional(:diego) => {
+          temporary_local_staging:               bool,
+          temporary_local_tasks:                 bool,
+          temporary_local_apps:                  bool,
+          nsync_url:                             String,
+          stager_url:                            String,
+          tps_url:                               String,
+          file_server_url:                       String,
+          cc_uploader_url:                       String,
+          use_privileged_containers_for_running: bool,
+          use_privileged_containers_for_staging: bool,
+          lifecycle_bundles:                     Hash,
+
+          bbs: {
+            url:         String,
+            ca_file:     String,
+            cert_file:   String,
+            key_file:    String,
+          }
+        },
       }
     end
 
@@ -262,6 +325,8 @@ module VCAP::CloudController
         QuotaDefinition.configure(config)
         Stack.configure(config[:stacks_file])
 
+        PrivateDomain.configure(config[:reserved_private_domains])
+
         dependency_locator = CloudController::DependencyLocator.instance
         nsync_client = Diego::NsyncClient.new(@config)
         dependency_locator.register(:nsync_client, nsync_client)
@@ -281,20 +346,21 @@ module VCAP::CloudController
         tps_client = Diego::TPSClient.new(@config)
         dependency_locator.register(:tps_client, tps_client)
         dependency_locator.register(:upload_handler, UploadHandler.new(config))
-        dependency_locator.register(:app_event_repository, Repositories::Runtime::AppEventRepository.new)
+        dependency_locator.register(:app_event_repository, Repositories::AppEventRepository.new)
 
         blobstore_url_generator = dependency_locator.blobstore_url_generator
-        stager_pool = Dea::StagerPool.new(@config, message_bus, blobstore_url_generator)
         dea_pool = Dea::Pool.new(@config, message_bus)
-        runners = Runners.new(@config, message_bus, dea_pool, stager_pool)
-        stagers = Stagers.new(@config, message_bus, dea_pool, stager_pool, runners)
 
-        dependency_locator.register(:stagers, stagers)
+        runners = Runners.new(@config, message_bus, dea_pool)
         dependency_locator.register(:runners, runners)
+
+        stagers = Stagers.new(@config, message_bus, dea_pool)
+        dependency_locator.register(:stagers, stagers)
+
         dependency_locator.register(:instances_reporters, InstancesReporters.new(tps_client, hm_client))
         dependency_locator.register(:index_stopper, IndexStopper.new(runners))
 
-        Dea::Client.configure(@config, message_bus, dea_pool, stager_pool, blobstore_url_generator)
+        Dea::Client.configure(@config, message_bus, dea_pool, blobstore_url_generator)
 
         AppObserver.configure(stagers, runners)
 
@@ -317,11 +383,11 @@ module VCAP::CloudController
           # When Rails is present, NewRelic adds itself to the Rails initializers instead
           # of initializing immediately.
 
-          if Rails.env.test? && !ENV['NRCONFIG']
-            opts = { env: ENV['NEW_RELIC_ENV'] || 'production', monitor_mode: false }
-          else
-            opts = { env: ENV['NEW_RELIC_ENV'] || 'production' }
-          end
+          opts = if (Rails.env.test? || Rails.env.development?) && !ENV['NRCONFIG']
+                   { env: ENV['NEW_RELIC_ENV'] || 'production', monitor_mode: false }
+                 else
+                   { env: ENV['NEW_RELIC_ENV'] || 'production' }
+                 end
 
           NewRelic::Agent.manual_start(opts)
           run_initializers_in_directory(config, '../../../config/newrelic/initializers/*.rb')
@@ -332,7 +398,7 @@ module VCAP::CloudController
       def run_initializers_in_directory(config, path)
         Dir.glob(File.expand_path(path, __FILE__)).each do |file|
           require file
-          method = File.basename(file).sub('.rb', '').gsub('-', '_')
+          method = File.basename(file).sub('.rb', '').tr('-', '_')
           CCInitializers.send(method, config)
         end
       end
@@ -358,6 +424,11 @@ module VCAP::CloudController
         config[:broker_client_default_async_poll_interval_seconds] ||= 60
         config[:packages][:max_valid_packages_stored] ||= 5
         config[:droplets][:max_staged_droplets_stored] ||= 5
+        config[:minimum_candidate_stagers] = (config[:minimum_candidate_stagers] && config[:minimum_candidate_stagers] > 0) ? config[:minimum_candidate_stagers] : 5
+        config[:bits_service] ||= { enabled: false }
+        config[:rate_limiter] ||= { enabled: false }
+        config[:rate_limiter][:general_limit] ||= 2000
+        config[:rate_limiter][:reset_interval_in_minutes] ||= 60
 
         unless config.key?(:users_can_select_backend)
           config[:users_can_select_backend] = true
@@ -382,7 +453,11 @@ module VCAP::CloudController
       def sanitize_staging_auth(config)
         auth = config[:staging][:auth]
         auth[:user] = escape_userinfo(auth[:user]) unless valid_in_userinfo?(auth[:user])
-        auth[:password] = escape_userinfo(auth[:password]) unless valid_in_userinfo?(auth[:password])
+        auth[:password] = escape_password(auth[:password]) unless valid_in_userinfo?(auth[:password])
+      end
+
+      def escape_password(value)
+        escape_userinfo(value).gsub(/\"/, '%22')
       end
 
       def escape_userinfo(value)

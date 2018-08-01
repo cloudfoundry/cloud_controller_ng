@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers
-  describe NullClient do
+  RSpec.describe NullClient do
     let(:client) { NullClient.new }
 
     describe '#unbind' do

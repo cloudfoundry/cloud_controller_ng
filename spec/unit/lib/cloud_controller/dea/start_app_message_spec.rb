@@ -1,7 +1,8 @@
 require 'spec_helper'
+require_relative '../../../../../lib/vcap/vars_builder'
 
 module VCAP::CloudController
-  describe Dea::StartAppMessage do
+  RSpec.describe Dea::StartAppMessage do
     let(:num_service_instances) { 3 }
 
     let(:app) do
@@ -9,8 +10,8 @@ module VCAP::CloudController
         num_service_instances.times do
           instance = ManagedServiceInstance.make(space: app.space)
           binding = ServiceBinding.make(
-              app: app,
-              service_instance: instance
+            app: app.app,
+            service_instance: instance
           )
           app.add_service_binding(binding)
           app.type = 'worker'
@@ -40,9 +41,9 @@ module VCAP::CloudController
         expect(res[:egress_network_rules]).to be_kind_of(Array)
         expect(res[:egress_network_rules]).to eq([])
         expect(res[:stack]).to eq(app.stack.name)
+        expect(res[:cc_partition]).to be_kind_of(String)
 
-        expect(app.vcap_application).to be
-        expect(res[:vcap_application]).to eql(app.vcap_application)
+        expect(res[:vcap_application]).to eql(VCAP::VarsBuilder.new(app).to_hash)
 
         expect(res[:index]).to eq(1)
       end
@@ -120,7 +121,7 @@ module VCAP::CloudController
 
       describe 'evironment variables' do
         before do
-          app.environment_json   = { 'KEY' => 'value' }
+          app.app.environment_variables = { 'KEY' => 'value' }
         end
 
         it 'includes app environment variables' do
@@ -149,24 +150,6 @@ module VCAP::CloudController
 
           request = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
           expect(request[:env]).to include('KEY=value')
-        end
-      end
-
-      context 'when the app is associated with a v3 app' do
-        let(:app_model) { AppModel.make }
-        let(:droplet) { DropletModel.make(droplet_hash: 'foobar', state: DropletModel::STAGED_STATE) }
-
-        before do
-          app_model.update(droplet_guid: droplet.guid)
-          app_model.add_process(app)
-        end
-
-        it 'should have a v3 download url, droplet_hash, and an app package' do
-          res = Dea::StartAppMessage.new(app, 1, TestConfig.config, blobstore_url_generator)
-
-          expect(res[:executableUri]).to eq('v3_app_uri')
-          expect(res[:sha1]).to eq(droplet.droplet_hash)
-          expect(res.has_app_package?).to be true
         end
       end
     end

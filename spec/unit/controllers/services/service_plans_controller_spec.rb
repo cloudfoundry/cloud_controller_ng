@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServicePlansController, :services do
+  RSpec.describe ServicePlansController, :services do
     shared_examples 'enumerate and read plan only' do |perm_name|
       include_examples 'permission enumeration', perm_name,
         name: 'service plan',
@@ -15,6 +15,7 @@ module VCAP::CloudController
       it { expect(described_class).to be_queryable_by(:service_guid) }
       it { expect(described_class).to be_queryable_by(:service_instance_guid) }
       it { expect(described_class).to be_queryable_by(:service_broker_guid) }
+      it { expect(described_class).to be_queryable_by(:unique_id) }
     end
 
     describe 'Attributes' do
@@ -118,15 +119,16 @@ module VCAP::CloudController
 
     describe 'non public service plans' do
       let!(:private_plan) { ServicePlan.make(public: false) }
-
       let(:plan_guids) do
         decoded_response.fetch('resources').collect do |r|
           r.fetch('metadata').fetch('guid')
         end
       end
 
+      before { set_current_user(developer) }
+
       it 'is not visible to users from normal organization' do
-        get '/v2/service_plans', {}, headers_for(developer)
+        get '/v2/service_plans'
         expect(plan_guids).not_to include(private_plan.guid)
       end
 
@@ -136,13 +138,48 @@ module VCAP::CloudController
           organization: organization,
           service_plan: private_plan,
         )
-        get '/v2/service_plans', {}, headers_for(developer)
+        get '/v2/service_plans'
         expect(plan_guids).to include(private_plan.guid)
       end
 
       it 'is visible to cf admin' do
-        get '/v2/service_plans', {}, admin_headers
+        set_current_user_as_admin
+        get '/v2/service_plans'
         expect(plan_guids).to include(private_plan.guid)
+      end
+    end
+
+    describe 'GET', '/v2/service_plans/:guid' do
+      let(:service_plan) { ServicePlan.make }
+
+      it 'returns the plan' do
+        set_current_user_as_admin
+
+        get "/v2/service_plans/#{service_plan.guid}"
+
+        expect(last_response.status).to eq 200
+
+        metadata = decoded_response.fetch('metadata')
+        expect(metadata['guid']).to eq service_plan.guid
+
+        entity = decoded_response.fetch('entity')
+        expect(entity['service_guid']).to eq service_plan.service.guid
+      end
+
+      context 'when the plan does not set bindable' do
+        let(:service_plan) { ServicePlan.make(bindable: nil) }
+
+        it 'inherits bindable from the service' do
+          set_current_user_as_admin
+
+          get "/v2/service_plans/#{service_plan.guid}"
+
+          expect(last_response.status).to eq 200
+
+          bindable = decoded_response.fetch('entity')['bindable']
+          expect(bindable).to_not be_nil
+          expect(bindable).to eq service_plan.service.bindable
+        end
       end
     end
 
@@ -172,7 +209,8 @@ module VCAP::CloudController
             space.add_developer(user)
             private_broker_service_plan = ServicePlan.make(service: service, public: false)
 
-            get '/v2/service_plans', {}, headers_for(user)
+            set_current_user(user)
+            get '/v2/service_plans'
             expect(last_response.status).to eq 200
 
             returned_plan_guids = decoded_response.fetch('resources').map do |res|
@@ -185,8 +223,10 @@ module VCAP::CloudController
       end
 
       context 'as an admin' do
+        before { set_current_user_as_admin }
+
         it 'displays all service plans' do
-          get '/v2/service_plans', {}, admin_headers
+          get '/v2/service_plans'
           expect(last_response.status).to eq 200
 
           plans = ServicePlan.all
@@ -207,7 +247,7 @@ module VCAP::CloudController
 
         it 'can query by service plan guid' do
           service = @services[:public][0].service
-          get "/v2/service_plans?q=service_guid:#{service.guid}", {}, admin_headers
+          get "/v2/service_plans?q=service_guid:#{service.guid}"
           expect(last_response.status).to eq 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
@@ -227,7 +267,7 @@ module VCAP::CloudController
 
         it 'can query by service broker guid' do
           service = @services[:public][0].service
-          get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}", {}, admin_headers
+          get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}"
           expect(last_response.status).to eq 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
@@ -247,10 +287,10 @@ module VCAP::CloudController
       end
 
       context 'when the user is not logged in' do
-        let(:headers) { headers_for(nil) }
+        before { set_current_user(nil) }
 
         it 'returns plans that are public and active' do
-          get '/v2/service_plans', {}, headers
+          get '/v2/service_plans'
           expect(last_response.status).to eq 200
 
           public_and_active_plans = ServicePlan.where(active: true, public: true).all
@@ -270,7 +310,7 @@ module VCAP::CloudController
         end
 
         it 'does not allow the unauthed user to use inline-relations-depth' do
-          get '/v2/service_plans?inline-relations-depth=1', {}, headers
+          get '/v2/service_plans?inline-relations-depth=1'
           plans = decoded_response.fetch('resources').map { |plan| plan['entity'] }
           plans.each do |plan|
             expect(plan['service_instances']).to be_nil
@@ -281,7 +321,7 @@ module VCAP::CloudController
           service_plan = @services[:public].first
           service_guid = service_plan.service.guid
 
-          get "/v2/service_plans?q=service_guid:#{service_guid}", {}, headers
+          get "/v2/service_plans?q=service_guid:#{service_guid}"
 
           plans = decoded_response.fetch('resources').map { |plan| plan['entity'] }
           expect(plans.size).to eq(1)
@@ -290,30 +330,27 @@ module VCAP::CloudController
       end
 
       context 'when the user has an expired token' do
-        let(:headers) do
-          {
-            'HTTP_AUTHORIZATION' => "bearer #{SecureRandom.uuid}"
-          }
-        end
-
         it 'raises an InvalidAuthToken error' do
-          get '/v2/service_plans', {}, headers
+          set_current_user(developer, token: :invalid_token)
+          get '/v2/service_plans'
           expect(last_response.status).to eq 401
         end
       end
     end
 
     describe 'PUT', '/v2/service_plans/:guid' do
-      context 'when the given unique_id is already taken' do
-        it 'returns an error response' do
-          service_plan = ServicePlan.make
-          other_service_plan = ServicePlan.make
-          payload = MultiJson.dump({ 'unique_id' => other_service_plan.unique_id })
+      context 'when fields other than public are requested' do
+        it 'only updates the public field' do
+          service_plan = ServicePlan.make(name: 'old-name', public: true)
+          payload = MultiJson.dump({ 'name' => 'new-name', 'public' => false })
 
-          put "/v2/service_plans/#{service_plan.guid}", payload, admin_headers
+          set_current_user_as_admin
+          put "/v2/service_plans/#{service_plan.guid}", payload
 
-          expect(last_response.status).to be == 400
-          expect(decoded_response.fetch('code')).to eql(110001)
+          expect(last_response.status).to eq(201)
+          service_plan.reload
+          expect(service_plan.name).to eq('old-name')
+          expect(service_plan.public).to eq(false)
         end
       end
     end
@@ -322,8 +359,9 @@ module VCAP::CloudController
       let(:service_plan) { ServicePlan.make }
 
       it 'should prevent recursive deletions if there are any instances' do
+        set_current_user_as_admin
         ManagedServiceInstance.make(service_plan: service_plan)
-        delete "/v2/service_plans/#{service_plan.guid}?recursive=true", {}, admin_headers
+        delete "/v2/service_plans/#{service_plan.guid}?recursive=true"
         expect(last_response.status).to eq(400)
 
         expect(decoded_response.fetch('code')).to eq(10006)

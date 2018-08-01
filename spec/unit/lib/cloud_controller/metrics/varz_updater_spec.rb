@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/metrics/varz_updater'
 
 module VCAP::CloudController::Metrics
-  describe VarzUpdater do
+  RSpec.describe VarzUpdater do
     let(:varz) { VarzUpdater.new }
 
     describe '#record_user_count' do
@@ -83,7 +83,7 @@ module VCAP::CloudController::Metrics
               size:        19,
               num_waiting: 2,
             },
-            resultqueue:      {
+            resultqueue: {
               size:        8,
               num_waiting: 1,
             },
@@ -108,6 +108,10 @@ module VCAP::CloudController::Metrics
     end
 
     describe '#update_log_counts' do
+      # noop
+    end
+
+    describe '#update_task_stats' do
       # noop
     end
   end

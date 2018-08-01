@@ -3,7 +3,7 @@ module CloudController
     class FingerprintsCollection
       def initialize(fingerprints)
         unless fingerprints.is_a?(Array)
-          raise VCAP::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'invalid :resources')
+          raise CloudController::Errors::ApiError.new_from_details('AppBitsUploadInvalid', 'invalid :resources')
         end
 
         @fingerprints = fingerprints
@@ -38,13 +38,14 @@ module CloudController
 
       def parse_mode(raw_mode)
         mode = raw_mode ? raw_mode.to_i(8) : DEFAULT_FILE_MODE
-        raise VCAP::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid', "File mode '#{raw_mode}' is invalid.") unless (mode & 0600) == 0600
+        raise CloudController::Errors::ApiError.new_from_details('AppResourcesFileModeInvalid',
+          "File mode '#{raw_mode}' is invalid. Minimum file mode is '0600'") unless (mode & 0600) == 0600
         mode
       end
 
       def validate_path(file_name)
         checker = VCAP::CloudController::FilePathChecker
-        raise VCAP::Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', "File path '#{file_name}' is not safe.") unless checker.safe_path? file_name
+        raise CloudController::Errors::ApiError.new_from_details('AppResourcesFilePathInvalid', "File path '#{file_name}' is not safe.") unless checker.safe_path? file_name
         file_name
       end
     end

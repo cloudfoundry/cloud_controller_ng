@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe OrganizationMemoryCalculator do
+  RSpec.describe OrganizationMemoryCalculator do
     describe '#get_memory_usage' do
       context 'with no apps' do
         it 'returns 0' do

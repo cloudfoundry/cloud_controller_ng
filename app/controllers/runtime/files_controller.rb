@@ -7,6 +7,7 @@ module VCAP::CloudController
     model_class_name :App
 
     get "#{path_guid}/instances/:instance_id/files", :files
+    get "#{path_guid}/instances/:instance_id/files/*", :files
     def files(guid, search_param, path=nil)
       app = find_guid_and_validate_access(:read, guid)
 
@@ -21,13 +22,6 @@ module VCAP::CloudController
       uri = info.file_uri_v2
       uri = add_tail(uri) if params.include?('tail')
       [HTTP::FOUND, { 'Location' => uri }, nil]
-    end
-
-    get "#{path_guid}/instances/:instance_id/files/*", :files
-    def http_get(uri, headers, username, password)
-      client = HTTPClient.new
-      client.set_auth(nil, username, password) if username && password
-      client.get(uri, header: headers)
     end
 
     private
@@ -54,13 +48,13 @@ module VCAP::CloudController
       if match
         instance = match.captures[0].to_i
         Dea::Client.get_file_uri_for_active_instance_by_index(app, path, instance)
-      elsif search_param.match(/^[0-9a-zA-z]+$/)
+      elsif search_param =~ /^[0-9a-zA-z]+$/
         Dea::Client.get_file_uri_by_instance_guid(app, path, search_param)
       else
         msg = "Request failed for app: #{app.name}, path: #{path || '/'}"
         msg << " as the search_param: #{search_param} is invalid."
 
-        raise Errors::ApiError.new_from_details('FileError', msg)
+        raise CloudController::Errors::ApiError.new_from_details('FileError', msg)
       end
     end
   end

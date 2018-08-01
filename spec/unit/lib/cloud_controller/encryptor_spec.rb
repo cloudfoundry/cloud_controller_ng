@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Encryptor do
+  RSpec.describe Encryptor do
     let(:salt) { Encryptor.generate_salt }
 
     describe 'generating some salt' do
@@ -49,7 +49,7 @@ module VCAP::CloudController
     end
   end
 
-  describe Encryptor::FieldEncryptor do
+  RSpec.describe Encryptor::FieldEncryptor do
     let(:klass) do
       Class.new do
         include VCAP::CloudController::Encryptor::FieldEncryptor

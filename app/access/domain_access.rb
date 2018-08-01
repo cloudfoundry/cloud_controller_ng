@@ -24,8 +24,11 @@ module VCAP::CloudController
     private
 
     def actual_access(domain)
-      domain.owning_organization ? PrivateDomainAccess.new(context) :
+      if domain.owning_organization
+        PrivateDomainAccess.new(context)
+      else
         SharedDomainAccess.new(context)
+      end
     end
   end
 end

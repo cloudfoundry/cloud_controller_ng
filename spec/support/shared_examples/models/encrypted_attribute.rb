@@ -35,7 +35,7 @@ module VCAP::CloudController
       saved_attribute = last_row[storage_column]
 
       expect(
-          Encryptor.decrypt(saved_attribute, model.salt)
+        Encryptor.decrypt(saved_attribute, model.send(attr_salt))
       ).to include(value_to_encrypt)
 
       saved_attribute = last_row[storage_column]
@@ -47,7 +47,7 @@ module VCAP::CloudController
       errored = false
 
       begin
-        decrypted_value = Encryptor.decrypt(saved_attribute, model.salt)
+        decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt))
       rescue OpenSSL::Cipher::CipherError
         errored = true
       end

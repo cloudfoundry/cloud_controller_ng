@@ -1,9 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ManagedServiceInstanceAccess, type: :access do
+  RSpec.describe ManagedServiceInstanceAccess, type: :access do
     subject(:access) { ManagedServiceInstanceAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
@@ -12,20 +11,16 @@ module VCAP::CloudController
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
     let(:object) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan, space: space) }
 
-    before do
-      SecurityContext.set(user, token)
-    end
+    before { set_current_user(user) }
 
-    after do
-      SecurityContext.clear
-    end
+    it_behaves_like :admin_read_only_access
 
     context 'admin' do
       include_context :admin_setup
       it_behaves_like :full_access
 
       context 'service plan' do
-        it 'allowed when the service plan is not visibile' do
+        it 'allowed when the service plan is not visible' do
           new_plan = VCAP::CloudController::ServicePlan.make(active: false)
 
           object.service_plan = new_plan
@@ -41,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'service plan' do
-        it 'allows when the service plan is visibile' do
+        it 'allows when the service plan is visible' do
           new_plan = VCAP::CloudController::ServicePlan.make(service: service)
           object.service_plan = new_plan
           expect(subject.create?(object)).to be_truthy
@@ -49,13 +44,19 @@ module VCAP::CloudController
           expect(subject.update?(object)).to be_truthy
         end
 
-        it 'fails when the service plan is not visibile' do
+        it 'fails when assigning to a service plan that is not visible' do
           new_plan = VCAP::CloudController::ServicePlan.make(active: false)
 
           object.service_plan = new_plan
           expect(subject.create?(object)).to be_falsey
-          expect(subject.read_for_update?(object)).to be_falsey
           expect(subject.update?(object)).to be_falsey
+        end
+
+        it 'succeeds when updating from a service plan that is not visible' do
+          new_plan = VCAP::CloudController::ServicePlan.make(active: false)
+
+          object.service_plan = new_plan
+          expect(subject.read_for_update?(object)).to be_truthy
         end
       end
     end

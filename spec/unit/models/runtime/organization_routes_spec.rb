@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe OrganizationRoutes do
+RSpec.describe OrganizationRoutes do
   let(:organization) { VCAP::CloudController::Organization.make }
 
   subject(:organization_routes) { OrganizationRoutes.new(organization) }

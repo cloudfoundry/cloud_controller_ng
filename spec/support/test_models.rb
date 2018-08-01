@@ -22,7 +22,7 @@ module VCAP::CloudController
                                  test_model_nullify_deps: :nullify)
 
     import_attributes :required_attr, :unique_value, :test_model_many_to_many_guids
-    export_attributes :unique_value
+    export_attributes :unique_value, :sortable_value, :nonsortable_value
 
     def validate
       validates_unique :unique_value
@@ -45,6 +45,7 @@ module VCAP::CloudController
     end
 
     query_parameters :unique_value, :created_at
+    sortable_parameters :sortable_value
 
     define_messages
     define_routes
@@ -56,7 +57,7 @@ module VCAP::CloudController
     end
 
     def self.translate_validation_exception(_, attributes)
-      Errors::ApiError.new_from_details('TestModelValidation', attributes['unique_value'])
+      CloudController::Errors::ApiError.new_from_details('TestModelValidation', attributes['unique_value'])
     end
   end
 

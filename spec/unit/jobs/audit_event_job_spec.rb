@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe AuditEventJob do
+    RSpec.describe AuditEventJob do
       let(:event_repository) { double(:event_repository) }
       let(:event_creation_method) { :record_service_creation_event }
       let(:event_type) { 'audit.service.create' }

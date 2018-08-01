@@ -2,8 +2,9 @@ module VCAP::CloudController
   class ServiceBrokerAccess < BaseAccess
     def create?(service_broker, _=nil)
       return true if admin_user?
+      FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
 
-      if service_broker.is_a? Object
+      unless service_broker.nil?
         return validate_object_access(service_broker)
       end
     end
@@ -11,7 +12,7 @@ module VCAP::CloudController
     def update?(service_broker, _=nil)
       return true if admin_user?
 
-      if service_broker.is_a? Object
+      unless service_broker.nil?
         return validate_object_access(service_broker)
       end
 
@@ -21,7 +22,7 @@ module VCAP::CloudController
     def delete?(service_broker, _=nil)
       return true if admin_user?
 
-      if service_broker.is_a? Object
+      unless service_broker.nil?
         return validate_object_access(service_broker)
       end
 

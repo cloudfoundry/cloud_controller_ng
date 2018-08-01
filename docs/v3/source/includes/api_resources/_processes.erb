@@ -1,0 +1,157 @@
+<% content_for :single_process do %>
+{
+  "guid": "6a901b7c-9417-4dc1-8189-d3234aa0ab82",
+  "type": "web",
+  "command": "rackup",
+  "instances": 5,
+  "memory_in_mb": 256,
+  "disk_in_mb": 1024,
+  "ports": [8080],
+  "health_check": {
+    "type": "port",
+    "data": {
+      "timeout": null
+    }
+  },
+  "created_at": "2016-03-23T18:48:22Z",
+  "updated_at": "2016-03-23T18:48:42Z",
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+    },
+    "scale": {
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+      "method": "PUT"
+    },
+    "app": {
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "space": {
+      "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+    },
+    "stats": {
+      "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+    }
+  }
+}
+<% end %>
+
+<% content_for :paginated_list_of_processes do |base_url| %>
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 2,
+    "first": {
+      "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
+    },
+    "last": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "next": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "6a901b7c-9417-4dc1-8189-d3234aa0ab82",
+      "type": "web",
+      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
+      "instances": 5,
+      "memory_in_mb": 256,
+      "disk_in_mb": 1024,
+      "ports": [8080],
+      "health_check": {
+        "type": "port",
+        "data": {
+          "timeout": null
+        }
+      },
+      "created_at": "2016-03-23T18:48:22Z",
+      "updated_at": "2016-03-23T18:48:42Z",
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82"
+        },
+        "scale": {
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/scale",
+          "method": "PUT"
+        },
+        "app": {
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "space": {
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+        },
+        "stats": {
+          "href": "https://api.example.org/v3/processes/6a901b7c-9417-4dc1-8189-d3234aa0ab82/stats"
+        }
+      }
+    },
+    {
+      "guid": "3fccacd9-4b02-4b96-8d02-8e865865e9eb",
+      "type": "worker",
+      "command": "[PRIVATE DATA HIDDEN IN LISTS]",
+      "instances": 1,
+      "memory_in_mb": 256,
+      "disk_in_mb": 1024,
+      "ports": [],
+      "health_check": {
+        "type": "process",
+        "data": {
+          "timeout": null
+        }
+      },
+      "created_at": "2016-03-23T18:48:22Z",
+      "updated_at": "2016-03-23T18:48:42Z",
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb"
+        },
+        "scale": {
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/scale",
+          "method": "PUT"
+        },
+        "app": {
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "space": {
+          "href": "https://api.example.org/v2/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"
+        },
+        "stats": {
+          "href": "https://api.example.org/v3/processes/3fccacd9-4b02-4b96-8d02-8e865865e9eb/stats"
+        }
+      }
+    }
+  ]
+}
+<% end %>
+
+<% content_for :list_of_process_stats do |base_url| %>
+{
+  "resources": [
+    {
+      "type": "web",
+      "index": 0,
+      "state": "RUNNING",
+      "usage": {
+        "time": "2016-03-23T23:17:30.476314154Z",
+        "cpu": 0.00038711029163348665,
+        "mem": 19177472,
+        "disk": 69705728
+      },
+      "host": "10.244.16.10",
+      "instance_ports": [
+        {
+          "external": 64546,
+          "internal": 8080
+        }
+      ],
+      "uptime": 9042,
+      "mem_quota": 268435456,
+      "disk_quota": 1073741824,
+      "fds_quota": 16384
+    }
+  ]
+}
+<% end %>

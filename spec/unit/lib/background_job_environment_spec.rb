@@ -1,7 +1,10 @@
 require 'spec_helper'
 
-describe BackgroundJobEnvironment do
-  let(:bg_config) { { db: 'cc-db', logging: { level: 'debug2' } } }
+RSpec.describe BackgroundJobEnvironment do
+  let(:bg_config) { { db: 'cc-db',
+                      logging: { level: 'debug2' },
+                      bits_service: { enabled: false } }
+  }
   subject(:background_job_environment) { described_class.new(bg_config) }
 
   before do
@@ -17,6 +20,7 @@ describe BackgroundJobEnvironment do
       allow(VCAP::CloudController::DB).to receive(:load_models)
       allow(Thread).to receive(:new).and_yield
       allow(EM).to receive(:run).and_yield
+      allow(VCAP::CloudController::ResourcePool).to receive(:new)
     end
 
     it 'loads models' do

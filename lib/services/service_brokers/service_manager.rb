@@ -62,6 +62,7 @@ module VCAP::Services::ServiceBrokers
           name:        catalog_plan.name,
           description: catalog_plan.description,
           free:        catalog_plan.free,
+          bindable:    catalog_plan.bindable,
           active:      true,
           extra:       catalog_plan.metadata ? catalog_plan.metadata.to_json : nil
         })
@@ -140,7 +141,7 @@ module VCAP::Services::ServiceBrokers
 
       def add(plan)
         @nested_warnings[plan.service.label] ||= []
-        @broker_url                          ||= plan.service_broker.broker_url
+        @broker_url ||= plan.service_broker.broker_url
         @nested_warnings[plan.service.label] << plan.name
       end
 

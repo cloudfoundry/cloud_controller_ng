@@ -1,57 +1,61 @@
 require 'spec_helper'
 
-def generate_hm_api_response(app, running_instances, crash_counts=[])
-  result = {
-    droplet: app.guid,
-    version: app.version,
-    desired: {
-      id: app.guid,
-      version: app.version,
-      instances: app.instances,
-      state: app.state,
-      package_state: app.package_state,
-    },
-    instance_heartbeats: [],
-    crash_counts: []
-  }
-
-  running_instances.each do |running_instance|
-    result[:instance_heartbeats].push({
-                                        droplet: app.guid,
-                                        version: app.version,
-                                        instance: running_instance[:instance_guid] || Sham.guid,
-                                        index: running_instance[:index],
-                                        state: running_instance[:state],
-                                        state_timestamp: 3.141
-                                      })
-  end
-
-  crash_counts.each do |crash_count|
-    result[:crash_counts].push({
-                                  droplet: app.guid,
-                                  version: app.version,
-                                  instance_index: crash_count[:instance_index],
-                                  crash_count: crash_count[:crash_count],
-                                  created_at: 1234567
-                               })
-  end
-
-  JSON.parse(result.to_json)
-end
-
 module VCAP::CloudController
-  describe VCAP::CloudController::Dea::HM9000::Client do
+  RSpec.describe VCAP::CloudController::Dea::HM9000::Client do
+    def generate_hm_api_response(app, running_instances, crash_counts=[])
+      result = {
+        droplet: app.guid,
+        version: app.version,
+        desired: {
+          id: app.guid,
+          version: app.version,
+          instances: app.instances,
+          state: app.state,
+          package_state: app.package_state,
+        },
+        instance_heartbeats: [],
+        crash_counts: []
+      }
+
+      running_instances.each do |running_instance|
+        result[:instance_heartbeats].push({
+          droplet: app.guid,
+          version: app.version,
+          instance: running_instance[:instance_guid] || Sham.guid,
+          index: running_instance[:index],
+          state: running_instance[:state],
+          state_timestamp: 3.141
+        })
+      end
+
+      crash_counts.each do |crash_count|
+        result[:crash_counts].push({
+          droplet: app.guid,
+          version: app.version,
+          instance_index: crash_count[:instance_index],
+          crash_count: crash_count[:crash_count],
+          created_at: 1234567
+        })
+      end
+
+      JSON.parse(result.to_json)
+    end
+
     let(:app0instances) { 1 }
     let(:app0) { AppFactory.make(instances: app0instances) }
     let(:app1) { AppFactory.make(instances: 1) }
     let(:app2) { AppFactory.make(instances: 1) }
     let(:app0_request_should_fail) { false }
+    let(:hm9000_external_url) { 'https://myuser:mypass@some-hm9000-api:9492' }
+    let(:skip_cert_verify) { nil }
 
     let(:hm9000_config) do
       {
+        skip_cert_verify: skip_cert_verify,
         flapping_crash_count_threshold: 3,
         hm9000: {
-          url: 'https://some-hm9000-api:9492'
+          url: 'https://some-hm9000-api:9492',
+          internal_url: 'https://hm9000.service.cf.internal:9492',
         },
         internal_api: {
           auth_user: 'myuser',
@@ -64,10 +68,145 @@ module VCAP::CloudController
     let(:app_1_api_response) { generate_hm_api_response(app1, [{ index: 0, state: 'CRASHED' }]) }
     let(:app_2_api_response) { generate_hm_api_response(app2, [{ index: 0, state: 'RUNNING' }]) }
 
-    let(:hm9000_url) { 'https://myuser:mypass@some-hm9000-api:9492' }
+    let(:hm9000_url) { 'https://myuser:mypass@hm9000.service.cf.internal:9492' }
     let(:legacy_client) { double(:legacy_client) }
 
     subject(:hm9000_client) { VCAP::CloudController::Dea::HM9000::Client.new(legacy_client, hm9000_config) }
+
+    shared_examples 'post_bulk_app_state request' do |method, args_array|
+      let(:legacy_return_value) { double(:legacy_return_value) }
+
+      before do
+        @args = if args_array
+                  [app0]
+                else
+                  app0
+                end
+      end
+
+      context 'when the request fails' do
+        context' and the status is a 500' do
+          before do
+            stub_request(:post, "#{hm9000_url}/bulk_app_state").
+              to_return(status: 500)
+            stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+          end
+
+          it 'retries 3 times' do
+            subject.send(method, @args)
+            assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
+              req.body = { droplet: app0.guid, version: app0.version }
+            end
+          end
+
+          context 'after 3 retries' do
+            before do
+              subject.send(method, @args)
+            end
+
+            it 'tries the external address' do
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+
+            it 'does try to use the internal address again on the next request' do
+              subject.send(method, @args)
+
+              # 3 times for the first call, 3 times for the next call
+              assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+
+              # once for the first call and once for the second call
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+          end
+        end
+
+        context 'and the status is a 401' do
+          before do
+            stub_request(:post, "#{hm9000_url}/bulk_app_state").
+              to_return(status: 401)
+            stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 401)
+          end
+
+          it 'retries 3 times' do
+            subject.send(method, @args)
+            assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
+              req.body = { droplet: app0.guid, version: app0.version }
+            end
+          end
+
+          context 'after 3 retries' do
+            before do
+              subject.send(method, @args)
+            end
+
+            it 'tries the external address' do
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+
+            it 'does try to use the internal address again on the next request' do
+              subject.send(method, @args)
+
+              # 3 times for the first call, 3 times for the next call
+              assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 6) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+
+              # once for the first call and once for the second call
+              assert_requested(:post, "#{hm9000_external_url}/bulk_app_state", times: 2) do |req|
+                req.body = { droplet: app0.guid, version: app0.version }
+              end
+            end
+          end
+        end
+      end
+
+      context 'when the hm9000 http api is not present' do
+        before do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").to_return(status: 404)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 404)
+        end
+
+        it 'retries 3 times' do
+          subject.send(method, @args)
+          assert_requested(:post, "#{hm9000_url}/bulk_app_state", times: 3) do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+
+        it 'calls through the legacy nats client' do
+          actual_return_value = hm9000_client.send(method, @args)
+          expect(actual_return_value).to eq(legacy_return_value)
+        end
+      end
+
+      context 'when a post to the internal address raises a socket error' do
+        before do
+          stub_request(:post, "#{hm9000_url}/bulk_app_state").to_raise(SocketError)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+          subject.send(method, @args)
+        end
+
+        it 'does not retry' do
+          assert_requested(:post, "#{hm9000_url}/bulk_app_state") do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+
+        it 'tries the external address' do
+          assert_requested(:post, "#{hm9000_external_url}/bulk_app_state") do |req|
+            req.body = { droplet: app0.guid, version: app0.version }
+          end
+        end
+      end
+    end
 
     describe 'healthy_instances' do
       context 'with a single desired and running instance' do
@@ -92,6 +231,14 @@ module VCAP::CloudController
 
           3.times { expect(hm9000_client.healthy_instances(app0)).to eq(-1) }
         end
+      end
+
+      context 'post_bulk_app_state behaviors' do
+        before do
+          allow(legacy_client).to receive(:healthy_instances).with(app0).and_return(legacy_return_value)
+        end
+
+        it_behaves_like 'post_bulk_app_state request', :healthy_instances, false
       end
 
       context 'with multiple desired instances' do
@@ -198,6 +345,14 @@ module VCAP::CloudController
           })
         end
       end
+
+      context 'post_bulk_app_state behaviors' do
+        before do
+          allow(legacy_client).to receive(:healthy_instances_bulk).with([app0]).and_return(legacy_return_value)
+        end
+
+        it_behaves_like 'post_bulk_app_state request', :healthy_instances_bulk, true
+      end
     end
 
     describe 'find_crashes' do
@@ -210,11 +365,22 @@ module VCAP::CloudController
       end
 
       context 'when the request fails' do
-        it 'should return an empty array' do
+        before do
           stub_request(:post, "#{hm9000_url}/bulk_app_state").
             to_return(status: 500)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+        end
 
+        it 'should return an empty array' do
           expect(hm9000_client.find_crashes(app0)).to eq([])
+        end
+
+        context 'post_bulk_app_state behaviors' do
+          before do
+            allow(legacy_client).to receive(:find_crashes).with(app0).and_return(legacy_return_value)
+          end
+
+          it_behaves_like 'post_bulk_app_state request', :find_crashes, false
         end
       end
 
@@ -237,11 +403,22 @@ module VCAP::CloudController
       end
 
       context 'when the request fails' do
-        it 'should return an empty array' do
+        before do
           stub_request(:post, "#{hm9000_url}/bulk_app_state").
             to_return(status: 500)
+          stub_request(:post, "#{hm9000_external_url}/bulk_app_state").to_return(status: 500)
+        end
 
+        it 'should return an empty array' do
           expect(hm9000_client.find_flapping_indices(app0)).to eq([])
+        end
+
+        context 'post_bulk_app_state behaviors' do
+          before do
+            allow(legacy_client).to receive(:find_flapping_indices).with(app0).and_return(legacy_return_value)
+          end
+
+          it_behaves_like 'post_bulk_app_state request', :find_flapping_indices, false
         end
       end
 
@@ -258,43 +435,6 @@ module VCAP::CloudController
       end
     end
 
-    context 'when the hm9000 http api is not present' do
-      before { stub_request(:post, "#{hm9000_url}/bulk_app_state").to_return(status: 404) }
-      let(:legacy_return_value) { double(:legacy_return_value) }
-
-      describe 'healthy_instances' do
-        it 'calls through the legacy nats client' do
-          allow(legacy_client).to receive(:healthy_instances).with(app0).and_return(legacy_return_value)
-          actual_return_value = hm9000_client.healthy_instances(app0)
-          expect(actual_return_value).to eq(legacy_return_value)
-        end
-      end
-
-      describe 'healthy_instances_bulk' do
-        it 'calls through the legacy nats client' do
-          allow(legacy_client).to receive(:healthy_instances_bulk).with([app0]).and_return(legacy_return_value)
-          actual_return_value = hm9000_client.healthy_instances_bulk([app0])
-          expect(actual_return_value).to eq(legacy_return_value)
-        end
-      end
-
-      describe 'find_crashes' do
-        it 'calls through the legacy nats client' do
-          allow(legacy_client).to receive(:find_crashes).with(app0).and_return(legacy_return_value)
-          actual_return_value = hm9000_client.find_crashes(app0)
-          expect(actual_return_value).to eq(legacy_return_value)
-        end
-      end
-
-      describe 'find_flapping_indices' do
-        it 'calls through the legacy nats client' do
-          allow(legacy_client).to receive(:find_flapping_indices).with(app0).and_return(legacy_return_value)
-          actual_return_value = hm9000_client.find_flapping_indices(app0)
-          expect(actual_return_value).to eq(legacy_return_value)
-        end
-      end
-    end
-
     it 'uses the default certificate store' do
       stub_request(:post, "#{hm9000_url}/bulk_app_state").
         to_return(status: 200, body: {}.to_json)
@@ -305,19 +445,7 @@ module VCAP::CloudController
 
     describe 'ssl certificate validation' do
       context 'when skip_cert_verify is true' do
-        let(:hm9000_config) do
-          {
-            skip_cert_verify: true,
-            flapping_crash_count_threshold: 3,
-            hm9000: {
-              url: 'https://some-hm9000-api:9492'
-            },
-            internal_api: {
-              auth_user: 'myuser',
-              auth_password: 'mypass'
-            }
-          }
-        end
+        let(:skip_cert_verify) { true }
 
         it 'does not verify the cert' do
           stub_request(:post, "#{hm9000_url}/bulk_app_state").
@@ -330,19 +458,7 @@ module VCAP::CloudController
       end
 
       context 'when skip_cert_verify is false' do
-        let(:hm9000_config) do
-          {
-            skip_cert_verify: false,
-            flapping_crash_count_threshold: 3,
-            hm9000: {
-              url: 'https://some-hm9000-api:9492'
-            },
-            internal_api: {
-              auth_user: 'myuser',
-              auth_password: 'mypass'
-            }
-          }
-        end
+        let(:skip_cert_verify) { false }
 
         it 'does verify the cert' do
           stub_request(:post, "#{hm9000_url}/bulk_app_state").

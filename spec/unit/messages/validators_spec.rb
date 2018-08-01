@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/validators'
 
 module VCAP::CloudController::Validators
-  describe 'Validators' do
+  RSpec.describe 'Validators' do
     let(:fake_class) do
       Class.new do
         include ActiveModel::Model
@@ -143,18 +143,6 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'must be a hash'
       end
 
-      it 'does not allow variables that start with CF_' do
-        fake_class = environment_variables_class.new field: { CF_POTATO: 'yum' }
-        expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include 'cannot start with CF_'
-      end
-
-      it 'does not allow variables that start with cf_' do
-        fake_class = environment_variables_class.new field: { cf_potato: 'gross' }
-        expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include 'cannot start with CF_'
-      end
-
       it 'does not allow variables that start with VCAP_' do
         fake_class = environment_variables_class.new field: { VCAP_BANANA: 'woo' }
         expect(fake_class.valid?).to be_falsey
@@ -167,6 +155,18 @@ module VCAP::CloudController::Validators
         expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
       end
 
+      it 'does not allow variables that start with VMC_' do
+        fake_class = environment_variables_class.new field: { VMC_BANANA: 'woo' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
+      end
+
+      it 'does not allow variables that start with vmc_' do
+        fake_class = environment_variables_class.new field: { vmc_donkey: 'hee-haw' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
+      end
+
       it 'does not allow variables that are PORT' do
         fake_class = environment_variables_class.new field: { PORT: 'el lunes nos ponemos camisetas naranjas' }
         expect(fake_class.valid?).to be_falsey
@@ -177,6 +177,12 @@ module VCAP::CloudController::Validators
         fake_class = environment_variables_class.new field: { port: 'el lunes nos ponemos camisetas naranjas' }
         expect(fake_class.valid?).to be_falsey
         expect(fake_class.errors[:field]).to include 'cannot set PORT'
+      end
+
+      it 'does not allow variables with zero key length' do
+        fake_class = environment_variables_class.new field: { '': 'el lunes nos ponemos camisetas naranjas' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'key must be a minimum length of 1'
       end
     end
 
@@ -251,6 +257,40 @@ module VCAP::CloudController::Validators
         message = RelationshipMessage.new({ relationships: 'not a hash' })
         expect(message).to be_valid
         expect(message.errors_on(:relationships)).to be_empty
+      end
+    end
+
+    describe 'DataValidator' do
+      class DataMessage < VCAP::CloudController::BaseMessage
+        attr_accessor :data
+
+        def allowed_keys
+          [:data]
+        end
+
+        validates_with DataValidator
+
+        class Data < VCAP::CloudController::BaseMessage
+          attr_accessor :foo
+
+          def allowed_keys
+            [:foo]
+          end
+
+          validates :foo, numericality: true
+        end
+      end
+
+      it "adds data's error message to the base class" do
+        message = DataMessage.new({ data: { foo: 'not a number' } })
+        expect(message).not_to be_valid
+        expect(message.errors_on(:data)).to include('Foo is not a number')
+      end
+
+      it 'returns early when base class data is not a hash' do
+        message = DataMessage.new({ data: 'not a hash' })
+        expect(message).to be_valid
+        expect(message.errors_on(:data)).to be_empty
       end
     end
 

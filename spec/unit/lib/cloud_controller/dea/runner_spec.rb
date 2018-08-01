@@ -2,10 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Dea
-    describe Runner do
-      let(:config) do
-        instance_double(Config)
-      end
+    RSpec.describe Runner do
+      let(:config) { TestConfig.config }
 
       let(:message_bus) do
         instance_double(CfMessageBus::MessageBus, publish: nil)
@@ -15,16 +13,33 @@ module VCAP::CloudController
         instance_double(Dea::Pool)
       end
 
-      let(:stager_pool) do
-        instance_double(Dea::StagerPool)
+      let(:blobstore_url_generator) do
+        double('blobstore_url_generator', droplet_download_url: 'app_uri')
       end
+
+      let(:num_service_instances) { 1 }
 
       let(:app) do
-        instance_double(App, guid: 'fake-app-guid')
+        AppFactory.make.tap do |app|
+          num_service_instances.times do
+            instance = ManagedServiceInstance.make(space: app.space)
+            binding = ServiceBinding.make(
+              app: app.app,
+              service_instance: instance
+            )
+            app.add_service_binding(binding)
+          end
+        end
       end
 
+      let(:app_starter_task) { instance_double(AppStarterTask, start: nil) }
+
       subject(:runner) do
-        Runner.new(app, config, message_bus, dea_pool, stager_pool)
+        Runner.new(app, config, blobstore_url_generator, message_bus, dea_pool)
+      end
+
+      before do
+        allow(AppStarterTask).to receive(:new).with(app, blobstore_url_generator, config).and_return(app_starter_task)
       end
 
       describe '#scale' do
@@ -59,12 +74,15 @@ module VCAP::CloudController
 
         before do
           allow(app).to receive(:instances).and_return(10)
-          allow(Client).to receive(:start)
         end
 
         context 'when started after staging (so there are existing instances)' do
           it 'only starts the number of additional required' do
-            expect(Client).to receive(:start).with(app, instances_to_start: 5)
+            expect(app_starter_task).to receive(:start).with(
+              hash_including(
+                instances_to_start: 5,
+              )
+            )
 
             staging_result = { started_instances: 5 }
             runner.start(staging_result)
@@ -73,7 +91,7 @@ module VCAP::CloudController
 
         context 'when starting after the app was stopped' do
           it 'starts the desired number of instances' do
-            expect(Client).to receive(:start).with(app, instances_to_start: 10)
+            expect(app_starter_task).to receive(:start).with(instances_to_start: 10)
 
             runner.start
           end
@@ -100,6 +118,14 @@ module VCAP::CloudController
 
         it 'stops the given index of the app' do
           expect(Client).to have_received(:stop_indices).with(app, [3])
+        end
+      end
+
+      describe '#update_routes' do
+        it 'delegates to dea client' do
+          allow(Dea::Client).to receive(:update_uris).and_return(nil)
+          runner.update_routes
+          expect(Dea::Client).to have_received(:update_uris).with(app)
         end
       end
     end

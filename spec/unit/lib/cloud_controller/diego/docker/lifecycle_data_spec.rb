@@ -4,7 +4,7 @@ require 'cloud_controller/diego/docker/lifecycle_data'
 module VCAP::CloudController
   module Diego
     module Docker
-      describe LifecycleData do
+      RSpec.describe LifecycleData do
         let(:image) { 'docker:///image/something' }
         let(:login_server) { 'http://loginServer.com' }
         let(:user) { 'user' }

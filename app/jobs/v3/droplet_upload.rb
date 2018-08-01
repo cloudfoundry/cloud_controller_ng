@@ -14,14 +14,15 @@ module VCAP::CloudController
           droplet = DropletModel.find(guid: @droplet_guid)
 
           if droplet
-            digest = Digester.new.digest_path(@local_path)
+            sha1_digest = Digester.new.digest_path(@local_path)
+            sha256_digest = Digester.new(algorithm: Digest::SHA256).digest_path(@local_path)
 
             blobstore.cp_to_blobstore(
               @local_path,
-              File.join(@droplet_guid, digest)
+              File.join(@droplet_guid, sha1_digest)
             )
 
-            droplet.update(droplet_hash: digest)
+            droplet.update(droplet_hash: sha1_digest, sha256_checksum: sha256_digest)
           end
 
           FileUtils.rm_f(@local_path)

@@ -1,0 +1,83 @@
+<% content_for :single_route_mapping do %>
+{
+  "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+  "app_port": 8080,
+  "created_at": "2016-02-17T01:50:05Z",
+  "updated_at": "2016-06-08T16:41:26Z",
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+    },
+    "app": {
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+    },
+    "route": {
+      "href": "https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+    },
+    "process": {
+      "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+    }
+  }
+}
+<% end %>
+
+<% content_for :paginated_list_of_route_mappings do |base_url| %>
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 2,
+    "first": {
+      "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
+    },
+    "last": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "next": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+      "app_port": 8080,
+      "created_at": "2016-02-17T01:50:05Z",
+      "updated_at": "2016-06-08T16:41:26Z",
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"
+        },
+        "app": {
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "route": {
+          "href": "https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"
+        },
+        "process": {
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"
+        }
+      }
+    },
+    {
+      "guid": "9f4970a8-9e6f-4984-b0a5-5e4a8af91665",
+      "app_port": 8080,
+      "created_at": "2016-02-17T01:50:05Z",
+      "updated_at": "2016-06-08T16:41:26Z",
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"
+        },
+        "app": {
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"
+        },
+        "route": {
+          "href": "https://api.example.org/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"
+        },
+        "process": {
+          "href": "https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"
+        }
+      }
+    }
+  ]
+}
+<% end %>

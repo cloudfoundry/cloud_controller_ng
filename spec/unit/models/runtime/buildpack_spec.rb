@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Buildpack, type: :model do
+  RSpec.describe Buildpack, type: :model do
     def ordered_buildpacks
       Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
     end
@@ -137,7 +137,7 @@ module VCAP::CloudController
 
     describe '.at_last_position' do
       let!(:buildpacks) do
-        4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
+        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
       it 'gets the last position' do
@@ -189,7 +189,7 @@ module VCAP::CloudController
 
       context 'when other buildpacks exist' do
         let!(:buildpacks) do
-          4.times.map { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
+          Array.new(4) { |i| Buildpack.make(name: "name_#{100 - i}", position: i + 1) }
         end
 
         context 'with a specified position' do
@@ -199,10 +199,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['new_buildpack', 1], ['name_100', 2], ['name_99', 3], ['name_98', 4], ['name_97', 5]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['new_buildpack', 1], ['name_100', 2], ['name_99', 3], ['name_98', 4], ['name_97', 5]]
+            )
           end
 
           it 'creates a buildpack entry at the lowest position' do
@@ -211,10 +211,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4], ['new_buildpack', 5]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4], ['new_buildpack', 5]]
+            )
           end
 
           it 'creates a buildpack entry and moves all other buildpacks' do
@@ -223,10 +223,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['name_100', 1], ['new_buildpack', 2], ['name_99', 3], ['name_98', 4], ['name_97', 5]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['name_100', 1], ['new_buildpack', 2], ['name_99', 3], ['name_98', 4], ['name_97', 5]]
+            )
           end
 
           it 'allows an insert at the current last position' do
@@ -235,10 +235,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['new_buildpack', 4], ['name_97', 5]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['new_buildpack', 4], ['name_97', 5]]
+            )
           end
         end
 
@@ -249,10 +249,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4], ['new_buildpack', 5]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4], ['new_buildpack', 5]]
+            )
           end
         end
 
@@ -265,10 +265,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['new_buildpack', 1], ['name_100', 2], ['name_99', 3], ['name_98', 4], ['name_97', 5]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['new_buildpack', 1], ['name_100', 2], ['name_99', 3], ['name_98', 4], ['name_97', 5]]
+            )
           end
         end
       end
@@ -276,7 +276,7 @@ module VCAP::CloudController
 
     describe '.update' do
       let!(:buildpacks) do
-        4.times.map { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
+        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", position: i + 1) }
       end
 
       it "locks the buildpacks so we don't get duplicate positions" do
@@ -312,10 +312,10 @@ module VCAP::CloudController
         }.to change {
           ordered_buildpacks
         }.from(
-               [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-             ).to(
-               [['name_97', 1], ['name_100', 2], ['name_99', 3], ['name_98', 4]]
-             )
+          [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+        ).to(
+          [['name_97', 1], ['name_100', 2], ['name_99', 3], ['name_98', 4]]
+        )
       end
 
       it 'shifts in the middle' do
@@ -324,10 +324,10 @@ module VCAP::CloudController
         }.to change {
           ordered_buildpacks
         }.from(
-               [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-             ).to(
-               [['name_100', 1], ['name_97', 2], ['name_99', 3], ['name_98', 4]]
-             )
+          [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+        ).to(
+          [['name_100', 1], ['name_97', 2], ['name_99', 3], ['name_98', 4]]
+        )
       end
 
       it 'shifts from the beginning to the end' do
@@ -336,10 +336,10 @@ module VCAP::CloudController
         }.to change {
           ordered_buildpacks
         }.from(
-               [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-             ).to(
-               [['name_99', 1], ['name_98', 2], ['name_97', 3], ['name_100', 4]]
-             )
+          [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+        ).to(
+          [['name_99', 1], ['name_98', 2], ['name_97', 3], ['name_100', 4]]
+        )
       end
 
       context 'when updating past' do
@@ -350,10 +350,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['name_99', 1], ['name_100', 2], ['name_98', 3], ['name_97', 4]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['name_99', 1], ['name_100', 2], ['name_98', 3], ['name_97', 4]]
+            )
           end
         end
 
@@ -364,10 +364,10 @@ module VCAP::CloudController
             }.to change {
               ordered_buildpacks
             }.from(
-                   [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
-                 ).to(
-                   [['name_100', 1], ['name_99', 2], ['name_97', 3], ['name_98', 4]]
-                 )
+              [['name_100', 1], ['name_99', 2], ['name_98', 3], ['name_97', 4]]
+            ).to(
+              [['name_100', 1], ['name_99', 2], ['name_97', 3], ['name_98', 4]]
+            )
           end
         end
       end
@@ -383,10 +383,10 @@ module VCAP::CloudController
         }.to change {
           ordered_buildpacks
         }.from(
-               [['first_buildpack', 1], ['second_buildpack', 2]]
-             ).to(
-               [['second_buildpack', 1]]
-             )
+          [['first_buildpack', 1], ['second_buildpack', 2]]
+        ).to(
+          [['second_buildpack', 1]]
+        )
       end
 
       it "doesn't shift when the last position is deleted" do
@@ -395,10 +395,10 @@ module VCAP::CloudController
         }.to change {
           ordered_buildpacks
         }.from(
-               [['first_buildpack', 1], ['second_buildpack', 2]]
-             ).to(
-               [['first_buildpack', 1]]
-             )
+          [['first_buildpack', 1], ['second_buildpack', 2]]
+        ).to(
+          [['first_buildpack', 1]]
+        )
       end
     end
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'presenters/api/staging_job_presenter'
 
-describe StagingJobPresenter do
+RSpec.describe StagingJobPresenter do
   describe '#to_hash' do
     let(:job) do
       job = Delayed::Job.enqueue double(:obj, perform: nil)

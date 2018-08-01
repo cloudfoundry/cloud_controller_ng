@@ -2,13 +2,14 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::V3
-    describe PackageBitsCopier do
+    RSpec.describe PackageBitsCopier do
       subject(:job) { PackageBitsCopier.new(source_package.guid, destination_package.guid) }
 
       let(:package_bits_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
       let(:blobstore_dir) { Dir.mktmpdir }
       let(:package_blobstore) do
-        CloudController::Blobstore::Client.new({ provider: 'Local', local_root: blobstore_dir }, 'package')
+        CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
+                                                  directory_key: 'package')
       end
       let(:source_package) { PackageModel.make(type: 'bits', package_hash: 'something') }
       let(:destination_package) { PackageModel.make(type: 'bits') }

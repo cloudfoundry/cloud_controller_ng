@@ -1,26 +1,39 @@
 module VCAP::CloudController
   module Dea
     class Stager
-      def initialize(app, config, message_bus, dea_pool, stager_pool, runners)
-        @app         = app
+      def initialize(app, config, message_bus, dea_pool, runners=CloudController::DependencyLocator.instance.runners)
         @config      = config
         @message_bus = message_bus
         @dea_pool    = dea_pool
-        @stager_pool = stager_pool
         @runners     = runners
+        @process     = app.web_process
       end
 
-      def stage
-        blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
-        task = AppStagerTask.new(@config, @message_bus, @app, @dea_pool, @stager_pool, blobstore_url_generator)
+      def stage(staging_details)
+        @droplet = staging_details.droplet
 
-        @app.last_stager_response = task.stage do |staging_result|
-          @runners.runner_for_app(@app).start(staging_result)
+        stager_task.stage do |staging_result|
+          @runners.runner_for_app(@process).start(staging_result)
         end
       end
 
-      def staging_complete(_, _)
-        raise NotImplementedError
+      def staging_complete(droplet, response)
+        @droplet = droplet
+
+        stager_task.handle_http_response(response) do |staging_result|
+          @process.reload
+          @runners.runner_for_app(@process).start(staging_result)
+        end
+      end
+
+      def stop_stage(_staging_guid)
+        nil
+      end
+
+      private
+
+      def stager_task
+        @task ||= AppStagerTask.new(@config, @message_bus, @droplet, @dea_pool, CloudController::DependencyLocator.instance.blobstore_url_generator)
       end
     end
   end

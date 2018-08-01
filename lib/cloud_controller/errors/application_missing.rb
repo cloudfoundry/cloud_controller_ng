@@ -1,4 +1,4 @@
-module VCAP::CloudController
+module CloudController
   module Errors
     class ApplicationMissing < RuntimeError
     end

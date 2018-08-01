@@ -19,7 +19,7 @@ Sequel.migration do
         add_foreign_key [:app_guid], :apps_v3, key: :guid
       end
 
-      if self.class.name.match(/mysql/i)
+      if self.class.name =~ /mysql/i
         ['packages', 'v3_droplets'].each do |table_name|
           run "ALTER TABLE `#{table_name}` CONVERT TO CHARACTER SET utf8;"
         end

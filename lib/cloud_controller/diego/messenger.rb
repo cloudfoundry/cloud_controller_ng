@@ -1,53 +1,104 @@
+require 'cloud_controller/dependency_locator'
+require 'cloud_controller/diego/desire_app_handler'
+
 module VCAP::CloudController
   module Diego
     class Messenger
-      def initialize(stager_client, nsync_client, protocol)
-        @stager_client = stager_client
-        @nsync_client = nsync_client
-        @protocol = protocol
+      def send_stage_request(config, staging_details)
+        logger.info('staging.begin', package_guid: staging_details.package.guid)
+
+        staging_guid = staging_details.droplet.guid
+
+        if do_local_staging
+          task_definition = task_recipe_builder.build_staging_task(config, staging_details)
+          bbs_stager_client.stage(staging_guid, task_definition)
+        else
+          staging_message = protocol.stage_package_request(config, staging_details)
+          stager_client.stage(staging_guid, staging_message)
+        end
       end
 
-      def send_stage_request(app, config)
-        logger.info('staging.begin', app_guid: app.guid)
+      def send_stop_staging_request(staging_guid)
+        logger.info('staging.stop', staging_guid: staging_guid)
 
-        staging_guid = StagingGuid.from_app(app)
-        staging_message = @protocol.stage_app_request(app, config)
-        @stager_client.stage(staging_guid, staging_message)
+        if do_local_staging
+          bbs_stager_client.stop_staging(staging_guid)
+        else
+          stager_client.stop_staging(staging_guid)
+        end
       end
 
-      def send_stop_staging_request(app)
-        logger.info('staging.stop', app_guid: app.guid)
+      def send_desire_request(process, config)
+        logger.info('desire.app.begin', app_guid: process.guid)
 
-        staging_guid = StagingGuid.from_app(app)
-        @stager_client.stop_staging(staging_guid)
+        process_guid = ProcessGuid.from_process(process)
+        if bypass_bridge?
+          app_recipe_builder = AppRecipeBuilder.new(config: config, process: process)
+          DesireAppHandler.create_or_update_app(process_guid, app_recipe_builder, bbs_apps_client)
+        else
+          desire_message = protocol.desire_app_request(process, config[:default_health_check_timeout])
+          nsync_client.desire_app(process_guid, desire_message)
+        end
       end
 
-      def send_desire_request(app, default_health_check_timeout)
-        logger.info('desire.app.begin', app_guid: app.guid)
+      def send_stop_index_request(process, index)
+        logger.info('stop.index', app_guid: process.guid, index: index)
 
-        process_guid = ProcessGuid.from_app(app)
-        desire_message = @protocol.desire_app_request(app, default_health_check_timeout)
-        @nsync_client.desire_app(process_guid, desire_message)
+        process_guid = ProcessGuid.from_process(process)
+        if bypass_bridge?
+          bbs_apps_client.stop_index(process_guid, index)
+        else
+          nsync_client.stop_index(process_guid, index)
+        end
       end
 
-      def send_stop_index_request(app, index)
-        logger.info('stop.index', app_guid: app.guid, index: index)
+      def send_stop_app_request(process)
+        logger.info('stop.app', app_guid: process.guid)
 
-        process_guid = ProcessGuid.from_app(app)
-        @nsync_client.stop_index(process_guid, index)
-      end
-
-      def send_stop_app_request(app)
-        logger.info('stop.app', app_guid: app.guid)
-
-        process_guid = ProcessGuid.from_app(app)
-        @nsync_client.stop_app(process_guid)
+        process_guid = ProcessGuid.from_process(process)
+        if bypass_bridge?
+          bbs_apps_client.stop_app(process_guid)
+        else
+          nsync_client.stop_app(process_guid)
+        end
       end
 
       private
 
+      def do_local_staging
+        !!HashUtils.dig(Config.config, :diego, :temporary_local_staging)
+      end
+
       def logger
         @logger ||= Steno.logger('cc.diego.messenger')
+      end
+
+      def protocol
+        @protocol ||= Protocol.new
+      end
+
+      def task_recipe_builder
+        @task_recipe_builder ||= TaskRecipeBuilder.new
+      end
+
+      def stager_client
+        CloudController::DependencyLocator.instance.stager_client
+      end
+
+      def bbs_apps_client
+        CloudController::DependencyLocator.instance.bbs_apps_client
+      end
+
+      def bbs_stager_client
+        CloudController::DependencyLocator.instance.bbs_stager_client
+      end
+
+      def nsync_client
+        CloudController::DependencyLocator.instance.nsync_client
+      end
+
+      def bypass_bridge?
+        !!HashUtils.dig(Config.config, :diego, :temporary_local_apps)
       end
     end
   end

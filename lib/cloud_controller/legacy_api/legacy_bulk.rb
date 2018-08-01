@@ -44,9 +44,9 @@ module VCAP::CloudController
         subject = "cloudcontroller.bulk.credentials.#{config[:cc_partition]}"
         message_bus.subscribe(subject) do |_, reply|
           message_bus.publish(
-              reply,
-              'user'      => config[:auth_user],
-              'password'  => config[:auth_password],
+            reply,
+            'user'      => config[:auth_user],
+            'password'  => config[:auth_password],
           )
         end
       end
@@ -63,7 +63,7 @@ module VCAP::CloudController
       super
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? && auth.credentials == self.class.credentials
-        raise Errors::ApiError.new_from_details('NotAuthenticated')
+        raise CloudController::Errors::NotAuthenticated
       end
     end
 

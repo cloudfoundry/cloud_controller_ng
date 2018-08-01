@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::RestAPI
-  describe VCAP::RestAPI::Query do
+  RSpec.describe VCAP::RestAPI::Query do
     include VCAP::RestAPI
 
     class Author < Sequel::Model
@@ -267,7 +267,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, q: q)
-          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises on nonexistent foreign_keys' do
@@ -275,7 +275,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           [*@queryable_attributes, 'fake_foreign_key_guid'], q: q)
-          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises on nonexistent attributes that do exist in queryable_attributes' do
@@ -283,7 +283,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           [*@queryable_attributes, 'fake_attr'], q: q)
-          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises on nonallowed attributes' do
@@ -291,7 +291,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, q: q)
-          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
 
         it 'raises when there is no key' do
@@ -299,7 +299,7 @@ module VCAP::RestAPI
           expect {
             Query.filtered_dataset_from_query_params(Author, Author.dataset,
                                                           @queryable_attributes, q: q)
-          }.to raise_error(VCAP::Errors::ApiError, /query parameter is invalid/)
+          }.to raise_error(CloudController::Errors::ApiError, /query parameter is invalid/)
         end
       end
 

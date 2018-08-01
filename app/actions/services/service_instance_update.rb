@@ -2,7 +2,8 @@ require 'actions/services/locks/updater_lock'
 
 module VCAP::CloudController
   class ServiceInstanceUpdate
-    KEYS_TO_UPDATE_CC_ONLY = %w(tags name space_guid)
+    KEYS_TO_UPDATE_CC_ONLY = %w(tags name space_guid).freeze
+    KEYS_TO_UPDATE_CC = KEYS_TO_UPDATE_CC_ONLY + ['service_plan_guid']
 
     def initialize(accepts_incomplete: false, services_event_repository: nil)
       @accepts_incomplete = accepts_incomplete
@@ -58,18 +59,18 @@ module VCAP::CloudController
     end
 
     def update_broker(accepts_incomplete, request_attrs, service_instance, previous_values)
-      if request_attrs.key?('service_plan_guid')
-        service_plan = ServicePlan.find(guid: request_attrs['service_plan_guid'])
-      else
-        service_plan = service_instance.service_plan
-      end
+      service_plan = if request_attrs.key?('service_plan_guid')
+                       ServicePlan.find(guid: request_attrs['service_plan_guid'])
+                     else
+                       service_instance.service_plan
+                     end
 
       response, err = service_instance.client.update(
-          service_instance,
-          service_plan,
-          accepts_incomplete: accepts_incomplete,
-          arbitrary_parameters: request_attrs['parameters'],
-          previous_values: previous_values
+        service_instance,
+        service_plan,
+        accepts_incomplete: accepts_incomplete,
+        arbitrary_parameters: request_attrs['parameters'],
+        previous_values: previous_values
       )
 
       service_instance.last_operation.update_attributes(response[:last_operation])
@@ -110,11 +111,12 @@ module VCAP::CloudController
 
     def build_fetch_job(service_instance, request_attrs)
       VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
-          'service-instance-state-fetch',
-          service_instance.client.attrs,
-          service_instance.guid,
-          @services_event_repository,
-          request_attrs,
+        'service-instance-state-fetch',
+        service_instance.client.attrs,
+        service_instance.guid,
+        @services_event_repository.user.guid,
+        @services_event_repository.current_user_email,
+        request_attrs,
       )
     end
 

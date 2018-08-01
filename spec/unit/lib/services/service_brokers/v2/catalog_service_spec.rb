@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'securerandom'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe CatalogService do
+  RSpec.describe CatalogService do
     def build_valid_service_attrs(opts={})
       {
         'id' => 'broker-provided-service-id',

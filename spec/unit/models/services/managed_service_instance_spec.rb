@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ManagedServiceInstance, type: :model do
+  RSpec.describe ManagedServiceInstance, type: :model do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
     let(:email) { Sham.email }
     let(:guid) { Sham.guid }
@@ -22,7 +22,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space }
       it do
         is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
-          app = VCAP::CloudController::App.make(space: service_instance.space)
+          app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
       end
@@ -108,12 +108,18 @@ module VCAP::CloudController
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)
-        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
+        expect(event.state).to eq(Repositories::ServiceUsageEventRepository::CREATED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
+      end
+
+      it 'allows really long dashboard urls' do
+        instance = ManagedServiceInstance.make
+        instance.update dashboard_url: 'a' * 1024
+        expect(instance.guid).to be
       end
     end
 
-    describe '#save_with_new_operation'  do
+    describe '#save_with_new_operation' do
       let(:service_instance) { ManagedServiceInstance.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
 
@@ -157,6 +163,7 @@ module VCAP::CloudController
       let(:service_instance) { ManagedServiceInstance.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:manager) { make_manager_for_space(service_instance.space) }
+      let(:admin_read_only) { set_current_user_as_admin_read_only(user: User.make) }
 
       before do
         last_operation = { state: 'in progress', description: '10%' }
@@ -205,6 +212,29 @@ module VCAP::CloudController
 
           service_instance.reload
           expect(service_instance.dashboard_url).to eq ''
+          expect(service_instance.last_operation.state).to eq 'in progress'
+          expect(service_instance.last_operation.guid).to eq @old_guid
+          expect(service_instance.last_operation.description).to eq '20%'
+        end
+      end
+
+      context 'admin_read_only' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(admin_read_only)
+        end
+
+        it 'updates the existing last_operation object and display the dashboard url' do
+          attrs = {
+            last_operation: {
+              state: 'in progress',
+              description: '20%'
+            },
+            dashboard_url: 'this.should.be.visible.com'
+          }
+          service_instance.save_and_update_operation(attrs)
+
+          service_instance.reload
+          expect(service_instance.dashboard_url).to eq 'this.should.be.visible.com'
           expect(service_instance.last_operation.state).to eq 'in progress'
           expect(service_instance.last_operation.guid).to eq @old_guid
           expect(service_instance.last_operation.description).to eq '20%'
@@ -310,12 +340,12 @@ module VCAP::CloudController
               })
 
           expect(service_instance.as_summary_json['last_operation']).to include(
-              {
-                'state' => 'in progress',
-                'description' => '50% all the time',
-                'type' => 'create',
-              }
-            )
+            {
+              'state' => 'in progress',
+              'description' => '50% all the time',
+              'type' => 'create',
+            }
+          )
         end
       end
       context 'when the last_operation does not exist' do
@@ -425,7 +455,7 @@ module VCAP::CloudController
       context 'when the instance has bindings' do
         before do
           ServiceBinding.make(
-            app: AppFactory.make(space: service_instance.space),
+            app: AppModel.make(space: service_instance.space),
             service_instance: service_instance
           )
         end
@@ -441,7 +471,7 @@ module VCAP::CloudController
         event = VCAP::CloudController::ServiceUsageEvent.last
 
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
-        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
+        expect(event.state).to eq(Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(service_instance)
       end
 
@@ -456,121 +486,17 @@ module VCAP::CloudController
       end
     end
 
-    describe '#enum_snapshots' do
-      subject { ManagedServiceInstance.make(:v1) }
-      let(:enum_snapshots_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
-      let(:service_auth_token) { 'tokenvalue' }
-      before do
-        subject.service_plan.service.update(url: 'http://gw.example.com:12345/')
-        subject.service_plan.service.service_auth_token.update(token: service_auth_token)
-      end
-
-      context "when there isn't a service auth token" do
-        it 'fails' do
-          subject.service_plan.service.service_auth_token.destroy
-          subject.refresh
-          expect do
-            subject.enum_snapshots
-          end.to raise_error(VCAP::Errors::ApiError, /Missing service auth token/)
-        end
-      end
-
-      context 'returns a list of snapshots' do
-        let(:success_response) { MultiJson.dump({ snapshots: [{ snapshot_id: '1', name: 'foo', state: 'ok', size: 0 },
-                                                              { snapshot_id: '2', name: 'bar', state: 'bad', size: 0 }] })
-        }
-        before do
-          stub_request(:get, enum_snapshots_url_matcher).to_return(body: success_response)
-        end
-
-        it 'return a list of snapshot from the gateway' do
-          snapshots = subject.enum_snapshots
-          expect(snapshots).to have(2).items
-          expect(snapshots.first.snapshot_id).to eq('1')
-          expect(snapshots.first.state).to eq('ok')
-          expect(snapshots.last.snapshot_id).to eq('2')
-          expect(snapshots.last.state).to eq('bad')
-          expect(a_request(:get, enum_snapshots_url_matcher).with(headers: {
-            'Content-Type' => 'application/json',
-            'X-Vcap-Service-Token' => 'tokenvalue'
-          })).to have_been_made
-        end
-      end
-    end
-
-    describe '#create_snapshot' do
-      let(:name) { 'New snapshot' }
-      subject { ManagedServiceInstance.make(:v1) }
-      let(:create_snapshot_url_matcher) { "gw.example.com:12345/gateway/v2/configurations/#{subject.gateway_name}/snapshots" }
-      before do
-        subject.service_plan.service.update(url: 'http://gw.example.com:12345/')
-        subject.service_plan.service.service_auth_token.update(token: 'tokenvalue')
-      end
-
-      context "when there isn't a service auth token" do
-        it 'fails' do
-          subject.service_plan.service.service_auth_token.destroy
-          subject.refresh
-          expect do
-            subject.create_snapshot(name)
-          end.to raise_error(VCAP::Errors::ApiError, /Missing service auth token/)
-        end
-      end
-
-      it 'rejects empty string as name' do
-        expect do
-          subject.create_snapshot('')
-        end.to raise_error(JsonMessage::ValidationError, /Field: name/)
-      end
-
-      context 'when the request succeeds' do
-        let(:success_response) { %({"snapshot_id": "1", "state": "empty", "name": "foo", "size": 0}) }
-        before do
-          stub_request(:post, create_snapshot_url_matcher).to_return(body: success_response)
-        end
-
-        it 'makes an HTTP call to the corresponding service gateway and returns the decoded response' do
-          snapshot = subject.create_snapshot(name)
-          expect(snapshot.snapshot_id).to eq('1')
-          expect(snapshot.state).to eq('empty')
-          expect(a_request(:post, create_snapshot_url_matcher)).to have_been_made
-        end
-
-        it 'uses the correct svc auth token' do
-          subject.create_snapshot(name)
-
-          expect(a_request(:post, create_snapshot_url_matcher).with(
-            headers: { 'X-VCAP-Service-Token' => 'tokenvalue' })).to have_been_made
-        end
-
-        it 'has the name in the payload' do
-          payload = MultiJson.dump({ name: name })
-          subject.create_snapshot(name)
-
-          expect(a_request(:post, create_snapshot_url_matcher).with(body: payload)).to have_been_made
-        end
-      end
-
-      context 'when the request fails' do
-        it 'should raise an error' do
-          stub_request(:post, create_snapshot_url_matcher).to_return(body: 'Something went wrong', status: 500)
-          expect { subject.create_snapshot(name) }.to raise_error(ManagedServiceInstance::ServiceGatewayError, /upstream failure/)
-        end
-      end
-    end
-
     describe '#bindable?' do
-      let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
-      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_instance) { ManagedServiceInstance.make }
 
-      context 'when the service is bindable' do
-        let(:service) { Service.make(bindable: true) }
+      context 'when the service plan is bindable' do
+        before { expect(service_instance.service_plan).to receive(:bindable?).and_return(true) }
 
         specify { expect(service_instance).to be_bindable }
       end
 
-      context 'when the service is not bindable' do
-        let(:service) { Service.make(bindable: false) }
+      context 'when the service plan is not bindable' do
+        before { expect(service_instance.service_plan).to receive(:bindable?).and_return(false) }
 
         specify { expect(service_instance).not_to be_bindable }
       end

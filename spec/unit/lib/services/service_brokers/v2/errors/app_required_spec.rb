@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe 'AppRequired' do
+        RSpec.describe 'AppRequired' do
           let(:response_body) { '{"error": "RequiresApp", "description": "error message"}' }
           let(:response) { instance_double(HttpResponse, code: 422, message: 'Unprocessable Entity', body: response_body) }
 

@@ -2,15 +2,20 @@ require 'spec_helper'
 require 'cloud_controller/dea/hm9000/respondent'
 
 module VCAP::CloudController
-  describe Dea::HM9000::Respondent do
+  RSpec.describe Dea::HM9000::Respondent do
     let(:message_bus) { CfMessageBus::MockMessageBus.new }
     let(:dea_client) { double('dea client', message_bus: message_bus) }
 
     subject { Dea::HM9000::Respondent.new(dea_client, message_bus) }
 
+    let(:app_starter_task) { instance_double(Dea::AppStarterTask, start: nil) }
+    let(:config) { TestConfig.config }
+
     before do
+      allow(Dea::AppStarterTask).to receive(:new).and_return(app_starter_task)
       allow(dea_client).to receive(:stop_instances)
-      allow(dea_client).to receive(:start_instance_at_index)
+      allow(dea_client).to receive(:start_instances)
+      allow(dea_client).to receive(:config).and_return(config)
     end
 
     describe '#handle_requests' do
@@ -41,18 +46,11 @@ module VCAP::CloudController
       AppFactory.make(
         instances: 2,
         state: app_state,
-        droplet_hash: droplet_hash,
-        package_hash: 'abcd',
-        package_state: package_state,
         diego: diego,
       )
     end
-
     let(:diego) { false }
-
     let(:app_state) { 'STARTED' }
-    let(:droplet_hash) { 'present-hash' }
-    let(:package_state) { 'STAGED' }
 
     describe '#process_hm9000_start' do
       let(:hm9000_start_message) do
@@ -65,7 +63,7 @@ module VCAP::CloudController
 
       context 'when the message is missing fields' do
         it 'should not do anything' do
-          expect(dea_client).not_to receive(:start_instance_at_index)
+          expect(dea_client).not_to receive(:start_instances)
           subject.process_hm9000_stop({ 'droplet' => app.guid, 'instance_index' => 2 })
         end
       end
@@ -76,7 +74,7 @@ module VCAP::CloudController
         let(:start_instance_index) { 1 }
 
         it 'should not do anything' do
-          expect(dea_client).not_to receive(:start_instance_at_index)
+          expect(dea_client).not_to receive(:start_instances)
           subject.process_hm9000_start(hm9000_start_message)
         end
       end
@@ -93,17 +91,14 @@ module VCAP::CloudController
                 let(:diego) { true }
 
                 it 'should not send the start message' do
-                  expect(dea_client).not_to receive(:start_instance_at_index)
+                  expect(dea_client).not_to receive(:start_instances)
                   subject.process_hm9000_start(hm9000_start_message)
                 end
               end
 
               context 'and the diego flag is not set' do
                 it 'should send the start message' do
-                  expect(dea_client).to receive(:start_instance_at_index) do |app_to_start, index_to_start|
-                    expect(app_to_start).to eq(app)
-                    expect(index_to_start).to eq(1)
-                  end
+                  expect(app_starter_task).to receive(:start).with(specific_instances: 1)
 
                   subject.process_hm9000_start(hm9000_start_message)
                 end
@@ -114,19 +109,19 @@ module VCAP::CloudController
               let(:droplet_hash) { nil }
 
               it 'should not do anything' do
-                expect(dea_client).not_to receive(:start_instance_at_index)
+                expect(dea_client).not_to receive(:start_instances)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
 
             context 'if the app failed to stage' do
               before do
-                app.package_state = 'FAILED'
-                app.save
+                DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::FAILED_STATE)
+                app.reload
               end
 
               it 'should not do anything' do
-                expect(dea_client).not_to receive(:start_instance_at_index)
+                expect(dea_client).not_to receive(:start_instances)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
@@ -135,7 +130,7 @@ module VCAP::CloudController
               let(:app_state) { 'STOPPED' }
 
               it 'should not do anything' do
-                expect(dea_client).not_to receive(:start_instance_at_index)
+                expect(dea_client).not_to receive(:start_instances)
                 subject.process_hm9000_start(hm9000_start_message)
               end
             end
@@ -145,7 +140,7 @@ module VCAP::CloudController
             let(:start_instance_index) { 2 }
 
             it 'should not do anything' do
-              expect(dea_client).not_to receive(:start_instance_at_index)
+              expect(dea_client).not_to receive(:start_instances)
               subject.process_hm9000_start(hm9000_start_message)
             end
           end
@@ -156,7 +151,7 @@ module VCAP::CloudController
           let(:start_instance_index) { 1 }
 
           it 'should not do anything' do
-            expect(dea_client).not_to receive(:start_instance_at_index)
+            expect(dea_client).not_to receive(:start_instances)
             subject.process_hm9000_start(hm9000_start_message)
           end
         end
@@ -240,10 +235,10 @@ module VCAP::CloudController
                   end
                 end
 
-                context 'but the package is pending staging' do
+                context 'but the package is staging' do
                   before do
-                    app.package_state = 'PENDING'
-                    app.save
+                    DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::STAGING_STATE)
+                    app.reload
                   end
 
                   it 'should ignore the request' do
@@ -254,8 +249,8 @@ module VCAP::CloudController
 
                 context 'but the package has failed to stage' do
                   before do
-                    app.package_state = 'FAILED'
-                    app.save
+                    DropletModel.make(app: app.app, package: app.latest_package, state: DropletModel::FAILED_STATE)
+                    app.reload
                   end
 
                   it 'should stop the index' do

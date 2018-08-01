@@ -54,5 +54,12 @@ module VCAP::CloudController::Metrics
         end
       end
     end
+
+    def update_task_stats(total_running_tasks, total_memory_in_mb)
+      @statsd.batch do |batch|
+        batch.gauge('cc.tasks_running.count', total_running_tasks)
+        batch.gauge('cc.tasks_running.memory_in_mb', total_memory_in_mb)
+      end
+    end
   end
 end

@@ -8,11 +8,10 @@ require 'cloud_controller/diego/egress_rules'
 
 module VCAP::CloudController
   class Runners
-    def initialize(config, message_bus, dea_pool, stager_pool)
+    def initialize(config, message_bus, dea_pool)
       @config = config
       @message_bus = message_bus
       @dea_pool = dea_pool
-      @stager_pool = stager_pool
     end
 
     def runner_for_app(app)
@@ -24,121 +23,99 @@ module VCAP::CloudController
     end
 
     def diego_apps(batch_size, last_id)
-      App.
-        eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
-        where('apps.id > ?', last_id).
-        where('deleted_at IS NULL').
-        where(state: 'STARTED').
-        where(package_state: 'STAGED').
-        where(diego: true).
-        order(:id).
+      App.select_all(App.table_name).
+        diego.
+        runnable.
+        where("#{App.table_name}.id > ?", last_id).
+        order("#{App.table_name}__id".to_sym).
         limit(batch_size).
+        eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all
     end
 
     def diego_apps_from_process_guids(process_guids)
       process_guids = Array(process_guids).to_set
-      App.
-        eager(:current_saved_droplet, :space, :stack, :service_bindings, { routes: :domain }).
-        where(guid: process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
-        where('deleted_at IS NULL').
-        where(state: 'STARTED').
-        where(package_state: 'STAGED').
-        where(diego: true).
-        order(:id).
+      App.select_all(App.table_name).
+        diego.
+        runnable.
+        where("#{App.table_name}__guid".to_sym => process_guids.map { |pg| Diego::ProcessGuid.app_guid(pg) }).
+        order("#{App.table_name}__id".to_sym).
+        eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all.
-        select { |app| process_guids.include?(Diego::ProcessGuid.from_app(app)) }
+        select { |app| process_guids.include?(Diego::ProcessGuid.from_process(app)) }
     end
 
     def diego_apps_cache_data(batch_size, last_id)
-      diego_apps = App.select(:id, :guid, :version, :updated_at).
-        where('id > ?', last_id).
-        where(state: 'STARTED').
-        where(package_state: 'STAGED').
-        where('deleted_at IS NULL').
-        where(diego: true)
-      diego_apps = filter_docker_apps(diego_apps) unless FeatureFlag.enabled?('diego_docker')
-      diego_apps.order(:id).
-        limit(batch_size).
-        select_map([:id, :guid, :version, :updated_at])
+      diego_apps = App.
+                   diego.
+                   runnable.
+                   where("#{App.table_name}.id > ?", last_id).
+                   order("#{App.table_name}__id".to_sym).
+                   limit(batch_size)
+
+      diego_apps = diego_apps.buildpack_type unless FeatureFlag.enabled?(:diego_docker)
+
+      diego_apps.select_map([
+        "#{App.table_name}__id".to_sym,
+        "#{App.table_name}__guid".to_sym,
+        "#{App.table_name}__version".to_sym,
+        "#{App.table_name}__updated_at".to_sym
+      ])
     end
 
     def dea_apps(batch_size, last_id)
-      query = App.
-        where('id > ?', last_id).
-        where('deleted_at IS NULL').
-        order(:id).
-        where(diego: false).
-        limit(batch_size)
+      query = App.select_all(App.table_name).
+              dea.
+              where("#{App.table_name}.id > ?", last_id).
+              order("#{App.table_name}__id".to_sym).
+              limit(batch_size)
 
       query.all
     end
 
-    EXPORT_ATTRIBUTES = [
-      :instances,
-      :state,
-      :memory,
-      :package_state,
-      :version
-    ]
-
     def dea_apps_hm9k(batch_size, last_id)
-      query = App.
-        where('id > ?', last_id).
-        where('deleted_at IS NULL').
-        order(:id).
-        where(diego: false).
-        where(state: 'STARTED').
-        exclude(package_state: 'FAILED').
-        limit(batch_size).
-        select_map([:id, :guid, :instances, :state, :memory, :package_state, :version, :created_at, :updated_at])
+      query = App.select_all(App.table_name).
+              runnable.
+              dea.
+              where("#{App.table_name}.id > ?", last_id).
+              order("#{App.table_name}__id".to_sym).
+              limit(batch_size).
+              eager(:latest_droplet, :latest_package, current_droplet: :package)
 
-      app_hashes = query.map do |row|
-        hash = {}
-        EXPORT_ATTRIBUTES.each_with_index { |obj, i| hash[obj.to_s] = row[i + 2] }
+      apps = query.all.reject { |a| a.package_state == 'FAILED' }
 
-        hash['id'] = row[1]
-        hash['updated_at'] = row[8] || row[7]
-        hash
+      app_hashes = apps.map do |app|
+        {
+          'id'            => app.guid,
+          'instances'     => app.instances,
+          'state'         => app.state,
+          'memory'        => app.memory,
+          'version'       => app.version,
+          'updated_at'    => app.updated_at || app.created_at,
+          'package_state' => app.package_state,
+        }
       end
 
-      id_for_next_token = app_hashes.empty? ? nil : query.last[0]
+      id_for_next_token = apps.empty? ? nil : apps.last.id
       [app_hashes, id_for_next_token]
     end
 
     private
 
     def diego_runner(app)
-      nsync_client = dependency_locator.nsync_client
-      stager_client = dependency_locator.stager_client
-
-      protocol = Diego::Protocol.new(diego_lifecycle_protocol(app), Diego::EgressRules.new)
-      messenger = Diego::Messenger.new(stager_client, nsync_client, protocol)
-      Diego::Runner.new(app, messenger, protocol, @config[:default_health_check_timeout])
+      Diego::Runner.new(app, @config)
     end
 
     def dea_runner(app)
-      Dea::Runner.new(app, @config, @message_bus, @dea_pool, @stager_pool)
+      Dea::Runner.new(app, @config, dependency_locator.blobstore_url_generator, @message_bus, @dea_pool)
     end
 
     def dependency_locator
       CloudController::DependencyLocator.instance
     end
 
-    def diego_lifecycle_protocol(app)
-      if app.docker_image.present?
-        Diego::Docker::LifecycleProtocol.new
-      else
-        Diego::Buildpack::LifecycleProtocol.new(dependency_locator.blobstore_url_generator(true))
-      end
-    end
-
     def staging_timeout
       @config[:staging][:timeout_in_seconds]
-    end
-
-    def filter_docker_apps(query)
-      query.where(docker_image: nil)
     end
   end
 end

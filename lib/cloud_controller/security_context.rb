@@ -19,6 +19,10 @@ module VCAP::CloudController
       roles.admin?
     end
 
+    def self.admin_read_only?
+      roles.admin_read_only?
+    end
+
     def self.roles
       VCAP::CloudController::Roles.new(token)
     end

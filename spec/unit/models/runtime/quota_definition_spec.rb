@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::QuotaDefinition, type: :model do
+  RSpec.describe VCAP::CloudController::QuotaDefinition, type: :model do
     let(:quota_definition) { QuotaDefinition.make }
 
     it { is_expected.to have_timestamp_columns }
@@ -51,6 +51,56 @@ module VCAP::CloudController
         expect(quota_definition).to be_valid
       end
 
+      context 'total_reserved_route_ports' do
+        let(:err_msg) { 'Total reserved ports must be -1, 0, or a positive integer, and must be less than or equal to total routes.' }
+
+        it 'total routes must be greater than the total_reserved_route_ports' do
+          quota_definition.total_routes = 2
+          quota_definition.total_reserved_route_ports = 3
+          expect(quota_definition).not_to be_valid
+          expect(quota_definition.errors.full_messages.first).to eq(err_msg)
+
+          quota_definition.total_routes = 0
+          quota_definition.total_reserved_route_ports = 1
+          expect(quota_definition).not_to be_valid
+          expect(quota_definition.errors.full_messages.first).to eq(err_msg)
+        end
+
+        it 'total routes is equal to total_reserved_route_ports' do
+          quota_definition.total_routes = 2
+          quota_definition.total_reserved_route_ports = 2
+          expect(quota_definition).to be_valid
+
+          quota_definition.total_reserved_route_ports = -1
+          expect(quota_definition).to be_valid
+        end
+
+        it 'total_reserved_route_ports cannot be less than -1' do
+          quota_definition.total_reserved_route_ports = -2
+          expect(quota_definition).not_to be_valid
+          expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
+
+          quota_definition.total_reserved_route_ports = -1
+          expect(quota_definition).to be_valid
+        end
+
+        context 'when total_routes is -1' do
+          it 'total_reserved_route_ports can be any value' do
+            quota_definition.total_routes = -1
+            quota_definition.total_reserved_route_ports = 2
+            expect(quota_definition).to be_valid
+
+            quota_definition.total_routes = -1
+            quota_definition.total_reserved_route_ports = 0
+            expect(quota_definition).to be_valid
+
+            quota_definition.total_routes = -1
+            quota_definition.total_reserved_route_ports = -1
+            expect(quota_definition).to be_valid
+          end
+        end
+      end
+
       it 'app_instance_limit cannot be less than -1' do
         quota_definition.app_instance_limit = -2
         expect(quota_definition).not_to be_valid
@@ -59,18 +109,36 @@ module VCAP::CloudController
         quota_definition.app_instance_limit = -1
         expect(quota_definition).to be_valid
       end
+
+      it 'app_task_limit cannot be less than -1' do
+        quota_definition.app_task_limit = -2
+        expect(quota_definition).not_to be_valid
+        expect(quota_definition.errors.on(:app_task_limit)).to include(:invalid_app_task_limit)
+
+        quota_definition.app_task_limit = -1
+        expect(quota_definition).to be_valid
+      end
+    end
+
+    it 'total_service_keys cannot be less than -1' do
+      quota_definition.total_service_keys = -2
+      expect(quota_definition).not_to be_valid
+      expect(quota_definition.errors.on(:total_service_keys)).to include(:invalid_total_service_keys)
+
+      quota_definition.total_service_keys = -1
+      expect(quota_definition).to be_valid
     end
 
     describe 'Serialization' do
       it {
         is_expected.to export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                                          :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit
+                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports
       }
       it {
         is_expected.to import_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,
                                          :total_private_domains, :memory_limit, :trial_db_allowed, :instance_memory_limit,
-                                         :app_instance_limit
+                                         :app_instance_limit, :app_task_limit, :total_service_keys, :total_reserved_route_ports
       }
     end
 
@@ -87,7 +155,7 @@ module VCAP::CloudController
 
           expect {
             quota_definition.destroy
-          }.to raise_error VCAP::Errors::ApiError, /Please delete the organization associations for your quota definition./
+          }.to raise_error CloudController::Errors::ApiError, /Please delete the organization associations for your quota definition./
           expect(QuotaDefinition[quota_definition.id]).to eq quota_definition
         end
       end

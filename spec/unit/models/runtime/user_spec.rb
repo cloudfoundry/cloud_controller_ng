@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::User, type: :model do
+  RSpec.describe VCAP::CloudController::User, type: :model do
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
@@ -181,14 +181,6 @@ module VCAP::CloudController
           expect {
             user.remove_organization(org)
           }.to raise_error User::InvalidOrganizationRelation
-        end
-
-        context 'and they are the only manager of an org' do
-          it 'should not allow them to remove the managed_organization' do
-            expect {
-              user.remove_managed_organization(org)
-            }.to raise_error(Sequel::HookFailed)
-          end
         end
       end
 

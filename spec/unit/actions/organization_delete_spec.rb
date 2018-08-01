@@ -3,8 +3,9 @@ require 'actions/organization_delete'
 require 'actions/space_delete'
 
 module VCAP::CloudController
-  describe OrganizationDelete do
-    let(:space_delete) { SpaceDelete.new(user.id, user_email) }
+  RSpec.describe OrganizationDelete do
+    let(:services_event_repository) { Repositories::ServiceEventRepository.new(user: user, user_email: user_email) }
+    let(:space_delete) { SpaceDelete.new(user.id, user_email, services_event_repository) }
     subject(:org_delete) { OrganizationDelete.new(space_delete) }
 
     describe '#delete' do
@@ -64,15 +65,15 @@ module VCAP::CloudController
           end
           it 'returns an OrganizationDeletionFailed error' do
             errors = org_delete.delete(org_dataset)
-            expect(errors.first).to be_instance_of(VCAP::Errors::ApiError)
+            expect(errors.first).to be_instance_of(CloudController::Errors::ApiError)
             expect(errors.first.name).to eq 'OrganizationDeletionFailed'
           end
 
           it 'rolls up the error messages of its child deletions' do
             errors = org_delete.delete(org_dataset)
-            expect(errors.first.message).to include "Deletion of organization #{org_1.name} failed because one or more resources within could not be deleted.
+            expect(errors.first.message).to include "Deletion of organization #{org_1.name} failed because one or more resources within could not be deleted."
 
-Deletion of space #{space.name} failed because one or more resources within could not be deleted.
+            expect(errors.first.message).to include "Deletion of space #{space.name} failed because one or more resources within could not be deleted.
 
 \tService instance #{service_instance.name}: The service broker returned an invalid response for the request"
 

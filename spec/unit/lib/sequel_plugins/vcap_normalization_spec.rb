@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Sequel::Plugins::VcapNormalization' do
+RSpec.describe 'Sequel::Plugins::VcapNormalization' do
   class TestModel < Sequel::Model
     plugin :vcap_normalization
     strip_attributes :unique_value

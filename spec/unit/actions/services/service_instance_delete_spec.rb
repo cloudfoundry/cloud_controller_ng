@@ -2,8 +2,10 @@ require 'spec_helper'
 require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
-  describe ServiceInstanceDelete do
-    subject(:service_instance_delete) { ServiceInstanceDelete.new }
+  RSpec.describe ServiceInstanceDelete do
+    let(:event_repository) { Repositories::ServiceEventRepository.new(user: user, user_email: user_email) }
+
+    subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository: event_repository) }
 
     describe '#delete' do
       let!(:service_instance_1) { ManagedServiceInstance.make(:routing) }
@@ -75,18 +77,8 @@ module VCAP::CloudController
         expect(a_request(:delete, broker_url)).to have_been_made
       end
 
-      context 'when the service instance is a v1 service' do
-        it 'deletes the service instance' do
-          service_instance = ManagedServiceInstance.make(:v1)
-          errs = service_instance_delete.delete([service_instance])
-          expect(errs).to be_empty
-          expect { service_instance.reload }.to raise_error /Record not found/
-        end
-      end
-
       context 'when accepts_incomplete is true' do
         let(:service_instance) { ManagedServiceInstance.make }
-        let(:event_repository) { Repositories::Services::EventRepository.new(user: user, user_email: user_email) }
         let(:multipart_delete) { false }
 
         subject(:service_instance_delete) do
@@ -159,20 +151,20 @@ module VCAP::CloudController
         end
 
         it 'should leave the service instance unchanged' do
-          original_attrs = service_binding_1.as_json
+          original_attrs = service_instance_1.as_json
           expect {
             Timeout.timeout(0.5.second) do
               service_instance_delete.delete(service_instance_dataset)
             end
           }.to raise_error(Timeout::Error)
 
-          service_binding_1.reload
+          service_instance_1.reload
 
           expect(a_request(:delete, unbind_url(service_binding_1))).
             to have_been_made.times(1)
-          expect(service_binding_1.as_json).to eq(original_attrs)
 
-          expect(ServiceInstance.first(id: service_instance_1.id)).to be
+          expect(service_instance_1.as_json).to eq(original_attrs)
+          expect(service_binding_1.exists?).to be_truthy
         end
       end
 

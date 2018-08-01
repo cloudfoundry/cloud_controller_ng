@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RouteAccess, type: :access do
+  RSpec.describe RouteAccess, type: :access do
     subject(:access) { RouteAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
+    let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
@@ -12,13 +12,9 @@ module VCAP::CloudController
     let(:app) { VCAP::CloudController::AppFactory.make(space: space) }
     let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
-    before do
-      SecurityContext.set(user, token)
-    end
+    before { set_current_user(user, scopes: scopes) }
 
-    after do
-      SecurityContext.clear
-    end
+    it_behaves_like :admin_read_only_access
 
     context 'admin' do
       include_context :admin_setup
@@ -142,7 +138,7 @@ module VCAP::CloudController
         before { FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil) }
 
         it 'raises when attempting to create a route' do
-          expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /route_creation/)
+          expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /route_creation/)
         end
 
         it 'allows all other actions' do
@@ -187,13 +183,13 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:token) { nil }
+      let(:scopes) { nil }
       it_behaves_like :no_access
       it { is_expected.not_to allow_op_on_object :reserved, nil }
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) { { 'scope' => ['cloud_controller.read'] } }
+      let(:scopes) { ['cloud_controller.read'] }
 
       before do
         org.add_user(user)
@@ -210,7 +206,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) { { 'scope' => [] } }
+      let(:scopes) { [] }
 
       before do
         org.add_user(user)

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+INDEX=$2
+
+export CC_JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
+source "${CC_JOB_DIR}/bin/ruby_version.sh"
+
+CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
+
+RUN_DIR="/var/vcap/sys/run/cloud_controller_ng"
+LOG_DIR="/var/vcap/sys/log/cloud_controller_ng"
+PIDFILE="${RUN_DIR}/cloud_controller_worker_${INDEX}.pid"
+
+export CONFIG_DIR="${CC_JOB_DIR}/config"
+export CLOUD_CONTROLLER_NG_CONFIG="${CONFIG_DIR}/cloud_controller_ng.yml"
+export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
+export TMPDIR="/var/vcap/data/cloud_controller_ng/tmp"
+
+export C_INCLUDE_PATH="/var/vcap/packages/libpq/include:${C_INCLUDE_PATH}"
+export LIBRARY_PATH="/var/vcap/packages/libpq/lib:${LIBRARY_PATH}"
+export LANG="en_US.UTF-8"
+
+export NEWRELIC_ENABLE="<%= !!properties.cc.newrelic.license_key %>"
+export NRCONFIG="${CONFIG_DIR}/newrelic.yml"
+export NEW_RELIC_ENV="<%= p("cc.newrelic.environment_name") %>_background"
+export NEW_RELIC_DISPATCHER="delayed_job"
+
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+source /var/vcap/packages/capi_utils/pid_utils.sh
+source "${CC_JOB_DIR}/bin/blobstore_waiter.sh"
+
+tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
+
+function setup_environment() {
+  mkdir -p "${RUN_DIR}"
+}
+
+case $1 in
+
+  start)
+    setup_environment
+    pid_guard "$PIDFILE" "Cloud controller jobs"
+
+    echo $$ > "$PIDFILE"
+
+    wait_for_blobstore
+
+    cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
+    exec bundle exec rake "jobs:local[cc_api_worker.<%= spec.job.name %>.<%= spec.index %>.${INDEX}]"
+  ;;
+
+  stop)
+    kill_and_wait "$PIDFILE"
+  ;;
+
+  *)
+    echo "Usage: cloud_controller_worker_ctl {start|stop}"
+  ;;
+
+esac

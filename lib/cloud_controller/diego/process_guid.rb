@@ -5,7 +5,7 @@ module VCAP::CloudController
         "#{app_guid}-#{app_version}"
       end
 
-      def self.from_app(app)
+      def self.from_process(app)
         from(app.guid, app.version)
       end
 

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Db connection sessions' do
+RSpec.describe 'Db connection sessions' do
   it 'sets the timezone to UTC' do
     conn = DbConfig.new.connection
     type = conn.database_type

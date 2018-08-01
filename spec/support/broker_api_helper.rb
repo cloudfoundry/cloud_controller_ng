@@ -27,7 +27,7 @@ module VCAP::CloudController::BrokerApiHelper
       body: catalog.to_json)
   end
 
-  def default_catalog(plan_updateable: false)
+  def default_catalog(plan_updateable: false, requires: [])
     {
       services: [
         {
@@ -35,6 +35,7 @@ module VCAP::CloudController::BrokerApiHelper
           name: service_name,
           description: 'A MySQL-compatible relational database',
           bindable: true,
+          requires: requires,
           plan_updateable: plan_updateable,
           plans: [
             {
@@ -61,6 +62,7 @@ module VCAP::CloudController::BrokerApiHelper
 
   def setup_broker(catalog=nil)
     stub_catalog_fetch(200, catalog)
+    UAARequests.stub_all
 
     post('/v2/service_brokers',
          { name: 'broker-name', broker_url: 'http://broker-url', auth_username: 'username', auth_password: 'password' }.to_json,
@@ -98,18 +100,24 @@ module VCAP::CloudController::BrokerApiHelper
     delete("/v2/service_brokers/#{@broker_guid}", '{}', json_headers(admin_headers))
   end
 
-  def async_delete_service(status: 202)
+  def async_delete_service(status: 202, operation_data: nil)
+    broker_response_body = operation_data.nil? ? '{}' : %({"operation": "#{operation_data}"})
+
     stub_request(:delete, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: status, body: '{}')
+      to_return(status: status, body: broker_response_body)
 
     delete("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
       {}.to_json,
       json_headers(admin_headers))
   end
 
-  def async_provision_service(status: 202)
+  def async_provision_service(status: 202, operation_data: nil)
+    provision_response_body = { dashboard_url: 'https://your.service.com/dashboard' }
+    if !operation_data.nil?
+      provision_response_body[:operation] = operation_data
+    end
     stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: status, body: "#{{ dashboard_url: 'https://your.service.com/dashboard' }.to_json}")
+      to_return(status: status, body: provision_response_body.to_json)
 
     body = {
       name: 'test-service',
@@ -125,23 +133,27 @@ module VCAP::CloudController::BrokerApiHelper
     @service_instance_guid = response['metadata']['guid']
   end
 
-  def stub_async_last_operation(state: 'succeeded')
+  def stub_async_last_operation(state: 'succeeded', operation_data: nil)
     fetch_body = {
       state: state
-
     }
 
+    url = "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation"
+    if !operation_data.nil?
+      url += "\\?operation=#{operation_data}"
+    end
+
     stub_request(:get,
-      "http://#{stubbed_broker_username}:#{stubbed_broker_password}@#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation").
+      Regexp.new(url)).
       to_return(
-      status: 200,
-      body: fetch_body.to_json)
+        status: 200,
+        body: fetch_body.to_json)
   end
 
   def provision_service(opts={})
     return_code = opts.delete(:return_code) || 201
     stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: return_code, body: "#{{ dashboard_url: 'https://your.service.com/dashboard' }.to_json}")
+      to_return(status: return_code, body: { dashboard_url: 'https://your.service.com/dashboard' }.to_json)
 
     body = {
       name: 'test-service',
@@ -176,9 +188,11 @@ module VCAP::CloudController::BrokerApiHelper
     )
   end
 
-  def async_update_service(status: 202)
+  def async_update_service(status: 202, operation_data: nil)
+    broker_update_response_body = operation_data.nil? ? '{}' : %({"operation": "#{operation_data}"})
+
     stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
-      to_return(status: status, body: '{}')
+      to_return(status: status, body: broker_update_response_body)
 
     body = {
       service_plan_guid: @large_plan_guid
@@ -208,7 +222,8 @@ module VCAP::CloudController::BrokerApiHelper
          json_headers(admin_headers)
     )
 
-    @binding_id = JSON.parse(last_response.body)['metadata']['guid']
+    metadata = JSON.parse(last_response.body).fetch('metadata', {})
+    @binding_id = metadata.fetch('guid', nil)
   end
 
   def unbind_service

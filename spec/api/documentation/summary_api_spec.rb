@@ -2,15 +2,15 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
 # rubocop:disable Metrics/LineLength
-resource 'Apps', type: [:api, :legacy_api] do
+RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
+  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space }
   let(:user) { make_developer_for_space(app_obj.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route1)  { VCAP::CloudController::Route.make(space: space) }
+  let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
 
   authenticated_request
 
@@ -46,9 +46,9 @@ resource 'Apps', type: [:api, :legacy_api] do
     field :services, 'List of services that are bound to the app'
 
     example 'Get App summary' do
-      app_obj.add_route(route1)
+      VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: route1, process_type: app_obj.type)
       service_binding.save
-      client.get "/v2/apps/#{app_obj.guid}/summary", {},  headers
+      client.get "/v2/apps/#{app_obj.guid}/summary", {}, headers
 
       expect(status).to eq 200
 
@@ -57,20 +57,25 @@ resource 'Apps', type: [:api, :legacy_api] do
       expect(parsed_response['memory']).to eq(app_obj.memory)
 
       expect(parsed_response['routes'][0]['host']).to eq(route1.host)
+      expect(parsed_response['routes'][0]['port']).to eq(route1.port)
       expect(parsed_response['services'][0]['name']).to eq(service_instance.name)
     end
   end
 end
 
-resource 'Spaces', type: [:api, :legacy_api] do
+RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space, droplet_hash: nil, package_state: 'PENDING' }
+  let(:app_obj) { VCAP::CloudController::AppFactory.make space: space }
   let(:user) { make_developer_for_space(app_obj.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
-  let(:route1)  { VCAP::CloudController::Route.make(space: space) }
+  let(:route1) { VCAP::CloudController::Route.make(space: space) }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj, service_instance: service_instance) }
+  let(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_obj.app, service_instance: service_instance) }
+
+  before do
+    service_instance.service_instance_operation = VCAP::CloudController::ServiceInstanceOperation.make(type: 'create', state: 'succeeded')
+  end
 
   authenticated_request
 
@@ -81,7 +86,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
     field :services, 'List of services that are associated with the space'
 
     example 'Get Space summary' do
-      app_obj.add_route(route1)
+      VCAP::CloudController::RouteMappingModel.make(app: app_obj.app, route: route1, process_type: app_obj.type)
       service_binding.save
       client.get "/v2/spaces/#{space.guid}/summary", {}, headers
 
@@ -95,7 +100,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
   end
 end
 
-resource 'Organizations', type: [:api, :legacy_api] do
+RSpec.resource 'Organizations', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { VCAP::CloudController::Organization.make }
   let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
@@ -119,7 +124,7 @@ resource 'Organizations', type: [:api, :legacy_api] do
   end
 end
 
-resource 'Users', type: [:api, :legacy_api] do
+RSpec.resource 'Users', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:user) { VCAP::CloudController::User.make }
 

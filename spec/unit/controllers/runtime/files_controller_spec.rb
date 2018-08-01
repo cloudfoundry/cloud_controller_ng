@@ -1,11 +1,11 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::FilesController do
+  RSpec.describe VCAP::CloudController::FilesController do
     describe 'GET /v2/apps/:id/instances/:instance/files/(:path)' do
       before :each do
-        @app = AppFactory.make(package_hash: 'abc', package_state: 'STAGED')
-        @user =  make_user_for_space(@app.space)
+        @app = AppFactory.make
+        @user = make_user_for_space(@app.space)
         @developer = make_developer_for_space(@app.space)
       end
 
@@ -14,16 +14,14 @@ module VCAP::CloudController
       end
 
       context 'as a developer' do
+        before { set_current_user(@developer) }
+
         it 'returns 400 when a bad instance is used' do
-          get("/v2/apps/#{@app.guid}/instances/kows$ik/files",
-              {},
-              headers_for(@developer))
+          get "/v2/apps/#{@app.guid}/instances/kows$ik/files"
 
           expect(last_response.status).to eq(400)
 
-          get("/v2/apps/#{@app.guid}/instances/-1/files",
-              {},
-              headers_for(@developer))
+          get "/v2/apps/#{@app.guid}/instances/-1/files"
 
           expect(last_response.status).to eq(400)
         end
@@ -34,9 +32,7 @@ module VCAP::CloudController
           @app.state = 'STOPPED'
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
-              {},
-              headers_for(@developer))
+          get "/v2/apps/#{@app.guid}/instances/#{instance}/files"
 
           expect(last_response.status).to eq(400)
         end
@@ -58,9 +54,7 @@ module VCAP::CloudController
           expect(Dea::Client).to receive(:get_file_uri_for_active_instance_by_index).
             with(@app, nil, 5).and_return(to_return)
 
-          get("/v2/apps/#{@app.guid}/instances/#{instance}/files",
-              {},
-              headers_for(@developer).merge('HTTP_RANGE' => range))
+          get "/v2/apps/#{@app.guid}/instances/#{instance}/files", nil, 'HTTP_RANGE' => range
 
           expect(last_response.status).to eq(302)
           expect(last_response.headers).to include('Location' => 'file_uri/')
@@ -68,10 +62,10 @@ module VCAP::CloudController
       end
 
       context 'as a user' do
+        before { set_current_user(@user) }
+
         it 'returns 403' do
-          get("/v2/apps/#{@app.guid}/instances/bad_instance/files",
-              {},
-              headers_for(@user))
+          get "/v2/apps/#{@app.guid}/instances/bad_instance/files"
 
           expect(last_response.status).to eq(403)
 
@@ -79,15 +73,11 @@ module VCAP::CloudController
           @app.instances = 10
           @app.save
 
-          get("/v2/apps/#{@app.guid}/instances/5/files",
-              {},
-              headers_for(@user))
+          get "/v2/apps/#{@app.guid}/instances/5/files"
 
           expect(last_response.status).to eq(403)
 
-          get("/v2/apps/#{@app.guid}/instances/5/files/path",
-              {},
-              headers_for(@user))
+          get "/v2/apps/#{@app.guid}/instances/5/files/path"
 
           expect(last_response.status).to eq(403)
         end

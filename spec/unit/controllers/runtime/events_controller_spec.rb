@@ -1,11 +1,13 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe EventsController do
+  RSpec.describe EventsController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:timestamp) }
       it { expect(described_class).to be_queryable_by(:type) }
       it { expect(described_class).to be_queryable_by(:actee) }
+      it { expect(described_class).to be_queryable_by(:space_guid) }
+      it { expect(described_class).to be_queryable_by(:organization_guid) }
     end
 
     describe 'GET /v2/events' do
@@ -35,7 +37,8 @@ module VCAP::CloudController
           Event.make(timestamp: Time.new(2000, 1, 1).utc, type: type, actor: 'later')
           Event.make(timestamp: Time.new(1995, 1, 1).utc, type: type, actor: 'middle')
 
-          get '/v2/events', {}, admin_headers
+          set_current_user_as_admin
+          get '/v2/events'
           parsed_body = MultiJson.load(last_response.body)
           events = parsed_body['resources'].select { |r| r['entity']['type'] == type }.map { |r| r['entity']['actor'] }
           expect(events).to eq(%w(earlier middle later))
@@ -43,8 +46,10 @@ module VCAP::CloudController
       end
 
       context 'as an admin' do
+        before { set_current_user_as_admin }
+
         it 'includes all events' do
-          get '/v2/events', {}, admin_headers
+          get '/v2/events'
 
           parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body['total_results']).to eq(3)
@@ -53,11 +58,13 @@ module VCAP::CloudController
 
       context 'as an org auditor' do
         before do
-          @space_a.organization.add_auditor(@user_a)
+          @org_a.add_auditor(@user_a)
+          expect(@user_a.spaces).to be_empty
+          set_current_user(@user_a)
         end
 
-        it 'includes only events from space visible to the user' do
-          get '/v2/events', {}, headers_for(@user_a)
+        it 'includes only events from organizations in which the user is an auditor' do
+          get '/v2/events'
 
           parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body['total_results']).to eq(1)
@@ -68,10 +75,11 @@ module VCAP::CloudController
         before do
           @space_a.add_auditor(@user_a)
           @space_b.add_auditor(@user_b)
+          set_current_user(@user_a)
         end
 
         it 'includes only events from space visible to the user' do
-          get '/v2/events', {}, headers_for(@user_a)
+          get '/v2/events'
 
           parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body['total_results']).to eq(1)
@@ -82,13 +90,29 @@ module VCAP::CloudController
         before do
           @space_a.add_developer(@user_a)
           @space_b.add_developer(@user_b)
+          set_current_user(@user_a)
         end
 
         it 'includes only events from space visible to the user' do
-          get '/v2/events', {}, headers_for(@user_a)
+          get '/v2/events'
 
           parsed_body = MultiJson.load(last_response.body)
           expect(parsed_body['total_results']).to eq(1)
+        end
+      end
+
+      context 'as a space manager' do
+        before do
+          @space_a.add_manager(@user_a)
+          @space_b.add_manager(@user_b)
+          set_current_user(@user_a)
+        end
+
+        it 'includes no events' do
+          get '/v2/events'
+
+          parsed_body = MultiJson.load(last_response.body)
+          expect(parsed_body['total_results']).to eq(0)
         end
       end
     end

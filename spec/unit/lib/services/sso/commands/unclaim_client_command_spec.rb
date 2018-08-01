@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO::Commands
-  describe UnclaimClientCommand do
+  RSpec.describe UnclaimClientCommand do
     let(:client_id) { 'client-id' }
 
     let(:command) { UnclaimClientCommand.new(client_id) }

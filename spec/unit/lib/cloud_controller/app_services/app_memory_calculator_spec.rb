@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppMemoryCalculator do
+  RSpec.describe AppMemoryCalculator do
     subject { described_class.new(app) }
-    let(:app) { AppFactory.make(package_hash: 'made-up-hash') }
+    let(:app) { AppFactory.make }
     let(:stopped_state) { 'STOPPED' }
     let(:started_state) { 'STARTED' }
 
@@ -20,12 +20,12 @@ module VCAP::CloudController
       end
 
       context 'when the app state is STARTED' do
-        let(:app) { AppFactory.make(state: started_state, package_hash: 'made-up-hash') }
+        let(:app) { AppFactory.make(state: started_state) }
 
         context 'and the app is already in the db' do
           it 'raises ApplicationMissing if the app no longer exists in the db' do
             app.delete
-            expect { subject.additional_memory_requested }.to raise_error(Errors::ApplicationMissing)
+            expect { subject.additional_memory_requested }.to raise_error(CloudController::Errors::ApplicationMissing)
           end
 
           context 'and it is changing from STOPPED' do
@@ -49,7 +49,7 @@ module VCAP::CloudController
             end
 
             it 'returns only newly requested memory' do
-              expected      = app.memory
+              expected = app.memory
               app.instances += 1
 
               expect(subject.additional_memory_requested).to eq(expected)
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
       it 'raises ApplicationMissing if the app no longer exists in the db' do
         app.delete
-        expect { subject.currently_used_memory }.to raise_error(Errors::ApplicationMissing)
+        expect { subject.currently_used_memory }.to raise_error(CloudController::Errors::ApplicationMissing)
       end
 
       context 'when the app in the db is STOPPED' do
@@ -105,7 +105,7 @@ module VCAP::CloudController
         end
 
         it 'returns the memory * instances of the db row' do
-          expected      = app.instances * app.memory
+          expected = app.instances * app.memory
           app.instances += 5
           app.memory += 100
 

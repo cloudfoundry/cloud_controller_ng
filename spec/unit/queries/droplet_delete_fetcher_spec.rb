@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/droplet_delete_fetcher'
 
 module VCAP::CloudController
-  describe DropletDeleteFetcher do
+  RSpec.describe DropletDeleteFetcher do
     describe '#fetch' do
       let!(:droplet) { DropletModel.make }
       let(:space) { droplet.space }

@@ -16,12 +16,10 @@ module VCAP::CloudController
         end
       end
 
-      # TODO: fix bad tests that grab this
       def job
         @handler
       end
 
-      # TODO: fix bad tests that grab this
       def request_id
         @request_id
       end

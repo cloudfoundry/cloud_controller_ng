@@ -2,19 +2,19 @@ module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def create?(service_instance, params=nil)
       return true if admin_user?
-      FeatureFlag.raise_unless_enabled!('service_instance_creation')
+      FeatureFlag.raise_unless_enabled!(:service_instance_creation)
       return false if service_instance.in_suspended_org?
       service_instance.space.has_developer?(context.user) && allowed?(service_instance)
     end
 
     def read_for_update?(service_instance, params=nil)
-      update?(service_instance, params)
+      return true if admin_user?
+      return false if service_instance.in_suspended_org?
+      service_instance.space.has_developer?(context.user)
     end
 
     def update?(service_instance, params=nil)
-      return true if admin_user?
-      return false if service_instance.in_suspended_org?
-      service_instance.space.has_developer?(context.user) && allowed?(service_instance)
+      read_for_update?(service_instance, params) && allowed?(service_instance)
     end
 
     def delete?(service_instance)
@@ -35,7 +35,7 @@ module VCAP::CloudController
     def allowed?(service_instance)
       return true if admin_user?
 
-      case (service_instance.type)
+      case service_instance.type
       when 'managed_service_instance'
         ManagedServiceInstanceAccess.new(context).allowed?(service_instance)
       when 'user_provided_service_instance'
@@ -45,8 +45,8 @@ module VCAP::CloudController
       end
     end
 
-    def purge?(_)
-      admin_user?
+    def purge?(service_instance)
+      admin_user? || (service_instance.space.has_developer?(context.user) && service_instance.service_broker.private?)
     end
 
     def purge_with_token?(instance)

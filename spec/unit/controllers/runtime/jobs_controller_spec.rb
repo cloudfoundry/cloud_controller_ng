@@ -1,16 +1,17 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::JobsController do
+  RSpec.describe VCAP::CloudController::JobsController do
     let(:job) { Delayed::Job.enqueue double(perform: nil) }
     let(:job_request_id) { job.guid }
-    let(:user)  { User.make }
+    let(:user) { User.make }
 
     describe 'GET /v2/jobs/:guid' do
       context 'permissions' do
         context 'when the user does not have cc.read' do
           it 'returns a 403 unauthorized error' do
-            get "/v2/jobs/#{job_request_id}", {}, headers_for(user, { scopes: ['cloud_controller.write'] })
+            set_current_user(user, scopes: ['cloud_controller.write'])
+            get "/v2/jobs/#{job_request_id}"
             expect(last_response.status).to eq(403)
             expect(last_response.body).to match /InsufficientScope/
           end
@@ -18,23 +19,26 @@ module VCAP::CloudController
 
         context 'when the user has cc.read' do
           it 'allows the user to access the job' do
-            get "/v2/jobs/#{job_request_id}", {}, headers_for(user, { scopes: ['cloud_controller.read'] })
+            set_current_user(user, scopes: ['cloud_controller.read'])
+            get "/v2/jobs/#{job_request_id}"
             expect(last_response.status).to eq(200)
           end
         end
 
         context 'when the user is an admin' do
           it 'allows the user to access the job' do
-            get "/v2/jobs/#{job_request_id}", {}, headers_for(user, { scopes: ['cloud_controller.admin'] })
+            set_current_user(user, scopes: ['cloud_controller.admin'])
+            get "/v2/jobs/#{job_request_id}"
             expect(last_response.status).to eq(200)
           end
         end
       end
 
-      subject { get("/v2/jobs/#{job_request_id}", {}, headers_for(user))  }
+      subject { get "/v2/jobs/#{job_request_id}" }
 
       context 'when the job exists' do
         it 'returns job' do
+          set_current_user(user)
           subject
           expect(last_response.status).to eq 200
           expect(decoded_response(symbolize_keys: true)).to eq(
@@ -49,6 +53,7 @@ module VCAP::CloudController
         let(:job_request_id) { 123 }
 
         it 'returns that job was finished' do
+          set_current_user(user)
           subject
           expect(last_response.status).to eq 200
           expect(decoded_response(symbolize_keys: true)).to eq(

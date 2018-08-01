@@ -1,4 +1,4 @@
-shared_examples_for 'a lifecycle' do
+RSpec.shared_examples_for 'a lifecycle' do
   let(:droplet) { VCAP::CloudController::DropletModel.make }
 
   it 'creates a lifecycle data model' do

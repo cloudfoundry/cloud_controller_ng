@@ -1,0 +1,31 @@
+### List spaces for an isolation segment
+
+```
+Definition
+```
+
+```http
+GET /v3/isolation_segments/:guid/relationships/spaces HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/isolation_segments/:guid/relationships/spaces" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :related_spaces %>
+```
+
+This endpoint lists the spaces to which the isolation segment is assigned.  For an Admin, this will list all associated spaces in the system.  For an org manager, this will list only those associated spaces belonging to orgs for which the user is a manager.  For any other user, this will list only those associated spaces to which the user has access.

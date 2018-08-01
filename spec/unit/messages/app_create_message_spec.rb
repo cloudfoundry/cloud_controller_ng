@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/app_create_message'
 
 module VCAP::CloudController
-  describe AppCreateMessage do
+  RSpec.describe AppCreateMessage do
     describe '.create_from_http_request' do
       let(:body) {
         {
@@ -10,7 +10,7 @@ module VCAP::CloudController
           'environment_variables' => {
             'ENVVAR' => 'env-val'
           },
-          'relationships'         => {
+          'relationships' => {
             'space' => { 'guid' => 'some-guid' }
           },
           'lifecycle' => {
@@ -32,12 +32,12 @@ module VCAP::CloudController
         expect(message.environment_variables).to eq({ 'ENVVAR' => 'env-val' })
         expect(message.relationships).to eq({ 'space' => { 'guid' => 'some-guid' } })
         expect(message.lifecycle).to eq(
-            { 'type' => 'buildpack',
-              'data' => {
-                'buildpack' => 'some-buildpack',
-                'stack' => 'some-stack'
-              }
-            })
+          { 'type' => 'buildpack',
+            'data' => {
+              'buildpack' => 'some-buildpack',
+              'stack' => 'some-stack'
+            }
+          })
       end
 
       it 'converts requested keys to symbols' do
@@ -114,7 +114,7 @@ module VCAP::CloudController
           message = AppCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors_on(:environment_variables)[0]).to include('must be a hash')
+          expect(message.errors_on(:environment_variables)).to include('must be a hash')
         end
       end
 
@@ -264,7 +264,7 @@ module VCAP::CloudController
         describe 'lifecycle data validations' do
           context 'when lifecycle data is not provided' do
             let(:params) do
-              { lifecycle: { type: 'buildpack'  } }
+              { lifecycle: { type: 'buildpack' } }
             end
 
             it 'is not valid' do
@@ -277,7 +277,7 @@ module VCAP::CloudController
 
           context 'when lifecycle data is not a hash' do
             let(:params) do
-              { lifecycle: { type: 'buildpack', data: 'blah blah'  } }
+              { lifecycle: { type: 'buildpack', data: 'blah blah' } }
             end
 
             it 'is not valid' do

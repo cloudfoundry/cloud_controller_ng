@@ -1,13 +1,13 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe UaaClient do
+  RSpec.describe UaaClient do
     let(:url) { 'http://uaa.example.com' }
     let(:client_id) { 'client_id' }
     let(:secret) { 'secret_key' }
-    let(:uaa_options) { { skip_ssl_validation: false } }
+    let(:uaa_options) { { skip_ssl_validation: false, ssl_ca_file: 'path/to/ca/file' } }
 
-    let(:uaa_client) { UaaClient.new(url, client_id, secret) }
+    subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
     let(:auth_header) { 'bearer STUFF' }
     let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header) }
     let(:token_issuer) { double(CF::UAA::TokenIssuer, client_credentials_grant: token_info) }
@@ -26,16 +26,6 @@ module VCAP::CloudController
 
       it 'caches the scim' do
         expect(uaa_client.scim).to be(uaa_client.scim)
-      end
-
-      context 'when skip_ssl_validation is true' do
-        let(:uaa_options) { { skip_ssl_validation: true } }
-        let(:uaa_client) { UaaClient.new(url, client_id, secret, uaa_options) }
-
-        it 'skips ssl validation for TokenIssuer and Scim creation' do
-          scim = uaa_client.scim
-          expect(scim.instance_variable_get(:@skip_ssl_validation)).to eq(true)
-        end
       end
     end
 
@@ -73,7 +63,7 @@ module VCAP::CloudController
 
       it 'returns a map of the given ids to the corresponding usernames from UAA' do
         response_body = {
-          'resources'    => [
+          'resources' => [
             { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
             { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
           ],
@@ -83,11 +73,11 @@ module VCAP::CloudController
           'totalresults' => 2 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
-        with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
-        to_return(
-          status: 200,
-          headers: { 'content-type' => 'application/json' },
-          body: response_body.to_json)
+          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
 
         mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
         expect(mapping[userid_1]).to eq('user_1')

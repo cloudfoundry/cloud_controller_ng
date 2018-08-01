@@ -1,9 +1,10 @@
-require 'actions/services/service_binding_delete'
+require 'actions/services/service_key_delete'
+require 'actions/services/route_binding_delete'
 require 'actions/services/locks/deleter_lock'
 
 module VCAP::CloudController
   class ServiceInstanceDelete
-    def initialize(accepts_incomplete: false, event_repository: nil, multipart_delete: false)
+    def initialize(accepts_incomplete: false, event_repository:, multipart_delete: false)
       @accepts_incomplete = accepts_incomplete
       @event_repository = event_repository
       @multipart_delete = multipart_delete
@@ -21,7 +22,7 @@ module VCAP::CloudController
           instance_errors = delete_service_instance(service_instance)
 
           if service_instance.operation_in_progress? && @multipart_delete && instance_errors.empty?
-            errors_accumulator.push VCAP::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+            errors_accumulator.push CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
           end
 
           errors_accumulator.concat instance_errors
@@ -63,11 +64,14 @@ module VCAP::CloudController
 
     def delete_route_bindings(service_instance)
       route_bindings_dataset = RouteBinding.where(service_instance_id: service_instance.id)
-      ServiceBindingDelete.new.delete(route_bindings_dataset)
+      RouteBindingDelete.new.delete(route_bindings_dataset)
     end
 
     def delete_service_bindings(service_instance)
-      ServiceBindingDelete.new.delete(service_instance.service_bindings_dataset)
+      ServiceBindingDelete.new(
+        @event_repository.user.guid,
+        @event_repository.current_user_email
+      ).delete(service_instance.service_bindings)
     end
 
     def delete_service_keys(service_instance)
@@ -79,7 +83,8 @@ module VCAP::CloudController
         'service-instance-state-fetch',
         service_instance.client.attrs,
         service_instance.guid,
-        @event_repository,
+        @event_repository.user.guid,
+        @event_repository.current_user_email,
         {},
       )
     end

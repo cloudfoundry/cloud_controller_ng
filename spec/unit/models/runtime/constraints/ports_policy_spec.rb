@@ -1,8 +1,9 @@
 require 'spec_helper'
 
-describe PortsPolicy do
+RSpec.describe PortsPolicy do
   let!(:app) { VCAP::CloudController::AppFactory.make }
-  let(:validator) { PortsPolicy.new(app) }
+  let(:validator) { PortsPolicy.new(app, changed_to_diego) }
+  let(:changed_to_diego) { false }
 
   context 'invalid apps request' do
     it 'registers error a provided port is not an integer' do
@@ -45,6 +46,18 @@ describe PortsPolicy do
     context 'when ports are nil' do
       it 'does not register error' do
         app.diego = false
+        expect(app.valid?).to eq(true)
+      end
+    end
+
+    context 'when ports are empty' do
+      before do
+        app.health_check_type = 'process'
+      end
+
+      it 'does not register error' do
+        app.diego = false
+        app.ports = []
         expect(app.valid?).to eq(true)
       end
     end

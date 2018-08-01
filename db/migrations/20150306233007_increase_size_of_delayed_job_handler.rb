@@ -1,6 +1,6 @@
 Sequel.migration do
   up do
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       alter_table :delayed_jobs do
         set_column_type :handler, :longtext
       end
@@ -8,7 +8,7 @@ Sequel.migration do
   end
 
   down do
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       alter_table :delayed_jobs do
         set_column_type :handler, String, text: true
       end

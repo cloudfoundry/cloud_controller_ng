@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe 'AsyncRequired' do
+        RSpec.describe 'AsyncRequired' do
           let(:response_body) { '{"error": "AsyncRequired", "description": "error message"}' }
           let(:response) { instance_double(HttpResponse, code: 422, message: 'Unprocessable Entity', body: response_body) }
 
@@ -14,7 +14,7 @@ module VCAP::Services
 
           it 'initializes the base class correctly' do
             exception = AsyncRequired.new(uri, method, response)
-            expect(exception.message).to eq(VCAP::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message)
+            expect(exception.message).to eq(CloudController::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired').message)
             expect(exception.uri).to eq(uri)
             expect(exception.method).to eq(method)
             expect(exception.source).to eq(MultiJson.load(response.body))

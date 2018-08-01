@@ -20,8 +20,8 @@ module VCAP::CloudController
       def complete_request(status)
         VCAP::Component.varz.synchronize do
           VCAP::Component.varz[:vcap_sinatra][:requests][:outstanding] -= 1
-          VCAP::Component.varz[:vcap_sinatra][:requests][:completed]   += 1
-          VCAP::Component.varz[:vcap_sinatra][:http_status][status]    += 1
+          VCAP::Component.varz[:vcap_sinatra][:requests][:completed] += 1
+          VCAP::Component.varz[:vcap_sinatra][:http_status][status] += 1
         end
 
         @statsd.batch do |batch|
@@ -35,7 +35,7 @@ module VCAP::CloudController
 
       def init_varz
         http_status = {}
-        [(100..101), (200..206), (300..307), (400..422), (500..505)].each do |r|
+        [(100..101), (200..206), (300..307), (400..429), (500..505)].each do |r|
           r.each { |c| http_status[c] = 0 }
         end
 

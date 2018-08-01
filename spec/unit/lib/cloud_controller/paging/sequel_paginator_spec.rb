@@ -3,7 +3,7 @@ require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/pagination_options'
 
 module VCAP::CloudController
-  describe SequelPaginator do
+  RSpec.describe SequelPaginator do
     let(:paginator) { SequelPaginator.new }
 
     describe '#get_page' do
@@ -37,24 +37,28 @@ module VCAP::CloudController
         options = { page: 1, per_page: 2, order_by: 'name', order_direction: 'asc' }
         app_model2.update(name: 'a')
         app_model1.update(name: 'b')
-        pagination_options      = PaginationOptions.new(options)
+        pagination_options = PaginationOptions.new(options)
         paginated_result = paginator.get_page(dataset, pagination_options)
         expect(paginated_result.records.first.guid).to eq(app_model2.guid)
 
         app_model2.update(name: 'c')
-        pagination_options      = PaginationOptions.new(options)
+        pagination_options = PaginationOptions.new(options)
         paginated_result = paginator.get_page(dataset, pagination_options)
         expect(paginated_result.records.first.guid).to eq(app_model1.guid)
       end
 
       it 'works with a multi table result set' do
-        options = { page: 2, per_page: per_page }
-        new_dataset = dataset.join(:packages, packages__app_guid: :apps_v3__guid)
+        PackageModel.make(app: app_model1)
+        options = { page: 1, per_page: per_page }
         pagination_options = PaginationOptions.new(options)
+        new_dataset = dataset.join(PackageModel.table_name, "#{PackageModel.table_name}__app_guid".to_sym => "#{AppModel.table_name}__guid".to_sym)
 
+        paginated_result = nil
         expect {
-          paginator.get_page(new_dataset, pagination_options)
+          paginated_result = paginator.get_page(new_dataset, pagination_options)
         }.not_to raise_error
+
+        expect(paginated_result.total).to be > 0
       end
     end
   end

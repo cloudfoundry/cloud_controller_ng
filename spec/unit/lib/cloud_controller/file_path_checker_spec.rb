@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP
   module CloudController
-    describe FilePathChecker do
+    RSpec.describe FilePathChecker do
       subject(:checker) { FilePathChecker }
 
       context 'File uses a relative path' do

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 require 'uri'
 
-resource 'Service Instances', type: [:api, :legacy_api] do
+RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
   tags = %w(accounting mongodb)
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
@@ -41,6 +41,7 @@ resource 'Service Instances', type: [:api, :legacy_api] do
 
     response_field 'name', 'The human-readable name of the service instance.'
     response_field 'credentials', 'The service broker-provided credentials to use this service.'
+    response_field 'service_guid', 'The service GUID that this service instance belongs to'
     response_field 'service_plan_guid', 'The service plan GUID that this service instance is utilizing.'
     response_field 'space_guid', 'The space GUID that this service instance belongs to.'
     response_field 'gateway_data', '',
@@ -57,9 +58,9 @@ resource 'Service Instances', type: [:api, :legacy_api] do
     response_field 'last_operation.updated_at', 'The timestamp that the Cloud Controller last checked the service instance state from the broker.'
     response_field 'space_url', 'The relative path to the space resource that this service instance belongs to.'
     response_field 'service_plan_url', 'The relative path to the service plan resource that this service instance belongs to.'
+    response_field 'service_url', 'The relative path to the service that this service instance belongs to.'
     response_field 'service_binding_url', 'The relative path to the service bindings that this service instance is bound to.'
-    response_field 'routes_url', 'Routes bound to the service instance. Requests to these routes will be forwarded to the service instance.',
-      experimental: true
+    response_field 'routes_url', 'Routes bound to the service instance. Requests to these routes will be forwarded to the service instance.'
     response_field 'tags', 'A list of tags for the service instance'
 
     standard_model_list :managed_service_instance, VCAP::CloudController::ServiceInstancesController, path: :service_instance
@@ -154,9 +155,17 @@ EOF
 Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker.
 The user must have the cloud_controller.admin scope on their OAuth token in order to perform a purge.
 EOF
+      recursive_description = <<EOF
+Will delete service bindings, service keys, and routes associated with the service instance.
+EOF
+      async_description = <<EOF
+Will run the delete request in a background job. Recommended: 'true'.
+EOF
 
       parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false]
       parameter :purge, purge_description, valid_values: [true, false]
+      parameter :recursive, recursive_description, valid_values: [true, false]
+      parameter :async, async_description, valid_values: [true, false]
 
       before do
         uri = URI(service_broker.broker_url)
@@ -176,14 +185,15 @@ EOF
   end
 
   describe 'Nested endpoints' do
-    field :guid, 'The guid of the Service Instance.', required: true
-
     describe 'Service Bindings' do
       before do
         VCAP::CloudController::ServiceBinding.make(service_instance: service_instance)
       end
 
-      standard_model_list :service_binding, VCAP::CloudController::ServiceBindingsController, outer_model: :service_instance
+      standard_model_list :service_binding,
+        VCAP::CloudController::ServiceBindingsController,
+        outer_model: :service_instance,
+        export_attributes: [:app_guid, :service_instance_guid, :credentials, :binding_options, :gateway_data, :gateway_name, :syslog_drain_url, :volume_mounts]
     end
 
     describe 'Routes' do
@@ -196,12 +206,21 @@ EOF
           stub_bind(service_instance)
         end
 
-        example 'Binding a service instance to a route (experimental)' do
-          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+        field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object.', required: false
+
+        example 'Binding a Service Instance to a Route' do
+          request_hash = {
+              parameters: {
+                  the_service_broker: 'wants this object'
+              }
+          }
+
+          client.put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", MultiJson.dump(request_hash, pretty: true), headers
 
           expect(status).to eq(201)
           expect(parsed_response['metadata']['guid']).to eq(service_instance.guid)
           expect(parsed_response['entity']['routes_url']).to eq("/v2/service_instances/#{service_instance.guid}/routes")
+          audited_event VCAP::CloudController::Event.find(type: 'audit.service_instance.bind_route', actee: service_instance.guid)
         end
       end
 
@@ -211,14 +230,23 @@ EOF
           stub_unbind(binding)
         end
 
-        example 'Unbinding a service instance from a route (experimental)' do
-          client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}.to_json, headers
+        example 'Unbinding a service instance from a route' do
+          client.delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}", {}, headers
           expect(status).to eq(204)
           expect(response_body).to be_empty
+          audited_event VCAP::CloudController::Event.find(type: 'audit.service_instance.unbind_route', actee: service_instance.guid)
         end
       end
 
       standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :service_instance
+    end
+
+    describe 'Service Keys' do
+      before do
+        VCAP::CloudController::ServiceKey.make(name: 'a-service-key', service_instance: service_instance)
+      end
+
+      standard_model_list :service_key, VCAP::CloudController::ServiceInstancesController, outer_model: :service_instance
     end
   end
 
@@ -228,25 +256,6 @@ EOF
       expect(status).to eq(200)
 
       expect(parsed_response).to eql({ 'manage' => true })
-    end
-  end
-
-  put '/v2/service_plans/:service_plan_guid/service_instances' do
-    let(:new_plan) { VCAP::CloudController::ServicePlan.make }
-    let(:old_plan) { service_instance.service_plan }
-    let(:request_json) { { service_plan_guid: new_plan.guid }.to_json }
-
-    field :service_plan_guid, 'The guid of the plan to move the existing instances to', required: true, example_values: %w(6c4bd80f-4593-41d1-a2c9-b20cb65ec76e)
-
-    example 'Migrate Service Instances from one Service Plan to another Service Plan (experimental)' do
-      explanation <<-EOD
-          Move all Service Instances for the service plan from the URL to the service plan in the request body
-      EOD
-
-      client.put "/v2/service_plans/#{old_plan.guid}/service_instances", request_json, headers
-
-      expect(status).to eq(200)
-      expect(parsed_response['changed_count']).to eq(1)
     end
   end
 end

@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class User < Sequel::Model
-    class InvalidOrganizationRelation < VCAP::Errors::InvalidRelation; end
+    class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
     attr_accessor :username, :organization_roles, :space_roles
 
     no_auto_guid
@@ -14,8 +14,7 @@ module VCAP::CloudController
       class: 'VCAP::CloudController::Organization',
       join_table: 'organizations_managers',
       right_key: :organization_id, reciprocal: :managers,
-      before_add: :validate_organization,
-      before_remove: proc { |user, org| org.manager_guids.count > 1 }
+      before_add: :validate_organization
 
     many_to_many :billing_managed_organizations,
       class: 'VCAP::CloudController::Organization',

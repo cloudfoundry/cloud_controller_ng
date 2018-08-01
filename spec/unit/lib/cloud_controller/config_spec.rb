@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Config do
+  RSpec.describe Config do
     let(:message_bus) { Config.message_bus }
 
     describe '.from_file' do
@@ -15,6 +15,10 @@ module VCAP::CloudController
     describe '.merge_defaults' do
       context 'when no config values are provided' do
         let(:config) { Config.from_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml')) }
+        it 'sets the default isolation segment name' do
+          expect(config[:shared_isolation_segment_name]).to eq('shared')
+        end
+
         it 'sets default stacks_file' do
           expect(config[:stacks_file]).to eq(File.join(Config.config_dir, 'stacks.yml'))
         end
@@ -59,10 +63,6 @@ module VCAP::CloudController
           expect(config[:staging][:minimum_staging_memory_mb]).to eq(1024)
         end
 
-        it 'sets a default value for min staging disk' do
-          expect(config[:staging][:minimum_staging_disk_mb]).to eq(4096)
-        end
-
         it 'sets a default value for min staging file descriptor limit' do
           expect(config[:staging][:minimum_staging_file_descriptor_limit]).to eq(16384)
         end
@@ -83,16 +83,20 @@ module VCAP::CloudController
           expect(config[:broker_client_default_async_poll_interval_seconds]).to eq(60)
         end
 
-        it 'does not set a default value for internal_service_hostname' do
-          expect(config[:internal_service_hostname]).to be_nil
-        end
-
         it ' sets a default value for num_of_valid_packages_per_app_to_store' do
           expect(config[:packages][:max_valid_packages_stored]).to eq(5)
         end
 
         it ' sets a default value for num_of_staged_droplets_per_app_to_store' do
           expect(config[:droplets][:max_staged_droplets_stored]).to eq(5)
+        end
+
+        it 'sets a default value for the minimum number of candidate stagers' do
+          expect(config[:minimum_candidate_stagers]).to eq(5)
+        end
+
+        it 'sets a default value for the bits service' do
+          expect(config[:bits_service]).to eq({ enabled: false })
         end
       end
 
@@ -210,6 +214,28 @@ module VCAP::CloudController
           end
         end
 
+        context 'and the password contains double quotes' do
+          let(:tmpdir) { Dir.mktmpdir }
+          let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
+
+          before do
+            config_hash = YAML.load_file(File.join(Paths::FIXTURES, 'config/minimal_config.yml'))
+            config_hash['staging']['auth']['password'] = 'pass"wor"d'
+
+            File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
+              YAML.dump(config_hash, f)
+            end
+          end
+
+          after do
+            FileUtils.rm_r(tmpdir)
+          end
+
+          it 'URL-encodes staging password as neccesary' do
+            expect(config_from_file[:staging][:auth][:password]).to eq('pass%22wor%22d')
+          end
+        end
+
         context 'and the values are invalid' do
           let(:tmpdir) { Dir.mktmpdir }
           let(:config_from_file) { Config.from_file(File.join(tmpdir, 'incorrect_overridden_config.yml')) }
@@ -219,6 +245,7 @@ module VCAP::CloudController
             config_hash['app_bits_upload_grace_period_in_seconds'] = -2345
             config_hash['staging']['auth']['user'] = 'f@t:%a'
             config_hash['staging']['auth']['password'] = 'm@/n!'
+            config_hash['minimum_candidate_stagers'] = 0
 
             File.open(File.join(tmpdir, 'incorrect_overridden_config.yml'), 'w') do |f|
               YAML.dump(config_hash, f)
@@ -227,6 +254,10 @@ module VCAP::CloudController
 
           after do
             FileUtils.rm_r(tmpdir)
+          end
+
+          it 'resets minimum_candidate_stagers to the default of 5' do
+            expect(config_from_file[:minimum_candidate_stagers]).to eq(5)
           end
 
           it 'reset the negative value of app_bits_upload_grace_period_in_seconds to 0' do
@@ -248,6 +279,9 @@ module VCAP::CloudController
         @test_config = {
           packages: {
             fog_connection: {},
+            fog_aws_storage_options: {
+              encryption: 'AES256'
+            },
             app_package_directory_key: 'app_key',
           },
           droplets: {
@@ -274,6 +308,9 @@ module VCAP::CloudController
               password: 'password',
             },
           },
+
+          bits_service: { enabled: false },
+          reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat'),
         }
       end
 
@@ -290,7 +327,7 @@ module VCAP::CloudController
       end
 
       it 'sets up the resource pool instance' do
-        Config.configure_components(@test_config.merge(resource_pool: { minimum_size: 9001 }))
+        Config.configure_components(@test_config.merge(resource_pool: { minimum_size: 9001, fog_connection: {} }))
         expect(ResourcePool.instance.minimum_size).to eq(9001)
       end
 
@@ -298,8 +335,7 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Runners).to receive(:new).with(
           @test_config,
           message_bus,
-          instance_of(Dea::Pool),
-          instance_of(Dea::StagerPool))
+          instance_of(Dea::Pool))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
@@ -308,16 +344,7 @@ module VCAP::CloudController
         expect(VCAP::CloudController::Stagers).to receive(:new).with(
           @test_config,
           message_bus,
-          instance_of(Dea::Pool),
-          instance_of(Dea::StagerPool),
-          instance_of(Runners))
-        Config.configure_components(@test_config)
-        Config.configure_components_depending_on_message_bus(message_bus)
-      end
-
-      it 'creates the dea stager pool' do
-        expect(Dea::StagerPool).to receive(:new).and_call_original
-
+          instance_of(Dea::Pool))
         Config.configure_components(@test_config)
         Config.configure_components_depending_on_message_bus(message_bus)
       end
@@ -421,6 +448,11 @@ module VCAP::CloudController
 
         Config.configure_components(@test_config)
         expect(dependency_locator.stager_client).to be_an_instance_of(VCAP::CloudController::Diego::StagerClient)
+      end
+
+      it 'sets up the reserved private domain' do
+        expect(PrivateDomain).to receive(:configure).with(@test_config[:reserved_private_domains])
+        Config.configure_components(@test_config)
       end
     end
   end

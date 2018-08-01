@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+set -ex
+export LANG="en_US.UTF-8"
+
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+tee_output_to_sys_log "cloud_controller_ng.$(basename "$0")"
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+CC_JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
+CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
+CONFIG_DIR="${CC_JOB_DIR}/config"
+
+export CLOUD_CONTROLLER_NG_CONFIG="${CONFIG_DIR}/cloud_controller_ng.yml"
+export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
+
+source ${CC_JOB_DIR}/bin/setup_local_blobstore.sh
+
+source "${SCRIPT_DIR}/ruby_version.sh"
+
+function setup_nginx_directories {
+  mkdir -p "/var/vcap/sys/run/nginx_cc"
+  chown -R vcap:vcap "/var/vcap/sys/run/nginx_cc"
+
+  mkdir -p "/var/vcap/sys/log/nginx_cc"
+  chown -R vcap:vcap "/var/vcap/sys/log/nginx_cc"
+
+  mkdir -p "/var/vcap/data/cloud_controller_ng/tmp/uploads"
+  chown vcap:vcap "/var/vcap/data/cloud_controller_ng/tmp/uploads"
+
+  mkdir -p "/var/vcap/data/cloud_controller_ng/tmp/staged_droplet_uploads"
+  chown vcap:vcap "/var/vcap/data/cloud_controller_ng/tmp/staged_droplet_uploads"
+
+  mkdir -p "/var/vcap/data/nginx_cc/tmp"
+  chown vcap:vcap "/var/vcap/data/nginx_cc/tmp"
+
+  #Workarounds for running nginx master as non-root
+  mkdir -p "/var/vcap/packages/nginx/proxy_temp"
+  touch "/var/vcap/packages/nginx/logs/error.log"
+  chown vcap:vcap "/var/vcap/packages/nginx/logs/error.log"
+}
+
+function setup_nginx_plugin_directories {
+  mkdir -p "/var/vcap/sys/run/nginx_newrelic_plugin"
+  chown -R vcap:vcap  "/var/vcap/sys/run/nginx_newrelic_plugin"
+
+  mkdir -p "/var/vcap/sys/log/nginx_newrelic_plugin"
+  chown -R vcap:vcap "/var/vcap/sys/log/nginx_newrelic_plugin"
+
+  cp "/var/vcap/jobs/cloud_controller_ng/config/newrelic_plugin.yml" "/var/vcap/packages/nginx_newrelic_plugin/config"
+  chown -R vcap:vcap "/var/vcap/packages/nginx_newrelic_plugin/config/newrelic_plugin.yml"
+}
+
+function setup_api_directories {
+  mkdir -p "/var/vcap/sys/run/cloud_controller_ng"
+  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_ng"
+
+  mkdir -p "/var/vcap/sys/log/cloud_controller_ng"
+  chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_ng"
+
+  mkdir -p "/var/vcap/data/cloud_controller_ng/tmp"
+  chown vcap:vcap "/var/vcap/data/cloud_controller_ng/tmp"
+
+  mkdir -p "/var/vcap/sys/cores"
+  chown vcap:vcap "/var/vcap/sys/cores"
+
+  # Configure the core file location
+  <% if p("cc.core_file_pattern") %>
+  echo <%= p("cc.core_file_pattern") %> > /proc/sys/kernel/core_pattern
+  <% end %>
+}
+
+function setup_directories {
+  setup_local_blobstore
+  setup_api_directories
+  setup_nginx_directories
+  setup_nginx_plugin_directories
+
+  <% if_p("cc.directories.diagnostics") do |diag_dir| %>
+  mkdir -p "<%= diag_dir %>"
+  chown vcap:vcap "<%= diag_dir %>"
+  <% end %>
+}
+
+function perform_migration {
+  pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
+    chpst -u vcap:vcap "${SCRIPT_DIR}/migrate_db"
+  popd > /dev/null
+}
+
+function seed_db {
+  pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
+    chpst -u vcap:vcap "${SCRIPT_DIR}/seed_db"
+  popd > /dev/null
+}
+
+function start_consul_agent {
+  # Start the consul agent so we can connect to a database url provided by consul dns
+  if [ -f /var/vcap/jobs/consul_agent/bin/agent_ctl ]; then
+    # If consul is already running, start exits 1
+    set +e
+    /var/vcap/jobs/consul_agent/bin/pre-start
+    chpst -u vcap:vcap /var/vcap/jobs/consul_agent/bin/agent_ctl start
+    set -e
+  fi
+}
+
+function main {
+  start_consul_agent
+  setup_directories
+  <% if spec.bootstrap && p('cc.run_prestart_migrations') %>
+  perform_migration
+  seed_db
+  <% else %>
+  echo "Skipping DB migrations and seeds"
+  <% end %>
+}
+
+main
+
+exit 0

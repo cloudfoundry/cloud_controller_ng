@@ -1,0 +1,109 @@
+---
+title: Cloud Controller API Reference
+
+language_tabs:
+  - shell: curl
+
+includes:
+ # snippets have to be at the top to be used in other files
+  - snippets/query_params
+  - snippets/object_attributes
+  - api_resources/apps
+  - api_resources/droplets
+  - api_resources/isolation_segments
+  - api_resources/packages
+  - api_resources/processes
+  - api_resources/route_mappings
+  - api_resources/service_bindings
+  - api_resources/tasks
+  - introduction/introduction
+  - concepts/concepts
+  - workflows/workflows
+  - resources/header
+  - resources/tasks/header
+  - resources/tasks/object
+  - resources/tasks/create
+  - resources/tasks/get
+  - resources/tasks/cancel
+  - resources/tasks/list
+  - resources/tasks/app/list
+  - experimental_resources/header
+  - experimental_resources/apps/header
+  - experimental_resources/apps/object
+  - experimental_resources/apps/create
+  - experimental_resources/apps/get
+  - experimental_resources/apps/env
+  - experimental_resources/apps/update
+  - experimental_resources/apps/current_droplet
+  - experimental_resources/apps/get_current_droplet
+  - experimental_resources/apps/start
+  - experimental_resources/apps/stop
+  - experimental_resources/apps/delete
+  - experimental_resources/apps/list
+  - experimental_resources/droplets/header
+  - experimental_resources/droplets/object
+  - experimental_resources/droplets/lifecycle_object
+  - experimental_resources/droplets/create
+  - experimental_resources/droplets/copy
+  - experimental_resources/droplets/get
+  - experimental_resources/droplets/delete
+  - experimental_resources/droplets/list
+  - experimental_resources/droplets/app/list
+  - experimental_resources/droplets/package/list
+  - experimental_resources/isolation_segments/header
+  - experimental_resources/isolation_segments/object
+  - experimental_resources/isolation_segments/create
+  - experimental_resources/isolation_segments/get
+  - experimental_resources/isolation_segments/update
+  - experimental_resources/isolation_segments/delete
+  - experimental_resources/isolation_segments/list
+  - experimental_resources/isolation_segments/assign
+  - experimental_resources/isolation_segments/unassign
+  - experimental_resources/isolation_segments/list_organizations
+  - experimental_resources/isolation_segments/list_spaces
+  - experimental_resources/packages/header
+  - experimental_resources/packages/object
+  - experimental_resources/packages/create
+  - experimental_resources/packages/get
+  - experimental_resources/packages/stage
+  - experimental_resources/packages/upload_bits
+  - experimental_resources/packages/download_bits
+  - experimental_resources/packages/copy_bits
+  - experimental_resources/packages/delete
+  - experimental_resources/packages/list
+  - experimental_resources/packages/app/list
+  - experimental_resources/processes/header
+  - experimental_resources/processes/object
+  - experimental_resources/processes/health_check_object
+  - experimental_resources/processes/stats_object
+  - experimental_resources/processes/get
+  - experimental_resources/processes/stats
+  - experimental_resources/processes/update
+  - experimental_resources/processes/scale
+  - experimental_resources/processes/terminate_instance
+  - experimental_resources/processes/list
+  - experimental_resources/processes/app/header
+  - experimental_resources/processes/object
+  - experimental_resources/processes/health_check_object
+  - experimental_resources/processes/stats_object
+  - experimental_resources/processes/app/get
+  - experimental_resources/processes/app/stats
+  - experimental_resources/processes/app/scale
+  - experimental_resources/processes/app/terminate_instance
+  - experimental_resources/processes/app/list
+  - experimental_resources/route_mappings/header
+  - experimental_resources/route_mappings/object
+  - experimental_resources/route_mappings/create
+  - experimental_resources/route_mappings/get
+  - experimental_resources/route_mappings/delete
+  - experimental_resources/route_mappings/list
+  - experimental_resources/route_mappings/app/list
+  - experimental_resources/service_bindings/header
+  - experimental_resources/service_bindings/object
+  - experimental_resources/service_bindings/create
+  - experimental_resources/service_bindings/get
+  - experimental_resources/service_bindings/delete
+  - experimental_resources/service_bindings/list
+
+search: true
+---

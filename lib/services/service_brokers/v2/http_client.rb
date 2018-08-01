@@ -56,7 +56,7 @@ module VCAP::Services
         507 => 'Insufficient Storage',
         508 => 'Loop Detected',
         511 => 'Network Authentication Required',
-      }
+      }.freeze
 
       def initialize(attrs={})
         @code = attrs.fetch(:code)
@@ -115,6 +115,7 @@ module VCAP::Services
       def make_request(method, uri, body, content_type)
         client = HTTPClient.new(force_basic_auth: true)
         client.set_auth(uri, auth_username, auth_password)
+        client.ssl_config.set_default_paths
 
         client.ssl_config.verify_mode = verify_certs? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
         client.connect_timeout = broker_client_timeout
@@ -130,7 +131,7 @@ module VCAP::Services
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
 
         response = client.request(method, uri, opts)
-        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{response.body.inspect}, HEADERS: #{response.headers.inspect}"
+        logger.debug "Response from request to #{uri}: STATUS #{response.code}, BODY: #{redact_credentials(response)}, HEADERS: #{response.headers.inspect}"
 
         HttpResponse.from_http_client_response(response)
       rescue SocketError, Errno::ECONNREFUSED => error
@@ -141,9 +142,17 @@ module VCAP::Services
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
       end
 
+      def redact_credentials(response)
+        body = MultiJson.load(response.body)
+        body['credentials'] = 'REDACTED' if body['credentials']
+        body.inspect
+      rescue
+        'Error parsing body'
+      end
+
       def default_headers
         {
-          VCAP::Request::HEADER_BROKER_API_VERSION => '2.8',
+          VCAP::Request::HEADER_BROKER_API_VERSION => '2.10',
           VCAP::Request::HEADER_NAME => VCAP::Request.current_id,
           'Accept' => 'application/json',
           VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config[:external_domain]}/v2/info"

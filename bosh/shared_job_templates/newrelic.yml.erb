@@ -1,0 +1,35 @@
+<%= properties.cc.newrelic.environment_name %>: &common_settings
+  license_key: <%= properties.cc.newrelic.license_key ? "'#{properties.cc.newrelic.license_key}'" : "~" %>
+  app_name: 'Cloud Controller (<%= properties.cc.newrelic.environment_name %>)'
+  developer_mode: <%= properties.cc.newrelic.developer_mode %>
+  monitor_mode: <%= properties.cc.newrelic.monitor_mode %>
+  log_level: info
+  log_file_path: '<%= properties.cc.newrelic.log_file_path %>'
+  log_file_name: <%= properties.cc.newrelic.environment_name %>.log
+
+  browser_monitoring:
+    auto_instrument: false
+
+  audit_log:
+    enabled: false
+  heroku:
+    use_dyno_names: true 
+
+  capture_params: <%= properties.cc.newrelic.capture_params %>
+
+  transaction_tracer:
+    enabled: <%= properties.cc.newrelic.transaction_tracer.enabled %>
+    record_sql: <%= properties.cc.newrelic.transaction_tracer.record_sql %>
+    transaction_threshold: apdex_f
+    stack_trace_threshold: 0.500
+
+  error_collector:
+    enabled: true
+    capture_source: true
+    ignore_errors: "CloudController::Errors::NotStaged,CloudController::Errors::NotAuthenticated,Sinatra::NotFound"
+
+<%= properties.cc.newrelic.environment_name %>_background:
+  <<: *common_settings
+  log_file_name: <%= properties.cc.newrelic.environment_name %>_background.log
+  transaction_tracer:
+    enabled: false

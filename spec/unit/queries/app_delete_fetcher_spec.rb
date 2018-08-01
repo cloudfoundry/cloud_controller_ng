@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/app_delete_fetcher'
 
 module VCAP::CloudController
-  describe AppDeleteFetcher do
+  RSpec.describe AppDeleteFetcher do
     describe '#fetch' do
       let(:app) { AppModel.make }
       let(:space) { app.space }

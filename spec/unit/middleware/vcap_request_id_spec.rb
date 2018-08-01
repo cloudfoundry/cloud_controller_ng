@@ -3,7 +3,7 @@ require 'vcap_request_id'
 
 module CloudFoundry
   module Middleware
-    describe VcapRequestId do
+    RSpec.describe VcapRequestId do
       let(:middleware) { described_class.new(app) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:uuid_regex) { '\w+-\w+-\w+-\w+-\w+' }

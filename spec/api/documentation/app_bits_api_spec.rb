@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Apps', type: [:api, :legacy_api] do
+RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:tmpdir) { Dir.mktmpdir }
   let(:valid_zip) {
@@ -19,7 +19,7 @@ resource 'Apps', type: [:api, :legacy_api] do
   end
 
   let(:space) { VCAP::CloudController::Space.make }
-  let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space, droplet_hash: nil, package_state: 'PENDING') }
+  let(:app_obj) { VCAP::CloudController::AppFactory.make(space: space) }
 
   authenticated_request
 
@@ -77,7 +77,6 @@ resource 'Apps', type: [:api, :legacy_api] do
         are also the default bits for a DEA backend. File mode bits are required to have at least the minimum permissions of 0600.
       eos
 
-      # rubocop:disable LineLength
       request_body_example = <<-eos.gsub(/^ */, '')
         --AaB03x
         Content-Disposition: form-data; name="async"
@@ -96,7 +95,6 @@ resource 'Apps', type: [:api, :legacy_api] do
         &lt;&lt;binary artifact bytes&gt;&gt;
         --AaB03x
       eos
-      # rubocop:enable LineLength
 
       client.put "/v2/apps/#{app_obj.guid}/bits", app_bits_put_params, headers
       example.metadata[:requests].each do |req|
@@ -131,15 +129,11 @@ resource 'Apps', type: [:api, :legacy_api] do
     end
 
     before do
-      app_obj.droplet_hash = 'abcdef'
-      app_obj.save
-
       droplet_file = Tempfile.new(app_obj.guid)
       droplet_file.write('droplet contents')
       droplet_file.close
 
-      droplet = CloudController::DropletUploader.new(app_obj, blobstore)
-      droplet.upload(droplet_file.path)
+      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, app_obj.current_droplet.guid).perform
     end
 
     example 'Downloads the staged droplet for an App' do

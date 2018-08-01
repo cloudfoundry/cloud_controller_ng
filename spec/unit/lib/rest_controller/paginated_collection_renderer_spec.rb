@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RestController
-  describe PaginatedCollectionRenderer do
+  RSpec.describe PaginatedCollectionRenderer do
     let(:controller) { VCAP::CloudController::TestModelsController }
     let(:dataset) { VCAP::CloudController::TestModel.dataset }
 
@@ -50,7 +50,7 @@ module VCAP::CloudController::RestController
           let(:results_per_page) { 11 }
 
           it 'raises ApiError error' do
-            expect { render_json_call }.to raise_error(VCAP::Errors::ApiError, /results_per_page/)
+            expect { render_json_call }.to raise_error(CloudController::Errors::ApiError, /results_per_page/)
           end
         end
 
@@ -94,7 +94,7 @@ module VCAP::CloudController::RestController
           it 'raises BadQueryParameter error' do
             expect {
               render_json_call
-            }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
+            }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
           end
         end
 
@@ -289,6 +289,47 @@ module VCAP::CloudController::RestController
             next_url = JSON.parse(render_json_call)['next_url']
             expect(prev_url).to include("order-direction=#{order_direction}")
             expect(next_url).to include("order-direction=#{order_direction}")
+          end
+        end
+      end
+
+      context 'orber-by' do
+        before do
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+          VCAP::CloudController::TestModel.make
+        end
+
+        let(:opts) do
+          {
+            results_per_page: 1,
+            order_by: order_by_param,
+            page: 2
+          }
+        end
+
+        context 'when not specified' do
+          let(:opts) do
+            {
+              results_per_page: 1,
+              page: 2
+            }
+          end
+
+          it 'does not include order-by in url params' do
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(next_url).to_not include('order-by')
+          end
+        end
+
+        context 'when it is specified' do
+          let(:order_by_param) { 'sortable_value' }
+
+          it 'includes order-by in next_url and prev_url' do
+            prev_url = JSON.parse(render_json_call)['prev_url']
+            next_url = JSON.parse(render_json_call)['next_url']
+            expect(prev_url).to include("order-by=#{order_by_param}")
+            expect(next_url).to include("order-by=#{order_by_param}")
           end
         end
       end

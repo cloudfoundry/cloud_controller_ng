@@ -16,7 +16,6 @@ Sham.define do
   long_description    { |index| "long description-#{index} over 255 characters #{'-' * 255}" }
   version             { |index| "version-#{index}" }
   service_credentials { |index| { "creds-key-#{index}" => "creds-val-#{index}" } }
-  binding_options     { |index| { "binding-options-#{index}" => "value-#{index}" } }
   uaa_id              { |index| "uaa-id-#{index}" }
   domain              { |index| "domain-#{index}.example.com" }
   host                { |index| "host-#{index}" }
@@ -26,49 +25,128 @@ Sham.define do
   unique_id           { |index| "unique-id-#{index}" }
   status              { |_| %w(active suspended cancelled).sample(1).first }
   error_message       { |index| "error-message-#{index}" }
+  sequence_id         { |index| index }
 end
 
 module VCAP::CloudController
-  AppModel.blueprint do
-    guid       { Sham.guid }
-    name       { Sham.name }
-    space_guid { Space.make.guid }
+  IsolationSegmentModel.blueprint do
+    guid { Sham.guid }
+    name { Sham.name }
   end
 
-  AppModel.blueprint(:buildpack) do
-    guid       { Sham.guid }
+  AppModel.blueprint do
     name       { Sham.name }
-    space_guid { Space.make.guid }
-    buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(app: object.save) }
+    space      { Space.make }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
+    name { Sham.name }
+    space { Space.make }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
+  AppModel.blueprint(:buildpack) do
   end
 
   PackageModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
     type     { 'bits' }
-    app_guid { AppModel.make.guid }
+    app { AppModel.make }
   end
 
   PackageModel.blueprint(:docker) do
     guid     { Sham.guid }
-    state    { VCAP::CloudController::PackageModel::CREATED_STATE }
+    state    { VCAP::CloudController::PackageModel::READY_STATE }
     type     { 'docker' }
-    app_guid { AppModel.make.guid }
-    docker_data { PackageDockerDataModel.create(package: object.save, image: "org/image-#{Sham.guid}:latest") }
+    app { AppModel.make }
+    docker_image { "org/image-#{Sham.guid}:latest" }
   end
 
   DropletModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app_guid { AppModel.make.guid }
-    buildpack_lifecycle_data  { BuildpackLifecycleDataModel.make(droplet: object.save) }
+    app { AppModel.make }
+    staging_memory_in_mb { 123 }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
+  end
+
+  DropletModel.blueprint(:staged) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGED_STATE }
+    app { AppModel.make }
+    staging_memory_in_mb { 123 }
+    droplet_hash { Sham.guid }
+    sha256_checksum { Sham.guid }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
+  end
+
+  DropletModel.blueprint(:docker) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app { AppModel.make(droplet_guid: guid) }
+    staging_memory_in_mb { 123 }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
+  TaskModel.blueprint do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:running) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::RUNNING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:canceling) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::CANCELING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:succeeded) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::SUCCEEDED_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
+  end
+
+  TaskModel.blueprint(:pending) do
+    guid { Sham.guid }
+    app { AppModel.make }
+    name { Sham.name }
+    droplet { DropletModel.make(:staged, app: app) }
+    command { 'bundle exec rake' }
+    state { VCAP::CloudController::TaskModel::PENDING_STATE }
+    memory_in_mb { 256 }
+    sequence_id { Sham.sequence_id }
   end
 
   User.blueprint do
-    guid              { Sham.uaa_id }
+    guid { Sham.uaa_id }
   end
 
   Organization.blueprint do
@@ -78,12 +156,7 @@ module VCAP::CloudController
   end
 
   Domain.blueprint do
-    name                { Sham.domain }
-  end
-
-  Droplet.blueprint do
-    app { App.make }
-    droplet_hash { Sham.guid }
+    name { Sham.domain }
   end
 
   PrivateDomain.blueprint do
@@ -92,11 +165,11 @@ module VCAP::CloudController
   end
 
   SharedDomain.blueprint do
-    name                { Sham.domain }
+    name { Sham.domain }
   end
 
   Route.blueprint do
-    space             { Space.make }
+    space { Space.make }
 
     domain do
       PrivateDomain.make(
@@ -112,12 +185,6 @@ module VCAP::CloudController
     organization      { Organization.make }
   end
 
-  ServiceAuthToken.blueprint do
-    label
-    provider
-    token
-  end
-
   Service.blueprint do
     label             { Sham.label }
     unique_id         { SecureRandom.uuid }
@@ -125,32 +192,14 @@ module VCAP::CloudController
     active            { true }
     service_broker    { ServiceBroker.make }
     description       { Sham.description } # remove hack
-    provider          { '' }
-    url               { nil }
-    version           { nil }
-  end
-
-  Service.blueprint(:v1) do
-    provider          { Sham.provider }
-    url               { Sham.url }
-    version           { Sham.version }
-    description do
-      # Hack since Sequel does not allow two foreign keys natively
-      # and putting this side effect outside memoizes the label and provider.
-      # This also creates a ServiceAuthToken for v2 services despite the fact
-      # that they do not use it.
-      ServiceAuthToken.make(label: label, provider: provider, token: Sham.token)
-      Sham.description
-    end
-
-    service_broker    { nil }
-  end
-
-  Service.blueprint(:v2) do
   end
 
   Service.blueprint(:routing) do
     requires { ['route_forwarding'] }
+  end
+
+  Service.blueprint(:volume_mount) do
+    requires { ['volume_mount'] }
   end
 
   ServiceInstance.blueprint do
@@ -164,24 +213,16 @@ module VCAP::CloudController
     name                       { Sham.name }
     credentials                { Sham.service_credentials }
     space                      { Space.make }
-    service_plan               { ServicePlan.make(:v2) }
+    service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
   end
 
-  ManagedServiceInstance.blueprint(:v1) do
-    is_gateway_service { true }
-    name              { Sham.name }
-    credentials       { Sham.service_credentials }
-    space             { Space.make }
-    service_plan      { ServicePlan.make(:v1) }
-    gateway_name      { Sham.guid }
-  end
-
-  ManagedServiceInstance.blueprint(:v2) do
-  end
-
   ManagedServiceInstance.blueprint(:routing) do
-    service_plan      { ServicePlan.make(:routing) }
+    service_plan { ServicePlan.make(:routing) }
+  end
+
+  ManagedServiceInstance.blueprint(:volume_mount) do
+    service_plan { ServicePlan.make(:volume_mount) }
   end
 
   UserProvidedServiceInstance.blueprint do
@@ -216,30 +257,63 @@ module VCAP::CloudController
   # if you want to create an app with droplet, use AppFactory.make
   # This is because the lack of factory hooks in Machinist.
   App.blueprint do
-    name              { Sham.name }
-    space             { Space.make }
-    stack             { Stack.make }
-    instances         { 1 }
-    type              { 'web' }
+    instances { 1 }
+    type { 'web' }
+    app { AppModel.make }
+  end
+
+  App.blueprint(:process) do
+    app { AppModel.make }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+  end
+
+  App.blueprint(:diego_runnable) do
+    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
+  end
+
+  App.blueprint(:dea_runnable) do
+    app { AppModel.make(droplet: DropletModel.make(:staged)) }
+    diego { false }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
+    state { 'STARTED' }
+  end
+
+  App.blueprint(:docker) do
+    app { AppModel.make(:docker) }
+    diego { true }
+    instances { 1 }
+    type { Sham.name }
+    metadata { {} }
   end
 
   RouteBinding.blueprint do
-    service_instance  { ManagedServiceInstance.make(:routing) }
+    service_instance { ManagedServiceInstance.make(:routing) }
     route { Route.make space: service_instance.space }
     route_service_url { Sham.url }
   end
 
   ServiceBinding.blueprint do
-    credentials       { Sham.service_credentials }
-    service_instance  { ManagedServiceInstance.make }
-    app               { AppFactory.make(space: service_instance.space) }
-    syslog_drain_url  { nil }
+    credentials { Sham.service_credentials }
+    service_instance { ManagedServiceInstance.make }
+    app { AppModel.make(space: service_instance.space) }
+    syslog_drain_url { nil }
+    type { 'app' }
   end
 
   ServiceKey.blueprint do
     credentials       { Sham.service_credentials }
     service_instance  { ManagedServiceInstance.make }
-    name               { Sham.name }
+    name { Sham.name }
   end
 
   ServiceBroker.blueprint do
@@ -258,25 +332,17 @@ module VCAP::CloudController
     name              { Sham.name }
     free              { false }
     description       { Sham.description }
-    service           { Service.make(:v2) }
+    service           { Service.make }
     unique_id         { SecureRandom.uuid }
     active            { true }
-  end
-
-  ServicePlan.blueprint(:v1) do
-    name              { Sham.name }
-    free              { false }
-    description       { Sham.description }
-    service           { Service.make(:v1) }
-    unique_id         { SecureRandom.uuid }
-    active            { true }
-  end
-
-  ServicePlan.blueprint(:v2) do
   end
 
   ServicePlan.blueprint(:routing) do
     service { Service.make(:routing) }
+  end
+
+  ServicePlan.blueprint(:volume_mount) do
+    service { Service.make(:volume_mount) }
   end
 
   ServicePlanVisibility.blueprint do
@@ -308,6 +374,7 @@ module VCAP::CloudController
   QuotaDefinition.blueprint do
     name { Sham.name }
     non_basic_services_allowed { true }
+    total_reserved_route_ports { 5 }
     total_services { 60 }
     total_routes { 1_000 }
     memory_limit { 20_480 } # 20 GB
@@ -323,8 +390,8 @@ module VCAP::CloudController
   end
 
   BuildpackLifecycleDataModel.blueprint do
-    buildpack { Sham.name }
-    stack { Sham.name }
+    buildpack { nil }
+    stack { Stack.make.name }
   end
 
   AppUsageEvent.blueprint do
@@ -374,6 +441,7 @@ module VCAP::CloudController
     name { Sham.name }
     non_basic_services_allowed { true }
     total_services { 60 }
+    total_service_keys { 600 }
     total_routes { 1_000 }
     memory_limit { 20_480 } # 20 GB
     organization { Organization.make }
@@ -393,6 +461,12 @@ module VCAP::CloudController
     name { 'user_org_creation' }
     enabled { false }
     error_message { Sham.error_message }
+  end
+
+  RouteMappingModel.blueprint do
+    app { AppModel.make }
+    route { Route.make(space: app.space) }
+    process_type { 'web' }
   end
 
   TestModel.blueprint do

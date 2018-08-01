@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Sinatra::VCAP', type: :v2_controller do
+RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
   class StructuredErrorWithResponseCode < StructuredError
     def initialize
       super('boring message', 'the source')
@@ -48,7 +48,7 @@ describe 'Sinatra::VCAP', type: :v2_controller do
     end
 
     get '/vcap_error' do
-      e = VCAP::Errors::ApiError.new_from_details('MessageParseError', 'some message')
+      e = CloudController::Errors::ApiError.new_from_details('MessageParseError', 'some message')
       e.set_backtrace(['/vcap:1', '/error:2'])
       raise e
     end

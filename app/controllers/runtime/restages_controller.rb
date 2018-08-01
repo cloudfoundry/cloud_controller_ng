@@ -1,7 +1,9 @@
+require 'actions/v2/app_stage'
+
 module VCAP::CloudController
   class RestagesController < RestController::ModelController
     def self.dependencies
-      [:app_event_repository]
+      [:app_event_repository, :stagers]
     end
 
     path_base 'apps'
@@ -10,37 +12,45 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @app_event_repository = dependencies.fetch(:app_event_repository)
+      @stagers              = dependencies.fetch(:stagers)
     end
 
     post "#{path_guid}/restage", :restage
 
     def restage(guid)
-      app = find_guid_and_validate_access(:read, guid)
+      process = find_guid_and_validate_access(:read_for_update, guid)
 
       model.db.transaction do
-        app.lock!
+        process.app.lock!
+        process.lock!
 
-        if app.pending?
-          raise VCAP::Errors::ApiError.new_from_details('NotStaged')
+        if process.pending?
+          raise CloudController::Errors::ApiError.new_from_details('NotStaged')
         end
 
-        app.restage!
+        if process.latest_package.nil?
+          raise CloudController::Errors::ApiError.new_from_details('AppPackageInvalid', 'bits have not been uploaded')
+        end
+
+        V2::AppStop.stop(process.app, @stagers)
+        process.app.update(droplet_guid: nil)
+        AppStart.start_without_event(process.app)
       end
 
-      @app_event_repository.record_app_restage(app, SecurityContext.current_user.guid, SecurityContext.current_user_email)
+      V2::AppStage.new(stagers: @stagers).stage(process)
+
+      @app_event_repository.record_app_restage(process, SecurityContext.current_user.guid, SecurityContext.current_user_email)
 
       [
         HTTP::CREATED,
-        { 'Location' => "#{self.class.path}/#{app.guid}" },
-        object_renderer.render_json(self.class, app, @opts)
+        { 'Location' => "#{self.class.path}/#{process.guid}" },
+        object_renderer.render_json(self.class, process, @opts)
       ]
-    end
-
-    def self.translate_validation_exception(e, attributes)
-      docker_errors = e.errors.on(:docker)
-      return Errors::ApiError.new_from_details('DockerDisabled') if docker_errors
-
-      Errors::ApiError.new_from_details('StagingError', e.errors.full_messages)
+    rescue AppStart::InvalidApp => e
+      raise CloudController::Errors::ApiError.new_from_details('DockerDisabled') if e.message =~ /docker_disabled/
+      raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
+    rescue AppStop::InvalidApp => e
+      raise CloudController::Errors::ApiError.new_from_details('StagingError', e.message)
     end
   end
 end

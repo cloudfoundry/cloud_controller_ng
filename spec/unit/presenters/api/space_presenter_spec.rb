@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe SpacePresenter do
+RSpec.describe SpacePresenter do
   describe '#to_hash' do
     let(:space) { VCAP::CloudController::Space.make }
     subject { SpacePresenter.new(space) }
@@ -10,7 +10,7 @@ describe SpacePresenter do
         metadata: {
           guid: space.guid,
           created_at: space.created_at.iso8601,
-          updated_at: nil,
+          updated_at: space.updated_at.iso8601,
         },
         entity: {
           name: space.name

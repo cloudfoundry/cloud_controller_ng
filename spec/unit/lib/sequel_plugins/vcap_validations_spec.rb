@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Sequel::Plugins::VcapValidations' do
+RSpec.describe 'Sequel::Plugins::VcapValidations' do
   before do
     @c = Class.new(Sequel::Model) do
       attr_accessor :val

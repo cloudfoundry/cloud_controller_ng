@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::Jobs
-  describe TimeoutJob do
+  RSpec.describe TimeoutJob do
     let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2) }
     let(:timeout_job) { TimeoutJob.new(job) }
 
@@ -23,13 +23,13 @@ module VCAP::CloudController::Jobs
 
       it "doesn't allow the job to exceed the timeout" do
         expect(timeout_job).to receive(:max_run_time).with('my-job').and_return(1)
-        expect { timeout_job.perform }.to raise_error VCAP::Errors::ApiError, /job.+timed out/
+        expect { timeout_job.perform }.to raise_error CloudController::Errors::ApiError, /job.+timed out/
       end
 
       context 'and the job does not specify a custom timeout error' do
-        it 'raises a VCAP::Errors::JobTimeout to ensure the error message reaches the API consumer' do
+        it 'raises a CloudController::Errors::JobTimeout to ensure the error message reaches the API consumer' do
           expect(timeout_job).to receive(:max_run_time).with('my-job').and_return(1)
-          expect { timeout_job.perform }.to raise_error VCAP::Errors::ApiError, /job.+timed out/
+          expect { timeout_job.perform }.to raise_error CloudController::Errors::ApiError, /job.+timed out/
         end
       end
 

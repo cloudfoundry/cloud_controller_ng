@@ -1,13 +1,67 @@
 require 'spec_helper'
+require 'cloud_controller/seeds'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Seeds do
+  RSpec.describe VCAP::CloudController::Seeds do
     let(:config) { TestConfig.config.clone }
 
     describe '.create_seed_stacks' do
       it 'populates stacks' do
         expect(Stack).to receive(:populate)
         Seeds.create_seed_stacks
+      end
+    end
+
+    describe '.create_seed_shared_isolation_segment' do
+      before do
+        IsolationSegmentModel.dataset.destroy
+      end
+
+      it 'creates the shared isolation segment' do
+        expect {
+          Seeds.create_seed_shared_isolation_segment(config)
+        }.to change { IsolationSegmentModel.count }.from(0).to(1)
+
+        shared_isolation_segment_model = IsolationSegmentModel.first
+        expect(shared_isolation_segment_model.name).to eq('shared')
+        expect(shared_isolation_segment_model.guid).to eq(IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+      end
+
+      context 'when the shared isolation segment already exists' do
+        before do
+          Seeds.create_seed_shared_isolation_segment(config)
+        end
+
+        context 'and the name does not change' do
+          it 'does not update the isolation segment' do
+            expect_any_instance_of(IsolationSegmentModel).to_not receive(:update)
+            Seeds.create_seed_shared_isolation_segment(config)
+          end
+        end
+
+        context 'and the name changes' do
+          it 'sets the name of the shared segment to the new value' do
+            expect {
+              Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: 'original-name' })
+            }.to_not change { IsolationSegmentModel.count }
+
+            shared_isolation_segment_model = IsolationSegmentModel.first
+            expect(shared_isolation_segment_model.name).to eq('original-name')
+            expect(shared_isolation_segment_model.guid).to eq(IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+          end
+
+          context 'and the name is already taken' do
+            let(:isolation_segment_model) { IsolationSegmentModel.make }
+
+            # this means that it will fail our deployment. To correct this issue we could
+            # redeploy with what the old 'shared' isolation segment name
+            it 'raises some kind of error TBD' do
+              expect {
+                Seeds.create_seed_shared_isolation_segment({ shared_isolation_segment_name: isolation_segment_model.name })
+              }.to raise_error(Sequel::ValidationFailed, /must be unique/)
+            end
+          end
+        end
       end
     end
 
@@ -20,6 +74,7 @@ module VCAP::CloudController
               total_routes: 10,
               total_services: 10,
               memory_limit: 1024,
+              total_reserved_route_ports: 10,
             },
 
             'default' => {
@@ -27,6 +82,7 @@ module VCAP::CloudController
               total_routes: 1000,
               total_services: 20,
               memory_limit: 1_024_000,
+              total_reserved_route_ports: 5,
             },
           },
           default_quota_definition: 'default',
@@ -49,12 +105,14 @@ module VCAP::CloudController
           expect(small_quota.total_routes).to eq(10)
           expect(small_quota.total_services).to eq(10)
           expect(small_quota.memory_limit).to eq(1024)
+          expect(small_quota.total_reserved_route_ports).to eq(10)
 
           default_quota = QuotaDefinition[name: 'default']
           expect(default_quota.non_basic_services_allowed).to eq(true)
           expect(default_quota.total_routes).to eq(1000)
           expect(default_quota.total_services).to eq(20)
           expect(default_quota.memory_limit).to eq(1_024_000)
+          expect(default_quota.total_reserved_route_ports).to eq(5)
         end
       end
 
@@ -74,12 +132,14 @@ module VCAP::CloudController
             expect(small_quota.total_routes).to eq(10)
             expect(small_quota.total_services).to eq(10)
             expect(small_quota.memory_limit).to eq(1024)
+            expect(small_quota.total_reserved_route_ports).to eq(10)
 
             default_quota = QuotaDefinition[name: 'default']
             expect(default_quota.non_basic_services_allowed).to eq(true)
             expect(default_quota.total_routes).to eq(1000)
             expect(default_quota.total_services).to eq(20)
             expect(default_quota.memory_limit).to eq(1_024_000)
+            expect(default_quota.total_reserved_route_ports).to eq(5)
           end
         end
 
@@ -159,10 +219,8 @@ module VCAP::CloudController
     describe '.create_seed_domains' do
       let(:config) do
         {
-          app_domains: [
-            'app.example.com'
-          ],
-          system_domain: 'system.example.com',
+          app_domains: app_domains,
+          system_domain: system_domain,
           system_domain_organization: 'the-system-org',
           quota_definitions: {
             'default' => {
@@ -175,6 +233,8 @@ module VCAP::CloudController
           default_quota_definition: 'default'
         }
       end
+      let(:system_org) { Organization.find(name: 'the-system-org') }
+      let(:system_domain) { 'system.example.com' }
 
       before do
         Domain.dataset.destroy
@@ -185,17 +245,19 @@ module VCAP::CloudController
       end
 
       context 'when the app domains do not include the system domain' do
-        it "makes shared domains for each of the config's app domains" do
+        let(:app_domains) { ['app.some-other-domain.com'] }
+
+        it 'makes a shared domain for each app domain, and a private domain for the system domain' do
           Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-          expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com'])
+          expect(Domain.shared_domains.map(&:name)).to eq(['app.some-other-domain.com'])
+          expect(Domain.private_domains.map(&:name)).to eq(['system.example.com'])
         end
 
         it 'raises if the system org is not specified' do
-          expect { Seeds.create_seed_domains(config, nil) }.to raise_error(RuntimeError, /organization.+cannot be nil/)
+          expect { Seeds.create_seed_domains(config, nil) }.to raise_error(RuntimeError, /system_domain_organization must be provided/)
         end
 
         it 'creates the system domain if the system domain does not exist' do
-          system_org = Organization.find(name: 'the-system-org')
           Seeds.create_seed_domains(config, system_org)
 
           system_domain = Domain.find(name: config[:system_domain])
@@ -212,19 +274,110 @@ module VCAP::CloudController
             name: config[:system_domain],
             owning_organization: Organization.make
           )
-          system_org = Organization.find(name: 'the-system-org')
           Seeds.create_seed_domains(config, system_org)
         end
-      end
 
-      context 'when the app domains include the system domain' do
-        before do
-          config[:app_domains] << config[:system_domain]
+        context 'when the app domains include a subdomain of the system domain' do
+          let(:app_domains) { ['app.example.com'] }
+          let(:system_domain) { 'example.com' }
+
+          it 'adds both as shared domains' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com', 'example.com'])
+            expect(Domain.private_domains.map(&:name)).to eq([])
+          end
         end
 
-        it "makes shared domains for each of the config's app domains, including the system domain" do
-          Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
-          expect(Domain.shared_domains.map(&:name)).to eq(config[:app_domains])
+        context 'when the system domain already exists as a shared domain' do
+          let(:app_domains) { ['app.example.com'] }
+          let(:system_domain) { 'system.example.com' }
+
+          before do
+            SharedDomain.make(name: 'system.example.com')
+          end
+
+          it 'that shared domain is not modified' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to match_array(['app.example.com', 'system.example.com'])
+            expect(Domain.private_domains.map(&:name)).to eq([])
+          end
+        end
+
+        context 'when the app domain is one of the system hostnames + system domain' do
+          let(:app_domains) { ['uaa.example.com'] }
+          let(:system_domain) { 'example.com' }
+
+          before do
+            Config.config[:system_hostnames] = ['api', 'uaa']
+            SharedDomain.make(name: 'example.com')
+          end
+
+          it 'returns an error about app domain overlapping with system hostnames' do
+            expect { Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org')) }.
+              to raise_error(RuntimeError, /App domain cannot overlap with reserved system hostnames/)
+          end
+        end
+
+        context 'when the app domains include the system domain' do
+          let(:app_domains) { ['app.example.com'] }
+
+          before do
+            config[:app_domains] << config[:system_domain]
+          end
+
+          it 'makes a shared domain for each app domain, including the system domain' do
+            Seeds.create_seed_domains(config, Organization.find(name: 'the-system-org'))
+            expect(Domain.shared_domains.map(&:name)).to eq(config[:app_domains])
+          end
+        end
+
+        context 'when a router group name is specified' do
+          let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(client)
+            allow(client).to receive(:router_group_guid).with('default-tcp').and_return('some-router-guid')
+          end
+
+          it 'seeds the shared domains with the router group guid' do
+            Seeds.create_seed_domains(config, system_org)
+            expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com'])
+            expect(Domain.shared_domains.map(&:router_group_guid)).to eq(['some-router-guid'])
+          end
+        end
+
+        context 'when a nonexistent router group name is specified' do
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'not-there' }] }
+          let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(client)
+            allow(client).to receive(:router_group_guid).and_return(nil)
+          end
+
+          it 'raises and error' do
+            expect {
+              Seeds.create_seed_domains(config, system_org)
+            }.to raise_error('Unknown router_group_name specified: not-there')
+          end
+        end
+
+        context 'when routing api is disabled' do
+          let(:disabled_client) { RoutingApi::DisabledClient.new }
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(disabled_client)
+          end
+
+          it 'raises an error' do
+            expect {
+              Seeds.create_seed_domains(config, system_org)
+            }.to raise_error(RoutingApi::RoutingApiDisabled)
+          end
         end
       end
     end
@@ -370,6 +523,62 @@ module VCAP::CloudController
           expect {
             Seeds.create_seed_security_groups(config)
           }.not_to change { SecurityGroup.count }
+        end
+      end
+    end
+
+    describe '.create_seed_environment_variable_groups' do
+      context 'when there are not running and staging environment variable groups' do
+        before do
+          EnvironmentVariableGroup.dataset.destroy
+        end
+
+        it 'creates the running and staging environment variable groups' do
+          expect(EnvironmentVariableGroup.find(name: 'running')).to be_nil
+          expect(EnvironmentVariableGroup.find(name: 'staging')).to be_nil
+          Seeds.create_seed_environment_variable_groups
+          expect(EnvironmentVariableGroup.find(name: 'running')).not_to be_nil
+          expect(EnvironmentVariableGroup.find(name: 'staging')).not_to be_nil
+        end
+
+        context 'if another instance of CC wins a race and creates the group while we are creating the group' do
+          it 'continues gracefully when running already exists' do
+            allow(EnvironmentVariableGroup).to receive(:running).and_raise(Sequel::UniqueConstraintViolation.new)
+
+            expect {
+              Seeds.create_seed_environment_variable_groups
+            }.not_to raise_error
+          end
+
+          it 'continues gracefully when staging already exists' do
+            allow(EnvironmentVariableGroup).to receive(:staging).and_raise(Sequel::UniqueConstraintViolation.new)
+
+            expect {
+              Seeds.create_seed_environment_variable_groups
+            }.not_to raise_error
+          end
+        end
+      end
+    end
+
+    describe '.parsed_domains' do
+      context 'when app domain is an array of strings' do
+        let(:app_domains) { ['string1.com', 'string2.com'] }
+
+        it 'returns an array of hashes' do
+          expected_result = [{ 'name' => 'string1.com' }, { 'name' => 'string2.com' }]
+          expect(Seeds.parsed_domains(app_domains)).to eq(expected_result)
+        end
+      end
+      context 'when app domains is an array of hashes' do
+        let(:app_domains) { [{ 'name' => 'string1.com',
+                               'router_group_name' => 'some-name' },
+                             { 'name' => 'string2.com' }]
+        }
+        it 'returns in the same format' do
+          expected_result = [{ 'name' => 'string1.com', 'router_group_name' => 'some-name' },
+                             { 'name' => 'string2.com' }]
+          expect(Seeds.parsed_domains(app_domains)).to eq(expected_result)
         end
       end
     end

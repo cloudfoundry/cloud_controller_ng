@@ -1,19 +1,27 @@
 require File.expand_path('../../config/boot', __FILE__)
 
 if ENV['CODECLIMATE_REPO_TOKEN'] && ENV['COVERAGE']
-  require 'codeclimate-test-reporter'
-  CodeClimate::TestReporter.start
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter '/spec/'
+    add_filter '/vendor/'
+    add_filter '/docs/'
+  end
 end
+ENV['PB_IGNORE_DEPRECATIONS'] = 'true'
 
 require 'fakefs/safe'
 require 'machinist/sequel'
 require 'machinist/object'
 require 'rack/test'
 require 'timecop'
+require 'awesome_print'
 
 require 'steno'
 require 'webmock/rspec'
 require 'cf_message_bus/mock_message_bus'
+
+require 'pry'
 
 require 'cloud_controller'
 require 'allowy/rspec'
@@ -22,7 +30,6 @@ require 'posix/spawn'
 
 require 'rspec_api_documentation'
 require 'services'
-require 'documentation_helper'
 
 require 'support/bootstrap/spec_bootstrap'
 require 'rspec/collection_matchers'
@@ -33,14 +40,23 @@ VCAP::CloudController::SpecBootstrap.init
 Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
 
 RSpec.configure do |rspec_config|
+  rspec_config.expose_dsl_globally = false
+  rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
+
   rspec_config.expect_with(:rspec) { |config| config.syntax = :expect }
   rspec_config.include Rack::Test::Methods
   rspec_config.include ModelCreation
+  rspec_config.include TimeHelpers
+  rspec_config.include BackgroundJobHelpers
 
   rspec_config.include ServiceBrokerHelpers
+  rspec_config.include UserHelpers
   rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w(spec unit controllers))
   rspec_config.include ControllerHelpers, type: :api
   rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))
+  rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec acceptance))
+  rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec request))
+  rspec_config.include RequestSpecHelper, file_path: EscapedPath.join(%w(spec request))
   rspec_config.include ApiDsl, type: :api
   rspec_config.include LegacyApiDsl, type: :legacy_api
 
@@ -48,10 +64,6 @@ RSpec.configure do |rspec_config|
   rspec_config.include IntegrationHttp, type: :integration
   rspec_config.include IntegrationSetupHelpers, type: :integration
   rspec_config.include IntegrationSetup, type: :integration
-
-  rspec_config.before(:each, type: :api) do
-    VCAP::CloudController::DocumentationConfigure.configure!(self)
-  end
 
   rspec_config.before(:all) { WebMock.disable_net_connect!(allow: 'codeclimate.com') }
   rspec_config.before(:all, type: :integration) { WebMock.allow_net_connect! }
@@ -62,6 +74,10 @@ RSpec.configure do |rspec_config|
 
   Delayed::Worker.plugins << DeserializationRetry
 
+  rspec_config.before :suite do
+    VCAP::CloudController::SpecBootstrap.seed
+  end
+
   rspec_config.before :each do
     Fog::Mock.reset
     Delayed::Worker.destroy_failed_jobs = false
@@ -70,7 +86,6 @@ RSpec.configure do |rspec_config|
 
     TestConfig.reset
 
-    stub_v1_broker
     VCAP::CloudController::SecurityContext.clear
   end
 
@@ -97,6 +112,7 @@ RSpec.configure do |rspec_config|
   rspec_config.after(:each, type: :legacy_api) { add_deprecation_warning }
 
   RspecApiDocumentation.configure do |c|
+    c.app = VCAP::CloudController::RackAppBuilder.new.build(TestConfig.config, VCAP::CloudController::Metrics::RequestMetrics.new)
     c.format = [:html, :json]
     c.api_name = 'Cloud Foundry API'
     c.template_path = 'spec/api/documentation/templates'

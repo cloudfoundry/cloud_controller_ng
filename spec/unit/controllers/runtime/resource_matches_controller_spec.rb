@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ResourceMatchesController do
+  RSpec.describe VCAP::CloudController::ResourceMatchesController do
     include_context 'resource pool'
 
     before do
@@ -11,8 +11,11 @@ module VCAP::CloudController
     def resource_match_request(verb, path, matches, non_matches)
       user = User.make(admin: false, active: true)
       req = MultiJson.dump(matches + non_matches)
+
+      set_current_user(user)
       send(verb, path, req, json_headers(headers_for(user)))
       expect(last_response.status).to eq(200)
+
       resp = MultiJson.load(last_response.body)
       expect(resp).to eq(matches)
     end
@@ -37,7 +40,9 @@ module VCAP::CloudController
 
         context 'invalid json' do
           it 'returns an error' do
-            put '/v2/resource_match', 'invalid json', json_headers(headers_for(User.make))
+            set_current_user_as_admin
+
+            put '/v2/resource_match', 'invalid json'
 
             expect(last_response.status).to eq(400)
             expect(last_response.body).to match(/MessageParseError/)
@@ -46,7 +51,9 @@ module VCAP::CloudController
 
         context 'non-array json' do
           it 'returns an error' do
-            put '/v2/resource_match', 'null', json_headers(headers_for(User.make))
+            set_current_user_as_admin
+
+            put '/v2/resource_match', 'null'
 
             expect(last_response.status).to eq(422)
             expect(last_response.body).to match(/UnprocessableEntity/)
@@ -62,16 +69,71 @@ module VCAP::CloudController
       end
 
       it 'allows the upload if the user is an admin' do
-        send(:put, '/v2/resource_match', '[]', admin_headers)
+        set_current_user_as_admin
+
+        put '/v2/resource_match', '[]'
         expect(last_response.status).to eq(200)
       end
 
       it 'returns FeatureDisabled unless the user is an admin' do
-        user = User.make(admin: false, active: true)
-        send(:put, '/v2/resource_match', '[]', json_headers(headers_for(user)))
+        set_current_user(User.make)
+
+        put '/v2/resource_match', '[]'
+
         expect(last_response.status).to eq(403)
         expect(decoded_response['error_code']).to match(/FeatureDisabled/)
         expect(decoded_response['description']).to match(/Feature Disabled/)
+      end
+    end
+
+    describe 'when bits-service flag is enabled' do
+      let(:bits_service_config) do
+        {
+          bits_service: {
+            enabled: true,
+            public_endpoint: 'https://public-bits-service.example.com',
+            private_endpoint: 'https://bits-service.service.cf.internal',
+            username: 'some-username',
+            password: 'some-password',
+          }
+        }
+      end
+      let(:resources) { [{ 'sha1': '12345' }, { 'sha1': '56789' }] }
+
+      before do
+        TestConfig.override(bits_service_config)
+        set_current_user_as_admin
+      end
+
+      it 'forwards the request using the bits_service client' do
+        expect_any_instance_of(BitsService::ResourcePool).to receive(:matches).with(resources.to_json)
+        send(:put, '/v2/resource_match', resources.to_json)
+      end
+
+      it 'returns back the matches' do
+        allow_any_instance_of(BitsService::ResourcePool).to receive(:matches).
+          and_return(double(:response, code: 200, body: resources.to_json))
+
+        send(:put, '/v2/resource_match', resources.to_json)
+        expect(last_response.body).to eq(resources.to_json)
+      end
+
+      context 'when the bits_service response is not 200' do
+        before do
+          allow_any_instance_of(BitsService::ResourcePool).to receive(:matches).
+            and_raise(BitsService::Errors::Error, 'Failed in bits-service')
+        end
+
+        it 'retuns HTTP status 500' do
+          put '/v2/resource_match', '[]'
+          expect(last_response.status).to eq(500)
+        end
+
+        it 'returns an error description' do
+          put '/v2/resource_match', '[]'
+          error = JSON.parse(last_response.body)
+          expect(error['description']).to match(/Failed in bits-service/)
+        end
       end
     end
   end

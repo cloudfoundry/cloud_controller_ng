@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/process_delete_fetcher'
 
 module VCAP::CloudController
-  describe ProcessDeleteFetcher do
+  RSpec.describe ProcessDeleteFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
       let(:org) { space.organization }

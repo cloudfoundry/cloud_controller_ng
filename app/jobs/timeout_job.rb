@@ -8,7 +8,7 @@ module VCAP::CloudController
         end
       rescue Timeout::Error
         raise @handler.timeout_error if @handler.respond_to?(:timeout_error)
-        raise VCAP::Errors::ApiError.new_from_details('JobTimeout')
+        raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 
       def max_run_time(job_name_in_configuration)
@@ -17,7 +17,6 @@ module VCAP::CloudController
         job_config[:timeout_in_seconds]
       end
 
-      # TODO: fix bad tests that grab this
       def job
         @handler
       end

@@ -1,11 +1,11 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Domain do
+  RSpec.describe Domain do
     it { is_expected.to have_timestamp_columns }
 
     it 'cannot create top level domains' do
-      expect { Domain.make name: 'com' }.to raise_error(Sequel::ValidationFailed, /name format/)
+      expect { Domain.make name: 'com' }.to raise_error(Sequel::ValidationFailed, /name.*alphanumeric characters and hyphens/)
     end
 
     it "can't be created if foo would become parent" do
@@ -16,7 +16,36 @@ module VCAP::CloudController
     describe 'Associations' do
       context 'routes' do
         let(:space) { Space.make }
-        it { is_expected.to have_associated :routes, associated_instance: ->(domain) { Route.make(space: space, domain: domain) } }
+        it { is_expected.to have_associated :routes,
+             test_instance: SharedDomain.make,
+             associated_instance: ->(domain) { Route.make(space: space, domain: domain) }
+        }
+      end
+
+      context 'shared_organizations' do
+        let(:org) { Organization.make }
+
+        it 'associates with shared organizations' do
+          domain = Domain.make(owning_organization_id: Organization.make.id)
+          domain.add_shared_organization(org)
+          expect(domain.shared_organizations).to include(org)
+        end
+
+        context 'when the domain is a shared domain' do
+          it 'fails validation' do
+            domain = Domain.make(owning_organization_id: nil)
+            expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
+            expect(domain.shared_organizations).to_not include(org)
+          end
+        end
+
+        context 'when the domain is owned by the organization' do
+          it 'fails validation' do
+            domain = Domain.make(owning_organization_id: org.id)
+            expect { domain.add_shared_organization(org) }.to raise_error(Sequel::HookFailed)
+            expect(domain.shared_organizations).to_not include(org)
+          end
+        end
       end
 
       context 'owning_organization' do
@@ -32,7 +61,7 @@ module VCAP::CloudController
         context 'shared domains' do
           it 'prevents converting a shared domain into a private domain' do
             shared = SharedDomain.make
-            expect { shared.owning_organization = Organization.make }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { shared.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
@@ -44,12 +73,12 @@ module VCAP::CloudController
         context 'private domains' do
           it 'prevents converting a private domain into a shared domain' do
             private_domain = PrivateDomain.make
-            expect { private_domain.owning_organization = nil }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { private_domain.owning_organization = nil }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'prevents changing orgs on a private domain' do
             private_domain = PrivateDomain.make
-            expect { private_domain.owning_organization = Organization.make }.to raise_error(VCAP::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { private_domain.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
@@ -150,6 +179,40 @@ module VCAP::CloudController
         expect {
           @eager_loaded_domain = Domain.eager(:spaces_sti_eager_load).where(id: domain.id).all.first
         }.to have_queried_db_times(/spaces/i, 1)
+      end
+    end
+
+    describe '#name_overlaps?' do
+      context 'when a domain exists that exactly matches the current name' do
+        context 'when the organization is the same' do
+          let(:organization) { Organization.make }
+
+          it 'is false' do
+            Domain.make(name: 'blah.blah.com', owning_organization: organization).save
+            expect(Domain.new(name: 'blah.blah.com', owning_organization: organization).name_overlaps?).to be false
+          end
+        end
+
+        context 'when the organization is different' do
+          it 'is true' do
+            Domain.make(name: 'blah.blah.com', owning_organization: Organization.make).save
+            expect(Domain.new(name: 'blah.blah.com', owning_organization: Organization.make).name_overlaps?).to be true
+          end
+        end
+
+        context 'but the first domain has no organization' do
+          it 'is false' do
+            Domain.make(name: 'blah.blah.com', owning_organization: nil).save
+            expect(Domain.new(name: 'blah.blah.com', owning_organization: Organization.make).name_overlaps?).to be false
+          end
+        end
+      end
+
+      context 'when no other private domain matches the name' do
+        it 'is false' do
+          Domain.make(name: 'blah.example.com', owning_organization: Organization.make).save
+          expect(Domain.new(name: 'blah.blah.com', owning_organization: Organization.make).name_overlaps?).to be false
+        end
       end
     end
   end

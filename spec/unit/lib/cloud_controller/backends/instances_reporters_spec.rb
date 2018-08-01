@@ -1,16 +1,14 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe InstancesReporters do
+  RSpec.describe InstancesReporters do
     let(:tps_client) { instance_double(Diego::TPSClient) }
     let(:hm_client) { instance_double(Dea::HM9000::Client) }
 
-    let(:dea_app) { AppFactory.make(package_hash: 'abc', package_state: 'STAGED') }
+    let(:dea_app) { AppFactory.make }
     let(:diego_app) do
       AppFactory.make(
-          package_hash: 'abc',
-          package_state: 'STAGED',
-          diego: true
+        diego: true
       )
     end
 
@@ -23,20 +21,20 @@ module VCAP::CloudController
       allow(Diego::InstancesReporter).to receive(:new).with(tps_client).and_return(diego_reporter)
     end
 
-    describe '#number_of_starting_and_running_instances_for_app' do
+    describe '#number_of_starting_and_running_instances_for_process' do
       context 'when the app is a DEA app' do
         it 'delegates to the DEA reporter' do
-          allow(dea_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(dea_app).and_return(1)
+          allow(dea_reporter).to receive(:number_of_starting_and_running_instances_for_process).with(dea_app).and_return(1)
 
-          expect(instances_reporters.number_of_starting_and_running_instances_for_app(dea_app)).to eq(1)
+          expect(instances_reporters.number_of_starting_and_running_instances_for_process(dea_app)).to eq(1)
         end
       end
 
       context 'when the app is a Diego app' do
         it 'delegates to the Diego reporter' do
-          allow(diego_reporter).to receive(:number_of_starting_and_running_instances_for_app).with(diego_app).and_return(2)
+          allow(diego_reporter).to receive(:number_of_starting_and_running_instances_for_process).with(diego_app).and_return(2)
 
-          expect(instances_reporters.number_of_starting_and_running_instances_for_app(diego_app)).to eq(2)
+          expect(instances_reporters.number_of_starting_and_running_instances_for_process(diego_app)).to eq(2)
         end
       end
     end
@@ -95,16 +93,16 @@ module VCAP::CloudController
       end
     end
 
-    describe '#number_of_starting_and_running_instances_for_apps' do
+    describe '#number_of_starting_and_running_instances_for_processes' do
       let(:apps) { [dea_app, diego_app] }
 
       it 'delegates to the proper reporter' do
-        expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_apps).
-                                    with([dea_app]).and_return({ 1 => {} })
-        expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_apps).
-                                      with([diego_app]).and_return({ 2 => {} })
-        expect(instances_reporters.number_of_starting_and_running_instances_for_apps(apps)).
-            to eq({ 1 => {}, 2 => {} })
+        expect(dea_reporter).to receive(:number_of_starting_and_running_instances_for_processes).
+          with([dea_app]).and_return({ 1 => {} })
+        expect(diego_reporter).to receive(:number_of_starting_and_running_instances_for_processes).
+          with([diego_app]).and_return({ 2 => {} })
+        expect(instances_reporters.number_of_starting_and_running_instances_for_processes(apps)).
+          to eq({ 1 => {}, 2 => {} })
       end
     end
   end

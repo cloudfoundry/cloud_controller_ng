@@ -1,20 +1,47 @@
 module VCAP::CloudController
   class ProcessListFetcher
-    def fetch_all(pagination_options)
-      dataset = ProcessModel.dataset
-      paginate(dataset, pagination_options)
+    def initialize(message)
+      @message = message
     end
 
-    def fetch(pagination_options, space_guids)
-      dataset = ProcessModel.select_all(:apps).join(:spaces, id: :space_id, guid: space_guids)
-      paginate(dataset, pagination_options)
+    def fetch_all
+      filter(ProcessModel.dataset)
+    end
+
+    def fetch_for_spaces(space_guids:)
+      dataset = ProcessModel.dataset.where(space: Space.where(guid: space_guids))
+      filter(dataset)
+    end
+
+    def fetch_for_app
+      app = AppModel.where(guid: @message.app_guid).eager(:space, :organization).all.first
+      return nil unless app
+      dataset = app.processes_dataset
+      [app, filter(dataset)]
     end
 
     private
 
-    def paginate(dataset, pagination_options)
-      dataset = dataset.eager(:space)
-      SequelPaginator.new.get_page(dataset, pagination_options)
+    def filter(dataset)
+      dataset = dataset.where(type: @message.types) if @message.requested?(:types)
+
+      if @message.requested?(:space_guids)
+        dataset = dataset.where(space: Space.where(guid: @message.space_guids))
+      end
+
+      if @message.requested?(:organization_guids)
+        dataset = dataset.where(space: Space.where(organization: Organization.where(guid: @message.organization_guids)))
+      end
+
+      if @message.requested?(:app_guids)
+        dataset = dataset.where(app_guid: @message.app_guids)
+      end
+
+      if @message.requested?(:guids)
+        dataset = dataset.where(guid: @message.guids)
+      end
+
+      dataset.eager(:space)
     end
   end
 end

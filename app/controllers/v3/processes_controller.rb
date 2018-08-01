@@ -1,131 +1,130 @@
+require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/process_presenter'
+require 'presenters/v3/process_stats_presenter'
 require 'cloud_controller/paging/pagination_options'
 require 'actions/process_delete'
-require 'queries/process_scale_fetcher'
 require 'queries/process_list_fetcher'
+require 'queries/process_fetcher'
 require 'messages/process_scale_message'
 require 'actions/process_scale'
+require 'actions/process_terminate'
 require 'actions/process_update'
 require 'messages/process_update_message'
 require 'messages/processes_list_message'
+require 'controllers/v3/mixins/sub_resource'
 
 class ProcessesController < ApplicationController
+  include SubResource
+
   def index
-    message = ProcessesListMessage.from_params(query_params)
+    message = ProcessesListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    pagination_options = PaginationOptions.from_params(query_params)
-    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
-
-    if roles.admin?
-      paginated_result = ProcessListFetcher.new.fetch_all(pagination_options)
+    if app_nested?
+      app, dataset = ProcessListFetcher.new(message).fetch_for_app
+      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      space_guids = membership.space_guids_for_roles([Membership::SPACE_DEVELOPER, Membership::SPACE_MANAGER, Membership::SPACE_AUDITOR, Membership::ORG_MANAGER])
-      paginated_result = ProcessListFetcher.new.fetch(pagination_options, space_guids)
+      dataset = if roles.admin? || roles.admin_read_only?
+                  ProcessListFetcher.new(message).fetch_all
+                else
+                  ProcessListFetcher.new(message).fetch_for_spaces(space_guids: readable_space_guids)
+                end
     end
 
-    render status: :ok, json: process_presenter.present_json_list(paginated_result, '/v3/processes')
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: base_url(resource: 'processes'), message: message)
   end
 
   def show
-    guid = params[:guid]
-    process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
-    render status: :ok, json: process_presenter.present_json(process)
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
+
+    render status: :ok, json: Presenters::V3::ProcessPresenter.new(process, show_secrets: can_see_secrets?(space))
   end
 
   def update
-    guid = params[:guid]
-    message = ProcessUpdateMessage.create_from_http_request(params[:body])
+    guid    = params[:process_guid]
+    message = ProcessUpdateMessage.create_from_http_request(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     process = ProcessModel.where(guid: guid).eager(:space, :organization).all.first
-    not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
-    unauthorized! if !can_update?(process.space.guid)
+    process_not_found! unless process && can_read?(process.space.guid, process.organization.guid)
+    unauthorized! unless can_write?(process.space.guid)
 
-    ProcessUpdate.new(current_user, current_user_email).update(process, message)
+    ProcessUpdate.new(current_user.guid, current_user_email).update(process, message)
 
-    render status: :ok, json: process_presenter.present_json(process)
+    render status: :ok, json: Presenters::V3::ProcessPresenter.new(process)
   rescue ProcessUpdate::InvalidProcess => e
     unprocessable!(e.message)
   end
 
   def terminate
-    process_guid = params[:guid]
-    process = ProcessModel.where(guid: process_guid).eager(:space, :organization).all.first
-    not_found! if process.nil? || !can_read?(process.space.guid, process.organization.guid)
-    unauthorized! unless can_terminate?(process.space.guid)
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
 
-    index = params[:index].to_i
-    instance_not_found! unless index < process.instances && index >= 0
+    unauthorized! unless can_write?(space.guid)
 
-    index_stopper.stop_index(process, index)
+    ProcessTerminate.new(current_user.guid, current_user_email, process, params[:index].to_i).terminate
 
     head :no_content
+  rescue ProcessTerminate::InstanceNotFound
+    resource_not_found!(:instance)
   end
 
   def scale
-    FeatureFlag.raise_unless_enabled!('app_scaling') unless roles.admin?
+    FeatureFlag.raise_unless_enabled!(:app_scaling)
 
     message = ProcessScaleMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?
 
-    process, space, org = ProcessScaleFetcher.new.fetch(params[:guid])
-    not_found! if process.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! if !can_scale?(space.guid)
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
 
-    ProcessScale.new(current_user, current_user_email).scale(process, message)
+    unauthorized! unless can_write?(space.guid)
 
-    render status: :ok, json: process_presenter.present_json(process)
+    ProcessScale.new(current_user, current_user_email, process, message).scale
+
+    render status: :accepted, json: Presenters::V3::ProcessPresenter.new(process)
   rescue ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
   end
 
   def stats
-    guid = params[:guid]
-    process = ProcessModel.where(guid: guid).eager(:space).all.first
+    if app_nested?
+      process, app, space, org = ProcessFetcher.new.fetch_for_app_by_type(process_type: params[:type], app_guid: params[:app_guid])
+      app_not_found! unless app && can_read?(space.guid, org.guid)
+      process_not_found! unless process
+    else
+      process, space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      process_not_found! unless process && can_read?(space.guid, org.guid)
+    end
+
     process_stats = instances_reporters.stats_for_app(process)
 
-    not_found! if process.nil? || !can_stats?(process.space.guid)
-
-    render status: :ok, json: process_presenter.present_json_stats(process, process_stats, "/v3/processes/#{guid}/stats")
+    render status: :ok, json: Presenters::V3::ProcessStatsPresenter.new(process.type, process_stats)
   end
 
   private
 
-  def process_presenter
-    ProcessPresenter.new
-  end
-
-  def index_stopper
-    CloudController::DependencyLocator.instance.index_stopper
-  end
-
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-    membership.has_any_roles?([Membership::SPACE_DEVELOPER,
-                               Membership::SPACE_MANAGER,
-                               Membership::SPACE_AUDITOR,
-                               Membership::ORG_MANAGER], space_guid, org_guid)
-  end
-
-  def can_update?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_terminate?, :can_update?
-  alias_method :can_scale?, :can_update?
-  alias_method :can_stats?, :can_update?
-
-  def instance_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Instance not found')
-  end
-
-  def not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Process not found')
+  def process_not_found!
+    resource_not_found!(:process)
   end
 
   def instances_reporters

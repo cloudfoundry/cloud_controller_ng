@@ -1,9 +1,10 @@
 module VCAP::CloudController
   class LegacyInfo < LegacyApiBase
-    include VCAP::Errors
+    include CloudController::Errors
 
     allow_unauthenticated_access
 
+    get '/info', :info
     def info
       info = {
         name: config[:info][:name],
@@ -24,20 +25,6 @@ module VCAP::CloudController
       end
 
       MultiJson.dump(info)
-    end
-
-    def service_info
-      legacy_resp = {}
-      Service.filter(provider: 'core').each do |svc|
-        next unless svc.service_plans.any? { |plan| plan.name == '100' }
-
-        svc_type = LegacyService.synthesize_service_type(svc)
-        legacy_resp[svc_type] ||= {}
-        legacy_resp[svc_type][svc.label] ||= {}
-        legacy_resp[svc_type][svc.label][svc.version] = legacy_svc_encoding(svc)
-      end
-
-      MultiJson.dump(legacy_resp)
     end
 
     private
@@ -66,32 +53,6 @@ module VCAP::CloudController
         services: default_space.service_instances.count
       }
     end
-
-    def legacy_svc_encoding(svc)
-      {
-        id: svc.guid,
-        vendor: svc.label,
-        version: svc.version,
-        type: LegacyService.synthesize_service_type(svc),
-        description: svc.description || '-',
-
-        # The legacy vmc/sts clients only handles free.  Don't
-        # try to pretent otherwise.
-        tiers: {
-          'free' => {
-            'options' => {},
-            'order' => 1
-          }
-        }
-      }
-    end
-
-    def self.setup_routes
-      get '/info',          :info
-      get '/info/services', :service_info
-    end
-
-    setup_routes
 
     deprecated_endpoint('/info')
   end

@@ -1,17 +1,15 @@
-require 'cloud_controller/diego/staging_guid'
-
 module VCAP::CloudController
   module Diego
-    REQUEST_HEADERS = { 'Content-Type' => 'application/json' }
+    REQUEST_HEADERS = { 'Content-Type' => 'application/json' }.freeze
 
     class StagerClient
       def initialize(config)
-        @url = URI(config[:diego_stager_url]) if config[:diego_stager_url]
+        @url = URI(config[:diego][:stager_url]) if HashUtils.dig(config, :diego, :stager_url)
       end
 
       def stage(staging_guid, staging_message)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('StagerUnavailable', 'invalid config')
+          raise CloudController::Errors::ApiError.new_from_details('StagerUnavailable', 'invalid config')
         end
 
         logger.info('stage.request', staging_guid: staging_guid)
@@ -23,13 +21,13 @@ module VCAP::CloudController
           response = http_client.put(path, staging_message.to_json, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
-          raise Errors::ApiError.new_from_details('StagerUnavailable', e)
+          raise CloudController::Errors::ApiError.new_from_details('StagerUnavailable', e)
         end
 
         logger.info('stage.response', staging_guid: staging_guid, response_code: response.code)
 
         if response.code != '202'
-          raise Errors::ApiError.new_from_details('StagerError', "staging failed: #{error_message(response)}")
+          raise CloudController::Errors::ApiError.new_from_details('StagerError', "staging failed: #{error_message(response)}")
         end
 
         nil
@@ -37,7 +35,7 @@ module VCAP::CloudController
 
       def stop_staging(staging_guid)
         if @url.nil?
-          raise Errors::ApiError.new_from_details('StagerUnavailable', 'invalid config')
+          raise CloudController::Errors::ApiError.new_from_details('StagerUnavailable', 'invalid config')
         end
 
         logger.info('stop.staging.request', staging_guid: staging_guid)
@@ -49,7 +47,7 @@ module VCAP::CloudController
           response = http_client.delete(path, REQUEST_HEADERS)
         rescue Errno::ECONNREFUSED => e
           retry unless (tries -= 1).zero?
-          raise Errors::ApiError.new_from_details('StagerUnavailable', e)
+          raise CloudController::Errors::ApiError.new_from_details('StagerUnavailable', e)
         end
 
         logger.info('stop.staging.response', staging_guid: staging_guid, response_code: response.code)
@@ -58,7 +56,7 @@ module VCAP::CloudController
         when '202', '404'
           # success
         else
-          raise Errors::ApiError.new_from_details('StagerError', "stop failed: #{response.code}")
+          raise CloudController::Errors::ApiError.new_from_details('StagerError', "stop failed: #{response.code}")
         end
 
         nil

@@ -3,37 +3,38 @@ module VCAP::CloudController
     class Runner
       class CannotCommunicateWithDiegoError < StandardError; end
 
-      def initialize(app, messenger, protocol, default_health_check_timeout)
-        @app = app
-        @messenger = messenger
-        @protocol = protocol
-        @default_health_check_timeout = default_health_check_timeout
+      attr_writer :messenger
+
+      def initialize(process, config)
+        @process = process
+        @config = config
       end
 
       def scale
-        raise VCAP::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
-        with_logging('scale') { @messenger.send_desire_request(@app, @default_health_check_timeout) }
+        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
+        raise CloudController::Errors::ApiError.new_from_details('NotStaged') if @process.pending?
+        with_logging('scale') { messenger.send_desire_request(@process, @config) }
       end
 
       def start(_={})
-        with_logging('start') { @messenger.send_desire_request(@app, @default_health_check_timeout) }
+        with_logging('start') { messenger.send_desire_request(@process, @config) }
       end
 
       def update_routes
-        raise VCAP::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @app.started?
-        @messenger.send_desire_request(@app, @default_health_check_timeout)
+        raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
+        with_logging('update_route') { messenger.send_desire_request(@process, @config) unless @process.staging? }
       end
 
       def desire_app_message
-        @protocol.desire_app_message(@app, @default_health_check_timeout)
+        Diego::Protocol.new.desire_app_message(@process, @config[:default_health_check_timeout])
       end
 
       def stop
-        with_logging('stop_app') { @messenger.send_stop_app_request(@app) }
+        with_logging('stop_app') { messenger.send_stop_app_request(@process) }
       end
 
       def stop_index(index)
-        with_logging('stop_index') { @messenger.send_stop_index_request(@app, index) }
+        with_logging('stop_index') { messenger.send_stop_index_request(@process, index) }
       end
 
       def with_logging(action=nil)
@@ -42,6 +43,10 @@ module VCAP::CloudController
         return raise e unless diego_not_responding_error?(e)
         logger.error "Cannot communicate with diego - tried to send #{action}"
         raise CannotCommunicateWithDiegoError.new(e.message)
+      end
+
+      def messenger
+        @messenger ||= Diego::Messenger.new
       end
 
       private

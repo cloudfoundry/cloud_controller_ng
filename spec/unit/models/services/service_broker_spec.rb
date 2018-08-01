@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceBroker, :services, type: :model do
+  RSpec.describe ServiceBroker, :services, type: :model do
     let(:name) { Sham.name }
     let(:broker_url) { 'http://cf-service-broker.example.com' }
     let(:auth_username) { 'me' }
@@ -121,11 +121,11 @@ module VCAP::CloudController
         let(:space) { Space.make }
         let(:broker) do
           ServiceBroker.new(
-              name: name,
-              broker_url: broker_url,
-              auth_username: auth_username,
-              auth_password: auth_password,
-              space_id: space.id
+            name: name,
+            broker_url: broker_url,
+            auth_username: auth_username,
+            auth_password: auth_password,
+            space_id: space.id
           )
         end
 

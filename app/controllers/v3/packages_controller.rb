@@ -1,164 +1,156 @@
 require 'presenters/v3/package_presenter'
-require 'presenters/v3/droplet_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'queries/package_list_fetcher'
-require 'actions/package_stage_action'
 require 'actions/package_delete'
-require 'actions/package_download'
 require 'actions/package_upload'
+require 'actions/package_create'
+require 'actions/package_copy'
+require 'messages/package_create_message'
 require 'messages/package_upload_message'
-require 'messages/droplet_create_message'
 require 'messages/packages_list_message'
+require 'controllers/v3/mixins/sub_resource'
 
 class PackagesController < ApplicationController
+  include SubResource
+
   before_action :check_read_permissions!, only: [:index, :show, :download]
 
   def index
-    message = PackagesListMessage.from_params(query_params)
+    message = PackagesListMessage.from_params(subresource_query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    pagination_options = PaginationOptions.from_params(query_params)
-    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
-
-    if roles.admin?
-      paginated_result = PackageListFetcher.new.fetch_all(pagination_options)
+    if app_nested?
+      app, dataset = PackageListFetcher.new.fetch_for_app(message: message)
+      app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
     else
-      space_guids = membership.space_guids_for_roles(
-        [Membership::SPACE_DEVELOPER,
-         Membership::SPACE_MANAGER,
-         Membership::SPACE_AUDITOR,
-         Membership::ORG_MANAGER])
-      paginated_result = PackageListFetcher.new.fetch(pagination_options, space_guids)
+      dataset = if roles.admin? || roles.admin_read_only?
+                  PackageListFetcher.new.fetch_all(message: message)
+                else
+                  PackageListFetcher.new.fetch_for_spaces(message: message, space_guids: readable_space_guids)
+                end
     end
 
-    render stats: :ok, json: package_presenter.present_json_list(paginated_result, '/v3/packages')
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: base_url(resource: 'packages'), message: message)
   end
 
   def upload
-    FeatureFlag.raise_unless_enabled!('app_bits_upload') unless roles.admin?
+    FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
     message = PackageUploadMessage.create_from_params(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_upload?(package.space.guid)
+    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    unauthorized! unless can_write?(package.space.guid)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     bits_already_uploaded! if package.state != PackageModel::CREATED_STATE
 
     begin
-      PackageUpload.new.upload(message, package, configuration)
+      PackageUpload.new.upload_async(
+        message:    message,
+        package:    package,
+        config:     configuration,
+        user_guid:  current_user.guid,
+        user_email: current_user_email
+      )
     rescue PackageUpload::InvalidPackage => e
       unprocessable!(e.message)
     end
 
-    render status: :ok, json: package_presenter.present_json(package)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   def download
-    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    unauthorized! unless can_see_secrets?(package.space)
 
     unprocessable!('Package type must be bits.') unless package.type == 'bits'
     unprocessable!('Package has no bits to download.') unless package.state == 'READY'
 
-    file_path_for_download, url_for_response = PackageDownload.new.download(package)
-    if file_path_for_download
-      send_file(file_path_for_download)
-    elsif url_for_response
-      redirect_to url_for_response
-    end
+    VCAP::CloudController::Repositories::PackageEventRepository.record_app_package_download(
+      package,
+      current_user.guid,
+      current_user_email,
+    )
+
+    send_package_blob(package)
   end
 
   def show
-    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).eager(:docker_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
+    package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
 
-    render status: :ok, json: package_presenter.present_json(package)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   def destroy
     package = PackageModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
-    unauthorized! unless can_delete?(package.space.guid)
+    package_not_found! unless package && can_read?(package.space.guid, package.space.organization.guid)
+    unauthorized! unless can_write?(package.space.guid)
 
-    PackageDelete.new.delete(package)
+    PackageDelete.new(current_user.guid, current_user_email).delete(package)
 
     head :no_content
   end
 
-  def stage
-    staging_message = DropletCreateMessage.create_from_http_request(params[:body])
-    unprocessable!(staging_message.errors.full_messages) unless staging_message.valid?
-
-    package = PackageModel.where(guid: params[:guid]).eager(:app, :space, space: :organization, app: :buildpack_lifecycle_data).all.first
-    package_not_found! if package.nil? || !can_read?(package.space.guid, package.space.organization.guid)
-
-    if package.type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
-      FeatureFlag.raise_unless_enabled!('diego_docker')
+  def create
+    if params[:source_package_guid]
+      create_copy
+    else
+      create_new
     end
+  end
 
-    unauthorized! unless can_stage?(package.space.guid)
+  def create_new
+    message = PackageCreateMessage.create_from_http_request(params[:app_guid], params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
-    lifecycle = LifecycleProvider.provide(package, staging_message)
-    unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
+    app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
+    app_not_found! unless app && can_read?(app.space.guid, app.organization.guid)
+    unauthorized! unless can_write?(app.space.guid)
 
-    droplet = PackageStageAction.new.stage(package, lifecycle, stagers)
+    package = PackageCreate.create(message: message, user_guid: current_user.guid, user_email: current_user_email)
 
-    render status: :created, json: droplet_presenter.present_json(droplet)
-  rescue PackageStageAction::InvalidPackage => e
-    invalid_request!(e.message)
-  rescue PackageStageAction::SpaceQuotaExceeded
-    unable_to_perform!('Staging request', "space's memory limit exceeded")
-  rescue PackageStageAction::OrgQuotaExceeded
-    unable_to_perform!('Staging request', "organization's memory limit exceeded")
-  rescue PackageStageAction::DiskLimitExceeded
-    unable_to_perform!('Staging request', 'disk limit exceeded')
+    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
+  rescue PackageCreate::InvalidPackage => e
+    unprocessable!(e.message)
+  end
+
+  def create_copy
+    destination_app = AppModel.where(guid: params[:app_guid]).eager(:space, :organization).all.first
+    app_not_found! unless destination_app && can_read?(destination_app.space.guid, destination_app.organization.guid)
+    unauthorized! unless can_write?(destination_app.space.guid)
+
+    source_package = PackageModel.where(guid: params[:source_package_guid]).eager(:app, :space, space: :organization).all.first
+    package_not_found! unless source_package && can_read?(source_package.space.guid, source_package.space.organization.guid)
+    unauthorized! unless can_write?(source_package.space.guid)
+
+    package = PackageCopy.new.copy(
+      destination_app_guid: params[:app_guid],
+      source_package:       source_package,
+      user_guid:            current_user.guid,
+      user_email:           current_user_email
+    )
+
+    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
+  rescue PackageCopy::InvalidPackage => e
+    unprocessable!(e.message)
   end
 
   private
 
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-    membership.has_any_roles?(
-      [Membership::SPACE_DEVELOPER,
-       Membership::SPACE_MANAGER,
-       Membership::SPACE_AUDITOR,
-       Membership::ORG_MANAGER],
-      space_guid, org_guid)
-  end
-
-  def can_delete?(space_guid)
-    roles.admin? || membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_stage?, :can_delete?
-  alias_method :can_upload?, :can_delete?
-
   def package_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Package not found')
+    resource_not_found!(:package)
   end
 
   def bits_already_uploaded!
-    raise VCAP::Errors::ApiError.new_from_details('PackageBitsAlreadyUploaded')
+    raise CloudController::Errors::ApiError.new_from_details('PackageBitsAlreadyUploaded')
   end
 
-  def unable_to_perform!(operation, message)
-    raise VCAP::Errors::ApiError.new_from_details('UnableToPerform', operation, message)
-  end
-
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
-
-  def package_presenter
-    @package_presenter ||= PackagePresenter.new
-  end
-
-  def droplet_presenter
-    @droplet_presenter ||= DropletPresenter.new
-  end
-
-  def stagers
-    CloudController::DependencyLocator.instance.stagers
+  def send_package_blob(package)
+    package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
+    BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
   end
 end

@@ -1,11 +1,10 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::DomainsController do
+  RSpec.describe VCAP::CloudController::DomainsController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
       it { expect(described_class).to be_queryable_by(:owning_organization_guid) }
-      it { expect(described_class).to be_queryable_by(:space_guid) }
     end
 
     describe 'Attributes' do
@@ -130,9 +129,9 @@ module VCAP::CloudController
       describe 'System Domain permissions' do
         describe 'PUT /v2/domains/:system_domain' do
           it 'does not allow modification of the shared domain by an org manager' do
-            put "/v2/domains/#{@shared_domain.guid}",
-              MultiJson.dump(name: Sham.domain),
-              json_headers(headers_for(@org_a_manager))
+            set_current_user(@org_a_manager)
+
+            put "/v2/domains/#{@shared_domain.guid}", MultiJson.dump(name: Sham.domain)
             expect(last_response.status).to eq(403)
           end
         end
@@ -140,13 +139,15 @@ module VCAP::CloudController
     end
 
     it 'is deprecated' do
-      get '/v2/domains', {}, admin_headers
+      get '/v2/domains'
       expect(last_response).to be_a_deprecated_response
     end
 
     describe 'GET /v2/domains/:id' do
       let(:user) { User.make }
       let(:organization) { Organization.make }
+
+      before { set_current_user(user) }
 
       context 'a space auditor' do
         let(:space) { Space.make organization: organization }
@@ -158,7 +159,7 @@ module VCAP::CloudController
         end
 
         it 'can see the domain' do
-          get "/v2/domains/#{domain.guid}", {}, headers_for(user)
+          get "/v2/domains/#{domain.guid}"
           expect(last_response.status).to eq 200
           expect(decoded_response['metadata']['guid']).to eq domain.guid
         end
@@ -176,7 +177,7 @@ module VCAP::CloudController
           let(:domain) { PrivateDomain.make(owning_organization: organization) }
 
           it 'has its GUID and URL in the response body' do
-            get "/v2/domains/#{domain.guid}", '{}', json_headers(headers_for(user))
+            get "/v2/domains/#{domain.guid}"
 
             expect(last_response.status).to eq 200
             expect(decoded_response['entity']['owning_organization_guid']).to eq organization.guid
@@ -189,7 +190,7 @@ module VCAP::CloudController
           let(:domain) { SharedDomain.make }
 
           it 'has its GUID as null, and no url key in the response body' do
-            get "/v2/domains/#{domain.guid}", '{}', json_headers(admin_headers)
+            get "/v2/domains/#{domain.guid}"
 
             expect(last_response.status).to eq(200)
 
@@ -203,6 +204,54 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/domains' do
+      let(:user) { User.make }
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:organization) { space.organization }
+      let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
+
+      context 'for space manager' do
+        before do
+          space.organization.add_user(user)
+          space.add_manager(user)
+          set_current_user(user)
+        end
+
+        it 'shows private domains for space manager' do
+          get '/v2/domains', nil, headers_for(user)
+
+          domains = {}
+          parsed_response['resources'].each do |d|
+            guid = d['metadata']['guid']
+            link = d['metadata']['url']
+            domains[guid] = link
+          end
+
+          expect(domains[private_domain.guid]).to match /private_domains/
+        end
+      end
+
+      context 'for space auditor' do
+        before do
+          space.organization.add_user(user)
+          space.add_auditor(user)
+          set_current_user(user)
+        end
+
+        it 'shows private domains for space auditor' do
+          get '/v2/domains', nil, headers_for(user)
+
+          domains = {}
+          parsed_response['resources'].each do |d|
+            guid = d['metadata']['guid']
+            link = d['metadata']['url']
+            domains[guid] = link
+          end
+
+          expect(domains[private_domain.guid]).to match /private_domains/
+        end
+      end
+    end
     describe 'POST /v2/domains' do
       context 'as an org manager' do
         let(:user) { User.make }
@@ -215,6 +264,8 @@ module VCAP::CloudController
         before do
           organization.add_user(user)
           organization.add_manager(user)
+
+          set_current_user(user)
         end
 
         context 'when domain_creation feature_flag is disabled' do
@@ -223,7 +274,7 @@ module VCAP::CloudController
           end
 
           it 'returns FeatureDisabled' do
-            post '/v2/domains', request_body, headers_for(user)
+            post '/v2/domains', request_body
 
             expect(last_response.status).to eq(403)
             expect(decoded_response['error_code']).to match(/FeatureDisabled/)
@@ -236,37 +287,39 @@ module VCAP::CloudController
     describe 'DELETE /v2/domains/:id' do
       let(:shared_domain) { SharedDomain.make }
 
+      before { set_current_user_as_admin }
+
       context 'when there are routes using the domain' do
         let!(:route) { Route.make(domain: shared_domain) }
 
         it 'does not delete the route' do
           expect {
-            delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
-          }.to_not change {
-            SharedDomain.find(guid: shared_domain.guid)
-          }
+            delete "/v2/domains/#{shared_domain.guid}"
+          }.to_not change { SharedDomain.find(guid: shared_domain.guid) }
         end
 
         it 'returns an error' do
-          delete "/v2/domains/#{shared_domain.guid}", {}, admin_headers
+          delete "/v2/domains/#{shared_domain.guid}"
           expect(last_response.status).to eq(400)
           expect(decoded_response['code']).to equal(10006)
           expect(decoded_response['description']).to match /delete the routes associations for your domains/i
         end
       end
     end
-  end
 
-  describe 'GET /v2/domains/:id/spaces' do
-    let!(:private_domain) { PrivateDomain.make }
-    let!(:space) { Space.make(organization: private_domain.owning_organization) }
+    describe 'GET /v2/domains/:id/spaces' do
+      let!(:private_domain) { PrivateDomain.make }
+      let!(:space) { Space.make(organization: private_domain.owning_organization) }
 
-    it 'returns the spaces associated with the owning organization' do
-      get "/v2/domains/#{private_domain.guid}/spaces", {}, admin_headers
-      expect(last_response.status).to eq(200)
-      expect(decoded_response['resources']).to have(1).item
-      expect(decoded_response['resources'][0]['entity']['name']).to eq(space.name)
-      expect(last_response).to be_a_deprecated_response
+      before { set_current_user_as_admin }
+
+      it 'returns the spaces associated with the owning organization' do
+        get "/v2/domains/#{private_domain.guid}/spaces"
+        expect(last_response.status).to eq(200)
+        expect(decoded_response['resources']).to have(1).item
+        expect(decoded_response['resources'][0]['entity']['name']).to eq(space.name)
+        expect(last_response).to be_a_deprecated_response
+      end
     end
   end
 end

@@ -1,5 +1,6 @@
 ---
 external_port: 8181
+tls_port: 8183
 
 info:
   name: "vcap"
@@ -30,6 +31,9 @@ audit_events:
 failed_jobs:
   cutoff_age_in_days: 31
 
+completed_tasks:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 
 default_health_check_timeout: 30 #seconds
@@ -40,10 +44,13 @@ broker_client_max_async_poll_duration_minutes: 10080
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "http://localhost:5155/internal"
 
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
+  internal_url: "https://uaa.service.cf.internal"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
@@ -121,6 +128,8 @@ loggregator:
 renderer:
   max_results_per_page: 100
   default_results_per_page: 50
+
+shared_isolation_segment_name: 'shared'
 
 stacks_file: "/tmp/foo"
 default_app_disk_in_mb: 512

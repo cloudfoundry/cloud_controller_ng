@@ -1,23 +1,18 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SpaceAccess, type: :access do
+  RSpec.describe SpaceAccess, type: :access do
     subject(:access) { SpaceAccess.new(Security::AccessContext.new) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:org) { VCAP::CloudController::Organization.make }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:scopes) { nil }
+
     let(:object) { VCAP::CloudController::Space.make(organization: org) }
 
-    let(:user) { VCAP::CloudController::User.make }
+    before { set_current_user(user, scopes: scopes) }
 
-    before do
-      SecurityContext.set(user, token)
-    end
-
-    after do
-      SecurityContext.clear
-    end
-
-    it_should_behave_like :admin_full_access
+    it_behaves_like :admin_full_access
+    it_behaves_like :admin_read_only_access
 
     context 'as an organization manager' do
       before { org.add_manager(user) }
@@ -101,12 +96,12 @@ module VCAP::CloudController
 
     context 'a user that isnt logged in (defensive)' do
       let(:user) { nil }
-      let(:roles) { double(:roles, :admin? => false, :none? => true, :present? => false) }
+      let(:roles) { double(:roles, admin?: false, none?: true, present?: false) }
       it_behaves_like :no_access
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) { { 'scope' => ['cloud_controller.read'] } }
+      let(:scopes) { ['cloud_controller.read'] }
 
       before do
         org.add_user(user)
@@ -122,7 +117,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) { { 'scope' => [] } }
+      let(:scopes) { [] }
 
       before do
         org.add_user(user)
@@ -135,6 +130,87 @@ module VCAP::CloudController
       end
 
       it_behaves_like :no_access
+    end
+
+    describe '#can_remove_related_object?' do
+      let(:params) { { relation: relation, related_guid: related_guid } }
+      let(:space) { object }
+
+      context 'with auditors' do
+        let(:relation) { :auditors }
+
+        context 'when acting against themselves' do
+          let(:related_guid) { user.guid }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+
+        context 'when acting against another' do
+          let(:related_guid) { 123456 }
+
+          it 'is false' do
+            expect(access.can_remove_related_object?(space, params)).to be false
+          end
+        end
+      end
+
+      context 'with developers' do
+        context 'when acting against themselves'
+        let(:relation) { :developers }
+
+        context 'when acting against themselves' do
+          let(:related_guid) { user.guid }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+
+        context 'when acting against another' do
+          let(:related_guid) { 123456 }
+
+          it 'is false' do
+            expect(access.can_remove_related_object?(space, params)).to be false
+          end
+        end
+      end
+
+      context 'with managers' do
+        let(:relation) { :managers }
+
+        before do
+          org.add_user(user)
+          org.add_manager(user)
+          space.add_manager(user)
+        end
+
+        context 'when acting against themselves' do
+          let(:related_guid) { user.guid }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+
+        context 'when acting against another' do
+          let(:related_guid) { 123456 }
+
+          it 'is true' do
+            expect(access.can_remove_related_object?(space, params)).to be true
+          end
+        end
+      end
+
+      context 'with apps' do
+        let(:relation) { :apps }
+        let(:related_guid) { user.guid }
+
+        it 'is false even when the guid matches the current user' do
+          expect(access.can_remove_related_object?(space, params)).to be false
+        end
+      end
     end
   end
 end

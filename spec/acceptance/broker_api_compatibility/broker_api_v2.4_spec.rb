@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Service Broker API integration' do
+RSpec.describe 'Service Broker API integration' do
   describe 'v2.4' do
     include VCAP::CloudController::BrokerApiHelper
 
@@ -21,7 +21,7 @@ describe 'Service Broker API integration' do
             description: 'A MySQL-compatible relational database',
             bindable:    true,
             plan_updateable: true,
-            plans:       [{
+            plans: [{
               id:          'plan1-guid-here',
               name:        'small',
               description: 'A small shared database with 100mb storage quota and 10 connections'

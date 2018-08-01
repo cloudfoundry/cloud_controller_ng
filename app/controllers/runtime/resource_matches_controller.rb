@@ -1,22 +1,14 @@
+require 'cloud_controller/resource_pool_wrapper'
+require 'cloud_controller/bits_service_resource_pool_wrapper'
+
 module VCAP::CloudController
   class ResourceMatchesController < RestController::BaseController
     put '/v2/resource_match', :match
     def match
       return ApiError.new_from_details('NotAuthorized') unless user
-      FeatureFlag.raise_unless_enabled!('app_bits_upload') unless SecurityContext.admin?
+      FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
-      begin
-        fingerprints_all_clientside_bits = MultiJson.load(body)
-      rescue MultiJson::ParseError => e
-        raise Errors::ApiError.new_from_details('MessageParseError', e.message)
-      end
-
-      unless fingerprints_all_clientside_bits.is_a?(Array)
-        raise Errors::ApiError.new_from_details('UnprocessableEntity', 'must be an array.')
-      end
-
-      fingerprints_existing_in_blobstore = ResourcePool.instance.match_resources(fingerprints_all_clientside_bits)
-      MultiJson.dump(fingerprints_existing_in_blobstore)
+      CloudController::DependencyLocator.instance.resource_pool_wrapper.new(body).call
     end
   end
 end

@@ -8,7 +8,7 @@ This repository contains the code for the Cloud Controller. The NG signifies
 that this is a "next generation" component and this is not backward-compatible
 with the original cloud_controller. This version adds significant new
 functionality including the additional mandatory "organization" and "space"
-hierarchy that all users, applications and services must use.
+hierarchy that all users, applications and services must use. For more information, please consult our [wiki](https://github.com/cloudfoundry/cloud_controller_ng/wiki).
 
 ## Components
 

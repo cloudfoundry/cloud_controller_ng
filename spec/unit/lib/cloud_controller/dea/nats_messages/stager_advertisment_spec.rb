@@ -3,7 +3,7 @@ require 'cloud_controller/dea/nats_messages/stager_advertisment'
 
 module VCAP::CloudController
   module Dea::NatsMessages
-    describe StagerAdvertisement do
+    RSpec.describe StagerAdvertisement do
       let(:message) do
         {
             'id' => 'staging-id',

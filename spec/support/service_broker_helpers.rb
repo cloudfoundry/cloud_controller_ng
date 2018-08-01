@@ -41,7 +41,7 @@ module ServiceBrokerHelpers
     status = opts[:status] || 200
     body = opts[:body] || '{}'
 
-    fake_service_binding = VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '')
+    fake_service_binding = opts[:fake_service_binding] || VCAP::CloudController::ServiceBinding.new(service_instance: service_instance, guid: '')
 
     if block
       stub_request(:put, /#{service_binding_url(fake_service_binding)}[A-Za-z0-9-]+/).
@@ -114,7 +114,9 @@ module ServiceBrokerHelpers
   end
 
   def last_operation_state_url(service_instance)
-    "#{service_instance_url(service_instance)}/last_operation"
+    params = "plan_id=#{service_instance.service_plan.broker_provided_id}&service_id=#{service_instance.service.broker_provided_id}"
+    params = "operation=#{service_instance.last_operation.broker_provided_operation}&" + params if service_instance.last_operation.broker_provided_operation
+    "#{service_instance_url(service_instance)}/last_operation?" + params
   end
 
   def service_instance_url(service_instance, query=nil)
@@ -148,29 +150,5 @@ module ServiceBrokerHelpers
     uri.path += relative_path if relative_path
     uri.query = query if query
     uri.to_s
-  end
-
-  def stub_v1_broker(opts={})
-    fake = double('HttpClient')
-
-    allow(fake).to receive(:provision).and_return({
-      'service_id' => Sham.guid,
-      'configuration' => 'CONFIGURATION',
-      'credentials' => Sham.service_credentials,
-      'dashboard_url' => 'http://dashboard.example.com'
-    })
-
-    binding_response = {
-      'service_id' => Sham.guid,
-      'configuration' => 'CONFIGURATION',
-      'credentials' => Sham.service_credentials
-    }
-    binding_response.merge!('syslog_drain_url' => opts[:syslog_drain_url]) if opts[:syslog_drain_url]
-    allow(fake).to receive(:bind).and_return(binding_response)
-
-    allow(fake).to receive(:unbind)
-    allow(fake).to receive(:deprovision)
-
-    allow(VCAP::Services::ServiceBrokers::V1::HttpClient).to receive(:new).and_return(fake)
   end
 end

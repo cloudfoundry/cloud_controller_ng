@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular App</h2>
+    <h3>GET /v2/apps/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/apps/15b3885d-0351-4b9b-8697-86641668c123</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQ0MSIsImVtYWlsIjoiZW1haWwtMzAzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDV9.Bs5aQIQEBp41syeW-4pJcDrkjQ6jihPHO587zev8N8g
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/apps/15b3885d-0351-4b9b-8697-86641668c123&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQ0MSIsImVtYWlsIjoiZW1haWwtMzAzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDV9.Bs5aQIQEBp41syeW-4pJcDrkjQ6jihPHO587zev8N8g&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+          <table class="response-fields table table-striped table-bordered table-condensed">
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Valid Values</th>
+              <th>Example Values</th>
+            </tr>
+            </thead>
+            <tbody>
+              <tr class="">
+                <td>
+                    <span class="name">name</span>
+                </td>
+                <td>
+                  <span class="description">The name of the app.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>my_super_app</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">memory</span>
+                </td>
+                <td>
+                  <span class="description">The amount of memory each instance should have. In megabytes.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>1024</li>
+                        <li>512</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">instances</span>
+                </td>
+                <td>
+                  <span class="description">The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>2</li>
+                        <li>6</li>
+                        <li>10</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">disk_quota</span>
+                </td>
+                <td>
+                  <span class="description">The maximum amount of disk available to an instance of an app. In megabytes.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>1204</li>
+                        <li>2048</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">space_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the associated space.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>guid-3f271b25-af61-402a-a032-679d6838042d</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">stack_guid</span>
+                </td>
+                <td>
+                  <span class="description">The guid of the associated stack.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>guid-169d5fac-8aa6-428d-8715-dead26221593</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">state</span>
+                </td>
+                <td>
+                  <span class="description">The current desired state of the app. One of STOPPED or STARTED.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>STOPPED</li>
+                      <li>STARTED</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">command</span>
+                </td>
+                <td>
+                  <span class="description">The command to start an app after it is staged, maximum length: 4096 (e.g. &#39;rails s -p $PORT&#39; or &#39;java com.org.Server $PORT&#39;).</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">buildpack</span>
+                </td>
+                <td>
+                  <span class="description">Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li></li>
+                        <li>https://github.com/virtualstaticvoid/heroku-buildpack-r.git</li>
+                        <li>ruby 1.6.20</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                  <span class="name">detected_buildpack</span>
+                </td>
+                <td>
+                  <span class="description">Buildpack that has been found for the app through autodetection</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                    <li></li>
+                    <li>ruby 1.6.20</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                  <span class="name">detected_buildpack_guid</span>
+                </td>
+                <td>
+                  <span class="description">Guid of the detected_buildpack</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                    <li></li>
+                    <li>d12fdf1a-f061-4040-81f4-b5b5b55570bd</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class=" ">
+                <td class=" ">
+                  <span class="name">health_check_http_endpoint</span>
+                </td>
+                <td>
+                  <span class="description">Endpoint called to determine if the app is healthy.</span>
+                </td>
+                <td>
+                  <span class="default"></span>
+                </td>
+                <td>
+                  <ul class="example_values">
+                    <li>/health</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">health_check_type</span>
+                </td>
+                <td>
+                  <span class="description">Type of health check to perform. &#39;none&#39; is deprecated and an alias to &#39;process&#39;.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>http</li>
+                      <li>port</li>
+                      <li>process</li>
+                      <li>none</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">health_check_timeout</span>
+                </td>
+                <td>
+                    <span class="description">Timeout in seconds for health checking of an staged app when starting up</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">diego</span>
+                </td>
+                <td>
+                  <span class="description">Use diego to stage and to run when available</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>true</li>
+                      <li>false</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">enable_ssh</span>
+                </td>
+                <td>
+                  <span class="description">Enable SSHing into the app. Supported for Diego only.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>true</li>
+                      <li>false</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">detected_start_command</span>
+                </td>
+                <td>
+                  <span class="description">The command detected by the buildpack during staging.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>rails s</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">docker_image</span>
+                </td>
+                <td>
+                  <span class="description">Name of the Docker image containing the app. The &quot;diego_docker&quot; feature flag must be enabled in order to create Docker image apps.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>cloudfoundry/diego-docker-app</li>
+                        <li>registry.example.com:5000/user/repository/tag</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td class="experimental">
+                    <span class="name">docker_credentials_json</span>
+                </td>
+                <td>
+                  <span class="description">Docker credentials for pulling docker image.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>200</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">environment_json</span>
+                </td>
+                <td>
+                  <span class="description">Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="deprecated">
+                <td>
+                    <span class="name">production</span>
+                </td>
+                <td>
+                  <span class="description">Deprecated.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>true</li>
+                      <li>false</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="deprecated">
+                <td>
+                    <span class="name">console</span>
+                </td>
+                <td>
+                  <span class="description">Open the console port for the app (at $CONSOLE_PORT).</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>true</li>
+                      <li>false</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="deprecated">
+                <td>
+                    <span class="name">debug</span>
+                </td>
+                <td>
+                  <span class="description">Open the debug port for the app (at $DEBUG_PORT).</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                      <li>true</li>
+                      <li>false</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">staging_failed_reason</span>
+                </td>
+                <td>
+                  <span class="description">Reason for application staging failures</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>StagingError</li>
+                        <li>StagingTimeExpired</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td>
+                    <span class="name">staging_failed_description</span>
+                </td>
+                <td>
+                  <span class="description">Detailed description for the staging_failed_reason</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>An app was not successfully detected by any available buildpack</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr class="">
+                <td class="experimental">
+                    <span class="name">ports</span>
+                </td>
+                <td>
+                  <span class="description">Ports on which application may listen. Overwrites previously configured ports. Ports must be in range 1024-65535. Supported for Diego only.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                        <li>[5222, 8080]</li>
+                        <li>[1056]</li>
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "15b3885d-0351-4b9b-8697-86641668c123",
+    "url": "/v2/apps/15b3885d-0351-4b9b-8697-86641668c123",
+    "created_at": "2016-06-08T16:41:44Z",
+    "updated_at": "2016-06-08T16:41:44Z"
+  },
+  "entity": {
+    "name": "name-2401",
+    "production": false,
+    "space_guid": "7846301e-c84c-4ba9-9c6a-2dfdae948d52",
+    "stack_guid": "7e03186d-a438-4285-b3b7-c426532e1df2",
+    "buildpack": null,
+    "detected_buildpack": null,
+    "detected_buildpack_guid": null,
+    "environment_json": null,
+    "memory": 1024,
+    "instances": 1,
+    "disk_quota": 1024,
+    "state": "STOPPED",
+    "version": "df19a7ea-2003-4ecb-a909-e630e43f2719",
+    "command": null,
+    "console": false,
+    "debug": null,
+    "staging_task_id": null,
+    "package_state": "PENDING",
+    "health_check_http_endpoint": "",
+    "health_check_type": "port",
+    "health_check_timeout": null,
+    "staging_failed_reason": null,
+    "staging_failed_description": null,
+    "diego": false,
+    "docker_image": null,
+    "package_updated_at": "2016-06-08T16:41:45Z",
+    "detected_start_command": "",
+    "enable_ssh": true,
+    "docker_credentials_json": {
+      "redacted_message": "[PRIVATE DATA HIDDEN]"
+    },
+    "ports": null,
+    "space_url": "/v2/spaces/7846301e-c84c-4ba9-9c6a-2dfdae948d52",
+    "stack_url": "/v2/stacks/7e03186d-a438-4285-b3b7-c426532e1df2",
+    "routes_url": "/v2/apps/15b3885d-0351-4b9b-8697-86641668c123/routes",
+    "events_url": "/v2/apps/15b3885d-0351-4b9b-8697-86641668c123/events",
+    "service_bindings_url": "/v2/apps/15b3885d-0351-4b9b-8697-86641668c123/service_bindings",
+    "route_mappings_url": "/v2/apps/15b3885d-0351-4b9b-8697-86641668c123/route_mappings"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: fb8f622e-abfd-4aba-9da9-89ae37ea54a3
+Content-Length: 1626
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

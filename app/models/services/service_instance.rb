@@ -1,10 +1,11 @@
-require 'repositories/services/service_usage_event_repository'
+require 'repositories/service_usage_event_repository'
 
 module VCAP::CloudController
   class ServiceInstance < Sequel::Model
     class InvalidServiceBinding < StandardError; end
 
     ROUTE_SERVICE_WARNING = 'Support for route services is disabled. This service instance cannot be bound to a route.'.freeze
+    VOLUME_SERVICE_WARNING = 'Support for volume services is disabled. This service instance cannot be bound to an app.'.freeze
 
     plugin :serialization
     plugin :single_table_inheritance, :is_gateway_service,
@@ -21,7 +22,7 @@ module VCAP::CloudController
 
     one_to_one :service_instance_operation
 
-    one_to_many :service_bindings, before_add: :validate_service_binding
+    one_to_many :service_bindings, before_add: :validate_service_binding, key: :service_instance_guid, primary_key: :guid
     one_to_many :service_keys
     many_to_many :routes, join_table: :route_bindings
 
@@ -53,6 +54,7 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       Sequel.or([
+        [:space, managed_organizations_spaces_dataset(user.managed_organizations_dataset)],
         [:space, user.spaces_dataset],
         [:space, user.audited_spaces_dataset],
         [:space, user.managed_spaces_dataset],
@@ -100,8 +102,8 @@ module VCAP::CloudController
     end
 
     def to_hash(opts={})
-      if !VCAP::CloudController::SecurityContext.admin? && !space.has_developer?(VCAP::CloudController::SecurityContext.current_user)
-        opts.merge!({ redact: ['credentials'] })
+      if !SecurityContext.admin? && !SecurityContext.admin_read_only? && !space.has_developer?(SecurityContext.current_user)
+        opts[:redact] = ['credentials']
       end
       hash = super(opts)
       hash
@@ -135,6 +137,7 @@ module VCAP::CloudController
 
     def after_update
       super
+      update_service_bindings
       if @columns_updated.key?(:service_plan_id) || @columns_updated.key?(:name)
         service_instance_usage_event_repository.updated_event_from_service_instance(self)
       end
@@ -152,6 +155,14 @@ module VCAP::CloudController
       false
     end
 
+    def volume_service?
+      false
+    end
+
+    def self.managed_organizations_spaces_dataset(managed_organizations_dataset)
+      VCAP::CloudController::Space.dataset.filter({ organization_id: managed_organizations_dataset.select(:organization_id) })
+    end
+
     private
 
     def validate_service_binding(service_binding)
@@ -165,7 +176,13 @@ module VCAP::CloudController
     end
 
     def service_instance_usage_event_repository
-      @repository ||= Repositories::Services::ServiceUsageEventRepository.new
+      @repository ||= Repositories::ServiceUsageEventRepository.new
+    end
+
+    def update_service_bindings
+      if @columns_updated.key?(:syslog_drain_url)
+        service_bindings_dataset.update(syslog_drain_url: syslog_drain_url)
+      end
     end
   end
 end

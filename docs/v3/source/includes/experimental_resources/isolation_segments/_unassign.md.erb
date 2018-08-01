@@ -1,0 +1,49 @@
+### Revoke entitlement to isolation segment for one or more organizations
+
+```
+Definition
+```
+
+```http
+DELETE /v3/isolation_segments/:guid/relationships/organizations HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations" \
+  -X DELETE \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "data": [
+      { "guid":"org-guid-1" },
+      { "guid":"org-guid-2" }
+    ]
+  }' 
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+This endpoint revokes the entitlements for the specified organizations to the isolation segment.  Only Admins can revoke isolation segment entitlements.  If the isolation segment is assigned to a space within an organization, the entitlement cannot be revoked.  If the isolation segment is the organization's default, and the organization has more than one isolation segment, the entitlement cannot be revoked.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data
+
+      <span class="method-list-item-type"/>
+    </h4>
+
+    <p class="method-list-item-description">Array of organizations, each specified by its guid, for which entitlement will be revoked.</p>
+  </li>
+</ul>

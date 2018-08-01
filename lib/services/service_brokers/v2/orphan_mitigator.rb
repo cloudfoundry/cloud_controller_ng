@@ -32,10 +32,10 @@ module VCAP::Services
 
         def cleanup_failed_key(client_attrs, service_key)
           key_delete_job = VCAP::CloudController::Jobs::Services::DeleteOrphanedKey.new(
-              'service-key-delete',
-              client_attrs,
-              service_key.guid,
-              service_key.service_instance.guid
+            'service-key-delete',
+            client_attrs,
+            service_key.guid,
+            service_key.service_instance.guid
           )
 
           opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }

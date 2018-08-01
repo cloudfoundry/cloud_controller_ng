@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Jobs', type: [:api, :legacy_api] do
+RSpec.resource 'Jobs', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
 
   authenticated_request
@@ -32,7 +32,7 @@ resource 'Jobs', type: [:api, :legacy_api] do
 
     class KnownFailingJob < FakeJob
       def perform
-        raise VCAP::Errors::ApiError.new_from_details('MessageParseError', 'arbitrary string')
+        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', 'arbitrary string')
       end
     end
 
@@ -63,7 +63,7 @@ resource 'Jobs', type: [:api, :legacy_api] do
     describe 'When a job has failed with an unknown failure' do
       class UnknownFailingJob < FakeJob
         def perform
-          raise RuntimeError.new('arbitrary string')
+          raise 'arbitrary string'
         end
       end
 

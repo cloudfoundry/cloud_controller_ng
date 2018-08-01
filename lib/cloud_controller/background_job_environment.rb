@@ -20,16 +20,29 @@ class BackgroundJobEnvironment
 
         # The AppObserver need no knowledge of the DEA or stager pools
         # so we are passing in no-op objects for these arguments
-        no_op_staging_pool = Object.new
         no_op_dea_pool = Object.new
 
-        runners = VCAP::CloudController::Runners.new(@config, message_bus, no_op_dea_pool, no_op_staging_pool)
-        stagers = VCAP::CloudController::Stagers.new(@config, message_bus, no_op_dea_pool, no_op_staging_pool, runners)
+        runners = VCAP::CloudController::Runners.new(@config, message_bus, no_op_dea_pool)
+        CloudController::DependencyLocator.instance.register(:runners, runners)
+
+        stagers = VCAP::CloudController::Stagers.new(@config, message_bus, no_op_dea_pool)
+        CloudController::DependencyLocator.instance.register(:stagers, stagers)
+
         VCAP::CloudController::AppObserver.configure(stagers, runners)
 
         blobstore_url_generator = CloudController::DependencyLocator.instance.blobstore_url_generator
-        VCAP::CloudController::Dea::Client.configure(@config, message_bus, no_op_dea_pool, no_op_staging_pool, blobstore_url_generator)
+        VCAP::CloudController::Dea::Client.configure(@config, message_bus, no_op_dea_pool, blobstore_url_generator)
       end
     end
+
+    if block_given?
+      yield
+
+      stop
+    end
+  end
+
+  def stop
+    EM.stop if EM.reactor_running?
   end
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/package_create_message'
 
 module VCAP::CloudController
-  describe PackageCreateMessage do
+  RSpec.describe PackageCreateMessage do
     describe '.create_from_http_request' do
       let(:body) { { 'type' => 'docker' } }
 
@@ -78,6 +78,16 @@ module VCAP::CloudController
       end
 
       context 'when a docker type is requested' do
+        context 'when data is not provided' do
+          let(:params) { { app_guid: 'guuid!', type: 'docker' } }
+
+          it 'is invalid' do
+            message = PackageCreateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors.full_messages).to include('Data Image required')
+          end
+        end
+
         context 'when an image is not provided' do
           let(:params) { { app_guid: 'guuid!', type: 'docker', data: { store_image: false, credentials: {} } } }
 
@@ -97,156 +107,13 @@ module VCAP::CloudController
           end
         end
 
-        context 'when store_image is not provided' do
-          let(:params) { { app_guid: 'guuid!', type: 'docker', data: { image: 'an-image' } } }
-          it 'is valid' do
-            message = PackageCreateMessage.new(params)
-            expect(message).to be_valid
-          end
-        end
-
-        context 'when a non-bool store_image is provided' do
-          let(:params) { { app_guid: 'guuid!', type: 'docker', data: { store_image: 5, image: 'an-image', credentials: {} } } }
+        context 'when unexpected data keys are provided' do
+          let(:params) { { app_guid: 'guuid!', type: 'docker', data: { image: 'path/to/image/', birthday: 'party' } } }
 
           it 'is invalid' do
             message = PackageCreateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to include('Data Store image must be a boolean')
-          end
-        end
-
-        context 'when credentials are provided' do
-          let(:params) { { app_guid: 'guuid!', type: 'docker', data: { credentials: credentials } } }
-          context 'and user is not present' do
-            let(:credentials) do
-              {
-                password: 'password',
-                email: 'email@example.com',
-                login_server: 'https://index.docker.io/v1/'
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials user required')
-            end
-          end
-
-          context 'and user is not a string' do
-            let(:credentials) do
-              {
-                user: 5,
-                password: 'password',
-                email: 'email@example.com',
-                login_server: 'https://index.docker.io/v1/'
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials user must be a string')
-            end
-          end
-
-          context 'and password is not present' do
-            let(:credentials) do
-              {
-                user: 'user',
-                email: 'email@example.com',
-                login_server: 'https://index.docker.io/v1/'
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials password required')
-            end
-          end
-
-          context 'and password is not a string' do
-            let(:credentials) do
-              {
-                user: 'user',
-                email: 'email@example.com',
-                login_server: 'https://index.docker.io/v1/',
-                password: 5,
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials password must be a string')
-            end
-          end
-
-          context 'and email is not present' do
-            let(:credentials) do
-              {
-                user: 'user',
-                password: 'password',
-                login_server: 'https://index.docker.io/v1/'
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials email required')
-            end
-          end
-
-          context 'and email is not a string' do
-            let(:credentials) do
-              {
-                user: 'user',
-                email: {},
-                login_server: 'https://index.docker.io/v1/',
-                password: '5',
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials email must be a string')
-            end
-          end
-
-          context 'and login_server is not present' do
-            let(:credentials) do
-              {
-                user: 'user',
-                password: 'password',
-                email: 'email@example.com',
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials login server required')
-            end
-          end
-
-          context 'and login server is not a string' do
-            let(:credentials) do
-              {
-                user: 'user',
-                email: 'gee-email',
-                login_server: ['server 1', 'this is not how this works'],
-                password: '5',
-              }
-            end
-
-            it 'is invalid' do
-              message = PackageCreateMessage.new(params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to include('Data Credentials login server must be a string')
-            end
+            expect(message.errors.full_messages[0]).to include("Unknown field(s): 'birthday'")
           end
         end
       end

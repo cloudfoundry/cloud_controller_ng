@@ -1,8 +1,8 @@
 module VCAP
   module Request
-    HEADER_NAME = 'X-VCAP-Request-ID'
-    HEADER_BROKER_API_VERSION = 'X-Broker-Api-Version'
-    HEADER_API_INFO_LOCATION = 'X-Api-Info-Location'
+    HEADER_NAME = 'X-VCAP-Request-ID'.freeze
+    HEADER_BROKER_API_VERSION = 'X-Broker-Api-Version'.freeze
+    HEADER_API_INFO_LOCATION = 'X-Api-Info-Location'.freeze
 
     class << self
       def current_id=(request_id)

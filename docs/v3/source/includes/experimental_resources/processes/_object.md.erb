@@ -1,0 +1,70 @@
+<div class='no-margin'></div>
+
+### The process object
+
+<ul class="method-list-group">
+<%= yield_content :guid, 'process' %>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      type
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Process type. A unique identifier for processes belonging to an app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The command is used to start the process.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      instances
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The number of instances to run.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      memory_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The memory in mb allocated per instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      disk_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">The disk in mb allocated per instance.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      ports
+      <span class="method-list-item-type">array of integers</span>
+    </h4>
+
+    <p class="method-list-item-description">The ports that will be open to accept traffic in the container running the process. An empty array will bind no ports to the application. <code>web</code> type processes will default to using port 8080 when ports are not provided. All other process types will default to no ports.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      health_check
+      <span class="method-list-item-type">health_check object</span>
+    </h4>
+
+    <p class="method-list-item-description">The health check to perform on the process. See <%= link_to 'health_check', '#the-health_check-object' %> for more information.</p>
+  </li>
+
+<%= yield_content :created_at %>
+
+<%= yield_content :updated_at %>
+
+<%= yield_content :links %>
+</ul>
+

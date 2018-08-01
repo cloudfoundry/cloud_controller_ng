@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe BlobstoreDelete do
+    RSpec.describe BlobstoreDelete do
       let(:key) { 'key' }
       subject(:job) do
         BlobstoreDelete.new(key, :droplet_blobstore)

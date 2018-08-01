@@ -1,163 +1,133 @@
 require 'spec_helper'
 require_relative 'lifecycle_protocol_shared'
+require 'isolation_segment_assign'
 
 module VCAP::CloudController
   module Diego
     class FakeLifecycleProtocol
       def lifecycle_data(_)
-        ['fake', { 'some' => 'data' }]
+        { 'some' => 'data' }
       end
 
       def desired_app_message(_)
         { 'more' => 'data', 'start_command' => '/usr/local/bin/party' }
       end
+
+      def staging_action_builder(_, _)
+        nil
+      end
     end
 
-    describe FakeLifecycleProtocol do
+    RSpec.describe FakeLifecycleProtocol do
       let(:lifecycle_protocol) { FakeLifecycleProtocol.new }
 
       it_behaves_like 'a lifecycle protocol'
     end
 
-    describe Protocol do
-      let(:blobstore_url_generator) do
-        instance_double(CloudController::Blobstore::UrlGenerator,
-          buildpack_cache_download_url: 'http://buildpack-artifacts-cache.com',
-          app_package_download_url: 'http://app-package.com',
-          unauthorized_perma_droplet_download_url: 'fake-droplet_uri',
-          buildpack_cache_upload_url: 'http://buildpack-artifacts-cache.up.com',
-          droplet_upload_url: 'http://droplet-upload-uri',
-        )
-      end
+    RSpec.describe Protocol do
+      subject(:protocol) { Protocol.new }
 
-      let(:default_health_check_timeout) { 99 }
       let(:config) { TestConfig.config }
-      let(:egress_rules) { double(:egress_rules) }
-      let(:app) do
-        AppFactory.make(
-          health_check_timeout: default_health_check_timeout,
-          command: 'start_me',
-          diego: true,
-          ports: [2222, 3333]
-        )
-      end
-
-      let(:lifecycle_protocol) { FakeLifecycleProtocol.new }
-
-      subject(:protocol) do
-        Protocol.new(lifecycle_protocol, egress_rules)
-      end
+      let(:egress_rules) { instance_double(EgressRules) }
+      let(:fake_lifecycle_protocol) { FakeLifecycleProtocol.new }
+      let(:running_env) { { 'KEY' => 'running_value' } }
 
       before do
-        allow(egress_rules).to receive(:staging).and_return(['staging_egress_rule'])
-        allow(egress_rules).to receive(:running).with(app).and_return(['running_egress_rule'])
+        group = EnvironmentVariableGroup.running
+        group.environment_json = running_env
+        group.save
+
+        allow(egress_rules).to receive(:running).and_return(['running_egress_rule'])
+        allow(LifecycleProtocol).to receive(:protocol_for_type).and_return(fake_lifecycle_protocol)
+
+        allow(EgressRules).to receive(:new).and_return(egress_rules)
       end
 
-      describe '#stage_app_request' do
-        let(:staging_env) { { 'KEY' => 'staging_value' } }
-
-        before do
-          override = {
-            external_port: external_port,
+      describe '#stage_package_request' do
+        let(:app) { AppModel.make }
+        let(:package) { PackageModel.make(app: app) }
+        let(:droplet) { DropletModel.make(package: package, app: app) }
+        let(:staging_details) do
+          Diego::StagingDetails.new.tap do |details|
+            details.droplet               = droplet
+            details.package               = package
+            details.environment_variables = { 'nightshade_fruit' => 'potato' }
+            details.staging_memory_in_mb  = 42
+            details.staging_disk_in_mb    = 51
+            details.start_after_staging = true
+          end
+        end
+        let(:config) do
+          {
+            external_port:             external_port,
             internal_service_hostname: internal_service_hostname,
-            internal_api: {
-              auth_user: user,
+            internal_api:              {
+              auth_user:     user,
               auth_password: password
             },
-            staging: {
-              minimum_staging_memory_mb: 128,
-              minimum_staging_disk_mb: 128,
-              minimum_staging_file_descriptor_limit: 128,
-              timeout_in_seconds: 90,
-              auth: { user: 'user', password: 'password' },
+            staging:                   {
+              minimum_staging_memory_mb:             128,
+              minimum_staging_file_descriptor_limit: 30,
+              timeout_in_seconds:                    90,
             }
           }
-          TestConfig.override(override)
-
-          group = EnvironmentVariableGroup.staging
-          group.environment_json = staging_env
-          group.save
         end
-
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
         let(:external_port) { '7777' }
-        let(:staging_guid) { StagingGuid.from_app(app) }
         let(:user) { 'user' }
         let(:password) { 'password' }
+        let(:result) { protocol.stage_package_request(config, staging_details) }
 
-        let(:message) { protocol.stage_app_request(app, config) }
-        let(:app) { AppFactory.make(staging_task_id: 'fake-staging-task-id', diego: true) }
+        before do
+          allow(LifecycleProtocol).to receive(:protocol_for_type).and_return(fake_lifecycle_protocol)
+          expect(egress_rules).to receive(:staging).with(app_guid: app.guid).and_return(['staging_egress_rule'])
+        end
 
-        it 'contains the correct payload for staging a buildpack app' do
-          expect(message).to eq({
-            app_id: app.guid,
-            log_guid: app.guid,
-            memory_mb: app.memory,
-            disk_mb: app.disk_quota,
-            file_descriptors: app.file_descriptors,
-            environment: Environment.new(app, staging_env).as_json,
-            egress_rules: ['staging_egress_rule'],
-            timeout: 90,
-            lifecycle: lifecycle_protocol.lifecycle_data(double(:app))[0],
-            lifecycle_data: lifecycle_protocol.lifecycle_data(double(:app))[1],
-            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}/internal/staging/#{staging_guid}/completed"
+        it 'contains the correct payload for staging a package' do
+          expect(result).to eq({
+            app_id:              staging_details.droplet.guid,
+            log_guid:            app.guid,
+            memory_mb:           staging_details.staging_memory_in_mb,
+            disk_mb:             staging_details.staging_disk_in_mb,
+            file_descriptors:    30,
+            environment:         VCAP::CloudController::Diego::NormalEnvHashToDiegoEnvArrayPhilosopher.muse(staging_details.environment_variables),
+            egress_rules:        ['staging_egress_rule'],
+            timeout:             90,
+            lifecycle:           droplet.lifecycle_type,
+            lifecycle_data:      { 'some' => 'data' },
+            completion_callback: "http://#{user}:#{password}@#{internal_service_hostname}:#{external_port}" \
+            "/internal/v3/staging/#{droplet.guid}/droplet_completed?start=#{staging_details.start_after_staging}"
           })
-        end
-
-        context 'when the app memory is less than the minimum staging memory' do
-          let(:app) { AppFactory.make(memory: 127, diego: true) }
-
-          subject(:message) do
-            protocol.stage_app_request(app, config)
-          end
-
-          it 'uses the minimum staging memory' do
-            expect(message[:memory_mb]).to eq(config[:staging][:minimum_staging_memory_mb])
-          end
-        end
-
-        context 'when the app disk is less than the minimum staging disk' do
-          let(:app) { AppFactory.make(disk_quota: 127, diego: true) }
-
-          subject(:message) do
-            protocol.stage_app_request(app, config)
-          end
-
-          it 'includes the fields needed to stage a Docker app' do
-            expect(message[:disk_mb]).to eq(config[:staging][:minimum_staging_disk_mb])
-          end
-        end
-
-        context 'when the app fd limit is less than the minimum staging fd limit' do
-          let(:app) { AppFactory.make(file_descriptors: 127, diego: true) }
-
-          subject(:message) do
-            protocol.stage_app_request(app, config)
-          end
-
-          it 'includes the fields needed to stage a Docker app' do
-            expect(message[:file_descriptors]).to eq(config[:staging][:minimum_staging_file_descriptor_limit])
-          end
         end
       end
 
       describe '#desire_app_request' do
-        let(:request) { protocol.desire_app_request(app, default_health_check_timeout) }
+        let(:process) { AppFactory.make }
+        let(:default_health_check_timeout) { 99 }
+        let(:request) { protocol.desire_app_request(process, default_health_check_timeout) }
+
+        before do
+          allow(egress_rules).to receive(:running).with(process).and_return(['running_egress_rule'])
+          allow(LifecycleProtocol).to receive(:protocol_for_type).and_return(fake_lifecycle_protocol)
+        end
 
         it 'returns the message' do
-          expect(request).to match_json(protocol.desire_app_message(app, default_health_check_timeout))
+          expect(request).to match_json(protocol.desire_app_message(process, default_health_check_timeout).as_json)
         end
       end
 
       describe '#desire_app_message' do
-        let(:message) { protocol.desire_app_message(app, default_health_check_timeout) }
+        let(:space) { Space.make }
+        let(:process) { AppFactory.make(space: space, diego: true, ports: ports, type: type, health_check_timeout: 12) }
+        let(:default_health_check_timeout) { 99 }
+        let(:message) { protocol.desire_app_message(process, default_health_check_timeout) }
+        let(:ports) { [2222, 3333] }
+        let(:type) { 'web' }
 
-        let(:running_env) { { 'KEY' => 'running_value' } }
-
-        let(:route_without_service) { Route.make(space: app.space) }
+        let(:route_without_service) { Route.make(space: process.space) }
         let(:route_with_service) do
-          si = ManagedServiceInstance.make(:routing, space: app.space)
-          r = Route.make(space: app.space)
+          si = ManagedServiceInstance.make(:routing, space: process.space)
+          r = Route.make(space: process.space)
           RouteBinding.make(route: r, service_instance: si, route_service_url: 'http://foobar.com')
           r
         end
@@ -167,41 +137,95 @@ module VCAP::CloudController
           group.environment_json = running_env
           group.save
 
-          app.add_route(route_without_service)
-          app.add_route(route_with_service)
-          app.current_droplet.execution_metadata = 'foobar'
+          RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 2222)
+          RouteMappingModel.make(app: process.app, route: route_with_service, process_type: process.type, app_port: 2222)
+          process.current_droplet.execution_metadata = 'foobar'
+
+          allow(egress_rules).to receive(:running).with(process).and_return(['running_egress_rule'])
+          allow(LifecycleProtocol).to receive(:protocol_for_type).and_return(fake_lifecycle_protocol)
+          allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('segment-from-selector')
         end
 
         it 'is a message with the information nsync needs to desire the app' do
-          expect(message).to eq({
-            'disk_mb' => app.disk_quota,
-            'environment' => Environment.new(app, running_env).as_json,
-            'file_descriptors' => app.file_descriptors,
-            'health_check_type' => app.health_check_type,
-            'health_check_timeout_in_seconds' => app.health_check_timeout,
-            'log_guid' => app.guid,
-            'memory_mb' => app.memory,
-            'num_instances' => app.desired_instances,
-            'process_guid' => ProcessGuid.from_app(app),
-            'stack' => app.stack.name,
-            'execution_metadata' => app.execution_metadata,
+          # TODO: The test shouldn't be a copy/paste of the implementation
+          expect(message.as_json).to match({
+            'disk_mb' => process.disk_quota,
+            'environment' => Environment.new(process, running_env).as_json,
+            'file_descriptors' => process.file_descriptors,
+            'health_check_type' => process.health_check_type,
+            'health_check_timeout_in_seconds' => process.health_check_timeout,
+            'health_check_http_endpoint' => '',
+            'log_guid' => process.app.guid,
+            'log_source' => 'APP/PROC/WEB',
+            'memory_mb' => process.memory,
+            'num_instances' => process.desired_instances,
+            'process_guid' => ProcessGuid.from_process(process),
+            'stack' => process.stack.name,
+            'execution_metadata' => process.execution_metadata,
             'routes' => [
               route_without_service.uri,
               route_with_service.uri
             ],
             'routing_info' => {
               'http_routes' => [
-                { 'hostname' => route_without_service.uri },
+                { 'hostname' => route_without_service.uri,
+                  'port' => 2222,
+              },
                 { 'hostname' => route_with_service.uri,
-                  'route_service_url' => route_with_service.route_binding.route_service_url
+                  'route_service_url' => route_with_service.route_binding.route_service_url,
+                  'port' => 2222,
                 }
               ]
             },
             'egress_rules' => ['running_egress_rule'],
-            'etag' => app.updated_at.to_f.to_s,
+            'etag' => process.updated_at.to_f.to_s,
             'allow_ssh' => true,
-            'ports' => [2222, 3333]
-          }.merge(lifecycle_protocol.desired_app_message(double(:app))))
+            'ports' => [2222, 3333],
+            'network' => {
+              'properties' => {
+                'policy_group_id' => process.guid,
+                'app_id' => process.guid,
+                'space_id' => process.space.guid,
+                'org_id' => process.organization.guid,
+              }
+            },
+            'volume_mounts' => an_instance_of(Array),
+            'isolation_segment' => 'segment-from-selector'
+          }.merge(fake_lifecycle_protocol.desired_app_message(double(:app))))
+        end
+
+        context 'when app does not have ports defined' do
+          let(:ports) { nil }
+
+          context 'when this is a docker app' do
+            let(:process) { AppFactory.make(docker_image: 'docker/image', diego: true, ports: ports, type: type) }
+
+            before do
+              allow(process).to receive(:docker_ports).and_return([123, 456])
+            end
+
+            it 'uses the saved docker ports' do
+              expect(message['ports']).to eq([123, 456])
+            end
+          end
+
+          context 'when this is a buildpack app' do
+            context 'when the type is web' do
+              let(:type) { 'web' }
+
+              it 'defaults to [8080]' do
+                expect(message['ports']).to eq([8080])
+              end
+            end
+
+            context 'when the type is not web' do
+              let(:type) { 'other' }
+
+              it 'default to []' do
+                expect(message['ports']).to eq([])
+              end
+            end
+          end
         end
 
         context 'when the app health check timeout is not set' do
@@ -209,10 +233,40 @@ module VCAP::CloudController
             TestConfig.override(default_health_check_timeout: default_health_check_timeout)
           end
 
-          let(:app) { AppFactory.make(health_check_timeout: nil, diego: true) }
+          let(:process) { AppFactory.make(health_check_timeout: nil, diego: true) }
 
           it 'uses the default app health check from the config' do
             expect(message['health_check_timeout_in_seconds']).to eq(default_health_check_timeout)
+          end
+        end
+
+        context 'when the app health check http endpoint is set' do
+          let(:default_health_check_http_endpoint) { '/check' }
+          before do
+            process.health_check_http_endpoint = default_health_check_http_endpoint
+          end
+          it 'uses the app health check http endpoint' do
+            expect(message['health_check_http_endpoint']).to eq(default_health_check_http_endpoint)
+          end
+        end
+
+        describe 'log_guid' do
+          let(:parent_app) { AppModel.make }
+          before do
+            process.app_guid = parent_app.guid
+            process.save
+          end
+
+          it 'is the parent app guid' do
+            expect(message).to match(hash_including('log_guid' => process.app.guid))
+          end
+        end
+
+        describe 'log_source' do
+          it 'includes the process type' do
+            process.type = 'potato'
+            process.save
+            expect(message).to match(hash_including('log_source' => 'APP/PROC/POTATO'))
           end
         end
       end

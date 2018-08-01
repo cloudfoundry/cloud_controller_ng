@@ -5,7 +5,7 @@ module CloudController
   module Blobstore
     class LocalAppBits
       PACKAGE_NAME = 'package.zip'.freeze
-      UNCOMPRESSED_DIR = 'uncompressed'
+      UNCOMPRESSED_DIR = 'uncompressed'.freeze
 
       def self.from_compressed_bits(compressed_bits_path, tmp_dir, &block)
         Dir.mktmpdir('safezipper', tmp_dir) do |root_path|

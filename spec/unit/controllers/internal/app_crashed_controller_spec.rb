@@ -1,19 +1,9 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppCrashedController do
-    let(:diego_app) do
-      AppFactory.make.tap do |app|
-        app.package_state = 'PENDING'
-        app.state = 'STARTED'
-        app.staging_task_id = 'task-1'
-        app.diego = true
-        app.save
-      end
-    end
-
-    let(:process_guid) { Diego::ProcessGuid.from(diego_app.guid, 'some-version-guid') }
-
+  RSpec.describe AppCrashedController do
+    let(:diego_process) { AppFactory.make(state: 'STARTED', diego: true) }
+    let(:process_guid) { Diego::ProcessGuid.from(diego_process.guid, 'some-version-guid') }
     let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
     let(:crashed_request) do
@@ -68,18 +58,38 @@ module VCAP::CloudController
       end
     end
 
-    context 'with a diego app' do
+    context 'with a diego process' do
       it 'audits the app crashed event' do
         post url, MultiJson.dump(crashed_request)
         expect(last_response.status).to eq(200)
 
-        app_event = Event.find(actee: diego_app.guid)
+        app_event = Event.find(actee: diego_process.guid, actor_type: 'app')
 
         expect(app_event).to be
-        expect(app_event.space).to eq(diego_app.space)
+        expect(app_event.space).to eq(diego_process.space)
         expect(app_event.type).to eq('app.crash')
         expect(app_event.actor_type).to eq('app')
-        expect(app_event.actor).to eq(diego_app.guid)
+        expect(app_event.actor).to eq(diego_process.guid)
+        expect(app_event.metadata['instance']).to eq(crashed_request['instance'])
+        expect(app_event.metadata['index']).to eq(crashed_request['index'])
+        expect(app_event.metadata['exit_status']).to eq(crashed_request['exit_status'])
+        expect(app_event.metadata['exit_description']).to eq(crashed_request['exit_description'])
+        expect(app_event.metadata['reason']).to eq(crashed_request['reason'])
+      end
+
+      it 'audits the process crashed event' do
+        post url, MultiJson.dump(crashed_request)
+        expect(last_response.status).to eq(200)
+
+        app_event = Event.find(actee: diego_process.guid, actor_type: 'process')
+
+        expect(app_event).to be
+        expect(app_event.space).to eq(diego_process.space)
+        expect(app_event.type).to eq('audit.app.process.crash')
+        expect(app_event.actor_type).to eq('process')
+        expect(app_event.actor).to eq(diego_process.guid)
+        expect(app_event.actee_type).to eq('app')
+        expect(app_event.actee).to eq(diego_process.app.guid)
         expect(app_event.metadata['instance']).to eq(crashed_request['instance'])
         expect(app_event.metadata['index']).to eq(crashed_request['index'])
         expect(app_event.metadata['exit_status']).to eq(crashed_request['exit_status'])
@@ -89,17 +99,8 @@ module VCAP::CloudController
     end
 
     context 'with a dea app' do
-      let(:dea_app) do
-        AppFactory.make.tap do |app|
-          app.package_state = 'PENDING'
-          app.state = 'STARTED'
-          app.staging_task_id = 'task-1'
-          app.save
-        end
-      end
-
+      let(:dea_app) { AppFactory.make(state: 'STARTED') }
       let(:process_guid) { Diego::ProcessGuid.from(dea_app.guid, 'some-version-guid') }
-
       let(:url) { "/internal/apps/#{process_guid}/crashed" }
 
       it 'fails with a 403' do
@@ -111,7 +112,7 @@ module VCAP::CloudController
     end
 
     context 'when the app does no longer exist' do
-      before { diego_app.delete }
+      before { diego_process.delete }
 
       it 'fails with a 404' do
         post url, MultiJson.dump(crashed_request)

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DeserializationRetry do
+RSpec.describe DeserializationRetry do
   context 'when a Delayed::Job fails to load because the class is missing' do
     it 'prevents DelayedJob from marking it as failed' do
       handler = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(10_000)
@@ -16,7 +16,7 @@ describe DeserializationRetry do
       expect(job.locked_by).to be_nil
       expect(job.locked_at).to be_nil
 
-      expect(job.run_at).to be_within(1.second).of Delayed::Job.db_time_now + 5.minutes
+      expect(job.run_at).to be_within(2.seconds).of Delayed::Job.db_time_now + 5.minutes
       expect(job.attempts).to eq(1)
     end
 
@@ -43,8 +43,7 @@ describe DeserializationRetry do
       job = Delayed::Job.last
       job.update handler: 'Dan'
 
-      successes, failures = Delayed::Worker.new.work_off
-      expect([successes, failures]).to eq [0, 1]
+      execute_all_jobs(expected_successes: 0, expected_failures: 1)
       expect(job.reload.attempts).to eq(1)
     end
   end
@@ -54,8 +53,7 @@ describe DeserializationRetry do
       handler = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(10_000)
       VCAP::CloudController::Jobs::Enqueuer.new(handler).enqueue
 
-      successes, failures = Delayed::Worker.new.work_off
-      expect([successes, failures]).to eq [1, 0]
+      execute_all_jobs(expected_successes: 1, expected_failures: 0)
     end
 
     context 'and the job blows up during execution' do
@@ -72,8 +70,7 @@ describe DeserializationRetry do
         job = Delayed::Job.last
         old_run_at = job.run_at
 
-        successes, failures = Delayed::Worker.new.work_off
-        expect([successes, failures]).to eq [0, 1]
+        execute_all_jobs(expected_successes: 0, expected_failures: 1)
 
         expect(job.reload.run_at).to eq old_run_at
         expect(job.reload.failed_at).not_to be_nil

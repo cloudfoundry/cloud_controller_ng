@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Service Brokers', type: [:api, :legacy_api] do
+RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:service_brokers) { 3.times { VCAP::CloudController::ServiceBroker.make } }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.first }
@@ -38,7 +38,7 @@ resource 'Service Brokers', type: [:api, :legacy_api] do
     field :broker_url, 'The URL of the service broker.', required: true, example_values: %w(https://broker.example.com)
     field :auth_username, 'The username with which to authenticate against the service broker.', required: true, example_values: %w(admin)
     field :auth_password, 'The password with which to authenticate against the service broker.', required: true, example_values: %w(secretpassw0rd)
-    field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false, experimental: true
+    field :space_guid, 'Guid of a space the broker is scoped to. Space developers are able to create service brokers scoped to a space.', required: false
   end
 
   shared_context 'updatable_fields' do

@@ -1,7 +1,4 @@
 shared_context 'permissions' do
-  let(:headers_a) { headers_for(member_a) }
-  let(:headers_b) { headers_for(member_b) }
-
   before do
     @org_a = VCAP::CloudController::Organization.make
     @org_a_manager = VCAP::CloudController::User.make
@@ -44,8 +41,6 @@ shared_context 'permissions' do
     @space_b.add_manager(@space_b_manager)
     @space_b.add_developer(@space_b_developer)
     @space_b.add_auditor(@space_b_auditor)
-
-    @cf_admin = VCAP::CloudController::User.make(admin: true)
   end
 end
 
@@ -54,10 +49,12 @@ shared_examples 'permission enumeration' do |perm_name, opts|
   path = opts[:path]
   expected = opts[:enumerate]
   perms_overlap = opts[:permissions_overlap]
+  user_opts = opts[:user_opts] || {}
   describe "GET #{path}" do
     it "should return #{name.pluralize} to a user that has #{perm_name} permissions" do
       expected_count = expected.respond_to?(:call) ? expected.call : expected
-      get path, {}, headers_a
+      set_current_user(member_a, user_opts)
+      get path
       if expected_count == :not_allowed
         expect(last_response.status).to eq(403)
       else
@@ -66,15 +63,16 @@ shared_examples 'permission enumeration' do |perm_name, opts|
         guids = decoded_response['resources'].map { |o| o['metadata']['guid'] }
         if respond_to?(:enumeration_expectation_a)
           expect(guids.sort).to eq enumeration_expectation_a.map(&:guid).sort
-        else
-          expect(guids).to include(@obj_a.guid) if expected_count > 0
+        elsif expected_count > 0
+          expect(guids).to include(@obj_a.guid)
         end
       end
     end
 
     unless perms_overlap
       it "should not return a #{name} to a user with the #{perm_name} permission on a different #{name}" do
-        get "#{path}/#{@obj_a.guid}", {}, headers_b
+        set_current_user(member_b, user_opts)
+        get "#{path}/#{@obj_a.guid}"
         expect(last_response).not_to be_ok
       end
     end

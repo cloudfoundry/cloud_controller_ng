@@ -1,18 +1,10 @@
 module CloudController
   module BlobSender
     class DefaultLocalBlobSender
-      def initialize(missing_blob_handler)
-        @missing_blob_handler = missing_blob_handler
-      end
-
-      def send_blob(app_guid, blob_name, blob, controller)
+      def send_blob(blob, controller)
         path = blob.local_path
-        if path
-          logger.debug "send_file #{path}"
-          controller.send_file(path)
-        else
-          @missing_blob_handler.handle_missing_blob!(app_guid, blob_name)
-        end
+        logger.debug "send_file #{path}"
+        controller.send_file(path)
       end
 
       def logger

@@ -1,22 +1,24 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::InfoController do
+  RSpec.describe VCAP::CloudController::InfoController do
     describe 'GET /v2/info' do
       it "returns a 'user' entry when authenticated" do
-        get '/v2/info', {}, admin_headers
+        set_current_user(User.make)
+
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash).to have_key('user')
       end
 
       it "excludes the 'user' entry when not authenticated" do
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash).not_to have_key('user')
       end
 
       it 'includes data from the config' do
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['name']).to eq(TestConfig.config[:info][:name])
         expect(hash['build']).to eq(TestConfig.config[:info][:build])
@@ -31,37 +33,63 @@ module VCAP::CloudController
         expect(hash['app_ssh_oauth_client']).to eq(TestConfig.config[:info][:app_ssh_oauth_client])
       end
 
+      it 'includes bits_endpoint when bits service is enabled' do
+        TestConfig.override(bits_service: {
+          enabled: true,
+          public_endpoint: 'http://public-bits-service.example.com',
+          private_endpoint: 'http://private-bits-service.example.com',
+          username: 'some-username',
+          password: 'some-password',
+        })
+        get '/v2/info'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['bits_endpoint']).to eq('http://public-bits-service.example.com')
+      end
+
+      it 'does not include bits_service when bits service is not enabled' do
+        get '/v2/info'
+        hash = MultiJson.load(last_response.body)
+        expect(hash).to_not include('bits_endpoint')
+      end
+
+      it 'does not include bits_endpoint when bits service is not enabled, despite a configured public endpoint' do
+        TestConfig.override(bits_service: { public_endpoint: 'bits-service.example.com' })
+        get '/v2/info'
+        hash = MultiJson.load(last_response.body)
+        expect(hash).to_not include('bits_endpoint')
+      end
+
       it 'includes login url when configured' do
         TestConfig.override(login: { url: 'login_url' })
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['authorization_endpoint']).to eq('login_url')
       end
 
       it 'includes the logging endpoint when configured' do
         TestConfig.override(loggregator: { url: 'loggregator_url' })
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['logging_endpoint']).to eq('loggregator_url')
       end
 
       it 'includes the routing api endpoint when configured' do
         TestConfig.override(routing_api: { url: 'some_routing_api' })
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['routing_endpoint']).to eq('some_routing_api')
       end
 
       it 'includes the doppler_logging_endpoint when enabled' do
         TestConfig.override(doppler: { enabled: true, url: 'doppler_url' })
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['doppler_logging_endpoint']).to eq('doppler_url')
       end
 
       it 'excludes the doppler_logging_endpoint when disabled' do
         TestConfig.override(doppler: { enabled: false })
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['doppler_logging_endpoint']).to be_nil
       end
@@ -71,7 +99,7 @@ module VCAP::CloudController
           min_cli_version: 'min_cli_version',
           min_recommended_cli_version: 'min_recommended_cli_version'
         })
-        get '/v2/info', {}, {}
+        get '/v2/info'
         hash = MultiJson.load(last_response.body)
         expect(hash['min_cli_version']).to eq('min_cli_version')
         expect(hash['min_recommended_cli_version']).to eq('min_recommended_cli_version')

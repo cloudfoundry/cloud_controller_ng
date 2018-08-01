@@ -1,93 +1,160 @@
 require 'spec_helper'
+require 'cloud_controller/diego/docker/lifecycle_protocol'
 require_relative '../lifecycle_protocol_shared'
 
 module VCAP
   module CloudController
     module Diego
       module Docker
-        describe LifecycleProtocol do
-          let(:lifecycle_protocol) { LifecycleProtocol.new }
+        RSpec.describe LifecycleProtocol do
+          subject(:lifecycle_protocol) { LifecycleProtocol.new }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { App.make(docker_image: 'https://cool.image') }
+            let(:app) { AppModel.make }
+            let(:package) { PackageModel.make(:docker, app: app) }
+            let(:droplet) { DropletModel.make(:staged, package: package, app: app) }
+            let(:process) { App.make(app: app) }
+
+            before do
+              app.update(droplet_guid: droplet.guid)
+            end
+
+            let(:staging_details) do
+              Diego::StagingDetails.new.tap do |details|
+                details.droplet = droplet
+                details.package = package
+                details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
+              end
+            end
           end
 
           describe '#lifecycle_data' do
-            let(:app) { AppFactory.make(docker_image: 'fake/docker_image') }
-
-            it 'returns lifecycle data of type docker' do
-              type = lifecycle_protocol.lifecycle_data(app)[0]
-              expect(type).to eq('docker')
+            let(:package) { PackageModel.make(:docker, docker_image: 'registry/image-name:latest') }
+            let(:droplet) { DropletModel.make(package_guid: package.guid) }
+            let(:staging_details) do
+              Diego::StagingDetails.new.tap do |details|
+                details.droplet = droplet
+                details.package = package
+                details.lifecycle = instance_double(VCAP::CloudController::DockerLifecycle)
+              end
             end
 
             it 'sets the docker image' do
-              message = lifecycle_protocol.lifecycle_data(app)[1]
-              expect(message[:docker_image]).to eq(app.docker_image)
+              message = lifecycle_protocol.lifecycle_data(staging_details)
+              expect(message[:docker_image]).to eq('registry/image-name:latest')
             end
 
-            context 'when there are image credentials' do
-              let(:server) { 'http://loginServer.com' }
-              let(:user) { 'user' }
-              let(:password) { 'password' }
-              let(:email) { 'email' }
-              let(:docker_credentials) do
-                {
-                  docker_login_server: server,
-                  docker_user: user,
-                  docker_password: password,
-                  docker_email: email
-                }
+            describe 'experimental v2 app docker credential support' do
+              it 'does not set docker credentials if there is no web process' do
+                message = lifecycle_protocol.lifecycle_data(staging_details)
+                expect(message[:docker_login_server]).to be_nil
+                expect(message[:docker_user]).to be_nil
+                expect(message[:docker_password]).to be_nil
+                expect(message[:docker_email]).to be_nil
               end
-              let(:app) { AppFactory.make(docker_image: 'fake/docker_image', docker_credentials_json: docker_credentials, diego: true) }
 
-              it 'uses the provided credentials to stage a Docker app' do
-                message = lifecycle_protocol.lifecycle_data(app)[1]
+              it 'does not set docker credentials if the web process has no docker credentials' do
+                App.make(app: droplet.app, type: 'web', docker_credentials_json: nil)
 
-                expect(message[:docker_login_server]).to eq(server)
-                expect(message[:docker_user]).to eq(user)
-                expect(message[:docker_password]).to eq(password)
-                expect(message[:docker_email]).to eq(email)
+                message = lifecycle_protocol.lifecycle_data(staging_details)
+                expect(message[:docker_login_server]).to be_nil
+                expect(message[:docker_user]).to be_nil
+                expect(message[:docker_password]).to be_nil
+                expect(message[:docker_email]).to be_nil
+              end
+
+              it 'sets docker credentials if the web process has docker credentials' do
+                App.make(
+                  app: droplet.app,
+                  type: 'web',
+                  docker_credentials_json: {
+                    docker_login_server: 'login-server',
+                    docker_user: 'user',
+                    docker_password: 'password',
+                    docker_email: 'email',
+                  }
+                )
+
+                message = lifecycle_protocol.lifecycle_data(staging_details)
+                expect(message[:docker_login_server]).to eq('login-server')
+                expect(message[:docker_user]).to eq('user')
+                expect(message[:docker_password]).to eq('password')
+                expect(message[:docker_email]).to eq('email')
               end
             end
           end
 
           describe '#desired_app_message' do
-            let(:app) { AppFactory.make(docker_image: 'cloudfoundry/diego-docker-app:latest', diego: true) }
+            let(:app) { AppModel.make }
+            let(:droplet) { DropletModel.make(:docker, state: DropletModel::STAGED_STATE, app: app, docker_receipt_image: 'the-image') }
+            let(:process) { App.make(app: app, diego: true, command: 'go go go', metadata: {}) }
 
-            it 'sets the start command' do
-              message = lifecycle_protocol.desired_app_message(app)
-              expect(message['start_command']).to eq(app.command)
+            before do
+              app.update(droplet_guid: droplet.guid)
             end
 
-            describe 'setting the docker image' do
-              context 'when there is no current_droplet for app' do
-                let(:docker_image) { 'cloudfoundry/diego-docker-app:latest' }
-                let(:app) do
-                  App.make(
-                    name: Sham.name,
-                    space: Space.make,
-                    stack: Stack.default,
-                    docker_image: docker_image,
-                    diego: true
-                  )
-                end
+            it 'sets the start command' do
+              message = lifecycle_protocol.desired_app_message(process)
+              expect(message['start_command']).to eq('go go go')
+            end
 
-                it 'uses the user provided docker image' do
-                  message = lifecycle_protocol.desired_app_message(app)
-                  expect(message['docker_image']).to eq(docker_image)
-                end
-              end
+            it 'uses the droplet receipt image' do
+              message = lifecycle_protocol.desired_app_message(process)
+              expect(message['docker_image']).to eq('the-image')
+            end
+          end
 
-              context 'when there is a cached_docker_image' do
-                let(:cached_docker_image) { '10.244.2.6:8080/uuid' }
+          describe '#desired_lrp_builder' do
+            let(:config) { {} }
+            let(:app) { AppModel.make(droplet: droplet) }
+            let(:droplet) do
+              DropletModel.make(:docker, {
+                state: DropletModel::STAGED_STATE,
+                docker_receipt_image: 'the-image',
+                execution_metadata: 'foobar',
+              })
+            end
+            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', metadata: {}) }
+            let(:builder_opts) do
+              {
+                ports: [1, 2, 3],
+                docker_image: 'the-image',
+                execution_metadata: 'foobar',
+                start_command: 'go go go',
+              }
+            end
+            before do
+              allow(Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(
+                instance_double(Protocol::OpenProcessPorts, to_a: [1, 2, 3])
+              )
+            end
 
-                before { app.current_droplet.cached_docker_image = cached_docker_image }
+            it 'creates a diego DesiredLrpBuilder' do
+              expect(VCAP::CloudController::Diego::Docker::DesiredLrpBuilder).to receive(:new).with(
+                config,
+                builder_opts,
+              )
+              lifecycle_protocol.desired_lrp_builder(config, process)
+            end
+          end
 
-                it 'uses the cached_docker_image instead of the user provided' do
-                  message = lifecycle_protocol.desired_app_message(app)
-                  expect(message['docker_image']).to eq(cached_docker_image)
-                end
-              end
+          describe '#task_action_builder' do
+            let(:config) { {} }
+            let(:droplet) { DropletModel.make(:docker, docker_receipt_image: 'repository/the-image') }
+            let(:task) { TaskModel.make(droplet: droplet) }
+            let(:lifecycle_data) do
+              {
+                droplet_path: 'repository/the-image',
+              }
+            end
+
+            it 'creates a diego TaskActionBuilder' do
+              expect(VCAP::CloudController::Diego::Docker::TaskActionBuilder).to receive(:new).with(
+                config,
+                task,
+                lifecycle_data,
+              )
+              lifecycle_protocol.task_action_builder(config, task)
             end
           end
         end

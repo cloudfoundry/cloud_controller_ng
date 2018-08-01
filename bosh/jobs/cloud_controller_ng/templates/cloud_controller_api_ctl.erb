@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+export RAILS_ENV=production
+
+export CC_JOB_DIR=/var/vcap/jobs/cloud_controller_ng
+source $CC_JOB_DIR/bin/ruby_version.sh
+
+CC_PACKAGE_DIR=/var/vcap/packages/cloud_controller_ng
+
+RUN_DIR=/var/vcap/sys/run/cloud_controller_ng
+LOG_DIR=/var/vcap/sys/log/cloud_controller_ng
+PIDFILE=$RUN_DIR/cloud_controller_ng.pid
+
+export CONFIG_DIR=$CC_JOB_DIR/config
+export CLOUD_CONTROLLER_NG_CONFIG=$CONFIG_DIR/cloud_controller_ng.yml
+export BUNDLE_GEMFILE=$CC_PACKAGE_DIR/cloud_controller_ng/Gemfile
+export HOME=/home/vcap # rake needs it to be set to run tasks
+export TMPDIR=/var/vcap/data/cloud_controller_ng/tmp
+
+<% if properties.env %>
+<% if properties.env.http_proxy %>
+export HTTP_PROXY='<%= properties.env.http_proxy %>'
+export http_proxy='<%= properties.env.http_proxy %>'
+<% end %>
+<% if properties.env.https_proxy %>
+export HTTPS_PROXY='<%= properties.env.https_proxy %>'
+export https_proxy='<%= properties.env.https_proxy %>'
+<% end %>
+<% if properties.env.no_proxy %>
+export NO_PROXY='<%= properties.env.no_proxy %>'
+export no_proxy='<%= properties.env.no_proxy %>'
+<% end %>
+<% end %>
+
+export C_INCLUDE_PATH=/var/vcap/packages/libpq/include:$C_INCLUDE_PATH
+export LIBRARY_PATH=/var/vcap/packages/libpq/lib:$LIBRARY_PATH
+export LANG=en_US.UTF-8
+
+export NEWRELIC_ENABLE=<%= !!properties.cc.newrelic.license_key || p("cc.development_mode") %>
+export NRCONFIG=$CONFIG_DIR/newrelic.yml
+export NEW_RELIC_ENV=<%= p("cc.newrelic.environment_name") %>
+# Setting ENV['DYNO'] so NewRelic properly names our Hostnames.
+# If this isn't done, all activity will be grouped under 'dynamic hostname'
+# Note: this will only take effect if heroku.use_dyno_names in newrelic.yml
+#       is set to true
+export DYNO=<%= "#{spec.job.name}-#{spec.index}" %>
+
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+source /var/vcap/packages/capi_utils/pid_utils.sh
+source $CC_JOB_DIR/bin/blobstore_waiter.sh
+
+tee_output_to_sys_log_and_file "${LOG_DIR}" "$(basename "$0")"
+
+function setup_environment() {
+  mkdir -p "${RUN_DIR}"
+}
+
+case $1 in
+
+  start)
+    setup_environment
+
+    pid_guard "$PIDFILE" "Cloud controller ng"
+
+    wait_for_blobstore
+
+    ulimit -c unlimited
+
+    cd "${CC_PACKAGE_DIR}/cloud_controller_ng"
+
+    <% if spec.bootstrap && !p('cc.run_prestart_migrations') %>
+    echo 'Running migrations and seeds'
+    $CC_JOB_DIR/bin/migrate_db
+    $CC_JOB_DIR/bin/seed_db
+    echo 'Finished migrations and seeds'
+    <% end %>
+
+    exec "${CC_PACKAGE_DIR}/cloud_controller_ng/bin/cloud_controller" \
+      -c "$CLOUD_CONTROLLER_NG_CONFIG"
+    ;;
+
+  stop)
+    kill_and_wait "$PIDFILE"
+    ;;
+
+  *)
+    echo "Usage: cloud_controller_ng_ctl {start|stop}"
+    ;;
+
+esac

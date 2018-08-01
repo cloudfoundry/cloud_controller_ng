@@ -1,0 +1,46 @@
+### Upload package bits
+
+```
+Definition
+```
+
+```http
+POST /v3/packages/:guid/upload HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/packages/[guid]/upload" \
+  -F bits=@"package.zip" \
+  -X POST \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :single_bits_package %>
+```
+
+This endpoint uploads bits to an existing package of type 'bits'. The bits must be sent as part of a multi-part form
+
+#### Form Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      bits
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">A binary zip file containing the package bits</p>
+  </li>
+</ul>

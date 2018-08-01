@@ -1,36 +1,33 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Dea::StagingMessage do
+  RSpec.describe Dea::StagingMessage do
     let(:blobstore_url_generator) { CloudController::DependencyLocator.instance.blobstore_url_generator }
     let(:config_hash) { { staging: { timeout_in_seconds: 360 } } }
     let(:task_id) { 'somthing' }
-    let(:droplet_guid) { 'abc123' }
     let(:log_id) { 'log-id' }
     let(:staging_message) { Dea::StagingMessage.new(config_hash, blobstore_url_generator) }
 
-    before do
-      SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
-      SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080-9090', 'destination' => '198.41.191.48/1' }], staging_default: true)
-      SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80',        'destination' => '0.0.0.0/0' }], staging_default: false)
-    end
-
     describe '.staging_request' do
-      let(:app) { AppFactory.make droplet_hash: nil, package_state: 'PENDING' }
+      let(:app) { AppFactory.make }
 
       before do
         3.times do
-          instance = ManagedServiceInstance.make(space: app.space)
-          binding = ServiceBinding.make(app: app, service_instance: instance)
-          app.add_service_binding(binding)
+          ServiceBinding.make(app: app.app, service_instance: ManagedServiceInstance.make(space: app.space))
         end
+
+        SecurityGroup.make(rules: [{ 'protocol' => 'udp', 'ports' => '8080-9090', 'destination' => '198.41.191.47/1' }], staging_default: true)
+        SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '80',        'destination' => '0.0.0.0/0' }], staging_default: false)
+
+        space_specific_security_group = SecurityGroup.make(rules: [{ 'protocol' => 'tcp', 'ports' => '8080-9090', 'destination' => '198.41.191.48/1' }], staging_default: false)
+        app.space.add_staging_security_group(space_specific_security_group)
       end
 
-      it 'includes app guid, task id, download/upload uris and stack name' do
-        allow(blobstore_url_generator).to receive(:app_package_download_url).with(app).and_return('http://www.app.uri')
-        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(app).and_return('http://www.droplet.upload.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app).and_return('http://www.buildpack.cache.download.uri')
-        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app).and_return('http://www.buildpack.cache.upload.uri')
+      it 'includes app guid, task id, download/upload uris, stack name, and accepts_http flag' do
+        allow(blobstore_url_generator).to receive(:package_download_url).with(app.latest_package).and_return('http://www.app.uri')
+        allow(blobstore_url_generator).to receive(:droplet_upload_url).with(task_id).and_return('http://www.droplet.upload.uri')
+        allow(blobstore_url_generator).to receive(:buildpack_cache_download_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.download.uri')
+        allow(blobstore_url_generator).to receive(:buildpack_cache_upload_url).with(app.app.guid, app.stack.name).and_return('http://www.buildpack.cache.upload.uri')
         request = staging_message.staging_request(app, task_id)
 
         expect(request[:app_id]).to eq(app.guid)
@@ -40,6 +37,7 @@ module VCAP::CloudController
         expect(request[:buildpack_cache_upload_uri]).to eq('http://www.buildpack.cache.upload.uri')
         expect(request[:buildpack_cache_download_uri]).to eq('http://www.buildpack.cache.download.uri')
         expect(request[:stack]).to eq(app.stack.name)
+        expect(request[:accepts_http]).to be false
       end
 
       it 'includes misc app properties' do
@@ -52,13 +50,12 @@ module VCAP::CloudController
         expect(request[:properties][:services].count).to eq(3)
         request[:properties][:services].each do |service|
           expect(service[:credentials]).to be_kind_of(Hash)
-          expect(service[:options]).to be_kind_of(Hash)
         end
       end
 
       context 'when app does not have buildpack' do
         it 'returns nil for buildpack' do
-          app.buildpack = nil
+          app.app.lifecycle_data.update(buildpack: nil)
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:buildpack]).to be_nil
         end
@@ -66,14 +63,14 @@ module VCAP::CloudController
 
       context 'when app has a buildpack' do
         it 'returns url for buildpack' do
-          app.buildpack = 'git://example.com/foo.git'
+          app.app.lifecycle_data.update(buildpack: 'git://example.com/foo.git')
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:buildpack]).to eq('git://example.com/foo.git')
           expect(request[:properties][:buildpack_git_url]).to eq('git://example.com/foo.git')
         end
 
         it "doesn't return a buildpack key" do
-          app.buildpack = 'git://example.com/foo.git'
+          app.app.lifecycle_data.update(buildpack: 'git://example.com/foo.git')
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties]).to_not have_key(:buildpack_key)
         end
@@ -124,17 +121,16 @@ module VCAP::CloudController
               admin_buildpacks = request[:admin_buildpacks]
 
               expect(admin_buildpacks).to have(3).items
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('a key'), key: 'a key')
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('b key'), key: 'b key')
-              expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('c key'), key: 'c key')
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('a key').internal_download_url, key: 'a key')
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('b key').internal_download_url, key: 'b key')
+              expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('c key').internal_download_url, key: 'c key')
             end
           end
         end
 
         context 'when a specific buildpack is requested' do
           before do
-            app.buildpack = Buildpack.first.name
-            app.save
+            app.app.lifecycle_data.update(buildpack: Buildpack.first.name)
           end
 
           it "includes a list of admin buildpacks so that the system doesn't think the buildpacks are gone" do
@@ -160,38 +156,28 @@ module VCAP::CloudController
                 admin_buildpacks = request[:admin_buildpacks]
 
                 expect(admin_buildpacks).to have(2).items
-                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('b key'), key: 'b key')
-                expect(admin_buildpacks).to include(url: buildpack_blobstore.download_uri('c key'), key: 'c key')
+                expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('b key').internal_download_url, key: 'b key')
+                expect(admin_buildpacks).to include(url: buildpack_blobstore.blob('c key').internal_download_url, key: 'c key')
               end
-            end
-          end
-
-          context 'when a buildpack has missing bits' do
-            it 'does not include the buildpack' do
-              Buildpack.make(key: 'd key', position: 5)
-
-              request = staging_message.staging_request(app, task_id)
-              admin_buildpacks = request[:admin_buildpacks]
-              expect(admin_buildpacks).to have(2).items
-              expect(admin_buildpacks).to_not include(key: 'd key', url: nil)
             end
           end
         end
       end
 
       it 'includes the key of an admin buildpack when the app has a buildpack specified' do
+        allow(AdminBuildpacksPresenter).to receive(:enabled_buildpacks)
+
         buildpack = Buildpack.make
-        app.buildpack = buildpack.name
-        app.save
+        app.app.lifecycle_data.update(buildpack: buildpack.name)
 
         request = staging_message.staging_request(app, task_id)
         expect(request[:properties][:buildpack_key]).to eql buildpack.key
       end
 
       it "doesn't include the custom buildpack url keys when the app has a buildpack specified" do
+        allow(AdminBuildpacksPresenter).to receive(:enabled_buildpacks)
         buildpack = Buildpack.make
-        app.buildpack = buildpack.name
-        app.save
+        app.app.lifecycle_data.update(buildpack: buildpack.name)
 
         request = staging_message.staging_request(app, task_id)
         expect(request[:properties]).to_not have_key(:buildpack)
@@ -208,7 +194,7 @@ module VCAP::CloudController
 
       describe 'environment variables' do
         before do
-          app.environment_json   = { 'KEY' => 'value' }
+          app.app.update(environment_variables: { 'KEY' => 'value' })
         end
 
         it 'includes app environment variables' do
@@ -226,8 +212,6 @@ module VCAP::CloudController
         end
 
         it 'includes CF_STACK' do
-          app.environment_json = { 'CF_STACK' => 'not-this' }
-
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:environment]).to include("CF_STACK=#{app.stack.name}")
         end
@@ -239,6 +223,15 @@ module VCAP::CloudController
 
           request = staging_message.staging_request(app, task_id)
           expect(request[:properties][:environment]).to include('KEY=value')
+        end
+      end
+
+      context 'when http is enabled for DEAs' do
+        let(:config_hash) { { dea_client: { cert_file: 'some/file', key_file: 'another/file' } } }
+
+        it 'sets the staging request accepts https to true' do
+          request = staging_message.staging_request(app, task_id)
+          expect(request[:accepts_http]).to equal(true)
         end
       end
     end

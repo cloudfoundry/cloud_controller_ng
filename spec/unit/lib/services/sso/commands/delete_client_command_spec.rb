@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO::Commands
-  describe DeleteClientCommand do
+  RSpec.describe DeleteClientCommand do
     let(:client_id) { 'client-id-1' }
 
     let(:command) { DeleteClientCommand.new(client_id) }

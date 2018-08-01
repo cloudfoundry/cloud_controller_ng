@@ -14,7 +14,7 @@ Sequel.migration do
     }
     ds = dataset.db.send(:metadata_dataset)
     statements = []
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       tables.each do |table|
         columns_to_change = ds.with_sql("SHOW FULL COLUMNS FROM `#{table}`").to_a.select do |column_definition|
           next if case_insensitive_columns[table] && case_insensitive_columns[table].include?(column_definition[:Field].to_sym)

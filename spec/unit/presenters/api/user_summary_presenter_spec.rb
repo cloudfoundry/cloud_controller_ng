@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe UserSummaryPresenter do
+RSpec.describe UserSummaryPresenter do
   describe '#to_hash' do
     let(:org) { VCAP::CloudController::Organization.make }
     let(:managed_org) { VCAP::CloudController::Organization.make }
@@ -32,7 +32,7 @@ describe UserSummaryPresenter do
         metadata: {
           guid: user.guid,
           created_at: user.created_at.iso8601,
-          updated_at: nil,
+          updated_at: user.updated_at.iso8601,
         },
         entity: {
           organizations: [

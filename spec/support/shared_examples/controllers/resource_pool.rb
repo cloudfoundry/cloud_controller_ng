@@ -6,7 +6,7 @@ shared_context 'resource pool' do
     @max_file_size = 1098 # this is arbitrary
 
     @total_allowed_files =
-        num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
+      num_dirs * num_unique_allowed_files_per_dir * file_duplication_factor
 
     @dummy_descriptor = { 'sha1' => Digester.new.digest('abc'), 'size' => 1 }
     @tmpdir = Dir.mktmpdir
@@ -55,7 +55,7 @@ shared_context 'resource pool' do
 
   before do
     @resource_pool = VCAP::CloudController::ResourcePool.new(
-        resource_pool: resource_pool_config
+      resource_pool: resource_pool_config
     )
   end
 

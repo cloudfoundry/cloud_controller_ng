@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/apps_list_message'
 
 module VCAP::CloudController
-  describe AppListFetcher do
+  RSpec.describe AppListFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
       let(:app) { AppModel.make(space_guid: space.guid) }
@@ -19,7 +19,7 @@ module VCAP::CloudController
       before do
         app.save
         sad_app.save
-        apps = fetcher.fetch(pagination_options, message, space_guids)
+        apps = fetcher.fetch(message, space_guids)
       end
 
       after do
@@ -28,12 +28,12 @@ module VCAP::CloudController
 
       it 'fetch_all includes all the apps' do
         app = AppModel.make
-        expect(fetcher.fetch_all(pagination_options, message).records).to include(app)
+        expect(fetcher.fetch_all(message).all).to include(app)
       end
 
       context 'when no filters are specified' do
         it 'returns all of the desired apps' do
-          expect(apps.records).to include(app, sad_app)
+          expect(apps.all).to include(app, sad_app)
         end
       end
 
@@ -41,8 +41,8 @@ module VCAP::CloudController
         let(:filters) { { names: [app.name] } }
 
         it 'returns all of the desired apps' do
-          expect(apps.records).to include(app)
-          expect(apps.records).to_not include(sad_app)
+          expect(apps.all).to include(app)
+          expect(apps.all).to_not include(sad_app)
         end
       end
 
@@ -51,8 +51,8 @@ module VCAP::CloudController
         let(:sad_app) { AppModel.make }
 
         it 'returns all of the desired apps' do
-          expect(apps.records).to include(app)
-          expect(apps.records).to_not include(sad_app)
+          expect(apps.all).to include(app)
+          expect(apps.all).to_not include(sad_app)
         end
       end
 
@@ -64,8 +64,8 @@ module VCAP::CloudController
         let(:space_guids) { [space.guid, sad_space.guid] }
 
         it 'returns all of the desired apps' do
-          expect(apps.records).to include(app)
-          expect(apps.records).to_not include(sad_app)
+          expect(apps.all).to include(app)
+          expect(apps.all).to_not include(sad_app)
         end
       end
 
@@ -73,8 +73,8 @@ module VCAP::CloudController
         let(:filters) { { guids: [app.guid] } }
 
         it 'returns all of the desired apps' do
-          expect(apps.records).to include(app)
-          expect(apps.records).to_not include(sad_app)
+          expect(apps.all).to include(app)
+          expect(apps.all).to_not include(sad_app)
         end
       end
     end

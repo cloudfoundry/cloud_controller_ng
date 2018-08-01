@@ -1,0 +1,16 @@
+# Workflows
+
+Many users will think of interactions with Cloud Foundry in terms of a single operation like `cf push` in order to upload an application to the platform, have it compiled, and schedule it to be run.
+Performing a push operation actually requires a client to orchestrate several requests to the API to accomplish the entire operation.
+This section is meant to explain how clients can perform complex workflows using the API.
+
+## Push V2 App and Run a V3 Task
+
+As of CF-245, a V2 Application is also available as a V3 Application, allowing a user to run a V3 Task against it.
+
+1. Push an application: `cf push v3-tasks-sample`
+1. Construct a task creation curl: `cf curl /v3/apps/$(cf app v3-tasks-sample --guid)/tasks -X POST -d '{"command":"echo foo; sleep 5; echo bar;"}'`
+1. Get logs from task: `cf logs v3-tasks-sample --recent`
+1. Check task state: `cf curl /v3/apps/$(cf app v3-tasks-sample --guid)/tasks`
+
+For more information, see <%= link_to 'Create a task', '#create-a-task' %>.

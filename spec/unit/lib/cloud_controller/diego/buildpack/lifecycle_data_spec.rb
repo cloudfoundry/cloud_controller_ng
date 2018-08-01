@@ -4,7 +4,7 @@ require 'cloud_controller/diego/buildpack/lifecycle_data'
 module VCAP::CloudController
   module Diego
     module Buildpack
-      describe LifecycleData do
+      RSpec.describe LifecycleData do
         let(:lifecycle_data) do
           data = LifecycleData.new
           data.app_bits_download_uri = 'app_bits_download'
@@ -59,7 +59,9 @@ module VCAP::CloudController
                 data.public_send("#{key}=", nil)
                 expect {
                   data.message
-                }.to raise_error(Membrane::SchemaValidationError)
+                }.to raise_error(
+                  Membrane::SchemaValidationError, /{ #{key} => Expected instance of (String|Array), given an instance of NilClass }/
+                )
               end
             end
           end

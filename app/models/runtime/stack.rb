@@ -3,7 +3,10 @@ module VCAP::CloudController
     class MissingConfigFileError < StandardError; end
     class MissingDefaultStackError < StandardError; end
 
-    one_to_many :apps
+    many_to_many :apps, join_table: BuildpackLifecycleDataModel.table_name,
+                        left_primary_key: :name, left_key: :stack,
+                        right_primary_key: :app_guid, right_key: :app_guid,
+                        conditions: { type: 'web' }
 
     plugin :serialization
 
@@ -19,7 +22,7 @@ module VCAP::CloudController
 
     def before_destroy
       if apps.present?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app', 'stack')
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app', 'stack')
       end
     end
 
@@ -78,7 +81,7 @@ module VCAP::CloudController
         @hash['default']
       end
 
-      Schema = Membrane::SchemaParser.parse {{
+      Schema = Membrane::SchemaParser.parse { {
         'default' => String,
         'stacks' => [{
           'name' => String,

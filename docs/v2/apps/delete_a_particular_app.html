@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Delete a Particular App</h2>
+    <h3>DELETE /v2/apps/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">DELETE /v2/apps/7265622a-f087-4ec8-954b-3ec5a6658483</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQ0NCIsImVtYWlsIjoiZW1haWwtMzA2QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDV9.FBTJnLJyOZkW94E_Kk-ygjd-eLHQbqwu2JFgJWfnKWo
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/apps/7265622a-f087-4ec8-954b-3ec5a6658483&quot; -d &#39;&#39; -X DELETE \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQ0NCIsImVtYWlsIjoiZW1haWwtMzA2QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDV9.FBTJnLJyOZkW94E_Kk-ygjd-eLHQbqwu2JFgJWfnKWo&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">204 No Content</pre>
+
+
+
+        <h4>Headers</h4>
+        <pre class="response headers">X-VCAP-Request-ID: f78f98f5-7484-41b9-854e-a5a1b9151623
+X-Content-Type-Options: nosniff</pre>
+
+      <h3>Audit Records Created By The Request</h3>
+      <h4>Audit Record: audit.app.delete-request</h4>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>Attribute Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="name">id</span>
+            </td>
+            <td>
+                <span class="description">34</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">guid</span>
+            </td>
+            <td>
+                <span class="description">f27b4b1b-08b0-45db-8d37-69003e35a71f</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">created_at</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:45 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">updated_at</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">timestamp</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:45 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">type</span>
+            </td>
+            <td>
+                <span class="description">audit.app.delete-request</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor</span>
+            </td>
+            <td>
+                <span class="description">uaa-id-444</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_type</span>
+            </td>
+            <td>
+                <span class="description">user</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee</span>
+            </td>
+            <td>
+                <span class="description">7265622a-f087-4ec8-954b-3ec5a6658483</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_type</span>
+            </td>
+            <td>
+                <span class="description">app</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">metadata</span>
+            </td>
+            <td>
+                <pre>{
+  &quot;request&quot;: {
+    &quot;recursive&quot;: false
+  }
+}</pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_id</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">organization_guid</span>
+            </td>
+            <td>
+                <span class="description">8e60fc6a-3519-4362-8a29-5bb235241102</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_guid</span>
+            </td>
+            <td>
+                <span class="description">3c7ba0a0-8ce0-4a0c-9ab8-ae2e5b11de05</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_name</span>
+            </td>
+            <td>
+                <span class="description">email-306@somedomain.com</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_name</span>
+            </td>
+            <td>
+                <span class="description">name-2449</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+</body>
+</html>

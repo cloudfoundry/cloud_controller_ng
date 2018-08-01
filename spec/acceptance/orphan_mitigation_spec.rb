@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe 'orphan mitigation' do
+  RSpec.describe 'orphan mitigation' do
     include VCAP::CloudController::BrokerApiHelper
 
     let(:guid_pattern) { '[[:alnum:]-]+' }
@@ -38,8 +38,7 @@ module VCAP::CloudController
       it 'makes the request to the broker and deprovisions' do
         expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
 
-        successes, failures = Delayed::Worker.new.work_off
-        expect([successes, failures]).to eq [1, 0]
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
         expect(a_request(:delete, %r{http://username:password@broker-url/v2/service_instances/#{guid_pattern}})).to have_been_made
       end
@@ -62,7 +61,7 @@ module VCAP::CloudController
         }
 
         stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).
-        to_return(status: 200, body: '{}')
+          to_return(status: 200, body: '{}')
 
         post('/v2/service_bindings',
           { app_guid: app_guid, service_instance_guid: service_instance_guid }.to_json,
@@ -73,8 +72,7 @@ module VCAP::CloudController
         expect(a_request(:put, %r{http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}})).
           to have_been_made
 
-        successes, failures = Delayed::Worker.new.work_off
-        expect([successes, failures]).to eq [1, 0]
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
         expect(a_request(:delete, %r{http://username:password@broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}})).
           to have_been_made

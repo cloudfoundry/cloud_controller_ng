@@ -1,5 +1,6 @@
 module VCAP::CloudController
   class Event < Sequel::Model
+    class EventValidationError < StandardError; end
     plugin :serialization
 
     many_to_one :space, primary_key: :guid, key: :space_guid, without_guid_generation: true
@@ -30,16 +31,29 @@ module VCAP::CloudController
     end
 
     def denormalize_space_and_org_guids
-      return if space_guid && organization_guid
-      self.space_guid = space.guid
-      self.organization_guid = space.organization.guid
+      # If we have both guids, return.
+      # If we have a space, get the guids off of it.
+      # If we have only an org, get the org guid from it.
+      # Raise.
+      if (space_guid && organization_guid) || organization_guid
+        return
+      elsif space
+        self.space_guid = space.guid
+        self.organization_guid = space.organization.guid
+      else
+        raise EventValidationError.new('A Space or an organization_guid must be supplied when creating an Event.')
+      end
     end
 
     def self.user_visibility_filter(user)
+      # use select_map so the query is run now instead of being added as a where filter later. When this instead
+      # generates a subselect in the filter query directly, performance degrades significantly in MySQL.
       Sequel.or([
-        [:space, user.audited_spaces_dataset],
-        [:space, user.spaces_dataset],
-        [:organization_guid, user.audited_organizations_dataset.map(&:guid)]
+        [:space_guid, Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:guid).
+          union(
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:guid)
+          ).select_map(:guid)],
+        [:organization_guid, Organization.dataset.where(auditors: user).select_map(:guid)]
       ])
     end
   end

@@ -1,9 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppLifecycleProvider do
-    context 'when creating an app' do
-      let(:app) { nil }
+  RSpec.describe AppLifecycleProvider do
+    describe '#provide_for_create' do
       let(:message) { AppCreateMessage.new(request) }
 
       context 'when lifecycle type is requested on the message' do
@@ -13,7 +12,7 @@ module VCAP::CloudController
           let(:type) { 'docker' }
 
           it 'returns a AppDockerLifecycle' do
-            expect(AppLifecycleProvider.provide(message, app)).to be_a(AppDockerLifecycle)
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppDockerLifecycle)
           end
         end
 
@@ -21,7 +20,7 @@ module VCAP::CloudController
           let(:type) { 'buildpack' }
 
           it 'returns a AppBuildpackLifecycle' do
-            expect(AppLifecycleProvider.provide(message, app)).to be_a(AppBuildpackLifecycle)
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
           end
         end
       end
@@ -30,12 +29,12 @@ module VCAP::CloudController
         let(:request) { {} }
 
         it 'returns a AppBuildpackLifecycle' do
-          expect(AppLifecycleProvider.provide(message, app)).to be_a(AppBuildpackLifecycle)
+          expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
         end
       end
     end
 
-    context 'when updating an app' do
+    describe '#provide_for_update' do
       let(:app) { AppModel.make }
       let(:message) { AppUpdateMessage.new(request) }
 
@@ -46,7 +45,7 @@ module VCAP::CloudController
           let(:type) { 'docker' }
 
           it 'returns a AppDockerLifecycle' do
-            expect(AppLifecycleProvider.provide(message, app)).to be_a(AppDockerLifecycle)
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppDockerLifecycle)
           end
         end
 
@@ -54,7 +53,7 @@ module VCAP::CloudController
           let(:type) { 'buildpack' }
 
           it 'returns a AppBuildpackLifecycle' do
-            expect(AppLifecycleProvider.provide(message, app)).to be_a(AppBuildpackLifecycle)
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppBuildpackLifecycle)
           end
         end
       end
@@ -66,7 +65,7 @@ module VCAP::CloudController
           let(:app) { AppModel.make(:buildpack) }
 
           it 'returns a AppBuildpackLifecycle' do
-            expect(AppLifecycleProvider.provide(message, app)).to be_a(AppBuildpackLifecycle)
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppBuildpackLifecycle)
           end
         end
 
@@ -74,7 +73,7 @@ module VCAP::CloudController
           let(:app) { AppModel.make(:docker) }
 
           it 'returns a AppDockerLifecycle' do
-            expect(AppLifecycleProvider.provide(message, app)).to be_a(AppDockerLifecycle)
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppDockerLifecycle)
           end
         end
       end

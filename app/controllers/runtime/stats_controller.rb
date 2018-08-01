@@ -16,9 +16,16 @@ module VCAP::CloudController
       end
 
       begin
-        [HTTP::OK, MultiJson.dump(instances_reporters.stats_for_app(app))]
-      rescue Errors::InstancesUnavailable
-        raise ApiError.new_from_details('StatsUnavailable', 'Stats server temporarily unavailable.')
+        stats = instances_reporters.stats_for_app(app)
+        # remove net_info, if it exists
+        stats.each do |_, stats_hash|
+          if stats_hash[:stats]
+            stats_hash[:stats].delete_if { |key, _| key == :net_info }
+          end
+        end
+        [HTTP::OK, MultiJson.dump(stats)]
+      rescue CloudController::Errors::InstancesUnavailable => e
+        raise ApiError.new_from_details('StatsUnavailable', ['Stats server temporarily unavailable.', e.to_s])
       rescue StandardError => e
         raise ApiError.new_from_details('StatsError', e)
       end

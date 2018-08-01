@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe UploadHandler do
+RSpec.describe UploadHandler do
   let(:key) { 'application' }
   subject(:uploader) { UploadHandler.new(config) }
 

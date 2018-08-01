@@ -2,48 +2,39 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppModel do
-    let(:app_model) { AppModel.make }
-    let(:space) { Space.find(guid: app_model.space_guid) }
+  RSpec.describe AppModel do
+    let(:app_model) { AppModel.create(space: space, name: 'some-name') }
+    let(:space) { Space.make }
 
-    describe '.user_visible' do
-      it 'shows the developer apps' do
-        developer = User.make
-        space.organization.add_user developer
-        space.add_developer developer
-        expect(AppModel.user_visible(developer)).to include(app_model)
+    describe '#staging_in_progress' do
+      context 'when a droplet is in staging state' do
+        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGING_STATE) }
+
+        it 'returns true' do
+          expect(app_model.staging_in_progress?).to eq(true)
+        end
       end
 
-      it 'shows the space manager apps' do
-        space_manager = User.make
-        space.organization.add_user space_manager
-        space.add_manager space_manager
+      context 'when a droplet is not in neither pending or staging state' do
+        let!(:droplet) { DropletModel.make(app_guid: app_model.guid, state: DropletModel::STAGED_STATE) }
 
-        expect(AppModel.user_visible(space_manager)).to include(app_model)
+        it 'returns false' do
+          expect(app_model.staging_in_progress?).to eq(false)
+        end
       end
+    end
 
-      it 'shows the auditor apps' do
-        auditor = User.make
-        space.organization.add_user auditor
-        space.add_auditor auditor
-
-        expect(AppModel.user_visible(auditor)).to include(app_model)
-      end
-
-      it 'shows the org manager apps' do
-        org_manager = User.make
-        space.organization.add_manager org_manager
-
-        expect(AppModel.user_visible(org_manager)).to include(app_model)
-      end
-
-      it 'hides everything from a regular user' do
-        evil_hacker = User.make
-        expect(AppModel.user_visible(evil_hacker)).to_not include(app_model)
+    describe 'fields' do
+      describe 'max_task_sequence_id' do
+        it 'defaults to 0' do
+          expect(app_model.max_task_sequence_id).to eq(1)
+        end
       end
     end
 
     describe 'validations' do
+      it { is_expected.to strip_whitespace :name }
+
       describe 'name' do
         let(:space_guid) { space.guid }
         let(:app) { AppModel.make }
@@ -53,7 +44,7 @@ module VCAP::CloudController
 
           expect {
             AppModel.make(name: 'lowerCase', space_guid: space_guid)
-          }.to raise_error(Sequel::ValidationFailed, /space_guid and name/)
+          }.to raise_error(Sequel::ValidationFailed, 'name must be unique in space')
         end
 
         it 'should allow standard ascii characters' do
@@ -114,7 +105,7 @@ module VCAP::CloudController
 
           expect {
             AppModel.make(name: name, space_guid: space.guid)
-          }.to raise_error(Sequel::ValidationFailed, /space_guid and name/)
+          }.to raise_error(Sequel::ValidationFailed, 'name must be unique in space')
         end
       end
 
@@ -182,10 +173,65 @@ module VCAP::CloudController
       end
 
       context 'buildpack_lifecycle_data is nil' do
-        let(:non_buildpack_app_model) { AppModel.make }
+        let(:non_buildpack_app_model) { AppModel.create(name: 'non-buildpack', space: space) }
 
         it 'returns a docker data model' do
           expect(non_buildpack_app_model.lifecycle_data).to be_a(DockerLifecycleDataModel)
+        end
+      end
+    end
+
+    describe '#database_uri' do
+      let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
+      let(:app) { App.make(app: parent_app) }
+
+      context 'when there are database-like services' do
+        before do
+          sql_service_plan     = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
+          sql_service_instance = ManagedServiceInstance.make(space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
+          ServiceBinding.make(app: parent_app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
+
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+        end
+
+        it 'returns database uri' do
+          expect(app.reload.database_uri).to eq('mysql2://foo.com')
+        end
+      end
+
+      context 'when there are non-database-like services' do
+        before do
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
+
+          uncredentialed_service_plan     = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
+          uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
+          ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
+        end
+
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
+        end
+      end
+
+      context 'when there are no services' do
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
+        end
+      end
+
+      context 'when the service binding credentials is nil' do
+        before do
+          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
+          ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: nil)
+        end
+
+        it 'returns nil' do
+          expect(app.reload.database_uri).to be_nil
         end
       end
     end

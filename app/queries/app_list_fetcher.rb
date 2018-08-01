@@ -3,19 +3,19 @@ require 'cloud_controller/paging/paginated_result'
 
 module VCAP::CloudController
   class AppListFetcher
-    def fetch_all(pagination_options, message)
+    def fetch_all(message)
       dataset = AppModel.dataset
-      filter(pagination_options, message, dataset)
+      filter(message, dataset)
     end
 
-    def fetch(pagination_options, message, space_guids)
+    def fetch(message, space_guids)
       dataset = AppModel.where(space_guid: space_guids)
-      filter(pagination_options, message, dataset)
+      filter(message, dataset)
     end
 
     private
 
-    def filter(pagination_options, message, dataset)
+    def filter(message, dataset)
       if message.requested?(:names)
         dataset = dataset.where(name: message.names)
       end
@@ -30,8 +30,6 @@ module VCAP::CloudController
       end
 
       dataset.eager(:processes)
-
-      SequelPaginator.new.get_page(dataset, pagination_options)
     end
   end
 end

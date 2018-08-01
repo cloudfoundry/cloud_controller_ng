@@ -8,19 +8,28 @@
 language: ruby
 bundler_args: --deployment --without development
 cache: bundler
+sudo: required
 
+# Travis cannot find the binary for Ruby 2.3, so we specifically choose 2.3.1
+# instead of using the .ruby-version file
 rvm:
-  - 2.2.3
+  - 2.3.1
+
+before_install:
+  - wget https://github.com/nats-io/gnatsd/releases/download/v0.9.4/gnatsd-v0.9.4-linux-amd64.zip -O /tmp/gnatsd.zip
+  - unzip /tmp/gnatsd.zip
+  - export PATH=$PATH:$PWD/gnatsd-v0.9.4-linux-amd64
 
 before_script:
   - bundle exec rake db:create
-  - gem install travis-artifacts
+  - DB=mysql bundle exec rake parallel:create
+  - DB=postgres bundle exec rake parallel:create
 
 script:
   - bundle exec rake $TASKS
 
-after_success:
-  - "[ $TRAVIS_BRANCH == 'master' -a $UPLOAD_DOCUMENTATION == 'true' ] && travis-artifacts upload --path doc/api --target-path $TRAVIS_BUILD_ID && echo https://s3-us-east-1.amazonaws.com/cc-api-docs/$TRAVIS_BUILD_ID/index.html"
+after_script:
+  - codeclimate-test-reporter
 
 services:
   - mysql
@@ -28,16 +37,10 @@ services:
 
 env:
   global:
-    # API Docs
-    - "ARTIFACTS_S3_BUCKET=cc-api-docs"
-    - "ARTIFACTS_AWS_REGION=us-east-1"
     - secure: "ikEVVNPGAX1NqgBPXdjxcPJ3ihO9TyTtaN4iX3d2Wv0GdlSKgRqtCXrWuttVfYGqSoHHWwvCR3qum7N44akLsntrkcIQXGu6CsTsvqDC+vAKHtC31TVmuTEXZyIYA7455+B+a8nMsrO5LjX1ylucV1ZhGLzA84lMRQYkr6PklK0=" # CODECLIMATE_REPO_TOKEN
-    - secure: "QKt8dWFoORupYyQ6g4ak4KwKVVnQEn4VsLg73hr7zqGDOKFJy2gFCndqA8oYgAjTtRxzJ1CwcZpNSPV8IAkP45N0uX/lqDWRWhMg+6u92gdzvPw6iaKhpMpdeoUZfwWV4itMXEdWAj2lUNQQnYCAMh85ARzqXItwspFLfNsPKXE=" # ARTIFACTS_AWS_ACCESS_KEY_ID
-    - secure: "LWELpbmGKm0czPQJAW/DhmKBXiID+UZPWi5r9EFxdO9LnqOcu8qYtu5GZkWSUsaWeLZqrfpR9ZvBvr62wQzDF75BJYuWrEjIPPC/2pTQAIg/NCu04iw8JWhOKW1MNXG1F4NKLCFEs9W8irKc4fC/xvjwhhDA7VI77oLoKZmrLW0=" # ARTIFACTS_AWS_SECRET_ACCESS_KEY
 
   matrix:
     - COVERAGE=true DB=postgres TASKS=spec:all
     - DB=mysql TASKS=spec:all
-
-    - DB=postgres TASKS=spec:api UPLOAD_DOCUMENTATION=true
+    - DB=postgres TASKS=spec:api
     - TASKS=rubocop

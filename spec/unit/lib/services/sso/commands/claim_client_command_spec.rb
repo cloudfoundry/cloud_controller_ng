@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO::Commands
-  describe ClaimClientCommand do
+  RSpec.describe ClaimClientCommand do
     let(:client_id) { 'client-id' }
     let(:service_broker) { double(:service_broker) }
     let(:command) { ClaimClientCommand.new(client_id, service_broker) }

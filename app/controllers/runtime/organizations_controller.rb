@@ -4,19 +4,27 @@ require 'queries/organization_user_roles_fetcher'
 module VCAP::CloudController
   class OrganizationsController < RestController::ModelController
     def self.dependencies
-      [:username_and_roles_populating_collection_renderer, :username_lookup_uaa_client]
+      [
+        :username_and_roles_populating_collection_renderer,
+        :uaa_client,
+        :services_event_repository,
+        :user_event_repository
+      ]
     end
 
     def inject_dependencies(dependencies)
       super
       @user_roles_collection_renderer = dependencies.fetch(:username_and_roles_populating_collection_renderer)
-      @username_lookup_uaa_client = dependencies.fetch(:username_lookup_uaa_client)
+      @uaa_client = dependencies.fetch(:uaa_client)
+      @services_event_repository = dependencies.fetch(:services_event_repository)
+      @user_event_repository = dependencies.fetch(:user_event_repository)
     end
 
     define_attributes do
       attribute :name,            String
       attribute :billing_enabled, Message::Boolean, default: false
       attribute :status,          String, default: 'active'
+      attribute :default_isolation_segment_guid, String, default: nil, exclude_in: :create, optional_in: :update
 
       to_one :quota_definition, optional_in: :create
       to_many :spaces,           exclude_in: :create
@@ -33,6 +41,7 @@ module VCAP::CloudController
     query_parameters :name, :space_guid, :user_guid,
       :manager_guid, :billing_manager_guid,
       :auditor_guid, :status
+    sortable_parameters :id, :name
 
     deprecated_endpoint "#{path_guid}/domains"
 
@@ -40,12 +49,22 @@ module VCAP::CloudController
       quota_def_errors = e.errors.on(:quota_definition_id)
       name_errors = e.errors.on(:name)
       if quota_def_errors && quota_def_errors.include?(:not_authorized)
-        Errors::ApiError.new_from_details('NotAuthorized', attributes['quota_definition_id'])
+        CloudController::Errors::ApiError.new_from_details('NotAuthorized', attributes['quota_definition_id'])
       elsif name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('OrganizationNameTaken', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('OrganizationNameTaken', attributes['name'])
       else
-        Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('OrganizationInvalid', e.errors.full_messages)
       end
+    end
+
+    def before_update(obj)
+      if request_attrs['default_isolation_segment_guid']
+        raise CloudController::Errors::ApiError.new_from_details(
+          'ResourceNotFound',
+          'Could not find Isolation Segment to set as the default.') unless IsolationSegmentModel.first(guid: request_attrs['default_isolation_segment_guid'])
+      end
+
+      super(obj)
     end
 
     get '/v2/organizations/:guid/user_roles', :enumerate_user_roles
@@ -60,7 +79,7 @@ module VCAP::CloudController
 
       @user_roles_collection_renderer.render_json(
         associated_controller,
-        OrganizationUserRolesFetcher.new.fetch(org),
+        OrganizationUserRolesFetcher.fetch(org, user_guid: user_guid_parameter),
         associated_path,
         opts,
         {},
@@ -71,7 +90,8 @@ module VCAP::CloudController
     def enumerate_services(guid)
       org = find_guid_and_validate_access(:read, guid)
 
-      associated_controller, associated_model = ServicesController, Service
+      associated_controller = ServicesController
+      associated_model = Service
 
       filtered_dataset = Query.filtered_dataset_from_query_params(
         associated_model,
@@ -113,84 +133,118 @@ module VCAP::CloudController
     [:user, :manager, :billing_manager, :auditor].each do |role|
       plural_role = role.to_s.pluralize
 
+      put "/v2/organizations/:guid/#{plural_role}/:user_id", "add_#{role}_by_user_id".to_sym
       put "/v2/organizations/:guid/#{plural_role}", "add_#{role}_by_username".to_sym
 
       define_method("add_#{role}_by_username") do |guid|
-        FeatureFlag.raise_unless_enabled!('set_roles_by_username') unless SecurityContext.admin?
+        FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
 
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
-          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
-          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('UaaEndpointDisabled')
         end
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+        raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 
-        user = User.where(guid: user_id).first || User.create(guid: user_id)
+        add_role(guid, role, user_id, username)
+      end
 
-        org = find_guid_and_validate_access(:update, guid)
-        org.send("add_#{role}", user)
-
-        [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
+      define_method("add_#{role}_by_user_id") do |guid, user_id|
+        add_role(guid, role, user_id, '')
       end
     end
 
     [:user, :manager, :billing_manager, :auditor].each do |role|
       plural_role = role.to_s.pluralize
 
+      delete "/v2/organizations/:guid/#{plural_role}/:user_id", "remove_#{role}_by_user_id".to_sym
       delete "/v2/organizations/:guid/#{plural_role}", "remove_#{role}_by_username".to_sym
 
       define_method("remove_#{role}_by_username") do |guid|
-        FeatureFlag.raise_unless_enabled!('unset_roles_by_username') unless SecurityContext.admin?
+        FeatureFlag.raise_unless_enabled!(:unset_roles_by_username)
 
         username = parse_and_validate_json(body)['username']
 
         begin
-          user_id = @username_lookup_uaa_client.id_for_username(username)
+          user_id = @uaa_client.id_for_username(username)
         rescue UaaUnavailable
-          raise VCAP::Errors::ApiError.new_from_details('UaaUnavailable')
+          raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
         rescue UaaEndpointDisabled
-          raise VCAP::Errors::ApiError.new_from_details('UaaEndpointDisabled')
+          raise CloudController::Errors::ApiError.new_from_details('UaaEndpointDisabled')
         end
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
+        raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user_id
 
         user = User.where(guid: user_id).first
 
-        raise VCAP::Errors::ApiError.new_from_details('UserNotFound', username) unless user
+        raise CloudController::Errors::ApiError.new_from_details('UserNotFound', username) unless user
 
         org = find_guid_and_validate_access(:update, guid)
-        org.send("remove_#{role}", user)
 
-        [HTTP::OK, object_renderer.render_json(self.class, org, @opts)]
+        if recursive_delete? && role == :user
+          org.send("remove_#{role}_recursive", user)
+        else
+          org.send("remove_#{role}", user)
+        end
+
+        @user_event_repository.record_organization_role_remove(
+          org,
+          user,
+          role,
+          SecurityContext.current_user,
+          SecurityContext.current_user_email,
+          request_attrs
+        )
+
+        [HTTP::NO_CONTENT]
+      end
+
+      define_method("remove_#{role}_by_user_id") do |guid, user_id|
+        response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
+
+        user = User.first(guid: user_id)
+        user.username = '' unless user.username
+
+        @user_event_repository.record_organization_role_remove(
+          Organization.first(guid: guid),
+          user,
+          role.to_s,
+          SecurityContext.current_user,
+          SecurityContext.current_user_email,
+          {}
+        )
+
+        response
       end
     end
 
     def delete(guid)
       org = find_guid_and_validate_access(:delete, guid)
-      raise_if_has_associations!(org) if v2_api? && !recursive?
+      raise_if_has_dependent_associations!(org) if v2_api? && !recursive_delete?
 
-      if !org.spaces.empty? && !recursive?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
+      if !org.spaces.empty? && !recursive_delete?
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email))
+      delete_action = OrganizationDelete.new(SpaceDelete.new(current_user.guid, current_user_email, @services_event_repository))
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       enqueue_deletion_job(deletion_job)
     end
 
-    def remove_related(guid, name, other_guid)
+    def remove_related(guid, name, other_guid, find_model=model)
       model.db.transaction do
-        if recursive? && name.to_s.eql?('users')
-          org = find_guid_and_validate_access(:update, guid)
+        if recursive_delete? && name.to_s.eql?('users')
+          org = find_guid(guid, model)
+          validate_access(:can_remove_related_object, org, { relation: name, related_guid: other_guid })
           user = User.find(guid: other_guid)
 
           org.remove_user_recursive(user)
         end
 
-        super(guid, name, other_guid)
+        super(guid, name, other_guid, find_model)
       end
     end
 
@@ -214,6 +268,23 @@ module VCAP::CloudController
     define_routes
 
     private
+
+    def add_role(guid, role, user_id, username)
+      user = User.first(guid: user_id) || User.create(guid: user_id)
+
+      user.username = username
+
+      org = find_guid_and_validate_access(:update, guid)
+      org.send("add_#{role}", user)
+
+      @user_event_repository.record_organization_role_add(org, user, role, SecurityContext.current_user, SecurityContext.current_user_email, request_attrs)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, org, @opts)]
+    end
+
+    def user_guid_parameter
+      @opts[:q][0].split(':')[1] if @opts[:q]
+    end
 
     def after_create(organization)
       return if SecurityContext.admin?

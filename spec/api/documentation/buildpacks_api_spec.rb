@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Buildpacks', type: [:api, :legacy_api] do
+RSpec.resource 'Buildpacks', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:buildpacks) { (1..3).map { |i| VCAP::CloudController::Buildpack.make(name: "name_#{i}", position: i) } }
   let(:guid) { buildpacks.first.guid }
@@ -35,7 +35,7 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
       example 'Creates an admin Buildpack' do
         client.post '/v2/buildpacks', fields_json, headers
         expect(status).to eq 201
-        standard_entity_response parsed_response, :buildpack, name: 'Golang_buildpack'
+        standard_entity_response parsed_response, :buildpack, expected_values: { name: 'Golang_buildpack' }
       end
     end
 
@@ -53,7 +53,7 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ position: 3 }, pretty: true), headers
           expect(status).to eq(201)
-          standard_entity_response parsed_response, :buildpack, position: 3
+          standard_entity_response parsed_response, :buildpack, expected_values: { position: 3 }
         }.to change {
           VCAP::CloudController::Buildpack.order(:position).map { |bp| [bp.name, bp.position] }
         }.from(
@@ -67,7 +67,7 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: false }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, enabled: false
+          standard_entity_response parsed_response, :buildpack, expected_values: { enabled: false }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).enabled
         }.from(true).to(false)
@@ -75,7 +75,7 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ enabled: true }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, enabled: true
+          standard_entity_response parsed_response, :buildpack, expected_values: { enabled: true }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).enabled
         }.from(false).to(true)
@@ -85,7 +85,7 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: true }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, locked: true
+          standard_entity_response parsed_response, :buildpack, expected_values: { locked: true }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).locked
         }.from(false).to(true)
@@ -93,7 +93,7 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
         expect {
           client.put "/v2/buildpacks/#{guid}", MultiJson.dump({ locked: false }, pretty: true), headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :buildpack, locked: false
+          standard_entity_response parsed_response, :buildpack, expected_values: { locked: false }
         }.to change {
           VCAP::CloudController::Buildpack.find(guid: guid).locked
         }.from(true).to(false)
@@ -113,15 +113,14 @@ resource 'Buildpacks', type: [:api, :legacy_api] do
     let(:valid_zip) do
       zip_name = File.join(tmpdir, filename)
       TestZip.create(zip_name, 1, 1024)
-      zip_file = File.new(zip_name)
-      Rack::Test::UploadedFile.new(zip_file)
+      File.new(zip_name)
     end
 
     example 'Upload the bits for an admin Buildpack' do
       explanation 'PUT not shown because it involves putting a large zip file. Right now only zipped admin buildpacks are accepted'
 
       no_doc do
-        client.put "/v2/buildpacks/#{guid}/bits", { buildpack: valid_zip }, headers
+        client.put "/v2/buildpacks/#{guid}/bits", { buildpack_name: filename, buildpack_path: valid_zip.path }, headers
       end
 
       expect(status).to eq(201)

@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::Space, type: :model do
+  RSpec.describe VCAP::CloudController::Space, type: :model do
     it { is_expected.to have_timestamp_columns }
 
     describe 'Validations' do
@@ -52,14 +52,13 @@ module VCAP::CloudController
 
       context 'organization' do
         it 'fails when changing' do
-          expect { Space.make.organization = Organization.make }.to raise_error Space::OrganizationAlreadySet
+          expect { Space.make.organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
         end
       end
     end
 
     describe 'Associations' do
       it { is_expected.to have_associated :organization, associated_instance: ->(space) { space.organization } }
-      it { is_expected.to have_associated :apps }
       it { is_expected.to have_associated :events }
       it { is_expected.to have_associated :service_instances, class: UserProvidedServiceInstance }
       it { is_expected.to have_associated :managed_service_instances }
@@ -141,7 +140,7 @@ module VCAP::CloudController
           }.to have_queried_db_times(//, 0)
 
           expect(@eager_loaded_space).to eql(space)
-          expect(@eager_loaded_domains).to eql([private_domain1, private_domain2, shared_domain])
+          expect(@eager_loaded_domains).to match_array([private_domain1, private_domain2, shared_domain])
           expect(@eager_loaded_domains).to eql(org.domains)
         end
 
@@ -224,6 +223,105 @@ module VCAP::CloudController
         end
       end
 
+      describe 'staging_security_groups' do
+        let!(:associated_sg) { SecurityGroup.make }
+        let!(:unassociated_sg) { SecurityGroup.make }
+        let!(:default_sg) { SecurityGroup.make(staging_default: true) }
+        let!(:another_default_sg) { SecurityGroup.make(staging_default: true) }
+        let!(:space) { Space.make(staging_security_group_guids: [associated_sg.guid, default_sg.guid]) }
+
+        it 'returns security groups associated with the space, and the defaults' do
+          expect(space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+
+        it 'works when eager loading' do
+          eager_space = Space.eager(:staging_security_groups).all.first
+          expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
+        end
+      end
+
+      describe 'isolation_segment_models' do
+        let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+        let(:space) { Space.make }
+        let(:isolation_segment_model) { IsolationSegmentModel.make }
+
+        context 'adding an isolation segment' do
+          context "and the Space's org does not have the isolation segment" do
+            it 'raises UnableToPerform' do
+              expect {
+                space.update(isolation_segment_model: isolation_segment_model)
+              }.to raise_error(CloudController::Errors::ApiError, /Only Isolation Segments in the Organization's allowed list can be used./)
+              space.reload
+
+              expect(space.isolation_segment_model).to be_nil
+            end
+          end
+
+          context "and the Space's org has the Isolation Segment" do
+            before do
+              assigner.assign(isolation_segment_model, [space.organization])
+            end
+
+            it 'adds the isolation segment' do
+              space.update(isolation_segment_guid: isolation_segment_model.guid)
+              space.reload
+
+              expect(space.isolation_segment_model).to eq(isolation_segment_model)
+            end
+
+            context 'and the space has apps' do
+              before do
+                AppModel.make(space: space)
+              end
+
+              it 'raises an error' do
+                expect {
+                  space.update(isolation_segment_guid: isolation_segment_model.guid)
+                }.to raise_error(CloudController::Errors::ApiError, /Cannot change the Isolation Segment for a Space containing Apps/)
+                space.reload
+
+                expect(space.isolation_segment_model).to be_nil
+              end
+            end
+          end
+        end
+
+        context 'removing an isolation segment' do
+          before do
+            assigner.assign(isolation_segment_model, [space.organization])
+            space.update(isolation_segment_model: isolation_segment_model)
+          end
+
+          it 'removes the isolation segment' do
+            space.update(isolation_segment_model: nil)
+            space.reload
+
+            expect(space.isolation_segment_model).to be_nil
+          end
+
+          context 'and the space has an app' do
+            before do
+              AppModel.make(space: space)
+            end
+
+            it 'raises an error' do
+              expect {
+                space.update(isolation_segment_model: nil)
+              }.to raise_error(CloudController::Errors::ApiError, /Removing the Isolation Segment from the Space/)
+              space.reload
+
+              expect(space.isolation_segment_model).to eq(isolation_segment_model)
+            end
+
+            it 'can delete the space' do
+              expect {
+                space.destroy
+              }.to_not raise_error
+            end
+          end
+        end
+      end
+
       context 'bad relationships' do
         subject(:space) { Space.make }
 
@@ -245,11 +343,107 @@ module VCAP::CloudController
           include_examples 'bad app space permission', perm
         end
       end
+
+      describe 'apps which is the process relationship' do
+        it 'has apps' do
+          space = Space.make
+          app1  = AppFactory.make(space: space)
+          app2  = AppFactory.make(space: space)
+          expect(space.apps).to match_array([app1, app2])
+        end
+
+        it 'does not associate non-web v2 apps' do
+          space = Space.make
+          app1  = AppFactory.make(type: 'web', space: space)
+          AppFactory.make(type: 'other', space: space)
+          expect(space.apps).to match_array([app1])
+        end
+
+        describe 'eager loading' do
+          it 'loads only web processes' do
+            # rubocop:disable UselessAssignment
+            space1 = Space.make
+            space2 = Space.make
+            space3 = Space.make
+            space4 = Space.make
+
+            app1_space1 = AppFactory.make(space: space1)
+            app2_space1 = AppFactory.make(space: space1)
+            app3_space1 = AppFactory.make(space: space1)
+            non_web_app_space1 = AppFactory.make(space: space1, type: 'other')
+
+            app1_space2 = AppFactory.make(space: space2)
+            app2_space2 = AppFactory.make(space: space2)
+            app3_space2 = AppFactory.make(space: space2)
+            non_web_app_space2 = AppFactory.make(space: space2, type: 'other')
+
+            app1_space3 = AppFactory.make(space: space3)
+            app2_space3 = AppFactory.make(space: space3)
+            app3_space3 = AppFactory.make(space: space3)
+            non_web_app_space3 = AppFactory.make(space: space3, type: 'other')
+
+            app1_space4 = AppFactory.make(space: space4)
+            app2_space4 = AppFactory.make(space: space4)
+            app3_space4 = AppFactory.make(space: space4)
+            non_web_app_space4 = AppFactory.make(space: space4, type: 'other')
+
+            spaces = Space.where(id: [space1.id, space3.id]).eager(:apps).all
+
+            expect(spaces).to match_array([space1, space3])
+            queried_space_1 = spaces.select { |s| s.guid == space1.guid }.first
+            queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
+            expect(queried_space_1.associations[:apps]).to match_array([app1_space1, app2_space1, app3_space1])
+            expect(queried_space_3.associations[:apps]).to match_array([app1_space3, app2_space3, app3_space3])
+            # rubocop:enable UselessAssignment
+          end
+
+          it 'respects when an eager block is passed in' do
+            # rubocop:disable UselessAssignment
+            space1 = Space.make
+            space2 = Space.make
+            space3 = Space.make
+            space4 = Space.make
+
+            app1_space1 = AppFactory.make(space: space1)
+            app2_space1 = AppFactory.make(space: space1)
+            app3_space1 = AppFactory.make(space: space1)
+            non_web_app_space1 = AppFactory.make(space: space1, type: 'other')
+            scaled_app_space1 = AppFactory.make(space: space1, instances: 5)
+
+            app1_space2 = AppFactory.make(space: space2)
+            app2_space2 = AppFactory.make(space: space2)
+            app3_space2 = AppFactory.make(space: space2)
+            non_web_app_space2 = AppFactory.make(space: space2, type: 'other')
+            scaled_app_space2 = AppFactory.make(space: space2, instances: 5)
+
+            app1_space3 = AppFactory.make(space: space3)
+            app2_space3 = AppFactory.make(space: space3)
+            app3_space3 = AppFactory.make(space: space3)
+            non_web_app_space3 = AppFactory.make(space: space3, type: 'other')
+            scaled_app_space3 = AppFactory.make(space: space3, instances: 5)
+
+            app1_space4 = AppFactory.make(space: space4)
+            app2_space4 = AppFactory.make(space: space4)
+            app3_space4 = AppFactory.make(space: space4)
+            non_web_app_space4 = AppFactory.make(space: space4, type: 'other')
+            scaled_app_space4 = AppFactory.make(space: space4, instances: 5)
+
+            spaces = Space.where(id: [space1.id, space3.id]).eager(apps: proc { |ds| ds.where(instances: 5) }).all
+
+            expect(spaces).to match_array([space1, space3])
+            queried_space_1 = spaces.select { |s| s.guid == space1.guid }.first
+            queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
+            expect(queried_space_1.associations[:apps]).to match_array([scaled_app_space1])
+            expect(queried_space_3.associations[:apps]).to match_array([scaled_app_space3])
+            # rubocop:enable UselessAssignment
+          end
+        end
+      end
     end
 
     describe 'Serialization' do
       it { is_expected.to export_attributes :name, :organization_guid, :space_quota_definition_guid, :allow_ssh }
-      it { is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids,
+      it { is_expected.to import_attributes :name, :organization_guid, :developer_guids, :manager_guids, :isolation_segment_guid,
         :auditor_guids, :security_group_guids, :space_quota_definition_guid, :allow_ssh
       }
     end
@@ -340,25 +534,111 @@ module VCAP::CloudController
         expect(event).to be
         expect(event.space).to be_nil
       end
+
+      it 'destroys all processes' do
+        app1 = AppFactory.make(space: space)
+        app2 = AppFactory.make(space: space)
+        app3 = AppFactory.make(space: space, type: 'potato')
+
+        expect {
+          subject.destroy
+        }.to change {
+          App.where(id: [app1.id, app2.id, app3.id]).count
+        }.by(-3)
+      end
     end
 
     describe '#has_remaining_memory' do
       let(:space_quota) { SpaceQuotaDefinition.make(memory_limit: 500) }
       let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
 
-      it 'returns true if there is enough memory remaining when no apps are running' do
+      it 'returns true if there is enough memory remaining when no processes are running' do
         AppFactory.make(space: space, memory: 50, instances: 1)
 
         expect(space.has_remaining_memory(500)).to eq(true)
         expect(space.has_remaining_memory(501)).to eq(false)
       end
 
-      it 'returns true if there is enough memory remaining when apps are consuming memory' do
-        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+      it 'returns true if there is enough memory remaining when processes are consuming memory' do
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'other')
         AppFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
 
         expect(space.has_remaining_memory(50)).to eq(true)
         expect(space.has_remaining_memory(51)).to eq(false)
+      end
+
+      it 'includes RUNNING tasks when determining available memory' do
+        app = AppModel.make(space_guid: space.guid)
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        TaskModel.make(app: app, memory_in_mb: 50, state: 'RUNNING')
+
+        expect(space.has_remaining_memory(50)).to eq(true)
+        expect(space.has_remaining_memory(51)).to eq(false)
+      end
+
+      it 'does not include non-RUNNING tasks when determining available memory' do
+        app = AppModel.make(space_guid: space.guid)
+        AppFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED')
+        TaskModel.make(app: app, memory_in_mb: 50, state: 'SUCCEEDED')
+
+        expect(space.has_remaining_memory(51)).to eq(true)
+      end
+    end
+
+    describe '#instance_memory_limit' do
+      let(:org) { Organization.make }
+      let(:space_quota) { SpaceQuotaDefinition.make(instance_memory_limit: 50, organization: org) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+
+      it 'returns the instance memory limit from the quota' do
+        expect(space.instance_memory_limit).to eq(50)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:space_quota) { nil }
+
+        it 'returns unlimited' do
+          expect(space.instance_memory_limit).to eq(SpaceQuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
+    describe '#app_task_limit' do
+      let(:org) { Organization.make }
+      let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+
+      it 'returns the app task limit from the quota' do
+        expect(space.app_task_limit).to eq(1)
+      end
+
+      context 'when the space does not have a quota' do
+        let(:space_quota) { nil }
+
+        it 'returns unlimited' do
+          expect(space.app_task_limit).to eq(SpaceQuotaDefinition::UNLIMITED)
+        end
+      end
+    end
+
+    describe '#meets_max_task_limit?' do
+      let(:org) { Organization.make }
+      let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
+      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
+
+      it 'returns false when the app task limit is not exceeded' do
+        expect(space.meets_max_task_limit?).to be false
+      end
+
+      context 'number of pending and running tasks equals the limit' do
+        before do
+          TaskModel.make(app: app_model, state: TaskModel::RUNNING_STATE)
+        end
+
+        it 'returns true' do
+          expect(space.meets_max_task_limit?).to be true
+        end
       end
     end
 
@@ -395,7 +675,8 @@ module VCAP::CloudController
           expect {
             space.space_quota_definition_guid = space_quota_definition_guid
             space.save
-          }.to raise_error(VCAP::Errors::ApiError, /Invalid relation: Could not find VCAP::CloudController::SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
+          }.to raise_error(CloudController::Errors::ApiError,
+            /Invalid relation: Could not find VCAP::CloudController::SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
         end
       end
     end

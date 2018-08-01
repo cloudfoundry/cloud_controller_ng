@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'securerandom'
 
-describe 'Staging an app', type: :integration do
+RSpec.describe 'Staging an app', type: :integration do
   before do
     start_nats(debug: false)
     start_cc(debug: false, config: 'spec/fixtures/config/port_8181_config.yml')

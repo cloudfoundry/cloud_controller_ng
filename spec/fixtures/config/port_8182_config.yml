@@ -1,6 +1,7 @@
 ---
 local_route: 127.0.0.1
 external_port: 8182
+tls_port: 8184
 pid_filename: /tmp/cloud_controller.8182.pid
 
 info:
@@ -43,11 +44,14 @@ broker_client_max_async_poll_duration_minutes: 10080
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "http://localhost:5155/internal"
 
 uaa:
   url: "http://localhost:8080/uaa"
+  internal_url: "https://uaa.service.cf.internal"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   file: /tmp/cloud_controller.8182.log
@@ -79,6 +83,7 @@ quota_definitions:
 
 default_quota_definition: default
 
+shared_isolation_segment_name: 'shared'
 
 resource_pool:
   resource_directory_key: "cc-resources"

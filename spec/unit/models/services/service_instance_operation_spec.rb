@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceInstanceOperation, type: :model do
+  RSpec.describe ServiceInstanceOperation, type: :model do
     let(:updated_at_time) { Time.now }
     let(:created_at_time) { Time.now }
     let(:operation_attributes) do
@@ -9,8 +9,6 @@ module VCAP::CloudController
         state: 'in progress',
         description: '50% all the time',
         type: 'create',
-        updated_at: updated_at_time,
-        created_at: created_at_time,
         proposed_changes: {
           name: 'pizza',
           service_plan_guid: '1800-pizza',
@@ -19,6 +17,10 @@ module VCAP::CloudController
     end
 
     let(:operation) { ServiceInstanceOperation.make(operation_attributes) }
+    before do
+      operation.this.update(updated_at: updated_at_time, created_at: created_at_time)
+      operation.reload
+    end
 
     describe '#to_hash' do
       it 'includes the type, state, description, and updated at' do

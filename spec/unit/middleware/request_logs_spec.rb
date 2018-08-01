@@ -3,12 +3,12 @@ require 'request_logs'
 
 module CloudFoundry
   module Middleware
-    describe RequestLogs do
+    RSpec.describe RequestLogs do
       let(:middleware) { described_class.new(app, logger) }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }
       let(:fake_request) { double('request', request_method: 'request_method', ip: 'ip', filtered_path: 'filtered_path') }
-      let(:env) { { 'cf.request_id' => 'ID' } }
+      let(:env) { { 'cf.request_id' => 'ID', 'cf.user_guid' => 'user-guid' } }
 
       describe 'logging' do
         before do
@@ -21,7 +21,7 @@ module CloudFoundry
 
         it 'logs before calling the app' do
           middleware.call(env)
-          expect(logger).to have_received(:info).with(/Started.+vcap-request-id: ID/)
+          expect(logger).to have_received(:info).with(/Started.+user: user-guid.+with vcap-request-id: ID/)
         end
 
         it 'logs after calling the app' do

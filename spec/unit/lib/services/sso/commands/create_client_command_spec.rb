@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO::Commands
-  describe CreateClientCommand do
+  RSpec.describe CreateClientCommand do
     let(:client_attrs) do
       {
         'id' => 'client-id-1',

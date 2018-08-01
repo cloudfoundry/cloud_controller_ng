@@ -4,7 +4,7 @@ module VCAP::Services
   module ServiceBrokers
     module V2
       module Errors
-        describe ServiceBrokerRequestRejected do
+        RSpec.describe ServiceBrokerRequestRejected do
           let(:uri) { 'http://www.example.com/' }
           let(:response) { double(code: 400, message: 'status message', body: response_body) }
           let(:method) { 'PUT' }

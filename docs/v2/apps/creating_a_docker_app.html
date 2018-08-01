@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Creating a Docker App</h2>
+    <h3>POST /v2/apps/</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">POST /v2/apps</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">The name of the app.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>my_super_app</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">memory</span>
+              </td>
+              <td>
+                <span class="description">The amount of memory each instance should have. In megabytes.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>1024</li>
+                      <li>512</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">instances</span>
+              </td>
+              <td>
+                <span class="description">The number of instances of the app to run. To ensure optimal availability, ensure there are at least 2 instances.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>2</li>
+                      <li>6</li>
+                      <li>10</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">disk_quota</span>
+              </td>
+              <td>
+                <span class="description">The maximum amount of disk available to an instance of an app. In megabytes.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>1204</li>
+                      <li>2048</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">space_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the associated space.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-bffb125b-1563-4ed1-9b5a-4dd16e565533</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">stack_guid</span>
+              </td>
+              <td>
+                <span class="description">The guid of the associated stack.</span>
+              </td>
+              <td>
+                <span class="default">Uses the default system stack.</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>guid-44b22d6d-3f46-4b84-bc7e-f7179d2de304</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">state</span>
+              </td>
+              <td>
+                <span class="description">The current desired state of the app. One of STOPPED or STARTED.</span>
+              </td>
+              <td>
+                <span class="default">STOPPED</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>STOPPED</li>
+                    <li>STARTED</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">command</span>
+              </td>
+              <td>
+                <span class="description">The command to start an app after it is staged, maximum length: 4096 (e.g. &#39;rails s -p $PORT&#39; or &#39;java com.org.Server $PORT&#39;).</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">buildpack</span>
+              </td>
+              <td>
+                <span class="description">Buildpack to build the app. 3 options: a) Blank means autodetection; b) A Git Url pointing to a buildpack; c) Name of an installed buildpack.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li></li>
+                      <li>https://github.com/virtualstaticvoid/heroku-buildpack-r.git</li>
+                      <li>an_example_installed_buildpack</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">health_check_http_endpoint</span>
+              </td>
+              <td>
+                <span class="description">Endpoint called to determine if the app is healthy.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+              <td>
+                <ul class="example_values">
+                  <li>/health</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">health_check_type</span>
+              </td>
+              <td>
+                <span class="description">Type of health check to perform. &#39;none&#39; is deprecated and an alias to &#39;process&#39;.</span>
+              </td>
+              <td>
+                <span class="default">port</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>http (Diego only)</li>
+                    <li>port</li>
+                    <li>process</li>
+                    <li>none</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">health_check_timeout</span>
+              </td>
+              <td>
+                <span class="description">Timeout in seconds for health checking of an staged app when starting up</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">diego</span>
+              </td>
+              <td>
+                <span class="description">Use diego to stage and to run when available</span>
+              </td>
+              <td>
+                <span class="default">false</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">enable_ssh</span>
+              </td>
+              <td>
+                <span class="description">Enable SSHing into the app. Supported for Diego only.</span>
+              </td>
+              <td>
+                <span class="default">false if SSH is disabled globally or on the space, true if enabled for both</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">docker_image</span>
+              </td>
+              <td>
+                <span class="description">Name of the Docker image containing the app. The &quot;diego_docker&quot; feature flag must be enabled in order to create Docker image apps.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>cloudfoundry/diego-docker-app</li>
+                      <li>registry.example.com:5000/user/repository/tag</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" experimental">
+                <span class="name">docker_credentials_json</span>
+              </td>
+              <td>
+                <span class="description">Docker credentials for pulling docker image.</span>
+              </td>
+              <td>
+                <span class="default">{}</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>#&lt;RspecApiDocumentation::Views::HtmlExample:0x007fcb736b6138&gt;</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">environment_json</span>
+              </td>
+              <td>
+                <span class="description">Key/value pairs of all the environment variables to run in your app. Does not include any system or service variables.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated ">
+              <td class=" ">
+                <span class="name">production</span>
+              </td>
+              <td>
+                <span class="description">Deprecated.</span>
+              </td>
+              <td>
+                <span class="default">true</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated ">
+              <td class=" ">
+                <span class="name">console</span>
+              </td>
+              <td>
+                <span class="description">Open the console port for the app (at $CONSOLE_PORT).</span>
+              </td>
+              <td>
+                <span class="default">false</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class="deprecated ">
+              <td class=" ">
+                <span class="name">debug</span>
+              </td>
+              <td>
+                <span class="description">Open the debug port for the app (at $DEBUG_PORT).</span>
+              </td>
+              <td>
+                <span class="default">false</span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                    <li>true</li>
+                    <li>false</li>
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">staging_failed_reason</span>
+              </td>
+              <td>
+                <span class="description">Reason for application staging failures</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>StagingError</li>
+                      <li>StagingTimeExpired</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">staging_failed_description</span>
+              </td>
+              <td>
+                <span class="description">Detailed description for the staging_failed_reason</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>An app was not successfully detected by any available buildpack</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" experimental">
+                <span class="name">ports</span>
+              </td>
+              <td>
+                <span class="description">Ports on which application may listen. Overwrites previously configured ports. Ports must be in range 1024-65535. Supported for Diego only.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>[5222, 8080]</li>
+                      <li>[1056]</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "name": "docker_app",
+  "space_guid": "20820ec2-12dc-4690-ac1f-d17eb5357959",
+  "docker_image": "cloudfoundry/diego-docker-app",
+  "diego": true
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzOSIsImVtYWlsIjoiZW1haWwtMzAxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDR9.z0fBFq-vMeKTNiBlKtRCZ49OV-V_lTQYYdBvRw_eR1c
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/apps&quot; -d &#39;{
+  &quot;name&quot;: &quot;docker_app&quot;,
+  &quot;space_guid&quot;: &quot;20820ec2-12dc-4690-ac1f-d17eb5357959&quot;,
+  &quot;docker_image&quot;: &quot;cloudfoundry/diego-docker-app&quot;,
+  &quot;diego&quot;: true
+}&#39; -X POST \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzOSIsImVtYWlsIjoiZW1haWwtMzAxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDR9.z0fBFq-vMeKTNiBlKtRCZ49OV-V_lTQYYdBvRw_eR1c&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "ba346f73-a330-42e1-b29c-ecbbc317addc",
+    "url": "/v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc",
+    "created_at": "2016-06-08T16:41:44Z",
+    "updated_at": "2016-06-08T16:41:26Z"
+  },
+  "entity": {
+    "name": "docker_app",
+    "production": false,
+    "space_guid": "20820ec2-12dc-4690-ac1f-d17eb5357959",
+    "stack_guid": "5603073e-38d3-4309-8bd1-460efa4a8c15",
+    "buildpack": null,
+    "detected_buildpack": null,
+    "detected_buildpack_guid": null,
+    "environment_json": {
+
+    },
+    "memory": 1024,
+    "instances": 1,
+    "disk_quota": 1024,
+    "state": "STOPPED",
+    "version": "dfdf8a09-5e86-47a3-94d9-3e5567c5fb90",
+    "command": null,
+    "console": false,
+    "debug": null,
+    "staging_task_id": null,
+    "package_state": "PENDING",
+    "health_check_http_endpoint": "",
+    "health_check_type": "port",
+    "health_check_timeout": null,
+    "staging_failed_reason": null,
+    "staging_failed_description": null,
+    "diego": true,
+    "docker_image": "cloudfoundry/diego-docker-app:latest",
+    "package_updated_at": "2016-06-08T16:41:44Z",
+    "detected_start_command": "",
+    "enable_ssh": true,
+    "docker_credentials_json": {
+      "redacted_message": "[PRIVATE DATA HIDDEN]"
+    },
+    "ports": [
+
+    ],
+    "space_url": "/v2/spaces/20820ec2-12dc-4690-ac1f-d17eb5357959",
+    "stack_url": "/v2/stacks/5603073e-38d3-4309-8bd1-460efa4a8c15",
+    "routes_url": "/v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc/routes",
+    "events_url": "/v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc/events",
+    "service_bindings_url": "/v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc/service_bindings",
+    "route_mappings_url": "/v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc/route_mappings"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+Location: /v2/apps/ba346f73-a330-42e1-b29c-ecbbc317addc
+X-VCAP-Request-ID: db83725b-6077-4c8d-bff6-ed447b363655
+Content-Length: 1650
+X-Content-Type-Options: nosniff</pre>
+
+      <h3>Audit Records Created By The Request</h3>
+      <h4>Audit Record: audit.app.create</h4>
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+        <tr>
+          <th>Attribute Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="name">id</span>
+            </td>
+            <td>
+                <span class="description">31</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">guid</span>
+            </td>
+            <td>
+                <span class="description">6f134370-0450-4088-9040-1763a6dc223c</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">created_at</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:44 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">updated_at</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">timestamp</span>
+            </td>
+            <td>
+                <span class="description">2016-06-08 16:41:44 UTC</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">type</span>
+            </td>
+            <td>
+                <span class="description">audit.app.create</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor</span>
+            </td>
+            <td>
+                <span class="description">uaa-id-439</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_type</span>
+            </td>
+            <td>
+                <span class="description">user</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee</span>
+            </td>
+            <td>
+                <span class="description">ba346f73-a330-42e1-b29c-ecbbc317addc</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_type</span>
+            </td>
+            <td>
+                <span class="description">app</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">metadata</span>
+            </td>
+            <td>
+                <pre>{
+  &quot;request&quot;: {
+    &quot;name&quot;: &quot;docker_app&quot;,
+    &quot;space_guid&quot;: &quot;20820ec2-12dc-4690-ac1f-d17eb5357959&quot;,
+    &quot;docker_image&quot;: &quot;cloudfoundry/diego-docker-app&quot;,
+    &quot;diego&quot;: true,
+    &quot;console&quot;: false,
+    &quot;docker_credentials_json&quot;: &quot;PRIVATE DATA HIDDEN&quot;,
+    &quot;environment_json&quot;: &quot;PRIVATE DATA HIDDEN&quot;,
+    &quot;health_check_type&quot;: &quot;port&quot;,
+    &quot;instances&quot;: 1,
+    &quot;production&quot;: false,
+    &quot;state&quot;: &quot;STOPPED&quot;
+  }
+}</pre>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_id</span>
+            </td>
+            <td>
+                <span class="description"></span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">organization_guid</span>
+            </td>
+            <td>
+                <span class="description">7a52a1d9-dc05-4de1-aa71-c23475131ab3</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">space_guid</span>
+            </td>
+            <td>
+                <span class="description">20820ec2-12dc-4690-ac1f-d17eb5357959</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actor_name</span>
+            </td>
+            <td>
+                <span class="description">email-301@somedomain.com</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="name">actee_name</span>
+            </td>
+            <td>
+                <span class="description">docker_app</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+</body>
+</html>

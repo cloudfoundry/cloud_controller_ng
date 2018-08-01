@@ -1,18 +1,18 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe UndoAppChanges do
+  RSpec.describe UndoAppChanges do
     let(:state) { 'STARTED' }
     let(:instances) { 2 }
     let(:app) do
-      AppFactory.make(package_hash: 'abc',
-                      name: 'app-name',
-                      droplet_hash: 'I DO NOTHING',
-                      state: state,
-                      instances: instances,
-                      )
+      # use tap so we get an updated_at value
+      AppFactory.make(name: 'app-name').tap do |app|
+        app.state = state
+        app.instances = instances
+        app.save.reload
+      end
     end
-    let(:changes) { { updated_at: [1, app.updated_at] } }
+    let(:changes) { { updated_at: [2.days.ago, app.updated_at] } }
     let(:undo_changes) { UndoAppChanges.new(app) }
 
     describe '#undo' do
@@ -23,14 +23,7 @@ module VCAP::CloudController
           expect(app.state).to eq('STOPPED')
         end
 
-        it 'does not undo when the final app state does not match the desired app state' do
-          app.state = 'CRASHED'
-          changes[:state] = ['STARTED', 'STOPPED']
-          undo_changes.undo(changes)
-          expect(app.state).to eq('CRASHED')
-        end
-
-        context('when the app is stopped') do
+        context 'when the app is stopped' do
           let(:state) { 'STOPPED' }
 
           it 'should not undo any stop' do

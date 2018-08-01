@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/app_update'
 
 module VCAP::CloudController
-  describe SetCurrentDroplet do
+  RSpec.describe SetCurrentDroplet do
     let(:app_model) { AppModel.make }
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
@@ -27,13 +27,13 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event' do
-        expect_any_instance_of(Repositories::Runtime::AppEventRepository).to receive(:record_app_map_droplet).with(
-                                                                                 app_model,
-                                                                                 app_model.space,
-                                                                                 user.guid,
-                                                                                 user_email,
-                                                                                 { droplet_guid: droplet.guid }
-                                                                             )
+        expect_any_instance_of(Repositories::AppEventRepository).to receive(:record_app_map_droplet).with(
+          app_model,
+          app_model.space,
+          user.guid,
+          user_email,
+          { droplet_guid: droplet.guid }
+        )
 
         set_current_droplet.update_to(app_model, droplet)
       end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers::V2
-  describe Catalog do
+  RSpec.describe Catalog do
     let(:broker) { VCAP::CloudController::ServiceBroker.make }
 
     def service_entry(opts={})
@@ -49,16 +49,16 @@ module VCAP::Services::ServiceBrokers::V2
         @index ||= 0
         @index += 1
         {
-          'id' => "#{@index}",
-          'name' => "#{@index}",
+          'id' => @index.to_s,
+          'name' => @index.to_s,
           'description' => 'the service description',
           'bindable' => true,
           'tags' => ['tag1'],
           'metadata' => { 'foo' => 'bar' },
           'plans' => [
             {
-              'id' => "#{@index}",
-              'name' => "#{@index}",
+              'id' => @index.to_s,
+              'name' => @index.to_s,
               'description' => 'the plan description',
               'metadata' => { 'foo' => 'bar' }
             }

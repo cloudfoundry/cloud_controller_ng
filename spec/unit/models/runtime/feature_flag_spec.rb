@@ -1,12 +1,13 @@
-# encoding: utf-8
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe FeatureFlag, type: :model do
+  RSpec.describe FeatureFlag, type: :model do
     let(:valid_flags) do
       [:user_org_creation, :private_domain_creation, :app_bits_upload,
        :app_scaling, :route_creation, :service_instance_creation,
-       :diego_docker, :set_roles_by_username, :unset_roles_by_username]
+       :diego_docker, :set_roles_by_username, :unset_roles_by_username,
+       :task_creation, :env_var_visibility, :space_scoped_private_broker_creation,
+       :space_developer_env_var_visibility]
     end
     let(:feature_flag) { FeatureFlag.make }
 
@@ -94,8 +95,8 @@ module VCAP::CloudController
     end
 
     describe '.enabled?' do
-      let(:key) { 'user_org_creation' }
-      let(:default_value) { FeatureFlag::DEFAULT_FLAGS[key.to_sym] }
+      let(:key) { :user_org_creation }
+      let(:default_value) { FeatureFlag::DEFAULT_FLAGS[key] }
 
       context 'when the feature flag is overridden' do
         before do
@@ -118,11 +119,60 @@ module VCAP::CloudController
       context 'when feature flag does not exist' do
         it 'blows up somehow' do
           expect {
-            FeatureFlag.enabled?('bogus_feature_flag')
+            FeatureFlag.enabled?(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
           expect {
-            FeatureFlag.disabled?('bogus_feature_flag')
+            FeatureFlag.disabled?(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
+        end
+      end
+
+      context 'when logged in as an admin' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
+          stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', { normal: false, blahrgha: false })
+          stub_const('VCAP::CloudController::FeatureFlag::ADMIN_SKIPPABLE', [:blahrgha])
+        end
+
+        context 'when flag is admin enabled' do
+          it 'is always enabled' do
+            FeatureFlag.create(name: 'blahrgha', enabled: false)
+
+            expect(FeatureFlag.enabled?(:blahrgha)).to eq(true)
+          end
+        end
+
+        context 'when flag is not admin enabled' do
+          it 'is false if the flag is disabled' do
+            FeatureFlag.create(name: 'normal', enabled: false)
+
+            expect(FeatureFlag.enabled?(:normal)).to eq(false)
+          end
+        end
+      end
+
+      context 'when logged in as an admin read only' do
+        before do
+          allow(VCAP::CloudController::SecurityContext).to receive(:admin_read_only?).and_return(true)
+          stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', { normal: false, potato: false, tomato: false })
+          stub_const('VCAP::CloudController::FeatureFlag::ADMIN_READ_ONLY_SKIPPABLE', [:potato])
+          stub_const('VCAP::CloudController::FeatureFlag::ADMIN__SKIPPABLE', [:tomato])
+        end
+
+        context 'when flag is admin read only enabled' do
+          it 'is always enabled' do
+            FeatureFlag.create(name: 'potato', enabled: false)
+
+            expect(FeatureFlag.enabled?(:potato)).to eq(true)
+          end
+        end
+
+        context 'when flag is not admin read only enabled' do
+          it 'is false if the flag is disabled' do
+            FeatureFlag.create(name: 'normal', enabled: false)
+
+            expect(FeatureFlag.enabled?(:normal)).to eq(false)
+          end
         end
       end
     end
@@ -151,7 +201,7 @@ module VCAP::CloudController
           end
 
           it 'raises FeatureDisabled with feature flag name' do
-            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|
+            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(CloudController::Errors::ApiError) do |error|
               expect(error.name).to eq('FeatureDisabled')
               expect(error.message).to eq("Feature Disabled: #{feature_flag.name}")
             end
@@ -162,7 +212,7 @@ module VCAP::CloudController
           let(:feature_flag) { FeatureFlag.make(error_message: 'foobar') }
 
           it 'raises FeatureDisabled with the custom error message' do
-            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(VCAP::Errors::ApiError) do |error|
+            expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(CloudController::Errors::ApiError) do |error|
               expect(error.name).to eq('FeatureDisabled')
               expect(error.message).to eq("Feature Disabled: #{feature_flag.error_message}")
             end
@@ -173,7 +223,7 @@ module VCAP::CloudController
       context 'when the flag does not exist' do
         it 'blows up somehow' do
           expect {
-            FeatureFlag.raise_unless_enabled!('bogus_feature_flag')
+            FeatureFlag.raise_unless_enabled!(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
       end

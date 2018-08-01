@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         lifecycle.update_lifecycle_data_model(app)
 
-        Repositories::Runtime::AppEventRepository.new.record_app_update(
+        Repositories::AppEventRepository.new.record_app_update(
           app,
           app.space,
           @user.guid,

@@ -2,11 +2,11 @@ module VCAP::CloudController
   module Dea
     class EligibleAdvertisementFilter
       def initialize(dea_advertisements, app_id)
-        @filtered_advertisements = dea_advertisements.dup
+        @filtered_advertisements = dea_advertisements.values
         @app_id = app_id
 
         @instance_counts_by_zones = Hash.new(0)
-        dea_advertisements.each { |ad| @instance_counts_by_zones[ad.zone] += ad.num_instances_of(@app_id) }
+        @filtered_advertisements.each { |ad| @instance_counts_by_zones[ad.zone] += ad.num_instances_of(@app_id) }
       end
 
       def only_with_disk(minimum_disk)

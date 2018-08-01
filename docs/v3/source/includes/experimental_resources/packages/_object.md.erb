@@ -1,0 +1,38 @@
+<div class='no-margin'></div>
+
+### The package object
+
+<ul class="method-list-group">
+<%= yield_content :guid, 'package' %>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      type
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Package type. Possible values are "bits", "docker".</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      data
+      <span class="method-list-item-type">object</span>
+    </h4>
+
+    <p class="method-list-item-description">Data for docker packages. Can be empty for bits packages.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      state
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">State of the package. Possible states are "PROCESSING_UPLOAD", "READY", "FAILED", "AWAITING_UPLOAD", "COPYING", and "EXPIRED".</p>
+  </li>
+
+<%= yield_content :created_at %>
+
+<%= yield_content :updated_at %>
+
+<%= yield_content :links %>
+</ul>
+

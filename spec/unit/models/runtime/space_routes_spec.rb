@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe SpaceRoutes do
+RSpec.describe SpaceRoutes do
   let(:space) { VCAP::CloudController::Space.make }
 
   subject { SpaceRoutes.new(space) }

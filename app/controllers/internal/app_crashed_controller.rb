@@ -11,7 +11,7 @@ module VCAP::CloudController
       super
       auth = Rack::Auth::Basic::Request.new(env)
       unless auth.provided? && auth.basic? && auth.credentials == InternalApi.credentials
-        raise Errors::ApiError.new_from_details('NotAuthenticated')
+        raise CloudController::Errors::NotAuthenticated
       end
     end
 
@@ -22,12 +22,14 @@ module VCAP::CloudController
 
       app_guid = Diego::ProcessGuid.app_guid(process_guid)
 
-      app = App.find(guid: app_guid)
-      raise Errors::ApiError.new_from_details('NotFound') unless app
-      raise Errors::ApiError.new_from_details('UnableToPerform', 'AppCrashed', 'not a diego app') unless app.diego?
+      process = App.find(guid: app_guid)
+      raise CloudController::Errors::ApiError.new_from_details('NotFound') unless process
+      raise CloudController::Errors::ApiError.new_from_details('UnableToPerform', 'AppCrashed', 'not a diego app') unless process.diego?
 
       crash_payload['version'] = Diego::ProcessGuid.app_version(process_guid)
-      Repositories::Runtime::AppEventRepository.new.create_app_exit_event(app, crash_payload)
+
+      Repositories::ProcessEventRepository.record_crash(process, crash_payload)
+      Repositories::AppEventRepository.new.create_app_exit_event(process, crash_payload)
     end
 
     private
@@ -39,7 +41,7 @@ module VCAP::CloudController
         crashed = MultiJson.load(payload)
       rescue MultiJson::ParseError => pe
         logger.error('diego.app_crashed.parse-error', payload: payload, error: pe.to_s)
-        raise Errors::ApiError.new_from_details('MessageParseError', payload)
+        raise CloudController::Errors::ApiError.new_from_details('MessageParseError', payload)
       end
 
       crashed

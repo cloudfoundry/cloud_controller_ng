@@ -15,6 +15,8 @@ class FakeModelTables
       primary_key :id
       String :guid
       String :unique_value
+      String :sortable_value
+      String :nonsortable_value
       TrueClass :required_attr, null: false
       DateTime :created_at
       DateTime :updated_at

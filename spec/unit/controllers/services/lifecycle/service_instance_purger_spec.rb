@@ -1,12 +1,18 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServiceInstancePurger do
-    let(:event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new({ user: User.make, user_email: 'email' }) }
+  RSpec.describe VCAP::CloudController::ServiceInstancePurger do
+    let(:event_repository) { VCAP::CloudController::Repositories::ServiceEventRepository.new({ user: User.make, user_email: 'email' }) }
     let(:purger) { ServiceInstancePurger.new(event_repository) }
 
     describe '#purge' do
       let(:service_instance) { ManagedServiceInstance.make }
+
+      it 'deletes the service instance' do
+        purger.purge(service_instance)
+
+        expect(service_instance).not_to exist
+      end
 
       it 'records a service instance delete event' do
         purger.purge(service_instance)
@@ -37,6 +43,28 @@ module VCAP::CloudController
           expect(events.length).to eq(2)
           expect(event_binding_guids).to match_array([service_binding_1.guid, service_binding_2.guid])
         end
+
+        it 'deletes the service bindings' do
+          purger.purge(service_instance)
+
+          expect(service_binding_1).not_to exist
+          expect(service_binding_2).not_to exist
+        end
+      end
+
+      context 'when there are route bindings' do
+        let(:route_1) { Route.make(space: service_instance.space) }
+        let(:route_2) { Route.make(space: service_instance.space) }
+        let!(:service_instance) { ManagedServiceInstance.make(:routing) }
+        let!(:route_binding_1) { RouteBinding.make(service_instance: service_instance, route: route_1) }
+        let!(:route_binding_2) { RouteBinding.make(service_instance: service_instance, route: route_2) }
+
+        it 'deletes the route bindings' do
+          purger.purge(service_instance)
+
+          expect(route_binding_1).not_to exist
+          expect(route_binding_2).not_to exist
+        end
       end
 
       context 'when there are service keys' do
@@ -51,6 +79,13 @@ module VCAP::CloudController
 
           expect(events.length).to eq(2)
           expect(event_key_guids).to match_array([service_key_1.guid, service_key_2.guid])
+        end
+
+        it 'deletes the service keys' do
+          purger.purge(service_instance)
+
+          expect(service_key_1).not_to exist
+          expect(service_key_2).not_to exist
         end
       end
     end

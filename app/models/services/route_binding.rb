@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     def notify_diego
       route.apps.each do |app|
-        app.handle_update_route(route) if app.diego
+        ProcessRouteHandler.new(app).notify_backend_of_route_update if app.diego?
       end
     end
 

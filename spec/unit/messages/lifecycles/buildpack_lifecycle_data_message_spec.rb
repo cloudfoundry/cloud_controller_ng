@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'messages/lifecycles/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
-  describe BuildpackLifecycleDataMessage do
+  RSpec.describe BuildpackLifecycleDataMessage do
     describe 'validations' do
       context 'allowed keys' do
         context 'when the message contains something other than the allowed keys' do

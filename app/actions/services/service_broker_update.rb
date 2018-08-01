@@ -3,11 +3,12 @@ module VCAP::CloudController
   class ServiceBrokerUpdate
     include VCAP::CloudController::ServiceBrokerRegistrationErrorParser
 
-    def initialize(service_manager, services_event_repository, warning_observer, route_services_enabled)
+    def initialize(service_manager, services_event_repository, warning_observer, route_services_enabled, volume_services_enabled)
       @service_manager = service_manager
       @services_event_repository = services_event_repository
       @warning_observer = warning_observer
       @route_services_enabled = route_services_enabled
+      @volume_services_enabled = volume_services_enabled
     end
 
     def update(guid, params)
@@ -17,7 +18,13 @@ module VCAP::CloudController
       ServiceBroker.db.transaction do
         old_broker = broker.clone
         broker.set(params)
-        registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(broker, @service_manager, @services_event_repository, @route_services_enabled)
+        registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(
+          broker,
+          @service_manager,
+          @services_event_repository,
+          @route_services_enabled,
+          @volume_services_enabled
+        )
 
         unless registration.update
           raise get_exception_from_errors(registration)

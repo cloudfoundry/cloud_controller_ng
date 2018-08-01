@@ -1,0 +1,92 @@
+### Create a droplet
+
+```
+Definition
+```
+
+```http
+POST /v3/packages/:guid/droplets HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/packages/[guid]/droplets" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "environment_variables": {
+      "CUSTOM_ENV_VAR": "hello"
+    },
+    "lifecycle": {
+      "type": "buildpack",
+      "data": {
+        "buildpack": "http://github.com/myorg/awesome-buildpack",
+        "stack": "cflinuxfs2"
+      }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+
+<%= yield_content :single_staging_buildpack_droplet %>
+```
+
+This endpoint creates a new droplet from a package.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      environment_variables
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Environment variables ot use during staging. Environment variable names may
+      not start with <code>VCAP_</code> or <code>CF_</code>. <code>PORT</code> is not a valid environment variable.
+    </p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+       staging_memory_in_mb
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Memory limit used to stage package	</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      staging_disk_in_mb
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Disk limit used to stage package</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      lifecycle
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">
+      Lifecycle information for a droplet.  If not provided, it will default to
+      what is specified on the app. If the app does not have lifecycle information,
+      it will default to a buildpack.
+    </p>
+  </li>
+</ul>
+

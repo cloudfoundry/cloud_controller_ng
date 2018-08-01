@@ -1,13 +1,25 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe Stack, type: :model do
+  RSpec.describe Stack, type: :model do
     let(:file) { File.join(Paths::FIXTURES, 'config/stacks.yml') }
 
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :apps }
+      it 'has apps' do
+        stack = Stack.make
+        app1 = AppFactory.make(stack: stack)
+        app2 = AppFactory.make(stack: stack)
+        expect(stack.apps).to match_array([app1, app2])
+      end
+
+      it 'does not associate non-web v2 apps' do
+        stack = Stack.make
+        app1 = AppFactory.make(type: 'web', stack: stack)
+        AppFactory.make(type: 'other', stack: stack)
+        expect(stack.apps).to match_array([app1])
+      end
     end
 
     describe 'Validations' do
@@ -143,7 +155,7 @@ module VCAP::CloudController
 
       it 'fails if there are apps' do
         AppFactory.make(stack: stack)
-        expect { stack.destroy }.to raise_error VCAP::Errors::ApiError, /Please delete the app associations for your stack/
+        expect { stack.destroy }.to raise_error CloudController::Errors::ApiError, /Please delete the app associations for your stack/
       end
     end
   end

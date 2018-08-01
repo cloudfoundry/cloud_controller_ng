@@ -7,42 +7,30 @@ module VCAP::CloudController
       [:droplet_blobstore, :blobstore_url_generator, :missing_blob_handler, :blob_sender]
     end
 
-    include VCAP::Errors
+    include CloudController::Errors
 
-    DROPLET_V2_PATH = '/internal/v2/droplets'
+    DROPLET_V2_PATH = '/internal/v2/droplets'.freeze
 
     # Endpoint does its own basic auth
     allow_unauthenticated_access
 
     attr_reader :blobstore
 
-    get "#{DROPLET_V2_PATH}/:guid/:droplet_hash/download", :download_droplet
-    def download_droplet(guid, droplet_hash)
+    get "#{DROPLET_V2_PATH}/:guid/:droplet_checksum/download", :download_droplet
+    def download_droplet(guid, droplet_checksum)
       app = App.find(guid: guid)
       check_app_exists(app, guid)
-      raise ApiError.new_from_details('NotFound', droplet_hash) unless app.droplet_hash == droplet_hash
+      raise ApiError.new_from_details('NotFound', droplet_checksum) unless app.droplet_checksum == droplet_checksum
 
       blob_name = 'droplet'
+      droplet   = app.current_droplet
 
       if @blobstore.local?
-        if app.is_v3?
-          droplet = app.app.droplet
-          blob = @blobstore.blob(droplet.blobstore_key)
-        else
-          droplet = app.current_droplet
-          blob = droplet.blob
-        end
-
+        blob = @blobstore.blob(droplet.blobstore_key)
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless droplet && blob
-        @blob_sender.send_blob(app.guid, blob_name, blob, self)
+        @blob_sender.send_blob(blob, self)
       else
-        url = nil
-        if app.is_v3?
-          url = @blobstore_url_generator.v3_droplet_download_url(app.app.droplet)
-        else
-          url = @blobstore_url_generator.droplet_download_url(app)
-        end
-
+        url = @blobstore_url_generator.droplet_download_url(droplet)
         @missing_blob_handler.handle_missing_blob!(app.guid, blob_name) unless url
         redirect url
       end

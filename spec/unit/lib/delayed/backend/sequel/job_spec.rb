@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Delayed::Backend::Sequel::Job do
+RSpec.describe Delayed::Backend::Sequel::Job do
   it 'has a cf_api_error column that can store large blobs of json' do
     expect(Delayed::Backend::Sequel::Job.columns).to include(:cf_api_error)
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BuildpackBitsDelete do
+  RSpec.describe BuildpackBitsDelete do
     let(:staging_timeout) { 144 }
     let(:key) { 'key' }
     let!(:blobstore) do
@@ -38,7 +38,8 @@ module VCAP::CloudController
         attrs = blobstore.blob(key).attributes
         job_attrs = {
           last_modified: attrs[:last_modified],
-          etag: attrs[:etag]
+          etag: attrs[:etag],
+          content_length: 0
         }
 
         expect(Jobs::Runtime::BlobstoreDelete).to receive(:new).with(key, :buildpack_blobstore, job_attrs).and_call_original

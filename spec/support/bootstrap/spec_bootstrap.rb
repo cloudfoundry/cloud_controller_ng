@@ -1,5 +1,6 @@
 require 'support/bootstrap/test_config'
 require 'support/bootstrap/table_recreator'
+require 'cloud_controller/seeds'
 
 module VCAP::CloudController
   module SpecBootstrap
@@ -23,8 +24,10 @@ module VCAP::CloudController
       db_resetter.recreate_tables
 
       DB.load_models(db_config.config, db_config.db_logger)
-      Config.run_initializers(TestConfig.config)
+    end
 
+    def self.seed
+      Config.run_initializers(TestConfig.config)
       Seeds.write_seed_data(TestConfig.config)
     end
   end

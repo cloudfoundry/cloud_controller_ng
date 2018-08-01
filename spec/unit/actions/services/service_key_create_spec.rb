@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/services/service_key_create'
 
 module VCAP::CloudController
-  describe ServiceKeyCreate do
+  RSpec.describe ServiceKeyCreate do
     let(:service_instance) { ManagedServiceInstance.make }
     let(:service_binding_url_pattern) { %r{/v2/service_instances/#{service_instance.guid}/service_bindings/} }
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
         service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
         service_key_create = ServiceKeyCreate.new(logger)
         _, errors = service_key_create.create(service_instance, key_attrs, {})
-        expect(errors.first).to be_instance_of Errors::ApiError
+        expect(errors.first).to be_instance_of CloudController::Errors::ApiError
       end
 
       describe 'orphan mitigation situations' do
@@ -62,7 +62,7 @@ module VCAP::CloudController
           context 'when the orphan mitigation unbind fails' do
             before do
               stub_request(:delete, service_binding_url_pattern).
-                  to_return(status: 500, body: {}.to_json)
+                to_return(status: 500, body: {}.to_json)
             end
 
             it 'logs that the unbind failed' do

@@ -1,0 +1,92 @@
+<div class='no-margin'></div>
+
+### The task object
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Unique GUID for the task</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      sequence_id
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing id of the task. This number is unique for every task associated with a given app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      name
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">User-facing name of the task.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      command
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Command that will be executed. This field may be excluded based on a user's role.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      disk_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Amount of disk to allocate for the task in MB.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      memory_in_mb
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Amount of memory to allocate for the task in MB.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      state
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">State of the task. Possible states are PENDING, RUNNING, SUCCEEDED, CANCELING, and FAILED</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      droplet_guid
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">The guid of the droplet that will be used to run the command.</p>
+  </li>
+  <li class="method-list-item">
+      <h4 class="method-list-item-label">
+        result
+        <span class="method-list-item-type">object</span>
+      </h4>
+
+      <p class="method-list-item-description">Results from the task</p>
+  </li>
+  <li class="method-list-item">
+      <h4 class="method-list-item-label">
+        result[failure_reason]
+        <span class="method-list-item-type">string</span>
+      </h4>
+
+      <p class="method-list-item-description">Null if the task succeeds, contains the error message if it fails.</p>
+  </li>
+<%= yield_content :created_at %>
+
+<%= yield_content :updated_at %>
+
+<%= yield_content :links %>
+</ul>
+

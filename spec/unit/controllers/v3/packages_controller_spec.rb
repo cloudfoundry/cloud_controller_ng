@@ -1,49 +1,30 @@
 require 'rails_helper'
 
-describe PackagesController, type: :controller do
-  let(:package_presenter) { instance_double(VCAP::CloudController::PackagePresenter) }
-  let(:membership) { instance_double(VCAP::CloudController::Membership) }
+RSpec.describe PackagesController, type: :controller do
+  let(:scheme) { TestConfig.config[:external_protocol] }
+  let(:host) { TestConfig.config[:external_domain] }
+  let(:link_prefix) { "#{scheme}://#{host}" }
 
   describe '#upload' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }
     let(:org) { space.organization }
     let(:params) { { 'bits_path' => 'path/to/bits' } }
-    let(:expected_response) { 'response stuff' }
     let(:form_headers) { { 'CONTENT_TYPE' => 'application/x-www-form-urlencoded' } }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       @request.env.merge!(form_headers)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(package_presenter).to receive(:present_json).and_return(expected_response)
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns 200 and updates the package state' do
       post :upload, params.merge(guid: package.guid)
 
       expect(response.status).to eq(200)
-      expect(response.body).to eq(expected_response)
-      expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
+      expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
       expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
-    end
-
-    context 'admin' do
-      before do
-        @request.env.merge!(admin_headers)
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 200 and updates the package state' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(200)
-        expect(response.body).to eq(expected_response)
-        expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
-        expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
-      end
     end
 
     context 'when app_bits_upload is disabled' do
@@ -62,14 +43,13 @@ describe PackagesController, type: :controller do
       end
 
       context 'admin user' do
-        before { @request.env.merge!(admin_headers) }
+        before { set_current_user_as_admin(user: user) }
 
         it 'returns 200 and updates the package state' do
           post :upload, params.merge(guid: package.guid)
 
           expect(response.status).to eq(200)
-          expect(response.body).to eq(expected_response)
-          expect(package_presenter).to have_received(:present_json).with(an_instance_of(VCAP::CloudController::PackageModel))
+          expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
           expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::PENDING_STATE)
         end
       end
@@ -110,59 +90,6 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
-      end
-
-      it 'returns an Unauthorized error' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'when the user cannot read the package' do
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
-      end
-
-      it 'returns a 404' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user does not have correct roles to upload' do
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(true)
-        allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).and_return(false)
-      end
-
-      it 'returns a 403' do
-        post :upload, params.merge(guid: package.guid)
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-
-        expect(membership).to have_received(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid)
-      end
-    end
-
     context 'when the bits have already been uploaded' do
       before do
         package.state = VCAP::CloudController::PackageModel::READY_STATE
@@ -179,7 +106,7 @@ describe PackagesController, type: :controller do
 
     context 'when the package is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::PackageUpload).to receive(:upload).and_raise(VCAP::CloudController::PackageUpload::InvalidPackage.new('err'))
+        allow_any_instance_of(VCAP::CloudController::PackageUpload).to receive(:upload_async).and_raise(VCAP::CloudController::PackageUpload::InvalidPackage.new('err'))
       end
 
       it 'returns 422' do
@@ -189,49 +116,79 @@ describe PackagesController, type: :controller do
         expect(response.body).to include('UnprocessableEntity')
       end
     end
+
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns an Unauthorized error' do
+          post :upload, params.merge(guid: package.guid)
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user cannot read the package' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404' do
+          post :upload, params.merge(guid: package.guid)
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the user can read but not write to the space' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns a 403' do
+          post :upload, params.merge(guid: package.guid)
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
   end
 
   describe '#download' do
-    let(:file_path) { nil }
-    let(:download_location) { nil }
-    let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
+    let(:user) { set_current_user(VCAP::CloudController::User.make, email: 'utako') }
 
     before do
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
-      allow_any_instance_of(VCAP::CloudController::PackageDownload).to receive(:download).and_return([file_path, download_location])
-      package.state = 'READY'
-      package.save
+      blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
+      allow_any_instance_of(CloudController::Blobstore::Client).to receive(:blob).and_return(blob)
+      allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+      allow_user_read_access(user, space: space)
+      allow_user_secret_access(user, space: space)
     end
 
-    context 'when the package exists on NFS' do
-      let(:file_path) { '/a/file/path/on/cc' }
-      let(:download_location) { nil }
+    it 'returns 302 and the redirect' do
+      get :download, guid: package.guid
 
-      it 'begins a download' do
-        allow(controller).to receive(:send_file)
-        allow(controller).to receive(:render).and_return(nil)
-
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(200)
-        expect(controller).to have_received(:send_file).with(file_path)
-      end
+      expect(response.status).to eq(302)
+      expect(response.headers['Location']).to eq('http://package.example.com')
     end
 
-    context 'when the package exists on S3' do
-      let(:file_path) { nil }
-      let(:download_location) { 'http://package.download.url' }
+    it 'creates an audit event' do
+      allow(VCAP::CloudController::Repositories::PackageEventRepository).to receive(:record_app_package_download)
+      get :download, guid: package.guid
 
-      it 'returns 302 and the redirect' do
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(302)
-        expect(response.headers['Location']).to eq(download_location)
+      expect(VCAP::CloudController::Repositories::PackageEventRepository).to have_received(:record_app_package_download) do |package, user_guid, user_name|
+        expect(package).to eq package
+        expect(user_guid).to eq user.guid
+        expect(user_name).to eq 'utako'
       end
     end
 
@@ -272,100 +229,62 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'user does not have read scope' do
-      before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])))
+    context 'permissions' do
+      context 'user does not have read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+        end
+
+        it 'returns an Unauthorized error' do
+          get :download, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns an Unauthorized error' do
-        get :download, guid: package.guid
+      context 'user does not have package read permissions' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        it 'returns 404' do
+          get :download, guid: package.guid
 
-    context 'user does not have package read permissions' do
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'returns 404' do
-        get :download, guid: package.guid
+      context 'user does not have package secrets permissions' do
+        before do
+          disallow_user_secret_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
+        it 'returns 403' do
+          get :download, guid: package.guid
 
-    context 'user is an admin' do
-      let(:download_location) { 'http://package.download.url' }
-
-      before do
-        @request.env.merge!(json_headers(admin_headers))
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns 302' do
-        get :download, guid: package.guid
-
-        expect(response.status).to eq(302)
-        expect(response.headers['Location']).to eq(download_location)
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
 
   describe '#show' do
     let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:expected_response) { 'im a response' }
+    let(:space) { package.space }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
-      allow(package_presenter).to receive(:present_json).and_return(expected_response)
+      allow_user_read_access(user, space: space)
     end
 
     it 'returns a 200 OK and the package' do
       get :show, guid: package.guid
 
       expect(response.status).to eq(200)
-      expect(response.body).to eq(expected_response)
-      expect(package_presenter).to have_received(:present_json).with(package)
-    end
-
-    context 'admin' do
-      before do
-        @request.env.merge!(admin_headers)
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 200 OK and the package' do
-        get :show, guid: package.guid
-
-        expect(response.status).to eq(200)
-        expect(response.body).to eq(expected_response)
-        expect(package_presenter).to have_received(:present_json).with(package)
-      end
-    end
-
-    context 'when the user does not have the read scope' do
-      before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
-      end
-
-      it 'returns a 403 NotAuthorized error' do
-        get :show, guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
+      expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
     end
 
     context 'when the package does not exist' do
@@ -377,42 +296,43 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user has incorrect roles' do
-      let(:space) { package.space }
-      let(:org) { space.organization }
+    context 'permissions' do
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.write'])
+        end
 
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        it 'returns a 403 NotAuthorized error' do
+          get :show, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns a 404 not found' do
-        get :show, guid: package.guid
+      context 'when the user can not read from the space' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
+        it 'returns a 404 not found' do
+          get :show, guid: package.guid
 
-        expect(membership).to have_received(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid)
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
     end
   end
 
   describe '#destroy' do
     let(:package) { VCAP::CloudController::PackageModel.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { package.space }
 
     before do
-      allow(VCAP::CloudController::PackagePresenter).to receive(:new).and_return(package_presenter)
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      allow_user_read_access(user, space: space)
+      allow_user_write_access(user, space: space)
     end
 
     it 'returns a 204 NO CONTENT and deletes the package' do
@@ -432,81 +352,51 @@ describe PackagesController, type: :controller do
       end
     end
 
-    context 'when the user does not have write scope' do
-      before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']))
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(user, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns an Unauthorized error' do
+          delete :destroy, guid: package.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
 
-      it 'returns an Unauthorized error' do
-        delete :destroy, guid: package.guid
+      context 'when the user cannot read the package' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
 
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
+        it 'returns a 404 ResourceNotFound error' do
+          delete :destroy, guid: package.guid
 
-    context 'when the user cannot read the package' do
-      let(:space) { package.space }
-      let(:org) { space.organization }
-
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
       end
 
-      it 'returns a 404 ResourceNotFound error' do
-        delete :destroy, guid: package.guid
+      context 'when the user can read but cannot write to the package' do
+        before do
+          allow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
+        it 'raises ApiError NotAuthorized' do
+          delete :destroy, guid: package.guid
 
-    context 'when the user can read but cannot write to the package' do
-      let(:space) { package.space }
-      let(:org) { space.organization }
-
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-          [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-           VCAP::CloudController::Membership::SPACE_MANAGER,
-           VCAP::CloudController::Membership::SPACE_AUDITOR,
-           VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-          and_return(true)
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-          and_return(false)
-      end
-
-      it 'raises ApiError NotAuthorized' do
-        delete :destroy, guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'admin' do
-      before do
-        @request.env.merge!(admin_headers)
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 204 NO CONTENT' do
-        delete :destroy, guid: package.guid
-
-        expect(response.status).to eq(204)
-        expect(response.body).to be_empty
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
       end
     end
   end
 
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -514,11 +404,8 @@ describe PackagesController, type: :controller do
     let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
-      @request.env.merge!(headers_for(user))
-      space.organization.add_user(user)
-      space.organization.save
-      space.add_developer(user)
-      space.save
+      allow_user_read_access(user, space: space)
+      stub_readable_space_guids_for(user, space)
     end
 
     it 'returns 200' do
@@ -529,25 +416,81 @@ describe PackagesController, type: :controller do
     it 'lists the packages visible to the user' do
       get :index
 
-      response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+      response_guids = parsed_body['resources'].map { |r| r['guid'] }
       expect(response_guids).to match_array([user_package_1, user_package_2].map(&:guid))
     end
 
     it 'returns pagination links for /v3/packages' do
       get :index
-      expect(JSON.parse(response.body)['pagination']['first']['href']).to start_with('/v3/packages')
+      expect(parsed_body['pagination']['first']['href']).to start_with("#{link_prefix}/v3/packages")
+    end
+
+    context 'when accessed as an app subresource' do
+      it 'uses the app as a filter' do
+        app = VCAP::CloudController::AppModel.make(space: space)
+        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
+        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
+        VCAP::CloudController::PackageModel.make
+
+        get :index, app_guid: app.guid
+
+        expect(response.status).to eq(200)
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([package_1.guid, package_2.guid])
+      end
+
+      it 'provides the correct base url in the pagination links' do
+        get :index, app_guid: app_model.guid
+        expect(parsed_body['pagination']['first']['href']).to include("#{link_prefix}/v3/apps/#{app_model.guid}/packages")
+      end
+
+      context 'the app does not exist' do
+        it 'returns a 404 Resource Not Found' do
+          get :index, app_guid: 'hello-i-do-not-exist'
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+        end
+      end
+
+      context 'when the user does not have permissions to read the app' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404 Resource Not Found error' do
+          get :index, app_guid: app_model.guid
+
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.status).to eq 404
+        end
+      end
     end
 
     context 'admin' do
       before do
-        @request.env.merge!(admin_headers)
-        allow(membership).to receive(:has_any_roles?).and_return(false)
+        set_current_user_as_admin(user: user)
       end
 
       it 'lists all the packages' do
         get :index
 
-        response_guids = JSON.parse(response.body)['resources'].map { |r| r['guid'] }
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
+      end
+    end
+
+    context 'read only admin' do
+      before do
+        disallow_user_read_access(user, space: space)
+        allow(controller).to receive(:readable_space_guids).and_return([])
+        set_current_user_as_admin_read_only(user: user)
+      end
+
+      it 'lists all the packages' do
+        get :index
+
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response_guids).to match_array([user_package_1, user_package_2, admin_package].map(&:guid))
       end
     end
@@ -560,23 +503,10 @@ describe PackagesController, type: :controller do
       it 'paginates the response' do
         get :index, params
 
-        parsed_response = JSON.parse(response.body)
+        parsed_response = parsed_body
         response_guids = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(2)
         expect(response_guids.length).to eq(per_page)
-      end
-    end
-
-    context 'when the user does not have the read scope' do
-      before do
-        @request.env.merge!(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.write']))
-      end
-
-      it 'returns a 403 NotAuthorized error' do
-        get :index
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
       end
     end
 
@@ -605,416 +535,283 @@ describe PackagesController, type: :controller do
         end
       end
     end
+
+    context 'permissions' do
+      context 'when the user can read but not write to the space' do
+        it 'returns a 200 OK' do
+          get :index
+          expect(response.status).to eq(200)
+        end
+      end
+
+      context 'when the user does not have the read scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
+        end
+
+        it 'returns a 403 NotAuthorized error' do
+          get :index
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
   end
 
-  describe '#stage' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:stagers) { double(:stagers) }
-    let(:package) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-                                               type: VCAP::CloudController::PackageModel::BITS_TYPE,
-                                               state: VCAP::CloudController::PackageModel::READY_STATE)
-    end
-
-    before do
-      @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make)))
-      allow(VCAP::CloudController::Membership).to receive(:new).and_return(membership)
-      allow(membership).to receive(:has_any_roles?).and_return(true)
-      allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-      allow(stagers).to receive(:stager_for_package).and_return(double(:stager, stage: nil))
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(
-        app: app_model,
-        buildpack: nil,
-        stack: VCAP::CloudController::Stack.default.name
-      )
-    end
-
-    it 'returns a 201 Created response' do
-      post :stage, guid: package.guid
-      expect(response.status).to eq 201
-    end
-
-    it 'creates a new droplet for the package' do
-      expect {
-        post :stage, guid: package.guid
-      }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
-
-      expect(VCAP::CloudController::DropletModel.last.package.guid).to eq(package.guid)
-    end
-
-    context 'admin' do
-      before do
-        @request.env.merge!(json_headers(admin_headers))
-        allow(membership).to receive(:has_any_roles?).and_return(false)
-      end
-
-      it 'returns a 201 Created response and creates a droplet' do
-        expect {
-          post :stage, guid: package.guid
-        }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
-        expect(response.status).to eq 201
-      end
-    end
-
-    context 'when the package does not exist' do
-      it 'returns a 404 ResourceNotFound error' do
-        post :stage, guid: 'made-up-guid'
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
-
-    context 'when the user does not have the write scope' do
-      before do
-        @request.env.merge!(json_headers(headers_for(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])))
-      end
-
-      it 'raises an ApiError with a 403 code' do
-        post :stage, guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    context 'when the user cannot read the package due to roles' do
+  describe '#create' do
+    describe '#create_new' do
+      let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
+      let(:req_body) { { type: 'bits' } }
+      let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
       before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).and_return(false)
+        allow_user_read_access(user, space: space)
+        allow_user_write_access(user, space: space)
       end
 
-      it 'returns a 404 ResourceNotFound error' do
-        post :stage, guid: package.guid
+      context 'bits' do
+        it 'returns a 201 and the package' do
+          expect(app_model.packages.count).to eq(0)
 
-        expect(response.status).to eq(404)
-        expect(response.body).to include('ResourceNotFound')
-      end
-    end
+          post :create, app_guid: app_model.guid, body: req_body
 
-    context 'when the user can read but cannot write to the package due to roles' do
-      let(:space) { app_model.space }
-      let(:org) { space.organization }
-
-      before do
-        allow(membership).to receive(:has_any_roles?).and_raise('incorrect args')
-        allow(membership).to receive(:has_any_roles?).with(
-            [VCAP::CloudController::Membership::SPACE_DEVELOPER,
-             VCAP::CloudController::Membership::SPACE_MANAGER,
-             VCAP::CloudController::Membership::SPACE_AUDITOR,
-             VCAP::CloudController::Membership::ORG_MANAGER], space.guid, org.guid).
-            and_return(true)
-        allow(membership).to receive(:has_any_roles?).with([VCAP::CloudController::Membership::SPACE_DEVELOPER], space.guid).
-            and_return(false)
-      end
-
-      it 'raises ApiError NotAuthorized' do
-        post :stage, guid: package.guid
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include('NotAuthorized')
-      end
-    end
-
-    describe 'buildpack lifecycle' do
-      describe 'buildpack request' do
-        let(:req_body) { { lifecycle: { type: 'buildpack', data: {  buildpack: buildpack_request } } } }
-        let(:buildpack) { VCAP::CloudController::Buildpack.make }
-
-        context 'when a git url is requested' do
-          let(:buildpack_request) { 'http://dan-and-zach-awesome-pack.com' }
-
-          it 'works with a valid url' do
-            post :stage, { guid: package.guid, body: req_body }
-
-            expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq('http://dan-and-zach-awesome-pack.com')
-          end
-
-          context 'when the url is invalid' do
-            let(:buildpack_request) { 'totally-broke!' }
-
-            it 'returns a 422' do
-              post :stage, { guid: package.guid, body: req_body }
-
-              expect(response.status).to eq(422)
-              expect(response.body).to include('UnprocessableEntity')
-            end
-          end
-        end
-
-        context 'when the buildpack is not a url' do
-          let(:buildpack_request) { buildpack.name }
-
-          it 'uses buildpack by name' do
-            post :stage, { guid: package.guid, body: req_body }
-
-            expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.buildpack_lifecycle_data.buildpack).to eq(buildpack.name)
-          end
-
-          context 'when the buildpack does not exist' do
-            let(:buildpack_request) { 'notfound' }
-
-            it 'returns a 422' do
-              post :stage, { guid: package.guid, body: req_body }
-
-              expect(response.status).to eq(422)
-              expect(response.body).to include('UnprocessableEntity')
-            end
-          end
-        end
-
-        context 'when buildpack is not requested and app has a buildpack' do
-          let(:req_body) { {} }
-
-          before do
-            app_model.buildpack_lifecycle_data.buildpack = buildpack.name
-            app_model.buildpack_lifecycle_data.save
-          end
-
-          it 'uses the apps buildpack' do
-            post :stage, { guid: package.guid, body: req_body }
-
-            expect(response.status).to eq(201)
-            expect(VCAP::CloudController::DropletModel.last.lifecycle_data.buildpack).to eq(app_model.lifecycle_data.buildpack)
-          end
-        end
-      end
-    end
-
-    describe 'docker lifecycle' do
-      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker) }
-      let(:req_body) { { lifecycle: { type: 'docker', data: {} } } }
-      let!(:package) do
-        VCAP::CloudController::PackageModel.make(:docker,
-                                                 app_guid: docker_app_model.guid,
-                                                 type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
-                                                 state: VCAP::CloudController::PackageModel::READY_STATE
-                                                )
-      end
-
-      before do
-        expect(docker_app_model.lifecycle_type).to eq('docker')
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(
-          app: docker_app_model,
-          buildpack: nil,
-          stack: VCAP::CloudController::Stack.default.name
-        )
-      end
-
-      context 'when diego_docker is enabled' do
-        before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
-        end
-
-        it 'returns a 201 Created response' do
-          expect {
-            post :stage, guid: package.guid, body: req_body
-          }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
           expect(response.status).to eq 201
+          expect(app_model.reload.packages.count).to eq(1)
+          created_package = app_model.packages.first
+
+          response_guid = parsed_body['guid']
+          expect(response_guid).to eq created_package.guid
         end
 
-        context 'when the user adds additional body parameters' do
-          let(:req_body) do
-            {
-              lifecycle:
-              {
-                type: 'docker',
-                data:
-                {
-                  foobar: 'iamverysmart'
-                }
-              }
-            }
-          end
+        context 'with an invalid type field' do
+          let(:req_body) { { type: 'ninja' } }
 
-          it 'raises a 422' do
-            post :stage, guid: package.guid, body: req_body
+          it 'returns an UnprocessableEntity error' do
+            post :create, app_guid: app_model.guid, body: req_body
 
-            expect(response.status).to eq(422)
-            expect(response.body).to include('UnprocessableEntity')
-          end
-        end
-      end
-
-      context 'when diego_docker is disabled' do
-        before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
-        end
-
-        context 'non-admin user' do
-          it 'raises 403' do
-            post :stage, guid: package.guid, body: req_body
-
-            expect(response.status).to eq(403)
-            expect(response.body).to include('FeatureDisabled')
-            expect(response.body).to include('diego_docker')
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include "must be one of 'bits, docker'"
           end
         end
 
-        context 'admin user' do
+        context 'when the app does not exist' do
+          it 'returns a 404 ResourceNotFound error' do
+            post :create, app_guid: 'bogus', body: req_body
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+          end
+        end
+
+        context 'when the package is invalid' do
           before do
-            @request.env.merge!(json_headers(admin_headers))
-            allow(membership).to receive(:has_any_roles?).and_return(false)
+            allow(VCAP::CloudController::PackageCreate).to receive(:create).and_raise(VCAP::CloudController::PackageCreate::InvalidPackage.new('err'))
           end
 
-          it 'returns a 201 Created response and creates a droplet' do
-            expect {
-              post :stage, guid: package.guid, body: req_body
-            }.to change { VCAP::CloudController::DropletModel.count }.from(0).to(1)
-            expect(response.status).to eq 201
+          it 'returns 422' do
+            post :create, app_guid: app_model.guid, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+          end
+        end
+
+        context 'permissions' do
+          context 'when the user does not have write scope' do
+            before do
+              set_current_user(user, scopes: ['cloud_controller.read'])
+            end
+
+            it 'returns a 403 NotAuthorized error' do
+              post :create, app_guid: app_model.guid, body: req_body
+
+              expect(response.status).to eq 403
+              expect(response.body).to include 'NotAuthorized'
+            end
+          end
+
+          context 'when the user cannot read the app' do
+            before do
+              disallow_user_read_access(user, space: space)
+            end
+
+            it 'returns a 404 ResourceNotFound error' do
+              post :create, app_guid: app_model.guid, body: req_body
+
+              expect(response.status).to eq 404
+              expect(response.body).to include 'ResourceNotFound'
+            end
+          end
+
+          context 'when the user can read but not write to the space' do
+            before do
+              disallow_user_write_access(user, space: space)
+            end
+
+            it 'returns a 403 NotAuthorized error' do
+              post :create, app_guid: app_model.guid, body: req_body
+
+              expect(response.status).to eq 403
+              expect(response.body).to include 'NotAuthorized'
+            end
           end
         end
       end
-    end
 
-    context 'when the stage request includes environment variables' do
-      context 'when the environment variables are valid' do
+      context 'docker' do
         let(:req_body) do
           {
-            'environment_variables' => {
-              'application_version' => 'whatuuid',
-              'application_name' => 'name-815'
+            type: 'docker',
+            data: {
+              image: 'registry/image:latest'
             }
           }
         end
 
         it 'returns a 201' do
-          post :stage, guid: package.guid, body: req_body
+          expect(app_model.packages.count).to eq(0)
+          post :create, app_guid: app_model.guid, body: req_body
 
-          expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include(
-              {
-                'application_version' => 'whatuuid',
-                'application_name'    => 'name-815'
-              })
-        end
-      end
+          expect(response.status).to eq 201
 
-      context 'when user passes in values to the app' do
-        let(:req_body) do
-          {
-            'environment_variables' => {
-              'key_from_package' => 'should_merge',
-              'conflicting_key'  => 'value_from_package'
-            }
-          }
-        end
-
-        before do
-          app_model.environment_variables = { 'key_from_app' => 'should_merge', 'conflicting_key' => 'value_from_app' }
-          app_model.save
-        end
-
-        it 'merges with the existing environment variables' do
-          post :stage, guid: package.guid, body: req_body
-
-          expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include('key_from_package' => 'should_merge')
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include('key_from_app' => 'should_merge')
-        end
-
-        it 'clobbers the existing value from the app' do
-          post :stage, guid: package.guid, body: req_body
-
-          expect(response.status).to eq(201)
-          expect(VCAP::CloudController::DropletModel.last.environment_variables).to include('conflicting_key' => 'value_from_package')
-        end
-      end
-
-      context 'when the environment variables are not valid' do
-        let(:req_body) { { 'environment_variables' => 'invalid_param' } }
-
-        it 'returns a 422' do
-          post :stage, guid: package.guid, body: req_body
-
-          expect(response.status).to eq(422)
-          expect(response.body).to include('UnprocessableEntity')
+          app_model.reload
+          package = app_model.packages.first
+          expect(package.type).to eq('docker')
+          expect(package.image).to eq('registry/image:latest')
         end
       end
     end
 
-    context 'when the request body is not valid' do
-      let(:req_body) { { 'memory_limit' => 'invalid' } }
-
-      it 'returns an UnprocessableEntity error' do
-        post :stage, guid: package.guid, body: req_body
-
-        expect(response.status).to eq(422)
-        expect(response.body).to include('UnprocessableEntity')
-      end
-    end
-
-    describe 'handling action errors' do
-      let(:package_stage_action) { double(VCAP::CloudController::PackageStageAction.new) }
+    describe '#create_copy' do
+      let(:source_app_model) { VCAP::CloudController::AppModel.make }
+      let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
+      let(:target_app_model) { VCAP::CloudController::AppModel.make }
+      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:source_space) { source_app_model.space }
+      let(:destination_space) { target_app_model.space }
 
       before do
-        allow(VCAP::CloudController::PackageStageAction).to receive(:new).and_return(package_stage_action)
+        allow_user_read_access(user, space: source_space)
+        allow_user_write_access(user, space: source_space)
+        allow_user_read_access(user, space: destination_space)
+        allow_user_write_access(user, space: destination_space)
       end
 
-      context 'when the request package is invalid' do
-        before do
-          allow(package_stage_action).to receive(:stage).and_raise(VCAP::CloudController::PackageStageAction::InvalidPackage)
+      it 'returns a 201 and the response' do
+        expect(target_app_model.packages.count).to eq(0)
+
+        post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+
+        copied_package = target_app_model.reload.packages.first
+        response_guid  = parsed_body['guid']
+
+        expect(response.status).to eq 201
+        expect(copied_package.type).to eq(original_package.type)
+        expect(response_guid).to eq copied_package.guid
+      end
+
+      context 'permissions' do
+        context 'when the user does not have write scope' do
+          before do
+            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
         end
 
-        it 'returns a 400 InvalidRequest error' do
-          post :stage, guid: package.guid
+        context 'when the user cannot read the source package' do
+          before do
+            disallow_user_read_access(user, space: source_space)
+          end
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('InvalidRequest')
+          it 'returns a 404 ResourceNotFound error' do
+            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+          end
+        end
+
+        context 'when the user cannot modify the source target_app' do
+          before do
+            allow_user_read_access(user, space: source_space)
+            disallow_user_write_access(user, space: source_space)
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
+        end
+
+        context 'when the user cannot read the target app' do
+          before do
+            disallow_user_read_access(user, space: destination_space)
+          end
+
+          it 'returns a 404 ResourceNotFound error' do
+            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+          end
+        end
+
+        context 'when the user cannot create the package' do
+          before do
+            allow_user_read_access(user, space: destination_space)
+            disallow_user_write_access(user, space: destination_space)
+          end
+
+          it 'returns a 403 NotAuthorized error' do
+            post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
         end
       end
 
-      context 'when the space quota is exceeded' do
-        before do
-          allow(package_stage_action).to receive(:stage).and_raise(VCAP::CloudController::PackageStageAction::SpaceQuotaExceeded)
-        end
+      context 'when the source package does not exist' do
+        it 'returns a 404 ResourceNotFound error' do
+          post :create, app_guid: target_app_model.guid, source_package_guid: 'bogus package guid'
 
-        it 'returns 400 UnableToPerform' do
-          post :stage, guid: package.guid
-
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
-          expect(response.body).to include("space's memory limit exceeded")
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
         end
       end
 
-      context 'when the org quota is exceeded' do
-        before do
-          allow(package_stage_action).to receive(:stage).and_raise(VCAP::CloudController::PackageStageAction::OrgQuotaExceeded)
-        end
+      context 'when the target target_app does not exist' do
+        it 'returns a 404 ResourceNotFound error' do
+          post :create, app_guid: 'bogus', source_package_guid: original_package.guid
 
-        it 'returns 400 UnableToPerform' do
-          post :stage, guid: package.guid
-
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
-          expect(response.body).to include("organization's memory limit exceeded")
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
         end
       end
 
-      context 'when the disk limit is exceeded' do
+      context 'when the package is invalid' do
         before do
-          allow(package_stage_action).to receive(:stage).and_raise(VCAP::CloudController::PackageStageAction::DiskLimitExceeded)
+          allow_any_instance_of(VCAP::CloudController::PackageCopy).to receive(:copy).and_raise(VCAP::CloudController::PackageCopy::InvalidPackage.new('ruh roh'))
         end
 
-        it 'returns 400 UnableToPerform' do
-          post :stage, guid: package.guid
+        it 'returns 422' do
+          post :create, app_guid: target_app_model.guid, source_package_guid: original_package.guid
 
-          expect(response.status).to eq(400)
-          expect(response.body).to include('UnableToPerform')
-          expect(response.body).to include('Staging request')
-          expect(response.body).to include('disk limit exceeded')
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'ruh roh'
         end
       end
     end

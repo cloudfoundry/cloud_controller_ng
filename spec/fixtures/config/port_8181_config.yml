@@ -1,7 +1,9 @@
 ---
 local_route: 127.0.0.1
 external_port: 8181
+tls_port: 8183
 pid_filename: /tmp/cloud_controller.8181.pid
+internal_service_hostname: cc.internal.cf
 
 info:
   name: "vcap"
@@ -34,6 +36,9 @@ audit_events:
 failed_jobs:
   cutoff_age_in_days: 31
 
+completed_tasks:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
 maximum_app_disk_in_mb: 2048
@@ -43,11 +48,14 @@ broker_client_max_async_poll_duration_minutes: 10080
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "http://localhost:5155/internal"
 
 uaa:
   url: "http://localhost:8080/uaa"
+  internal_url: "https://uaa.service.cf.internal"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   file: /tmp/cloud_controller.8181.log
@@ -82,6 +90,7 @@ quota_definitions:
 
 default_quota_definition: default
 
+shared_isolation_segment_name: 'shared'
 
 resource_pool:
   resource_directory_key: "cc-resources"

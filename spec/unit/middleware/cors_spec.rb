@@ -3,7 +3,7 @@ require 'cors'
 
 module CloudFoundry
   module Middleware
-    describe Cors do
+    RSpec.describe Cors do
       let(:allowed_domains) { ['http://*.inblue.net', 'http://talkoncorners.com', 'http://borrowedheaven.org'] }
       let(:middleware) { described_class.new(app, allowed_domains) }
       let(:app) { double(:app, call: [123, {}, 'a body']) }
@@ -27,7 +27,7 @@ module CloudFoundry
             let(:origin) { 'http://corblimey.com' }
 
             it 'does not return any Access-Control headers' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -38,7 +38,7 @@ module CloudFoundry
             end
 
             it 'delegates to the initial request' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -54,7 +54,7 @@ module CloudFoundry
             let(:origin) { 'http://talkoncorners.com.extra' }
 
             it 'does not return any Access-Control headers' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -65,7 +65,7 @@ module CloudFoundry
             end
 
             it 'delegates to the initial request' do
-              request_headers       = {
+              request_headers = {
                 'HTTP_ORIGIN'                        => origin,
                 'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
                 'REQUEST_METHOD'                     => 'OPTIONS'
@@ -82,7 +82,7 @@ module CloudFoundry
 
             context 'but no Access-Control-Request-Method header is present' do
               it 'does not return any Access-Control headers' do
-                request_headers       = {
+                request_headers = {
                   'HTTP_ORIGIN'    => origin,
                   'REQUEST_METHOD' => 'OPTIONS'
                 }
@@ -92,7 +92,7 @@ module CloudFoundry
               end
 
               it 'delegates to the initial request' do
-                request_headers       = {
+                request_headers = {
                   'HTTP_ORIGIN'    => origin,
                   'REQUEST_METHOD' => 'OPTIONS'
                 }
@@ -142,8 +142,8 @@ module CloudFoundry
               it 'returns the valid request methods in the Access-Control-Allow-Methods header' do
                 _, headers, _ = middleware.call(request_headers)
                 expect(headers['Access-Control-Allow-Methods'].split(',')).to contain_exactly(
-                    'PUT', 'POST', 'DELETE', 'GET'
-                  )
+                  'PUT', 'POST', 'DELETE', 'GET'
+                )
               end
 
               it 'returns a max-age header with a large value (since these headers rarely change' do
@@ -160,10 +160,10 @@ module CloudFoundry
               it 'allows needed request headers to be included' do
                 _, headers, _ = middleware.call(request_headers)
                 expect(headers['Access-Control-Allow-Headers'].split(',')).to contain_exactly(
-                    'origin',
-                    'content-type',
-                    'authorization'
-                  )
+                  'origin',
+                  'content-type',
+                  'authorization'
+                )
               end
 
               it 'returns Vary: Origin header' do
@@ -176,10 +176,10 @@ module CloudFoundry
                 it 'allows that by adding them to the Allow-Headers list' do
                   _, headers, _ = middleware.call(request_headers.merge(extra_headers))
                   expect(headers['Access-Control-Allow-Headers'].split(',')).to contain_exactly(
-                      'origin',
-                      'content-type',
-                      'authorization',
-                      'foo', 'bar', 'baz'
+                    'origin',
+                    'content-type',
+                    'authorization',
+                    'foo', 'bar', 'baz'
                     )
                 end
               end

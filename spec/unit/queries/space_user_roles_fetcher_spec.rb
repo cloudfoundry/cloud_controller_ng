@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/space_user_roles_fetcher'
 
 module VCAP::CloudController
-  describe SpaceUserRolesFetcher do
+  RSpec.describe SpaceUserRolesFetcher do
     describe '#fetch' do
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }

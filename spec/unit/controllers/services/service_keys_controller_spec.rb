@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceKeysController do
+  RSpec.describe ServiceKeysController do
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
@@ -29,9 +29,9 @@ module VCAP::CloudController
 
     def stub_requests(broker)
       stub_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-          to_return(status: bind_status, body: bind_body.to_json)
+        to_return(status: bind_status, body: bind_body.to_json)
       stub_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-          to_return(status: unbind_status, body: unbind_body.to_json)
+        to_return(status: unbind_status, body: unbind_body.to_json)
     end
 
     def bind_url_regex(opts={})
@@ -46,7 +46,7 @@ module VCAP::CloudController
     describe 'Dependencies' do
       let(:object_renderer) { double :object_renderer }
       let(:collection_renderer) { double :collection_renderer }
-      let(:dependencies) {{
+      let(:dependencies) { {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer
       }}
@@ -67,14 +67,14 @@ module VCAP::CloudController
       before do
         @service_instance_a = ManagedServiceInstance.make(space: @space_a)
         @obj_a = ServiceKey.make(
-            name: 'fake-name-a',
-            service_instance: @service_instance_a
+          name: 'fake-name-a',
+          service_instance: @service_instance_a
         )
 
         @service_instance_b = ManagedServiceInstance.make(space: @space_b)
         @obj_b = ServiceKey.make(
-            name: 'fake-name-b',
-            service_instance: @service_instance_b
+          name: 'fake-name-b',
+          service_instance: @service_instance_b
         )
       end
 
@@ -167,13 +167,15 @@ module VCAP::CloudController
         }.to_json
       end
 
+      before { set_current_user(developer, email: 'email@example.com') }
+
       context 'for managed services' do
         before do
           stub_requests(service.service_broker)
         end
 
         it 'creates a service key to a service instance' do
-          post '/v2/service_keys', req, headers_for(developer)
+          post '/v2/service_keys', req
           expect(last_response).to have_status_code(201)
           service_key = ServiceKey.last
           expect(service_key.credentials).to eq(credentials)
@@ -185,8 +187,7 @@ module VCAP::CloudController
               service_instance_guid: instance.guid
           }
 
-          email = 'email@example.com'
-          post '/v2/service_keys', req.to_json, headers_for(developer, email: email)
+          post '/v2/service_keys', req.to_json
 
           service_key = ServiceKey.last
 
@@ -194,7 +195,7 @@ module VCAP::CloudController
           expect(event.actor_type).to eq('user')
           expect(event.timestamp).to be
           expect(event.actor).to eq(developer.guid)
-          expect(event.actor_name).to eq(email)
+          expect(event.actor_name).to eq('email@example.com')
           expect(event.actee).to eq(service_key.guid)
           expect(event.actee_type).to eq('service_key')
           expect(event.actee_name).to eq('fake-service-key')
@@ -218,7 +219,7 @@ module VCAP::CloudController
                 name: name,
                 service_instance_guid: instance.guid }.to_json
 
-            post '/v2/service_keys', req, headers_for(developer)
+            post '/v2/service_keys', req
           end
 
           it 'raises ServiceKeyNotSupported error' do
@@ -237,7 +238,7 @@ module VCAP::CloudController
             let(:service_instance_guid) { 'THISISWRONG' }
 
             it 'returns CF-ServiceInstanceNotFound error' do
-              post '/v2/service_keys', req, headers_for(developer)
+              post '/v2/service_keys', req
 
               hash_body = JSON.parse(last_response.body)
               expect(hash_body['error_code']).to eq('CF-ServiceInstanceNotFound')
@@ -252,14 +253,14 @@ module VCAP::CloudController
 
             it 'does not tell the service broker to bind the service' do
               broker = service.service_broker
-              post '/v2/service_keys', req, headers_for(developer)
+              post '/v2/service_keys', req
 
               expect(a_request(:put, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
-                  to_not have_been_made
+                to_not have_been_made
             end
 
             it 'should show an error message for create key operation' do
-              post '/v2/service_keys', req, headers_for(developer)
+              post '/v2/service_keys', req
               expect(last_response).to have_status_code 409
               expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
             end
@@ -273,7 +274,7 @@ module VCAP::CloudController
               end
 
               it 'reverts the last_operation of the instance to its previous operation' do
-                post '/v2/service_keys', req, headers_for(developer)
+                post '/v2/service_keys', req
                 expect(instance.last_operation.state).to eq 'succeeded'
                 expect(instance.last_operation.type).to eq 'create'
               end
@@ -286,7 +287,7 @@ module VCAP::CloudController
               end
 
               it 'does not save a last_operation' do
-                post '/v2/service_keys', req, headers_for(developer)
+                post '/v2/service_keys', req
                 expect(instance.refresh.last_operation).to be_nil
               end
             end
@@ -294,7 +295,7 @@ module VCAP::CloudController
 
           describe 'creating key errors' do
             subject(:make_request) do
-              post '/v2/service_keys', req, headers_for(developer)
+              post '/v2/service_keys', req
             end
 
             context 'when attempting to create key and service key already exists' do
@@ -359,7 +360,7 @@ module VCAP::CloudController
           end
 
           it 'forwards the parameters in the bind request' do
-            post '/v2/service_keys', req, headers_for(developer)
+            post '/v2/service_keys', req
             expect(last_response).to have_status_code 201
 
             url_regex = %r{#{broker_url(service.service_broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}
@@ -370,24 +371,11 @@ module VCAP::CloudController
         end
       end
 
-      context 'for a v1 service instance' do
-        let(:instance) { ManagedServiceInstance.make(:v1) }
-
-        it 'returns an error to the user' do
-          post '/v2/service_keys', req, headers_for(developer)
-          expect(last_response).to have_status_code 400
-          expect(decoded_response['description']).to eq(
-              'Service keys are not supported for this service. The service broker ' \
-              'implements the v1 Service Broker API which has been deprecated. To ' \
-              'generate credentials, try binding an application to the service instance.')
-        end
-      end
-
       context 'for a user-provided service instance' do
         let(:instance) { UserProvidedServiceInstance.make }
 
         it 'returns an error to the user' do
-          post '/v2/service_keys', req, headers_for(developer)
+          post '/v2/service_keys', req
           expect(last_response).to have_status_code 400
           expect(decoded_response['description']).to eq('Service keys are not supported for user-provided service instances.')
         end
@@ -407,28 +395,29 @@ module VCAP::CloudController
         service_key_a.save
         service_key_b.save
         service_key_c.save
+        set_current_user(developer)
       end
 
       it 'returns the service keys filtered by service_instance_guid' do
-        get "/v2/service_keys?q=service_instance_guid:#{instance_a.guid}", {}, headers_for(developer)
+        get "/v2/service_keys?q=service_instance_guid:#{instance_a.guid}"
         expect(last_response.status).to eql(200)
         expect(decoded_response.fetch('total_results')).to eq(2)
         expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
         expect(decoded_response.fetch('resources')[1].fetch('metadata').fetch('guid')).to eq(service_key_b.guid)
 
-        get "/v2/service_keys?q=service_instance_guid:#{instance_b.guid}", {}, headers_for(developer)
+        get "/v2/service_keys?q=service_instance_guid:#{instance_b.guid}"
         expect(last_response.status).to eql(200)
         expect(decoded_response.fetch('total_results')).to eq(1)
         expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_c.guid)
       end
 
       it 'returns the service keys filtered by key name' do
-        get '/v2/service_keys?q=name:fake-key-a', {}, headers_for(developer)
+        get '/v2/service_keys?q=name:fake-key-a'
         expect(last_response.status).to eql(200)
         expect(decoded_response.fetch('total_results')).to eq(1)
         expect(decoded_response.fetch('resources').first.fetch('metadata').fetch('guid')).to eq(service_key_a.guid)
 
-        get '/v2/service_keys?q=name:non-exist-key-name', {}, headers_for(developer)
+        get '/v2/service_keys?q=name:non-exist-key-name'
         expect(last_response.status).to eql(200)
         expect(decoded_response.fetch('total_results')).to eq(0)
       end
@@ -439,6 +428,8 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
       let(:instance)  { ManagedServiceInstance.make(space: space) }
       let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
+
+      before { set_current_user(developer) }
 
       def verify_not_found_response(service_key_guid)
         expect(last_response).to have_status_code 404
@@ -451,24 +442,26 @@ module VCAP::CloudController
         let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
 
         it 'SpaceManager role can not get a service key' do
-          get "/v2/service_keys/#{service_key.guid}", '', headers_for(manager)
+          set_current_user(manager)
+          get "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
         end
 
         it 'SpaceAuditor role can not get a service key' do
-          get "/v2/service_keys/#{service_key.guid}", '', headers_for(auditor)
+          set_current_user(auditor)
+          get "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
         end
       end
 
       it 'returns the specific service key' do
-        get "/v2/service_keys/#{service_key.guid}", {}, headers_for(developer)
+        get "/v2/service_keys/#{service_key.guid}"
         expect(last_response.status).to eql(200)
         expect(decoded_response.fetch('metadata').fetch('guid')).to eq(service_key.guid)
       end
 
       it 'returns empty result if no service key found' do
-        get '/v2/service_keys/non-exist-service-key-guid', {}, headers_for(developer)
+        get '/v2/service_keys/non-exist-service-key-guid'
         expect(last_response.status).to eql(404)
         expect(decoded_response.fetch('error_code')).to eq('CF-ServiceKeyNotFound')
         expect(decoded_response.fetch('description')).to eq('The service key could not be found: non-exist-service-key-guid')
@@ -481,6 +474,7 @@ module VCAP::CloudController
 
       before do
         stub_requests(service_key.service_instance.service.service_broker)
+        set_current_user(developer, email: 'example@example.com')
       end
 
       def verify_not_found_response(service_key_guid)
@@ -494,24 +488,26 @@ module VCAP::CloudController
         let(:auditor) { make_auditor_for_space(service_key.service_instance.space) }
 
         it 'SpaceManager role can not delete a service key' do
-          delete "/v2/service_keys/#{service_key.guid}", '', headers_for(manager)
+          set_current_user(manager)
+          delete "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
         end
 
         it 'SpaceAuditor role can not delete a service key' do
-          delete "/v2/service_keys/#{service_key.guid}", '', headers_for(auditor)
+          set_current_user(auditor)
+          delete "/v2/service_keys/#{service_key.guid}"
           verify_not_found_response(service_key.guid)
         end
       end
 
       it 'returns ServiceKeyNotFound error if there is no such key' do
-        delete '/v2/service_keys/non-exist-service-key', '', headers_for(developer)
+        delete '/v2/service_keys/non-exist-service-key'
         verify_not_found_response('non-exist-service-key')
       end
 
       it 'deletes the service key' do
         expect {
-          delete "/v2/service_keys/#{service_key.guid}", '', headers_for(developer)
+          delete "/v2/service_keys/#{service_key.guid}"
         }.to change(ServiceKey, :count).by(-1)
         expect(last_response).to have_status_code 204
         expect(last_response.body).to be_empty
@@ -519,14 +515,13 @@ module VCAP::CloudController
       end
 
       it 'creates an audit event after a service key deleted' do
-        email = 'example@example.com'
-        delete "/v2/service_keys/#{service_key.guid}", '', headers_for(developer, email: email)
+        delete "/v2/service_keys/#{service_key.guid}"
 
         event = Event.first(type: 'audit.service_key.delete')
         expect(event.actor_type).to eq('user')
         expect(event.timestamp).to be
         expect(event.actor).to eq(developer.guid)
-        expect(event.actor_name).to eq(email)
+        expect(event.actor_name).to eq('example@example.com')
         expect(event.actee).to eq(service_key.guid)
         expect(event.actee_type).to eq('service_key')
         expect(event.actee_name).to eq(service_key.name)

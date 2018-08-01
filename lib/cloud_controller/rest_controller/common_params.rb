@@ -16,11 +16,11 @@ module VCAP::CloudController::RestController
         ['page',                   Integer],
         ['results-per-page',       Integer],
         ['q',                      String],
+        ['order-by',               String],
         ['order-direction',        String],
         ['orphan-relations',       Integer],
         ['exclude-relations',      String],
         ['include-relations',      String],
-
       ].each do |key, klass|
         val = params[key]
         res[key.underscore.to_sym] = Object.send(klass.name, val) if val

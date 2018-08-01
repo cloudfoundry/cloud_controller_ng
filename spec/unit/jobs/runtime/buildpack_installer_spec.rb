@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe BuildpackInstaller do
+    RSpec.describe BuildpackInstaller do
       let(:buildpack_name) { 'mybuildpack' }
 
       let(:zipfile) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }

@@ -1,18 +1,27 @@
 ---
 local_route: 127.0.0.1
 external_port: 8181
+tls_port: 8182
 pid_filename: /tmp/cloud_controller.pid
 message_bus_servers:
   - nats://127.0.0.1:4222
 
 external_protocol: http
 external_domain: api2.vcap.me
+internal_service_hostname: api.internal.cf
 
 system_domain_organization: the-system_domain-org-name
 system_domain: vcap.me
 app_domains:
   - customer-app-domain1.com
   - customer-app-domain2.com
+system_hostnames:
+  - api
+  - uaa
+  - login
+  - doppler
+  - loggregator
+  - hm9000
 
 jobs:
   global:
@@ -33,12 +42,17 @@ audit_events:
 failed_jobs:
   cutoff_age_in_days: 31
 
+completed_tasks:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
 maximum_app_disk_in_mb: 2048
 
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
+
+shared_isolation_segment_name: 'shared'
 
 info:
   name: "vcap"
@@ -71,11 +85,14 @@ db:
 
 uaa:
   url: "http://localhost:8080/uaa"
+  internal_url: "https://uaa.service.cf.internal"
   resource_id: "cloud_controller"
   symmetric_secret: "tokensecret"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "https://localhost:5155/internal"
 
 routing_api:
   url: "http://localhost:3000"
@@ -83,6 +100,7 @@ routing_api:
   routing_client_secret: 'routing-secret'
 
 route_services_enabled: true
+volume_services_enabled: true
 
 cc_partition: ng
 
@@ -116,6 +134,7 @@ default_quota_definition: default
 resource_pool:
   resource_directory_key: "spec-cc-resources"
   fog_connection:
+    blobstore_timeout: 5
     provider: "AWS"
     aws_access_key_id: "fake_aws_key_id"
     aws_secret_access_key: "fake_secret_access_key"
@@ -123,6 +142,7 @@ resource_pool:
 packages:
   app_package_directory_key: "cc-packages"
   fog_connection:
+    blobstore_timeout: 5
     provider: "AWS"
     aws_access_key_id: "fake_aws_key_id"
     aws_secret_access_key: "fake_secret_access_key"
@@ -130,6 +150,7 @@ packages:
 droplets:
   droplet_directory_key: cc-droplets
   fog_connection:
+    blobstore_timeout: 5
     provider: "AWS"
     aws_access_key_id: "fake_aws_key_id"
     aws_secret_access_key: "fake_secret_access_key"
@@ -137,6 +158,7 @@ droplets:
 buildpacks:
   buildpack_directory_key: cc-buildpacks
   fog_connection:
+    blobstore_timeout: 5
     provider: "AWS"
     aws_access_key_id: "fake_aws_key_id"
     aws_secret_access_key: "fake_secret_access_key"
@@ -164,9 +186,8 @@ cloud_controller_username_lookup_client_secret: 'username_lookup_secret'
 
 users_can_select_backend: true
 allow_app_ssh_access: true
-diego_nsync_url: http://nsync.service.cf.internal:8787
-diego_stager_url: http://stager.service.cf.internal:8888
-diego_tps_url: http://tps.service.cf.internal:1518
+default_app_ssh_access: true
+
 
 renderer:
   max_results_per_page: 100
@@ -197,3 +218,32 @@ allowed_cors_domains:
 - http://*.inblue.net
 - http://talkoncorners.com
 - http://borrowedheaven.org
+
+rate_limiter:
+  enabled: false
+  general_limit: 2000
+  unauthenticated_limit: 100
+  reset_interval_in_minutes: 60
+
+diego:
+  temporary_local_staging: false
+  temporary_local_tasks: false
+  temporary_local_apps: false
+  nsync_url: http://nsync.service.cf.internal:8787
+  stager_url: http://stager.service.cf.internal:8888
+  tps_url: http://tps.service.cf.internal:1518
+  file_server_url: http://file-server.service.cf.internal:8080
+  cc_uploader_url: http://cc-uploader.service.cf.internal:9090
+  use_privileged_containers_for_running: false
+  use_privileged_containers_for_staging: false
+  lifecycle_bundles:
+    "buildpack/cflinuxfs2": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
+    "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"
+    "docker": "docker_app_lifecycle/docker_app_lifecycle.tgz"
+  insecure_docker_registry_list: []
+  docker_staging_stack: 'cflinuxfs2'
+  bbs:
+    url: https://bbs.service.cf.internal:8889
+    key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
+    cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
+    ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt

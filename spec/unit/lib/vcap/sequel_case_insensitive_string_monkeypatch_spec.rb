@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'vcap/sequel_case_insensitive_string_monkeypatch'
 
-describe 'String :name' do
+RSpec.describe 'String :name' do
   let(:table_name) { :unique_str_defaults }
   let(:db_config) { DbConfig.new }
 

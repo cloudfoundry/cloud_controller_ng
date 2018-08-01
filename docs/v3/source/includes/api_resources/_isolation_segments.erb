@@ -1,0 +1,176 @@
+<% content_for :paginated_list_of_isolation_segments do |base_url| %>
+{
+   "pagination": {
+      "total_results": 11,
+      "total_pages": 3,
+      "first": {
+         "href": "https://api.example.org/v3/isolation_segments?page=1&per_page=5"
+      },
+      "last": {
+         "href": "https://api.example.org/v3/isolation_segments?page=3&per_page=5"
+      },
+      "next": {
+         "href": "https://api.example.org/v3/isolation_segments?page=2&per_page=5"
+      },
+      "previous": null
+   },
+   "resources": [
+      {
+         "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+         "name": "an_isolation_segment",
+         "created_at": "2016-10-19T20:25:04Z",
+         "updated_at": "2016-11-08T16:41:26Z",
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+         "name": "an_isolation_segment1",
+         "created_at": "2016-10-19T20:29:19Z",
+         "updated_at": "2016-11-08T16:41:26Z",
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "ecdc67c3-a71e-43ff-bddf-048930b8cd03",
+         "name": "an_isolation_segment2",
+         "created_at": "2016-10-19T20:29:22Z",
+         "updated_at": "2016-11-08T16:41:26Z",
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "424c89e4-4353-46b7-9bf4-f90bd9bacac0",
+         "name": "an_isolation_segment3",
+         "created_at": "2016-10-19T20:29:27Z",
+         "updated_at": "2016-11-08T16:41:26Z",
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0"
+            },
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/relationships/organizations"
+            }
+         }
+      },
+      {
+         "guid": "0a79fcec-a648-4eb8-a6c3-2b5be39047c7",
+         "name": "an_isolation_segment4",
+         "created_at": "2016-10-19T20:29:33Z",
+         "updated_at": "2016-11-08T16:41:26Z",
+         "links": {
+            "spaces": {
+               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/spaces"
+            },
+            "organizations": {
+               "href": "https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/relationships/organizations"
+            }
+         }
+      }
+   ]
+}
+<% end %>
+
+<% content_for :single_isolation_segment do %>
+{
+   "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+   "name": "an_isolation_segment",
+   "created_at": "2016-10-19T20:25:04Z",
+   "updated_at": "2016-11-08T16:41:26Z",
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+      },
+      "spaces": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+      },
+      "organizations": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+      }
+   }
+}
+<% end %>
+
+<% content_for :isolation_segment_with_name do |name = 'a_segment'| %>
+{
+   "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+   "name": "<%= name %>",
+   "created_at": "2016-10-19T20:25:04Z",
+   "updated_at": "2016-11-08T16:41:26Z",
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+      },
+      "spaces": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/spaces"
+      },
+      "organizations": {
+         "href": "https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/relationships/organizations"
+      }
+   }
+}
+<% end %>
+
+<% content_for :related_spaces do %>
+{
+  "data": [
+    {
+      "name": "space1",
+      "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+      "link": "/v2/spaces/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
+    },
+    {
+      "name": "space2",
+      "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+      "link": "/v2/spaces/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+    }
+  ]
+}
+<% end %>
+
+<% content_for :related_organizations do %>
+{
+  "data": [
+    {
+      "name": "org1",
+      "guid": "68d54d31-9b3a-463b-ba94-e8e4c32edbac",
+      "link": "/v2/organizations/68d54d31-9b3a-463b-ba94-e8e4c32edbac"
+    },
+    {
+      "name": "org2",
+      "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c",
+      "link": "/v2/organizations/b19f6525-cbd3-4155-b156-dc0c2a431b4c"
+    }
+  ]
+}
+<% end %>

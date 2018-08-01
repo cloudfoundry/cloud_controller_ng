@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'actions/services/service_instance_create'
 
 module VCAP::CloudController
-  describe ServiceInstanceCreate do
-    let(:event_repository) { double(:event_repository, record_service_instance_event: nil) }
+  RSpec.describe ServiceInstanceCreate do
+    let(:event_repository) { instance_double(Repositories::ServiceEventRepository, record_service_instance_event: nil, user: User.make, current_user_email: 'fake@email.com') }
     let(:logger) { double(:logger) }
     subject(:create_action) { ServiceInstanceCreate.new(event_repository, logger) }
 

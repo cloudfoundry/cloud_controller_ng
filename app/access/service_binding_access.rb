@@ -1,13 +1,11 @@
 module VCAP::CloudController
   class ServiceBindingAccess < BaseAccess
     def create?(service_binding, params=nil)
-      return true if admin_user?
-      return false if service_binding.in_suspended_org?
-      service_binding.app.space.has_developer?(context.user)
+      raise 'callers should use Membership to determine this'
     end
 
     def delete?(service_binding)
-      create?(service_binding)
+      raise 'callers should use Membership to determine this'
     end
   end
 end

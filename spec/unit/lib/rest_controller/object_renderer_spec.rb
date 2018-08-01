@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RestController
-  describe ObjectRenderer do
+  RSpec.describe ObjectRenderer do
     subject(:renderer) { described_class.new(eager_loader, serializer, renderer_opts) }
     let(:eager_loader) { SecureEagerLoader.new }
     let(:serializer) { PreloadedObjectSerializer.new }
@@ -20,7 +20,7 @@ module VCAP::CloudController::RestController
         it 'raises BadQueryParameter error' do
           expect {
             subject.render_json(controller, instance, opts)
-          }.to raise_error(VCAP::Errors::ApiError, /inline_relations_depth/)
+          }.to raise_error(CloudController::Errors::ApiError, /inline_relations_depth/)
         end
       end
 
@@ -41,6 +41,25 @@ module VCAP::CloudController::RestController
         it 'renders json response' do
           result = subject.render_json(controller, instance, opts)
           expect(result).to be_instance_of(String)
+        end
+      end
+
+      describe 'object transformer' do
+        let(:instance) { VCAP::CloudController::TestModel.make }
+        let(:object_transformer) { double(:object_transformer) }
+
+        before do
+          renderer_opts[:object_transformer] = object_transformer
+        end
+
+        it 'accepts an optional object transformer that can mutate the rendered object' do
+          expect(object_transformer).to receive(:transform) do |object|
+            expect(object).to eq(instance)
+            object.unique_value = 'bar'
+          end
+
+          result = MultiJson.load(subject.render_json(controller, instance, opts))
+          expect(result['entity']['unique_value']).to eq('bar')
         end
       end
     end

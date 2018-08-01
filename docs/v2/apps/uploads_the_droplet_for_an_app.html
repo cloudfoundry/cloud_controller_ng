@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Uploads the droplet for an App</h2>
+    <h3>PUT /v2/apps/:guid/droplet/upload</h3>
+
+    <p class="explanation">
+      Defines and uploads a previously staged droplet that this application will run, using a multipart PUT request.
+      The uploaded file should be a gzipped tar file.
+    </p>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/apps/a9c16d56-26dd-406e-9f42-caa42915d316/droplet/upload</pre>
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class="required ">
+                <span class="name">droplet</span>
+              </td>
+              <td>
+                <span class="description">A tgz droplet file.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>cURL</h4>
+        <pre class="request curl">
+curl &quot;https://api.[your-domain.com]/v2/apps/a9c16d56-26dd-406e-9f42-caa42915d316/droplet/upload&quot; \
+	-F droplet=@&quot;/path/to/droplet.tgz&quot; \
+	-X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTQzOSIsImVtYWlsIjoiZW1haWwtMzAxQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg5MDR9.z0fBFq-vMeKTNiBlKtRCZ49OV-V_lTQYYdBvRw_eR1c&quot;
+        </pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "88890ca1-7500-4344-bbba-794938f6f702",
+    "created_at": "2016-10-03T18:26:21Z",
+    "url": "/v2/jobs/88890ca1-7500-4344-bbba-794938f6f702"
+  },
+  "entity": {
+    "guid": "88890ca1-7500-4344-bbba-794938f6f702",
+    "status": "queued"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">
+Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: db83725b-6077-4c8d-bff6-ed447b363655
+Content-Length: 270
+        </pre>
+  </div>
+</div>
+</body>
+</html>

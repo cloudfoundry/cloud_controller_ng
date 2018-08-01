@@ -1,23 +1,18 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe SpaceQuotaDefinitionAccess, type: :access do
+  RSpec.describe SpaceQuotaDefinitionAccess, type: :access do
     subject(:access) { SpaceQuotaDefinitionAccess.new(Security::AccessContext.new) }
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { Organization.make }
+    let(:scopes) { nil }
     let(:space) { Space.make(organization: org) }
     let(:object) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
-    let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
-    before do
-      SecurityContext.set(user, token)
-    end
+    before { set_current_user(user, scopes: scopes) }
 
-    after do
-      SecurityContext.clear
-    end
-
-    it_should_behave_like :admin_full_access
+    it_behaves_like :admin_full_access
+    it_behaves_like :admin_read_only_access
 
     context 'organization manager' do
       before { org.add_manager(user) }
@@ -133,7 +128,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.write' do
-      let(:token) { { 'scope' => ['cloud_controller.read'] } }
+      let(:scopes) { ['cloud_controller.read'] }
 
       before do
         org.add_user(user)
@@ -149,7 +144,7 @@ module VCAP::CloudController
     end
 
     context 'any user using client without cloud_controller.read' do
-      let(:token) { { 'scope' => [] } }
+      let(:scopes) { [] }
 
       before do
         org.add_user(user)

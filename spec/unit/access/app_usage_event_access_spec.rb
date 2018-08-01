@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AppUsageEventAccess, type: :access do
+  RSpec.describe AppUsageEventAccess, type: :access do
     subject(:access) { AppUsageEventAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
     let(:user) { VCAP::CloudController::User.make }
@@ -14,6 +14,8 @@ module VCAP::CloudController
     after do
       SecurityContext.clear
     end
+
+    it_behaves_like :admin_read_only_access
 
     context 'an admin' do
       include_context :admin_setup

@@ -17,6 +17,12 @@ Sequel.migration do
   end
 end
       Ruby
+      puts"*"*134
+      puts""
+      puts "Before writing a migration review our style guide: https://github.com/cloudfoundry/cloud_controller_ng/wiki/CAPI-Migration-Style-Guide"
+      puts""
+      puts"*"*134
+
     end
   end
 
@@ -50,6 +56,39 @@ end
     Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
     db_logger = Steno.logger("cc.db.migrations")
     DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
+  end
+
+  def parse_db_connection_string
+    host = port = passenv = ""
+    case ENV["DB"]
+    when "postgres"
+      user = "-U postgres"
+      pass = ""
+      if ENV["DB_CONNECTION_STRING"]
+        uri = URI.parse(ENV["DB_CONNECTION_STRING"])
+        host = "-h #{uri.host}"
+        port = "-p #{uri.port}" if uri.port
+        if uri.user
+          user = "-U #{uri.user}"
+        end
+        passenv = "PGPASSWORD=#{uri.password}" if uri.password
+      end
+    when "mysql"
+      user = "-u root"
+      pass = "--password=password"
+      if ENV["DB_CONNECTION_STRING"]
+        uri = URI.parse(ENV["DB_CONNECTION_STRING"])
+        host = "-h #{uri.host}"
+        port = "-P #{uri.port}" if uri.port
+        if uri.user
+          user = "-u #{uri.user}"
+        end
+        if uri.password
+          pass = "--password=#{uri.password}"
+        end
+      end
+    end
+    return host, port, user, pass, passenv
   end
 
   desc "Rollback migrations to the database (one migration by default)"
@@ -89,16 +128,19 @@ end
   task :create do
     require_relative "../../spec/support/bootstrap/db_config"
     db_config = DbConfig.new
+    host, port, user, pass, passenv = parse_db_connection_string
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'create database #{db_config.name};'"
-        sh "psql -U postgres -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext'"
+        sh "#{passenv} psql -q #{host} #{port} #{user} -c 'create database #{db_config.name};'"
+        sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'"
+        # sh %Q(#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c 'CREATE EXTENSION IF NOT EXISTS citext; CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;')
+        # sh "#{passenv} psql -q #{host} #{port} #{user} -d #{db_config.name} -c '"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'create database #{db_config.name};' -u root"
         else
-          sh "mysql -e 'create database #{db_config.name};' -u root --password=password"
+          sh "mysql #{host} #{port} #{user} #{pass} -e 'create database #{db_config.name};'"
         end
       else
         puts "rake db:create requires DB to be set to create a database"
@@ -109,15 +151,16 @@ end
   task :drop do
     require_relative "../../spec/support/bootstrap/db_config"
     db_config = DbConfig.new
+    host, port, user, pass, passenv = parse_db_connection_string
 
     case ENV["DB"]
       when "postgres"
-        sh "psql -U postgres -c 'drop database if exists #{db_config.name};'"
+        sh "#{passenv} psql -q #{host} #{port} #{user} -c 'drop database if exists #{db_config.name};'"
       when "mysql"
         if ENV["TRAVIS"] == "true"
           sh "mysql -e 'drop database if exists #{db_config.name};' -u root"
         else
-          sh "mysql -e 'drop database if exists #{db_config.name};' -u root --password=password"
+          sh "mysql #{host} #{port} #{user} #{pass} -e 'drop database if exists #{db_config.name};'"
         end
       else
         puts "rake db:drop requires DB to be set to create a database"
@@ -125,4 +168,16 @@ end
   end
 
   task recreate: %w[drop create]
+
+  namespace :parallel do
+    task recreate: %w[parallel:drop parallel:create]
+  end
+
+  desc "Seed the database"
+  task :seed do
+    require 'cloud_controller/seeds'
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
+      VCAP::CloudController::Seeds.write_seed_data(RakeConfig.config)
+    end
+  end
 end

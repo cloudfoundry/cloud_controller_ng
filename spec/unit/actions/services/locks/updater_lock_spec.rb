@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe UpdaterLock do
+  RSpec.describe UpdaterLock do
     let(:service_instance) { ManagedServiceInstance.make }
     let(:updater_lock) { UpdaterLock.new(service_instance) }
     let(:operation) { ServiceInstanceOperation.make(state: 'override me') }
@@ -30,7 +30,7 @@ module VCAP::CloudController
       it 'does not let you lock again' do
         expect {
           updater_lock.lock!
-        }.to raise_error Errors::ApiError
+        }.to raise_error CloudController::Errors::ApiError
       end
     end
 
@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       describe 'unlocking with a delayed job' do
         it 'enqueues the job' do
-          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil)
+          job = Jobs::Services::ServiceInstanceStateFetch.new(nil, nil, nil, nil, nil, nil)
           updater_lock.enqueue_unlock!(job)
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end

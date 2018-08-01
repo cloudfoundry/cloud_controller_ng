@@ -1,59 +1,64 @@
-require 'presenters/v3/app_presenter'
-require 'queries/app_list_fetcher'
-require 'messages/apps_list_message'
-require 'queries/app_fetcher'
-require 'messages/app_create_message'
-require 'actions/app_create'
+require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
 require 'cloud_controller/paging/pagination_options'
-require 'messages/app_update_message'
+require 'actions/app_create'
 require 'actions/app_update'
-require 'queries/app_delete_fetcher'
 require 'actions/app_delete'
 require 'actions/app_start'
 require 'actions/app_stop'
-require 'queries/assign_current_droplet_fetcher'
 require 'actions/set_current_droplet'
-require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
+require 'messages/apps_list_message'
+require 'messages/app_update_message'
+require 'messages/app_create_message'
+require 'presenters/v3/app_presenter'
+require 'presenters/v3/app_env_presenter'
+require 'presenters/v3/paginated_list_presenter'
+require 'queries/app_list_fetcher'
+require 'queries/app_fetcher'
+require 'queries/app_delete_fetcher'
+require 'queries/assign_current_droplet_fetcher'
 
 class AppsV3Controller < ApplicationController
   def index
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
+    invalid_param!(message.pagination_options.errors.full_messages) unless message.pagination_options.valid?
 
-    pagination_options = PaginationOptions.from_params(query_params)
-    invalid_param!(pagination_options.errors.full_messages) unless pagination_options.valid?
+    dataset = if roles.admin? || roles.admin_read_only?
+                AppListFetcher.new.fetch_all(message)
+              else
+                AppListFetcher.new.fetch(message, readable_space_guids)
+              end
 
-    paginated_result = roles.admin? ? AppListFetcher.new.fetch_all(pagination_options, message) :
-      VCAP::CloudController::AppListFetcher.new.fetch(pagination_options, message, allowed_space_guids)
-
-    render status: :ok, json: AppPresenter.new.present_json_list(paginated_result, message)
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(dataset: dataset, path: '/v3/apps', message: message)
   end
 
   def show
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: Presenters::V3::AppPresenter.new(app, show_secrets: can_see_secrets?(space))
   end
 
   def create
     message = AppCreateMessage.create_from_http_request(params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    space_not_found! unless Space.where(guid: message.space_guid).count > 0
-    space_not_found! unless can_create?(message.space_guid)
+    space = Space.where(guid: message.space_guid).first
+    space_not_found! unless space
+    space_not_found! unless can_read?(space.guid, space.organization_guid)
+    unauthorized! unless can_write?(message.space_guid)
 
-    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE && !roles.admin?
-      FeatureFlag.raise_unless_enabled!('diego_docker')
+    if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
+      FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
 
-    lifecycle = AppLifecycleProvider.provide(message)
+    lifecycle = AppLifecycleProvider.provide_for_create(message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppCreate.new(current_user, current_user_email).create(message, lifecycle)
 
-    render status: :created, json: AppPresenter.new.present_json(app)
+    render status: :created, json: Presenters::V3::AppPresenter.new(app)
   rescue AppCreate::InvalidApp => e
     unprocessable!(e.message)
   end
@@ -64,15 +69,15 @@ class AppsV3Controller < ApplicationController
 
     app, space, org = AppFetcher.new.fetch(params[:guid])
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! unless can_update?(space.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
 
-    lifecycle = AppLifecycleProvider.provide(message)
+    lifecycle = AppLifecycleProvider.provide_for_update(message, app)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppUpdate.new(current_user, current_user_email).update(app, message, lifecycle)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound
     droplet_not_found!
   rescue AppUpdate::InvalidApp => e
@@ -80,48 +85,57 @@ class AppsV3Controller < ApplicationController
   end
 
   def destroy
-    app, space, org  = AppDeleteFetcher.new.fetch(params[:guid])
+    app, space, org = AppDeleteFetcher.new.fetch(params[:guid])
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! unless can_delete?(space.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
 
     AppDelete.new(current_user.guid, current_user_email).delete(app)
 
     head :no_content
+  rescue AppDelete::InvalidDelete => e
+    unprocessable!(e.message)
   end
 
   def start
     app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! unless can_start?(space.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    droplet_not_found! unless app.droplet
+    unauthorized! unless can_write?(space.guid)
+    if app.droplet.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+      FeatureFlag.raise_unless_enabled!(:diego_docker)
+    end
 
-    AppStart.new(current_user, current_user_email).start(app)
+    AppStart.start(app: app, user_guid: current_user.guid, user_email: current_user_email)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
-  rescue AppStart::DropletNotFound
-    droplet_not_found!
+    render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStart::InvalidApp => e
     unprocessable!(e.message)
   end
 
   def stop
     app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! unless can_stop?(space.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
 
-    AppStop.new(current_user, current_user_email).stop(app)
+    AppStop.stop(app: app, user_guid: current_user.guid, user_email: current_user_email)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStop::InvalidApp => e
     unprocessable!(e.message)
   end
 
   def show_environment
     app, space, org = AppFetcher.new.fetch(params[:guid])
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! unless can_read_envs?(space.guid)
 
-    render status: :ok, json: AppPresenter.new.present_json_env(app)
+    FeatureFlag.raise_unless_enabled!(:env_var_visibility)
+
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_see_secrets?(space)
+
+    FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
+
+    render status: :ok, json: Presenters::V3::AppEnvPresenter.new(app)
   end
 
   def assign_current_droplet
@@ -129,59 +143,43 @@ class AppsV3Controller < ApplicationController
     droplet_guid = params[:body]['droplet_guid']
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
-    app_not_found! if app.nil? || !can_read?(space.guid, org.guid)
-    unauthorized! unless can_update?(space.guid)
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    unauthorized! unless can_write?(space.guid)
     unprocessable!('Stop the app before changing droplet') if app.desired_state != 'STOPPED'
 
     droplet_not_found! if droplet.nil?
 
-    app = SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
+    SetCurrentDroplet.new(current_user, current_user_email).update_to(app, droplet)
 
-    render status: :ok, json: AppPresenter.new.present_json(app)
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
   rescue SetCurrentDroplet::InvalidApp => e
     unprocessable!(e.message)
   end
 
+  def current_droplet
+    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app_not_found! unless app && can_read?(space.guid, org.guid)
+    droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
+
+    droplet_not_found! unless droplet
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
   private
 
-  def membership
-    @membership ||= Membership.new(current_user)
-  end
-
-  def can_read?(space_guid, org_guid)
-    roles.admin? ||
-      membership.has_any_roles?([VCAP::CloudController::Membership::SPACE_DEVELOPER,
-                                 VCAP::CloudController::Membership::SPACE_MANAGER,
-                                 VCAP::CloudController::Membership::SPACE_AUDITOR,
-                                 VCAP::CloudController::Membership::ORG_MANAGER], space_guid, org_guid)
-  end
-
-  def allowed_space_guids
-    membership.space_guids_for_roles([VCAP::CloudController::Membership::SPACE_DEVELOPER,
-                                      VCAP::CloudController::Membership::SPACE_MANAGER,
-                                      VCAP::CloudController::Membership::SPACE_AUDITOR,
-                                      VCAP::CloudController::Membership::ORG_MANAGER])
-  end
-
-  def can_create?(space_guid)
-    roles.admin? ||
-      membership.has_any_roles?([Membership::SPACE_DEVELOPER], space_guid)
-  end
-  alias_method :can_update?, :can_create?
-  alias_method :can_delete?, :can_create?
-  alias_method :can_start?, :can_create?
-  alias_method :can_stop?, :can_create?
-  alias_method :can_read_envs?, :can_create?
-
   def droplet_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Droplet not found')
+    resource_not_found!(:droplet)
   end
 
   def space_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'Space not found')
+    resource_not_found!(:space)
   end
 
   def app_not_found!
-    raise VCAP::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found')
+    resource_not_found!(:app)
+  end
+
+  def instances_reporters
+    CloudController::DependencyLocator.instance.instances_reporters
   end
 end

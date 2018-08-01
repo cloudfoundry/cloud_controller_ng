@@ -4,7 +4,6 @@ module VCAP::CloudController
 
     many_to_one :service_broker
     one_to_many :service_plans
-    one_to_one :service_auth_token, key: [:label, :provider], primary_key: [:label, :provider]
 
     add_association_dependencies service_plans: :destroy
 
@@ -12,27 +11,22 @@ module VCAP::CloudController
                       :version, :info_url, :active, :bindable,
                       :unique_id, :extra, :tags, :requires, :documentation_url, :service_broker_guid, :plan_updateable
 
-    import_attributes :label, :provider, :url, :description, :long_description,
-                      :version, :info_url, :active, :bindable,
-                      :unique_id, :extra, :tags, :requires, :documentation_url, :plan_updateable
+    import_attributes :label, :description, :long_description, :info_url,
+                      :active, :bindable, :unique_id, :extra,
+                      :tags, :requires, :documentation_url, :plan_updateable
 
-    strip_attributes :label, :provider
+    strip_attributes :label
 
     def validate
-      validates_presence :label,                message:  Sequel.lit('Service name is required')
+      validates_presence :label,                message: Sequel.lit('Service name is required')
       validates_presence :description,          message: 'is required'
       validates_presence :bindable,             message: 'is required'
-      validates_url :url,                       message: 'must be a valid url'
       validates_url :info_url,                  message: 'must be a valid url'
       validates_unique :unique_id,              message: Sequel.lit('Service ids must be unique')
       validates_max_length 2048, :tag_contents, message: Sequel.lit("Service tags for service #{label} must be 2048 characters or less.")
 
-      if v2?
-        validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
-          ds.exclude(service_broker_id: nil)
-        end
-      else
-        validates_unique [:label, :provider], message: 'is taken'
+      validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
+        ds.exclude(service_broker_id: nil)
       end
     end
 
@@ -65,8 +59,8 @@ module VCAP::CloudController
 
       def organization_visible(organization)
         service_ids = ServicePlan.
-          organization_visible(organization).
-          inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
+                      organization_visible(organization).
+                      inject([]) { |ids_so_far, service_plan| ids_so_far << service_plan.service_id }
         dataset.filter(id: service_ids)
       end
 
@@ -75,7 +69,7 @@ module VCAP::CloudController
       def space_visible(space, user)
         if space.has_member? user
           private_brokers_for_space = ServiceBroker.filter(space_id: space.id)
-          dataset.filter(service_broker: (private_brokers_for_space))
+          dataset.filter(service_broker: private_brokers_for_space)
         else
           dataset.filter(id: nil)
         end
@@ -99,23 +93,11 @@ module VCAP::CloudController
       super || []
     end
 
-    def v2?
-      !service_broker.nil?
-    end
-
     def client
       if purging
         VCAP::Services::ServiceBrokers::NullClient.new
-      elsif v2?
-        service_broker.client
       else
-        raise VCAP::Errors::ApiError.new_from_details('MissingServiceAuthToken', label) if service_auth_token.nil?
-
-        @v1_client ||= VCAP::Services::ServiceBrokers::V1::Client.new(
-          url: url,
-          auth_token: service_auth_token.token,
-          timeout: timeout
-        )
+        service_broker.client
       end
     end
 
@@ -142,6 +124,10 @@ module VCAP::CloudController
 
     def route_service?
       requires.include?('route_forwarding')
+    end
+
+    def volume_service?
+      requires.include?('volume_mount')
     end
   end
 end

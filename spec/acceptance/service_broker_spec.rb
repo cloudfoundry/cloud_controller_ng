@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe 'Service Broker' do
+RSpec.describe 'Service Broker' do
   include VCAP::CloudController::BrokerApiHelper
 
-  let(:catalog_with_no_plans) {{
+  let(:catalog_with_no_plans) { {
     services:
     [{
       id:          'service-guid-here',
@@ -14,7 +14,7 @@ describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_small_plan) {{
+  let(:catalog_with_small_plan) { {
     services:
     [{
       id:          'service-guid-here',
@@ -29,7 +29,7 @@ describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_large_plan) {{
+  let(:catalog_with_large_plan) { {
     services:
     [{
       id:          'service-guid-here',
@@ -44,7 +44,7 @@ describe 'Service Broker' do
     }]
   }}
 
-  let(:catalog_with_two_plans)  {{
+  let(:catalog_with_two_plans) { {
     services:
     [{
       id:          'service-guid-here',
@@ -303,7 +303,7 @@ describe 'Service Broker' do
         # set up a fake broker catalog that includes dashboard_client for services
         stub_catalog_fetch(200, services: [service_1, service_2, service_3, service_4, service_5, service_6])
         UAARequests.stub_all
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/.*}).to_return(status: 404)
 
         # add that broker to the CC
         post('/v2/service_brokers',
@@ -321,24 +321,24 @@ describe 'Service Broker' do
         WebMock.reset!
 
         UAARequests.stub_all
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body:    { client_id: 'client-1' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-2}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-2}).to_return(
           body:    { client_id: 'client-2' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-3}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-3}).to_return(
           body:    { client_id: 'client-3' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-5}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-5}).to_return(
           body:    { client_id: 'client-5' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-6}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-6}).to_return(
           body:    { client_id: 'client-6' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
@@ -356,7 +356,7 @@ describe 'Service Broker' do
 
         stub_catalog_fetch(200, services: [service_1, service_2, service_3, service_4, service_5, service_6])
 
-        stub_request(:post, %r{http://localhost:8080/uaa/oauth/clients/tx/modify}).
+        stub_request(:post, %r{https://uaa.service.cf.internal/oauth/clients/tx/modify}).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -428,14 +428,14 @@ describe 'Service Broker' do
           }
         ]
 
-        expect(a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with do |req|
+        expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').with do |req|
           client_modifications = JSON.parse(req.body)
           expect(client_modifications).to match_array(expected_client_modifications)
         end).to have_been_made
       end
 
       it 'can update the service broker name' do
-        put("/v2/service_brokers/#{@service_broker_guid}", "{\"name\":\"new_broker_name\"}",
+        put("/v2/service_brokers/#{@service_broker_guid}", '{"name":"new_broker_name"}',
             json_headers(admin_headers))
 
         expect(last_response).to have_status_code(200)
@@ -539,13 +539,11 @@ describe 'Service Broker' do
 
           warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
 
-          # rubocop:disable LineLength
           expect(warning).to eq(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (http://#{stubbed_broker_host}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
   small
 HEREDOC
-          # rubocop:enable LineLength
         end
       end
 
@@ -587,7 +585,7 @@ HEREDOC
         # set up a fake broker catalog that includes dashboard_client for services
         stub_catalog_fetch(200, services: [service_1, service_2, service_3])
         UAARequests.stub_all
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/.*}).to_return(status: 404)
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/.*}).to_return(status: 404)
 
         # add that broker to the CC
         post('/v2/service_brokers',
@@ -602,16 +600,16 @@ HEREDOC
         expect(last_response).to have_status_code(201)
         @service_broker_guid = decoded_response.fetch('metadata').fetch('guid')
 
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-1}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
           body:    { client_id: 'client-1' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
-        stub_request(:get, %r{http://localhost:8080/uaa/oauth/clients/client-2}).to_return(
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-2}).to_return(
           body:    { client_id: 'client-2' }.to_json,
           status:  200,
           headers: { 'content-type' => 'application/json' })
 
-        stub_request(:post, %r{http://localhost:8080/uaa/oauth/clients/tx/modify}).
+        stub_request(:post, %r{https://uaa.service.cf.internal/oauth/clients/tx/modify}).
           to_return(
             status: 200,
             headers: { 'content-type' => 'application/json' },
@@ -642,8 +640,10 @@ HEREDOC
           }
         ].to_json
 
-        expect(a_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').with(
-          body:  expected_json_body
+        expect(
+          a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
+          with(
+            body: expected_json_body
         )).to have_been_made
       end
     end

@@ -8,19 +8,19 @@ module VCAP::CloudController
 
     get '/v2/service_usage_events', :enumerate
 
-    get "#{path_guid}", :read
+    get path_guid, :read
 
     post '/v2/service_usage_events/destructively_purge_all_and_reseed_existing_instances', :reset
     def reset
       validate_access(:reset, model)
 
-      repository = Repositories::Services::ServiceUsageEventRepository.new
+      repository = Repositories::ServiceUsageEventRepository.new
       repository.purge_and_reseed_service_instances!
 
       [HTTP::NO_CONTENT, nil]
     end
 
-    def self.not_found_exception_name
+    def self.not_found_exception_name(_model_class)
       'EventNotFound'
     end
 
@@ -29,9 +29,9 @@ module VCAP::CloudController
     def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
       after_guid = params['after_guid']
       if after_guid
-        repository = Repositories::Services::ServiceUsageEventRepository.new
+        repository = Repositories::ServiceUsageEventRepository.new
         previous_event = repository.find(after_guid)
-        raise Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
         ds = ds.filter { id > previous_event.id }
       end
       super(model, ds, qp, opts)

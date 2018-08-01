@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServicePlan, type: :model do
+  RSpec.describe ServicePlan, type: :model do
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
@@ -45,8 +45,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active }
-      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public }
+      it { is_expected.to export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active }
+      it { is_expected.to import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable }
     end
 
     describe '#save' do
@@ -89,14 +89,13 @@ module VCAP::CloudController
         end
 
         context 'when a plan with the same name has already been added for this service' do
-          let(:attrs1) { { name: 'dumbo', service_id: service.id } }
-          let(:attrs2) { { name: 'dumbo', service_id: service.id } }
-          let(:service) { Service.make({}) }
+          let(:service) { Service.make(label: 'my-service') }
 
-          before { ServicePlan.make(attrs1) }
+          before { ServicePlan.make(name: 'dumbo', service_id: service.id) }
 
           it 'throws a useful error' do
-            expect { ServicePlan.make(attrs2) }.to raise_exception('Plan names must be unique within a service')
+            expect { ServicePlan.make(name: 'dumbo', service_id: service.id) }.
+              to raise_exception('Plan names must be unique within a service. Service my-service already has a plan named dumbo')
           end
         end
       end
@@ -191,20 +190,52 @@ module VCAP::CloudController
     end
 
     describe '#bindable?' do
-      let(:service_plan) { ServicePlan.make(service: service) }
+      let(:service_plan) { ServicePlan.make(service: service, bindable: plan_bindable) }
 
-      context 'when the service is bindable' do
-        let(:service) { Service.make(bindable: true) }
-        specify { expect(service_plan).to be_bindable }
+      context 'when the plan does not specify if it is bindable' do
+        let(:plan_bindable) { nil }
+
+        context 'and the service is bindable' do
+          let(:service) { Service.make(bindable: true) }
+          specify { expect(service_plan).to be_bindable }
+        end
+
+        context 'and the service is unbindable' do
+          let(:service) { Service.make(bindable: false) }
+          specify { expect(service_plan).not_to be_bindable }
+        end
       end
 
-      context 'when the service is unbindable' do
-        let(:service) { Service.make(bindable: false) }
-        specify { expect(service_plan).not_to be_bindable }
+      context 'when the plan is explicitly set to not be bindable' do
+        let(:plan_bindable) { false }
+
+        context 'and the service is bindable' do
+          let(:service) { Service.make(bindable: true) }
+          specify { expect(service_plan).not_to be_bindable }
+        end
+
+        context 'and the service is unbindable' do
+          let(:service) { Service.make(bindable: false) }
+          specify { expect(service_plan).not_to be_bindable }
+        end
+      end
+
+      context 'when the plan is explicitly set to be bindable' do
+        let(:plan_bindable) { true }
+
+        context 'and the service is bindable' do
+          let(:service) { Service.make(bindable: true) }
+          specify { expect(service_plan).to be_bindable }
+        end
+
+        context 'and the service is unbindable' do
+          let(:service) { Service.make(bindable: false) }
+          specify { expect(service_plan).to be_bindable }
+        end
       end
     end
 
-    describe '#private?' do
+    describe '#broker_private?' do
       it 'returns true if the plan belongs to a service that belongs to a private broker' do
         space = Space.make
         broker = ServiceBroker.make space: space
@@ -218,14 +249,6 @@ module VCAP::CloudController
         plan = ServicePlan.make
 
         expect(plan.broker_private?).to be_falsey
-      end
-
-      context 'for v1 services' do
-        it 'is false' do
-          plan = ServicePlan.make(:v1)
-
-          expect(plan.broker_private?).to be_falsey
-        end
       end
     end
   end

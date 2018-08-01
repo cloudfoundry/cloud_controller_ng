@@ -34,10 +34,10 @@ module Sinatra
         # We don't really have a class to attach a member variable to, so we have to
         # use the env to flag this.
         unless request.env['vcap_exception_body_set']
-          error = ::VCAP::Errors::ApiError.new_from_details('NotFound')
+          error = ::CloudController::Errors::ApiError.new_from_details('NotFound')
           presenter = ErrorPresenter.new(error, in_test_mode?)
 
-          body MultiJson.dump(presenter.error_hash, pretty: true)
+          body MultiJson.dump(presenter.to_hash, pretty: true)
         end
       end
 
@@ -54,12 +54,12 @@ module Sinatra
         end
 
         ::VCAP::Component.varz.synchronize do
-          varz[:recent_errors] << presenter.error_hash
+          varz[:recent_errors] << presenter.to_hash
         end
 
         request.env['vcap_exception_body_set'] = true
 
-        payload = MultiJson.dump(presenter.error_hash, pretty: true)
+        payload = MultiJson.dump(presenter.to_hash, pretty: true)
         body payload.concat("\n")
       end
     end
@@ -109,8 +109,6 @@ module Sinatra
         nil
       end
     end
-
-    private
 
     def self.init_varz
       ::VCAP::Component.varz.synchronize do

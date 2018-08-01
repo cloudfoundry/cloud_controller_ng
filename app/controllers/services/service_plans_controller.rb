@@ -11,7 +11,7 @@ module VCAP::CloudController
       attribute :public, Message::Boolean, default: true
     end
 
-    query_parameters :active, :service_guid, :service_instance_guid, :service_broker_guid
+    query_parameters :active, :service_guid, :service_instance_guid, :service_broker_guid, :unique_id
     # added :service_broker_guid here for readability, it is actually implemented as a search filter
     # in the #get_filtered_dataset_for_enumeration method because ModelControl does not support
     # searching on parameters that are not directly associated with the model
@@ -37,17 +37,43 @@ module VCAP::CloudController
           {}
         )
       elsif SecurityContext.invalid_token?
-        raise VCAP::Errors::ApiError.new_from_details('InvalidAuthToken')
+        raise CloudController::Errors::ApiError.new_from_details('InvalidAuthToken')
       else
         super
       end
+    end
+
+    def create
+      404
+    end
+
+    def update(guid)
+      json_msg = self.class::UpdateMessage.decode(body)
+      @request_attrs = json_msg.extract(stringify_keys: true).select { |key, value| key == 'public' }
+      logger.debug 'cc.update', guid: guid, attributes: redact_attributes(:update, request_attrs)
+      raise InvalidRequest unless request_attrs
+
+      obj = find_guid(guid)
+
+      before_update(obj)
+
+      model.db.transaction do
+        obj.lock!
+        validate_access(:read_for_update, obj, request_attrs)
+        obj.update_from_hash(request_attrs)
+        validate_access(:update, obj, request_attrs)
+      end
+
+      after_update(obj)
+
+      [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
     end
 
     def delete(guid)
       plan = find_guid_and_validate_access(:delete, guid)
 
       if plan.service_instances.present?
-        raise VCAP::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', plan.class.table_name)
+        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instances', plan.class.table_name)
       end
 
       plan.destroy
@@ -58,9 +84,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, attributes)
       name_errors = e.errors.on([:service_id, :name])
       if name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('ServicePlanNameTaken', "#{attributes['service_id']}-#{attributes['name']}")
+        CloudController::Errors::ApiError.new_from_details('ServicePlanNameTaken', "#{attributes['service_id']}-#{attributes['name']}")
       else
-        Errors::ApiError.new_from_details('ServicePlanInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServicePlanInvalid', e.errors.full_messages)
       end
     end
 

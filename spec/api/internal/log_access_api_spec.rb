@@ -1,6 +1,8 @@
 require 'spec_helper'
 
-describe 'GET', '/internal/log_access/:guid', type: [:api] do
+RSpec.describe 'GET', '/internal/log_access/:guid', type: [:api] do
+  include RequestSpecHelper
+
   context 'when the guid is for a v3 app' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
 

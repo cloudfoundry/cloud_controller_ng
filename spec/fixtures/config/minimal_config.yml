@@ -1,5 +1,6 @@
 ---
 external_port: 8181
+tls_port: 8183
 
 info:
   name: "vcap"
@@ -8,13 +9,17 @@ info:
   support_address: "http://support.cloudfoundry.com"
   description: "Cloud Foundry sponsored by Pivotal"
 
+shared_isolation_segment_name: 'shared'
+
 external_protocol: http
+internal_service_hostname: cc.internal.cf
 
 system_domain_organization: the-system-domain-org-name
 system_domain: the-system-domain.com
 app_domains:
-  - customer-app-domain1.com
-  - customer-app-domain2.com
+  - name: customer-app-domain1.com
+  - name: customer-app-domain2.com
+    router_group_name: default-tcp
 
 app_events:
   cutoff_age_in_days: 31
@@ -28,6 +33,9 @@ audit_events:
 failed_jobs:
   cutoff_age_in_days: 31
 
+completed_tasks:
+  cutoff_age_in_days: 31
+
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
 
@@ -39,10 +47,13 @@ broker_client_max_async_poll_duration_minutes: 10080
 
 hm9000:
   url: "http://localhost:5155"
+  internal_url: "http://localhost:5155/internal"
 
 uaa:
   url: "http://localhost:8080/uaa"
   resource_id: "cloud_controller"
+  internal_url: "https://uaa.service.cf.internal"
+  ca_file: "spec/fixtures/certs/uaa_ca.crt"
 
 logging:
   level: fatal # Keep at fatal to avoid lots of extraneous output in tests
@@ -133,4 +144,3 @@ default_staging_security_groups:
 - defaults
 default_running_security_groups:
 - defaults
-

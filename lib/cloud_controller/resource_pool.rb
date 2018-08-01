@@ -5,6 +5,7 @@
 # they will be ignored and preserved.
 
 require 'fog'
+require 'fog/azurerm'
 require 'httpclient'
 require 'steno'
 
@@ -19,12 +20,11 @@ class VCAP::CloudController::ResourcePool
   end
 
   def initialize(config={})
-    options = config[:resource_pool] || {}
-    @cdn = options[:cdn]
+    options = config.fetch(:resource_pool, {})
 
-    @blobstore = CloudController::Blobstore::Client.new(
-        options[:fog_connection],
-        options[:resource_directory_key] || 'cc-resources'
+    @blobstore = CloudController::Blobstore::ClientProvider.provide(
+      options: options,
+      directory_key: options.fetch(:resource_directory_key, 'cc-resources')
     )
 
     @minimum_size = options[:minimum_size] || 0
@@ -53,25 +53,17 @@ class VCAP::CloudController::ResourcePool
 
   def add_path(path)
     sha1 = Digester.new.digest_path(path)
-    key = key_from_sha1(sha1)
-    return if blobstore.files.head(sha1)
+    return if blobstore.exists?(sha1)
 
-    File.open(path) do |file|
-      blobstore.files.create(
-        key: key,
-        body: file,
-        public: false,
-      )
-    end
+    blobstore.cp_to_blobstore(path, sha1)
   end
 
   def resource_sizes(resources)
     sizes = []
     resources.each do |descriptor|
-      key = key_from_sha1(descriptor['sha1'])
-      if (head = blobstore.files.head(key))
+      if (blob = blobstore.blob(descriptor['sha1']))
         entry = descriptor.dup
-        entry['size'] = head.content_length
+        entry['size'] = blob.attributes[:content_length]
         sizes << entry
       end
     end
@@ -81,7 +73,17 @@ class VCAP::CloudController::ResourcePool
   def copy(descriptor, destination)
     if resource_known?(descriptor)
       logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
-      overwrite_destination_with!(descriptor, destination)
+
+      logger.debug 'resource_pool.download.starting',
+        destination: destination
+
+      start = Time.now.utc
+
+      blobstore.download_from_blobstore(descriptor['sha1'], destination)
+
+      took = Time.now.utc - start
+
+      logger.debug 'resource_pool.download.complete', took: took, destination: destination
     else
       logger.warn 'resource_pool.sync.failed', unknown_resource: descriptor, destination: destination
       raise ArgumentError.new("Can not copy bits we do not have #{descriptor}")
@@ -98,11 +100,10 @@ class VCAP::CloudController::ResourcePool
     size = descriptor['size']
     sha1 = descriptor['sha1']
     if size_allowed?(size) && valid_sha?(sha1)
-      key = key_from_sha1(sha1)
-      blobstore.files.head(key)
+      blobstore.exists?(sha1)
     end
   rescue => e
-    logger.error('Fog connection error: ' + e)
+    logger.error('blobstore error: ' + e.to_s)
     raise e
   end
 
@@ -117,45 +118,5 @@ class VCAP::CloudController::ResourcePool
 
   def valid_sha?(sha1)
     sha1 && sha1.to_s.length == VALID_SHA_LENGTH
-  end
-
-  # Called after we sanity-check the input.
-  # Create a new path on disk containing the resource described by +descriptor+
-  def overwrite_destination_with!(descriptor, destination)
-    FileUtils.mkdir_p File.dirname(destination)
-    s3_key = key_from_sha1(descriptor['sha1'])
-
-    logger.debug 'resource_pool.download.starting',
-      destination: destination
-
-    start = Time.now.utc
-
-    if @cdn && @cdn[:uri]
-      logger.debug 'resource_pool.download.using-cdn'
-
-      uri = "#{@cdn[:uri]}/#{s3_key}"
-      for_real_uri = Aws::CF::Signer.is_configured? ? Aws::CF::Signer.sign_url(uri) : uri
-
-      File.open(destination, 'w') do |file|
-        HTTPClient.new.get(for_real_uri) do |chunk|
-          file.write(chunk)
-        end
-      end
-    else
-      File.open(destination, 'w') do |file|
-        blobstore.files.get(s3_key) do |chunk, _, _|
-          file.write(chunk)
-        end
-      end
-    end
-
-    took = Time.now.utc - start
-
-    logger.debug 'resource_pool.download.complete', took: took, destination: destination
-  end
-
-  def key_from_sha1(sha1)
-    sha1 = sha1.to_s.downcase
-    File.join(sha1[0..1], sha1[2..3], sha1)
   end
 end

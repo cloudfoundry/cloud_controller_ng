@@ -2,32 +2,32 @@ module VCAP::CloudController
   class AppStop
     class InvalidApp < StandardError; end
 
-    def initialize(user, user_email)
-      @user = user
-      @user_email = user_email
-      @logger = Steno.logger('cc.action.app_stop')
-    end
+    class << self
+      def stop(app:, user_guid:, user_email:, record_event: true)
+        app.db.transaction do
+          app.lock!
+          app.update(desired_state: 'STOPPED')
+          app.processes.each { |process| process.update(state: 'STOPPED') }
 
-    def stop(app)
-      app.db.transaction do
-        app.update(desired_state: 'STOPPED')
-
-        Repositories::Runtime::AppEventRepository.new.record_app_stop(
-          app,
-          @user.guid,
-          @user_email
-        )
-
-        # this will force a query, may want to eager load processes in
-        # AppFetcher
-        app.processes.each do |process|
-          process.update({
-            state: 'STOPPED',
-          })
+          record_audit_event(app, user_guid, user_email) if record_event
         end
+      rescue Sequel::ValidationFailed => e
+        raise InvalidApp.new(e.message)
       end
-    rescue Sequel::ValidationFailed => e
-      raise InvalidApp.new(e.message)
+
+      def stop_without_event(app)
+        stop(app: app, user_guid: nil, user_email: nil, record_event: false)
+      end
+
+      private
+
+      def record_audit_event(app, user_guid, user_email)
+        Repositories::AppEventRepository.new.record_app_stop(
+          app,
+          user_guid,
+          user_email
+        )
+      end
     end
   end
 end

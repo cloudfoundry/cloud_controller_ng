@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'securerandom'
 
-describe 'Sequel::Plugins::VcapSerialization' do
+RSpec.describe 'Sequel::Plugins::VcapSerialization' do
   class TestModel < Sequel::Model
     import_attributes :guid, :required_attr
   end

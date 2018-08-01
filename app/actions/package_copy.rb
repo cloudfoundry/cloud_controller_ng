@@ -1,25 +1,32 @@
-require 'repositories/runtime/package_event_repository'
+require 'repositories/package_event_repository'
 
 module VCAP::CloudController
   class PackageCopy
     class InvalidPackage < StandardError; end
 
-    def copy(app_guid, source_package)
-      logger.info("copying package #{source_package.guid} to app #{app_guid}")
+    attr_reader :enqueued_job
 
-      package          = PackageModel.new
-      package.app_guid = app_guid
-      package.type     = source_package.type
-      package.state    = source_package.type == 'bits' ? PackageModel::COPYING_STATE : PackageModel::READY_STATE
+    def copy(destination_app_guid:, source_package:, user_guid:, user_email:, record_event: true)
+      raise InvalidPackage.new('Source and destination app cannot be the same') if destination_app_guid == source_package.app_guid
+      logger.info("copying package #{source_package.guid} to app #{destination_app_guid}")
+
+      package              = PackageModel.new
+      package.app_guid     = destination_app_guid
+      package.type         = source_package.type
+      package.state        = source_package.bits? ? PackageModel::COPYING_STATE : PackageModel::READY_STATE
+      package.docker_image = source_package.docker_image
 
       package.db.transaction do
         package.save
-        copy_docker_data(package, source_package)
 
         if source_package.type == 'bits'
-          copy_job = Jobs::V3::PackageBitsCopier.new(source_package.guid, package.guid)
-          Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
+          @enqueued_job = Jobs::Enqueuer.new(
+            Jobs::V3::PackageBitsCopier.new(source_package.guid, package.guid),
+            queue: 'cc-generic'
+          ).enqueue
         end
+
+        record_audit_event(package, source_package, user_guid, user_email) if record_event
       end
 
       return package
@@ -27,18 +34,18 @@ module VCAP::CloudController
       raise InvalidPackage.new(e.message)
     end
 
+    def copy_without_event(destination_app_guid, source_package)
+      copy(destination_app_guid: destination_app_guid, source_package: source_package, user_guid: nil, user_email: nil, record_event: false)
+    end
+
     private
 
-    def copy_docker_data(package, source_package)
-      return unless source_package.type == 'docker' && source_package.docker_data
-      source_data = source_package.docker_data
-      data = PackageDockerDataModel.new
-      data.image = source_data.image
-      data.store_image = source_data.store_image
-      data.credentials = source_data.credentials
-      data.package = package
-      data.save
-      package.reload
+    def record_audit_event(package, source_package, user_guid, user_email)
+      Repositories::PackageEventRepository.record_app_package_copy(
+        package,
+        user_guid,
+        user_email,
+        source_package.guid)
     end
 
     def logger

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'cloud_controller/backends/staging_memory_calculator'
 
 module VCAP::CloudController
-  describe StagingMemoryCalculator do
+  RSpec.describe StagingMemoryCalculator do
     let(:calculator) { StagingMemoryCalculator.new }
 
     describe '#get_limit' do

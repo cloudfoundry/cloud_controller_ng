@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'vcap/digester'
 
-describe Digester do
+RSpec.describe Digester do
   let(:tempfile) do
     Tempfile.new('coolfile').tap do |f|
       f.write('I am a teapot!')

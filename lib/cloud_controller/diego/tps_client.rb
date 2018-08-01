@@ -4,25 +4,25 @@ module VCAP::CloudController
   module Diego
     class TPSClient
       def initialize(config)
-        @url = URI(config[:diego_tps_url]) if config[:diego_tps_url]
+        @url = URI(config[:diego][:tps_url]) if HashUtils.dig(config, :diego, :tps_url)
       end
 
-      def lrp_instances(app)
-        guid = ProcessGuid.from_app(app)
+      def lrp_instances(process)
+        guid = ProcessGuid.from_process(process)
         fetch_lrp_status(guid)
       end
 
-      def lrp_instances_stats(app)
-        guid = ProcessGuid.from_app(app)
+      def lrp_instances_stats(process)
+        guid = ProcessGuid.from_process(process)
         fetch_lrp_stats(guid)
       end
 
-      def bulk_lrp_instances(apps)
-        return {} unless apps && !apps.empty?
+      def bulk_lrp_instances(processes)
+        return {} unless processes && !processes.empty?
 
-        guids = apps.map { |a| ProcessGuid.from_app(a) }
+        guids = processes.map { |a| ProcessGuid.from_process(a) }
         path = "/v1/bulk_actual_lrp_status?guids=#{guids.join(',')}"
-        Hash[fetch_from_tps(path, {}).map { |k, v| [ProcessGuid.app_guid(k).to_sym, v] }]
+        Hash[fetch_from_tps(path, {}).map { |k, v| [ProcessGuid.app_guid(k), v] }]
       end
 
       private
@@ -51,7 +51,7 @@ module VCAP::CloudController
 
       def fetch_from_tps(path, headers)
         if @url.nil?
-          raise Errors::InstancesUnavailable.new('TPS URL not configured')
+          raise CloudController::Errors::InstancesUnavailable.new('TPS URL not configured')
         end
 
         response = nil
@@ -62,7 +62,7 @@ module VCAP::CloudController
         rescue Errno::ECONNREFUSED => e
           tries -= 1
           retry unless tries == 0
-          raise Errors::InstancesUnavailable.new(e)
+          raise CloudController::Errors::InstancesUnavailable.new(e)
         end
 
         if response.code == '200'
@@ -71,10 +71,10 @@ module VCAP::CloudController
           return []
         else
           err_msg = "response code: #{response.code}, response body: #{response.body}"
-          raise Errors::InstancesUnavailable.new(err_msg)
+          raise CloudController::Errors::InstancesUnavailable.new(err_msg)
         end
       rescue JSON::JSONError => e
-        raise Errors::InstancesUnavailable.new(e)
+        raise CloudController::Errors::InstancesUnavailable.new(e)
       end
 
       def logger

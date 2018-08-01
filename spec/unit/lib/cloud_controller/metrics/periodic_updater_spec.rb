@@ -2,14 +2,15 @@ require 'spec_helper'
 require 'cloud_controller/metrics/periodic_updater'
 
 module VCAP::CloudController::Metrics
-  describe PeriodicUpdater do
-    let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, [updater1, updater2]) }
+  RSpec.describe PeriodicUpdater do
+    let(:periodic_updater) { PeriodicUpdater.new(start_time, log_counter, logger, [updater1, updater2]) }
     let(:updater1) { double(:updater1) }
     let(:updater2) { double(:updater2) }
     let(:threadqueue) { double(EventMachine::Queue, size: 20, num_waiting: 0) }
     let(:resultqueue) { double(EventMachine::Queue, size: 0, num_waiting: 1) }
     let(:start_time) { Time.now.utc - 90 }
     let(:log_counter) { double(:log_counter, counts: {}) }
+    let(:logger) { double(:logger) }
 
     before do
       allow(EventMachine).to receive(:connection_count).and_return(123)
@@ -26,6 +27,47 @@ module VCAP::CloudController::Metrics
       end
     end
 
+    describe 'task stats' do
+      before do
+        allow(updater1).to receive(:update_task_stats)
+        allow(updater2).to receive(:update_task_stats)
+      end
+
+      describe 'number of tasks' do
+        it 'should update the number of running tasks' do
+          VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE)
+          VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
+            VCAP::CloudController::TaskModel.make(state: state)
+          end
+
+          periodic_updater.update_task_stats
+
+          expect(updater1).to have_received(:update_task_stats).with(2, anything)
+          expect(updater2).to have_received(:update_task_stats).with(2, anything)
+        end
+      end
+
+      it 'should update the total memory allocated to tasks' do
+        VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::RUNNING_STATE, memory_in_mb: 512)
+        VCAP::CloudController::TaskModel::TASK_STATES.each do |state|
+          VCAP::CloudController::TaskModel.make(state: state, memory_in_mb: 1)
+        end
+
+        periodic_updater.update_task_stats
+
+        expect(updater1).to have_received(:update_task_stats).with(anything, 513)
+        expect(updater2).to have_received(:update_task_stats).with(anything, 513)
+      end
+
+      context 'when there are no running tasks' do
+        it 'properly reports 0' do
+          periodic_updater.update_task_stats
+          expect(updater1).to have_received(:update_task_stats).with(0, 0)
+          expect(updater2).to have_received(:update_task_stats).with(0, 0)
+        end
+      end
+    end
+
     describe '#setup_updates' do
       before do
         allow(updater1).to receive(:record_user_count)
@@ -34,6 +76,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_failed_job_count)
         allow(updater1).to receive(:update_vitals)
         allow(updater1).to receive(:update_log_counts)
+        allow(updater1).to receive(:update_task_stats)
 
         allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
@@ -41,6 +84,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_failed_job_count)
         allow(updater2).to receive(:update_vitals)
         allow(updater2).to receive(:update_log_counts)
+        allow(updater2).to receive(:update_task_stats)
 
         allow(EventMachine).to receive(:add_periodic_timer)
       end
@@ -75,6 +119,11 @@ module VCAP::CloudController::Metrics
         periodic_updater.setup_updates
       end
 
+      it 'updates the task stats' do
+        expect(periodic_updater).to receive(:update_task_stats).once
+        periodic_updater.setup_updates
+      end
+
       context 'when EventMachine periodic_timer tasks are run' do
         before do
           @periodic_timers = []
@@ -90,6 +139,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'bumps the number of users and sets periodic timer' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:record_user_count).once
           expect(@periodic_timers[0][:interval]).to eq(600)
 
@@ -97,6 +147,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'bumps the length of cc job queues and sets periodic timer' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_job_queue_length).once
           expect(@periodic_timers[1][:interval]).to eq(30)
 
@@ -104,6 +155,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates thread count and event machine queues' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_thread_info).once
           expect(@periodic_timers[2][:interval]).to eq(30)
 
@@ -111,6 +163,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'bumps the length of cc failed job queues and sets periodic timer' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_failed_job_count).once
           expect(@periodic_timers[3][:interval]).to eq(30)
 
@@ -118,6 +171,7 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates the vitals' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_vitals).once
           expect(@periodic_timers[4][:interval]).to eq(30)
 
@@ -125,10 +179,19 @@ module VCAP::CloudController::Metrics
         end
 
         it 'updates the log counts' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
           expect(periodic_updater).to receive(:update_log_counts).once
           expect(@periodic_timers[5][:interval]).to eq(30)
 
           @periodic_timers[5][:block].call
+        end
+
+        it 'updates the task stats' do
+          expect(periodic_updater).to receive(:catch_error).once.and_call_original
+          expect(periodic_updater).to receive(:update_task_stats).once
+          expect(@periodic_timers[6][:interval]).to eq(30)
+
+          @periodic_timers[6][:block].call
         end
       end
     end
@@ -156,9 +219,9 @@ module VCAP::CloudController::Metrics
       end
 
       it 'should include the length of the delayed job queue and the total' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic')
 
         periodic_updater.update_job_queue_length
 
@@ -166,15 +229,15 @@ module VCAP::CloudController::Metrics
           cc_local:   2,
           cc_generic: 1
         }
-        expected_total                      = 3
+        expected_total = 3
 
         expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
       end
 
       it 'should find jobs which have not been attempted yet' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1), queue: 'cc_generic')
 
         periodic_updater.update_job_queue_length
 
@@ -182,14 +245,14 @@ module VCAP::CloudController::Metrics
           cc_local:   1,
           cc_generic: 1
         }
-        expected_total                      = 2
+        expected_total = 2
 
         expect(updater1).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
         expect(updater2).to have_received(:update_job_queue_length).with(expected_pending_job_count_by_queue, expected_total)
       end
 
       it 'should ignore jobs that have already been attempted' do
-        job = VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', [])
+        job = VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(1)
         Delayed::Job.enqueue(job, queue: 'cc_generic', attempts: 1)
 
         periodic_updater.update_job_queue_length
@@ -209,12 +272,12 @@ module VCAP::CloudController::Metrics
       end
 
       it 'includes the number of failed jobs in the delayed job queue with a total and sends it to all updaters' do
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('ghj', 'klm', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('abc', 'def', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_generic')
         Delayed::Job.dataset.update(failed_at: DateTime.now.utc)
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('gej', 'kkm', []), queue: 'cc_local')
-        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::AppBitsPacker.new('bcz', 'dqf', []), queue: 'cc_generic')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_local')
+        Delayed::Job.enqueue(VCAP::CloudController::Jobs::Runtime::EventsCleanup.new(5), queue: 'cc_generic')
 
         periodic_updater.update_failed_job_count
 
@@ -222,7 +285,7 @@ module VCAP::CloudController::Metrics
           cc_local:   2,
           cc_generic: 1
         }
-        expected_total                = 3
+        expected_total = 3
 
         expect(updater1).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
         expect(updater2).to have_received(:update_failed_job_count).with(expected_failed_jobs_by_queue, expected_total)
@@ -246,7 +309,7 @@ module VCAP::CloudController::Metrics
               size:        20,
               num_waiting: 0,
             },
-            resultqueue:      {
+            resultqueue: {
               size:        0,
               num_waiting: 1,
             },
@@ -270,7 +333,7 @@ module VCAP::CloudController::Metrics
                 size:        0,
                 num_waiting: 0,
               },
-              resultqueue:      {
+              resultqueue: {
                 size:        0,
                 num_waiting: 0,
               },
@@ -382,6 +445,7 @@ module VCAP::CloudController::Metrics
         allow(updater1).to receive(:update_failed_job_count)
         allow(updater1).to receive(:update_vitals)
         allow(updater1).to receive(:update_log_counts)
+        allow(updater1).to receive(:update_task_stats)
 
         allow(updater2).to receive(:record_user_count)
         allow(updater2).to receive(:update_job_queue_length)
@@ -389,6 +453,7 @@ module VCAP::CloudController::Metrics
         allow(updater2).to receive(:update_failed_job_count)
         allow(updater2).to receive(:update_vitals)
         allow(updater2).to receive(:update_log_counts)
+        allow(updater2).to receive(:update_task_stats)
       end
 
       it 'calls all update methods' do
@@ -398,7 +463,30 @@ module VCAP::CloudController::Metrics
         expect(periodic_updater).to receive(:update_failed_job_count).once
         expect(periodic_updater).to receive(:update_vitals).once
         expect(periodic_updater).to receive(:update_log_counts).once
+        expect(periodic_updater).to receive(:update_task_stats).once
         periodic_updater.update!
+      end
+    end
+
+    describe '#catch_error' do
+      it 'calls a block' do
+        was_called = false
+        periodic_updater.catch_error { was_called = true }
+        expect(was_called).to be true
+      end
+
+      it 'swallows errors' do
+        allow(logger).to receive(:info)
+        expect {
+          periodic_updater.catch_error { raise 'RDoom' }
+        }.not_to raise_error
+      end
+
+      it 'logs errors' do
+        exception = RuntimeError.new('The periodic metrics task encountered an error: boom')
+        allow(logger).to receive(:info)
+        periodic_updater.catch_error { raise exception }
+        expect(logger).to have_received(:info).with(exception)
       end
     end
   end

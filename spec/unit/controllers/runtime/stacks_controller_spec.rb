@@ -1,8 +1,12 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::StacksController do
+  RSpec.describe VCAP::CloudController::StacksController do
     let(:user) { User.make }
+
+    before do
+      set_current_user(user, admin: true)
+    end
 
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:name) }
@@ -19,23 +23,32 @@ module VCAP::CloudController
 
     describe 'POST /v2/stacks' do
       let(:params) { { name: 'zakstack', description: 'the_best_of_all_the_stacks' } }
+
+      before do
+        set_current_user(user)
+      end
+
       context 'as an admin' do
+        before do
+          set_current_user_as_admin
+        end
+
         it 'creates a stack' do
-          post '/v2/stacks', MultiJson.dump(params), json_headers(admin_headers)
+          post '/v2/stacks', MultiJson.dump(params)
           expect(last_response.status).to eq(201)
         end
 
         context 'when the description is not provided' do
           let(:params) { { name: 'zakstack' } }
           it 'creates a stack' do
-            post '/v2/stacks', MultiJson.dump(params), json_headers(admin_headers)
+            post '/v2/stacks', MultiJson.dump(params)
             expect(last_response.status).to eq(201)
           end
         end
       end
 
       it 'returns unauthorized' do
-        post '/v2/stacks', MultiJson.dump(params), json_headers(headers_for(user))
+        post '/v2/stacks', MultiJson.dump(params)
         expect(last_response.status).to eq(403)
       end
     end
@@ -45,7 +58,7 @@ module VCAP::CloudController
 
       context 'if no app exist' do
         it 'succeds' do
-          delete "/v2/stacks/#{stack.guid}", '', admin_headers
+          delete "/v2/stacks/#{stack.guid}"
           expect(last_response.status).to eq(204)
         end
       end
@@ -54,7 +67,7 @@ module VCAP::CloudController
         let!(:application) { AppFactory.make(stack: stack) }
 
         it 'fails even when recursive' do
-          delete "/v2/stacks/#{stack.guid}?recursive=true", '', admin_headers
+          delete "/v2/stacks/#{stack.guid}?recursive=true"
           expect(last_response.status).to eq(400)
         end
       end

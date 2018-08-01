@@ -1,17 +1,23 @@
-module VCAP::CloudController
-  class AppModel < Sequel::Model(:apps_v3)
-    include Serializer
-    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+require 'cloud_controller/database_uri_generator'
 
-    many_to_many :routes, join_table: :apps_v3_routes, left_key: :app_v3_id
+module VCAP::CloudController
+  class AppModel < Sequel::Model(:apps)
+    include Serializer
+    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+
+    many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
+    one_to_many :service_bindings, key: :app_guid, primary_key: :guid
+    one_to_many :tasks, class: 'VCAP::CloudController::TaskModel', key: :app_guid, primary_key: :guid
 
     many_to_one :space, class: 'VCAP::CloudController::Space', key: :space_guid, primary_key: :guid, without_guid_generation: true
-    one_through_one :organization, join_table: Space.table_name, left_key: :guid, left_primary_key: :space_guid, right_primary_key: :guid, right_key: :space_guid
+    one_through_one :organization, join_table: Space.table_name, left_key: :guid, left_primary_key: :space_guid, right_primary_key: :id, right_key: :organization_id
 
     one_to_many :processes, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid
     one_to_many :packages, class: 'VCAP::CloudController::PackageModel', key: :app_guid, primary_key: :guid
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
+
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
+    one_to_one :web_process, class: 'VCAP::CloudController::App', key: :app_guid, primary_key: :guid, conditions: { type: 'web' }
 
     one_to_one :buildpack_lifecycle_data,
                 class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
@@ -23,12 +29,15 @@ module VCAP::CloudController
 
     add_association_dependencies buildpack_lifecycle_data: :delete
 
+    strip_attributes :name
+
     def validate
       validates_presence :name
-      validates_unique [:space_guid, :name]
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
       validate_droplet_is_staged
+
+      validates_unique [:space_guid, :name], message: Sequel.lit('name must be unique in space')
     end
 
     def lifecycle_type
@@ -41,29 +50,23 @@ module VCAP::CloudController
       DockerLifecycleDataModel.new
     end
 
-    class << self
-      def user_visible(user)
-        dataset.where(user_visibility_filter(user))
-      end
+    def database_uri
+      service_binding_uris = service_bindings.map do |binding|
+        binding.credentials['uri'] if binding.credentials.present?
+      end.compact
+      DatabaseUriGenerator.new(service_binding_uris).database_uri
+    end
 
-      def user_visibility_filter(user)
-        {
-          space_guid: space_guids_where_visible(user)
-        }
-      end
+    def staging_in_progress?
+      droplets.any?(&:staging?)
+    end
 
-      private
+    def docker?
+      lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
 
-      def space_guids_where_visible(user)
-        Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
-        union(
-          Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)
-        ).union(
-          Space.join(:spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
-        ).union(
-          Space.join(:organizations_managers, organization_id: :organization_id, user_id: user.id).select(:spaces__guid)
-        ).select(:space_guid)
-      end
+    def buildpack?
+      lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     private

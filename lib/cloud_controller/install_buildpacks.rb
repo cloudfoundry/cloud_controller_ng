@@ -9,6 +9,8 @@ module VCAP::CloudController
     def install(buildpacks)
       return unless buildpacks
 
+      buildpack_install_jobs = []
+
       buildpacks.each do |bpack|
         buildpack = VCAP.symbolize_keys(bpack)
 
@@ -34,9 +36,11 @@ module VCAP::CloudController
           next
         end
 
-        buildpack_job = VCAP::CloudController::Jobs::Runtime::BuildpackInstaller.new(buildpack_name, buildpack_file, buildpack)
-        VCAP::CloudController::Jobs::Enqueuer.new(buildpack_job, queue: VCAP::CloudController::Jobs::LocalQueue.new(config)).enqueue
+        buildpack_install_jobs << VCAP::CloudController::Jobs::Runtime::BuildpackInstaller.new(buildpack_name, buildpack_file, buildpack)
       end
+
+      run_canary(buildpack_install_jobs)
+      enqueue_remaining_jobs(buildpack_install_jobs)
     end
 
     def logger
@@ -49,6 +53,16 @@ module VCAP::CloudController
       return zipfile if zipfile
       job_dir = File.join('/var/vcap/packages', package, '*.zip')
       Dir[job_dir].first
+    end
+
+    def run_canary(jobs)
+      jobs.first.perform if jobs.first
+    end
+
+    def enqueue_remaining_jobs(jobs)
+      jobs.drop(1).each do |job|
+        VCAP::CloudController::Jobs::Enqueuer.new(job, queue: VCAP::CloudController::Jobs::LocalQueue.new(config)).enqueue
+      end
     end
   end
 end

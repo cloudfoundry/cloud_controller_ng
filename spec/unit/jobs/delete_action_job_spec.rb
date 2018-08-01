@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    describe DeleteActionJob do
+    RSpec.describe DeleteActionJob do
       let(:user) { User.make(admin: true) }
       let(:delete_action) { double(SpaceDelete, delete: []) }
       let(:space) { Space.make(name: Sham.guid) }
@@ -35,7 +35,7 @@ module VCAP::CloudController
           let(:delete_action) { double(SpaceDelete, delete: []) }
 
           it 'returns a generic timeout error' do
-            expect(job.timeout_error).to be_a(VCAP::Errors::ApiError)
+            expect(job.timeout_error).to be_a(CloudController::Errors::ApiError)
             expect(job.timeout_error.name).to eq('JobTimeout')
           end
         end

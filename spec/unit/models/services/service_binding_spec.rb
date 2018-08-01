@@ -1,19 +1,40 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServiceBinding, type: :model do
+  RSpec.describe VCAP::CloudController::ServiceBinding, type: :model do
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :app, associated_instance: ->(binding) { App.make(space: binding.space) } }
+      it { is_expected.to have_associated :app, associated_instance: ->(binding) { AppModel.make(space: binding.space) } }
       it { is_expected.to have_associated :service_instance, associated_instance: ->(binding) { ServiceInstance.make(space: binding.space) } }
+
+      it 'has a v2 app through the v3 app' do
+        service_binding = ServiceBinding.make
+        app = service_binding.app
+
+        App.make(app: app, type: 'non-web')
+        expect(service_binding.reload.v2_app).to be_nil
+
+        web_process = App.make(app: app, type: 'web')
+        expect(service_binding.reload.v2_app.guid).to eq(web_process.guid)
+      end
     end
 
     describe 'Validations' do
       it { is_expected.to validate_presence :app }
       it { is_expected.to validate_presence :service_instance }
       it { is_expected.to validate_db_presence :credentials }
-      it { is_expected.to validate_uniqueness [:app_id, :service_instance_id] }
+      it { is_expected.to validate_uniqueness [:app_guid, :service_instance_guid] }
+      it { is_expected.to validate_presence [:type] }
+
+      it 'validates max length of volume_mounts' do
+        too_long = 'a' * (65_535 + 1)
+
+        binding = ServiceBinding.make
+        binding.volume_mounts = too_long
+
+        expect { binding.save }.to raise_error(Sequel::ValidationFailed, /volume_mounts max_length/)
+      end
 
       describe 'changing the binding after creation' do
         subject(:binding) { ServiceBinding.make }
@@ -25,7 +46,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow changing app after it has been set' do
-            binding.app = App.make(space: binding.app.space)
+            binding.app = AppFactory.make(space: binding.app.space)
             expect { binding.save }.to raise_error Sequel::ValidationFailed, /app/
           end
         end
@@ -42,15 +63,20 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the service instance and app are in different spaces' do
+        let(:app) { AppModel.make }
+        let(:service_instance) { ManagedServiceInstance.make }
+
+        it 'is not valid' do
+          expect { ServiceBinding.make(service_instance: service_instance, app: app)
+          }.to raise_error(Sequel::ValidationFailed, /service_instance space_mismatch/)
+        end
+      end
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :app_guid, :service_instance_guid, :credentials, :binding_options,
-                                    :gateway_data, :gateway_name, :syslog_drain_url
-      }
-      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials,
-                                    :binding_options, :gateway_data, :syslog_drain_url
-      }
+      it { is_expected.to import_attributes :app_guid, :service_instance_guid, :credentials, :syslog_drain_url }
     end
 
     describe '#new' do
@@ -60,42 +86,36 @@ module VCAP::CloudController
       end
     end
 
-    it_behaves_like 'a model with an encrypted attribute' do
-      let(:service_instance) { ManagedServiceInstance.make }
+    describe 'encrypted columns' do
+      describe 'credentials' do
+        it_behaves_like 'a model with an encrypted attribute' do
+          let(:service_instance) { ManagedServiceInstance.make }
 
-      def new_model
-        ServiceBinding.make(
-          service_instance: service_instance,
-          credentials: value_to_encrypt
-        )
+          def new_model
+            ServiceBinding.make(
+              service_instance: service_instance,
+              credentials: value_to_encrypt
+            )
+          end
+
+          let(:encrypted_attr) { :credentials }
+          let(:attr_salt) { :salt }
+        end
       end
 
-      let(:encrypted_attr) { :credentials }
-      let(:attr_salt) { :salt }
-    end
+      describe 'volume_mounts' do
+        it_behaves_like 'a model with an encrypted attribute' do
+          let(:service_instance) { ManagedServiceInstance.make }
 
-    describe 'bad relationships' do
-      before do
-        # since we don't set them, these will have different app spaces
-        @service_instance = ManagedServiceInstance.make
-        @app = AppFactory.make
-        @service_binding = ServiceBinding.make
-      end
+          def new_model
+            ServiceBinding.make(
+              service_instance: service_instance,
+              volume_mounts: value_to_encrypt
+            )
+          end
 
-      it 'should not associate an app with a service from a different app space' do
-        expect {
-          service_binding = ServiceBinding.make
-          service_binding.app = @app
-          service_binding.save
-        }.to raise_error ServiceBinding::InvalidAppAndServiceRelation
-      end
-
-      it 'should not associate a service with an app from a different app space' do
-        expect {
-          service_binding = ServiceBinding.make
-          service_binding.service_instance = @service_instance
-          service_binding.save
-        }.to raise_error ServiceBinding::InvalidAppAndServiceRelation
+          let(:encrypted_attr) { :volume_mounts }
+        end
       end
     end
 
@@ -146,34 +166,6 @@ module VCAP::CloudController
             service_binding.save
           }.not_to raise_error
         end
-
-        context 'v1 service instance' do
-          let(:service) { Service.make(:v1, requires: []) }
-          let(:service_plan) { ServicePlan.make(:v1, service: service) }
-          let(:service_instance) do
-            ManagedServiceInstance.make(
-              :v1,
-              service_plan: service_plan,
-              name: 'not a syslog drain instance'
-            )
-          end
-
-          it 'should allow a non syslog_drain with a nil syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = nil
-              service_binding.save
-            }.not_to raise_error
-          end
-
-          it 'should allow a non syslog_drain with an empty syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = ''
-              service_binding.save
-            }.not_to raise_error
-          end
-        end
       end
 
       context 'service that does require a syslog_drain' do
@@ -186,120 +178,22 @@ module VCAP::CloudController
             service_binding.save
           }.not_to raise_error
         end
-
-        context 'v1 service instance' do
-          let(:service) { Service.make(:v1, requires: ['syslog_drain']) }
-          let(:service_plan) { ServicePlan.make(:v1, service: service) }
-          let(:service_instance) do
-            ManagedServiceInstance.make(
-              :v1,
-              service_plan: service_plan,
-              name: 'a syslog drain instance'
-            )
-          end
-
-          it 'should allow a syslog_drain with a syslog drain url' do
-            expect {
-              service_binding = ServiceBinding.make(service_instance: service_instance)
-              service_binding.syslog_drain_url = 'http://syslogurl.com'
-              service_binding.save
-            }.not_to raise_error
-          end
-        end
       end
     end
 
     describe 'restaging' do
-      def fake_app_staging(app)
-        app.package_hash = 'abc'
-        app.add_new_droplet('def')
-        app.mark_as_staged
-        app.save
-        expect(app.needs_staging?).to eq(false)
-      end
-
-      let(:app) do
-        app = AppFactory.make
-        app.state = 'STARTED'
-        app.instances = 1
-        fake_app_staging(app)
-        app
-      end
-
-      let(:service_instance) { ManagedServiceInstance.make(space: app.space) }
+      let(:v2_app) { AppFactory.make(state: 'STARTED', instances: 1, type: 'web') }
+      let(:service_instance) { ManagedServiceInstance.make(space: v2_app.space) }
 
       it 'should not trigger restaging when creating a binding' do
-        ServiceBinding.make(app: app, service_instance: service_instance)
-        app.refresh
-        expect(app.needs_staging?).to be false
+        ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
+        v2_app.refresh
+        expect(v2_app.needs_staging?).to be false
       end
 
       it 'should not trigger restaging when directly destroying a binding' do
-        binding = ServiceBinding.make(app: app, service_instance: service_instance)
-        app.refresh
-        fake_app_staging(app)
-        expect(app.needs_staging?).to be false
-
-        binding.destroy
-        app.refresh
-        expect(app.needs_staging?).to be false
-      end
-
-      context 'when indirectly destroying a binding' do
-        let(:binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
-        before do
-          app.refresh
-          fake_app_staging(app)
-          expect(app.needs_staging?).to be false
-        end
-
-        it 'should not trigger restaging if the broker successfully unbinds' do
-          stub_unbind(binding, status: 200)
-
-          app.remove_service_binding(binding)
-          expect(app.needs_staging?).to be false
-        end
-
-        it 'should raise a broker error if the broker cannot successfully unbind' do
-          stub_unbind(binding, status: 500)
-
-          expect {
-            app.remove_service_binding(binding)
-          }.to raise_error(VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerBadResponse)
-        end
-      end
-    end
-
-    describe '#to_hash' do
-      let(:binding) { ServiceBinding.make }
-      let(:developer) { make_developer_for_space(binding.service_instance.space) }
-      let(:auditor) { make_auditor_for_space(binding.service_instance.space) }
-      let(:user) { make_user_for_space(binding.service_instance.space) }
-      let(:manager) { make_manager_for_space(binding.service_instance.space) }
-
-      it 'does not redact creds for an admin' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:admin?).and_return(true)
-        expect(binding.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'does not redact creds for a space developer' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(developer)
-        expect(binding.to_hash['credentials']).not_to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space auditor' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(auditor)
-        expect(binding.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space user' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(user)
-        expect(binding.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
-      end
-
-      it 'redacts creds for a space manager' do
-        allow(VCAP::CloudController::SecurityContext).to receive(:current_user).and_return(manager)
-        expect(binding.to_hash['credentials']).to eq({ redacted_message: '[PRIVATE DATA HIDDEN]' })
+        binding = ServiceBinding.make(app: v2_app.app, service_instance: service_instance)
+        expect { binding.destroy }.not_to change { v2_app.refresh.needs_staging? }.from(false)
       end
     end
 

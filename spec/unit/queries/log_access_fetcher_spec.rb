@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'queries/log_access_fetcher'
 
 module VCAP::CloudController
-  describe LogAccessFetcher do
+  RSpec.describe LogAccessFetcher do
     let(:space) { Space.make }
     let(:app) { AppModel.make(space_guid: space.guid) }
     let(:sad_app) { AppModel.make }
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         context 'to the v2 app guid' do
-          let(:app) { App.make(space_guid: space.guid) }
+          let(:app) { AppFactory.make(space: space) }
           it 'returns true' do
             expect(fetcher.app_exists_by_space?(app.guid, space_guids)).to eq(true)
           end

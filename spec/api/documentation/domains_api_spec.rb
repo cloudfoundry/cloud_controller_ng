@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Domains (deprecated)', type: [:api, :legacy_api] do
+RSpec.resource 'Domains (deprecated)', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:domain) { VCAP::CloudController::SharedDomain.make }
   let(:guid) { domain.guid }
@@ -23,9 +23,11 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
         example 'Create a Shared Domain' do
           client.post '/v2/domains', fields_json, headers
           expect(status).to eq 201
-          standard_entity_response parsed_response, :domain,
-                                   name: 'example.com',
-                                   owning_organization_guid: nil
+          standard_entity_response parsed_response, :shared_domain,
+            expected_values: {
+              name:                     'example.com',
+              owning_organization_guid: nil
+            }
         end
       end
 
@@ -42,9 +44,11 @@ resource 'Domains (deprecated)', type: [:api, :legacy_api] do
           client.post '/v2/domains', payload, headers
 
           expect(status).to eq 201
-          standard_entity_response parsed_response, :domain,
-                                   name: 'exmaple.com',
-                                   owning_organization_guid: org_guid
+          standard_entity_response parsed_response, :private_domain,
+            expected_values: {
+              name:                     'exmaple.com',
+              owning_organization_guid: org_guid
+            }
         end
       end
     end

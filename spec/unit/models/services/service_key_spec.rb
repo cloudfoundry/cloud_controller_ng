@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::ServiceKey, type: :model do
+  RSpec.describe VCAP::CloudController::ServiceKey, type: :model do
     let(:client) { double('broker client', unbind: nil, deprovision: nil) }
 
     before do
@@ -20,6 +20,43 @@ module VCAP::CloudController
       it { is_expected.to validate_db_presence :service_instance_id }
       it { is_expected.to validate_db_presence :credentials }
       it { is_expected.to validate_uniqueness [:name, :service_instance_id] }
+
+      context 'MaxServiceKeysPolicy' do
+        let(:service_key) { ServiceKey.make }
+        let(:policy) { double(MaxServiceKeysPolicy) }
+        let(:space_policy) { double(MaxServiceKeysPolicy) }
+
+        it 'validates org quotas using MaxServiceKeysPolicy' do
+          expect(MaxServiceKeysPolicy).to receive(:new).
+            with(service_key, 1, service_key.service_instance.organization.quota_definition, :service_keys_quota_exceeded).
+            and_return(policy)
+          expect(policy).to receive(:validate)
+          expect(MaxServiceKeysPolicy).to receive(:new).with(service_key, 1, nil, :service_keys_space_quota_exceeded).and_return(space_policy)
+          expect(space_policy).to receive(:validate)
+
+          service_key.valid?
+        end
+
+        context 'with a space quota' do
+          let(:space_quota) { SpaceQuotaDefinition.make(organization: service_key.service_instance.organization) }
+
+          before do
+            quota = space_quota
+            service_key.service_instance.space.space_quota_definition = quota
+          end
+
+          it 'validates space quotas using MaxServiceKeysPolicy' do
+            expect(MaxServiceKeysPolicy).to receive(:new).
+              with(service_key, 1, service_key.service_instance.organization.quota_definition, :service_keys_quota_exceeded).
+              and_return(policy)
+            expect(policy).to receive(:validate)
+            expect(MaxServiceKeysPolicy).to receive(:new).with(service_key, 1, space_quota, :service_keys_space_quota_exceeded).and_return(space_policy)
+            expect(space_policy).to receive(:validate)
+
+            service_key.valid?
+          end
+        end
+      end
     end
 
     describe 'Serialization' do
@@ -39,9 +76,9 @@ module VCAP::CloudController
 
       def new_model
         ServiceKey.make(
-            name: Sham.name,
-            service_instance: service_instance,
-            credentials: value_to_encrypt
+          name: Sham.name,
+          service_instance: service_instance,
+          credentials: value_to_encrypt
         )
       end
 

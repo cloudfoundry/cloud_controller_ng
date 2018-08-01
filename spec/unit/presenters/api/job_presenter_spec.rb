@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe JobPresenter do
+RSpec.describe JobPresenter do
   describe '#to_hash' do
     let(:job) do
       job = Delayed::Job.enqueue double(:obj, perform: nil)

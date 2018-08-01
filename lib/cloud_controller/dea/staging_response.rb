@@ -4,6 +4,10 @@ module VCAP::CloudController::Dea
       @response = response
     end
 
+    def dea_id
+      @response['dea_id']
+    end
+
     def log
       @response['task_log']
     end

@@ -30,11 +30,11 @@ module VCAP::CloudController::RestController
     # @option opts [Integer] :results_per_page Number of results to include
     # per page.  Defaults to 50.
     #
-    # @option opts [Boolean] :pretty Controlls pretty formating of the encoded
+    # @option opts [Boolean] :pretty Controls pretty formatting of the encoded
     # json.  Defaults to true.
     #
     # @option opts [Integer] :inline_relations_depth Depth to recursively
-    # exapend relationships in addition to providing the URLs.
+    # expand relationships in addition to providing the URLs.
     #
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
@@ -45,12 +45,12 @@ module VCAP::CloudController::RestController
 
       page_size = opts[:results_per_page] || @default_results_per_page
       if page_size > @max_results_per_page
-        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "results_per_page must be <= #{@max_results_per_page}")
       end
 
       inline_relations_depth = opts[:inline_relations_depth] || @default_inline_relations_depth
       if inline_relations_depth > @max_inline_relations_depth
-        raise VCAP::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
+        raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
       ordered_dataset = order_applicator.apply(ds)
@@ -64,7 +64,7 @@ module VCAP::CloudController::RestController
         next_url = url(controller, path, paginated_dataset.next_page, page_size, order_direction, opts, request_params)
       end
 
-      opts[:max_inline] ||= PreloadedObjectSerializer::MAX_INLINE_DEFAULT
+      opts[:max_inline] ||= ::CloudController::Presenters::V2::RelationsPresenter::MAX_INLINE_DEFAULT
       orphans = opts[:orphan_relations] == 1 ? {} : nil
 
       resources = fetch_and_process_records(paginated_dataset, controller, inline_relations_depth, orphans, opts)
@@ -105,8 +105,8 @@ module VCAP::CloudController::RestController
 
     def default_visibility_filter
       user = VCAP::CloudController::SecurityContext.current_user
-      admin = VCAP::CloudController::SecurityContext.admin?
-      proc { |ds| ds.filter(ds.model.user_visibility(user, admin)) }
+      admin_override = VCAP::CloudController::SecurityContext.admin? || VCAP::CloudController::SecurityContext.admin_read_only?
+      proc { |ds| ds.filter(ds.model.user_visibility(user, admin_override)) }
     end
 
     def url(controller, path, page, page_size, order_direction, opts, request_params)
@@ -126,6 +126,7 @@ module VCAP::CloudController::RestController
       params['orphan-relations'] = opts[:orphan_relations] if opts[:orphan_relations]
       params['exclude-relations'] = opts[:exclude_relations] if opts[:exclude_relations]
       params['include-relations'] = opts[:include_relations] if opts[:include_relations]
+      params['order-by'] = opts[:order_by] if opts[:order_by]
 
       controller.preserve_query_parameters.each do |preserved_param|
         params[preserved_param] = request_params[preserved_param] if request_params[preserved_param]

@@ -8,6 +8,10 @@ module VCAP::CloudController
       logger.info("purging service instance #{service_instance.guid}")
 
       service_instance.db.transaction do
+        service_instance.routes.each do |route|
+          route.route_binding.destroy
+        end
+
         service_instance.service_bindings.each do |binding|
           binding.destroy
           @event_repository.record_service_binding_event('delete', binding, nil)

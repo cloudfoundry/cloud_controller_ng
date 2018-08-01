@@ -8,6 +8,20 @@ module VCAP::CloudController
         system_org = create_seed_organizations(config)
         create_seed_domains(config, system_org)
         create_seed_lockings
+        create_seed_environment_variable_groups
+        create_seed_shared_isolation_segment(config)
+      end
+
+      def create_seed_shared_isolation_segment(config)
+        shared_isolation_segment_model = IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+
+        if shared_isolation_segment_model
+          if !shared_isolation_segment_model.name.eql?(config[:shared_isolation_segment_name])
+            shared_isolation_segment_model.update(name: config[:shared_isolation_segment_name])
+          end
+        else
+          IsolationSegmentModel.create(name: config[:shared_isolation_segment_name], guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
+        end
       end
 
       def create_seed_quota_definitions(config)
@@ -52,26 +66,47 @@ module VCAP::CloudController
       end
 
       def create_seed_domains(config, system_org)
-        config[:app_domains].each do |domain|
-          shared_domain = SharedDomain.find_or_create(domain)
+        domains = parsed_domains(config[:app_domains])
+        system_domain = config[:system_domain]
 
-          if domain == config[:system_domain]
-            shared_domain.save
-          end
+        domains.each do |domain|
+          domain_name = domain['name']
+
+          router_group_guid = find_routing_guid(domain)
+
+          SharedDomain.find_or_create(domain_name, router_group_guid)
         end
 
-        unless config[:app_domains].include?(config[:system_domain])
-          raise 'The organization that owns the system domain cannot be nil' unless system_org
+        if CloudController::DomainHelper.is_sub_domain?(domain: system_domain, test_domains: domains.map { |domain_hash| domain_hash['name'] })
+          Config.config[:system_hostnames].each do |hostnames|
+            domains.each do |app_domain|
+              raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
+            end
+          end
 
-          domain = Domain.find(name: config[:system_domain])
+          router_group_guid = find_routing_guid({ 'name' => system_domain })
+          SharedDomain.find_or_create(system_domain, router_group_guid)
+        else
+          raise 'A system_domain_organization must be provided if the system_domain is not shared with (in the list of) app_domains' unless system_org
+
+          domain = Domain.find(name: system_domain)
 
           if domain
             if domain.owning_organization != system_org
               Steno.logger('cc.seeds').warn('seeds.system-domain.collision', organization: domain.owning_organization)
             end
           else
-            PrivateDomain.create({ owning_organization: system_org, name: config[:system_domain] })
+            PrivateDomain.create({ owning_organization: system_org, name: system_domain })
           end
+        end
+      end
+
+      def find_routing_guid(domain)
+        if domain.key?('router_group_name')
+          router_group_name = domain['router_group_name']
+          router_group_guid = routing_api_client.router_group_guid(router_group_name)
+          raise "Unknown router_group_name specified: #{router_group_name}" if router_group_guid.nil?
+          router_group_guid
         end
       end
 
@@ -95,6 +130,48 @@ module VCAP::CloudController
 
       def create_seed_lockings
         Locking.find_or_create(name: 'buildpacks')
+        Locking.find_or_create(name: 'clock')
+        Locking.find_or_create(name: 'diego-sync')
+      end
+
+      def create_seed_environment_variable_groups
+        begin
+          EnvironmentVariableGroup.running
+        rescue Sequel::UniqueConstraintViolation
+          # swallow error, nothing to seed so we have succeeded
+        end
+
+        begin
+          EnvironmentVariableGroup.staging
+        rescue Sequel::UniqueConstraintViolation
+          # swallow error, nothing to seed so we have succeeded
+        end
+      end
+
+      def parsed_domains(app_domains)
+        if app_domains[0].is_a?(String)
+          parsed = []
+          app_domains.each do |d|
+            parsed << { 'name' => d }
+          end
+          parsed
+        else
+          app_domains
+        end
+      end
+
+      private
+
+      def routing_api_client
+        CloudController::DependencyLocator.instance.routing_api_client
+      end
+
+      def domain_overlap(parsed_domain, system_config)
+        overlap = false
+        parsed_domain.each do |d|
+          overlap = true if d['name'].include?(system_config)
+        end
+        overlap
       end
     end
   end

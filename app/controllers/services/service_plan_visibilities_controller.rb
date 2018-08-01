@@ -19,9 +19,9 @@ module VCAP::CloudController
     def self.translate_validation_exception(e, _)
       associations_errors = e.errors.on([:organization_id, :service_plan_id])
       if associations_errors && associations_errors.include?(:unique)
-        Errors::ApiError.new_from_details('ServicePlanVisibilityAlreadyExists', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServicePlanVisibilityAlreadyExists', e.errors.full_messages)
       else
-        Errors::ApiError.new_from_details('ServicePlanVisibilityInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('ServicePlanVisibilityInvalid', e.errors.full_messages)
       end
     end
 
@@ -68,8 +68,8 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      service_plan_visibility  = find_guid_and_validate_access(:delete, guid, ServicePlanVisibility)
-      raise_if_has_associations!(service_plan_visibility) if v2_api? && !recursive?
+      service_plan_visibility = find_guid_and_validate_access(:delete, guid, ServicePlanVisibility)
+      raise_if_has_dependent_associations!(service_plan_visibility) if v2_api? && !recursive_delete?
 
       model_deletion_job = Jobs::Runtime::ModelDeletion.new(ServicePlanVisibility, guid)
       delete_and_audit_job = Jobs::AuditEventJob.new(

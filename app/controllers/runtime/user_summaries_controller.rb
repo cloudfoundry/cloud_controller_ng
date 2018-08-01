@@ -9,7 +9,7 @@ module VCAP::CloudController
     def summary(guid)
       # only admins should have unfettered access to all users
       # UserAccess allows all to read so org and space user lists show all users in those lists
-      raise Errors::ApiError.new_from_details('NotAuthorized') unless roles.admin?
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless roles.admin?
       user = find_guid_and_validate_access(:read, guid)
       MultiJson.dump UserSummaryPresenter.new(user).to_hash
     end

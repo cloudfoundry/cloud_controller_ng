@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 module VCAP::Services::SSO
-  describe DashboardClientManager do
+  RSpec.describe DashboardClientManager do
     let(:client_manager) { double('client_manager') }
     let(:user) { VCAP::CloudController::User.make }
     let(:email) { 'email@example.com' }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
-    let(:services_event_repository) { VCAP::CloudController::Repositories::Services::EventRepository.new(user: user, user_email: email) }
+    let(:services_event_repository) { VCAP::CloudController::Repositories::ServiceEventRepository.new(user: user, user_email: email) }
 
     context 'for service brokers' do
       let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
@@ -309,7 +309,7 @@ module VCAP::Services::SSO
             end
 
             it 'raises a ServiceBrokerDashboardClientFailure error' do
-              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(CloudController::Errors::ApiError)) { |err|
                 expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
                 expect(err.message).to match('my test error')
               }
@@ -356,7 +356,7 @@ module VCAP::Services::SSO
             end
 
             it 'raises a ServiceBrokerDashboardClientFailure error' do
-              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+              expect { manager.synchronize_clients_with_catalog(catalog) }.to(raise_error(CloudController::Errors::ApiError)) { |err|
                 expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
                 expect(err.message).to match('error message')
               }
@@ -493,7 +493,7 @@ module VCAP::Services::SSO
           end
 
           it 'raises a ServiceBrokerDashboardClientFailure error' do
-            expect { manager.remove_clients_for_broker }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+            expect { manager.remove_clients_for_broker }.to(raise_error(CloudController::Errors::ApiError)) { |err|
               expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
               expect(err.message).to match('error message')
             }
@@ -520,7 +520,7 @@ module VCAP::Services::SSO
           end
 
           it 'raises a ServiceBrokerDashboardClientFailure error' do
-            expect { manager.remove_clients_for_broker }.to(raise_error(VCAP::Errors::ApiError)) { |err|
+            expect { manager.remove_clients_for_broker }.to(raise_error(CloudController::Errors::ApiError)) { |err|
               expect(err.name).to eq('ServiceBrokerDashboardClientFailure')
               expect(err.message).to match('my test error')
             }
@@ -571,9 +571,9 @@ module VCAP::Services::SSO
     end
 
     context 'for service instances' do
-      let(:service_instance) {  VCAP::CloudController::ManagedServiceInstance.make }
-      let(:service_broker) {  service_instance.service_plan.service.service_broker }
-      let(:dashboard_client) {  VCAP::CloudController::ServiceInstanceDashboardClient }
+      let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let(:service_broker) { service_instance.service_plan.service.service_broker }
+      let(:dashboard_client) { VCAP::CloudController::ServiceInstanceDashboardClient }
       let(:manager) { DashboardClientManager.new(service_instance, services_event_repository, dashboard_client) }
       let(:client_id) { 'client-id-1' }
       let(:client_info) do

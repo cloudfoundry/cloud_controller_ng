@@ -1,6 +1,7 @@
+require 'spec_helper'
 require 'rails_helper'
 
-describe ApplicationController, type: :controller do
+RSpec.describe ApplicationController, type: :controller do
   RSpec::Matchers.define_negated_matcher :not_change, :change
 
   controller do
@@ -15,85 +16,108 @@ describe ApplicationController, type: :controller do
     def create
       head 201
     end
-  end
 
-  describe 'setting the current user' do
-    context 'when a valid auth is provided' do
-      let(:headers) { headers_for(VCAP::CloudController::User.new(guid: expected_user_id)) }
-      let(:expected_user_id) { 'user-id' }
-
-      before do
-        @request.env.merge!(headers)
-      end
-
-      it 'sets security context to the user' do
-        get :index
-
-        expect(VCAP::CloudController::SecurityContext.current_user).to eq VCAP::CloudController::User.last
-        expect(VCAP::CloudController::SecurityContext.token['user_id']).to eq expected_user_id
-      end
+    def read_access
+      can_read?(params[:space_guid], params[:org_guid])
+      head 200
     end
 
-    context 'when an invalid auth token is provided' do
-      before do
-        @request.env.merge!('HTTP_AUTHORIZATION' => 'bearer potato')
-      end
-
-      it 'sets the token to invalid' do
-        expect { get :index }.to not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
-          and change { VCAP::CloudController::SecurityContext.token }.to(:invalid_token)
-      end
+    def secret_access
+      can_see_secrets?(VCAP::CloudController::Space.find(guid: params[:space_guid]))
+      head 200
     end
 
-    context 'when there is no auth token provided' do
-      it 'sets security context to be empty' do
-        expect { get :index }.to not_change { VCAP::CloudController::SecurityContext.current_user }.from(nil).
-          and not_change { VCAP::CloudController::SecurityContext.token }.from(nil)
-      end
+    def write_access
+      can_write?(params[:space_guid])
+      head 200
+    end
+
+    def api_explode
+      raise CloudController::Errors::ApiError.new_from_details('InvalidRequest', 'omg no!')
+    end
+
+    def blobstore_error
+      raise CloudController::Blobstore::BlobstoreError.new('it broke!')
     end
   end
 
-  describe 'read permission scope validation' do
-    let(:headers) { headers_for(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.write']) }
-
+  describe '#check_read_permissions' do
     before do
-      @request.env.merge!(headers)
+      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: [])
     end
 
     it 'is required on index' do
       get :index
 
       expect(response.status).to eq(403)
-      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+      expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is required on show' do
       get :show, id: 1
 
       expect(response.status).to eq(403)
-      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+      expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
     end
 
-    it 'is not required on other actions' do
-      @request.env.merge!(json_headers({}))
+    context 'cloud_controller.read' do
+      before do
+        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
+      end
 
-      post :create
-      expect(response.status).to eq(201)
+      it 'grants reading access' do
+        get :index
+        expect(response.status).to eq(200)
+      end
+
+      it 'should show a specific item' do
+        get :show, id: 1
+        expect(response.status).to eq(204)
+      end
     end
 
-    it 'is not required for admin' do
-      @request.env.merge!(json_headers(admin_headers))
+    context 'cloud_controller.admin_read_only' do
+      before do
+        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.admin_read_only'])
+      end
 
-      post :create
-      expect(response.status).to eq(201)
+      it 'grants reading access' do
+        get :index
+        expect(response.status).to eq(200)
+      end
+
+      it 'should show a specific item' do
+        get :show, id: 1
+        expect(response.status).to eq(204)
+      end
+    end
+
+    it 'admin can read all' do
+      set_current_user_as_admin
+
+      get :show, id: 1
+      expect(response.status).to eq(204)
+
+      get :index
+      expect(response.status).to eq(200)
+    end
+
+    context 'post' do
+      before do
+        set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.write'])
+      end
+
+      it 'is not required on other actions' do
+        post :create
+
+        expect(response.status).to eq(201)
+      end
     end
   end
 
-  describe 'write permission scope validation' do
-    let(:headers) { headers_for(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read']) }
-
+  describe 'when a user does not have cloud_controller.write scope' do
     before do
-      @request.env.merge!(headers)
+      set_current_user(VCAP::CloudController::User.new(guid: 'some-guid'), scopes: ['cloud_controller.read'])
     end
 
     it 'is not required on index' do
@@ -109,11 +133,11 @@ describe ApplicationController, type: :controller do
     it 'is required on other actions' do
       post :create
       expect(response.status).to eq(403)
-      expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+      expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
     end
 
     it 'is not required for admin' do
-      @request.env.merge!(json_headers(admin_headers))
+      set_current_user_as_admin
 
       post :create
       expect(response.status).to eq(201)
@@ -122,14 +146,15 @@ describe ApplicationController, type: :controller do
 
   describe 'request id' do
     before do
-      @request.env.merge!(admin_headers).merge!('cf.request_id' => 'expected-request-id')
+      set_current_user_as_admin
+      @request.env.merge!('cf.request_id' => 'expected-request-id')
     end
 
     it 'sets the vcap request current_id from the passed in rack request during request handling' do
       get :index
 
       # finding request id inside the controller action and returning on the body
-      expect(MultiJson.load(response.body)['request_id']).to eq('expected-request-id')
+      expect(parsed_body['request_id']).to eq('expected-request-id')
     end
 
     it 'unsets the vcap request current_id after the request completes' do
@@ -140,7 +165,7 @@ describe ApplicationController, type: :controller do
 
   describe 'https schema validation' do
     before do
-      @request.env.merge!(headers_for(VCAP::CloudController::User.make))
+      set_current_user(VCAP::CloudController::User.make)
       VCAP::CloudController::Config.config[:https_required] = true
     end
 
@@ -152,7 +177,7 @@ describe ApplicationController, type: :controller do
       it 'raises an error' do
         get :index
         expect(response.status).to eq(403)
-        expect(MultiJson.load(response.body)['description']).to eq('You are not authorized to perform the requested action')
+        expect(parsed_body['errors'].first['detail']).to eq('You are not authorized to perform the requested action')
       end
     end
 
@@ -169,12 +194,10 @@ describe ApplicationController, type: :controller do
   end
 
   describe 'auth token validation' do
-    before do
-      @request.env.merge!(headers)
-    end
-
     context 'when the token contains a valid user' do
-      let(:headers) { admin_headers }
+      before do
+        set_current_user_as_admin
+      end
 
       it 'allows the operation' do
         get :index
@@ -183,42 +206,104 @@ describe ApplicationController, type: :controller do
     end
 
     context 'when there is no token' do
-      let(:headers) { {} }
-
       it 'raises NotAuthenticated' do
         get :index
         expect(response.status).to eq(401)
-        expect(MultiJson.load(response.body)['description']).to eq('Authentication error')
+        expect(parsed_body['errors'].first['detail']).to eq('Authentication error')
       end
     end
 
-    context 'when the token cannot be parsed' do
-      let(:headers) { { 'HTTP_AUTHORIZATION' => 'bearer potato' } }
-
-      it 'raises InvalidAuthToken' do
-        get :index
-        expect(response.status).to eq(401)
-        expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
-      end
-    end
-
-    context 'when the token is valid but does not contain user or client id' do
-      let(:headers) do
-        coder = CF::UAA::TokenCoder.new(
-          audience_ids: TestConfig.config[:uaa][:resource_id],
-          skey:         TestConfig.config[:uaa][:symmetric_secret],
-          pkey:         nil)
-
-        token = coder.encode(scope: ['some-scope'])
-
-        { 'HTTP_AUTHORIZATION' => "bearer #{token}" }
+    context 'when the token is invalid' do
+      before do
+        VCAP::CloudController::SecurityContext.set(nil, :invalid_token, nil)
       end
 
       it 'raises InvalidAuthToken' do
         get :index
         expect(response.status).to eq(401)
-        expect(MultiJson.load(response.body)['description']).to eq('Invalid Auth Token')
+        expect(parsed_body['errors'].first['detail']).to eq('Invalid Auth Token')
       end
+    end
+
+    context 'when there is a token but no matching user' do
+      before do
+        user = nil
+        VCAP::CloudController::SecurityContext.set(user, 'valid_token', nil)
+      end
+
+      it 'raises InvalidAuthToken' do
+        get :index
+        expect(response.status).to eq(401)
+        expect(parsed_body['errors'].first['detail']).to eq('Invalid Auth Token')
+      end
+    end
+  end
+
+  describe '#can_read?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_from_space? on behalf of the current user' do
+      routes.draw { get 'read_access' => 'anonymous#read_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_read_from_space?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :read_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_read_from_space?).with('space-guid', 'org-guid')
+    end
+  end
+
+  describe '#can_see_secrets?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_see_secrets_in_space? on behalf of the current user' do
+      routes.draw { get 'secret_access' => 'anonymous#secret_access' }
+
+      space = VCAP::CloudController::Space.make
+      permissions = instance_double(VCAP::CloudController::Permissions, can_see_secrets_in_space?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :secret_access, space_guid: space.guid
+
+      expect(permissions).to have_received(:can_see_secrets_in_space?).with(space.guid, space.organization_guid)
+    end
+  end
+
+  describe '#can_write?' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'asks for #can_read_from_space? on behalf of the current user' do
+      routes.draw { get 'write_access' => 'anonymous#write_access' }
+
+      permissions = instance_double(VCAP::CloudController::Permissions, can_write_to_space?: true)
+      allow(VCAP::CloudController::Permissions).to receive(:new).and_return(permissions)
+
+      get :write_access, space_guid: 'space-guid', org_guid: 'org-guid'
+
+      expect(permissions).to have_received(:can_write_to_space?).with('space-guid')
+    end
+  end
+
+  describe '#handle_blobstore_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from ApiError and renders an error presenter' do
+      routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
+      get :blobstore_error
+      expect(response.status).to eq(500)
+      expect(parsed_body['errors'].first['detail']).to match /three retries/
+    end
+  end
+
+  describe '#handle_api_error' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'rescues from ApiError and renders an error presenter' do
+      routes.draw { get 'api_explode' => 'anonymous#api_explode' }
+      get :api_explode
+      expect(response.status).to eq(400)
+      expect(parsed_body['errors'].first['detail']).to eq('The request is invalid')
     end
   end
 end

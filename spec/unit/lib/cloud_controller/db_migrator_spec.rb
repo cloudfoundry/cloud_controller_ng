@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DBMigrator do
+RSpec.describe DBMigrator do
   describe '#check_migrations!' do
     context 'when the migrations have not run' do
       it 'raises an exception' do

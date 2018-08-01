@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe DownloadDropletsController do
+  RSpec.describe DownloadDropletsController do
     let(:timeout_in_seconds) { 120 }
     let(:cc_addr) { '1.2.3.4' }
     let(:cc_port) { 5678 }
@@ -53,7 +53,9 @@ module VCAP::CloudController
       CloudController::DependencyLocator.instance.droplet_blobstore
     end
 
-    let(:app_obj) { AppFactory.make }
+    let(:v3_app) { AppModel.make(droplet: droplet) }
+    let(:process) { App.make(app: v3_app) }
+    let(:droplet) { DropletModel.make(state: 'STAGED') }
 
     before do
       Fog.unmock!
@@ -68,12 +70,11 @@ module VCAP::CloudController
       end
 
       def upload_droplet
-        droplet_file = Tempfile.new(app_obj.guid)
+        droplet_file = Tempfile.new(v3_app.guid)
         droplet_file.write('droplet contents')
         droplet_file.close
 
-        droplet = CloudController::DropletUploader.new(app_obj, blobstore)
-        droplet.upload(droplet_file.path)
+        Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid).perform
       end
 
       context 'when using with nginx' do
@@ -82,41 +83,45 @@ module VCAP::CloudController
         it 'succeeds for valid droplets' do
           upload_droplet
 
-          get "/internal/v2/droplets/#{app_obj.guid}/#{app_obj.droplet_hash}/download"
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(200)
-          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{app_obj.guid}")
+          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{process.droplet_hash}")
         end
       end
 
       context 'when not using with nginx' do
         before { TestConfig.override(staging_config.merge(nginx: { use_nginx: false })) }
 
-        it 'should return the droplet' do
+        it 'succeeds for valid droplets' do
           upload_droplet
 
-          get "/internal/v2/droplets/#{app_obj.guid}/#{app_obj.droplet_hash}/download"
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(200)
           expect(last_response.body).to eq('droplet contents')
         end
       end
 
-      context 'with a valid app but no droplet' do
+      context 'with a valid app but no droplet in the blobstore' do
+        before do
+          droplet.update(droplet_hash: 'not-in-blobstore')
+        end
+
         it 'raises an error' do
-          get "/internal/v2/droplets/#{app_obj.guid}/#{app_obj.droplet_hash}/download"
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(400)
-          expect(decoded_response['description']).to eq("Staging error: droplet not found for #{app_obj.guid}")
+          expect(decoded_response['description']).to eq("Staging error: droplet not found for #{process.guid}")
         end
 
         it 'fails if blobstore is remote' do
           allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-          get "/internal/v2/droplets/#{app_obj.guid}/#{app_obj.droplet_hash}/download"
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
           expect(last_response.status).to eq(400)
         end
       end
 
       context 'with an invalid droplet_hash' do
         it 'returns an error' do
-          get "/internal/v2/droplets/#{app_obj.guid}/bogus/download"
+          get "/internal/v2/droplets/#{process.guid}/bogus/download"
           expect(last_response.status).to eq(404)
         end
       end
@@ -130,54 +135,17 @@ module VCAP::CloudController
 
       context 'when the blobstore is not local' do
         before do
-          allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
+          allow_any_instance_of(CloudController::Blobstore::FogClient).to receive(:local?).and_return(false)
         end
 
         it 'should redirect to the url provided by the blobstore_url_generator' do
+          upload_droplet
           allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).and_return('http://example.com/somewhere/else')
-          get "/internal/v2/droplets/#{app_obj.guid}/#{app_obj.droplet_hash}/download"
+
+          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_checksum}/download"
+
           expect(last_response).to be_redirect
           expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
-        end
-      end
-
-      context 'when the app is a v3 app' do
-        let(:v3_app) { AppModel.make(droplet: droplet) }
-        let(:process) { App.make(app: v3_app) }
-        let(:droplet) { DropletModel.make(state: 'STAGED') }
-
-        def upload_v3_droplet
-          droplet_file = Tempfile.new(v3_app.guid)
-          droplet_file.write('droplet contents')
-          droplet_file.close
-
-          VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid).perform
-          process.droplet_hash = droplet.reload.droplet_hash
-          process.save
-        end
-
-        it 'succeeds for valid droplets' do
-          upload_v3_droplet
-
-          get "/internal/v2/droplets/#{process.guid}/#{process.droplet_hash}/download"
-          expect(last_response.status).to eq(200)
-          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{process.droplet_hash}")
-        end
-
-        context 'when the blobstore is not local' do
-          before do
-            allow_any_instance_of(CloudController::Blobstore::Client).to receive(:local?).and_return(false)
-          end
-
-          it 'should redirect to the url provided by the blobstore_url_generator' do
-            upload_v3_droplet
-            allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:v3_droplet_download_url).and_return('http://example.com/somewhere/else')
-
-            get "/internal/v2/droplets/#{process.guid}/#{process.droplet_hash}/download"
-
-            expect(last_response).to be_redirect
-            expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
-          end
         end
       end
     end

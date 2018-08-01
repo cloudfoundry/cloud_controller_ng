@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class AppBitsDownloadController < RestController::ModelController
     def self.dependencies
-      [:blob_sender, :package_blobstore, :missing_blob_handler]
+      [:package_blobstore, :missing_blob_handler]
     end
 
     path_base 'apps'
@@ -9,28 +9,22 @@ module VCAP::CloudController
 
     get "#{path_guid}/download", :download
     def download(guid)
-      find_guid_and_validate_access(:read, guid)
-
-      blob = @blobstore.blob(guid)
-
-      if blob.nil?
-        Loggregator.emit_error(guid, "Could not find package for #{guid}")
-        logger.error "could not find package for #{guid}"
-        raise Errors::ApiError.new_from_details('AppPackageNotFound', guid)
-      end
-
-      if @blobstore.local?
-        @blob_sender.send_blob(guid, 'AppPackage', blob, self)
-      else
-        return [HTTP::FOUND, { 'Location' => blob.download_url }, nil]
-      end
+      app = find_guid_and_validate_access(:read, guid)
+      blob_dispatcher.send_or_redirect(guid: app.latest_package.guid)
+    rescue CloudController::Errors::BlobNotFound
+      Loggregator.emit_error(guid, "Could not find package for #{guid}")
+      logger.error "could not find package for #{guid}"
+      raise CloudController::Errors::ApiError.new_from_details('AppPackageNotFound', guid)
     end
 
     private
 
     def inject_dependencies(dependencies)
-      @blob_sender = dependencies.fetch(:blob_sender)
       @blobstore = dependencies.fetch(:package_blobstore)
+    end
+
+    def blob_dispatcher
+      BlobDispatcher.new(blobstore: @blobstore, controller: self)
     end
   end
 end

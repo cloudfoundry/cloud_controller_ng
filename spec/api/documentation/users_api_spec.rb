@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Users', type: [:api, :legacy_api] do
+RSpec.resource 'Users', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:user) { VCAP::CloudController::User.make(default_space: space) }
   let(:guid) { user.guid }
@@ -18,11 +18,11 @@ resource 'Users', type: [:api, :legacy_api] do
     field :admin, 'Whether the user is an admin (Use UAA instead).', deprecated: true
   end
 
-  describe 'Standard endpoints' do
-    before do
-      allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ guid => 'user@example.com' })
-    end
+  before do
+    allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ guid => 'user@example.com' })
+  end
 
+  describe 'Standard endpoints' do
     standard_model_list(:user, VCAP::CloudController::UsersController)
     standard_model_get(:user, nested_associations: [:default_space])
     standard_model_delete(:user)
@@ -48,7 +48,7 @@ resource 'Users', type: [:api, :legacy_api] do
         client.put "/v2/users/#{guid}", MultiJson.dump({ default_space_guid: new_space.guid }, pretty: true), headers
 
         expect(status).to eq 201
-        standard_entity_response parsed_response, :user, default_space_guid: new_space.guid
+        standard_entity_response parsed_response, :user, expected_values: { default_space_guid: new_space.guid }
       end
     end
   end

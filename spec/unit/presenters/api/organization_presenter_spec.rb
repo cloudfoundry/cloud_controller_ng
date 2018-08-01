@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe OrganizationPresenter do
+RSpec.describe OrganizationPresenter do
   describe '#to_hash' do
     let(:org) { VCAP::CloudController::Organization.make }
     before do
@@ -16,7 +16,7 @@ describe OrganizationPresenter do
         metadata: {
           guid: org.guid,
           created_at: org.created_at.iso8601,
-          updated_at: nil,
+          updated_at: org.updated_at.iso8601,
         },
         entity: {
           name: org.name,

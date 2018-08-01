@@ -22,7 +22,7 @@ module VCAP::CloudController
       end
     end
 
-    describe FailedJobsCleanup do
+    RSpec.describe FailedJobsCleanup do
       let(:cutoff_age_in_days) { 2 }
       let(:worker) { Delayed::Worker.new }
 

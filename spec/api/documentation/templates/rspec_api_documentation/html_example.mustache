@@ -218,6 +218,7 @@
               <th>Name</th>
               <th>Description</th>
               <th>Valid Values</th>
+              <th>Example Values</th>
             </tr>
             </thead>
             <tbody>
@@ -239,6 +240,18 @@
                     {{# valid_values }}
                       <li>{{ . }}</li>
                     {{/ valid_values }}
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                    {{# example_values }}
+                      {{# render_example_pre_tag }}
+                        <li><pre>{{ . }}</pre></li>
+                      {{/ render_example_pre_tag }}
+                      {{^ render_example_pre_tag }}
+                        <li>{{ . }}</li>
+                      {{/ render_example_pre_tag }}
+                    {{/ example_values }}
                   </ul>
                 </td>
               </tr>

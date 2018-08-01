@@ -1,13 +1,13 @@
 require 'spec_helper'
 
 module VCAP::Services::ServiceBrokers
-  describe ServiceBrokerRegistration do
-    subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false) }
+  RSpec.describe ServiceBrokerRegistration do
+    subject(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false, false) }
 
     let(:client_manager) { instance_double(VCAP::Services::SSO::DashboardClientManager, synchronize_clients_with_catalog: true, warnings: []) }
     let(:catalog) { instance_double(VCAP::Services::ServiceBrokers::V2::Catalog, valid?: true) }
     let(:service_manager) { instance_double(VCAP::Services::ServiceBrokers::ServiceManager, sync_services_and_plans: true, has_warnings?: false) }
-    let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::Services::EventRepository) }
+    let(:services_event_repository) { instance_double(VCAP::CloudController::Repositories::ServiceEventRepository) }
 
     describe 'initializing' do
       let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -79,16 +79,15 @@ module VCAP::Services::ServiceBrokers
         registration.create
 
         expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
-                                                                 broker,
-                                                                 services_event_repository
-                                                               )
+          broker,
+          services_event_repository
+        )
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 
       context 'when invalid' do
         context 'because the broker has errors' do
           let(:broker) { VCAP::CloudController::ServiceBroker.new }
-          let(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false) }
 
           it 'returns nil' do
             expect(registration.create).to be_nil
@@ -137,7 +136,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize uaa clients' do
             begin
               registration.create
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
 
             expect(client_manager).not_to have_received(:synchronize_clients_with_catalog)
@@ -146,14 +145,14 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize the catalog' do
             begin
               registration.create
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
 
             expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error with a human-readable message' do
-            expect { registration.create }.to raise_error(VCAP::Errors::ApiError, /something bad happened/)
+            expect { registration.create }.to raise_error(CloudController::Errors::ApiError, /something bad happened/)
             expect(formatter).to have_received(:format).with(errors)
           end
         end
@@ -205,13 +204,13 @@ module VCAP::Services::ServiceBrokers
           let(:validation_errors) { instance_double(VCAP::Services::ValidationErrors) }
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { registration.create }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)
+            expect { registration.create }.to raise_error(CloudController::Errors::ApiError, /#{error_text}/)
           end
 
           it 'does not synchronize the catalog' do
             begin
               registration.create
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
 
             expect(service_manager).not_to have_received(:sync_services_and_plans)
@@ -225,7 +224,7 @@ module VCAP::Services::ServiceBrokers
           allow(client_manager).to receive(:synchronize_clients_with_catalog) {
             VCAP::CloudController::ServiceDashboardClient.make(uaa_id: 'my-uaa-id', service_broker_id: broker.id)
           }
-          allow(service_manager).to receive(:sync_services_and_plans).and_raise(VCAP::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', 'omg it broke'))
+          allow(service_manager).to receive(:sync_services_and_plans).and_raise(CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', 'omg it broke'))
         end
 
         it 'does not save new broker' do
@@ -233,7 +232,7 @@ module VCAP::Services::ServiceBrokers
           expect {
             begin
               registration.create
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
           }.to change { VCAP::CloudController::ServiceBroker.count }.by(0)
         end
@@ -243,7 +242,7 @@ module VCAP::Services::ServiceBrokers
           expect {
             begin
               registration.create
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
           }.to change { VCAP::CloudController::ServiceDashboardClient.count }.by(1)
 
@@ -293,6 +292,23 @@ module VCAP::Services::ServiceBrokers
           registration.create
 
           expect(registration.warnings).to eq(['warning1', 'warning2'])
+        end
+      end
+
+      context 'when volume_services_enabled is false and a service requires volume_mount' do
+        let(:volume_mount_plan) { instance_double(V2::CatalogService, route_service?: false, volume_mount_service?: true, name: 'service-name') }
+
+        before do
+          allow(catalog).to receive(:services).and_return([volume_mount_plan])
+        end
+
+        it 'adds a warning' do
+          registration.create
+
+          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled.' \
+                       ' Users will be prevented from binding instances of this service with apps.'
+
+          expect(registration.warnings).to include(expected_warning)
         end
       end
     end
@@ -389,16 +405,14 @@ module VCAP::Services::ServiceBrokers
         registration.update
 
         expect(VCAP::Services::SSO::DashboardClientManager).to have_received(:new).with(
-                                                                 broker,
-                                                                 services_event_repository
-                                                               )
+          broker,
+          services_event_repository
+        )
         expect(client_manager).to have_received(:synchronize_clients_with_catalog).with(catalog)
       end
 
       context 'when invalid' do
         context 'because the broker has errors' do
-          let(:registration) { ServiceBrokerRegistration.new(broker, service_manager, services_event_repository, false) }
-
           before do
             broker.name = nil
           end
@@ -451,7 +465,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize uaa clients' do
             begin
               registration.update
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
 
             expect(client_manager).not_to have_received(:synchronize_clients_with_catalog)
@@ -460,14 +474,14 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize the catalog' do
             begin
               registration.update
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
 
             expect(service_manager).not_to have_received(:sync_services_and_plans)
           end
 
           it 'raises a ServiceBrokerCatalogInvalid error with a human-readable message' do
-            expect { registration.update }.to raise_error(VCAP::Errors::ApiError, /something bad happened/)
+            expect { registration.update }.to raise_error(CloudController::Errors::ApiError, /something bad happened/)
             expect(formatter).to have_received(:format).with(errors)
           end
         end
@@ -518,7 +532,7 @@ module VCAP::Services::ServiceBrokers
           let(:validation_errors) { instance_double(VCAP::Services::ValidationErrors) }
 
           it 'raises a ServiceBrokerCatalogInvalid error' do
-            expect { registration.update }.to raise_error(VCAP::Errors::ApiError, /#{error_text}/)
+            expect { registration.update }.to raise_error(CloudController::Errors::ApiError, /#{error_text}/)
           end
 
           it 'not update the service broker' do
@@ -530,7 +544,7 @@ module VCAP::Services::ServiceBrokers
           it 'does not synchronize the catalog' do
             begin
               registration.update
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
 
             expect(service_manager).not_to have_received(:sync_services_and_plans)
@@ -541,7 +555,7 @@ module VCAP::Services::ServiceBrokers
       context 'when exception is raised during transaction' do
         before do
           allow(catalog).to receive(:valid?).and_return(true)
-          allow(service_manager).to receive(:sync_services_and_plans).and_raise(VCAP::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', 'omg it broke'))
+          allow(service_manager).to receive(:sync_services_and_plans).and_raise(CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', 'omg it broke'))
         end
 
         it 'does not update the broker' do
@@ -549,7 +563,7 @@ module VCAP::Services::ServiceBrokers
           expect {
             begin
               registration.update
-            rescue VCAP::Errors::ApiError
+            rescue CloudController::Errors::ApiError
             end
           }.not_to change { VCAP::CloudController::ServiceBroker[broker.id].name }
         end
@@ -602,6 +616,23 @@ module VCAP::Services::ServiceBrokers
           registration.update
 
           expect(registration.warnings).to eq(['warning1', 'warning2'])
+        end
+      end
+
+      context 'when volume_services_enabled is false and a service requires volume_mount' do
+        let(:volume_mount_plan) { instance_double(V2::CatalogService, route_service?: false, volume_mount_service?: true, name: 'service-name') }
+
+        before do
+          allow(catalog).to receive(:services).and_return([volume_mount_plan])
+        end
+
+        it 'adds a warning' do
+          registration.update
+
+          expected_warning = 'Service service-name is declared to be a volume mount service but support for volume mount services is disabled.' \
+                       ' Users will be prevented from binding instances of this service with apps.'
+
+          expect(registration.warnings).to include(expected_warning)
         end
       end
     end

@@ -1,20 +1,22 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe RestController::BaseController do
+  RSpec.describe RestController::BaseController do
     let(:logger) { double(:logger, debug: nil, error: nil) }
     let(:params) { {} }
     let(:env) { {} }
     let(:sinatra) { nil }
 
     class TestController < RestController::BaseController
+      allow_unauthenticated_access only: [:test_unauthenticated, :test_basic_auth]
+
       def test_endpoint
         'test_response'
       end
       define_route :get, '/test_endpoint', :test_endpoint
 
       def test_i18n
-        "#{I18n.locale}"
+        I18n.locale.to_s
       end
       define_route :get, '/test_i18n', :test_i18n
 
@@ -28,6 +30,11 @@ module VCAP::CloudController
       end
       define_route :get, '/test_sql_hook_failed', :test_sql_hook_failed
 
+      def test_blobstore_error
+        raise CloudController::Blobstore::BlobstoreError.new('whoops!')
+      end
+      define_route :get, '/test_blobstore_error', :test_blobstore_error
+
       def test_database_error
         raise Sequel::DatabaseError.new('error')
       end
@@ -39,18 +46,17 @@ module VCAP::CloudController
       define_route :get, '/test_json_error', :test_json_error
 
       def test_invalid_relation_error
-        raise VCAP::Errors::InvalidRelation.new('error')
+        raise CloudController::Errors::InvalidRelation.new('error')
       end
       define_route :get, '/test_invalid_relation_error', :test_invalid_relation_error
 
-      allow_unauthenticated_access only: :test_unauthenticated
       def test_unauthenticated
         'unauthenticated_response'
       end
       define_route :get, '/test_unauthenticated', :test_unauthenticated
 
       authenticate_basic_auth('/test_basic_auth') do
-        ['username', 'password']
+        ['username', "p'a\"ss%40%3A%3Fwo!r%24d"]
       end
       def test_basic_auth
         'basic_auth_response'
@@ -80,47 +86,53 @@ module VCAP::CloudController
 
     describe '#dispatch' do
       context 'when the dispatch is successful' do
-        let(:token_decoder) { double(:decoder) }
-        let(:header_token) { 'some token' }
-        let(:token_info) { { 'user_id' => 'some user' } }
+        before { set_current_user(user) }
 
         it 'should dispatch the request' do
-          get '/test_endpoint', '', headers_for(user)
+          get '/test_endpoint'
           expect(last_response.body).to eq 'test_response'
         end
 
         it 'should log a debug message' do
           expect(logger).to receive(:debug).with('cc.dispatch', endpoint: :test_endpoint, args: [])
-          get '/test_endpoint', '', headers_for(user)
+          get '/test_endpoint'
         end
       end
 
       context 'when the dispatch raises an error' do
+        before { set_current_user(user) }
+
         it 'processes Sequel Validation errors using translate_validation_exception' do
-          get '/test_validation_error', '', headers_for(user)
-          expect(decoded_response['description']).to eq 'validation failed'
+          get '/test_validation_error'
+          expect(decoded_response['description']).to eq('validation failed')
+        end
+
+        it 'processes BlobstoreError using translate_validation_exception' do
+          get '/test_blobstore_error'
+          expect(decoded_response['code']).to eq(150007)
+          expect(decoded_response['description']).to match(/three retries/)
         end
 
         it 'returns InvalidRequest when Sequel HookFailed error occurs' do
-          get '/test_sql_hook_failed', '', headers_for(user)
-          expect(decoded_response['code']).to eq 10004
+          get '/test_sql_hook_failed'
+          expect(decoded_response['code']).to eq(10004)
         end
 
         it 'logs the error when a Sequel Database Error occurs' do
           expect(logger).to receive(:warn).with(/exception not translated/)
-          get '/test_database_error', '', headers_for(user)
-          expect(decoded_response['code']).to eq 10011
+          get '/test_database_error'
+          expect(decoded_response['code']).to eq(10011)
         end
 
         it 'logs an error when a JSON error occurs' do
           expect(logger).to receive(:debug).with(/Rescued JsonMessage::Error/)
-          get '/test_json_error', '', headers_for(user)
-          expect(decoded_response['code']).to eq 1001
+          get '/test_json_error'
+          expect(decoded_response['code']).to eq(1001)
         end
 
         it 'returns InvalidRelation when an Invalid Relation error occurs' do
-          get '/test_invalid_relation_error', '', headers_for(user)
-          expect(decoded_response['code']).to eq 1002
+          get '/test_invalid_relation_error'
+          expect(decoded_response['code']).to eq(1002)
         end
       end
 
@@ -149,33 +161,15 @@ module VCAP::CloudController
 
       describe 'internationalization' do
         it 'should record the locale during dispatching the request' do
-          get '/test_i18n', '', headers_for(user).merge({ 'HTTP_ACCEPT_LANGUAGE' => 'never_Neverland' })
+          set_current_user(user)
+          get '/test_i18n', nil, { 'HTTP_ACCEPT_LANGUAGE' => 'never_Neverland' }
           expect(last_response.body).to eq('never_Neverland')
         end
       end
 
       describe 'authentication' do
-        context 'when the token contains a valid user' do
-          let(:headers) { headers_for(user) }
-          it 'allows the operation' do
-            get '/test_endpoint', '', headers
-            expect(last_response.body).to eq 'test_response'
-          end
-
-          context 'and the endpoint allows authenticated access' do
-            it 'allows the operation' do
-              get '/test_unauthenticated', '', headers
-              expect(last_response.body).to eq 'unauthenticated_response'
-            end
-          end
-        end
-
-        context 'when there is no token' do
-          it 'returns NotAuthenticated' do
-            get '/test_endpoint'
-            expect(last_response.status).to eq 401
-            expect(decoded_response['code']).to eq 10002
-          end
+        context 'when there is no current user' do
+          before { set_current_user(nil) }
 
           context 'when a particular operation is allowed to skip authentication' do
             it 'does not raise error' do
@@ -185,37 +179,52 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the token cannot be parsed' do
-          it 'returns InvalidAuthToken' do
-            get '/test_endpoint', '', 'HTTP_AUTHORIZATION' => 'BEARER fake_token'
-            expect(decoded_response['code']).to eq 1000
-            expect(last_response.status).to eq 401
-          end
-        end
-
         context 'when the endpoint requires basic auth' do
+          let(:unencoded_password) { "p'a\"ss@:?wo!r$d" }
+          let(:encoded_password) { URI.escape(unencoded_password, "%#{URI::REGEXP::PATTERN::RESERVED}") }
+
+          it 'this is just a check around our encoding and decoding assumptions' do
+            expect(URI.decode(encoded_password)).to eq(unencoded_password)
+          end
+
           it 'returns NotAuthenticated if username and password are not provided' do
             get '/test_basic_auth'
+            expect(last_response.status).to eq 401
             expect(decoded_response['code']).to eq 10002
           end
 
           it 'returns NotAuthenticated if username and password are wrong' do
             authorize 'username', 'letmein'
+
             get '/test_basic_auth'
+            expect(last_response.status).to eq 401
             expect(decoded_response['code']).to eq 10002
           end
 
-          it 'does not raise NotAuthorized if username and password is correct' do
-            authorize 'username', 'password'
+          context 'when the dea returns percent-encoded staging credentials' do
+            it 'successfully authenticates' do
+              authorize 'username', encoded_password
 
-            get '/test_basic_auth'
-            expect(last_response.body).to_not eq 'basic_auth_response'
+              get '/test_basic_auth'
+              expect(last_response.status).to eq 200
+              expect(last_response.body).to eq 'basic_auth_response'
+            end
+          end
+
+          context 'when diego returns percent-decoded staging credentials' do
+            it 'successfully authenticates' do
+              authorize 'username', unencoded_password
+
+              get '/test_basic_auth'
+              expect(last_response.status).to eq 200
+              expect(last_response.body).to eq 'basic_auth_response'
+            end
           end
         end
       end
     end
 
-    describe '#recursive?' do
+    describe '#recursive_delete?' do
       subject(:base_controller) do
         VCAP::CloudController::RestController::BaseController.new(double(:config), logger, env, params, double(:body), nil)
       end
@@ -223,17 +232,17 @@ module VCAP::CloudController
       context 'when the recursive flag is present' do
         context 'and the flag is true' do
           let(:params) { { 'recursive' => 'true' } }
-          it { is_expected.to be_recursive }
+          it { is_expected.to be_recursive_delete }
         end
 
         context 'and the flag is false' do
           let(:params) { { 'recursive' => 'false' } }
-          it { is_expected.not_to be_recursive }
+          it { is_expected.not_to be_recursive_delete }
         end
       end
 
       context 'when the recursive flag is not present' do
-        it { is_expected.not_to be_recursive }
+        it { is_expected.not_to be_recursive_delete }
       end
     end
 
@@ -300,7 +309,8 @@ module VCAP::CloudController
 
     describe '#add_warning' do
       it 'sets warnings in the X-Cf-Warnings header' do
-        get '/test_warnings', '', headers_for(user)
+        set_current_user(user)
+        get '/test_warnings'
 
         warnings_header = last_response.headers['X-Cf-Warnings']
         warnings = warnings_header.split(',')
@@ -348,7 +358,7 @@ module VCAP::CloudController
         it 'raises an unauthorized API error' do
           expect {
             base_controller.check_read_permissions!
-          }.to raise_error VCAP::Errors::ApiError
+          }.to raise_error CloudController::Errors::ApiError
         end
       end
     end
@@ -391,7 +401,7 @@ module VCAP::CloudController
         it 'raises an unauthorized API error' do
           expect {
             base_controller.check_write_permissions!
-          }.to raise_error VCAP::Errors::ApiError
+          }.to raise_error CloudController::Errors::ApiError
         end
       end
     end

@@ -1,25 +1,28 @@
 require 'spec_helper'
 
 module VCAP::CloudController::RoutingApi
-  describe Client do
-    let(:token_issuer) { double(:token_issuer) }
-    let(:token_info) { double(:token_info) }
+  RSpec.describe Client do
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient, token_info: token_info) }
+    let(:token_info) { instance_double(CF::UAA::TokenInfo, auth_header: 'bearer my-token') }
     let(:routing_api_url) { 'http://routing-api.example.com' }
     let(:skip_cert_verify) { false }
     let(:body) { nil }
     let(:status) { 400 }
     let(:path) { '/routing/v1/router_groups' }
-    let(:routing_api) { Client.new(routing_api_url, token_issuer, skip_cert_verify) }
+    let(:routing_api) { Client.new(routing_api_url, uaa_client, skip_cert_verify) }
 
     before do
       if !routing_api_url.nil?
         uri = URI(routing_api_url)
         uri.path = path
         stub_request(:get, uri.to_s).
-            to_return(status: status, body: body)
+          to_return(status: status, body: body)
+      end
+    end
 
-        allow(token_issuer).to receive(:client_credentials_grant).and_return(token_info)
-        allow(token_info).to receive(:auth_header).and_return('bearer my-token')
+    describe '.enabled?' do
+      it 'returns true' do
+        expect(routing_api.enabled?).to be_truthy
       end
     end
 
@@ -37,7 +40,7 @@ module VCAP::CloudController::RoutingApi
         it 'raises a RoutingApiUnavailable error' do
           expect {
             routing_api.router_groups
-          }.to raise_error Client::RoutingApiUnavailable
+          }.to raise_error RoutingApiUnavailable
         end
       end
 
@@ -49,7 +52,7 @@ module VCAP::CloudController::RoutingApi
           expect(response).to eq [expected_router_group1, expected_router_group2]
 
           expect(a_request(:get, routing_api_url + path)).
-              to have_been_made.times(1)
+            to have_been_made.times(1)
         end
 
         it 'sends an authorization token with the request' do
@@ -57,10 +60,7 @@ module VCAP::CloudController::RoutingApi
 
           expect(a_request(:get, routing_api_url + path).
                      with(headers: { 'Authorization' => 'bearer my-token' })).
-              to have_been_made.times(1)
-
-          expect(token_issuer).to have_received(:client_credentials_grant)
-          expect(token_info).to have_received(:auth_header)
+            to have_been_made.times(1)
         end
 
         it 'does not set the HTTPClient::SSLConfig' do
@@ -69,33 +69,18 @@ module VCAP::CloudController::RoutingApi
         end
 
         context 'when fetching a token' do
-          context 'and token_issuer raises a CF::UAA::NotFound error' do
+          context 'and uaa_client raises a CF::UAA::BadResponse error' do
             before do
-              allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::NotFound)
+              allow(uaa_client).to receive(:token_info).and_raise(CF::UAA::BadResponse)
             end
 
             it 'raises a UaaUnavailable' do
               expect {
                 routing_api.router_groups
-              }.to raise_error Client::UaaUnavailable
+              }.to raise_error UaaUnavailable
 
               expect(a_request(:get, routing_api_url + path)).
-                  to have_been_made.times(0)
-            end
-          end
-
-          context 'and token_issuer raises a CF::UAA::BadResponse error' do
-            before do
-              allow(token_issuer).to receive(:client_credentials_grant).and_raise(CF::UAA::BadResponse)
-            end
-
-            it 'raises a UaaUnavailable' do
-              expect {
-                routing_api.router_groups
-              }.to raise_error Client::UaaUnavailable
-
-              expect(a_request(:get, routing_api_url + path)).
-                  to have_been_made.times(0)
+                to have_been_made.times(0)
             end
           end
         end
@@ -106,16 +91,16 @@ module VCAP::CloudController::RoutingApi
             uri.path = path
 
             stub_request(:get, uri.to_s).
-                to_return(status: 500, body: '')
+              to_return(status: 500, body: '')
           end
 
           it 'raises a error' do
             expect {
               routing_api.router_groups
-            }.to raise_error Client::RoutingApiUnavailable
+            }.to raise_error RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
-                to have_been_made.times(1)
+              to have_been_made.times(1)
           end
         end
 
@@ -147,16 +132,16 @@ module VCAP::CloudController::RoutingApi
             uri.path = path
 
             stub_request(:get, uri.to_s).
-                to_return(status: 200, body: '{\/adf[{')
+              to_return(status: 200, body: '{\/adf[{')
           end
 
           it 'returns a RoutingApiUnavailable error' do
             expect {
-              puts routing_api.router_groups
-            }.to raise_error Client::RoutingApiUnavailable
+              routing_api.router_groups
+            }.to raise_error RoutingApiUnavailable
 
             expect(a_request(:get, routing_api_url + path)).
-                to have_been_made.times(1)
+              to have_been_made.times(1)
           end
         end
       end
@@ -186,6 +171,26 @@ module VCAP::CloudController::RoutingApi
         it 'return nil' do
           group = routing_api.router_group('no-group-guid')
           expect(group).to be_nil
+        end
+      end
+    end
+
+    describe '.router_group_guid' do
+      let(:status) { 200 }
+      let(:body) do
+        [
+          { guid: 'random-guid-1', name: 'group-name', type: 'tcp' },
+          { guid: 'router-group-guid', name: 'group-name-2', type: 'my-type' },
+        ].to_json
+      end
+
+      it 'provides the associated router name for the given guid' do
+        expect(routing_api.router_group_guid('group-name')).to eq('random-guid-1')
+      end
+
+      context 'when there is no router group guid for the given name' do
+        it 'returns nil' do
+          expect(routing_api.router_group_guid('some-random-guid')).to be_nil
         end
       end
     end

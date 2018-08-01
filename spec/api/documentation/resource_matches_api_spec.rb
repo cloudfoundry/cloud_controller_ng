@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Resource Match', type: [:api, :legacy_api] do
+RSpec.resource 'Resource Match', type: [:api, :legacy_api] do
   include_context 'resource pool'
 
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }

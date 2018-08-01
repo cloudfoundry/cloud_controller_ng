@@ -1,18 +1,23 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::SpaceQuotaDefinitionsController do
+  RSpec.describe VCAP::CloudController::SpaceQuotaDefinitionsController do
+    before { set_current_user_as_admin }
+
     describe 'Attributes' do
       it do
         expect(described_class).to have_creatable_attributes({
           name:                       { type: 'string', required: true },
           non_basic_services_allowed: { type: 'bool', required: true },
           total_services:             { type: 'integer', required: true },
+          total_service_keys:         { type: 'integer', default: -1 },
           total_routes:               { type: 'integer', required: true },
           memory_limit:               { type: 'integer', required: true },
           instance_memory_limit:      { type: 'integer' },
           organization_guid:          { type: 'string', required: true },
           app_instance_limit:         { type: 'integer' },
+          app_task_limit:             { type: 'integer', required: false, default: 5 },
+          total_reserved_route_ports: { type: 'integer', required: false, default: -1 }
         })
       end
 
@@ -21,11 +26,14 @@ module VCAP::CloudController
           name:                       { type: 'string' },
           non_basic_services_allowed: { type: 'bool' },
           total_services:             { type: 'integer' },
+          total_service_keys:         { type: 'integer' },
           total_routes:               { type: 'integer' },
           memory_limit:               { type: 'integer' },
           app_instance_limit:         { type: 'integer' },
           instance_memory_limit:      { type: 'integer' },
           organization_guid:          { type: 'string' },
+          app_task_limit:             { type: 'integer' },
+          total_reserved_route_ports: { type: 'integer' }
         })
       end
     end
@@ -144,8 +152,8 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       it 'returns SpaceQuotaDefinitionInvalid' do
-        sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
-        post '/v2/space_quota_definitions', MultiJson.dump(sqd_json), json_headers(admin_headers)
+        sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
+        post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/Space Quota Definition is invalid/)
@@ -154,8 +162,8 @@ module VCAP::CloudController
 
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
         SpaceQuotaDefinition.make(name: 'foo', organization: org)
-        sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
-        post '/v2/space_quota_definitions', MultiJson.dump(sqd_json), json_headers(admin_headers)
+        sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
+        post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
 
         expect(last_response.status).to eq(400)
         expect(decoded_response['description']).to match(/name is taken/)
@@ -166,7 +174,7 @@ module VCAP::CloudController
     describe '#delete' do
       it 'succeeds when no spaces are associated' do
         quota = SpaceQuotaDefinition.make
-        delete "/v2/space_quota_definitions/#{quota.guid}", '', admin_headers
+        delete "/v2/space_quota_definitions/#{quota.guid}"
         expect(last_response.status).to eq(204)
       end
     end

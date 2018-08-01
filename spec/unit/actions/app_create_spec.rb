@@ -3,7 +3,7 @@ require 'messages/app_create_message'
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
 
 module VCAP::CloudController
-  describe AppCreate do
+  RSpec.describe AppCreate do
     let(:user) { double(:user, guid: 'single') }
     let(:user_email) { 'user-email' }
     subject(:app_create) { AppCreate.new(user, user_email) }
@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         it 'creates an audit event' do
-          expect_any_instance_of(Repositories::Runtime::AppEventRepository).
+          expect_any_instance_of(Repositories::AppEventRepository).
             to receive(:record_app_create).with(instance_of(AppModel),
               space,
               user.guid,

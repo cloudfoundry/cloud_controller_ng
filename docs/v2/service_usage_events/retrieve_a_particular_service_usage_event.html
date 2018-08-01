@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Usage Events API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Service Usage Events API</h1>
+
+  <div class="article">
+    <h2>Retrieve a Particular Service Usage Event</h2>
+    <h3>GET /v2/service_usage_events/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/service_usage_events/46a55ff9-96a1-442d-b8f5-21f4a6dd4a1a</pre>
+
+
+
+
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMyOCIsImVtYWlsIjoiZW1haWwtMjIzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTl9.5dyRkuI9orqtiMi3Zh2wv9LBgJIC7YA4D1Qg44WZUS8
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/service_usage_events/46a55ff9-96a1-442d-b8f5-21f4a6dd4a1a&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTMyOCIsImVtYWlsIjoiZW1haWwtMjIzQHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTl9.5dyRkuI9orqtiMi3Zh2wv9LBgJIC7YA4D1Qg44WZUS8&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "46a55ff9-96a1-442d-b8f5-21f4a6dd4a1a",
+    "url": "/v2/service_usage_events/46a55ff9-96a1-442d-b8f5-21f4a6dd4a1a",
+    "created_at": "2016-06-08T16:41:39Z"
+  },
+  "entity": {
+    "state": "CREATED",
+    "org_guid": "guid-c52b692e-4896-4f21-bbbb-17fa679efc2d",
+    "space_guid": "guid-0220f8ce-2704-4c1b-bc8e-94f4cfb49c46",
+    "space_name": "name-1987",
+    "service_instance_guid": "guid-7741fcc1-0343-4630-8d76-1d8cd1af00e2",
+    "service_instance_name": "name-1988",
+    "service_instance_type": "type-7",
+    "service_plan_guid": "guid-af7b1577-16fa-4ca3-a1ff-c90917382378",
+    "service_plan_name": "name-1989",
+    "service_guid": "guid-01954caf-cc7b-4242-b5f8-569cfedba078",
+    "service_label": "label-66"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 3ae6e561-fb70-44e0-8082-e2a1ad87a445
+Content-Length: 750
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

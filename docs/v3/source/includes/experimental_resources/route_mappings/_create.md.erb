@@ -1,0 +1,82 @@
+### Create a route mapping
+
+```
+Definition
+```
+
+```http
+POST /v3/route_mappings HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_mappings" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -d '{
+    "relationships": {
+      "app": {
+        "guid": "[app-guid]"
+      },
+      "route": {
+        "guid": "[route_guid]"
+      }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+
+<%= yield_content :single_route_mapping %>
+```
+
+This endpoint creates a new route mapping.
+
+#### Body Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      app_port
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">The port that traffic will be routed to for the mapped process. Defaults to <code>8080</code></p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships['app']['guid']
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Guid of the app to which you would like to map the route.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships['route']['guid']
+
+      <span class="method-list-item-type method-list-item-type-required">required</span>
+    </h4>
+
+    <p class="method-list-item-description">Guid of the route to which you would like to map the app.</p>
+  </li>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      relationships['process']['type']
+
+      <span class="method-list-item-type">optional</span>
+    </h4>
+
+    <p class="method-list-item-description">Type of the process on the app to which you would like to map the route. Defaults to <code>web</code></p>
+  </li>
+</ul>

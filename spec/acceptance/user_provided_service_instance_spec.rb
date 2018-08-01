@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'User Provided Service Instance' do
+RSpec.describe 'User Provided Service Instance' do
   include VCAP::CloudController::BrokerApiHelper
 
   before(:each) do

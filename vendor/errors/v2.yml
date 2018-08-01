@@ -78,6 +78,16 @@
   http_code: 500
   message: "Database error"
 
+10012:
+  name: OrderByParameterInvalid
+  http_code: 500
+  message: "Cannot order by: %s"
+
+10013:
+  name: RateLimitExceeded
+  http_code: 429
+  message: "Rate Limit Exceeded"
+
 20001:
   name: UserInvalid
   http_code: 400
@@ -117,6 +127,26 @@
   name: OrganizationNotFound
   http_code: 404
   message: "The organization could not be found: %s"
+
+30004:
+  name: LastManagerInOrg
+  http_code: 403
+  message: "Cannot remove last Org Manager in org"
+
+30005:
+  name: LastBillingManagerInOrg
+  http_code: 403
+  message: "Cannot remove last Billing Manager in org"
+
+30006:
+  name: LastUserInOrg
+  http_code: 403
+  message: "Cannot remove last User in org"
+
+30007:
+  name: OrganizationAlreadySet
+  http_code: 400
+  message: 'Cannot change organization'
 
 40001:
   name: SpaceInvalid
@@ -256,7 +286,7 @@
 60019:
   name: ServiceInstanceRouteServiceURLInvalid
   http_code: 400
-  message: "The service instance cannot be created with the invalid route service url: %s"
+  message: "The route service URL is invalid: %s"
 
 60020:
   name: ServiceInstanceRouteServiceRequiresDiego
@@ -267,6 +297,31 @@
   name: ServiceInstanceRouteServiceDisabled
   http_code: 403
   message: "Support for route services is disabled"
+
+60022:
+  name: AppPortMappingRequiresDiego
+  http_code: 400
+  message: "App ports are supported for Diego apps only."
+
+60023:
+  name: RoutePortNotEnabledOnApp
+  http_code: 400
+  message: "Routes can only be mapped to ports already enabled for the application."
+
+60024:
+  name: MultipleAppPortsMappedDiegoToDea
+  http_code: 400
+  message: "The app has routes mapped to multiple ports. Multiple ports are supported for Diego only. Please unmap routes from all but one app port. Multiple routes can be mapped to the same port if desired."
+
+60025:
+  name: VolumeMountServiceDisabled
+  http_code: 403
+  message: "Support for volume mount services is disabled"
+
+60026:
+  name: DockerAppToDea
+  http_code: 400
+  message: "Docker apps cannot run on DEAs"
 
 70001:
   name: RuntimeInvalid
@@ -321,7 +376,7 @@
 90005:
   name: UnbindableService
   http_code: 400
-  message: "The service doesn't support binding."
+  message: "The service instance doesn't support binding."
 
 90006:
   name: InvalidLoggingServiceBinding
@@ -468,6 +523,16 @@
   http_code: 400
   message: "Downloading blobs can only be done directly to the blobstore."
 
+150006:
+  name: BlobstoreUnavailable
+  http_code: 502
+  message: "Failed to perform operation due to blobstore unavailability."
+
+150007:
+  name: BlobstoreError
+  http_code: 500
+  message: "Failed to perform blobstore operation after three retries."
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400
@@ -553,10 +618,30 @@
   http_code: 500
   message: "Runner error: %s"
 
-180001:
-  name: SnapshotNotFound
-  http_code: 404
-  message: "Snapshot could not be found: %s"
+170017:
+  name: StagingInProgress
+  http_code: 422
+  message: "Only one package can be staged at a time per application."
+
+170018:
+  name: InvalidTaskAddress
+  http_code: 500
+  message: "Invalid config: %s"
+
+170019:
+  name: TaskError
+  http_code: 500
+  message: "Task failed: %s"
+
+170020:
+  name: TaskWorkersUnavailable
+  http_code: 503
+  message: "Task workers are unavailable: %s"
+
+170021:
+  name: InvalidTaskRequest
+  http_code: 422
+  message: "The task request is invalid: %s"
 
 180002:
   name: ServiceGatewayError
@@ -617,6 +702,26 @@
   name: RoutePortTaken
   http_code: 400
   message: "The port is taken: %s"
+
+210006:
+  name: RouteMappingTaken
+  http_code: 400
+  message: "The route mapping is taken: %s"
+
+210007:
+  name: RouteMappingNotFound
+  http_code: 404
+  message: "The route mapping could not be found: %s"
+
+21008:
+  name: OutOfRouterGroupPorts
+  http_code: 403
+  message: "There are no more ports available for router group: %s. Please contact your administrator for more information."
+
+210009:
+  name: RouterGroupNotFound
+  http_code: 404
+  message: "The router group could not be found: %s"
 
 220001:
   name: InstancesError
@@ -711,7 +816,7 @@
 270010:
   name: ServiceBrokerNotRemovable
   http_code: 400
-  message: "Can not remove brokers that have associated service instances"
+  message: "Can not remove brokers that have associated service instances: %s"
 
 270011:
   name: ServiceBrokerUrlInvalid
@@ -788,6 +893,16 @@
   http_code: 502
   message: "Deletion of organization %s failed because one or more resources within could not be deleted.\n\n%s"
 
+290011:
+  name: NonrecursiveSpaceDeletionFailed
+  http_code: 400
+  message: "Resource inside space %s must first be deleted, or specify recursive delete."
+
+290012:
+  name: BitsServiceError
+  http_code: 500
+  message: "The bits service returned an error: %s"
+
 300001:
   name: SecurityGroupInvalid
   http_code: 400
@@ -853,6 +968,16 @@
   http_code: 400
   message: "You have exceeded the instance limit for your space's quota."
 
+310009:
+  name: OrgQuotaTotalReservedRoutePortsExceeded
+  http_code: 400
+  message: "You have exceeded the total reserved route ports for your organization's quota."
+
+310010:
+  name: SpaceQuotaTotalReservedRoutePortsExceeded
+  http_code: 400
+  message: "You have exceeded the total reserved route ports for your space's quota."
+
 320001:
   name: DiegoDisabled
   http_code: 400
@@ -908,6 +1033,12 @@
   http_code: 400
   message: "Unable to perform delete action: %s"
 
+350003:
+  name: ProcessNotFound
+  http_code: 404
+  message: "The process could not be found: %s"
+
+
 360001:
   name: ServiceKeyNameTaken
   http_code: 400
@@ -933,7 +1064,17 @@
   http_code: 503
   message: "The Routing API is currently unavailable"
 
+370002:
+  name: TcpRoutingDisabled
+  http_code: 403
+  message: "Support for TCP routing is disabled"
+
 380001:
   name: EnvironmentVariableGroupInvalid
   http_code: 400
   message: "The Environment Variable Group is invalid: %s"
+
+380002:
+  name: DropletUploadInvalid
+  http_code: 400
+  message: "The droplet upload is invalid: %s"

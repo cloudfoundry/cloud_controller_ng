@@ -18,7 +18,7 @@ module ControllerHelpers
     { protocol: 'http',  config_setting: :https_required_for_admins, user: 'admin', success: false },
     { protocol: 'https', config_setting: :https_required_for_admins, user: 'user',  success: true },
     { protocol: 'https', config_setting: :https_required_for_admins, user: 'admin', success: true }
-  ]
+  ].freeze
 
   def self.description_for_inline_depth(depth, pagination=50)
     if depth
@@ -70,29 +70,7 @@ module ControllerHelpers
              https: false }.merge(opts)
 
     headers = {}
-    token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
-                                          skey: TestConfig.config[:uaa][:symmetric_secret],
-                                          pkey: nil)
-
-    scopes = opts[:scopes]
-    if scopes.nil? && user
-      scopes = %w(cloud_controller.read cloud_controller.write)
-    end
-
-    if opts[:admin] && user
-      scopes << 'cloud_controller.admin'
-    end
-
-    if user
-      user_token = token_coder.encode(
-        user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
-        email: opts[:email],
-        scope: scopes
-      )
-
-      headers['HTTP_AUTHORIZATION'] = "bearer #{user_token}"
-    end
-
+    headers['HTTP_AUTHORIZATION'] = "bearer #{user_token(user, opts)}"
     headers['HTTP_X_FORWARDED_PROTO'] = 'https' if opts[:https]
     headers
   end

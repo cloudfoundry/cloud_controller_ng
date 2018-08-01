@@ -1,8 +1,11 @@
 require 'cloud_controller/diego/lifecycles/lifecycles'
+require 'utils/uri_utils'
 
 module VCAP::CloudController
   class BuildpackLifecycleDataModel < Sequel::Model(:buildpack_lifecycle_data)
     LIFECYCLE_TYPE = Lifecycles::BUILDPACK
+
+    encrypt :buildpack_url, salt: :encrypted_buildpack_url_salt, column: :encrypted_buildpack_url
 
     many_to_one :droplet,
       class: '::VCAP::CloudController::DropletModel',
@@ -16,8 +19,24 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
+    def buildpack=(buildpack)
+      self.buildpack_url = nil
+      self.admin_buildpack_name = nil
+
+      if UriUtils.is_uri?(buildpack)
+        self.buildpack_url = buildpack
+      else
+        self.admin_buildpack_name = buildpack
+      end
+    end
+
+    def buildpack
+      return self.admin_buildpack_name if self.admin_buildpack_name.present?
+      self.buildpack_url
+    end
+
     def to_hash
-      { buildpack: buildpack, stack: stack }
+      { buildpack: CloudController::UrlSecretObfuscator.obfuscate(buildpack), stack: stack }
     end
 
     def validate

@@ -20,9 +20,10 @@ module VCAP::CloudController
       requested_keys.include?(key)
     end
 
-    def audit_hash
+    def audit_hash(exclude: [])
       request = {}
       requested_keys.each do |key|
+        next if exclude.include?(key)
         request[key.to_s] = self.try(key)
       end
       request
@@ -32,18 +33,14 @@ module VCAP::CloudController
       params = {}
       (requested_keys - opts[:exclude]).each do |key|
         val = self.try(key)
-        if val.is_a?(Array)
-          params[key] = val.map { |v| CGI.escape(v) }.join(',')
-        else
-          params[key] = val
-        end
+        params[key] = val.is_a?(Array) ? val.map { |v| v.gsub(',', CGI.escape(',')) }.join(',') : val
       end
       params
     end
 
     def self.to_array!(params, key)
       if params[key]
-        params[key] = params[key].to_s.split(',').map { |val| CGI.unescape(val) unless val.nil? }
+        params[key] = params[key].to_s.split(/,\s*/).map { |val| CGI.unescape(val) unless val.nil? }
       end
     end
 

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
+  RSpec.describe VCAP::CloudController::UserProvidedServiceInstance, type: :model do
     let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
     it_behaves_like 'a model with an encrypted attribute' do
@@ -23,7 +23,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space }
       it do
         is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
-          app = VCAP::CloudController::App.make(space: service_instance.space)
+          app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
       end
@@ -45,9 +45,24 @@ module VCAP::CloudController
       end
 
       it 'raises an error if the route_service_url is not https' do
-        instance = described_class.make
-        instance.route_service_url = 'http://route.url.com'
-        expect(instance).not_to be_valid
+        expect {
+          described_class.make(route_service_url: 'http://route.url.com')
+        }.
+          to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_not_https')
+      end
+
+      it 'raises an error if the route_service_url does not have a valid host' do
+        expect {
+          described_class.make(route_service_url: 'https://.com')
+        }.
+          to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
+      end
+
+      it 'raises an error if the route_service_url format is invalid' do
+        expect {
+          described_class.make(route_service_url: 'https\\route')
+        }.
+          to raise_error(Sequel::ValidationFailed, 'service_instance route_service_url_invalid')
       end
     end
 
@@ -72,7 +87,7 @@ module VCAP::CloudController
 
         event = ServiceUsageEvent.last
         expect(ServiceUsageEvent.count).to eq(1)
-        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::CREATED_EVENT_STATE)
+        expect(event.state).to eq(Repositories::ServiceUsageEventRepository::CREATED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
       end
 
@@ -90,7 +105,7 @@ module VCAP::CloudController
         event = VCAP::CloudController::ServiceUsageEvent.last
 
         expect(VCAP::CloudController::ServiceUsageEvent.count).to eq(2)
-        expect(event.state).to eq(Repositories::Services::ServiceUsageEventRepository::DELETED_EVENT_STATE)
+        expect(event.state).to eq(Repositories::ServiceUsageEventRepository::DELETED_EVENT_STATE)
         expect(event).to match_service_instance(instance)
       end
     end

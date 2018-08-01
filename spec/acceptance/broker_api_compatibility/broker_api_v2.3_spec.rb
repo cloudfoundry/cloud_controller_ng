@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Service Broker API integration' do
+RSpec.describe 'Service Broker API integration' do
   describe 'v2.3' do
     include VCAP::CloudController::BrokerApiHelper
 
@@ -29,7 +29,7 @@ describe 'Service Broker API integration' do
                            secret:       'dash-board-confessional-ahhhhh',
                            redirect_uri: 'http://redirect.to.me.plz'
                          },
-                         plans:       [{
+                         plans: [{
                                          id:          'plan1-guid-here',
                                          name:        'small',
                                          description: 'A small shared database with 100mb storage quota and 10 connections'
@@ -91,27 +91,9 @@ describe 'Service Broker API integration' do
 
           after { delete_broker }
           before do
-            UAARequests.stub_all
             setup_broker(catalog)
-
-            # stub uaa token request
-            stub_request(:post, 'http://cc-service-dashboards:some-sekret@localhost:8080/uaa/oauth/token').to_return(
-              status: 200,
-              body: { token_type: 'token-type', access_token: 'access-token' }.to_json,
-              headers: { 'content-type' => 'application/json' })
-
-            # stub uaa client search request
-            stub_request(:get, 'http://localhost:8080/uaa/oauth/clients/dash-id').to_return(
-              status: 200,
-              body: { id: 'some-id', client_id: 'dash-id', redirect_uri: 'http://redirect.to.me.plz' }.to_json,
-              headers: { 'content-type' => 'application/json' })
-
-            # stub uaa client update request
-            stub_request(:post, 'http://localhost:8080/uaa/oauth/clients/tx/modify').to_return(
-              status:  200,
-              headers: { 'content-type' => 'application/json' })
-
             stub_catalog_fetch(broker_response_status, catalog_with_updated_secret)
+            UAARequests.stub_all
 
             put("/v2/service_brokers/#{@broker_guid}",
               {}.to_json,

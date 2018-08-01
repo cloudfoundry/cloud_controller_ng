@@ -1,4 +1,5 @@
 require 'active_model'
+require 'utils/uri_utils'
 
 module VCAP::CloudController::Validators
   class ArrayValidator < ActiveModel::EachValidator
@@ -22,13 +23,13 @@ module VCAP::CloudController::Validators
   class GuidValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
       record.errors.add attribute, 'must be a string' unless value.is_a?(String)
-      record.errors.add attribute, 'must be between 1 and 200 characters' unless value.is_a?(String) && (1..200).include?(value.size)
+      record.errors.add attribute, 'must be between 1 and 200 characters' unless value.is_a?(String) && (1..200).cover?(value.size)
     end
   end
 
   class UriValidator < ActiveModel::EachValidator
     def validate_each(record, attribute, value)
-      record.errors.add attribute, 'must be a valid URI' unless value =~ /\A#{URI.regexp}\Z/
+      record.errors.add attribute, 'must be a valid URI' unless UriUtils.is_uri?(value)
     end
   end
 
@@ -37,11 +38,13 @@ module VCAP::CloudController::Validators
       if !value.is_a?(Hash)
         record.errors.add(attribute, 'must be a hash')
       else
-        value.keys.each do |key|
-          if key =~ /^CF_/i
-            record.errors.add(attribute, 'cannot start with CF_')
+        value.each_key do |key|
+          if key.length < 1
+            record.errors.add(attribute, 'key must be a minimum length of 1')
           elsif key =~ /^VCAP_/i
             record.errors.add(attribute, 'cannot start with VCAP_')
+          elsif key =~ /^VMC/i
+            record.errors.add(attribute, 'cannot start with VMC_')
           elsif key =~ /^PORT$/i
             record.errors.add(attribute, 'cannot set PORT')
           end
@@ -84,6 +87,18 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class DataValidator < ActiveModel::Validator
+    def validate(record)
+      return if !record.data.is_a?(Hash)
+
+      data = record.class::Data.new(record.data.symbolize_keys)
+
+      if !data.valid?
+        record.errors[:data].concat data.errors.full_messages
+      end
+    end
+  end
+
   class ToOneRelationshipValidator < ActiveModel::EachValidator
     def error_message(attribute)
       "must be structured like this: \"#{attribute}: {\"guid\": \"valid-guid\"}\""
@@ -102,7 +117,7 @@ module VCAP::CloudController::Validators
     end
 
     def has_correct_structure?(value)
-      (value.is_a?(Hash) && (value.keys.map(&:to_sym) == [:guid]))
+      (value.is_a?(Hash) && (value.keys.map(&:to_s) == ['guid']))
     end
   end
 
@@ -132,7 +147,7 @@ module VCAP::CloudController::Validators
     end
 
     def is_a_guid_hash?(hsh)
-      (hsh.keys.map(&:to_sym) == [:guid])
+      (hsh.keys.map(&:to_s) == ['guid'])
     end
   end
 end

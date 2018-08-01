@@ -1,16 +1,18 @@
 require 'spec_helper'
+require 'cloud_controller/diego/task_protocol'
 
 module VCAP::CloudController::Diego
-  describe NsyncClient do
+  RSpec.describe NsyncClient do
     let(:content_type_header) { { 'Content-Type' => 'application/json' } }
     let(:app) { VCAP::CloudController::AppFactory.make }
-    let(:process_guid) { ProcessGuid.from_app(app) }
+    let(:process_guid) { ProcessGuid.from_process(app) }
     let(:desire_message) { MultiJson.dump({ process_guid: process_guid }) }
+    let(:config) { TestConfig.config }
 
-    subject(:client) { NsyncClient.new(TestConfig.config) }
+    subject(:client) { NsyncClient.new(config) }
 
     describe '#desire_app' do
-      let(:desire_app_url) { "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}" }
+      let(:desire_app_url) { "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}" }
 
       context 'when there is an nsync url configured' do
         context 'when an endpoint is available' do
@@ -28,7 +30,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises RunnerUnavailable' do
             stub = stub_request(:put, desire_app_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.desire_app(process_guid, desire_message) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.desire_app(process_guid, desire_message) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -39,7 +41,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises RunnerError' do
-            expect { client.desire_app(process_guid, desire_message) }.to raise_error(VCAP::Errors::ApiError, /desire app failed: 500/i)
+            expect { client.desire_app(process_guid, desire_message) }.to raise_error(CloudController::Errors::ApiError, /desire app failed: 500/i)
           end
         end
 
@@ -68,17 +70,17 @@ module VCAP::CloudController::Diego
 
       context 'when the nsync url is missing' do
         before do
-          TestConfig.override(diego_nsync_url: nil)
+          TestConfig.override(diego: { nsync_url: nil })
         end
 
         it 'raises RunnerUnavailable' do
-          expect { client.desire_app(process_guid, desire_message) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
+          expect { client.desire_app(process_guid, desire_message) }.to raise_error(CloudController::Errors::ApiError, /invalid config/)
         end
       end
     end
 
     describe '#stop_app' do
-      let(:stop_app_url) { "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}" }
+      let(:stop_app_url) { "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}" }
 
       context 'when there is an nsync url configured' do
         context 'when the endpoint is available' do
@@ -106,7 +108,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises RunnerUnavailable' do
             stub = stub_request(:delete, stop_app_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stop_app(process_guid) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.stop_app(process_guid) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -117,7 +119,7 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises RunnerError' do
-            expect { client.stop_app(process_guid) }.to raise_error(VCAP::Errors::ApiError, /stop app failed: 500/i)
+            expect { client.stop_app(process_guid) }.to raise_error(CloudController::Errors::ApiError, /stop app failed: 500/i)
           end
         end
       end
@@ -125,7 +127,7 @@ module VCAP::CloudController::Diego
 
     describe '#stop_index' do
       let(:index) { 1 }
-      let(:stop_index_url) { "#{TestConfig.config[:diego_nsync_url]}/v1/apps/#{process_guid}/index/#{index}" }
+      let(:stop_index_url) { "#{TestConfig.config[:diego][:nsync_url]}/v1/apps/#{process_guid}/index/#{index}" }
 
       context 'when there is an nsync url configured' do
         context 'when the endpoint is available' do
@@ -153,7 +155,7 @@ module VCAP::CloudController::Diego
           it 'retries and eventually raises RunnerUnavailable' do
             stub = stub_request(:delete, stop_index_url).to_raise(Errno::ECONNREFUSED)
 
-            expect { client.stop_index(process_guid, index) }.to raise_error(VCAP::Errors::ApiError, /connection refused/i)
+            expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
             expect(stub).to have_been_requested.times(3)
           end
         end
@@ -164,18 +166,154 @@ module VCAP::CloudController::Diego
           end
 
           it 'raises RunnerError' do
-            expect { client.stop_index(process_guid, index) }.to raise_error(VCAP::Errors::ApiError, /stop index failed: 500/i)
+            expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError, /stop index failed: 500/i)
           end
         end
       end
 
       context 'when the nsync url is missing' do
         before do
-          TestConfig.override(diego_nsync_url: nil)
+          TestConfig.override(diego: { nsync_url: nil })
         end
 
         it 'raises RunnerUnavailable' do
-          expect { client.stop_index(process_guid, index) }.to raise_error(VCAP::Errors::ApiError, /invalid config/)
+          expect { client.stop_index(process_guid, index) }.to raise_error(CloudController::Errors::ApiError, /invalid config/)
+        end
+      end
+    end
+
+    describe '#desire_task' do
+      let(:content_type_header) { { 'Content-Type' => 'application/json' } }
+      let(:droplet) { VCAP::CloudController::DropletModel.make(:staged) }
+      let(:task) { VCAP::CloudController::TaskModel.make(droplet: droplet, state: 'PENDING') }
+      let(:config) { {} }
+      let(:client_url) { "#{config[:diego][:nsync_url]}/v1/tasks" }
+
+      context 'when the config is missing a diego task url' do
+        it 'sets the state to FAILED and returns an error' do
+          expect { client.desire_task(task) }.to raise_error CloudController::Errors::ApiError, /Diego Task URL does not exist/
+          expect(task.state).to eq('FAILED')
+          expect(task.failure_reason).to eq('Unable to request task to be run')
+        end
+      end
+
+      context 'when there is a valid config' do
+        let(:config) do
+          {
+            diego: { nsync_url: 'http://nsync.service.cf.internal:8787' },
+            internal_api: {
+              auth_user: 'my-cool-user',
+              auth_password: 'my-not-so-cool-password'
+            },
+            internal_service_hostname: 'hostname'
+          }
+        end
+        let(:protocol) { instance_double(VCAP::CloudController::Diego::TaskProtocol) }
+        let(:desired_message) { MultiJson.dump({ process_guid: 'process-guid' }) }
+
+        before do
+          allow(VCAP::CloudController::Diego::TaskProtocol).to receive(:new).and_return(protocol)
+          allow(protocol).to receive(:task_request).and_return(desired_message)
+          stub_request(:post, client_url).to_return(status: 202, body: '')
+        end
+
+        it 'sets the task state as RUNNING' do
+          expect { client.desire_task(task) }.not_to raise_error
+          expect(task.state).to eq('RUNNING')
+        end
+
+        it 'send the request with a proper json body' do
+          expect { client.desire_task(task) }.not_to raise_error
+          expect(
+            a_request(:post, client_url).with(body: desired_message, headers: content_type_header)
+          ).to have_been_made.once
+        end
+
+        context 'when the task url is unavailable' do
+          it 'retries and eventually raises TaskWorkerUnavailable' do
+            stub = stub_request(:post, client_url).to_raise(Errno::ECONNREFUSED)
+
+            expect { client.desire_task(task) }.to raise_error(CloudController::Errors::ApiError, /connection refused/i)
+            expect(stub).to have_been_requested.times(3)
+            expect(task.state).to eq('FAILED')
+            expect(task.failure_reason).to eq('Unable to request task to be run')
+          end
+        end
+
+        context 'when we do not receive a 202 from the task endpoint' do
+          before do
+            stub_request(:post, client_url).to_return(status: 500, body: '')
+          end
+
+          it 'raises a TaskError' do
+            expect { client.desire_task(task) }.to raise_error(CloudController::Errors::ApiError, /task failed: 500/i)
+            expect(task.state).to eq('FAILED')
+            expect(task.failure_reason).to eq('Unable to request task to be run')
+          end
+        end
+      end
+    end
+
+    describe '#cancel_task' do
+      let(:content_type_header) { { 'Content-Type' => 'application/json' } }
+      let(:task) { VCAP::CloudController::TaskModel.make(state: VCAP::CloudController::TaskModel::CANCELING_STATE) }
+      let(:config) { {} }
+      let(:client_url) { "#{config[:diego][:nsync_url]}/v1/tasks/#{task.guid}" }
+
+      context 'when the config is missing a diego task url' do
+        it 'leaves the state as CANCELING and returns an error' do
+          expect { client.cancel_task(task) }.to raise_error CloudController::Errors::ApiError, /Diego Task URL does not exist/
+          expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
+        end
+      end
+
+      context 'when there is a valid config' do
+        let(:config) do
+          {
+            diego: { nsync_url: 'http://nsync.service.cf.internal:8787' },
+            internal_api: {
+              auth_user: 'my-cool-user',
+              auth_password: 'my-not-so-cool-password'
+            },
+            internal_service_hostname: 'hostname'
+          }
+        end
+
+        before do
+          stub_request(:delete, client_url).to_return(status: 202, body: '')
+        end
+
+        it 'keeps the task state as CANCELING' do
+          expect { client.cancel_task(task) }.not_to raise_error
+          expect(task.state).to eq(VCAP::CloudController::TaskModel::CANCELING_STATE)
+        end
+
+        it 'sends the proper DELETE request to nsync' do
+          expect { client.cancel_task(task) }.not_to raise_error
+          expect(
+            a_request(:delete, client_url).with(body: '', headers: content_type_header)
+          ).to have_been_made.once
+        end
+
+        context 'when the task url is unavailable' do
+          it 'retries and eventually raises TaskWorkerUnavailable' do
+            stub = stub_request(:delete, client_url).to_raise(Errno::ECONNREFUSED)
+
+            expect { client.cancel_task(task) }.not_to raise_error
+            expect(stub).to have_been_requested.times(3)
+            expect(task.state).to eq('CANCELING')
+          end
+        end
+
+        context 'when we do not receive a 202 from the task endpoint' do
+          before do
+            stub_request(:delete, client_url).to_return(status: 500, body: '')
+          end
+
+          it 'does not raise an error' do
+            expect { client.cancel_task(task) }.not_to raise_error
+            expect(task.state).to eq('CANCELING')
+          end
         end
       end
     end

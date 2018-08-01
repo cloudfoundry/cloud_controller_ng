@@ -19,15 +19,15 @@ module VCAP::CloudController
       name_errors = e.errors.on(:name)
       organization_errors = e.errors.on(:organization)
       if name_errors && name_errors.include?(:unique)
-        Errors::ApiError.new_from_details('DomainNameTaken', attributes['name'])
+        CloudController::Errors::ApiError.new_from_details('DomainNameTaken', attributes['name'])
       elsif organization_errors && organization_errors.include?(:total_private_domains_exceeded)
-        Errors::ApiError.new_from_details('TotalPrivateDomainsExceeded', Organization[guid: attributes['owning_organization_guid']].name)
+        CloudController::Errors::ApiError.new_from_details('TotalPrivateDomainsExceeded', Organization[guid: attributes['owning_organization_guid']].name)
       else
-        Errors::ApiError.new_from_details('DomainInvalid', e.errors.full_messages)
+        CloudController::Errors::ApiError.new_from_details('DomainInvalid', e.errors.full_messages)
       end
     end
 
-    def self.not_found_exception_name
+    def self.not_found_exception_name(_model_class)
       :DomainNotFound
     end
   end

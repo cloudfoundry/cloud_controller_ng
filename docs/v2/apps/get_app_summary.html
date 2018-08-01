@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Apps API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Apps API</h1>
+
+  <div class="article">
+    <h2>Get App summary</h2>
+    <h3>GET /v2/apps/:guid/summary</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">GET /v2/apps/cd897c8c-3171-456d-b5d7-3c87feeabbd1/summary</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE2IiwiZW1haWwiOiJlbWFpbC0xNkBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgyfQ.CUw8MYYD6_ZqXlBMn35feU7u_nWDby1svEUI4PvtLcM
+Host: example.org
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/apps/cd897c8c-3171-456d-b5d7-3c87feeabbd1/summary&quot; -X GET \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE2IiwiZW1haWwiOiJlbWFpbC0xNkBzb21lZG9tYWluLmNvbSIsInNjb3BlIjpbImNsb3VkX2NvbnRyb2xsZXIuYWRtaW4iXSwiYXVkIjpbImNsb3VkX2NvbnRyb2xsZXIiXSwiZXhwIjoxNDY2MDA4ODgyfQ.CUw8MYYD6_ZqXlBMn35feU7u_nWDby1svEUI4PvtLcM&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">200 OK</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "guid": "cd897c8c-3171-456d-b5d7-3c87feeabbd1",
+  "name": "name-79",
+  "routes": [
+    {
+      "guid": "2d642293-7448-45c6-a864-937c77b9c09a",
+      "host": "host-1",
+      "port": null,
+      "path": "",
+      "domain": {
+        "guid": "02e200d3-5b18-497b-aafd-17fc3bece05f",
+        "name": "domain-1.example.com"
+      }
+    }
+  ],
+  "running_instances": 0,
+  "services": [
+    {
+      "guid": "307f8c47-7796-4d90-bd40-6a56764e37b3",
+      "name": "name-82",
+      "bound_app_count": 1,
+      "last_operation": null,
+      "dashboard_url": null,
+      "service_plan": {
+        "guid": "a7229730-4c4a-418c-a449-9d9f1f2fb3c2",
+        "name": "name-83",
+        "service": {
+          "guid": "724a9245-900e-47cb-b924-0a7a98dea977",
+          "label": "label-1",
+          "provider": null,
+          "version": null
+        }
+      }
+    }
+  ],
+  "available_domains": [
+    {
+      "guid": "02e200d3-5b18-497b-aafd-17fc3bece05f",
+      "name": "domain-1.example.com",
+      "owning_organization_guid": "58a46adc-2e73-4f9c-b7ba-5e72e875cd18"
+    },
+    {
+      "guid": "f067af33-4141-4e69-bbd5-d7b3e01140fa",
+      "name": "customer-app-domain1.com",
+      "router_group_guid": null,
+      "router_group_type": null
+    },
+    {
+      "guid": "ccdb1696-d3e3-4786-a9c1-11bc64b2090a",
+      "name": "customer-app-domain2.com",
+      "router_group_guid": null,
+      "router_group_type": null
+    }
+  ],
+  "production": false,
+  "space_guid": "1053174d-eb79-4f16-bf82-9f83a52d6e84",
+  "stack_guid": "aff73b55-7767-4928-b0ce-502cca863be0",
+  "buildpack": null,
+  "detected_buildpack": null,
+  "detected_buildpack_guid": null,
+  "environment_json": null,
+  "memory": 1024,
+  "instances": 1,
+  "disk_quota": 1024,
+  "state": "STOPPED",
+  "version": "d457b51a-d7cb-494d-b39e-3171ec75bd60",
+  "command": null,
+  "console": false,
+  "debug": null,
+  "staging_task_id": null,
+  "package_state": "PENDING",
+  "health_check_http_endpoint": "",
+  "health_check_type": "port",
+  "health_check_timeout": null,
+  "staging_failed_reason": null,
+  "staging_failed_description": null,
+  "diego": false,
+  "docker_image": null,
+  "package_updated_at": "2016-06-08T16:41:22Z",
+  "detected_start_command": "",
+  "enable_ssh": true,
+  "docker_credentials_json": {
+    "redacted_message": "[PRIVATE DATA HIDDEN]"
+  },
+  "ports": null
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 59ca0582-092c-4355-a2ae-d8752f5def54
+Content-Length: 1750
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -ex
+
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+tee_output_to_sys_log "cloud_controller_worker.$(basename "$0")"
+
+source /var/vcap/jobs/cloud_controller_worker/bin/setup_local_blobstore.sh
+
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+function setup_directories {
+  setup_local_blobstore
+
+  mkdir -p "/var/vcap/sys/run/cloud_controller_worker"
+  chown -R vcap:vcap "/var/vcap/sys/run/cloud_controller_worker"
+
+  mkdir -p "/var/vcap/sys/log/cloud_controller_worker"
+  chown -R vcap:vcap "/var/vcap/sys/log/cloud_controller_worker"
+}
+
+function main {
+  setup_directories
+}
+
+main
+
+exit 0

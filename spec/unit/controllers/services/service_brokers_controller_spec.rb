@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe ServiceBrokersController, :services do
+  RSpec.describe ServiceBrokersController, :services do
     let(:broker) { ServiceBroker.make }
     let(:catalog_json) do
       {
@@ -53,12 +53,7 @@ module VCAP::CloudController
     def stub_catalog(broker_url: nil)
       url = broker_url || broker_catalog_url
       stub_request(:get, url).
-          to_return(status: 200, body: catalog_json.to_json)
-    end
-
-    let(:non_admin_headers) do
-      user = VCAP::CloudController::User.make
-      json_headers(headers_for(user))
+        to_return(status: 200, body: catalog_json.to_json)
     end
 
     describe 'Query Parameters' do
@@ -94,8 +89,10 @@ module VCAP::CloudController
       let!(:space_a_broker) { ServiceBroker.make space: space_a }
       let!(:space_b_broker) { ServiceBroker.make space: space_b }
 
+      before { set_current_user_as_admin }
+
       it 'can filter brokers by name' do
-        get "/v2/service_brokers?q=name:#{public_broker.name}", {}, admin_headers
+        get "/v2/service_brokers?q=name:#{public_broker.name}"
 
         expect(last_response).to have_status_code(200)
         expect(decoded_response['total_results']).to eq(1)
@@ -104,7 +101,7 @@ module VCAP::CloudController
       end
 
       it 'can filter brokers by space_guid' do
-        get "/v2/service_brokers?q=space_guid:#{space_a_broker.space_guid}", {}, admin_headers
+        get "/v2/service_brokers?q=space_guid:#{space_a_broker.space_guid}"
 
         expect(last_response).to have_status_code(200)
         expect(decoded_response['total_results']).to eq(1)
@@ -114,7 +111,7 @@ module VCAP::CloudController
 
       context 'as an Admin' do
         it 'sees all brokers' do
-          get '/v2/service_brokers', {}, admin_headers
+          get '/v2/service_brokers'
 
           expect(last_response).to have_status_code(200)
           expect(decoded_response['total_results']).to eq(3)
@@ -125,10 +122,11 @@ module VCAP::CloudController
         before do
           space_a.organization.add_user user
           space_a.add_developer user
+          set_current_user(user)
         end
 
         it 'sees only private brokers in space_a' do
-          get '/v2/service_brokers', {}, headers_for(user)
+          get '/v2/service_brokers'
 
           expect(last_response).to have_status_code(200)
           expect(decoded_response['total_results']).to eq(1)
@@ -136,11 +134,11 @@ module VCAP::CloudController
         end
 
         it 'sees only private broker in space_a when filtering' do
-          get "/v2/service_brokers?q=name:#{public_broker.name}", {}, headers_for(user)
+          get "/v2/service_brokers?q=name:#{public_broker.name}"
           expect(last_response).to have_status_code(200)
           expect(decoded_response['total_results']).to eq(0)
 
-          get "/v2/service_brokers?q=name:#{space_a_broker.name}", {}, headers_for(user)
+          get "/v2/service_brokers?q=name:#{space_a_broker.name}"
           expect(last_response).to have_status_code(200)
           expect(decoded_response['total_results']).to eq(1)
         end
@@ -148,7 +146,8 @@ module VCAP::CloudController
 
       context 'as an unaffiliated user' do
         it 'sees no brokers' do
-          get '/v2/service_brokers', {}, headers_for(user)
+          set_current_user(user)
+          get '/v2/service_brokers'
 
           expect(last_response).to have_status_code(200)
           expect(decoded_response['total_results']).to eq(0)
@@ -176,10 +175,13 @@ module VCAP::CloudController
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
       let(:user) { User.make }
 
+      before { set_current_user_as_admin }
+
       it 'creates a broker create event' do
         email = 'email@example.com'
+        set_current_user(user, admin: true, email: email)
         stub_catalog
-        post '/v2/service_brokers', body, admin_headers_for(user, email: email)
+        post '/v2/service_brokers', body
         broker = ServiceBroker.last
 
         event = Event.first(type: 'audit.service_broker.create')
@@ -204,7 +206,7 @@ module VCAP::CloudController
 
       it 'creates a service broker registration' do
         stub_catalog
-        post '/v2/service_brokers', body, admin_headers
+        post '/v2/service_brokers', body
 
         expect(last_response).to have_status_code(201)
         expect(a_request(:get, broker_catalog_url)).to have_been_made
@@ -212,17 +214,17 @@ module VCAP::CloudController
 
       it 'returns the serialized broker' do
         stub_catalog
-        post '/v2/service_brokers', body, admin_headers
+        post '/v2/service_brokers', body
 
         service_broker = ServiceBroker.last
         expect(MultiJson.load(last_response.body)).to eq(
           'metadata' => {
             'guid' => service_broker.guid,
             'created_at' => service_broker.created_at.iso8601,
-            'updated_at' => nil,
+            'updated_at' => service_broker.updated_at.iso8601,
             'url' => "/v2/service_brokers/#{service_broker.guid}",
           },
-          'entity' =>  {
+          'entity' => {
             'name' => name,
             'broker_url' => broker_url,
             'auth_username' => auth_username,
@@ -233,7 +235,7 @@ module VCAP::CloudController
 
       it 'includes a location header for the resource' do
         stub_catalog
-        post '/v2/service_brokers', body, admin_headers
+        post '/v2/service_brokers', body
 
         headers = last_response.original_headers
         broker = ServiceBroker.last
@@ -253,7 +255,7 @@ module VCAP::CloudController
         it 'creates a broker with an associated space' do
           stub_catalog
 
-          post '/v2/service_brokers', body, admin_headers
+          post '/v2/service_brokers', body
 
           expect(last_response).to have_status_code(201)
           parsed_body = JSON.load(last_response.body)
@@ -265,9 +267,9 @@ module VCAP::CloudController
         end
 
         it 'returns a 403 if a user is not a SpaceDeveloper for the space' do
-          user = User.make
+          set_current_user(User.make)
 
-          post '/v2/service_brokers', body, headers_for(user)
+          post '/v2/service_brokers', body
           expect(last_response.status).to eq(403)
         end
 
@@ -281,10 +283,10 @@ module VCAP::CloudController
             auth_password: auth_password,
           }.to_json
 
-          post '/v2/service_brokers', public_body, admin_headers
+          post '/v2/service_brokers', public_body
           expect(last_response).to have_status_code(201)
 
-          post '/v2/service_brokers', body, admin_headers
+          post '/v2/service_brokers', body
           expect(last_response).to have_status_code(400)
         end
 
@@ -298,10 +300,10 @@ module VCAP::CloudController
             auth_password: auth_password,
           }.to_json
 
-          post '/v2/service_brokers', public_body, admin_headers
+          post '/v2/service_brokers', public_body
           expect(last_response).to have_status_code(201)
 
-          post '/v2/service_brokers', body, admin_headers
+          post '/v2/service_brokers', body
           expect(last_response).to have_status_code(400)
         end
 
@@ -309,7 +311,7 @@ module VCAP::CloudController
           space.destroy
           stub_catalog
 
-          post '/v2/service_brokers', body, admin_headers
+          post '/v2/service_brokers', body
 
           expect(last_response).to have_status_code(404)
           parsed_body = JSON.load(last_response.body)
@@ -324,10 +326,11 @@ module VCAP::CloudController
         before do
           space.organization.add_user user
           space.add_developer user
+          set_current_user(user)
         end
 
         it 'returns a 403 if the SpaceDeveloper does not include a space_guid' do
-          post '/v2/service_brokers', body, headers_for(user)
+          post '/v2/service_brokers', body
           expect(last_response.status).to eq(403)
         end
       end
@@ -337,7 +340,7 @@ module VCAP::CloudController
           let(:broker_url) { 'http://url_with_underscore.broker.com' }
 
           it 'returns a 400 error' do
-            post '/v2/service_brokers', body, admin_headers
+            post '/v2/service_brokers', body
             expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270011)
           end
@@ -350,7 +353,7 @@ module VCAP::CloudController
 
           it 'returns an error' do
             stub_catalog
-            post '/v2/service_brokers', body, admin_headers
+            post '/v2/service_brokers', body
 
             expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270003)
@@ -364,7 +367,7 @@ module VCAP::CloudController
 
           it 'returns an error' do
             stub_catalog
-            post '/v2/service_brokers', body, admin_headers
+            post '/v2/service_brokers', body
 
             expect(last_response).to have_status_code(400)
             expect(decoded_response.fetch('code')).to eq(270002)
@@ -378,7 +381,7 @@ module VCAP::CloudController
 
           it 'returns an error' do
             stub_catalog
-            post '/v2/service_brokers', body, admin_headers
+            post '/v2/service_brokers', body
 
             expect(last_response).to have_status_code(502)
             expect(decoded_response.fetch('code')).to eq(270012)
@@ -400,7 +403,7 @@ module VCAP::CloudController
               end
 
               it 'should succeed without warnings' do
-                post '/v2/service_brokers', body, admin_headers
+                post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
                 warning = last_response.headers['X-Cf-Warnings']
@@ -413,7 +416,7 @@ module VCAP::CloudController
                 TestConfig.config[:route_services_enabled] = false
               end
               it 'should succeed with a warning' do
-                post '/v2/service_brokers', body, admin_headers
+                post '/v2/service_brokers', body
 
                 expect(last_response).to have_status_code(201)
                 warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
@@ -450,7 +453,7 @@ module VCAP::CloudController
                   stub_catalog
                 end
                 it 'should succeed with two warnings' do
-                  post '/v2/service_brokers', body, admin_headers
+                  post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
                   warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
@@ -463,11 +466,98 @@ module VCAP::CloudController
                   stub_catalog
                 end
                 it 'should succeed with one warnings' do
-                  post '/v2/service_brokers', body, admin_headers
+                  post '/v2/service_brokers', body
 
                   expect(last_response).to have_status_code(201)
                   warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
                   expect(warning).to match /fake-service2.+route services is disabled/
+                end
+              end
+            end
+          end
+        end
+
+        context 'when the catalog response includes services that require volume mounting' do
+          context 'for a single service' do
+            before do
+              catalog_json['services'][0]['requires'] = ['volume_mount']
+              stub_catalog
+            end
+
+            context 'when volume_services_enabled is enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = true
+              end
+
+              it 'should succeed without warnings' do
+                post '/v2/service_brokers', body
+
+                expect(last_response).to have_status_code(201)
+                warning = last_response.headers['X-Cf-Warnings']
+                expect(warning).to be_nil
+              end
+            end
+
+            context 'when route-services are not enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = false
+              end
+              it 'should succeed with a warning' do
+                post '/v2/service_brokers', body
+
+                expect(last_response).to have_status_code(201)
+                warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                expect(warning).to match /fake-service.+volume mount services is disabled/
+              end
+            end
+          end
+
+          context 'for multiple services' do
+            before do
+              catalog_json['services'] <<
+                {
+                  'name' => 'fake-service2',
+                  'id' => 'a479b64b-7c25-42e6-8d8f-e6d22c456c9b',
+                  'description' => 'fake service',
+                  'bindable' => true,
+                  'requires' => ['volume_mount'],
+                  'plans' => [{
+                    'name' => 'fake-plan',
+                    'id' => 'a52eabf8-e38d-422f-8ef9-9dc83b75cc05',
+                    'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
+                  }],
+                }
+            end
+
+            context 'when volume_services_enabled are not enabled' do
+              before do
+                TestConfig.config[:volume_services_enabled] = false
+              end
+
+              context 'when all services require volume mounting' do
+                before do
+                  catalog_json['services'][0]['requires'] = ['volume_mount']
+                  stub_catalog
+                end
+                it 'should succeed with two warnings' do
+                  post '/v2/service_brokers', body
+
+                  expect(last_response).to have_status_code(201)
+                  warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                  expect(warning).to match /fake-service.+volume mount services is disabled.+fake-service2.+volume mount services is disabled/
+                end
+              end
+
+              context 'when only some services require volume mounting' do
+                before do
+                  stub_catalog
+                end
+                it 'should succeed with one warnings' do
+                  post '/v2/service_brokers', body
+
+                  expect(last_response).to have_status_code(201)
+                  warning = CGI.unescape(last_response.headers['X-Cf-Warnings'])
+                  expect(warning).to match /fake-service2.+volume mount services is disabled/
                 end
               end
             end
@@ -489,7 +579,7 @@ module VCAP::CloudController
 
         it 'emits warnings as headers to the CC client' do
           stub_catalog
-          post('/v2/service_brokers', body, admin_headers)
+          post '/v2/service_brokers', body
 
           warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
           expect(warnings.length).to eq(1)
@@ -502,18 +592,21 @@ module VCAP::CloudController
       let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret') }
       let(:user) { User.make }
 
+      before { set_current_user_as_admin }
+
       it 'deletes the service broker' do
-        delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers
+        delete "/v2/service_brokers/#{broker.guid}"
 
         expect(last_response).to have_status_code(204)
 
-        get '/v2/service_brokers', {}, admin_headers
+        get '/v2/service_brokers'
         expect(decoded_response).to include('total_results' => 0)
       end
 
       it 'creates a broker delete event' do
         email = 'some-email-address@example.com'
-        delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers_for(user, email: email)
+        set_current_user(user, email: email, admin: true)
+        delete "/v2/service_brokers/#{broker.guid}"
 
         event = Event.first(type: 'audit.service_broker.delete')
         expect(event.actor_type).to eq('user')
@@ -530,7 +623,7 @@ module VCAP::CloudController
       end
 
       it 'returns 404 when deleting a service broker that does not exist' do
-        delete '/v2/service_brokers/1234', {}, admin_headers
+        delete '/v2/service_brokers/1234'
         expect(last_response.status).to eq(404)
       end
 
@@ -540,24 +633,27 @@ module VCAP::CloudController
           service_plan = ServicePlan.make(service: service)
           ManagedServiceInstance.make(service_plan: service_plan)
 
-          delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers
+          delete "/v2/service_brokers/#{broker.guid}"
 
           expect(last_response.status).to eq(400)
           expect(decoded_response.fetch('code')).to eq(270010)
           expect(decoded_response.fetch('description')).to match(/Can not remove brokers that have associated service instances/)
 
-          get '/v2/service_brokers', {}, admin_headers
+          get '/v2/service_brokers'
           expect(decoded_response).to include('total_results' => 1)
         end
       end
 
       describe 'authentication' do
         it 'returns a forbidden status for non-admin users' do
-          delete "/v2/service_brokers/#{broker.guid}", {}, non_admin_headers
+          set_current_user(User.make)
+
+          delete "/v2/service_brokers/#{broker.guid}"
           expect(last_response).to be_forbidden
 
           # make sure it still exists
-          get '/v2/service_brokers', {}, admin_headers
+          set_current_user_as_admin
+          get '/v2/service_brokers'
           expect(decoded_response).to include('total_results' => 1)
         end
       end
@@ -593,6 +689,7 @@ module VCAP::CloudController
         }
         stub_request(:get, build_broker_url(attrs, '/v2/catalog')).
           to_return(status: 200, body: catalog_json.to_json)
+        set_current_user_as_admin
       end
 
       context 'when changing credentials' do
@@ -600,8 +697,9 @@ module VCAP::CloudController
           old_broker_name = broker.name
           body_hash.delete(:broker_url)
           email = 'email@example.com'
+          set_current_user(user, email: email, admin: true)
 
-          put "/v2/service_brokers/#{broker.guid}", body, admin_headers_for(user, email: email)
+          put "/v2/service_brokers/#{broker.guid}", body
 
           event = Event.first(type: 'audit.service_broker.update')
           expect(event.actor_type).to eq('user')
@@ -620,7 +718,7 @@ module VCAP::CloudController
         end
 
         it 'updates the broker' do
-          put "/v2/service_brokers/#{broker.guid}", body, admin_headers
+          put "/v2/service_brokers/#{broker.guid}", body
 
           broker.reload
           expect(broker.name).to eq(body_hash[:name])
@@ -629,12 +727,12 @@ module VCAP::CloudController
         end
 
         it 'returns the serialized broker' do
-          put "/v2/service_brokers/#{broker.guid}", body, admin_headers
+          put "/v2/service_brokers/#{broker.guid}", body
 
           expect(last_response).to have_status_code(200)
           json_response = MultiJson.load(last_response.body)
           expect(json_response).to include({
-            'entity' =>  {
+            'entity' => {
               'name' => 'My Updated Service',
               'broker_url' => broker.broker_url,
               'auth_username' => 'new-username',
@@ -645,7 +743,7 @@ module VCAP::CloudController
 
         context 'when specifying an unknown broker' do
           it 'returns 404' do
-            put '/v2/service_brokers/nonexistent', body, admin_headers
+            put '/v2/service_brokers/nonexistent', body
 
             expect(last_response).to have_status_code(HTTP::NOT_FOUND)
           end
@@ -656,7 +754,7 @@ module VCAP::CloudController
             before { body_hash[:broker_url] = 'foo.bar' }
 
             it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, admin_headers
+              put "/v2/service_brokers/#{broker.guid}", body
 
               expect(last_response).to have_status_code(400)
               expect(decoded_response.fetch('code')).to eq(270011)
@@ -669,7 +767,7 @@ module VCAP::CloudController
             before { body_hash[:broker_url] = another_broker.broker_url }
 
             it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, admin_headers
+              put "/v2/service_brokers/#{broker.guid}", body
 
               expect(last_response.status).to eq(400)
               expect(decoded_response.fetch('code')).to eq(270003)
@@ -682,7 +780,7 @@ module VCAP::CloudController
             before { body_hash[:name] = another_broker.name }
 
             it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body, admin_headers
+              put "/v2/service_brokers/#{broker.guid}", body
 
               expect(last_response.status).to eq(400)
               expect(decoded_response.fetch('code')).to eq(270002)
@@ -737,7 +835,7 @@ module VCAP::CloudController
           end
 
           it 'includes the warnings in the response' do
-            put("/v2/service_brokers/#{broker.guid}", body, admin_headers)
+            put("/v2/service_brokers/#{broker.guid}", body)
             warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
             expect(warnings.length).to eq(1)
             expect(warnings[0]).to match(/Service plans are missing from the broker/)
@@ -746,7 +844,9 @@ module VCAP::CloudController
 
         describe 'authentication' do
           it 'returns a forbidden status for non-admin users' do
-            put "/v2/service_brokers/#{broker.guid}", body, non_admin_headers
+            set_current_user(User.make)
+            put "/v2/service_brokers/#{broker.guid}", body
+
             expect(last_response).to be_forbidden
           end
         end
@@ -773,10 +873,11 @@ module VCAP::CloudController
             }
             stub_request(:get, build_broker_url(attrs, '/v2/catalog')).
               to_return(status: 200, body: catalog_json.to_json)
+            set_current_user(user)
           end
 
           it 'updates the broker' do
-            put "/v2/service_brokers/#{broker.guid}", body, headers_for(user)
+            put "/v2/service_brokers/#{broker.guid}", body
             expect(last_response.status).to eq(200)
 
             broker.reload
@@ -797,7 +898,7 @@ module VCAP::CloudController
             let!(:old_space_guid) { broker.space_guid }
 
             it 'does not update the broker' do
-              put "/v2/service_brokers/#{broker.guid}", body, headers_for(user)
+              put "/v2/service_brokers/#{broker.guid}", body
               expect(last_response.status).to eq(200)
               expect(broker.space_guid).to eq(old_space_guid)
             end
@@ -815,7 +916,7 @@ module VCAP::CloudController
             end
 
             it 'does not update the broker' do
-              put "/v2/service_brokers/#{broker.guid}", body, headers_for(user)
+              put "/v2/service_brokers/#{broker.guid}", body
               expect(last_response.status).to eq(403)
             end
           end

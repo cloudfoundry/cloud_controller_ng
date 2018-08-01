@@ -26,7 +26,7 @@ module VCAP::CloudController
     validates_with CompleteValidator
   end
 
-  describe NestedMessageValidator do
+  RSpec.describe NestedMessageValidator do
     context 'is an abstract interface' do
       describe 'when it is subclassed' do
         let(:incomplete_validator)  { IncompleteValidator.new }
@@ -35,7 +35,7 @@ module VCAP::CloudController
         let(:record) { SampleActiveModel.new }
 
         it 'behaves like an ActiveModel::Validator' do
-          expect(complete_validator.is_a? ActiveModel::Validator).to eq true
+          expect(complete_validator.is_a?(ActiveModel::Validator)).to eq true
         end
 
         it 'must override should_validate?' do

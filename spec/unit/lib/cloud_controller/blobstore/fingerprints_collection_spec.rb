@@ -3,7 +3,7 @@ require 'cloud_controller/blobstore/fingerprints_collection'
 
 module CloudController
   module Blobstore
-    describe FingerprintsCollection do
+    RSpec.describe FingerprintsCollection do
       let(:unpresented_fingerprints) do
         [
           { 'fn' => 'path/to/file.txt', 'size' => 123, 'sha1' => 'abc' },
@@ -18,7 +18,7 @@ module CloudController
         it 'validates that the input is a array of hashes' do
           expect {
             FingerprintsCollection.new('')
-          }.to raise_error VCAP::Errors::ApiError, /invalid/
+          }.to raise_error CloudController::Errors::ApiError, /invalid/
         end
       end
 
@@ -102,6 +102,7 @@ module CloudController
                     fingerprint
                   }.to raise_error do |error|
                     expect(error.name).to eq 'AppResourcesFileModeInvalid'
+                    expect(error.message).to eq "The resource file mode is invalid: File mode '144' is invalid. Minimum file mode is '0600'"
                     expect(error.response_code).to eq 400
                   end
                 end

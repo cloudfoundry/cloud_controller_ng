@@ -22,15 +22,13 @@ module Sequel::Plugins::VcapSerialization
       attrs.each do |k|
         if opts[:only].nil? || opts[:only].include?(k)
           value = send(k)
-          if value.respond_to?(:nil_object?) && value.nil_object?
-            hash[k.to_s] = nil
-          else
-            if !redact_vals.nil? && redact_vals.include?(k.to_s)
-              hash[k.to_s] = { redacted_message: '[PRIVATE DATA HIDDEN]' }
-            else
-              hash[k.to_s] = value
-            end
-          end
+          hash[k.to_s] = if value.respond_to?(:nil_object?) && value.nil_object?
+                           nil
+                         elsif !redact_vals.nil? && redact_vals.include?(k.to_s)
+                           { redacted_message: '[PRIVATE DATA HIDDEN]' }
+                         else
+                           value
+                         end
         end
       end
       hash
@@ -39,6 +37,10 @@ module Sequel::Plugins::VcapSerialization
     # Returns an array of attribute names that will be used when calling to_hash
     def export_attrs
       self.class.export_attrs || []
+    end
+
+    def export_attrs_from_methods
+      self.class.export_attrs_from_methods
     end
 
     # Update the model instance from the supplied json string.  Only update
@@ -108,6 +110,12 @@ module Sequel::Plugins::VcapSerialization
       self.export_attrs = attributes.freeze
     end
 
+    # after serializing an object to a hash based on export_attributes and
+    # transient_attributes, swap in different values from methods on the object
+    def export_attributes_from_methods(hash)
+      self.export_attrs_from_methods = hash.freeze
+    end
+
     # @param [Array<Symbol>] List of attributes to include when importing
     # from json or a hash.
     def import_attributes(*attributes)
@@ -132,6 +140,6 @@ module Sequel::Plugins::VcapSerialization
       results
     end
 
-    attr_accessor :export_attrs, :import_attrs
+    attr_accessor :export_attrs, :import_attrs, :export_attrs_from_methods
   end
 end

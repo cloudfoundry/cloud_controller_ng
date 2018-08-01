@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     delete "#{path}/buildpack_cache", :delete
     def delete
-      raise VCAP::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.roles.admin?
+      raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless SecurityContext.roles.admin?
       job = Jobs::Enqueuer.new(Jobs::Runtime::BuildpackCacheCleanup.new, queue: 'cc-generic').enqueue
       [HTTP::ACCEPTED, JobPresenter.new(job).to_json]
     end

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe DomainAccess, type: :access do
+  RSpec.describe DomainAccess, type: :access do
     subject(:access) { DomainAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
@@ -30,6 +30,14 @@ module VCAP::CloudController
         it_behaves_like :full_access
       end
 
+      context 'admin read only' do
+        include_context :admin_read_only_setup
+
+        before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+
+        it_behaves_like :read_only_access
+      end
+
       context 'organization manager' do
         before { org.add_manager(user) }
         it_behaves_like :full_access
@@ -37,7 +45,7 @@ module VCAP::CloudController
         context 'when private_domain_creation FeatureFlag is disabled' do
           it 'cannot create a private domain' do
             FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
-            expect { subject.create?(object) }.to raise_error(VCAP::Errors::ApiError, /private_domain_creation/)
+            expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /private_domain_creation/)
           end
         end
       end
@@ -118,6 +126,7 @@ module VCAP::CloudController
 
       it_behaves_like :admin_full_access
       it_behaves_like :read_only_access
+      it_behaves_like :admin_read_only_access
 
       context 'a user that isnt logged in (defensive)' do
         let(:user) { nil }

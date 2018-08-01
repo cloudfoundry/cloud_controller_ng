@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Provided Service Instances API</title>
+  <meta charset="utf-8">
+  <link id="bootstrapcss" rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" />
+  <script>
+    if( "file:" == document.location.protocol ) {
+      var csslink = document.getElementById("bootstrapcss");
+      csslink.href = "http://" + csslink.href.replace(/.*\/\//, "");
+    }
+  </script>
+  <style>
+    p {
+      padding: 15px;
+      font-size: 130%;
+    }
+
+    pre {
+      white-space: pre;
+    }
+
+    td.required .name:after {
+      float: right;
+      content: " required";
+      font-weight: normal;
+      color: #F08080;
+    }
+
+    td.experimental:after {
+      float: right;
+      content: " experimental";
+      font-weight: normal;
+      color: #FFA500;
+      padding: 2px;
+    }
+
+    tr.deprecated td:first-child:before {
+      content: "deprecated: ";
+      font-weight: bold;
+      color: gray;
+    }
+
+    tr.deprecated span, tr.deprecated ul {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    tr.readonly .name:after {
+      float: right;
+      content: " read-only";
+      font-weight: normal;
+    }
+
+    tr.readonly {
+      color: grey;
+    }
+
+    table ul {
+      padding-left: 1.2em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>User Provided Service Instances API</h1>
+
+  <div class="article">
+    <h2>Updating a User Provided Service Instance</h2>
+    <h3>PUT /v2/user_provided_service_instances/:guid</h3>
+
+      <h3>Request</h3>
+      <h4>Route</h4>
+      <pre class="request route highlight">PUT /v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23</pre>
+
+
+
+        <h4>Body</h4>
+        <table class="fields table table-striped table-bordered table-condensed">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+            <th>Valid Values</th>
+            <th>Example Values</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">name</span>
+              </td>
+              <td>
+                <span class="description">A name for the service instance</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>my-user-provided-instance</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">syslog_drain_url</span>
+              </td>
+              <td>
+                <span class="description">The url for the syslog_drain to direct to</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>syslog://example.com</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">credentials</span>
+              </td>
+              <td>
+                <span class="description">A hash that can be used to store credentials</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>{:somekey=&gt;&quot;somevalue&quot;}</li>
+                </ul>
+              </td>
+            </tr>
+            <tr class=" ">
+              <td class=" ">
+                <span class="name">route_service_url</span>
+              </td>
+              <td>
+                <span class="description">URL to which requests for bound routes will be forwarded.</span>
+              </td>
+              <td>
+                <span class="default"></span>
+              </td>
+              <td>
+                <ul class="valid_values">
+                </ul>
+              </td>
+              <td>
+                <ul class="example_values">
+                      <li>https://logger.example.com</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre class="request body">{
+  "credentials": {
+    "somekey": "somenewvalue"
+  }
+}</pre>
+
+      <h4>Headers</h4>
+      <pre class="request headers">Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5MCIsImVtYWlsIjoiZW1haWwtMTQ1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.fu_vRQ0QoFrVrMUO8Z-TQPrnT2JwFPWklSgSZ5PYKeM
+Host: example.org
+Content-Type: application/x-www-form-urlencoded
+Cookie: </pre>
+
+        <h4>cURL</h4>
+        <pre class="request curl">curl &quot;https://api.[your-domain.com]/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23&quot; -d &#39;{
+  &quot;credentials&quot;: {
+    &quot;somekey&quot;: &quot;somenewvalue&quot;
+  }
+}&#39; -X PUT \
+	-H &quot;Authorization: bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoidWFhLWlkLTE5MCIsImVtYWlsIjoiZW1haWwtMTQ1QHNvbWVkb21haW4uY29tIiwic2NvcGUiOlsiY2xvdWRfY29udHJvbGxlci5hZG1pbiJdLCJhdWQiOlsiY2xvdWRfY29udHJvbGxlciJdLCJleHAiOjE0NjYwMDg4OTN9.fu_vRQ0QoFrVrMUO8Z-TQPrnT2JwFPWklSgSZ5PYKeM&quot; \
+	-H &quot;Host: example.org&quot; \
+	-H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+	-H &quot;Cookie: &quot;</pre>
+
+        <h3>Response</h3>
+
+        <h4>Status</h4>
+        <pre class="response status">201 Created</pre>
+
+          <h4>Body</h4>
+
+          <pre class="response body">{
+  "metadata": {
+    "guid": "1af1629e-0c47-4b09-bedd-5174b9862b23",
+    "url": "/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23",
+    "created_at": "2016-06-08T16:41:33Z",
+    "updated_at": "2016-06-08T16:41:33Z"
+  },
+  "entity": {
+    "name": "name-1692",
+    "credentials": {
+      "somekey": "somenewvalue"
+    },
+    "space_guid": "884c5c61-fbb8-4c89-91d2-a7a5ab27b004",
+    "type": "user_provided_service_instance",
+    "syslog_drain_url": "https://foo.com/url-102",
+    "route_service_url": null,
+    "space_url": "/v2/spaces/884c5c61-fbb8-4c89-91d2-a7a5ab27b004",
+    "service_bindings_url": "/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23/service_bindings",
+    "routes_url": "/v2/user_provided_service_instances/1af1629e-0c47-4b09-bedd-5174b9862b23/routes"
+  }
+}</pre>
+
+        <h4>Headers</h4>
+        <pre class="response headers">Content-Type: application/json;charset=utf-8
+X-VCAP-Request-ID: 8af29ff9-dd0f-4e96-a7b2-7438ee90a244
+Content-Length: 824
+X-Content-Type-Options: nosniff</pre>
+
+  </div>
+</div>
+</body>
+</html>

@@ -3,9 +3,9 @@ require 'active_support/concern'
 module LegacyApiDsl
   extend ActiveSupport::Concern
 
-  def validate_response(model, json, expected_values={}, ignored_attributes=[])
+  def validate_response(model, json, expected_values: {}, ignored_attributes: [], expected_attributes: nil)
     ignored_attributes.push :guid
-    expected_attributes_for_model(model).each do |expected_attribute|
+    (expected_attributes || expected_attributes_for_model(model)).each do |expected_attribute|
       # refactor: pass exclusions, and figure out which are valid to not be there
       next if ignored_attributes.include? expected_attribute
 
@@ -19,17 +19,17 @@ module LegacyApiDsl
     end
   end
 
-  def standard_list_response(response_json, model)
+  def standard_list_response(response_json, model, expected_attributes: nil)
     standard_paginated_response_format? response_json
     resource = response_json['resources'].first
-    standard_entity_response resource, model
+    standard_entity_response resource, model, expected_attributes: expected_attributes
   end
 
-  def standard_entity_response(json, model, expected_values={})
+  def standard_entity_response(json, model, expected_values: {}, expected_attributes: nil)
     expect(json).to include('metadata')
     expect(json).to include('entity')
     standard_metadata_response_format? json['metadata'], model
-    validate_response model, json['entity'], expected_values
+    validate_response(model, json['entity'], expected_values: expected_values, expected_attributes: expected_attributes)
   end
 
   def standard_paginated_response_format?(json)
@@ -39,7 +39,7 @@ module LegacyApiDsl
   def standard_metadata_response_format?(json, model)
     ignored_attributes = []
     ignored_attributes = [:updated_at] unless model_has_updated_at?(model)
-    validate_response VCAP::RestAPI::MetadataMessage, json, {}, ignored_attributes
+    validate_response(VCAP::RestAPI::MetadataMessage, json, ignored_attributes: ignored_attributes)
   end
 
   def expected_attributes_for_model(model)
@@ -105,24 +105,28 @@ module LegacyApiDsl
       "#{api_version}/#{model.to_s.pluralize}"
     end
 
-    def standard_model_list(model, controller, options={})
+    def standard_model_list(model, controller, options={}, &block)
       outer_model_description = ''
       model_name = options[:path] || model
       title = options[:title] || model_name.to_s.pluralize.titleize
 
-      if options[:outer_model]
+      outer_model = options[:outer_model]
+      if outer_model
         model_name = options[:path] if options[:path]
-        path = "#{options[:outer_model].to_s.pluralize}/:guid/#{model_name}"
-        outer_model_description = " for the #{options[:outer_model].to_s.singularize.titleize}"
+        path = "#{outer_model.to_s.pluralize}/:guid/#{model_name}"
+        outer_model_description = " for the #{outer_model.to_s.singularize.titleize}"
       else
         path = options[:path] || model
       end
 
       get root(path) do
-        standard_list_parameters controller
+        include_context 'response_fields' if options[:response_fields]
+
+        standard_list_parameters controller, outer_model: outer_model, exclude_parameters: options.fetch(:exclude_parameters, []), &block
+
         example_request "List all #{title}#{outer_model_description}" do
           expect(status).to eq 200
-          standard_list_response parsed_response, model
+          standard_list_response(parsed_response, model, expected_attributes: options[:export_attributes])
         end
       end
     end
@@ -159,8 +163,10 @@ module LegacyApiDsl
       path = options[:path] || model
       title = options[:title] || path.to_s.singularize.titleize
       get "#{root(path)}/:guid" do
+        include_context 'response_fields' if options[:response_fields]
+
         example_request "Retrieve a Particular #{title}" do
-          standard_entity_response parsed_response, model
+          standard_entity_response(parsed_response, model, expected_attributes: options[:export_attributes])
           if options[:nested_associations]
             options[:nested_associations].each do |association_name|
               expect(parsed_response['entity'].keys).to include("#{association_name}_url")
@@ -196,17 +202,23 @@ module LegacyApiDsl
       end
     end
 
-    def standard_list_parameters(controller)
-      if controller.query_parameters.size > 0
+    def standard_list_parameters(controller, outer_model: nil, exclude_parameters: [], &block)
+      query_parameters = controller.query_parameters - exclude_parameters
+      if query_parameters.size > 0
         query_parameter_description = 'Parameters used to filter the result set.<br/>'
         query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
         query_parameter_description += ' Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>'
-        query_parameter_description += " Valid filters: #{controller.query_parameters.to_a.join(', ')}"
+        query_parameter_description += " Valid filters: #{query_parameters.to_a.join(', ')}"
+        if outer_model && query_parameters.include?((outer_model.to_s + '_guid'))
+          query_parameter_description += "<br/> (Note that filtering on #{outer_model}_guid will return an empty list" \
+          ' if you specify anything other than the guid included in the path.)'
+        end
 
         examples = ['q=filter:value', 'q=filter>value', 'q=filter IN a,b,c']
         request_parameter :q, query_parameter_description, { html: true, example_values: examples }
       end
       pagination_parameters
+      instance_eval(&block) if block_given?
       request_parameter :'inline-relations-depth', "0 - don't inline any relations and return URLs.  Otherwise, inline to depth N.", deprecated: true
       request_parameter :'orphan-relations', '0 - de-duplicate object entries in response', deprecated: true
       request_parameter :'exclude-relations', 'comma-delimited list of relations to drop from response', deprecated: true

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Synchronous orphan mitigation' do
+RSpec.describe 'Synchronous orphan mitigation' do
   let(:logger) { double }
   let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
   subject { VCAP::CloudController::SynchronousOrphanMitigate.new(logger) }

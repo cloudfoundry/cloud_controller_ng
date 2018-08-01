@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'tempfile'
 require 'thread'
 
-describe 'Cloud controller', type: :integration, monitoring: true do
+RSpec.describe 'Cloud controller', type: :integration, monitoring: true do
   let(:port) { 8181 }
 
   let(:newrelic_config_file) {

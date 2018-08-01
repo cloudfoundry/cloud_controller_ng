@@ -6,9 +6,11 @@ module VCAP::CloudController
 
     add_association_dependencies service_plan_visibilities: :destroy
 
-    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :active
+    export_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable, :active
 
-    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public
+    export_attributes_from_methods bindable: :bindable?
+
+    import_attributes :name, :free, :description, :service_guid, :extra, :unique_id, :public, :bindable
 
     strip_attributes :name
 
@@ -24,7 +26,7 @@ module VCAP::CloudController
       validates_presence :free,                message: 'is required'
       validates_presence :service,             message: 'is required'
       validates_presence :unique_id,           message: 'is required'
-      validates_unique [:service_id, :name],   message: Sequel.lit('Plan names must be unique within a service')
+      validates_unique [:service_id, :name],   message: Sequel.lit("Plan names must be unique within a service. Service #{service.try(:label)} already has a plan named #{name}")
       validates_unique :unique_id,             message: Sequel.lit('Plan ids must be unique')
       validate_private_broker_plan_not_public
     end
@@ -38,7 +40,7 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       included_ids = ServicePlanVisibility.visible_private_plan_ids_for_user(user).
-                       concat(plan_ids_from_private_brokers(user))
+                     concat(plan_ids_from_private_brokers(user))
 
       Sequel.or(
         { public: true, id: included_ids }
@@ -54,6 +56,7 @@ module VCAP::CloudController
     end
 
     def bindable?
+      return bindable unless bindable.nil?
       service.bindable?
     end
 

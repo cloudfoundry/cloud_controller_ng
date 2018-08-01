@@ -1,11 +1,13 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe BuildpacksCacheController do
+  RSpec.describe BuildpacksCacheController do
     describe 'DELETE /v2/blobstores/buildpack_cache' do
+      before { set_current_user_as_admin }
+
       it 'returns the job' do
         expect {
-          delete '/v2/blobstores/buildpack_cache', {}, admin_headers
+          delete '/v2/blobstores/buildpack_cache'
         }.to change {
           Delayed::Job.count
         }.by(1)
@@ -17,9 +19,10 @@ module VCAP::CloudController
       end
 
       context 'when the user is not an admin' do
-        let(:user) { User.make }
+        before { set_current_user(User.make) }
+
         it 'returns a 403 NotAuthorized' do
-          delete '/v2/blobstores/buildpack_cache', {}, headers_for(user)
+          delete '/v2/blobstores/buildpack_cache'
 
           expect(last_response.status).to eq(403)
           expect(last_response.body).to match('CF-NotAuthorized')

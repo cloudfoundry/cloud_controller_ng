@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe HealthCheckPolicy do
+RSpec.describe HealthCheckPolicy do
   let(:app) { VCAP::CloudController::AppFactory.make }
 
   subject(:validator) { HealthCheckPolicy.new(app, health_check_timeout) }

@@ -1,0 +1,23 @@
+<% content_for :updated_at do %>
+  <% query_param('updated_at', ['datetime']) do %>
+    The time with zone when the object was last updated.
+  <% end %>
+<% end %>
+
+<% content_for :created_at do %>
+  <% query_param('created_at', ['datetime']) do %>
+    The time with zone when the object was created.
+  <% end %>
+<% end %>
+
+<% content_for :links do %>
+  <% query_param('links', ['object']) do %>
+    Links to related resources.
+  <% end %>
+<% end %>
+
+<% content_for :guid do |resource| %>
+  <% query_param('guid', ['string']) do %>
+    Unique GUID for the <%= resource %>.
+  <% end %>
+<% end %>

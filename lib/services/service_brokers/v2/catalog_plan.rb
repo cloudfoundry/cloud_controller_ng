@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors, :free
+    attr_reader :broker_provided_id, :name, :description, :metadata, :catalog_service, :errors, :free, :bindable
 
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
@@ -12,6 +12,7 @@ module VCAP::Services::ServiceBrokers::V2
       @description        = attrs['description']
       @errors             = VCAP::Services::ValidationErrors.new
       @free               = attrs['free'].nil? ? true : attrs['free']
+      @bindable           = attrs['bindable']
     end
 
     def cc_plan
@@ -34,6 +35,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_string!(:description, description, required: true)
       validate_hash!(:metadata, metadata) if metadata
       validate_bool!(:free, free) if free
+      validate_bool!(:bindable, bindable) if bindable
     end
 
     def human_readable_attr_name(name)
@@ -42,7 +44,8 @@ module VCAP::Services::ServiceBrokers::V2
         name:               'Plan name',
         description:        'Plan description',
         metadata:           'Plan metadata',
-        free:               'Plan free'
+        free:               'Plan free',
+        bindable:           'Plan bindable',
       }.fetch(name) { raise NotImplementedError }
     end
   end

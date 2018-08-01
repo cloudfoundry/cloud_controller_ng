@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set +e
+set -x
+
+CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
+export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
+
+function migrate {
+    set +e
+
+    echo "Running migrations"
+    local result=1
+    local counter=1
+    local num_retries=3
+    while [[ $counter -le $num_retries ]]; do
+      echo "Running migration try number ${counter} of ${num_retries}"
+      bundle exec rake db:migrate
+      result=$?
+      if [[ $result -eq 0 ]]; then
+        break
+      fi
+      sleep 5
+      ((counter++))
+    done
+
+    if [[ $result -ne 0 ]]; then
+      echo "Migrations failed"
+      exit $result
+    fi
+
+    set -e
+}
+
+function main {
+  migrate
+}
+
+main
+
+exit 0

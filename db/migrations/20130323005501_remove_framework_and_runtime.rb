@@ -5,7 +5,7 @@ Sequel.migration do
     # Mysql requires us to remove foreign key constraint
     # before dropping column (errno 150). Sequel also
     # requires type=foreign_key to be present for such operations.
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       alter_table :apps do
         drop_constraint :fk_apps_framework_id, type: :foreign_key
         drop_constraint :fk_apps_runtime_id, type: :foreign_key

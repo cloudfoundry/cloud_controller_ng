@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs::Runtime
-    describe AppEventsCleanup do
+    RSpec.describe AppEventsCleanup do
       let(:cutoff_age_in_days) { 2 }
       subject(:job) { AppEventsCleanup.new(cutoff_age_in_days) }
 

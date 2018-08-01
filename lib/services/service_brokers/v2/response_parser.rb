@@ -11,25 +11,26 @@ module VCAP::Services
           unvalidated_response = UnvalidatedResponse.new(:put, @url, path, response)
 
           validator =
-          case unvalidated_response.code
-          when 200
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'succeeded'))
-          when 201
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'succeeded'))
-          when 202
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'in progress'))
-          when 409
-            FailingValidator.new(Errors::ServiceBrokerConflict)
-          when 422
-            FailWhenValidator.new('error',
-                                  { 'AsyncRequired' => Errors::AsyncRequired },
-                                  FailingValidator.new(Errors::ServiceBrokerBadResponse))
-          else
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          end
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger,
+                  SuccessValidator.new(state: 'succeeded'))
+            when 201
+              JsonObjectValidator.new(@logger,
+                  SuccessValidator.new(state: 'succeeded'))
+            when 202
+              JsonObjectValidator.new(@logger,
+                OperationValidator.new(
+                  SuccessValidator.new(state: 'in progress')))
+            when 409
+              FailingValidator.new(Errors::ServiceBrokerConflict)
+            when 422
+              FailWhenValidator.new('error',
+                                    { 'AsyncRequired' => Errors::AsyncRequired },
+                                    FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
@@ -44,7 +45,8 @@ module VCAP::Services
               JsonObjectValidator.new(@logger,
                 SyslogDrainValidator.new(opts[:service_guid],
                   RouteServiceURLValidator.new(
-                    SuccessValidator.new(state: 'succeeded'))))
+                    VolumeMountsValidator.new(opts[:service_guid],
+                      SuccessValidator.new(state: 'succeeded')))))
             when 202
               JsonObjectValidator.new(@logger,
                 FailingValidator.new(Errors::ServiceBrokerBadResponse))
@@ -66,23 +68,23 @@ module VCAP::Services
           unvalidated_response = UnvalidatedResponse.new(:delete, @url, path, response)
 
           validator =
-          case unvalidated_response.code
-          when 200
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'succeeded'))
-          when 201
-            IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
-          when 202
-            JsonObjectValidator.new(@logger,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
-          when 204
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          when 410
-            @logger.warn("Already deleted: #{unvalidated_response.uri}")
-            SuccessValidator.new { |res| {} }
-          else
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          end
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger,
+                  SuccessValidator.new(state: 'succeeded'))
+            when 201
+              IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
+            when 202
+              JsonObjectValidator.new(@logger,
+                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            when 204
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            when 410
+              @logger.warn("Already deleted: #{unvalidated_response.uri}")
+              SuccessValidator.new { |res| {} }
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
@@ -100,7 +102,8 @@ module VCAP::Services
               IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 202
               JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'in progress'))
+                OperationValidator.new(
+                  SuccessValidator.new(state: 'in progress')))
             when 204
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             when 410
@@ -121,15 +124,15 @@ module VCAP::Services
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
           validator =
-          case unvalidated_response.code
-          when 200
-            JsonObjectValidator.new(@logger, SuccessValidator.new)
-          when 201, 202
-            JsonObjectValidator.new(@logger,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
-          else
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          end
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger, SuccessValidator.new)
+            when 201, 202
+              JsonObjectValidator.new(@logger,
+                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
@@ -139,21 +142,22 @@ module VCAP::Services
           unvalidated_response = UnvalidatedResponse.new(:patch, @url, path, response)
 
           validator =
-          case unvalidated_response.code
-          when 200
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'succeeded'))
-          when 201
-            IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
-          when 202
-            JsonObjectValidator.new(@logger,
-                SuccessValidator.new(state: 'in progress'))
-          when 422
-            FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
-              FailingValidator.new(Errors::ServiceBrokerRequestRejected))
-          else
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          end
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger,
+                  SuccessValidator.new(state: 'succeeded'))
+            when 201
+              IgnoreDescriptionKeyFailingValidator.new(Errors::ServiceBrokerBadResponse)
+            when 202
+              JsonObjectValidator.new(@logger,
+                OperationValidator.new(
+                  SuccessValidator.new(state: 'in progress')))
+            when 422
+              FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
+                FailingValidator.new(Errors::ServiceBrokerRequestRejected))
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
@@ -163,19 +167,19 @@ module VCAP::Services
           unvalidated_response = UnvalidatedResponse.new(:get, @url, path, response)
 
           validator =
-          case unvalidated_response.code
-          when 200
-            JsonObjectValidator.new(@logger,
-              StateValidator.new(['succeeded', 'failed', 'in progress'],
-                SuccessValidator.new))
-          when 201, 202
-            JsonObjectValidator.new(@logger,
-              FailingValidator.new(Errors::ServiceBrokerBadResponse))
-          when 410
-            SuccessValidator.new { |res| {} }
-          else
-            FailingValidator.new(Errors::ServiceBrokerBadResponse)
-          end
+            case unvalidated_response.code
+            when 200
+              JsonObjectValidator.new(@logger,
+                StateValidator.new(['succeeded', 'failed', 'in progress'],
+                  SuccessValidator.new))
+            when 201, 202
+              JsonObjectValidator.new(@logger,
+                FailingValidator.new(Errors::ServiceBrokerBadResponse))
+            when 410
+              SuccessValidator.new { |res| {} }
+            else
+              FailingValidator.new(Errors::ServiceBrokerBadResponse)
+            end
 
           validator = CommonErrorValidator.new(validator)
           validator.validate(unvalidated_response.to_hash)
@@ -202,6 +206,89 @@ module VCAP::Services
               code: @code,
               response: @response,
             }
+          end
+        end
+
+        class VolumeMountsValidator
+          def initialize(service_guid, validator)
+            @validator = validator
+            @service_guid = service_guid
+          end
+
+          def validate(method:, uri:, code:, response:)
+            service = VCAP::CloudController::Service.first(guid: @service_guid)
+            parsed_response = MultiJson.load(response.body)
+
+            if !parsed_response['volume_mounts'].nil? && !service.requires.include?('volume_mount')
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, not_required_error_description)
+            end
+
+            if !parsed_response['volume_mounts'].nil? &&
+              (!parsed_response['volume_mounts'].is_a?(Array) || parsed_response['volume_mounts'].any? { |mount_info| !mount_info.is_a?(Hash) })
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, invalid_error_description(response.body))
+            end
+
+            if !parsed_response['volume_mounts'].nil?
+              parsed_response['volume_mounts'].each do |mount_info|
+                validate_mount(method, uri, response, mount_info)
+              end
+            end
+
+            @validator.validate(method: method, uri: uri, code: code, response: response)
+          end
+
+          def validate_mount(method, uri, response, mount_info)
+            %w(device_type device mode container_dir driver).each do |key|
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "missing required field '#{key}'") unless mount_info.key?(key)
+            end
+
+            %w(device_type mode container_dir driver).each do |key|
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "missing required field '#{key}'") unless
+                mount_info[key].is_a?(String) && !mount_info[key].empty?
+            end
+
+            if !mount_info['device'].is_a?(Hash)
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "required field 'device' must be an object but is " + mount_info['device'].class.to_s)
+            end
+
+            if mount_info['device']['volume_id'].class != String || mount_info['device']['volume_id'].empty?
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "required field 'device.volume_id' must be a non-empty string")
+            end
+
+            if mount_info['device'].key?('mount_config') && !mount_info['device']['mount_config'].nil? && mount_info['device']['mount_config'].class != Hash
+              raise Errors::ServiceBrokerInvalidVolumeMounts.new(uri, method, response, "field 'device.mount_config' must be an object if it is defined")
+            end
+          end
+
+          def invalid_error_description(body)
+            "expected \"volume_mounts\" key to contain an array of JSON objects in body, broker returned '#{body}'"
+          end
+
+          def not_required_error_description
+            'The service is attempting to supply volume mounts from your application, but is not registered as a volume mount service. ' \
+            'Please contact the service provider.'
+          end
+        end
+
+        class OperationValidator
+          def initialize(validator)
+            @validator = validator
+          end
+
+          def validate(method:, uri:, code:, response:)
+            parsed_response = MultiJson.load(response.body)
+
+            if (operation = parsed_response['operation'])
+              if !operation.is_a?(String)
+                raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response,
+                  'The service broker response contained an operation field that was not a string.')
+              elsif operation.length > 10_000
+                raise Errors::ServiceBrokerResponseMalformed.new(uri, method, response,
+                  'The service broker response contained an operation field exceeding 10k characters.')
+              end
+            end
+
+            @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end
 

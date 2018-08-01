@@ -1,91 +1,92 @@
+require 'presenters/v3/base_presenter'
+
 module VCAP::CloudController
-  class DropletPresenter
-    def initialize(pagination_presenter=PaginationPresenter.new)
-      @pagination_presenter                = pagination_presenter
-    end
+  module Presenters
+    module V3
+      class DropletPresenter < BasePresenter
+        def to_hash
+          {
+            guid:                  droplet.guid,
+            state:                 droplet.state,
+            error:                 droplet.error,
+            lifecycle:             {
+              type: droplet.lifecycle_type,
+              data: droplet.lifecycle_data.as_json
+            },
+            staging_memory_in_mb:  droplet.staging_memory_in_mb,
+            staging_disk_in_mb:    droplet.staging_disk_in_mb,
+            result:                result_for_lifecycle,
+            environment_variables: redact_hash(droplet.environment_variables || {}),
+            created_at:            droplet.created_at,
+            updated_at:            droplet.updated_at,
+            links:                 build_links,
+          }
+        end
 
-    def present_json(droplet)
-      MultiJson.dump(droplet_hash(droplet), pretty: true)
-    end
+        private
 
-    def present_json_list(paginated_result, base_url, params)
-      droplets       = paginated_result.records
-      droplet_hashes = droplets.collect { |droplet| droplet_hash(droplet) }
+        def droplet
+          @resource
+        end
 
-      paginated_response = {
-        pagination: @pagination_presenter.present_pagination_hash(paginated_result, base_url, params),
-        resources:  droplet_hashes
-      }
+        def build_links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
-      MultiJson.dump(paginated_response, pretty: true)
-    end
+          {
+            self:                   { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}") },
+            package:                nil,
+            app:                    { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}") },
+            assign_current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}/droplets/current"), method: 'PUT' },
+          }.tap do |links|
+            links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?
+            links.merge!(links_for_lifecyle(url_builder))
+          end
+        end
 
-    private
+        def result_for_lifecycle
+          return nil unless droplet.in_final_state?
 
-    DEFAULT_HASHING_ALGORITHM = 'sha1'
+          lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
+                               {
+                                 hash:      droplet_checksum_info,
+                                 buildpack: {
+                                   name:          CloudController::UrlSecretObfuscator.obfuscate(droplet.buildpack_receipt_buildpack),
+                                   detect_output: droplet.buildpack_receipt_detect_output
+                                 },
+                                 stack:     droplet.buildpack_receipt_stack_name,
+                               }
+                             elsif droplet.lifecycle_type == Lifecycles::DOCKER
+                               {
+                                 image: droplet.docker_receipt_image
+                               }
+                             end
 
-    def droplet_hash(droplet)
-      {
-        guid:                  droplet.guid,
-        state:                 droplet.state,
-        error:                 droplet.error,
-        lifecycle:             {
-          type: droplet.lifecycle_type,
-          data: droplet.lifecycle_data.as_json
-        },
-        memory_limit:          droplet.memory_limit,
-        disk_limit:            droplet.disk_limit,
-        result:                result_for_lifecycle(droplet),
-        environment_variables: droplet.environment_variables || {},
-        created_at:            droplet.created_at,
-        updated_at:            droplet.updated_at,
-        links:                 build_links(droplet),
-      }
-    end
+          {
+            execution_metadata: redact(droplet.execution_metadata),
+            process_types:      redact_hash(droplet.process_types)
+          }.merge(lifecycle_result)
+        end
 
-    def build_links(droplet)
-      {
-        self:                   { href: "/v3/droplets/#{droplet.guid}" },
-        package:                { href: "/v3/packages/#{droplet.package_guid}" },
-        app:                    { href: "/v3/apps/#{droplet.app_guid}" },
-        assign_current_droplet: { href: "/v3/apps/#{droplet.app_guid}/current_droplet", method: 'PUT' },
-      }.merge(links_for_lifecyle(droplet))
-    end
+        def droplet_checksum_info
+          if droplet.sha256_checksum
+            { type: 'sha256', value: droplet.sha256_checksum }
+          else
+            { type: 'sha1', value: droplet.droplet_hash }
+          end
+        end
 
-    def result_for_lifecycle(droplet)
-      return nil unless DropletModel::COMPLETED_STATES.include?(droplet.state)
+        def links_for_lifecyle(url_builder)
+          links = {}
 
-      lifecycle_result = if droplet.lifecycle_type == Lifecycles::BUILDPACK
-                           {
-                             hash:      {
-                               type:  DEFAULT_HASHING_ALGORITHM,
-                               value: droplet.droplet_hash,
-                             },
-                             buildpack: droplet.buildpack_receipt_buildpack,
-                             stack:     droplet.buildpack_receipt_stack_name,
-                           }
-                         elsif droplet.lifecycle_type == Lifecycles::DOCKER
-                           {
-                             image: droplet.docker_receipt_image
-                           }
-                         end
+          if droplet.lifecycle_type == Lifecycles::BUILDPACK
+            if droplet.buildpack_receipt_buildpack_guid
+              links[:buildpack] = { href: url_builder.build_url(path: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}") }
+            end
+          end
 
-      {
-        execution_metadata: droplet.execution_metadata,
-        process_types:      droplet.process_types
-      }.merge(lifecycle_result)
-    end
-
-    def links_for_lifecyle(droplet)
-      links = {}
-
-      if droplet.lifecycle_type == Lifecycles::BUILDPACK
-        if droplet.buildpack_receipt_buildpack_guid
-          links[:buildpack] = { href: "/v2/buildpacks/#{droplet.buildpack_receipt_buildpack_guid}" }
+          links
         end
       end
-
-      links
     end
   end
 end

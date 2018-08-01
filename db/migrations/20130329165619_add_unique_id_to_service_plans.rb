@@ -7,7 +7,7 @@ Sequel.migration do
       add_index :unique_id, unique: true
     end
 
-    if self.class.name.match /mysql/i
+    if self.class.name =~ /mysql/i
       run <<-SQL
         UPDATE service_plans
           SET unique_id =

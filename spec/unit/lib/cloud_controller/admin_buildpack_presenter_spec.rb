@@ -1,21 +1,22 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe AdminBuildpacksPresenter do
+  RSpec.describe AdminBuildpacksPresenter do
     let(:url_generator) { double(:url_generator) }
 
-    subject { described_class.new(url_generator) }
+    subject { described_class }
 
     before do
+      allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator) { url_generator }
       allow(url_generator).to receive(:admin_buildpack_download_url) do |bp|
         "http://blobstore/#{bp.key}"
       end
     end
 
-    describe '#to_staging_message_array' do
+    describe '.enabled_buildpacks' do
       context 'when there are no buildpacks' do
         it 'returns an empty array' do
-          expect(subject.to_staging_message_array).to eq([])
+          expect(subject.enabled_buildpacks).to eq([])
         end
       end
 
@@ -27,7 +28,7 @@ module VCAP::CloudController
         end
 
         it 'returns the buildpacks as an ordered array of hashes' do
-          expect(subject.to_staging_message_array).to eq([
+          expect(subject.enabled_buildpacks).to eq([
             { key: 'first-buildpack', url: 'http://blobstore/first-buildpack' },
             { key: 'second-buildpack', url: 'http://blobstore/second-buildpack' },
             { key: 'third-buildpack', url: 'http://blobstore/third-buildpack' },
@@ -40,7 +41,7 @@ module VCAP::CloudController
           end
 
           it 'does not include them' do
-            expect(subject.to_staging_message_array).not_to include(include(key: 'disabled'))
+            expect(subject.enabled_buildpacks).not_to include(include(key: 'disabled'))
           end
         end
       end

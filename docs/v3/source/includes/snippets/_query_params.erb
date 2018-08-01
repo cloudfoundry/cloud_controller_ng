@@ -1,0 +1,78 @@
+<% content_for :page_query_param do %>
+  <% query_param('page', ['optional']) do %>
+    Page to display. Possible values are all integers >= 1.
+  <% end %>
+<% end %>
+
+<% content_for :per_page_query_param do %>
+  <% query_param('per_page', ['optional']) do %>
+    Number of results per page. Possible values are 1 through 5000.
+  <% end %>
+<% end %>
+
+<% content_for :order_by_query_param do %>
+  <% query_param('order_by', ['optional']) do %>
+    Value to sort by. Defaults to ascending, or prepend with "-" to sort descending.
+    <br>Possible values are <code>created_at</code> or <code>updated_at</code>.
+  <% end %>
+<% end %>
+
+<% content_for :app_guids_query_param do %>
+  <% query_param('app_guids', ['optional', 'string']) do %>
+    Comma-delimited list of app guids to filter by. <br>Example: <code>app_guids=app_guid1,app_guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :organization_guids_query_param do %>
+  <% query_param('organization_guids', ['optional', 'string']) do %>
+    Comma-delimited list of organization guids to filter by. <br>Example: <code>organization_guids=organization_guid1,organization_guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :space_guids_query_param do %>
+  <% query_param('space_guids', ['optional', 'string']) do %>
+    Comma-delimited list of space guids to filter by. <br>Example: <code>space_guids=space_guid1,space_guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :guids_query_param do |resource_type| %>
+  <% query_param('guids', ['optional', 'string']) do %>
+    Comma-delimited list of <%= resource_type %> guids to filter by. <br>Example: <code>guids=guid1,guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :route_guids_query_param do %>
+  <% query_param('route_guids', ['optional', 'string']) do %>
+    Comma-delimited list of route guids to filter by. <br>Example: <code>route_guids=route_guid1,route_guid2</code>
+  <% end %>
+<% end %>
+
+<% content_for :types_query_param do |resource_type| %>
+  <% query_param('types', ['optional', 'string']) do %>
+    Comma-delimited list of <%= resource_type %> types to filter by.
+  <% end %>
+<% end %>
+
+<% content_for :service_instance_guids_query_param do %>
+  <% query_param('service_instance_guids', ['optional', 'string']) do %>
+    Comma-delimited list of service_instance_guids types to filter by. Example: <code>service_instance_guids=guid1,guid2</code></p>
+  <% end %>
+<% end %>
+
+<% content_for :query_param do |name, types, description| %>
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      <%= name %>
+
+      <% types.each do |type| %>
+        <span class="method-list-item-type"><%= type %></span>
+      <% end %>
+    </h4>
+
+    <p class="method-list-item-description"><%= description %></p>
+  </li>
+<% end %>
+
+<% def query_param(name, types, &block) %>
+  <%= yield_content(:query_param, name, types, capture(&block)) %>
+<% end %>

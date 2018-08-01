@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cloud Foundry API</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"></link>
+  <style>
+    body {
+      margin-left: auto;
+      margin-right: auto;
+      width: 900px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Cloud Foundry API</h1>
+
+  <div class="article">
+    <h2>App Usage Events</h2>
+
+    <ul>
+      <li>
+        <a href="app_usage_events/list_all_app_usage_events.html">List all App Usage Events</a>
+      </li>
+      <li>
+        <a href="app_usage_events/purge_and_reseed_app_usage_events.html">Purge and reseed App Usage Events</a>
+      </li>
+      <li>
+        <a href="app_usage_events/retrieve_a_particular_app_usage_event.html">Retrieve a Particular App Usage Event</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Apps</h2>
+
+    <ul>
+      <li>
+        <a href="apps/associate_route_with_the_app.html">Associate Route with the App</a>
+      </li>
+      <li>
+        <a href="apps/copy_the_app_bits_for_an_app.html">Copy the app bits for an App</a>
+      </li>
+      <li>
+        <a href="apps/creating_a_docker_app.html">Creating a Docker App</a>
+      </li>
+      <li>
+        <a href="apps/creating_an_app.html">Creating an App</a>
+      </li>
+      <li>
+        <a href="apps/delete_a_particular_app.html">Delete a Particular App</a>
+      </li>
+      <li>
+        <a href="apps/downloads_the_bits_for_an_app.html">Downloads the bits for an App</a>
+      </li>
+      <li>
+        <a href="apps/downloads_the_staged_droplet_for_an_app.html">Downloads the staged droplet for an App</a>
+      </li>
+      <li>
+        <a href="apps/get_app_summary.html">Get App summary</a>
+      </li>
+      <li>
+        <a href="apps/get_detailed_stats_for_a_started_app.html">Get detailed stats for a STARTED App</a>
+      </li>
+      <li>
+        <a href="apps/get_the_env_for_an_app.html">Get the env for an App</a>
+      </li>
+      <li>
+        <a href="apps/get_the_instance_information_for_a_started_app.html">Get the instance information for a STARTED App</a>
+      </li>
+      <li>
+        <a href="apps/list_all_apps.html">List all Apps</a>
+      </li>
+      <li>
+        <a href="apps/list_all_routes_for_the_app.html">List all Routes for the App</a>
+      </li>
+      <li>
+        <a href="apps/list_all_service_bindings_for_the_app.html">List all Service Bindings for the App</a>
+      </li>
+      <li>
+        <a href="apps/remove_route_from_the_app.html">Remove Route from the App</a>
+      </li>
+      <li>
+        <a href="apps/remove_service_binding_from_the_app.html">Remove Service Binding from the App</a>
+      </li>
+      <li>
+        <a href="apps/restage_an_app.html">Restage an App</a>
+      </li>
+      <li>
+        <a href="apps/retrieve_a_particular_app.html">Retrieve a Particular App</a>
+      </li>
+      <li>
+        <a href="apps/terminate_the_running_app_instance_at_the_given_index.html">Terminate the running App Instance at the given index</a>
+      </li>
+      <li>
+        <a href="apps/updating_an_app.html">Updating an App</a>
+      </li>
+      <li>
+        <a href="apps/uploads_the_bits_for_an_app.html">Uploads the bits for an App</a>
+      </li>
+      <li>
+        <a href="apps/uploads_the_droplet_for_an_app.html">Uploads the droplet for an App</a>
+      </li>
+      <li>
+        <a href="apps/retrieving_permissions_on_a_app.html">Retrieving permissions on an App</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Blobstores</h2>
+
+    <ul>
+      <li>
+        <a href="blobstores/delete_all_blobs_in_the_buildpack_cache_blobstore.html">Delete all blobs in the Buildpack cache blobstore</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Buildpacks</h2>
+
+    <ul>
+      <li>
+        <a href="buildpacks/change_the_position_of_a_buildpack.html">Change the position of a Buildpack</a>
+      </li>
+      <li>
+        <a href="buildpacks/creates_an_admin_buildpack.html">Creates an admin Buildpack</a>
+      </li>
+      <li>
+        <a href="buildpacks/delete_a_particular_buildpack.html">Delete a Particular Buildpack</a>
+      </li>
+      <li>
+        <a href="buildpacks/enable_or_disable_a_buildpack.html">Enable or disable a Buildpack</a>
+      </li>
+      <li>
+        <a href="buildpacks/list_all_buildpacks.html">List all Buildpacks</a>
+      </li>
+      <li>
+        <a href="buildpacks/lock_or_unlock_a_buildpack.html">Lock or unlock a Buildpack</a>
+      </li>
+      <li>
+        <a href="buildpacks/retrieve_a_particular_buildpack.html">Retrieve a Particular Buildpack</a>
+      </li>
+      <li>
+        <a href="buildpacks/upload_the_bits_for_an_admin_buildpack.html">Upload the bits for an admin Buildpack</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Domains (deprecated)</h2>
+
+    <ul>
+      <li>
+        <a href="domains_(deprecated)/create_a_domain_owned_by_the_given_organization_(deprecated).html">Create a Domain owned by the given Organization (deprecated)</a>
+      </li>
+      <li>
+        <a href="domains_(deprecated)/create_a_shared_domain_(deprecated).html">Create a Shared Domain (deprecated)</a>
+      </li>
+      <li>
+        <a href="domains_(deprecated)/delete_a_particular_domain_(deprecated).html">Delete a Particular Domain (deprecated)</a>
+      </li>
+      <li>
+        <a href="domains_(deprecated)/list_all_domains_(deprecated).html">List all Domains (deprecated)</a>
+      </li>
+      <li>
+        <a href="domains_(deprecated)/list_all_spaces_for_the_domain_(deprecated).html">List all Spaces for the Domain (deprecated)</a>
+      </li>
+      <li>
+        <a href="domains_(deprecated)/retrieve_a_particular_domain_(deprecated).html">Retrieve a Particular Domain (deprecated)</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Environment Variable Groups</h2>
+
+    <ul>
+      <li>
+        <a href="environment_variable_groups/getting_the_contents_of_the_running_environment_variable_group.html">Getting the contents of the running environment variable group</a>
+      </li>
+      <li>
+        <a href="environment_variable_groups/getting_the_contents_of_the_staging_environment_variable_group.html">Getting the contents of the staging environment variable group</a>
+      </li>
+      <li>
+        <a href="environment_variable_groups/updating_the_contents_of_the_running_environment_variable_group.html">Updating the contents of the running environment variable group</a>
+      </li>
+      <li>
+        <a href="environment_variable_groups/updating_the_contents_of_the_staging_environment_variable_group.html">Updating the contents of the staging environment variable group</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Events</h2>
+
+    <ul>
+      <li>
+        <a href="events/list_app_create_events.html">List App Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_delete_events.html">List App Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_exited_events.html">List App Exited Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_ssh_authorized_events.html">List App SSH Authorized Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_ssh_unauthorized_events.html">List App SSH Unauthorized Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_start_events.html">List App Start Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_stop_events.html">List App Stop Events</a>
+      </li>
+      <li>
+        <a href="events/list_app_update_events.html">List App Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_route_create_events.html">List Route Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_route_delete_events.html">List Route Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_route_update_events.html">List Route Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_binding_create_events.html">List Service Binding Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_binding_delete_events.html">List Service Binding Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_broker_create_events.html">List Service Broker Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_broker_delete_events.html">List Service Broker Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_broker_update_events.html">List Service Broker Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_create_events.html">List Service Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_dashboard_client_create_events.html">List Service Dashboard Client Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_dashboard_client_delete_events.html">List Service Dashboard Client Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_delete_events.html">List Service Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_instance_bind_route_events.html">List Service Instance Bind Route Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_instance_create_events.html">List Service Instance Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_instance_delete_events.html">List Service Instance Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_instance_unbind_route_events.html">List Service Instance Unbind Route Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_instance_update_events.html">List Service Instance Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_key_create_events.html">List Service Key Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_key_delete_events.html">List Service Key Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_plan_create_events.html">List Service Plan Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_plan_delete_events.html">List Service Plan Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_plan_update_events.html">List Service Plan Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_plan_visibility_create_events.html">List Service Plan Visibility Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_plan_visibility_delete_events.html">List Service Plan Visibility Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_plan_visibility_update_events.html">List Service Plan Visibility Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_service_update_events.html">List Service Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_space_create_events.html">List Space Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_space_delete_events.html">List Space Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_space_update_events.html">List Space Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_user_provided_service_instance_create_events.html">List User Provided Service Instance Create Events</a>
+      </li>
+      <li>
+        <a href="events/list_user_provided_service_instance_delete_events.html">List User Provided Service Instance Delete Events</a>
+      </li>
+      <li>
+        <a href="events/list_user_provided_service_instance_update_events.html">List User Provided Service Instance Update Events</a>
+      </li>
+      <li>
+        <a href="events/list_all_events.html">List all Events</a>
+      </li>
+      <li>
+        <a href="events/list_events_associated_with_an_app_since_january_1,_2014.html">List events associated with an App since January 1, 2014</a>
+      </li>
+      <li>
+        <a href="events/retrieve_a_particular_event.html">Retrieve a Particular Event</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Feature Flags</h2>
+
+    <ul>
+      <li>
+        <a href="feature_flags/get_all_feature_flags.html">Get all feature flags</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_app_bits_upload_feature_flag.html">Get the App Bits Upload feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_app_scaling_feature_flag.html">Get the App Scaling feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_diego_docker_feature_flag.html">Get the Diego Docker feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_private_domain_creation_feature_flag.html">Get the Private Domain Creation feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_route_creation_feature_flag.html">Get the Route Creation feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_service_instance_creation_feature_flag.html">Get the Service Instance Creation feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_set_user_roles_feature_flag.html">Get the Set User Roles feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_space_developer_environment_variable_visibility_feature_flag_(experimental).html">Get the Space Developer Environment Variable Visibility feature flag (experimental)</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_env_var_visibility_feature_flag.html">Get the Environment Variable Visibility feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_space_scoped_private_broker_creation_feature_flag_(experimental).html">Get the Space Scoped Private Broker Creation feature flag (experimental)</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_task_creation_feature_flag_(experimental).html">Get the Task Creation feature flag (experimental)</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_unset_user_roles_feature_flag.html">Get the Unset User Roles feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/get_the_user_org_creation_feature_flag.html">Get the User Org Creation feature flag</a>
+      </li>
+      <li>
+        <a href="feature_flags/set_a_feature_flag.html">Set a feature flag</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Files</h2>
+
+    <ul>
+      <li>
+        <a href="files/retrieve_file.html">Retrieve File</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Info</h2>
+
+    <ul>
+      <li>
+        <a href="info/get_info.html">Get Info</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Jobs</h2>
+
+    <ul>
+      <li>
+        <a href="jobs/retrieve_job_that_is_queued.html">Retrieve Job that is queued</a>
+      </li>
+      <li>
+        <a href="jobs/retrieve_job_that_was_successful.html">Retrieve Job that was successful</a>
+      </li>
+      <li>
+        <a href="jobs/retrieve_job_with_known_failure.html">Retrieve Job with known failure</a>
+      </li>
+      <li>
+        <a href="jobs/retrieve_job_with_unknown_failure.html">Retrieve Job with unknown failure</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Organization Quota Definitions</h2>
+
+    <ul>
+      <li>
+        <a href="organization_quota_definitions/creating_a_organization_quota_definition.html">Creating a Organization Quota Definition</a>
+      </li>
+      <li>
+        <a href="organization_quota_definitions/delete_a_particular_organization_quota_definition.html">Delete a Particular Organization Quota Definition</a>
+      </li>
+      <li>
+        <a href="organization_quota_definitions/list_all_organization_quota_definitions.html">List all Organization Quota Definitions</a>
+      </li>
+      <li>
+        <a href="organization_quota_definitions/retrieve_a_particular_organization_quota_definition.html">Retrieve a Particular Organization Quota Definition</a>
+      </li>
+      <li>
+        <a href="organization_quota_definitions/updating_a_organization_quota_definition.html">Updating a Organization Quota Definition</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Organizations</h2>
+
+    <ul>
+      <li>
+        <a href="organizations/associate_auditor_with_the_organization.html">Associate Auditor with the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/associate_auditor_with_the_organization_by_username.html">Associate Auditor with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/associate_billing_manager_with_the_organization.html">Associate Billing Manager with the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/associate_billing_manager_with_the_organization_by_username.html">Associate Billing Manager with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/associate_manager_with_the_organization.html">Associate Manager with the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/associate_manager_with_the_organization_by_username.html">Associate Manager with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/associate_private_domain_with_the_organization.html">Associate Private Domain with the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/associate_user_with_the_organization.html">Associate User with the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/associate_user_with_the_organization_by_username.html">Associate User with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/creating_an_organization.html">Creating an Organization</a>
+      </li>
+      <li>
+        <a href="organizations/delete_a_particular_organization.html">Delete a Particular Organization</a>
+      </li>
+      <li>
+        <a href="organizations/get_organization_summary.html">Get Organization summary</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_auditors_for_the_organization.html">List all Auditors for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_billing_managers_for_the_organization.html">List all Billing Managers for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_domains_for_the_organization_(deprecated).html">List all Domains for the Organization (deprecated)</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_managers_for_the_organization.html">List all Managers for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_organizations.html">List all Organizations</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_private_domains_for_the_organization.html">List all Private Domains for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_services_for_the_organization.html">List all Services for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_space_quota_definitions_for_the_organization.html">List all Space Quota Definitions for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_spaces_for_the_organization.html">List all Spaces for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/list_all_users_for_the_organization.html">List all Users for the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/remove_auditor_from_the_organization.html">Remove Auditor from the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/remove_auditor_with_the_organization_by_username.html">Remove Auditor with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/remove_billing_manager_from_the_organization.html">Remove Billing Manager from the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/remove_billing_manager_with_the_organization_by_username.html">Remove Billing Manager with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/remove_manager_from_the_organization.html">Remove Manager from the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/remove_manager_with_the_organization_by_username.html">Remove Manager with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/remove_private_domain_from_the_organization.html">Remove Private Domain from the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/remove_user_from_the_organization.html">Remove User from the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/remove_user_with_the_organization_by_username.html">Remove User with the Organization by Username</a>
+      </li>
+      <li>
+        <a href="organizations/retrieve_a_particular_organization.html">Retrieve a Particular Organization</a>
+      </li>
+      <li>
+        <a href="organizations/retrieving_organization_instance_usage.html">Retrieving organization instance usage</a>
+      </li>
+      <li>
+        <a href="organizations/retrieving_organization_memory_usage.html">Retrieving organization memory usage</a>
+      </li>
+      <li>
+        <a href="organizations/retrieving_the_roles_of_all_users_in_the_organization.html">Retrieving the roles of all Users in the Organization</a>
+      </li>
+      <li>
+        <a href="organizations/update_an_organization.html">Update an Organization</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Private Domains</h2>
+
+    <ul>
+      <li>
+        <a href="private_domains/create_a_private_domain_owned_by_the_given_organization.html">Create a Private Domain owned by the given Organization</a>
+      </li>
+      <li>
+        <a href="private_domains/delete_a_particular_private_domain.html">Delete a Particular Private Domain</a>
+      </li>
+      <li>
+        <a href="private_domains/filtering_private_domains_by_name.html">Filtering Private Domains by name</a>
+      </li>
+      <li>
+        <a href="private_domains/list_all_private_domains.html">List all Private Domains</a>
+      </li>
+      <li>
+        <a href="private_domains/list_all_shared_organizations_for_the_private_domain.html">List all Shared Organizations for the Private Domain</a>
+      </li>
+      <li>
+        <a href="private_domains/retrieve_a_particular_private_domain.html">Retrieve a Particular Private Domain</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Resource Match</h2>
+
+    <ul>
+      <li>
+        <a href="resource_match/list_all_matching_resources.html">List all matching resources</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Routes</h2>
+
+    <ul>
+      <li>
+        <a href="routes/associate_app_with_the_route.html">Associate App with the Route</a>
+      </li>
+      <li>
+        <a href="routes/check_a_http_route_exists.html">Check a HTTP Route exists</a>
+      </li>
+      <li>
+        <a href="routes/check_a_route_exists.html">Check a Route exists</a>
+      </li>
+      <li>
+        <a href="routes/creating_a_route.html">Creating a Route</a>
+      </li>
+      <li>
+        <a href="routes/delete_a_particular_route.html">Delete a Particular Route</a>
+      </li>
+      <li>
+        <a href="routes/list_all_apps_for_the_route.html">List all Apps for the Route</a>
+      </li>
+      <li>
+        <a href="routes/list_all_route_mappings_for_the_route.html">List all Route Mappings for the Route</a>
+      </li>
+      <li>
+        <a href="routes/list_all_routes.html">List all Routes</a>
+      </li>
+      <li>
+        <a href="routes/remove_app_from_the_route.html">Remove App from the Route</a>
+      </li>
+      <li>
+        <a href="routes/retrieve_a_particular_route.html">Retrieve a Particular Route</a>
+      </li>
+      <li>
+        <a href="routes/update_a_route.html">Update a Route</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Route Mappings (experimental)</h2>
+
+    <ul>
+      <li>
+        <a href="routes_mapping/delete_a_particular_route_mapping.html">Delete a Particular Route Mapping</a>
+      </li>
+      <li>
+        <a href="routes_mapping/list_all_route_mappings.html">List all Route Mappings</a>
+      </li>
+      <li>
+        <a href="routes_mapping/mapping_an_app_and_a_route.html">Mapping an App and a Route</a>
+      </li>
+      <li>
+        <a href="routes_mapping/retrieve_a_particular_route_mapping.html">Retrieve a Particular Route Mapping</a>
+      </li>
+      <li>
+        <a href="routes_mapping/updating_a_route_mapping.html">Updating a Route Mapping</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Security Group Running Defaults</h2>
+
+    <ul>
+      <li>
+        <a href="security_group_running_defaults/removing_a_security_group_as_a_default_for_running_apps.html">Removing a Security Group as a default for running Apps</a>
+      </li>
+      <li>
+        <a href="security_group_running_defaults/return_the_security_groups_used_for_running_apps.html">Return the Security Groups used for running Apps</a>
+      </li>
+      <li>
+        <a href="security_group_running_defaults/set_a_security_group_as_a_default_for_running_apps.html">Set a Security Group as a default for running Apps</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Security Group Staging Defaults</h2>
+
+    <ul>
+      <li>
+        <a href="security_group_staging_defaults/removing_a_security_group_as_a_default_for_staging.html">Removing a Security Group as a default for staging</a>
+      </li>
+      <li>
+        <a href="security_group_staging_defaults/return_the_security_groups_used_for_staging.html">Return the Security Groups used for staging</a>
+      </li>
+      <li>
+        <a href="security_group_staging_defaults/set_a_security_group_as_a_default_for_staging.html">Set a Security Group as a default for staging</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Security Groups</h2>
+
+    <ul>
+      <li>
+        <a href="security_groups/associate_space_with_the_security_group.html">Associate Space with the Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/associate_space_with_the_security_group_for_staging.html">Associate Space with the Security Group for Staging</a>
+      </li>
+      <li>
+        <a href="security_groups/creating_a_security_group.html">Creating a Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/delete_a_particular_security_group.html">Delete a Particular Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/list_all_security_groups.html">List all Security Groups</a>
+      </li>
+      <li>
+        <a href="security_groups/list_all_spaces_for_the_security_group.html">List all Spaces for the Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/list_all_staging_spaces_for_the_security_group.html">List all Staging Spaces for the Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/remove_space_from_the_security_group.html">Remove Space from the Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/remove_space_from_the_security_group_for_staging.html">Remove Space from the Security Group for Staging</a>
+      </li>
+      <li>
+        <a href="security_groups/retrieve_a_particular_security_group.html">Retrieve a Particular Security Group</a>
+      </li>
+      <li>
+        <a href="security_groups/updating_a_security_group.html">Updating a Security Group</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Bindings</h2>
+
+    <ul>
+      <li>
+        <a href="service_bindings/create_a_service_binding.html">Create a Service Binding</a>
+      </li>
+      <li>
+        <a href="service_bindings/delete_a_particular_service_binding.html">Delete a Particular Service Binding</a>
+      </li>
+      <li>
+        <a href="service_bindings/list_all_service_bindings.html">List all Service Bindings</a>
+      </li>
+      <li>
+        <a href="service_bindings/retrieve_a_particular_service_binding.html">Retrieve a Particular Service Binding</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Brokers</h2>
+
+    <ul>
+      <li>
+        <a href="service_brokers/create_a_service_broker.html">Create a Service Broker</a>
+      </li>
+      <li>
+        <a href="service_brokers/delete_a_particular_service_broker.html">Delete a Particular Service Broker</a>
+      </li>
+      <li>
+        <a href="service_brokers/list_all_service_brokers.html">List all Service Brokers</a>
+      </li>
+      <li>
+        <a href="service_brokers/retrieve_a_particular_service_broker.html">Retrieve a Particular Service Broker</a>
+      </li>
+      <li>
+        <a href="service_brokers/update_a_service_broker.html">Update a Service Broker</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Instances</h2>
+
+    <ul>
+      <li>
+        <a href="service_instances/binding_a_service_instance_to_a_route.html">Binding a Service Instance to a Route</a>
+      </li>
+      <li>
+        <a href="service_instances/creating_a_service_instance.html">Creating a Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/delete_a_service_instance.html">Delete a Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/list_all_routes_for_the_service_instance.html">List all Routes for the Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/list_all_service_bindings_for_the_service_instance.html">List all Service Bindings for the Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/list_all_service_instances.html">List all Service Instances</a>
+      </li>
+      <li>
+        <a href="service_instances/list_all_service_keys_for_the_service_instance.html">List all Service Keys for the Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/retrieve_a_particular_service_instance.html">Retrieve a Particular Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/retrieving_permissions_on_a_service_instance.html">Retrieving permissions on a Service Instance</a>
+      </li>
+      <li>
+        <a href="service_instances/unbinding_a_service_instance_from_a_route.html">Unbinding a service instance from a route</a>
+      </li>
+      <li>
+        <a href="service_instances/update_a_service_instance.html">Update a Service Instance</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Keys</h2>
+
+    <ul>
+      <li>
+        <a href="service_keys/create_a_service_key.html">Create a Service Key</a>
+      </li>
+      <li>
+        <a href="service_keys/delete_a_particular_service_key.html">Delete a Particular Service Key</a>
+      </li>
+      <li>
+        <a href="service_keys/list_all_service_keys.html">List all Service Keys</a>
+      </li>
+      <li>
+        <a href="service_keys/retrieve_a_particular_service_key.html">Retrieve a Particular Service Key</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Plan Visibilities</h2>
+
+    <ul>
+      <li>
+        <a href="service_plan_visibilities/creating_a_service_plan_visibility.html">Creating a Service Plan Visibility</a>
+      </li>
+      <li>
+        <a href="service_plan_visibilities/delete_a_particular_service_plan_visibilities.html">Delete a Particular Service Plan Visibilities</a>
+      </li>
+      <li>
+        <a href="service_plan_visibilities/list_all_service_plan_visibilities.html">List all Service Plan Visibilities</a>
+      </li>
+      <li>
+        <a href="service_plan_visibilities/retrieve_a_particular_service_plan_visibility.html">Retrieve a Particular Service Plan Visibility</a>
+      </li>
+      <li>
+        <a href="service_plan_visibilities/updating_a_service_plan_visibility.html">Updating a Service Plan Visibility</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Plans</h2>
+
+    <ul>
+      <li>
+        <a href="service_plans/delete_a_particular_service_plans.html">Delete a Particular Service Plans</a>
+      </li>
+      <li>
+        <a href="service_plans/list_all_service_instances_for_the_service_plan.html">List all Service Instances for the Service Plan</a>
+      </li>
+      <li>
+        <a href="service_plans/list_all_service_plans.html">List all Service Plans</a>
+      </li>
+      <li>
+        <a href="service_plans/retrieve_a_particular_service_plan.html">Retrieve a Particular Service Plan</a>
+      </li>
+      <li>
+        <a href="service_plans/updating_a_service_plan.html">Updating a Service Plan</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Service Usage Events</h2>
+
+    <ul>
+      <li>
+        <a href="service_usage_events/list_service_usage_events.html">List Service Usage Events</a>
+      </li>
+      <li>
+        <a href="service_usage_events/purge_and_reseed_service_usage_events.html">Purge and reseed Service Usage Events</a>
+      </li>
+      <li>
+        <a href="service_usage_events/retrieve_a_particular_service_usage_event.html">Retrieve a Particular Service Usage Event</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Services</h2>
+
+    <ul>
+      <li>
+        <a href="services/delete_a_particular_service.html">Delete a Particular Service</a>
+      </li>
+      <li>
+        <a href="services/list_all_service_plans_for_the_service.html">List all Service Plans for the Service</a>
+      </li>
+      <li>
+        <a href="services/list_all_services.html">List all Services</a>
+      </li>
+      <li>
+        <a href="services/retrieve_a_particular_service.html">Retrieve a Particular Service</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Shared Domains</h2>
+
+    <ul>
+      <li>
+        <a href="shared_domains/create_a_shared_domain.html">Create a Shared Domain</a>
+      </li>
+      <li>
+        <a href="shared_domains/delete_a_particular_shared_domain.html">Delete a Particular Shared Domain</a>
+      </li>
+      <li>
+        <a href="shared_domains/filtering_shared_domains_by_name.html">Filtering Shared Domains by name</a>
+      </li>
+      <li>
+        <a href="shared_domains/list_all_shared_domains.html">List all Shared Domains</a>
+      </li>
+      <li>
+        <a href="shared_domains/retrieve_a_particular_shared_domain.html">Retrieve a Particular Shared Domain</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Space Quota Definitions</h2>
+
+    <ul>
+      <li>
+        <a href="space_quota_definitions/associate_space_with_the_space_quota_definition.html">Associate Space with the Space Quota Definition</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/creating_a_space_quota_definition.html">Creating a Space Quota Definition</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/delete_a_particular_space_quota_definition.html">Delete a Particular Space Quota Definition</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/list_all_space_quota_definitions.html">List all Space Quota Definitions</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/list_all_spaces_for_the_space_quota_definition.html">List all Spaces for the Space Quota Definition</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/remove_space_from_the_space_quota_definition.html">Remove Space from the Space Quota Definition</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/retrieve_a_particular_space_quota_definition.html">Retrieve a Particular Space Quota Definition</a>
+      </li>
+      <li>
+        <a href="space_quota_definitions/updating_a_space_quota_definition.html">Updating a Space Quota Definition</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Spaces</h2>
+
+    <ul>
+      <li>
+        <a href="spaces/associate_auditor_with_the_space.html">Associate Auditor with the Space</a>
+      </li>
+      <li>
+        <a href="spaces/associate_auditor_with_the_space_by_username.html">Associate Auditor with the Space by Username</a>
+      </li>
+      <li>
+        <a href="spaces/associate_developer_with_the_space.html">Associate Developer with the Space</a>
+      </li>
+      <li>
+        <a href="spaces/associate_developer_with_the_space_by_username.html">Associate Developer with the Space by Username</a>
+      </li>
+      <li>
+        <a href="spaces/associate_manager_with_the_space.html">Associate Manager with the Space</a>
+      </li>
+      <li>
+        <a href="spaces/associate_manager_with_the_space_by_username.html">Associate Manager with the Space by Username</a>
+      </li>
+      <li>
+        <a href="spaces/associate_security_group_with_the_space.html">Associate Security Group with the Space</a>
+      </li>
+      <li>
+        <a href="spaces/associate_staging_security_group_with_the_space.html">Associate Security Group with the Space for staging</a>
+      </li>
+      <li>
+        <a href="spaces/creating_a_space.html">Creating a Space</a>
+      </li>
+      <li>
+        <a href="spaces/delete_a_particular_space.html">Delete a Particular Space</a>
+      </li>
+      <li>
+        <a href="spaces/get_space_summary.html">Get Space summary</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_apps_for_the_space.html">List all Apps for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_auditors_for_the_space.html">List all Auditors for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_developers_for_the_space.html">List all Developers for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_domains_for_the_space_(deprecated).html">List all Domains for the Space (deprecated)</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_events_for_the_space.html">List all Events for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_managers_for_the_space.html">List all Managers for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_routes_for_the_space.html">List all Routes for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_security_groups_for_the_space.html">List all Security Groups for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_service_instances_for_the_space.html">List all Service Instances for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_services_for_the_space.html">List all Services for the Space</a>
+      </li>
+      <li>
+        <a href="spaces/list_all_spaces.html">List all Spaces</a>
+      </li>
+      <li>
+        <a href="spaces/remove_auditor_from_the_space.html">Remove Auditor from the Space</a>
+      </li>
+      <li>
+        <a href="spaces/remove_auditor_with_the_space_by_username.html">Remove Auditor with the Space by Username</a>
+      </li>
+      <li>
+        <a href="spaces/remove_developer_from_the_space.html">Remove Developer from the Space</a>
+      </li>
+      <li>
+        <a href="spaces/remove_developer_with_the_space_by_username.html">Remove Developer with the Space by Username</a>
+      </li>
+      <li>
+        <a href="spaces/remove_manager_from_the_space.html">Remove Manager from the Space</a>
+      </li>
+      <li>
+        <a href="spaces/remove_manager_with_the_space_by_username.html">Remove Manager with the Space by Username</a>
+      </li>
+      <li>
+        <a href="spaces/remove_security_group_from_the_space.html">Remove Security Group from the Space</a>
+      </li>
+      <li>
+        <a href="spaces/remove_staging_security_group_from_the_space.html">Remove Security Group from the Space for staging</a>
+      </li>
+      <li>
+        <a href="spaces/retrieve_a_particular_space.html">Retrieve a Particular Space</a>
+      </li>
+      <li>
+        <a href="spaces/retrieving_the_roles_of_all_users_in_the_space.html">Retrieving the roles of all Users in the Space</a>
+      </li>
+      <li>
+        <a href="spaces/update_a_space.html">Update a Space</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Stacks</h2>
+
+    <ul>
+      <li>
+        <a href="stacks/create_a_stack.html">Create a Stack</a>
+      </li>
+      <li>
+        <a href="stacks/delete_a_particular_stack.html">Delete a Particular Stack</a>
+      </li>
+      <li>
+        <a href="stacks/list_all_stacks.html">List all Stacks</a>
+      </li>
+      <li>
+        <a href="stacks/retrieve_a_particular_stack.html">Retrieve a Particular Stack</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>User Provided Service Instances</h2>
+
+    <ul>
+      <li>
+        <a href="user_provided_service_instances/associate_route_with_the_user_provided_service_instance.html">Associate Route with the User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/creating_a_user_provided_service_instance.html">Creating a User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/delete_a_particular_user_provided_service_instance.html">Delete a Particular User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/list_all_routes_for_the_user_provided_service_instance.html">List all Routes for the User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/list_all_service_bindings_for_the_user_provided_service_instance.html">List all Service Bindings for the User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/list_all_user_provided_service_instances.html">List all User Provided Service Instances</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/remove_route_from_the_user_provided_service_instance.html">Remove Route from the User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/retrieve_a_particular_user_provided_service_instance.html">Retrieve a Particular User Provided Service Instance</a>
+      </li>
+      <li>
+        <a href="user_provided_service_instances/updating_a_user_provided_service_instance.html">Updating a User Provided Service Instance</a>
+      </li>
+    </ul>
+  </div>
+  <div class="article">
+    <h2>Users</h2>
+
+    <ul>
+      <li>
+        <a href="users/associate_audited_organization_with_the_user.html">Associate Audited Organization with the User</a>
+      </li>
+      <li>
+        <a href="users/associate_audited_space_with_the_user.html">Associate Audited Space with the User</a>
+      </li>
+      <li>
+        <a href="users/associate_billing_managed_organization_with_the_user.html">Associate Billing Managed Organization with the User</a>
+      </li>
+      <li>
+        <a href="users/associate_managed_organization_with_the_user.html">Associate Managed Organization with the User</a>
+      </li>
+      <li>
+        <a href="users/associate_managed_space_with_the_user.html">Associate Managed Space with the User</a>
+      </li>
+      <li>
+        <a href="users/associate_organization_with_the_user.html">Associate Organization with the User</a>
+      </li>
+      <li>
+        <a href="users/associate_space_with_the_user.html">Associate Space with the User</a>
+      </li>
+      <li>
+        <a href="users/creating_a_user.html">Creating a User</a>
+      </li>
+      <li>
+        <a href="users/delete_a_particular_user.html">Delete a Particular User</a>
+      </li>
+      <li>
+        <a href="users/get_user_summary.html">Get User summary</a>
+      </li>
+      <li>
+        <a href="users/list_all_audited_organizations_for_the_user.html">List all Audited Organizations for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_audited_spaces_for_the_user.html">List all Audited Spaces for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_billing_managed_organizations_for_the_user.html">List all Billing Managed Organizations for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_managed_organizations_for_the_user.html">List all Managed Organizations for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_managed_spaces_for_the_user.html">List all Managed Spaces for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_organizations_for_the_user.html">List all Organizations for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_spaces_for_the_user.html">List all Spaces for the User</a>
+      </li>
+      <li>
+        <a href="users/list_all_users.html">List all Users</a>
+      </li>
+      <li>
+        <a href="users/remove_audited_organization_from_the_user.html">Remove Audited Organization from the User</a>
+      </li>
+      <li>
+        <a href="users/remove_audited_space_from_the_user.html">Remove Audited Space from the User</a>
+      </li>
+      <li>
+        <a href="users/remove_billing_managed_organization_from_the_user.html">Remove Billing Managed Organization from the User</a>
+      </li>
+      <li>
+        <a href="users/remove_managed_organization_from_the_user.html">Remove Managed Organization from the User</a>
+      </li>
+      <li>
+        <a href="users/remove_managed_space_from_the_user.html">Remove Managed Space from the User</a>
+      </li>
+      <li>
+        <a href="users/remove_organization_from_the_user.html">Remove Organization from the User</a>
+      </li>
+      <li>
+        <a href="users/remove_space_from_the_user.html">Remove Space from the User</a>
+      </li>
+      <li>
+        <a href="users/retrieve_a_particular_user.html">Retrieve a Particular User</a>
+      </li>
+      <li>
+        <a href="users/updating_a_user.html">Updating a User</a>
+      </li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

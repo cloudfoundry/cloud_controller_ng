@@ -2,23 +2,23 @@ require 'spec_helper'
 require 'cloud_controller/diego/staging_request'
 
 module VCAP::CloudController::Diego
-  describe StagingRequest do
+  RSpec.describe StagingRequest do
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:app) do
-      a = VCAP::CloudController::App.make
-      a.staging_task_id = 'staging-task-id'
-      a.stack = VCAP::CloudController::Stack.default
-      a.file_descriptors = 16384
-      a.memory = 1024
-      a.disk_quota = 4096
-      a
+      VCAP::CloudController::AppFactory.make(
+        stack:            VCAP::CloudController::Stack.default,
+        file_descriptors: 16384,
+        memory:           1024,
+        disk_quota:       1946,
+      )
     end
 
     let(:staging_payload) do
       {
         app_id: app.guid,
-        file_descriptors: app.file_descriptors,
-        memory_mb: app.memory,
-        disk_mb: app.disk_quota,
+        file_descriptors: 16384,
+        memory_mb: 1024,
+        disk_mb: 1946,
         environment: Environment.new(app).as_json,
         egress_rules: [],
         timeout: 1800,
@@ -34,9 +34,9 @@ module VCAP::CloudController::Diego
     let(:staging_request) do
       request = StagingRequest.new
       request.app_id = app.guid
-      request.file_descriptors = app.file_descriptors
-      request.memory_mb = app.memory
-      request.disk_mb = app.disk_quota
+      request.file_descriptors = 16384
+      request.memory_mb = 1024
+      request.disk_mb = 1946
       request.environment = Environment.new(app).as_json
       request.egress_rules = []
       request.timeout = 1800
@@ -54,7 +54,29 @@ module VCAP::CloudController::Diego
     end
 
     describe 'validation' do
-      let(:optional_keys) { [:lifecycle_data, :egress_rules] }
+      let(:optional_keys) { [:lifecycle_data, :egress_rules, :isolation_segment] }
+
+      context "when the app's space is not associated with an isolation segment" do
+        it 'does not raise an error' do
+          expect {
+            staging_request.message
+          }.to_not raise_error
+        end
+
+        it 'omits isolation_segment data from the message' do
+          expect(staging_request.message.keys).to_not include(:isolation_segment)
+        end
+      end
+
+      context "when the app's space is associated with an isolation segment" do
+        before do
+          staging_request.isolation_segment = 'segment-name'
+        end
+
+        it 'includes the isolation_segment name in the message' do
+          expect(staging_request.message[:isolation_segment]).to eq('segment-name')
+        end
+      end
 
       context 'when lifecycle data is missing' do
         before do

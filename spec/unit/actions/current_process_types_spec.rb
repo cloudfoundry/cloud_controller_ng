@@ -2,75 +2,42 @@ require 'spec_helper'
 require 'actions/current_process_types'
 
 module VCAP::CloudController
-  describe CurrentProcessTypes do
+  RSpec.describe CurrentProcessTypes do
     let(:user) { double(:user, guid: Sham.guid) }
     let(:droplet) { nil }
-    let(:app) { AppModel.make(droplet: droplet) }
+    let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
     subject(:current_process_types) { CurrentProcessTypes.new(user.guid, Sham.email) }
 
     describe '#process_current_droplet' do
-      context 'when the apps droplet has a procfile' do
-        let(:process_types) do
-          { web: 'thing', other: 'stuff' }
-        end
+      let(:process_types) { { web: 'thing', other: 'stuff' } }
+      let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: process_types) }
 
-        let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: process_types) }
+      it 'adds missing processes' do
+        expect(app.processes.count).to eq(0)
+        current_process_types.process_current_droplet(app)
 
-        it 'adds missing processes' do
-          expect(app.processes.count).to eq(0)
+        app.reload
+        expect(app.processes.count).to eq(2)
+      end
+
+      it 'deletes processes that are no longer mentioned' do
+        process_to_delete = App.make(type: 'bogus', app: app)
+
+        current_process_types.process_current_droplet(app)
+
+        expect(process_to_delete.exists?).to be_falsey
+      end
+
+      it 'updates existing processes' do
+        existing_process = App.make(type: 'other', command: 'old', app: app, metadata: {})
+        expect {
           current_process_types.process_current_droplet(app)
-
-          app.reload
-          expect(app.processes.count).to eq(2)
-        end
-
-        context 'when adding processes it sets the default instance count' do
-          context 'web processes' do
-            let(:process_types) { { web: 'thing' } }
-
-            it '1 instance' do
-              current_process_types.process_current_droplet(app)
-              app.reload
-
-              expect(app.processes[0].instances).to eq(1)
-            end
-          end
-
-          context 'non-web processes' do
-            let(:process_types) { { other: 'stuff' } }
-
-            it '0 instances' do
-              current_process_types.process_current_droplet(app)
-              app.reload
-
-              expect(app.processes[0].instances).to eq(0)
-            end
-          end
-        end
-
-        it 'deletes processes that are no longer mentioned' do
-          existing_process = AppFactory.make(type: 'bogus', command: 'old')
-          app.add_process_by_guid(existing_process.guid)
-          process = App.where(app_guid: app.guid, type: 'bogus').first
-          current_process_types.process_current_droplet(app)
-
-          expect {
-            process.refresh
-          }.to raise_error(Sequel::Error)
-        end
-
-        it 'updates existing processes' do
-          existing_process = AppFactory.make(type: 'other', command: 'old')
-          app.add_process_by_guid(existing_process.guid)
-          process = App.where(app_guid: app.guid, type: 'other').first
-
-          expect {
-            current_process_types.process_current_droplet(app)
-          }.to change { process.refresh.command }.from('old').to('stuff')
-        end
+        }.to change { existing_process.refresh.command }.from('old').to('stuff')
       end
 
       context 'when the app does not have droplet' do
+        let(:droplet) { nil }
+
         it 'raises a ProcessTypesNotFound error' do
           expect {
             current_process_types.process_current_droplet(app)

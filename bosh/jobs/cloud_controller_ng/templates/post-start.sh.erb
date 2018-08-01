@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -ex
+export LANG="en_US.UTF-8"
+
+CC_JOB_DIR="/var/vcap/jobs/cloud_controller_ng"
+CONFIG_DIR="${CC_JOB_DIR}/config"
+CC_PACKAGE_DIR="/var/vcap/packages/cloud_controller_ng"
+
+export CLOUD_CONTROLLER_NG_CONFIG="${CONFIG_DIR}/cloud_controller_ng.yml"
+export BUNDLE_GEMFILE="${CC_PACKAGE_DIR}/cloud_controller_ng/Gemfile"
+
+source "${CC_JOB_DIR}/bin/ruby_version.sh"
+source /var/vcap/packages/capi_utils/syslog_utils.sh
+tee_output_to_sys_log "cloud_controller_ng.$(basename "$0")"
+
+function install_buildpacks {
+  <% if spec.bootstrap %>
+  pushd "${CC_PACKAGE_DIR}/cloud_controller_ng" > /dev/null
+    chpst -u vcap:vcap bundle exec rake buildpacks:install
+
+    if [[ $? -ne 0 ]]; then
+      echo "Buildpacks installation failed"
+      exit 1
+    fi
+  popd > /dev/null
+  <% else %>
+  echo "Skipping buildpack installation"
+  <% end %>
+}
+
+function main {
+  install_buildpacks
+}
+
+main
+
+exit 0

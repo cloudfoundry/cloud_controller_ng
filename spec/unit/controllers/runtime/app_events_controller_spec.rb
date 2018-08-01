@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::AppEventsController do
+  RSpec.describe VCAP::CloudController::AppEventsController do
     describe 'Query Parameters' do
       it { expect(described_class).to be_queryable_by(:timestamp) }
       it { expect(described_class).to be_queryable_by(:app_guid) }
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       it 'is deprecated' do
-        get '/v2/app_events', {}, admin_headers
+        get '/v2/app_events'
         expect(last_response).to be_a_deprecated_response
       end
     end

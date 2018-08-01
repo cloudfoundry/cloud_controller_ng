@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  describe VCAP::CloudController::LegacyApiBase do
+  RSpec.describe VCAP::CloudController::LegacyApiBase do
     let(:user) { User.make(admin: true, active: true) }
     let(:logger) { Steno.logger('vcap_spec') }
     let(:fake_req) { '' }
@@ -10,7 +10,7 @@ module VCAP::CloudController
       it 'should raise NotAuthorized if the user is nil' do
         SecurityContext.set(nil)
         api = LegacyApiBase.new(TestConfig.config, logger, {}, {}, fake_req)
-        expect { api.has_default_space? }.to raise_error(Errors::ApiError, /not authorized/)
+        expect { api.has_default_space? }.to raise_error(CloudController::Errors::ApiError, /not authorized/)
       end
 
       context 'with app spaces' do
@@ -45,7 +45,7 @@ module VCAP::CloudController
       it 'should raise NotAuthorized if the user is nil' do
         SecurityContext.set(nil)
         api = LegacyApiBase.new(TestConfig.config, logger, {}, {}, fake_req)
-        expect { api.default_space }.to raise_error(Errors::ApiError, /not authorized/)
+        expect { api.default_space }.to raise_error(CloudController::Errors::ApiError, /not authorized/)
       end
 
       it 'should raise LegacyApiWithoutDefaultSpace if the user has no app spaces' do
@@ -53,7 +53,7 @@ module VCAP::CloudController
         api = LegacyApiBase.new(TestConfig.config, logger, {}, {}, fake_req)
         expect {
           api.default_space
-        }.to raise_error(Errors::ApiError, /legacy api call requiring a default app space was called/)
+        }.to raise_error(CloudController::Errors::ApiError, /legacy api call requiring a default app space was called/)
       end
 
       context 'with app spaces' do

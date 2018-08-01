@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  shared_examples_for 'domain validation' do
+  RSpec.shared_examples_for 'domain validation' do
     context 'when the name is not present' do
       before { subject.name = nil }
 
@@ -71,12 +71,12 @@ module VCAP::CloudController
         expect(subject).to be_valid
       end
 
-      it 'should not allow a domain with > 255 characters' do
+      it 'should not allow a domain with > 253 characters' do
         subdomain = 'a' * 63
-        subject.name = "#{subdomain}.#{subdomain}.#{subdomain}.#{subdomain}"
+        subject.name = "#{subdomain}.#{subdomain}.#{subdomain}.#{'a' * 61}"
         expect(subject).to be_valid
 
-        subject.name = "#{subdomain}.#{subdomain}.#{subdomain}.#{subdomain}x"
+        subject.name = "#{subdomain}.#{subdomain}.#{subdomain}.#{'a' * 61}x"
         expect(subject).not_to be_valid
       end
 

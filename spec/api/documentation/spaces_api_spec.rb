@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
 
-resource 'Spaces', type: [:api, :legacy_api] do
+RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:space) { VCAP::CloudController::Space.make }
   let(:guid) { space.guid }
@@ -23,6 +23,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
       field :security_group_guids, 'The list of the associated security groups'
       field :space_quota_definition_guid, 'The guid of the associated space quota definition'
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
+      field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
     shared_context 'updatable_fields' do |opts|
@@ -34,12 +35,15 @@ resource 'Spaces', type: [:api, :legacy_api] do
       field :domain_guids, 'The list of the associated domains'
       field :security_group_guids, 'The list of the associated security groups'
       field :allow_ssh, 'Whether or not Space Developers can enable ssh on apps in the space'
+      field :isolation_segment_guid, 'The guid for the isolation segment', experimental: true
     end
 
-    standard_model_list :space, VCAP::CloudController::SpacesController
+    standard_model_list :space, VCAP::CloudController::SpacesController do
+      request_parameter :'order-by', 'Parameter to order results by', valid_values: ['name', 'id']
+    end
     standard_model_get :space, nested_associations: [:organization]
     standard_model_delete :space do
-      parameter :recursive, 'Will delete all apps, services, and routes associated with the space', valid_values: [true, false]
+      parameter :recursive, 'Will delete all apps, services, routes, and service brokers associated with the space', valid_values: [true, false]
     end
 
     def after_standard_model_delete(guid)
@@ -73,7 +77,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
           headers
 
         expect(status).to eq 201
-        standard_entity_response parsed_response, :space, name: new_name
+        standard_entity_response parsed_response, :space, expected_values: { name: new_name }
 
         audited_event VCAP::CloudController::Event.find(type: 'audit.space.update', actee: guid)
       end
@@ -82,6 +86,15 @@ resource 'Spaces', type: [:api, :legacy_api] do
 
   describe 'Nested endpoints' do
     include_context 'guid_parameter'
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      VCAP::CloudController::SecurityContext.set(user, 'valid_token')
+    end
+
+    after do
+      VCAP::CloudController::SecurityContext.clear
+    end
 
     describe 'Routes' do
       before do
@@ -89,7 +102,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         VCAP::CloudController::Route.make(domain: domain, space: space)
       end
 
-      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space
+      standard_model_list :route, VCAP::CloudController::RoutesController, outer_model: :space, exclude_parameters: ['organization_guid']
     end
 
     describe 'Developers' do
@@ -123,7 +136,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         put 'v2/spaces/:guid/developers' do
           example 'Associate Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(developer.guid)
 
             client.put "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
@@ -134,9 +147,9 @@ resource 'Spaces', type: [:api, :legacy_api] do
         end
 
         delete 'v2/spaces/:guid/developers' do
-          example 'Disassociate Developer with the Space by Username' do
+          example 'Remove Developer with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_developer.guid)
 
             client.delete "v2/spaces/#{space.guid}/developers", MultiJson.dump({ username: 'developer@example.com' }, pretty: true), headers
@@ -179,7 +192,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         put 'v2/spaces/:guid/managers' do
           example 'Associate Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(manager.guid)
 
             client.put "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
@@ -190,9 +203,9 @@ resource 'Spaces', type: [:api, :legacy_api] do
         end
 
         delete 'v2/spaces/:guid/managers' do
-          example 'Disassociate Manager with the Space by Username' do
+          example 'Remove Manager with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_manager.guid)
 
             client.delete "v2/spaces/#{space.guid}/managers", MultiJson.dump({ username: 'manager@example.com' }, pretty: true), headers
@@ -235,7 +248,7 @@ resource 'Spaces', type: [:api, :legacy_api] do
         put 'v2/spaces/:guid/auditors' do
           example 'Associate Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(auditor.guid)
 
             client.put "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'user@example.com' }, pretty: true), headers
@@ -246,9 +259,9 @@ resource 'Spaces', type: [:api, :legacy_api] do
         end
 
         delete 'v2/spaces/:guid/auditors' do
-          example 'Disassociate Auditor with the Space by Username' do
+          example 'Remove Auditor with the Space by Username' do
             uaa_client = double(:uaa_client)
-            allow(CloudController::DependencyLocator.instance).to receive(:username_lookup_uaa_client).and_return(uaa_client)
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
             allow(uaa_client).to receive(:id_for_username).and_return(associated_auditor.guid)
 
             client.delete "v2/spaces/#{space.guid}/auditors", MultiJson.dump({ username: 'auditor@example.com' }, pretty: true), headers
@@ -315,13 +328,13 @@ resource 'Spaces', type: [:api, :legacy_api] do
         VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
-      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service
+      standard_model_list :service, VCAP::CloudController::ServicesController, outer_model: :space, path: :service, exclude_parameters: ['provider']
     end
 
     describe 'Events' do
       before do
         user                   = VCAP::CloudController::User.make
-        space_event_repository = VCAP::CloudController::Repositories::Runtime::SpaceEventRepository.new
+        space_event_repository = VCAP::CloudController::Repositories::SpaceEventRepository.new
         space_event_repository.record_space_update(space, user, 'user@example.com', { 'name' => 'new_name' })
       end
 
@@ -341,6 +354,39 @@ resource 'Spaces', type: [:api, :legacy_api] do
 
         nested_model_associate :security_group, :space
         nested_model_remove :security_group, :space
+      end
+    end
+
+    describe 'Isolation Segments (experimental)' do
+      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:org_manager) { VCAP::CloudController::User.make }
+      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+
+      before do
+        assigner.assign(isolation_segment_model, [space.organization])
+        assigner.assign(isolation_segment_model2, [space.organization])
+        space.isolation_segment_guid = isolation_segment_model.guid
+        space.organization.add_manager(org_manager)
+        allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ org_manager.guid => 'manager@example.com' })
+      end
+
+      put '/v2/spaces/:guid' do
+        example 'Set the Isolation Segment for a Space (experimental)' do
+          client.put "/v2/spaces/#{space.guid}", MultiJson.dump({ isolation_segment_guid: isolation_segment_model2.guid }), headers
+          expect(status).to eq(201)
+
+          standard_entity_response parsed_response, :space
+        end
+      end
+
+      delete '/v2/spaces/:guid/isolation_segment (experimental)' do
+        example 'Remove the associated Isolation Segment from the Space (experimental)' do
+          client.delete "/v2/spaces/#{space.guid}/isolation_segment", {}, headers
+          expect(status).to eq(200)
+
+          standard_entity_response parsed_response, :space
+        end
       end
     end
   end

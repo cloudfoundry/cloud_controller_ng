@@ -1,0 +1,86 @@
+### List tasks for an app
+
+```
+Definition
+```
+
+```http
+GET /v3/apps/:guid/tasks HTTP/1.1
+```
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/:guid/tasks" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+
+<%= yield_content :paginated_list_of_tasks, '/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/tasks' %>
+```
+
+This endpoint retrieves the tasks the user has access to. The <code>command</code> field may be
+excluded in the response based on the user's role.
+
+#### Query Parameters
+
+<ul class="method-list-group">
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      guids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task guids to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      names
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma-delimited list of task names to filter by.</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      sequence_ids
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">integer</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma delimited list of sequence ids to filter by. Possible values are integers >= 1</p>
+  </li>
+
+  <li class="method-list-item">
+    <h4 class="method-list-item-label">
+      states
+
+      <span class="method-list-item-type">optional</span>
+      <span class="method-list-item-type">string</span>
+    </h4>
+
+    <p class="method-list-item-description">Comma delimited list of task states to filter by.</p>
+  </li>
+
+<%= yield_content :page_query_param %>
+
+<%= yield_content :per_page_query_param %>
+
+<%= yield_content :order_by_query_param %>
+</ul>

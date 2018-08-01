@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'vcap/ring_buffer'
 
 module VCAP
-  describe RingBuffer do
+  RSpec.describe RingBuffer do
     MAX_ENTRIES = 5
     let(:rb) { RingBuffer.new(MAX_ENTRIES) }
 

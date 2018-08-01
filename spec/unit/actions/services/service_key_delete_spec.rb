@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/services/service_key_delete'
 
 module VCAP::CloudController
-  describe ServiceKeyDelete do
+  RSpec.describe ServiceKeyDelete do
     let(:guid_pattern) { '[[:alnum:]-]+' }
     subject(:service_key_delete) { ServiceKeyDelete.new }
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
       it 'fails if the instance has another operation in progress' do
         service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
         errors = service_key_delete.delete([service_key_1])
-        expect(errors.first).to be_instance_of Errors::ApiError
+        expect(errors.first).to be_instance_of CloudController::Errors::ApiError
       end
 
       context 'when one key deletion fails' do

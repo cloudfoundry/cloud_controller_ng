@@ -1,17 +1,17 @@
 require 'spec_helper'
 require 'models/runtime/event'
-require 'repositories/services/event_repository'
+require 'repositories/service_event_repository'
 require 'cloud_controller/security_context'
 
 module VCAP::Services::ServiceBrokers
-  describe ServiceManager do
+  RSpec.describe ServiceManager do
     let(:broker) { VCAP::CloudController::ServiceBroker.make }
 
     let(:service_id) { Sham.guid }
     let(:service_name) { Sham.name }
     let(:service_description) { Sham.description }
     let(:service_event_repository) do
-      VCAP::CloudController::Repositories::Services::EventRepository.new(
+      VCAP::CloudController::Repositories::ServiceEventRepository.new(
         user: VCAP::CloudController::SecurityContext.current_user,
         user_email: VCAP::CloudController::SecurityContext.current_user_email,
       )
@@ -46,12 +46,13 @@ module VCAP::Services::ServiceBrokers
             'tags'        => ['mysql', 'relational'],
             'requires'    => ['ultimate', 'power'],
             'plan_updateable' => true,
-            'plans'       => [
+            'plans' => [
               {
                 'id'          => plan_id,
                 'name'        => plan_name,
                 'description' => plan_description,
                 'free'        => false,
+                'bindable'    => true,
               }.merge(plan_metadata_hash)
             ]
           }.merge(service_metadata_hash)
@@ -153,10 +154,11 @@ module VCAP::Services::ServiceBrokers
           'free' => service_plan.free,
           'description' => service_plan.description,
           'service_guid' => service_plan.service.guid,
-          'extra' => "{\"cost\":\"0.0\"}",
+          'extra' => '{"cost":"0.0"}',
           'unique_id' => service_plan.unique_id,
           'public' => service_plan.public,
-          'active' => service_plan.active
+          'active' => service_plan.active,
+          'bindable' => true,
         })
       end
 
@@ -270,6 +272,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
 
           expect(plan.free).to be false
+          expect(plan.bindable).to be true
         end
 
         context 'and a plan already exists' do
@@ -277,7 +280,8 @@ module VCAP::Services::ServiceBrokers
             VCAP::CloudController::ServicePlan.make(
               service: service,
               unique_id: plan_id,
-              free: true
+              free: true,
+              bindable: false
             )
           end
 
@@ -285,6 +289,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.name).to_not eq(plan_name)
             expect(plan.description).to_not eq(plan_description)
             expect(plan.free).to be true
+            expect(plan.bindable).to be false
 
             expect {
               service_manager.sync_services_and_plans(catalog)
@@ -294,6 +299,32 @@ module VCAP::Services::ServiceBrokers
             expect(plan.name).to eq(plan_name)
             expect(plan.description).to eq(plan_description)
             expect(plan.free).to be false
+            expect(plan.bindable).to be true
+          end
+
+          it 'creates service audit events for each service plan updated' do
+            service_manager.sync_services_and_plans(catalog)
+
+            service_plan = VCAP::CloudController::ServicePlan.last
+
+            event = VCAP::CloudController::Event.first(type: 'audit.service_plan.update')
+            expect(event.type).to eq('audit.service_plan.update')
+            expect(event.actor_type).to eq('service_broker')
+            expect(event.actor).to eq(broker.guid)
+            expect(event.actor_name).to eq(broker.name)
+            expect(event.timestamp).to be
+            expect(event.actee).to eq(service_plan.guid)
+            expect(event.actee_type).to eq('service_plan')
+            expect(event.actee_name).to eq(plan_name)
+            expect(event.space_guid).to eq('')
+            expect(event.organization_guid).to eq('')
+            expect(event.metadata).to include({
+              'name' => service_plan.name,
+              'description' => service_plan.description,
+              'extra' => '{"cost":"0.0"}',
+              'bindable' => true,
+              'free' => false,
+            })
           end
 
           context 'when the plan is public' do
@@ -372,7 +403,6 @@ module VCAP::Services::ServiceBrokers
 
               it 'adds a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-                # rubocop:disable LineLength
                 expect(service_manager.warnings).to include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
@@ -381,14 +411,12 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
 #{missing_service2_name}
   #{missing_service2_plan_name}
 HEREDOC
-                # rubocop:enable LineLength
               end
             end
 
             context 'when there are no existing service instances' do
               it 'does not add a formatted warning' do
                 service_manager.sync_services_and_plans(catalog)
-                # rubocop:disable LineLength
                 expect(service_manager.warnings).to_not include(<<HEREDOC)
 Warning: Service plans are missing from the broker's catalog (#{broker.broker_url}/v2/catalog) but can not be removed from Cloud Foundry while instances exist. The plans have been deactivated to prevent users from attempting to provision new instances of these plans. The broker should continue to support bind, unbind, and delete for existing instances; if these operations fail contact your broker provider.
 #{service_name}
@@ -397,7 +425,6 @@ Warning: Service plans are missing from the broker's catalog (#{broker.broker_ur
 #{missing_service2_name}
   #{missing_service2_plan_name}
 HEREDOC
-                # rubocop:enable LineLength
               end
             end
           end
