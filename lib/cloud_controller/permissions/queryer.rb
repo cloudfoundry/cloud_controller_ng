@@ -188,8 +188,8 @@ class VCAP::CloudController::Permissions::Queryer
     perm_permissions.task_readable_space_guids
   end
 
-  def can_read_task?(resource_guid)
-    perm_permissions.can_read_task?(resource_guid)
+  def can_read_task?(org_guid:, space_guid:)
+    perm_permissions.can_read_task?(org_guid: org_guid, space_guid: space_guid)
   end
 
   private

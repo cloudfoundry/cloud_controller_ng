@@ -965,27 +965,34 @@ module VCAP::CloudController::Perm
     describe '#can_read_task?' do
       let(:resource_id) { space_id }
 
-      it 'returns true when the user has the task.read permission' do
-        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: resource_id, user_id: user_id, issuer: issuer).and_return(true)
+      it 'returns true when the user has the task.read permission for the space' do
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: "#{org_id}/*", user_id: user_id, issuer: issuer).and_return(false)
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: "#{org_id}/#{space_id}", user_id: user_id, issuer: issuer).and_return(true)
 
-        expect(permissions.can_read_task?(resource_id)).to equal(true)
+        expect(permissions.can_read_task?(org_guid: org_id, space_guid: space_id)).to equal(true)
+      end
+
+      it 'returns true when the user has the task.read permission for the org' do
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: "#{org_id}/*", user_id: user_id, issuer: issuer).and_return(true)
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: "#{org_id}/#{space_id}", user_id: user_id, issuer: issuer).and_return(false)
+
+        expect(permissions.can_read_task?(org_guid: org_id, space_guid: space_id)).to equal(true)
       end
 
       it 'returns false otherwise' do
-        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: resource_id, user_id: user_id, issuer: issuer).and_return(false)
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: "#{org_id}/*", user_id: user_id, issuer: issuer).and_return(false)
+        allow(perm_client).to receive(:has_permission?).with(action: 'task.read', resource: "#{org_id}/#{space_id}", user_id: user_id, issuer: issuer).and_return(false)
 
-        expect(permissions.can_read_task?(resource_id)).to equal(false)
+        expect(permissions.can_read_task?(org_guid: org_id, space_guid: space_id)).to equal(false)
       end
     end
 
     describe '#task_readable_space_guids' do
-      it 'returns the list of space guids that the user has task.read access for either through space or org' do
+      it 'returns the list of space guids that the user has task.read access for either that space or the containing org' do
         org = VCAP::CloudController::Organization.make(guid: 'org-guid-1')
-        VCAP::CloudController::Space.make(guid: 'space-guid-1')
-        VCAP::CloudController::Space.make(guid: 'space-guid-2')
         VCAP::CloudController::Space.make(guid: 'space-guid-3', organization: org)
 
-        readable_resource_guids = ['space-guid-1', 'space-guid-2', 'org-guid-1']
+        readable_resource_guids = ['org-guid-1/space-guid-1', 'org-guid-1/space-guid-2', 'org-guid-1/*']
         readable_space_guids = ['space-guid-1', 'space-guid-2', 'space-guid-3']
 
         allow(perm_client).to receive(:list_unique_resource_patterns).and_return([])

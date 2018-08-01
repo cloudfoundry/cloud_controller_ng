@@ -37,7 +37,7 @@ module VCAP
           if can_read_globally?
             VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
           else
-            resource_guids_for_action([
+            resource_identifiers_for_action([
               ORG_MANAGER_ACTION,
               ORG_BILLING_MANAGER_ACTION,
               ORG_AUDITOR_ACTION,
@@ -192,13 +192,22 @@ module VCAP
           end
         end
 
-        def can_read_task?(resource_guid)
-          has_permission?('task.read', resource_guid)
+        def can_read_task?(org_guid:, space_guid:)
+          has_permission?('task.read', org_resource_id(org_guid: org_guid)) ||
+            has_permission?('task.read', space_resource_id(org_guid: org_guid, space_guid: space_guid))
         end
 
         private
 
         attr_reader :perm_client, :user_id, :roles, :issuer
+
+        def org_resource_id(org_guid:)
+          "#{org_guid}/*"
+        end
+
+        def space_resource_id(org_guid:, space_guid:)
+          "#{org_guid}/#{space_guid}"
+        end
 
         def has_permission?(action, resource)
           perm_client.has_permission?(action: action, resource: resource, user_id: user_id, issuer: issuer)
@@ -209,23 +218,25 @@ module VCAP
         end
 
         def space_guids_for_actions(space_actions, org_actions)
-          space_guids = resource_guids_for_action(space_actions)
-          org_guids = resource_guids_for_action(org_actions)
+          space_guids = resource_identifiers_for_action(space_actions)
+          org_guids = resource_identifiers_for_action(org_actions)
 
           aggregate_space_guids(org_guids, space_guids)
         end
 
         def space_guids_for_generic_actions(actions)
-          resource_guids = resource_guids_for_action(actions)
+          resource_patterns = resource_identifiers_for_action(actions)
 
-          space_guids, org_guids = resource_guids.partition do |guid|
-            Space.where(guid: guid).present?
+          org_resource_patterns, space_resource_patterns = resource_patterns.partition do |guid|
+            %r(.*/\*).match(guid)
           end
 
+          space_guids = convert_to_space_guids(space_resource_patterns)
+          org_guids = convert_to_org_guids(org_resource_patterns)
           aggregate_space_guids(org_guids, space_guids)
         end
 
-        def resource_guids_for_action(actions)
+        def resource_identifiers_for_action(actions)
           perm_client.list_unique_resource_patterns(
             user_id: user_id,
             issuer: issuer,
@@ -240,6 +251,18 @@ module VCAP
                       select("#{Space.table_name}__guid".to_sym).all.map(&:guid)
 
           all_guids.uniq
+        end
+
+        def convert_to_space_guids(resource_patterns)
+          resource_patterns.map! { |resource|
+            resource.split('/')[1]
+          }
+        end
+
+        def convert_to_org_guids(resource_patterns)
+          resource_patterns.map! { |resource|
+            resource.split('/')[0]
+          }
         end
       end
     end

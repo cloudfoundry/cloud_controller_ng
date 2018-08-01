@@ -305,21 +305,9 @@ RSpec.describe TasksController, type: :controller do
           end
         end
 
-        context 'when the user has permission to read tasks in the app space' do
+        context 'when the user has permission to read tasks in the app space or org' do
           before do
-            allow_user_perm_permission(:can_read_task?, space_guid: space.guid)
-          end
-
-          it 'returns a 200' do
-            get :show, task_guid: task.guid
-
-            expect(response.status).to eq 200
-          end
-        end
-
-        context 'when the user has permission to read tasks in the app org' do
-          before do
-            allow_user_perm_permission(:can_read_task?, org_guid: org.guid)
+            allow_user_perm_permission(:can_read_task?, space_guid: space.guid, org_guid: org.guid)
           end
 
           it 'returns a 200' do
