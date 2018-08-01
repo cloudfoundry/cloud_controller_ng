@@ -101,6 +101,12 @@ includes:
   - resources/processes/terminate_instance
   - resources/processes/list
   - resources/processes/list_for_app
+  - resources/service_instances/header
+  - resources/service_instances/object
+  - resources/service_instances/list
+  - resources/service_instances/share_to_space
+  - resources/service_instances/unshare_from_space
+  - resources/service_instances/list_shared_spaces
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
@@ -148,11 +154,5 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
-  - experimental_resources/service_instances/header
-  - experimental_resources/service_instances/object
-  - experimental_resources/service_instances/list
-  - experimental_resources/service_instances/share_to_space
-  - experimental_resources/service_instances/unshare_from_space
-  - experimental_resources/service_instances/list_shared_spaces
 search: true
 ---
