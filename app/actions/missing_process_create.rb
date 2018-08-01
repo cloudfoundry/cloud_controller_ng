@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
-      @logger = Steno.logger('cc.action.process_upsert_from_droplet')
+      @logger = Steno.logger('cc.action.missing_process_create')
     end
 
     def create_from_current_droplet(app)

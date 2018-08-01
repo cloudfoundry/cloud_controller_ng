@@ -292,6 +292,7 @@ module VCAP::CloudController
     type { 'web' }
     diego { true }
     app { AppModel.make }
+    metadata { {} }
   end
 
   ProcessModel.blueprint(:process) do
