@@ -21,7 +21,7 @@ module CloudController
             'volume_mounts'         => ::ServiceBindingPresenter.censor_volume_mounts(service_binding.volume_mounts),
             'name'                  => service_binding.name,
             'last_operation'        => {
-              'type'        => 'create',
+              'type'        => service_binding.last_operation.try(:type) || 'create',
               'state'       => service_binding.last_operation.try(:state) || 'succeeded',
               'description' => service_binding.last_operation.try(:description) || '',
               'updated_at'  => service_binding.last_operation.try(:updated_at) || service_binding.updated_at,

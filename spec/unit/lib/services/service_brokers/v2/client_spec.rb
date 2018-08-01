@@ -1222,6 +1222,8 @@ module VCAP::Services::ServiceBrokers::V2
     describe '#unbind' do
       let(:binding) { VCAP::CloudController::ServiceBinding.make }
 
+      let(:arbitrary_parameters) { {} }
+
       let(:response_data) { {} }
 
       let(:path) { "/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}" }
@@ -1276,7 +1278,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when the broker returns an error' do
         let(:code) { 204 }
         let(:response_data) do
-          { 'description' => 'Could not delete instance' }
+          { 'description' => 'Could not delete binding' }
         end
         let(:response_body) { response_data.to_json }
 
@@ -1284,7 +1286,67 @@ module VCAP::Services::ServiceBrokers::V2
           expect {
             client.unbind(binding)
           }.to raise_error(Errors::ServiceBrokerBadResponse).
-            with_message("Service instance #{binding.service_instance.name}: Service broker error: Could not delete instance")
+            with_message("Service broker failed to delete service binding for instance #{binding.service_instance.name}: Service broker error: Could not delete binding")
+        end
+      end
+
+      context 'when the broker responds synchronously' do
+        let(:code) { 200 }
+
+        it 'should return async false' do
+          unbind_response = client.unbind(binding)
+          expect(unbind_response[:async]).to eq(false)
+        end
+      end
+
+      context 'when the broker responds asynchronously' do
+        let(:code) { 202 }
+
+        it 'should return async true' do
+          unbind_response = client.unbind(binding)
+          expect(unbind_response[:async]).to eq(true)
+        end
+      end
+
+      context 'when the caller provides accepts_incomplete' do
+        let(:user_guid) { 'some-guid' }
+
+        before do
+          client.unbind(binding, user_guid, accepts_incomplete)
+        end
+
+        context 'when accepts_incomplete=true' do
+          let(:accepts_incomplete) { true }
+
+          it 'make a put request with accepts_incomplete true' do
+            expect(http_client).to have_received(:delete).with(/accepts_incomplete=true/, anything, anything)
+          end
+
+          context 'and when the broker returns asynchronously' do
+            let(:code) { 202 }
+
+            it 'returns async true' do
+              response = client.unbind(binding, arbitrary_parameters, accepts_incomplete)
+              expect(response[:async]).to eq(true)
+            end
+
+            context 'and when the broker provides operation' do
+              let(:response_data) { { operation: '123' } }
+
+              it 'returns the operation attribute' do
+                response = client.unbind(binding, arbitrary_parameters, accepts_incomplete)
+                expect(response[:operation]).to eq('123')
+              end
+            end
+          end
+        end
+
+        context 'when accepts_incomplete=false' do
+          let(:accepts_incomplete) { false }
+
+          it 'make a put request without the accepts_incomplete query parameter' do
+            expect(http_client).to have_received(:delete).with(/^((?!accepts_incomplete).)*$/, anything, anything)
+          end
         end
       end
     end

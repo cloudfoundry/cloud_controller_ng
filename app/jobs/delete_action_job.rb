@@ -14,8 +14,14 @@ module VCAP::CloudController
         logger.info("Deleting model class '#{model_class}' with guid '#{resource_guid}'")
 
         dataset = model_class.where(guid: resource_guid)
-        errors  = delete_action.delete(dataset)
+        if delete_action_can_return_warnings?
+          errors, warnings = delete_action.delete(dataset)
+        else
+          errors = delete_action.delete(dataset)
+        end
+
         raise errors.first unless errors.empty?
+        warnings
       end
 
       def job_name_in_configuration
@@ -44,6 +50,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def delete_action_can_return_warnings?
+        delete_action.respond_to?(:can_return_warnings?) && delete_action.can_return_warnings?
+      end
 
       attr_reader :model_class, :delete_action
     end

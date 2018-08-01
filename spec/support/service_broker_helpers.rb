@@ -68,8 +68,9 @@ module ServiceBrokerHelpers
   def stub_unbind(service_binding, opts={})
     status = opts[:status] || 200
     body = opts[:body] || '{}'
+    accepts_incomplete = opts[:accepts_incomplete] || nil
 
-    stub_request(:delete, unbind_url(service_binding)).
+    stub_request(:delete, unbind_url(service_binding, accepts_incomplete: accepts_incomplete)).
       with(basic_auth: basic_auth(service_binding: service_binding)).
       to_return(status: status, body: body)
   end
@@ -112,10 +113,11 @@ module ServiceBrokerHelpers
     /#{build_broker_url(service_instance.service_broker)}#{path}#{query_params}/
   end
 
-  def unbind_url(service_binding)
+  def unbind_url(service_binding, accepts_incomplete: nil)
     plan = service_binding.service_instance.service_plan
     service = plan.service
-    query = "plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
+    query = 'accepts_incomplete=true&' if accepts_incomplete
+    query = "#{query}plan_id=#{plan.unique_id}&service_id=#{service.unique_id}"
     service_binding_url(service_binding, query)
   end
 

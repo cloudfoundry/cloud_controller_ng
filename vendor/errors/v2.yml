@@ -313,6 +313,11 @@
   http_code: 400
   message: "Docker apps cannot run on DEAs"
 
+60027:
+  name: ServiceInstanceRecursiveDeleteFailed
+  http_code: 502
+  message: "Deletion of service instance %s failed because one or more associated resources could not be deleted.\n\n%s"
+
 70001:
   name: RuntimeInvalid
   http_code: 400
@@ -1147,7 +1152,7 @@
 390001:
   name: ServiceInstanceUnshareFailed
   http_code: 502
-  message: "Unshare of service instance failed because one or more bindings could not be deleted.\n\n%s"
+  message: "Unshare of service instance failed: \n\n%s"
 
 390002:
   name: ServiceInstanceDeletionSharesExists

@@ -12,13 +12,14 @@ module VCAP::CloudController
 
       delete_job = build_delete_job(service_instance, delete_action)
 
+      warnings = []
       if async && !accepts_incomplete
         enqueued_job = Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
       else
-        delete_job.perform
+        warnings = delete_job.perform
       end
 
-      enqueued_job
+      [enqueued_job, warnings]
     end
 
     private

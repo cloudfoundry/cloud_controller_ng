@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs
     RSpec.describe DeleteActionJob, job_context: :worker do
       let(:user) { User.make(admin: true) }
-      let(:delete_action) { double(SpaceDelete, delete: []) }
+      let(:delete_action) { instance_double(SpaceDelete, delete: []) }
       let(:space) { Space.make(name: Sham.guid) }
 
       subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
@@ -24,7 +24,7 @@ module VCAP::CloudController
       describe 'the timeout error to use when the job times out' do
         context 'when the delete action has a timeout error' do
           let(:error) { StandardError.new('foo') }
-          let(:delete_action) { double(SpaceDelete, delete: [], timeout_error: error) }
+          let(:delete_action) { instance_double(SpaceDelete, delete: [], timeout_error: error) }
 
           it 'returns the custom timeout error' do
             expect(job.timeout_error).to eq(error)
@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         context 'when the delete action does not have a timeout error' do
-          let(:delete_action) { double(SpaceDelete, delete: []) }
+          let(:delete_action) { instance_double(SpaceDelete, delete: []) }
 
           it 'returns a generic timeout error' do
             expect(job.timeout_error).to be_a(CloudController::Errors::ApiError)
@@ -41,8 +41,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the action implements can_return_warnings?' do
+        context 'when can_return_warnings? is false' do
+          let(:delete_action) { instance_double(ServiceInstanceDelete, delete: [], can_return_warnings?: false) }
+          it 'does not expect warnings' do
+            expect {
+              job.perform
+            }.not_to raise_error
+          end
+        end
+
+        context 'when the delete action returns warnings' do
+          let(:delete_action) { instance_double(ServiceInstanceDelete, delete: [[], ['warning-1', 'warning-2']], can_return_warnings?: true) }
+
+          it 'returns the warnings' do
+            expect(job.perform).to match_array(['warning-1', 'warning-2'])
+          end
+        end
+      end
+
       context 'when the delete action fails' do
-        let(:delete_action) { double(SpaceDelete, delete: errors) }
+        let(:delete_action) { instance_double(SpaceDelete, delete: errors) }
 
         context 'with a single error' do
           let(:errors) { [StandardError.new] }

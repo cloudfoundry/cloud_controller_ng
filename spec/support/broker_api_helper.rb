@@ -193,7 +193,7 @@ module VCAP::CloudController::BrokerApiHelper
         body: fetch_body.to_json)
   end
 
-  def stub_async_binding_last_operation(state: 'succeeded', operation_data: nil)
+  def stub_async_binding_last_operation(state: 'succeeded', operation_data: nil, return_code: 200)
     fetch_body = {
       state: state
     }
@@ -207,7 +207,7 @@ module VCAP::CloudController::BrokerApiHelper
       Regexp.new(url)).
       with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
       to_return(
-        status: 200,
+        status: return_code,
         body: fetch_body.to_json)
   end
 
@@ -315,12 +315,20 @@ module VCAP::CloudController::BrokerApiHelper
     bind_service(opts)
   end
 
+  def async_unbind_service(opts={})
+    opts[:accepts_incomplete] = 'true'
+    unbind_service(opts)
+  end
+
   def unbind_service(opts={})
+    status = opts[:status] ? opts[:status] : 204
+    res_body = opts[:response_body] || {}
     stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
-      to_return(status: 204, body: {}.to_json)
+      to_return(status: status, body: res_body.to_json)
 
     headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
     params = opts[:async] ? { async: true } : '{}'
+    params = opts[:accepts_incomplete] ? { accepts_incomplete: true } : params
     delete("/v2/service_bindings/#{@binding_id}", params, headers)
   end
 

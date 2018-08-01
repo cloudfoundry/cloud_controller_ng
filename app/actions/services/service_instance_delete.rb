@@ -11,20 +11,34 @@ module VCAP::CloudController
     end
 
     def delete(service_instance_dataset)
-      service_instance_dataset.each_with_object([]) do |service_instance, errors_accumulator|
-        errors = delete_service_bindings(service_instance)
-        errors.concat delete_service_keys(service_instance)
-        errors.concat delete_route_bindings(service_instance)
+      service_instance_dataset.each_with_object([[], []]) do |service_instance, errors_and_warnings|
+        errors_accumulator, warnings_accumulator = errors_and_warnings
+
+        if service_instance.operation_in_progress?
+          errors_accumulator << CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
+          next
+        end
+
+        errors, warnings = delete_service_bindings(service_instance)
 
         errors.concat unshare_from_all_spaces(service_instance)
 
-        errors_accumulator.concat(errors)
+        errors.concat delete_service_keys(service_instance)
+        errors.concat delete_route_bindings(service_instance)
 
         if errors.empty?
           instance_errors = delete_service_instance(service_instance)
           errors_accumulator.concat(instance_errors)
+        else
+          errors_accumulator << recursive_delete_error(service_instance, errors)
         end
+
+        warnings_accumulator.concat(warnings)
       end
+    end
+
+    def can_return_warnings?
+      true
     end
 
     private
@@ -32,14 +46,19 @@ module VCAP::CloudController
     def unshare_from_all_spaces(service_instance)
       errors = []
 
-      if service_instance.shared?
-        unshare = ServiceInstanceUnshare.new
-        service_instance.shared_spaces.each do |target_space|
-          begin
-            unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
-          rescue => e
-            errors << e
-          end
+      if service_instance.exists?
+        service_instance.reload
+      end
+
+      return errors unless service_instance.service_bindings.empty?
+      return errors unless service_instance.shared?
+
+      unshare = ServiceInstanceUnshare.new
+      service_instance.shared_spaces.each do |target_space|
+        begin
+          unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
+        rescue => e
+          errors << e
         end
       end
 
@@ -86,7 +105,17 @@ module VCAP::CloudController
     end
 
     def delete_service_bindings(service_instance)
-      ServiceBindingDelete.new(@event_repository.user_audit_info).delete(service_instance.service_bindings)
+      service_binding_deleter = ServiceBindingDelete.new(@event_repository.user_audit_info, @accepts_incomplete)
+      errors, warnings = service_binding_deleter.delete(service_instance.service_bindings)
+      async_unbinds = service_instance.service_bindings_dataset.all.select(&:operation_in_progress?)
+
+      async_unbinds.each do |service_binding|
+        errors << StandardError.new(
+          "An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress."
+        )
+      end
+
+      [errors, warnings]
     end
 
     def delete_service_keys(service_instance)
@@ -106,6 +135,11 @@ module VCAP::CloudController
     def log_audit_event(service_instance)
       event_method = service_instance.managed_instance? ? :record_service_instance_event : :record_user_provided_service_instance_event
       @event_repository.send(event_method, :delete, service_instance, {})
+    end
+
+    def recursive_delete_error(service_instance, errors)
+      msg = errors.map { |error| "\t#{error.message}" }.join("\n\n")
+      CloudController::Errors::ApiError.new_from_details('ServiceInstanceRecursiveDeleteFailed', service_instance.name, msg)
     end
   end
 end

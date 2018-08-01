@@ -2340,7 +2340,7 @@ module VCAP::CloudController
 
       before do
         set_current_user(developer)
-        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind)
+        allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })
       end
 
       it 'removes the association' do

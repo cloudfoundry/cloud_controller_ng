@@ -2,16 +2,18 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstanceDeprovisioner do
+    let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: User.make.guid, user_email: 'email')) }
+    let(:deprovisioner) { ServiceInstanceDeprovisioner.new(event_repository) }
+
     describe '#deprovision_service_instance' do
-      let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: User.make.guid, user_email: 'email')) }
-      let(:deprovisioner) { ServiceInstanceDeprovisioner.new(event_repository) }
       let(:service_instance) { ManagedServiceInstance.make }
       let(:fake_job) { instance_double(Jobs::DeleteActionJob) }
+      let(:fake_action) { instance_double(ServiceInstanceDelete, can_return_warnings?: true) }
       let(:some_boolean) { false }
 
       before do
         allow(Jobs::DeleteActionJob).to receive(:new).and_return(fake_job)
-        allow(fake_job).to receive(:perform)
+        allow(fake_job).to receive(:perform).and_return([])
       end
 
       context 'when accepts_incomplete is true' do
@@ -19,7 +21,8 @@ module VCAP::CloudController
           accepts_incomplete = true
 
           expect(ServiceInstanceDelete).to receive(:new).
-            with({ accepts_incomplete: true, event_repository: event_repository }).once
+            with({ accepts_incomplete: true, event_repository: event_repository }).once.
+            and_return(fake_action)
 
           deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, some_boolean)
         end
@@ -30,7 +33,8 @@ module VCAP::CloudController
           accepts_incomplete = false
 
           expect(ServiceInstanceDelete).to receive(:new).
-            with({ accepts_incomplete: false, event_repository: event_repository }).once
+            with({ accepts_incomplete: false, event_repository: event_repository }).once.
+            and_return(fake_action)
 
           deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, some_boolean)
         end
@@ -61,9 +65,22 @@ module VCAP::CloudController
             deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
           end
 
-          it 'returns nil' do
-            result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-            expect(result).to be_nil
+          context 'and the delete job returned warnings' do
+            before do
+              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+            end
+
+            it 'returns nil and the warnings' do
+              result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+            end
+          end
+
+          context 'and the delete job did not return warnings' do
+            it 'returns nil and an empty array' do
+              result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+              expect(result).to match_array([nil, []])
+            end
           end
         end
 
@@ -82,9 +99,22 @@ module VCAP::CloudController
             deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
           end
 
-          it 'returns nil' do
-            result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-            expect(result).to be_nil
+          context 'and the delete job returned warnings' do
+            before do
+              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+            end
+
+            it 'returns nil and the warnings' do
+              result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+            end
+          end
+
+          context 'and the delete job did not return warnings' do
+            it 'returns nil and an empty array' do
+              result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+              expect(result).to match_array([nil, []])
+            end
           end
         end
       end
@@ -103,9 +133,9 @@ module VCAP::CloudController
             deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
           end
 
-          it 'returns the enqueued job' do
+          it 'returns the enqueued job and an empty warnings array' do
             result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-            expect(result).to be_instance_of Delayed::Job
+            expect(result).to match_array([be_instance_of(Delayed::Job), []])
           end
         end
 
@@ -124,9 +154,22 @@ module VCAP::CloudController
             deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
           end
 
-          it 'returns nil' do
-            result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
-            expect(result).to be_nil
+          context 'and the delete job returned warnings' do
+            before do
+              allow(fake_job).to receive(:perform).and_return(['warning-1', 'warning-2'])
+            end
+
+            it 'returns nil and the warnings' do
+              result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+              expect(result).to match_array([nil, ['warning-1', 'warning-2']])
+            end
+          end
+
+          context 'and the delete job did not return warnings' do
+            it 'returns nil and an empty array' do
+              result = deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)
+              expect(result).to match_array([nil, []])
+            end
           end
         end
       end

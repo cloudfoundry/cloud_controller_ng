@@ -103,7 +103,17 @@ module VCAP::CloudController
     end
 
     def is_created?
-      !service_binding_operation || service_binding_operation.state == 'succeeded'
+      return true unless service_binding_operation
+
+      if service_binding_operation.type == 'create' && service_binding_operation.state != 'succeeded'
+        return false
+      end
+
+      if service_binding_operation.type == 'delete' && service_binding_operation.state == 'succeeded'
+        return false
+      end
+
+      true
     end
 
     def terminal_state?
@@ -120,6 +130,10 @@ module VCAP::CloudController
     def save_with_new_operation(last_operation)
       ServiceBinding.db.transaction do
         save_changes
+
+        if self.last_operation
+          self.last_operation.destroy
+        end
 
         # it is important to create the service binding operation with the service binding
         # instead of doing self.service_binding_operation = x

@@ -60,7 +60,10 @@ module VCAP::CloudController
       service_instance = opts[:service_instance] || service_binding.try(:service_instance)
       service_instance_guid = service_instance.try(:guid) || guid_pattern
       broker = opts[:service_broker] || service_instance.service_plan.service.service_broker
-      %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}}
+      if opts[:accepts_incomplete]
+        query_params = '?accepts_incomplete=true'
+      end
+      %r{#{broker_url(broker)}/v2/service_instances/#{service_instance_guid}/service_bindings/#{service_binding_guid}#{query_params}}
     end
 
     describe 'Permissions' do
@@ -417,9 +420,8 @@ module VCAP::CloudController
                 end
 
                 it 'returns an in progress service binding response' do
-                  hash_body = JSON.parse(last_response.body)
-                  expect(hash_body['entity']['last_operation']['type']).to eq('create')
-                  expect(hash_body['entity']['last_operation']['state']).to eq('in progress')
+                  expect(decoded_response['entity']['last_operation']['type']).to eq('create')
+                  expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
                 end
 
                 it 'returns a location header' do
@@ -847,6 +849,23 @@ module VCAP::CloudController
           expect(event.metadata).to include({})
         end
 
+        context 'when there are warnings from deleting the binding' do
+          before do
+            service_binding_deleter = instance_double(ServiceBindingDelete)
+
+            allow(ServiceBindingDelete).to receive(:new).and_return(service_binding_deleter)
+            allow(service_binding_deleter).to receive(:foreground_delete_request).and_return(['warning-1', 'warning-2'])
+          end
+
+          it 'includes the warnings in the X-Cf-Warnings header' do
+            delete "/v2/service_bindings/#{service_binding.guid}"
+
+            expect(last_response).to have_status_code(204)
+            expect(last_response.headers).to include('X-Cf-Warnings')
+            expect(last_response.headers['X-Cf-Warnings']).to include('warning-1,warning-2')
+          end
+        end
+
         context 'when the user does not belong to the space' do
           it 'returns a 403' do
             set_current_user(User.make)
@@ -895,6 +914,128 @@ module VCAP::CloudController
         it 'sends an unbind request to the broker' do
           delete "/v2/service_bindings/#{service_binding.guid}"
           expect(a_request(:delete, bind_url_regex(service_binding: service_binding))).to have_been_made
+        end
+
+        describe 'accepts_incomplete' do
+          context 'when accepts_incomplete is true' do
+            context 'when the broker responds asynchronously' do
+              let(:unbind_status) { 202 }
+
+              it 'returns a 202 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+                expect(last_response).to have_status_code(202)
+              end
+
+              it 'passess accepts_incomplete flag to the broker' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+                expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+              end
+
+              it 'updates the binding operation in the model' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+
+                service_binding.reload
+
+                expect(service_binding.last_operation.type).to eql('delete')
+                expect(service_binding.last_operation.state).to eql('in progress')
+              end
+
+              it 'indicates the service binding is being deleted' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+
+                expect(last_response.headers['Location']).to eq "/v2/service_bindings/#{service_binding.guid}"
+
+                expect(decoded_response['entity']['last_operation']).to be
+                expect(decoded_response['entity']['last_operation']['type']).to eq('delete')
+                expect(decoded_response['entity']['last_operation']['state']).to eq('in progress')
+              end
+            end
+
+            context 'when the broker responds synchronously' do
+              let(:unbind_status) { 200 }
+              let(:unbind_body) { {} }
+
+              it 'returns 204 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=true"
+
+                expect(last_response).to have_status_code(204)
+              end
+            end
+          end
+
+          context 'when accepts_incomplete is false' do
+            it 'returns a 204 status code' do
+              delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+              expect(last_response).to have_status_code(204)
+            end
+
+            context 'when the broker responds asynchronously' do
+              let(:unbind_status) { 202 }
+              let(:warning) do
+                CGI.escape(['The service broker responded asynchronously to the unbind request, but the accepts_incomplete query parameter was false or not given.',
+                            'The service binding may not have been successfully deleted on the service broker.'].join(' '))
+              end
+
+              it 'returns a 204 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+
+                expect(last_response).to have_status_code(204)
+              end
+
+              it 'should warn the user about the misbehaving broker' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+
+                expect(last_response.headers).to include('X-Cf-Warnings')
+                expect(last_response.headers['X-Cf-Warnings']).to include(warning)
+              end
+            end
+
+            context 'and the broker only supports asynchronous request' do
+              let(:unbind_status) { 422 }
+              let(:unbind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=false"
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+          end
+
+          context 'and when accepts_incomplete is not set' do
+            context 'and when the broker only supports asynchronous request' do
+              let(:unbind_status) { 422 }
+              let(:unbind_body) { { error: 'AsyncRequired' } }
+
+              it 'returns a 400 status code' do
+                delete "/v2/service_bindings/#{service_binding.guid}"
+                expect(last_response).to have_status_code(400)
+                expect(decoded_response['error_code']).to eq 'CF-AsyncRequired'
+              end
+            end
+          end
+
+          context 'and when the parameter is not a bool' do
+            it 'returns a 400 status code' do
+              delete "/v2/service_bindings/#{service_binding.guid}?accepts_incomplete=not_a_bool"
+              expect(last_response).to have_status_code(400)
+
+              expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                to_not have_been_made
+            end
+
+            context 'when ?async=true' do
+              context 'and when the parameter is not a bool' do
+                it 'returns a 400 status code' do
+                  delete "/v2/service_bindings/#{service_binding.guid}?async=true&accepts_incomplete=not_a_bool"
+                  expect(last_response).to have_status_code(400)
+
+                  expect(a_request(:delete, %r{#{broker_url(broker)}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}})).
+                    to_not have_been_made
+                end
+              end
+            end
+          end
         end
 
         describe 'locking the service instance of the binding' do
@@ -1199,10 +1340,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the binding has last operation' do
+      context 'when the binding has a create operation in progress' do
         before do
           binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
-          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create')
+          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create', description: 'creating')
           set_current_user(developer)
         end
 
@@ -1213,6 +1354,25 @@ module VCAP::CloudController
           service_binding = decoded_response['resources'].first
           expect(service_binding['entity']['last_operation']['type']).to eq('create')
           expect(service_binding['entity']['last_operation']['state']).to eq('in progress')
+          expect(service_binding['entity']['last_operation']['description']).to eq('creating')
+        end
+      end
+
+      context 'when the binding has a delete operation in progress' do
+        before do
+          binding = ServiceBinding.make(service_instance: managed_service_instance, app: process.app)
+          binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'delete', description: 'deleting')
+          set_current_user(developer)
+        end
+
+        it 'returns the in progress state' do
+          get '/v2/service_bindings?inline-relations-depth=1'
+          expect(last_response).to have_status_code(200)
+
+          service_binding = decoded_response['resources'].first
+          expect(service_binding['entity']['last_operation']['type']).to eq('delete')
+          expect(service_binding['entity']['last_operation']['state']).to eq('in progress')
+          expect(service_binding['entity']['last_operation']['description']).to eq('deleting')
         end
       end
     end
