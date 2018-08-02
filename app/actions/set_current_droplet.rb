@@ -1,3 +1,5 @@
+require 'missing_process_create'
+
 module VCAP::CloudController
   class SetCurrentDroplet
     class InvalidApp < StandardError; end
