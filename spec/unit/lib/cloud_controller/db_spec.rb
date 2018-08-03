@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 RSpec.describe VCAP::CloudController::DB do
-
   describe '.get_database_scheme' do
     context 'with only a database connection string for mysql' do
       it 'should return that the database is MySQL' do
