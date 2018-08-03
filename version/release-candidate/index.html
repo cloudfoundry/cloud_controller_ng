@@ -5990,8 +5990,8 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 <tr>
 <td><strong>command</strong></td>
-<td><em>string</em></td>
-<td>The command is used to start the process.</td>
+<td><em>string</em> or <em>null</em></td>
+<td>The command used to start the process. Use <em>null</em> to revert to the buildpack-detected or procfile-provided start command.</td>
 </tr>
 <tr>
 <td><strong>instances</strong></td>
@@ -6001,12 +6001,12 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <tr>
 <td><strong>memory_in_mb</strong></td>
 <td><em>integer</em></td>
-<td>The memory in mb allocated per instance.</td>
+<td>The memory in MB allocated per instance.</td>
 </tr>
 <tr>
 <td><strong>disk_in_mb</strong></td>
 <td><em>integer</em></td>
-<td>The disk in mb allocated per instance.</td>
+<td>The disk in MB allocated per instance.</td>
 </tr>
 <tr>
 <td><strong>health_check</strong></td>
@@ -6374,8 +6374,8 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </thead><tbody>
 <tr>
 <td><strong>command</strong></td>
-<td><em>string</em></td>
-<td>The command is used to start the process.</td>
+<td><em>string</em> or <em>null</em></td>
+<td>The command used to start the process. Use <em>null</em> to revert to the buildpack-detected or procfile-provided start command.</td>
 </tr>
 <tr>
 <td><strong>health_check</strong></td>
