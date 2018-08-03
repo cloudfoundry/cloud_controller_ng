@@ -18,11 +18,17 @@ module VCAP::CloudController
       }
     }
     let(:instances_reporters) { double(:instance_reporters) }
+    let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
+    let(:workpool) { instance_double(WorkPool, submit: nil, drain: nil) }
 
     describe '.update' do
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
         allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
+        allow(WorkPool).to receive(:new).and_return(workpool)
+        allow(Steno).to receive(:logger).and_return(logger)
+
+        allow(workpool).to receive(:submit).with(deployment, logger).and_yield(deployment, logger)
       end
 
       context 'when all new deploying_web_processes are running' do
@@ -142,6 +148,12 @@ module VCAP::CloudController
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
           end
+
+          it 'drains the workpool' do
+            deployer.update
+
+            expect(workpool).to have_received(:drain)
+          end
         end
       end
 
@@ -149,6 +161,10 @@ module VCAP::CloudController
         let(:finished_web_process) { ProcessModel.make(instances: 0) }
         let(:finished_deploying_web_process_guid) { ProcessModel.make(instances: 2) }
         let!(:finished_deployment) { DeploymentModel.make(app: finished_web_process.app, deploying_web_process: finished_deploying_web_process_guid, state: 'DEPLOYED') }
+
+        before do
+          allow(workpool).to receive(:submit).with(finished_deployment, logger).and_yield(finished_deployment, logger)
+        end
 
         it 'does not scale the deployment' do
           expect {
@@ -235,13 +251,13 @@ module VCAP::CloudController
 
       context 'when an error occurs while scaling a deployment' do
         let(:failing_process) { ProcessModel.make(app: web_process.app, type: 'failing', instances: 5) }
-        let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
         let!(:failing_deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: failing_process, state: 'DEPLOYING') }
 
         before do
-          allow(Steno).to receive(:logger).and_return(fake_logger)
-          allow(deployer).to receive(:scale_deployment).with(deployment, fake_logger).and_call_original
-          allow(deployer).to receive(:scale_deployment).with(failing_deployment, fake_logger).and_raise(StandardError.new('Something real bad happened'))
+          allow(workpool).to receive(:submit).with(failing_deployment, logger).and_yield(failing_deployment, logger)
+
+          allow(deployer).to receive(:scale_deployment).with(deployment, logger).and_call_original
+          allow(deployer).to receive(:scale_deployment).with(failing_deployment, logger).and_raise(StandardError.new('Something real bad happened'))
         end
 
         it 'logs the error' do
@@ -251,7 +267,7 @@ module VCAP::CloudController
             failing_process.reload.instances
           }
 
-          expect(fake_logger).to have_received(:error).with(
+          expect(logger).to have_received(:error).with(
             'error-scaling-deployment',
             deployment_guid: failing_deployment.guid,
             error: 'StandardError',
@@ -266,6 +282,12 @@ module VCAP::CloudController
           }.to change {
             deploying_web_process.reload.instances
           }.by(1)
+        end
+
+        it 'still drains the workpool' do
+          deployer.update
+
+          expect(workpool).to have_received(:drain)
         end
       end
     end
