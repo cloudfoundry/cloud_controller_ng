@@ -54,9 +54,9 @@ module VCAP::CloudController
           else
             config[:db][:database] = ENV['DB_CONNECTION_STRING']
           end
-          config[:db][:database_parts] = DB.database_parts_from_connection(config[:db][:database])
+          config[:db][:database_parts] = DatabasePartsParser.database_parts_from_connection(config[:db][:database])
         else
-          config[:db][:database] ||= ENV['DB_CONNECTION_STRING'] || DB.connection_from_database_parts(config[:db][:database_parts])
+          config[:db][:database] ||= ENV['DB_CONNECTION_STRING'] || DatabasePartsParser.connection_from_database_parts(config[:db][:database_parts])
         end
       end
 

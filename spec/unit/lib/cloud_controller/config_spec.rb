@@ -81,7 +81,7 @@ module VCAP::CloudController
 
           it 'sets a default value for database' do
             expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
-            expect(config[:db][:database_parts]).to eq(DB.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
+            expect(config[:db][:database_parts]).to eq(DatabasePartsParser.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
           end
 
           context 'special passwords characters' do
@@ -93,7 +93,7 @@ module VCAP::CloudController
 
               it "can't handle an unescaped @" do
                 expect {
-                  DB.database_parts_from_connection(uri)
+                  DatabasePartsParser.database_parts_from_connection(uri)
                 }.to raise_error(URI::InvalidURIError, "bad URI(is not URI?): #{uri}")
               end
             end
@@ -102,7 +102,7 @@ module VCAP::CloudController
               let(:password) { CGI.escape(raw_password) }
 
               it "can't handle an unescaped @" do
-                parts = DB.database_parts_from_connection(uri)
+                parts = DatabasePartsParser.database_parts_from_connection(uri)
                 expect(parts[:password]).to eq(raw_password)
               end
             end

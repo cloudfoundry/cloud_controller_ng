@@ -8,7 +8,7 @@ module IntegrationSetup
     if TestConfig.config[:db][:database_parts]
       database_config = TestConfig.config[:db][:database_parts].clone
       database_config[:database] += suffix
-      return VCAP::CloudController::DB.connection_from_database_parts(database_config)
+      return VCAP::CloudController::DatabasePartsParser.connection_from_database_parts(database_config)
     end
     raise Exception.new('No database config') if !TestConfig.config[:db][:database]
     warn('Time to move to db.database_parts')
