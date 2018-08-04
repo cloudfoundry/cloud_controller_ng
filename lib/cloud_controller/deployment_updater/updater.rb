@@ -88,7 +88,7 @@ module VCAP::CloudController
             VCAP::CloudController::ProcessRestart.restart(process: process, config: Config.config, stop_in_runtime: true)
           end
         end
-        end
       end
+    end
   end
 end
