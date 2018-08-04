@@ -117,7 +117,7 @@ redirect_traffic_to_local_cc() {
   disown
 
   bosh ssh "${BOSH_API_INSTANCE}" -c "\
-    sudo sed -i -- 's#unix:/var/vcap/sys/run/cloud_controller_ng/cloud_controller\.sock#127.0.0.1:${REMOTE_TUNNEL_PORT}#g' '/var/vcap/jobs/cloud_controller_ng/config/nginx.conf' && \
+    sudo sed -i -- 's#unix:/var/vcap/data/cloud_controller_ng/cloud_controller\.sock#127.0.0.1:${REMOTE_TUNNEL_PORT}#g' '/var/vcap/jobs/cloud_controller_ng/config/nginx.conf' && \
     sudo /var/vcap/bosh/bin/monit restart nginx_cc" > /dev/null
 }
 
@@ -148,7 +148,7 @@ cleanup() {
 
   echo "Resetting nginx to original socket..."
   bosh ssh "${BOSH_API_INSTANCE}" -c "\
-    sudo sed -i -- 's/127\.0\.0\.1:9029/unix:\/var\/vcap\/sys\/run\/cloud_controller_ng\/cloud_controller\.sock/g' '/var/vcap/jobs/cloud_controller_ng/config/nginx.conf' && \
+    sudo sed -i -- 's/127\.0\.0\.1:9029/unix:\/var\/vcap\/data\/cloud_controller_ng\/cloud_controller\.sock/g' '/var/vcap/jobs/cloud_controller_ng/config/nginx.conf' && \
     sudo /var/vcap/bosh/bin/monit restart nginx_cc" > /dev/null
 
   echo "Removing internal hostnames from /etc/hosts..."
