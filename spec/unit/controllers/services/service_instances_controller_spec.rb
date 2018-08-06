@@ -3081,6 +3081,12 @@ module VCAP::CloudController
                 to_raise(HTTPClient::TimeoutError)
             end
 
+            it 'does not remove the service instance' do
+              expect {
+                delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
+              }.to change(ServiceInstance, :count).by(0)
+            end
+
             it 'fails the initial delete with description included in the error message' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
 
