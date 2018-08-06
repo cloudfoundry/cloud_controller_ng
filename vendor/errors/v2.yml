@@ -318,6 +318,11 @@
   http_code: 502
   message: "Deletion of service instance %s failed because one or more associated resources could not be deleted.\n\n%s"
 
+60028:
+  name: ManagedServiceInstanceNotFound
+  http_code: 404
+  message: "The service instance could not be found: %s"
+
 70001:
   name: RuntimeInvalid
   http_code: 400

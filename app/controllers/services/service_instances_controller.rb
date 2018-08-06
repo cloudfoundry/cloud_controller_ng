@@ -159,7 +159,7 @@ module VCAP::CloudController
       async = convert_flag_to_bool(params['async'])
       purge = convert_flag_to_bool(params['purge'])
 
-      service_instance = find_guid(guid, ServiceInstance)
+      service_instance = find_service_instance(guid)
 
       if purge
         validate_access(:purge, service_instance)
@@ -229,7 +229,7 @@ module VCAP::CloudController
 
     get '/v2/service_instances/:guid/shared_from', :shared_from_information
     def shared_from_information(guid)
-      service_instance = find_guid_and_validate_access(:read, guid, ManagedServiceInstance)
+      service_instance = find_guid_and_validate_access(:read, guid, ServiceInstance)
 
       return HTTP::NO_CONTENT unless service_instance.shared?
 
@@ -424,7 +424,7 @@ module VCAP::CloudController
     end
 
     def find_service_instance(guid)
-      find_guid(guid, ManagedServiceInstance)
+      find_guid(guid, ServiceInstance)
     end
 
     def validate_service_instance_access(service_instance)
