@@ -63,10 +63,10 @@ module VCAP::CloudController
     set_field_as_encrypted :credentials
 
     def self.user_visibility_filter(user)
-      visible_spaces = user.spaces_dataset.all.
-                       concat(user.audited_spaces_dataset.all).
-                       concat(user.managed_spaces_dataset.all).
-                       concat(managed_organizations_spaces_dataset(user.managed_organizations_dataset).all).uniq
+      visible_spaces = user.spaces_dataset.
+                       union(user.audited_spaces_dataset).
+                       union(user.managed_spaces_dataset).
+                       union(managed_organizations_spaces_dataset(user.managed_organizations_dataset)).all.uniq
 
       Sequel.or([
         [:space, visible_spaces],
