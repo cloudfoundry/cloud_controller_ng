@@ -58,7 +58,7 @@ class BuildsController < ApplicationController
   def show
     build = BuildModel.find(guid: params[:guid])
 
-    build_not_found! unless build && permission_queryer.can_read_from_space?(build.package.space.guid, build.package.space.organization.guid)
+    build_not_found! unless build && permission_queryer.can_read_from_space?(build.app.space.guid, build.app.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
   end

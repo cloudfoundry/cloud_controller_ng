@@ -604,7 +604,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:space) { VCAP::CloudController::Space.make(organization: organization) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package) }
+    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
     let!(:droplet) do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -624,6 +624,19 @@ RSpec.describe BuildsController, type: :controller do
 
         expect(response.status).to eq(200)
         expect(parsed_body['guid']).to eq(build.guid)
+      end
+
+      context 'when the build package is deleted' do
+        before do
+          package.delete
+        end
+
+        it 'returns a 200 OK and the build' do
+          get :show, guid: build.guid
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['guid']).to eq(build.guid)
+        end
       end
 
       context 'when the build does not exist' do
