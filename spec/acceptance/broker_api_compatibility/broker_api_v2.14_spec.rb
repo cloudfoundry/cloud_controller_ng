@@ -353,5 +353,90 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
     end
+
+    describe 'orphan mitigation strategy for 408s' do
+      context 'when provisioning' do
+        context 'when the broker responds with 408 (Client Timeout)' do
+          before do
+            stub_request(:put, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
+              to_return(status: 408)
+
+            body = {
+              name: 'test-service',
+              space_guid: @space_guid,
+              service_plan_guid: @plan_guid
+            }
+
+            post('/v2/service_instances',
+                 body.to_json,
+                 admin_headers)
+
+            Delayed::Worker.new.work_off
+          end
+
+          it 'should not orphan mitigate' do
+            expect(
+              a_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+})
+            ).not_to have_been_made
+          end
+        end
+      end
+
+      context 'when binding' do
+        before do
+          provision_service
+          create_app
+        end
+
+        context 'when the broker responds with 408 (Client Timeout)' do
+          before do
+            stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+              to_return(status: 408)
+
+            body = { app_guid: @app_guid, service_instance_guid: @service_instance_guid }
+
+            post('/v2/service_bindings',
+                 body.to_json,
+                 admin_headers)
+
+            Delayed::Worker.new.work_off
+          end
+
+          it 'should not orphan mitigate' do
+            expect(
+              a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
+            ).not_to have_been_made
+          end
+        end
+      end
+
+      context 'when service key' do
+        before do
+          provision_service
+          create_app
+        end
+
+        context 'when the broker responds with 408 (Client Timeout)' do
+          before do
+            stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
+              to_return(status: 408)
+
+            body = { name: 'service-key', service_instance_guid: @service_instance_guid }
+
+            post('/v2/service_keys',
+                 body.to_json,
+                 admin_headers)
+
+            Delayed::Worker.new.work_off
+          end
+
+          it 'should not orphan mitigate' do
+            expect(
+              a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
+            ).not_to have_been_made
+          end
+        end
+      end
+    end
   end
 end

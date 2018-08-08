@@ -210,7 +210,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises a timeout error' do
             expect { request }.
-              to raise_error(Errors::ServiceBrokerApiTimeout)
+              to raise_error(Errors::HttpClientTimeout)
           end
         end
       end
