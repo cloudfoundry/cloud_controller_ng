@@ -17,6 +17,7 @@ module VCAP::CloudController
       let(:lock_runner) { instance_double(Locket::LockRunner, start: nil, lock_acquired?: nil) }
       let(:lock_worker) { instance_double(Locket::LockWorker) }
       let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil) }
+      let(:statsd_client) { instance_double(Statsd) }
 
       before do
         allow(Locket::LockRunner).to receive(:new).and_return(lock_runner)
@@ -26,6 +27,8 @@ module VCAP::CloudController
         allow(lock_worker).to receive(:acquire_lock_and).and_yield
         allow(DeploymentUpdater::Scheduler).to receive(:sleep)
         allow(DeploymentUpdater::Updater).to receive(:update)
+        allow(CloudController::DependencyLocator.instance).to receive(:statsd_client).and_return(statsd_client)
+        allow(statsd_client).to receive(:time).and_yield
       end
 
       it 'correctly configures a LockRunner and uses it to initialize a LockWorker' do
@@ -74,6 +77,23 @@ module VCAP::CloudController
           expect(logger).to have_received(:info).with(start_with('Update loop took'))
           expect(DeploymentUpdater::Scheduler).not_to have_received(:sleep)
           expect(logger).to have_received(:info).with('Not Sleeping')
+        end
+      end
+
+      describe 'statsd metrics' do
+        it 'records the deployment update duration' do
+          timed_block = nil
+
+          allow(statsd_client).to receive(:time) do |_, &block|
+            timed_block = block
+          end
+
+          DeploymentUpdater::Scheduler.start
+          expect(statsd_client).to have_received(:time).with('cc.deployments.update.duration')
+
+          expect(DeploymentUpdater::Updater).to_not have_received(:update)
+          timed_block.call
+          expect(DeploymentUpdater::Updater).to have_received(:update)
         end
       end
     end

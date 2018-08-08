@@ -4,34 +4,32 @@ module VCAP::CloudController
   module DeploymentUpdater
     class Updater
       class << self
-        def update(statsd_client:)
+        def update
           logger = Steno.logger('cc.deployment_updater.update')
           logger.info('run-deployment-update')
 
-          statsd_client.time('cc.deployments.update.duration') do
-            deployments = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE)
-            begin
-              workpool = WorkPool.new(50)
+          deployments = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE)
+          begin
+            workpool = WorkPool.new(50)
 
-              deployments.each do |deployment|
-                workpool.submit(deployment, logger) do |d, l|
-                  begin
-                    scale_deployment(d, l)
-                  rescue => e
-                    error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
-                    logger.error(
-                      'error-scaling-deployment',
-                      deployment_guid: d.guid,
-                      error: error_name,
-                      error_message: e.message,
-                      backtrace: e.backtrace.join("\n")
-                    )
-                  end
+            deployments.each do |deployment|
+              workpool.submit(deployment, logger) do |d, l|
+                begin
+                  scale_deployment(d, l)
+                rescue => e
+                  error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
+                  logger.error(
+                    'error-scaling-deployment',
+                    deployment_guid: d.guid,
+                    error: error_name,
+                    error_message: e.message,
+                    backtrace: e.backtrace.join("\n")
+                  )
                 end
               end
-            ensure
-              workpool.drain
             end
+          ensure
+            workpool.drain
           end
         end
 

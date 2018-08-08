@@ -35,7 +35,9 @@ module VCAP::CloudController
           logger = Steno.logger('cc.deployment_updater.scheduler')
 
           update_start_time = Time.now
-          Updater.update(statsd_client: statsd_client)
+          statsd_client.time('cc.deployments.update.duration') do
+            Updater.update
+          end
           update_duration = Time.now - update_start_time
           logger.info("Update loop took #{update_duration}s")
 
