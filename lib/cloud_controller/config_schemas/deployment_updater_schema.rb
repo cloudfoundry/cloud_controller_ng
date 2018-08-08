@@ -149,6 +149,9 @@ module VCAP::CloudController
             routing_client_name: String,
             routing_client_secret: String,
           },
+
+          statsd_host: String,
+          statsd_port: Integer,
         }
       end
       # rubocop:enable Metrics/BlockLength

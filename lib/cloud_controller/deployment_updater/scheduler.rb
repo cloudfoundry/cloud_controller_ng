@@ -17,21 +17,25 @@ module VCAP::CloudController
             client_key_path: config.get(:locket, :key_file),
             client_cert_path: config.get(:locket, :cert_file),
           )
+          statsd_client = CloudController::DependencyLocator.instance.statsd_client
 
           lock_worker = Locket::LockWorker.new(lock_runner)
 
           lock_worker.acquire_lock_and do
-            update(config.get(:deployment_updater, :update_frequency_in_seconds))
+            update(
+              update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
+              statsd_client: statsd_client
+            )
           end
         end
 
         private
 
-        def update(update_frequency)
+        def update(update_frequency:, statsd_client:)
           logger = Steno.logger('cc.deployment_updater.scheduler')
 
           update_start_time = Time.now
-          Updater.update
+          Updater.update(statsd_client: statsd_client)
           update_duration = Time.now - update_start_time
           logger.info("Update loop took #{update_duration}s")
 

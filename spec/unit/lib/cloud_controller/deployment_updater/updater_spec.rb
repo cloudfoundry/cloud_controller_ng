@@ -20,6 +20,7 @@ module VCAP::CloudController
     let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
     let(:workpool) { instance_double(WorkPool, submit: nil, drain: nil) }
+    let(:statsd_client) { instance_double(Statsd) }
 
     describe '.update' do
       before do
@@ -27,6 +28,7 @@ module VCAP::CloudController
         allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
         allow(WorkPool).to receive(:new).and_return(workpool)
         allow(Steno).to receive(:logger).and_return(logger)
+        allow(statsd_client).to receive(:time).and_yield
 
         allow(workpool).to receive(:submit).with(deployment, logger).and_yield(deployment, logger)
       end
@@ -37,14 +39,14 @@ module VCAP::CloudController
             allow(DeploymentModel).to receive(:where).and_return([deployment])
             allow(deployment).to receive(:lock!).and_call_original
 
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
 
             expect(deployment).to have_received(:lock!)
           end
 
           it 'scales the web process down by one' do
             expect {
-              deployer.update
+              deployer.update(statsd_client: statsd_client)
             }.to change {
               web_process.reload.instances
             }.by(-1)
@@ -52,7 +54,7 @@ module VCAP::CloudController
 
           it 'scales up the new web process by one' do
             expect {
-              deployer.update
+              deployer.update(statsd_client: statsd_client)
             }.to change {
               deploying_web_process.reload.instances
             }.by(1)
@@ -65,7 +67,7 @@ module VCAP::CloudController
 
           it 'scales the original web process down by one' do
             expect {
-              deployer.update
+              deployer.update(statsd_client: statsd_client)
             }.to change {
               web_process.reload.instances
             }.by(-1)
@@ -73,7 +75,7 @@ module VCAP::CloudController
 
           it 'does not scale up the deploying web process' do
             expect {
-              deployer.update
+              deployer.update(statsd_client: statsd_client)
             }.not_to change {
               deploying_web_process.reload.instances
             }
@@ -104,7 +106,7 @@ module VCAP::CloudController
             expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-1', 'worker', 'clock'])
             expect(deploying_web_process.instances).to eq(5)
 
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
 
             deployment.reload
             the_best_app.reload
@@ -120,14 +122,14 @@ module VCAP::CloudController
           end
 
           it 'puts the deployment into its finished DEPLOYED_STATE' do
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
             deployment.reload
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
           end
 
           it 'restarts the non-web processes, but not the web process' do
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
             deployment.reload
 
             expect(ProcessRestart).
@@ -150,7 +152,7 @@ module VCAP::CloudController
           end
 
           it 'drains the workpool' do
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
 
             expect(workpool).to have_received(:drain)
           end
@@ -168,13 +170,13 @@ module VCAP::CloudController
 
         it 'does not scale the deployment' do
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             finished_web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             finished_deploying_web_process_guid.reload.instances
           }
@@ -192,13 +194,13 @@ module VCAP::CloudController
 
         it 'does not scales the process' do
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             deploying_web_process.reload.instances
           }
@@ -216,13 +218,13 @@ module VCAP::CloudController
 
         it 'does not scale the process' do
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             deploying_web_process.reload.instances
           }
@@ -236,13 +238,13 @@ module VCAP::CloudController
 
         it 'does not scale the process' do
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             deploying_web_process.reload.instances
           }
@@ -262,7 +264,7 @@ module VCAP::CloudController
 
         it 'logs the error' do
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.not_to change {
             failing_process.reload.instances
           }
@@ -278,16 +280,34 @@ module VCAP::CloudController
 
         it 'is able to scale the other deployments' do
           expect {
-            deployer.update
+            deployer.update(statsd_client: statsd_client)
           }.to change {
             deploying_web_process.reload.instances
           }.by(1)
         end
 
         it 'still drains the workpool' do
-          deployer.update
+          deployer.update(statsd_client: statsd_client)
 
           expect(workpool).to have_received(:drain)
+        end
+      end
+
+      describe 'statsd metrics' do
+        it 'records the deployment update duration' do
+          allow(deployer).to receive(:scale_deployment).and_call_original
+
+          timed_block = nil
+          allow(statsd_client).to receive(:time) do |_, &block|
+            timed_block = block
+          end
+
+          deployer.update(statsd_client: statsd_client)
+          expect(statsd_client).to have_received(:time).with('cc.deployments.update.duration')
+
+          expect(deployer).to_not have_received(:scale_deployment)
+          timed_block.call
+          expect(deployer).to have_received(:scale_deployment)
         end
       end
     end
