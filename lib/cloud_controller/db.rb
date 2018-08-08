@@ -1,5 +1,6 @@
 require 'cloud_controller/db_migrator'
-require 'cloud_controller/db_connection_options'
+require 'cloud_controller/db_connection/options_factory'
+require 'cloud_controller/db_connection/finalizer'
 
 module VCAP::CloudController
   class DB
@@ -21,21 +22,11 @@ module VCAP::CloudController
     #
     # @return [Sequel::Database]
     def self.connect(opts, logger)
-      connection_options = VCAP::CloudController::DBConnectionOptionsFactory.build(opts)
-      db = Sequel.connect(connection_options)
+      connection_options = VCAP::CloudController::DbConnection::OptionsFactory.build(opts)
 
-      if connection_options[:log_db_queries]
-        db.logger = logger
-        db.sql_log_level = connection_options[:log_level]
-      end
-      db.default_collate = 'utf8_bin' if db.database_type == :mysql
-      db.extension(:connection_validator)
+      db_connection = Sequel.connect(connection_options)
 
-      if connection_options[:connection_validation_timeout]
-        db.pool.connection_validation_timeout = connection_options[:connection_validation_timeout]
-      end
-
-      db
+      VCAP::CloudController::DbConnection::Finalizer.finalize(db_connection, connection_options, logger)
     end
 
     def self.load_models(db_config, logger)
