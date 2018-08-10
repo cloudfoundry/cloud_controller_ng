@@ -9,16 +9,15 @@ module VCAP::CloudController
     let!(:org3) { Organization.make(name: 'Beaver') }
     let!(:org4) { Organization.make(name: 'Capybara') }
     let!(:org5) { Organization.make(name: 'Groundhog') }
+    let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
 
     let(:fetcher) { OrgListFetcher.new }
 
     let(:message) { OrgsListMessage.new }
 
     describe '#fetch' do
-      let(:org_guids) { [org1.guid, org3.guid, org4.guid] }
-
       it 'includes all the orgs with the provided guids' do
-        results = fetcher.fetch(message: message, guids: org_guids).all
+        results = fetcher.fetch(message: message, guids: some_org_guids).all
         expect(results).to match_array([org1, org3, org4])
       end
 
@@ -26,9 +25,37 @@ module VCAP::CloudController
         context 'when org names are provided' do
           let(:message) { OrgsListMessage.new names: ['Marmot', 'Capybara'] }
 
-          it 'returns the correct set of tasks' do
-            results = fetcher.fetch(message: message, guids: org_guids).all
+          it 'returns the correct set of orgs' do
+            results = fetcher.fetch(message: message, guids: some_org_guids).all
             expect(results).to match_array([org1, org4])
+          end
+
+          context 'respects any provided guids' do
+            let(:message) { OrgsListMessage.new names: ['Marmot', 'Rat'] }
+
+            it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
+              results = fetcher.fetch(message: message, guids: some_org_guids).all
+              expect(results).to match_array([org1])
+            end
+          end
+        end
+
+        context 'when org guids are provided' do
+          let(:all_org_guids) { [org1.guid, org2.guid, org3.guid, org4.guid, org5.guid] }
+          let(:message) { OrgsListMessage.new guids: some_org_guids }
+
+          it 'returns the correct set of orgs' do
+            results = fetcher.fetch(message: message, guids: all_org_guids).all
+            expect(results).to match_array([org1, org3, org4])
+          end
+
+          context 'respects any provided guids' do
+            let(:message) { OrgsListMessage.new guids: [org1.guid, org2.guid] }
+
+            it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
+              results = fetcher.fetch(message: message, guids: some_org_guids).all
+              expect(results).to match_array([org1])
+            end
           end
         end
       end
@@ -54,6 +81,15 @@ module VCAP::CloudController
           it 'returns the correct set of orgs' do
             results = fetcher.fetch_all(message: message).all
             expect(results).to match_array([org1, org4, org5])
+          end
+        end
+
+        context 'when org guids are provided' do
+          let(:message) { OrgsListMessage.new guids: some_org_guids }
+
+          it 'returns the correct set of orgs' do
+            results = fetcher.fetch_all(message: message).all
+            expect(results).to match_array([org1, org3, org4])
           end
         end
       end

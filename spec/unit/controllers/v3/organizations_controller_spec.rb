@@ -189,6 +189,26 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           ])
         end
       end
+
+      describe 'guids' do
+        it 'returns orgs with matching guids' do
+          get :index, guids: "#{billing_manager_org.guid},#{member_org.guid}"
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([
+            billing_manager_org.guid, member_org.guid
+          ])
+        end
+
+        it 'does not return orgs that the user does not have access to' do
+          get :index, guids: "#{billing_manager_org.guid},#{member_org.guid},#{other_org.guid}"
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([
+            billing_manager_org.guid, member_org.guid
+          ])
+        end
+      end
     end
 
     describe 'query params errors' do

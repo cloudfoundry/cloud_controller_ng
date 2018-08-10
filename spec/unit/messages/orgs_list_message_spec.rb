@@ -10,6 +10,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'name',
+          'guids' => 'one-guid,two-guid,three-guid',
         }
       end
 
@@ -18,10 +19,11 @@ module VCAP::CloudController
 
         expect(message).to be_a(OrgsListMessage)
 
+        expect(message).to be_valid
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.names).to eq(['Case', 'Molly'])
-        expect(message).to be_valid
+        expect(message.guids).to eq(['one-guid', 'two-guid', 'three-guid'])
       end
 
       it 'converts requested keys to symbols' do
@@ -31,6 +33,7 @@ module VCAP::CloudController
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
+        expect(message.requested?(:guids)).to be_truthy
       end
     end
 
@@ -41,11 +44,12 @@ module VCAP::CloudController
           page: 1,
           per_page: 5,
           order_by: 'name',
+          guids: ['one-guid,two-guid,three-guid'],
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names]
+        expected_params = [:names, :guids]
         expect(OrgsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -78,6 +82,12 @@ module VCAP::CloudController
           message = OrgsListMessage.new names: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:names].length).to eq 1
+        end
+
+        it 'validates guids is an array' do
+          message = OrgsListMessage.new guids: 'not array'
+          expect(message).to be_invalid
+          expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates that order_by value is in the supported list' do
