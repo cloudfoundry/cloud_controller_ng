@@ -147,7 +147,7 @@ module VCAP::Services
       rescue SocketError, Errno::ECONNREFUSED => error
         raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
       rescue HTTPClient::TimeoutError => error
-        raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, error)
+        raise Errors::HttpClientTimeout.new(uri.to_s, method, error)
       rescue => error
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
       end

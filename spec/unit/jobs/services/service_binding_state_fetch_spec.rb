@@ -251,7 +251,7 @@ module VCAP::CloudController
                   )
                 }
                 let(:binding_response) { { 'credentials': '{}' } }
-                let(:timeout_exception) { VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new(nil, nil, broker_response) }
+                let(:timeout_exception) { VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout.new(nil, nil, broker_response) }
 
                 before do
                   allow(client).to receive(:fetch_service_binding).with(service_binding).and_raise(timeout_exception)
@@ -556,9 +556,26 @@ module VCAP::CloudController
             end
           end
 
-          context 'when calling last operation times out' do
+          context 'when last operation request times out on the broker' do
             before do
               err = VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout.new('uri', 'GET', {})
+              allow(client).to receive(:fetch_service_binding_last_operation).and_raise(err)
+              run_job(job)
+            end
+
+            it 'should enqueue another fetch job' do
+              expect(Delayed::Job.count).to eq 1
+            end
+
+            it 'maintains the service binding last operation details' do
+              service_binding.reload
+              expect(service_binding.last_operation.state).to eq('in progress')
+            end
+          end
+
+          context 'when the http call for last operation times out' do
+            before do
+              err = VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout.new('uri', 'GET', {})
               allow(client).to receive(:fetch_service_binding_last_operation).and_raise(err)
               run_job(job)
             end
