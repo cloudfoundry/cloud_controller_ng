@@ -97,6 +97,7 @@ module VCAP::CloudController
           RouteMappingModel,
           process: process,
           route: route,
+          weight: 5
         )
       end
 
@@ -104,7 +105,8 @@ module VCAP::CloudController
         adapter.unmap_route(route_mapping)
         expect(copilot_client).to have_received(:unmap_route).with(
           capi_process_guid: capi_process_guid,
-          route_guid: route_guid
+          route_guid: route_guid,
+          route_weight: 5
         )
       end
 

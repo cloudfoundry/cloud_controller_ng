@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cloudfoundry/copilot
-  revision: 73f7d66a18bdec4c17ee9dc49825feee7d56b6a7
+  revision: 79ce691c7d5b950aa26ea9086d0fdd1be6996bf9
   glob: sdk/ruby/*.gemspec
   specs:
     cf-copilot (0.0.5)
