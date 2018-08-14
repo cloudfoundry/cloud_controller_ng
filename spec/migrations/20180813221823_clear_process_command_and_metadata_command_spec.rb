@@ -116,6 +116,20 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       end
     end
 
+    context 'when the process metadata command and droplet command are equal and the process command is ""' do
+      let(:process_command) { '' }
+      let(:process_metadata_command) { command_a }
+      let(:droplet_command) { command_a }
+
+      it 'nils out everything except the droplet command' do
+        run_migration
+
+        expect(process.reload.command_without_fallback).to be_nil
+        expect(process.reload.metadata_without_command['command']).to be_nil
+        expect(process.reload.detected_start_command).to eq command_a
+      end
+    end
+
     context 'when the process metadata command, droplet command, and process command are all different' do
       let(:process_command) { command_a }
       let(:process_metadata_command) { command_b }
@@ -155,6 +169,20 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
         expect(process.reload.command_without_fallback).to eq(command_b)
         expect(process.reload.metadata_without_command['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_a)
+      end
+    end
+
+    context 'when the process metadata command and the droplet command are different and the process command is ""' do
+      let(:process_command) { '' }
+      let(:process_metadata_command) { command_b }
+      let(:droplet_command) { command_a }
+
+      it 'promotes the metadata command to process command' do
+        run_migration
+
+        expect(process.reload.command_without_fallback).to eq command_b
+        expect(process.reload.metadata_without_command['command']).to be_nil
+        expect(process.reload.detected_start_command).to eq command_a
       end
     end
 

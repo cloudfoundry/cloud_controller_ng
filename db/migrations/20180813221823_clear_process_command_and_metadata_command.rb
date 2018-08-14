@@ -14,7 +14,7 @@ Sequel.migration do
       process_metadata_command = process_metadata && process_metadata['command']
 
       fields_to_update = { metadata: process_metadata.except('command').to_json }
-      if process_metadata_command && process_record[:command].nil?
+      if process_metadata_command && process_record[:command].blank?
         fields_to_update[:command] = process_metadata_command
       end
 
