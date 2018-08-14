@@ -15,6 +15,8 @@ module VCAP::CloudController
     def validate
       validates_presence [:app_port]
       validates_unique [:app_guid, :route_guid, :process_type, :app_port]
+
+      validate_weight
     end
 
     def self.user_visibility_filter(user)
@@ -37,6 +39,11 @@ module VCAP::CloudController
 
     def logger
       @logger ||= Steno.logger('cc.route_mapping')
+    end
+
+    def validate_weight
+      return unless weight.present?
+      errors.add(:weight, 'must be between 1 and 128') unless (1..128).member?(weight)
     end
   end
 end

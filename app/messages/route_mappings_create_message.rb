@@ -3,7 +3,7 @@ require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class RouteMappingsCreateMessage < BaseMessage
-    register_allowed_keys [:relationships]
+    register_allowed_keys [:relationships, :weight]
 
     validates_with NoAdditionalKeysValidator
     validates :app, hash: true
@@ -12,6 +12,7 @@ module VCAP::CloudController
     validates :route_guid, guid: true
     validates :process, hash: true, allow_nil: true
     validates :process_type, string: true, allow_nil: true
+    validates_inclusion_of :weight, in: 1..128, allow_nil: true, message: '%{value} must be an integer between 1 and 128'
 
     def app
       HashUtils.dig(relationships, :app)

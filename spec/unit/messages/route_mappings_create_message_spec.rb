@@ -46,6 +46,63 @@ module VCAP::CloudController
         end
       end
 
+      describe 'weight' do
+        let(:message) { RouteMappingsCreateMessage.new(body) }
+        context 'when weight is NOT provided' do
+          let(:body) do
+            {
+              'relationships' => {
+                'app' => { 'guid' => 'some-app-guid' },
+                'route'   => { 'guid' => 'some-route-guid' },
+                'process' => { 'type' => 'web' }
+              }
+            }
+          end
+          it 'is valid' do
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when weight is provided' do
+          let(:body) do
+            {
+              'relationships' => {
+                'app' => { 'guid' => 'some-app-guid' },
+                'route'   => { 'guid' => 'some-route-guid' },
+                'process' => { 'type' => 'web' }
+              },
+              'weight' => weight
+            }
+          end
+
+          context 'when weight is less than 1' do
+            let(:weight) { 0 }
+
+            it 'is invalid' do
+              expect(message).to be_invalid
+              expect(message.errors[:weight]).to include('0 must be an integer between 1 and 128')
+            end
+          end
+
+          context 'when weight is greater than 128' do
+            let(:weight) { 129 }
+
+            it 'is invalid' do
+              expect(message).to be_invalid
+              expect(message.errors[:weight]).to include('129 must be an integer between 1 and 128')
+            end
+          end
+
+          context 'when weight is between 1 and 128' do
+            let(:weight) { 128 }
+
+            it 'is valid' do
+              expect(message).to be_valid
+            end
+          end
+        end
+      end
+
       describe 'app' do
         it 'is not valid when app is missing' do
           message = RouteMappingsCreateMessage.new({ relationships: {} })

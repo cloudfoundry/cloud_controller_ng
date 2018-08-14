@@ -12,6 +12,7 @@ module VCAP::CloudController::Presenters::V3
         app_port:     1234,
         route:        route,
         process_type: process.type,
+        weight:       55
       )
     end
     let(:app) { VCAP::CloudController::AppModel.make }
@@ -25,6 +26,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:guid]).to eq(route_mapping.guid)
         expect(result[:created_at]).to eq(route_mapping.created_at)
         expect(result[:updated_at]).to eq(route_mapping.updated_at)
+        expect(result[:weight]).to eq(route_mapping.weight)
         expect(result[:links]).to include(:self)
         expect(result[:links]).to include(:app)
         expect(result[:links]).to include(:route)

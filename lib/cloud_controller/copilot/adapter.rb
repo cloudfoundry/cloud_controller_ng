@@ -20,7 +20,8 @@ module VCAP::CloudController
         def map_route(route_mapping)
           copilot_client.map_route(
             capi_process_guid: route_mapping.process.guid,
-            route_guid: route_mapping.route.guid
+            route_guid: route_mapping.route.guid,
+            route_weight: route_mapping.weight
           )
         rescue StandardError => e
           raise CopilotUnavailable.new(e.message)

@@ -18,11 +18,13 @@ RSpec.describe 'Route Mappings' do
           app:     { guid: app_model.guid },
           route:   { guid: route.guid },
           process: { type: process.type }
-        }
+        },
+        weight: 55
       }
 
       post '/v3/route_mappings', body.to_json, developer_headers
 
+      expect(last_response.status).to eq(201), last_response.body
       route_mapping = VCAP::CloudController::RouteMappingModel.last
 
       expected_response = {
@@ -30,6 +32,7 @@ RSpec.describe 'Route Mappings' do
         'created_at' => iso8601,
         'updated_at' => iso8601,
 
+        'weight'     => 55,
         'links'      => {
           'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
           'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -41,7 +44,6 @@ RSpec.describe 'Route Mappings' do
       parsed_response = MultiJson.load(last_response.body)
 
       # verify response
-      expect(last_response.status).to eq(201)
       expect(parsed_response).to be_a_response_like(expected_response)
 
       # verify mapping
@@ -51,6 +53,7 @@ RSpec.describe 'Route Mappings' do
       expect(route_mapping.route_guid).to eq(route.guid)
       expect(route_mapping.process_type).to eq('worker')
       expect(route_mapping.app_port).to eq(8080)
+      expect(route_mapping.weight).to eq(55)
 
       # verify audit event
       event = VCAP::CloudController::Event.last
@@ -97,6 +100,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping1.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'weight'     => 1,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
@@ -109,6 +113,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping2.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'weight'     => 1,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },
@@ -192,6 +197,7 @@ RSpec.describe 'Route Mappings' do
         'guid'       => route_mapping.guid,
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        'weight'     => 1,
 
         'links'      => {
           'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
@@ -262,6 +268,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping1.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'weight'     => 1,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
@@ -274,6 +281,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping2.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'weight'     => 1,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },

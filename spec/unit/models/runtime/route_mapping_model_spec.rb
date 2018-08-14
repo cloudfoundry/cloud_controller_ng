@@ -23,6 +23,14 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed, /app_guid and route_guid and process_type and app_port unique/)
       end
 
+      it 'validates that a weight is either between 1 and 128' do
+        valid_route_mapping_opts = { app: app_model, route: route, process_type: 'something', app_port: 1000, weight: 1000 }
+
+        expect {
+          RouteMappingModel.make(valid_route_mapping_opts)
+        }.to raise_error(Sequel::ValidationFailed, /must be between 1 and 128/)
+      end
+
       context 'when copilot is disabled', isolation: :truncation do
         before do
           TestConfig.override({ copilot: { enabled: false } })

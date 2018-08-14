@@ -9,6 +9,7 @@ module VCAP::CloudController
             guid: route_mapping.guid,
             created_at: route_mapping.created_at,
             updated_at: route_mapping.updated_at,
+            weight: route_mapping.weight,
             links: build_links
           }
         end
