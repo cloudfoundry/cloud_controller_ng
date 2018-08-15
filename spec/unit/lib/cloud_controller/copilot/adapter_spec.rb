@@ -181,6 +181,7 @@ module VCAP::CloudController
           RouteMappingModel,
           process: process,
           route: route,
+          weight: 5
         )
       end
       let(:diego_process_guid) { 'some-diego-process-guid' }
@@ -193,7 +194,7 @@ module VCAP::CloudController
         adapter.bulk_sync(routes: [route], route_mappings: [route_mapping], processes: [process])
         expect(copilot_client).to have_received(:bulk_sync).with(
           routes: [{ guid: 'some-route-guid', host: 'host.example.com', path: '/some/path' }],
-          route_mappings: [{ capi_process_guid: capi_process_guid, route_guid: route_guid }],
+          route_mappings: [{ capi_process_guid: capi_process_guid, route_guid: route_guid, route_weight: 5 }],
           capi_diego_process_associations: [{
             capi_process_guid: capi_process_guid,
             diego_process_guids: [diego_process_guid]
