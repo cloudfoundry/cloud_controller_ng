@@ -2,7 +2,8 @@ require 'logcache/logcache_egress_services_pb'
 
 module Logcache
   class Client
-    attr_reader :service
+    MAX_LIMIT = 1000
+    DEFAULT_LIMIT = 100
 
     def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:)
       client_ca = IO.read(client_ca_path)
@@ -16,21 +17,19 @@ module Logcache
       )
     end
 
-    def container_metrics(auth_token: nil, app_guid:)
-      service.read(build_read_request(app_guid))
+    def container_metrics(source_guid:, envelope_limit: DEFAULT_LIMIT)
+      service.read(
+        Logcache::V1::ReadRequest.new(
+          source_id: source_guid,
+          limit: envelope_limit,
+          descending: true,
+          envelope_types: [:GAUGE]
+        )
+      )
     end
 
     private
 
-    def build_read_request(source_id)
-      num_to_request = [VCAP::CloudController::AppModel.find(guid: source_id).web_process.instances**2, 1000].min
-      Logcache::V1::ReadRequest.new(
-        {
-          source_id: source_id,
-          limit: num_to_request,
-          descending: true
-        }
-      )
-    end
+    attr_reader :service
   end
 end

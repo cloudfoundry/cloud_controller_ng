@@ -19,7 +19,7 @@ module VCAP::CloudController
 
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
         envelopes = @logstats_client.container_metrics(
-          app_guid: process.guid,
+          source_guid: process.guid,
           auth_token: VCAP::CloudController::SecurityContext.auth_token,
         )
         actual_lrps = bbs_instances_client.lrp_instances(process)

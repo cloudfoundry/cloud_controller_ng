@@ -40,8 +40,7 @@ module VCAP::CloudController
     end
 
     def diego_stats_reporter
-      client = if FeatureFlag.enabled?(:temporary_use_logcache)
-                 # TODO: Add dependency_locator.tc_compatible_logcache_client
+      client = if Config.config.get(:temporary_use_logcache)
                  dependency_locator.traffic_controller_compatible_logcache_client
                else
                  dependency_locator.traffic_controller_client

@@ -40,7 +40,7 @@ module TrafficController
       end
 
       it 'returns an array of Envelopes' do
-        expect(client.container_metrics(auth_token: auth_token, app_guid: 'example-app-guid')).to match_array([
+        expect(client.container_metrics(auth_token: auth_token, source_guid: 'example-app-guid')).to match_array([
           Models::Envelope.new(origin: 'a', eventType: Models::Envelope::EventType::ContainerMetric),
           Models::Envelope.new(origin: 'b', eventType: Models::Envelope::EventType::ContainerMetric),
         ])
@@ -52,7 +52,7 @@ module TrafficController
         let(:response_body) { 'not found' }
 
         it 'raises' do
-          expect { client.container_metrics(auth_token: auth_token, app_guid: 'example-app-guid') }.to raise_error(ResponseError, /status: 404, body: not found/)
+          expect { client.container_metrics(auth_token: auth_token, source_guid: 'example-app-guid') }.to raise_error(ResponseError, /status: 404, body: not found/)
         end
       end
 
@@ -62,7 +62,7 @@ module TrafficController
         end
 
         it 'raises' do
-          expect { client.container_metrics(auth_token: auth_token, app_guid: 'example-app-guid') }.to raise_error(RequestError, /error message/)
+          expect { client.container_metrics(auth_token: auth_token, source_guid: 'example-app-guid') }.to raise_error(RequestError, /error message/)
         end
       end
 
@@ -70,7 +70,7 @@ module TrafficController
         let(:response_body) { '' }
 
         it 'returns an empty array' do
-          expect(client.container_metrics(auth_token: auth_token, app_guid: 'example-app-guid')).to be_empty
+          expect(client.container_metrics(auth_token: auth_token, source_guid: 'example-app-guid')).to be_empty
         end
       end
 
@@ -79,7 +79,7 @@ module TrafficController
 
         it 'raises' do
           expect {
-            client.container_metrics(auth_token: auth_token, app_guid: 'example-app-guid')
+            client.container_metrics(auth_token: auth_token, source_guid: 'example-app-guid')
           }.to raise_error(ResponseError, 'failed to find multipart boundary in Content-Type header')
         end
       end
@@ -93,7 +93,7 @@ module TrafficController
         end
 
         it 'raises' do
-          expect { client.container_metrics(auth_token: auth_token, app_guid: 'example-app-guid') }.to raise_error(DecodeError)
+          expect { client.container_metrics(auth_token: auth_token, source_guid: 'example-app-guid') }.to raise_error(DecodeError)
         end
       end
     end

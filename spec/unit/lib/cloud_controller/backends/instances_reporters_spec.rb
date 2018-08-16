@@ -7,13 +7,16 @@ module VCAP::CloudController
     let(:bbs_instances_client) { instance_double(Diego::BbsInstancesClient) }
     let(:traffic_controller_client) { instance_double(::TrafficController::Client) }
     let(:logcache_client) { instance_double(::Logcache::Client) }
-    let(:tc_compatible_logcache_client) { Logcache::TrafficControllerDecorator.new(:logcache_client) }
+    let(:tc_compatible_logcache_client) { instance_double(Logcache::TrafficControllerDecorator) }
 
     let(:diego_process) { ProcessModelFactory.make(diego: true) }
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:diego_instances_stats_reporter) { instance_double(Diego::InstancesStatsReporter) }
+    let(:temporary_use_logcache) { false }
 
     before do
+      TestConfig.override(temporary_use_logcache: temporary_use_logcache)
+
       CloudController::DependencyLocator.instance.register(:bbs_instances_client, bbs_instances_client)
       CloudController::DependencyLocator.instance.register(:traffic_controller_client, traffic_controller_client)
       CloudController::DependencyLocator.instance.register(:logcache_client, logcache_client)
@@ -98,42 +101,23 @@ module VCAP::CloudController
 
     describe '#stats_for_app' do
       let(:app) { AppModel.make }
+
       before do
         allow(diego_instances_stats_reporter).to receive(:stats_for_app).with(app)
       end
 
-      context 'when the feature-flag temporary_use_logcache is true' do
-        before do
-          FeatureFlag.create(name: 'temporary_use_logcache', enabled: true)
-        end
+      context 'when temporary_use_logcache is true' do
+        let(:temporary_use_logcache) { true }
+
         it 'uses the logcache' do
           instances_reporters.stats_for_app(app)
           expect(Diego::InstancesStatsReporter).to have_received(:new).with(bbs_instances_client, tc_compatible_logcache_client)
         end
       end
 
-      context 'when the feature-flag temporary_use_logcache is false' do
-        before do
-          FeatureFlag.create(name: 'temporary_use_logcache', enabled: false)
-        end
-        it 'uses the trafficcontroller' do
-          instances_reporters.stats_for_app(app)
-          expect(Diego::InstancesStatsReporter).to have_received(:new).with(bbs_instances_client, traffic_controller_client)
-        end
+      context 'when temporary_use_logcache is false' do
+        let(:temporary_use_logcache) { false }
 
-        context 'and then it is set to true' do
-          before do
-            FeatureFlag.find(name: 'temporary_use_logcache').update(enabled: true)
-          end
-
-          it 'uses the logcache' do
-            instances_reporters.stats_for_app(app)
-            expect(Diego::InstancesStatsReporter).to have_received(:new).with(bbs_instances_client, tc_compatible_logcache_client)
-          end
-        end
-      end
-
-      context 'when the feature-flag temporary_use_logcache is not set' do
         it 'uses the trafficcontroller' do
           instances_reporters.stats_for_app(app)
           expect(Diego::InstancesStatsReporter).to have_received(:new).with(bbs_instances_client, traffic_controller_client)

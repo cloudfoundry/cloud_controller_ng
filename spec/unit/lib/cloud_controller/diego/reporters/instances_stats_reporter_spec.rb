@@ -94,7 +94,7 @@ module VCAP::CloudController
         before do
           allow(bbs_instances_client).to receive(:lrp_instances).and_return(bbs_actual_lrps_response)
           allow(bbs_instances_client).to receive(:desired_lrp_instance).and_return(bbs_desired_lrp_response)
-          allow(traffic_controller_client).to receive(:container_metrics).with(auth_token: 'my-token', app_guid: process.guid).and_return(traffic_controller_response)
+          allow(traffic_controller_client).to receive(:container_metrics).with(auth_token: 'my-token', source_guid: process.guid).and_return(traffic_controller_response)
           allow(VCAP::CloudController::SecurityContext).to receive(:auth_token).and_return('my-token')
         end
 
@@ -241,7 +241,7 @@ module VCAP::CloudController
             let(:error) { StandardError.new('tomato') }
             let(:mock_logger) { double(:logger, error: nil, debug: nil) }
             before do
-              allow(traffic_controller_client).to receive(:container_metrics).with(auth_token: 'my-token', app_guid: process.guid).and_raise(error)
+              allow(traffic_controller_client).to receive(:container_metrics).with(auth_token: 'my-token', source_guid: process.guid).and_raise(error)
               allow(instances_reporter).to receive(:logger).and_return(mock_logger)
             end
 

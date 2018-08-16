@@ -9,6 +9,7 @@ module VCAP::CloudController
           external_port: Integer,
           external_domain: String,
           temporary_disable_deployments: bool,
+          temporary_use_logcache: bool,
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,

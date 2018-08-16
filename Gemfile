@@ -1,7 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'googleapis-common-protos'
-
 gem 'addressable'
 gem 'allowy'
 gem 'cf-copilot'
@@ -9,6 +7,7 @@ gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.1'
 gem 'eventmachine', '~> 1.0.9'
+gem 'googleapis-common-protos'
 gem 'httpclient'
 gem 'i18n'
 gem 'json-schema'
@@ -29,7 +28,6 @@ gem 'public_suffix'
 gem 'rake'
 gem 'rfc822'
 gem 'rubyzip', git: 'https://github.com/rubyzip/rubyzip.git', ref: '8887b70'
-
 gem 'sequel'
 gem 'sinatra', '~> 1.4'
 gem 'sinatra-contrib'

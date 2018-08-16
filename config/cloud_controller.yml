@@ -8,6 +8,7 @@ stacks_file: config/stacks.yml
 external_protocol: http
 external_domain: api2.vcap.me
 temporary_disable_deployments: true
+temporary_use_logcache: false
 deployment_updater:
   update_frequency_in_seconds: 30
   lock_key: 'cf-deployment-updater'
@@ -87,9 +88,9 @@ logcache:
   port: 8080
 
 logcache_tls:
-  key_file: 'spec/fixtures/log_cache.key'
-  cert_file: 'spec/fixtures/log_cache.crt'
-  ca_file: 'spec/fixtures/log_cache_ca.crt'
+  key_file: 'spec/fixtures/certs/log_cache.key'
+  cert_file: 'spec/fixtures/certs/log_cache.crt'
+  ca_file: 'spec/fixtures/certs/log_cache_ca.crt'
 
 doppler:
   url: 'wss://doppler.example.com:443'
