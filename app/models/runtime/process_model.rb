@@ -26,6 +26,7 @@ module VCAP::CloudController
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
+      self.metadata         ||= {}
     end
 
     NO_APP_PORT_SPECIFIED = -1
@@ -355,16 +356,8 @@ module VCAP::CloudController
       db.after_commit { ProcessObserver.deleted(self) }
     end
 
-    def metadata_with_command
-      result = metadata_without_command || self.metadata = {}
-      command ? result.merge('command' => command) : result
-    end
-
-    alias_method_chain :metadata, :command
-
     def command_with_fallback
-      cmd = command_without_fallback.presence
-      cmd || metadata_without_command && metadata_without_command['command']
+      command_without_fallback.presence
     end
 
     alias_method_chain :command, :fallback
