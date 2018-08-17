@@ -267,13 +267,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(http_client).to receive(:put).and_raise(error)
           end
 
-          context 'Errors::ServiceBrokerApiTimeout error' do
-            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+          context 'Errors::HttpClientTimeout error' do
+            let(:error) { Errors::HttpClientTimeout.new(uri, :put, Timeout::Error.new) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.provision(instance)
-              }.to raise_error(Errors::ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::HttpClientTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_provision).with(client_attrs, instance)
             end
@@ -291,13 +291,12 @@ module VCAP::Services::ServiceBrokers::V2
           context 'Errors::ServiceBrokerApiTimeout error' do
             let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
-            it 'propagates the error and follows up with a deprovision request' do
+            it 'propagates the error and does not follow up with a deprovision request' do
               expect {
                 client.provision(instance)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_provision).
-                with(client_attrs, instance)
+              expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision)
             end
           end
 
@@ -878,12 +877,12 @@ module VCAP::Services::ServiceBrokers::V2
           end
 
           context 'Errors::ServiceBrokerApiTimeout error' do
-            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+            let(:error) { Errors::HttpClientTimeout.new(uri, :put, Timeout::Error.new) }
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
                 client.create_service_key(key)
-              }.to raise_error(Errors::ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::HttpClientTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_key).
                 with(client_attrs, key)
@@ -907,7 +906,7 @@ module VCAP::Services::ServiceBrokers::V2
                 client.create_service_key(key)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_key).with(client_attrs, key)
+              expect(orphan_mitigator).not_to have_received(:cleanup_failed_key)
             end
           end
 
@@ -1170,13 +1169,13 @@ module VCAP::Services::ServiceBrokers::V2
             allow(http_client).to receive(:put).and_raise(error)
           end
 
-          context 'Errors::ServiceBrokerApiTimeout error' do
-            let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
+          context 'Errors::HttpClientTimeout error' do
+            let(:error) { Errors::HttpClientTimeout.new(uri, :put, Timeout::Error.new) }
 
-            it 'propagates the error and follows up with a deprovision request' do
+            it 'propagates the error and cleans up the failed binding' do
               expect {
                 client.bind(binding, arbitrary_parameters)
-              }.to raise_error(Errors::ServiceBrokerApiTimeout)
+              }.to raise_error(Errors::HttpClientTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
                 with(client_attrs, binding)
@@ -1195,12 +1194,12 @@ module VCAP::Services::ServiceBrokers::V2
           context 'Errors::ServiceBrokerApiTimeout error' do
             let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
-            it 'propagates the error and follows up with a deprovision request' do
+            it 'propagates the error but does not clean up the binding' do
               expect {
                 client.bind(binding, arbitrary_parameters)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+              expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
             end
           end
 

@@ -1,5 +1,6 @@
 require 'services/service_brokers/v2/errors/service_broker_api_unreachable'
 require 'services/service_brokers/v2/errors/service_broker_api_timeout'
+require 'services/service_brokers/v2/errors/http_client_timeout'
 require 'services/service_brokers/v2/errors/service_broker_response_malformed'
 require 'services/service_brokers/v2/errors/service_broker_api_authentication_failed'
 require 'services/service_brokers/v2/errors/service_broker_bad_response'

@@ -29,7 +29,10 @@ module VCAP::CloudController
           end
 
           retry_job unless service_binding.terminal_state?
-        rescue HttpResponseError, Sequel::Error, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout => e
+        rescue HttpResponseError,
+               Sequel::Error,
+               VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout,
+               VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout => e
           logger.error("There was an error while fetching the service binding operation state: #{e}")
           retry_job
         end
@@ -46,7 +49,7 @@ module VCAP::CloudController
 
             begin
               binding_response = client.fetch_service_binding(service_binding)
-            rescue HttpResponseError, VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout => e
+            rescue HttpResponseError, VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout => e
               set_binding_failed_state(service_binding, logger)
               logger.error("There was an error while fetching the service binding details: #{e}")
               return { finished: true }

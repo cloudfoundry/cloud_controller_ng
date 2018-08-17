@@ -69,7 +69,7 @@ module VCAP::CloudController
           admin_headers)
       end
 
-      it 'makes the request to the broker and deprovisions' do
+      it 'makes the request to the broker and unbinds' do
         expect(a_request(:put, %r{http://broker-url/v2/service_instances/#{service_instance_guid}/service_bindings/#{guid_pattern}}).with(basic_auth: basic_auth)).
           to have_been_made
 
