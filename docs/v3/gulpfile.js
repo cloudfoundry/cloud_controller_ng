@@ -23,17 +23,17 @@ gulp.task('middleman', function(cb) {
   });
 });
 
-gulp.task('webserver', ['middleman'], function() {
+gulp.task('webserver', gulp.series('middleman', function() {
   gulp.src('build').pipe(webserver({
     livereload: true
   }));
-});
+}));
 
 gulp.task('watch', function() {
   gulp.watch(['source/**/*'], ['middleman']);
 });
 
-gulp.task('default', ['middleman', 'webserver', 'watch']);
+gulp.task('default', gulp.series('middleman', 'webserver', 'watch'));
 
 
 var checkPagesOptions = {
@@ -42,13 +42,14 @@ var checkPagesOptions = {
   terse: true
 };
 
-var checkPathAndExit = function(path, options) {
+var checkPathAndExit = function(path, options, done) {
   var stream = gulp.src(path).pipe(webserver({
     livereload: false
   }));
 
   return checkPages(console, options, function(err, stdout, stderr) {
     stream.emit("kill");
+    done();
 
     if (err != undefined) {
       return displayErrors(err, stdout, stderr);
@@ -58,18 +59,18 @@ var checkPathAndExit = function(path, options) {
   });
 };
 
-gulp.task("checkV3docs", ["middleman"], function(cb) {
+gulp.task("checkV3docs", gulp.series("middleman", function(done) {
   checkPagesOptions.pageUrls = [
     'http://localhost:8000/'
   ];
 
   checkPagesOptions.linksToIgnore = ["http://localhost:8000/version/release-candidate"];
 
-  checkPathAndExit("build", checkPagesOptions);
+  checkPathAndExit("build", checkPagesOptions, done);
 
-});
+}));
 
-gulp.task("checkV2docs", [], function(cb) {
+gulp.task("checkV2docs", function(done) {
   globber.glob("../v2/**/*.html", function(err, htmlFiles) {
     if (err) {
       return displayErrors(err, "npm glob failed", "");
@@ -82,11 +83,9 @@ gulp.task("checkV2docs", [], function(cb) {
     checkPagesOptions.pageUrls = [
       'http://localhost:8000/'
     ].concat(fixedFiles);
-    checkPathAndExit("../v2", checkPagesOptions);
-
-    cb();
+    checkPathAndExit("../v2", checkPagesOptions, done);
     return;
   });
 });
 
-gulp.task("checkdocs", ["checkV2docs", "checkV3docs"], function(cb) {});
+gulp.task("checkdocs", gulp.parallel("checkV2docs", "checkV3docs"));

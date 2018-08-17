@@ -21,7 +21,7 @@
   "devDependencies": {
     "check-pages": "^0.10.0",
     "glob": "^7.1.2",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
     "gulp-webserver": "^0.9.1"
   },
