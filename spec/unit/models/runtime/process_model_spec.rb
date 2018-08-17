@@ -802,19 +802,6 @@ module VCAP::CloudController
     end
 
     describe 'command' do
-      it 'saves the field as nil when initializing to empty string' do
-        process = ProcessModelFactory.make(command: '')
-        expect(process.command).to eq(nil)
-      end
-
-      it 'saves the field as nil when overriding to empty string' do
-        process         = ProcessModelFactory.make(command: 'echo hi')
-        process.command = ''
-        process.save
-        process.refresh
-        expect(process.command).to eq(nil)
-      end
-
       it 'saves the field as nil when set to nil' do
         process         = ProcessModelFactory.make(command: 'echo hi')
         process.command = nil

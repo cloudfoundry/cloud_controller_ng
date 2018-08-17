@@ -23,7 +23,7 @@ module CloudController
             'disk_quota'                 => process.disk_quota,
             'state'                      => process.state,
             'version'                    => process.version,
-            'command'                    => process.command,
+            'command'                    => process.command.presence,
             'console'                    => process.console,
             'debug'                      => process.debug,
             'staging_task_id'            => process.staging_task_id,

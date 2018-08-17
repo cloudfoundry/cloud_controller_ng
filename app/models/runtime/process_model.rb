@@ -355,18 +355,12 @@ module VCAP::CloudController
       db.after_commit { ProcessObserver.deleted(self) }
     end
 
-    def command_with_fallback
-      command_without_fallback.presence
-    end
-
-    alias_method_chain :command, :fallback
-
     def execution_metadata
       current_droplet.try(:execution_metadata) || ''
     end
 
     def specified_or_detected_command
-      command || detected_start_command
+      command.presence || detected_start_command
     end
 
     def detected_start_command

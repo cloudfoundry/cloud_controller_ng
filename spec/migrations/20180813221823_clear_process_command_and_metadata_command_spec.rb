@@ -90,7 +90,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out everything except the droplet command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to be_nil
+        expect(process.reload.command).to be_nil
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_a)
       end
@@ -104,7 +104,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out everything except the droplet command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to be_nil
+        expect(process.reload.command).to be_nil
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_a)
       end
@@ -124,7 +124,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out everything except the droplet command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to be_nil
+        expect(process.reload.command).to be_nil
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq command_a
       end
@@ -138,7 +138,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq(command_a)
+        expect(process.reload.command).to eq(command_a)
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_c)
       end
@@ -152,7 +152,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq(command_a)
+        expect(process.reload.command).to eq(command_a)
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_b)
       end
@@ -166,7 +166,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'sets the process command equal to the process metadata command and nils out the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq(command_b)
+        expect(process.reload.command).to eq(command_b)
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_a)
       end
@@ -180,7 +180,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'promotes the metadata command to process command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq command_b
+        expect(process.reload.command).to eq command_b
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq command_a
       end
@@ -194,7 +194,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'sets the process command equal to the process metadata command and nils out the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq(command_a)
+        expect(process.reload.command).to eq(command_a)
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to be_empty
       end
@@ -208,7 +208,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq(command_a)
+        expect(process.reload.command).to eq(command_a)
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to be_empty
       end
@@ -222,7 +222,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'keeps everything nil (what were you expecting?)' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to be_nil
+        expect(process.reload.command).to be_nil
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to be_empty
       end
@@ -236,7 +236,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out the process command and the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to be_nil
+        expect(process.reload.command).to be_nil
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_a)
       end
@@ -250,7 +250,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
       it 'nils out the process metadata command' do
         run_migration
 
-        expect(process.reload.command_without_fallback).to eq(command_a)
+        expect(process.reload.command).to eq(command_a)
         expect(process.reload.metadata['command']).to be_nil
         expect(process.reload.detected_start_command).to eq(command_b)
       end
@@ -274,7 +274,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
         run_migration
       }.not_to raise_error
 
-      expect(process.reload.command_without_fallback).to be_nil
+      expect(process.reload.command).to be_nil
       expect(process.reload.detected_start_command).to eq droplet_command
     end
   end
