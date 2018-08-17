@@ -19,7 +19,7 @@ module CloudController::Errors
     let(:messagePartialTranslatedDetails) { create_details(messagePartialTranslated) }
     let(:messageNotTranslatedDetails) { create_details(messageNotTranslated) }
 
-    let(:translations) { Dir[File.expand_path('../../../../../fixtures/i18n/*.yml', __FILE__)] }
+    let(:translations) { Dir[File.expand_path('../../../../fixtures/i18n/*.yml', __dir__)] }
 
     before do
       @original_load_paths = I18n.load_path.dup

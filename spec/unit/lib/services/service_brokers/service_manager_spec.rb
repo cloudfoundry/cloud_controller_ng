@@ -627,7 +627,7 @@ module VCAP::Services::ServiceBrokers
                     #{missing_plan2_name}
                   #{missing_service2_name}
                     #{missing_service2_plan_name}
-HEREDOC
+                HEREDOC
               end
             end
 
@@ -641,7 +641,7 @@ HEREDOC
                     #{missing_plan2_name}
                   #{missing_service2_name}
                     #{missing_service2_plan_name}
-HEREDOC
+                HEREDOC
               end
             end
           end

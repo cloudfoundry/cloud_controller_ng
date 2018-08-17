@@ -393,8 +393,8 @@ module VCAP::CloudController
       end
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      AppQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
+      AppQuery.filtered_dataset_from_query_params(model, dataset, query_params, opts)
     end
 
     def filter_dataset(dataset)

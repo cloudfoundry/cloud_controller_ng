@@ -3,7 +3,7 @@ if ENV['DB'] == 'postgresql'
   ENV['DB'] = 'postgres'
 end
 
-require File.expand_path('../config/boot', __FILE__)
+require File.expand_path('config/boot', __dir__)
 
 require 'yaml'
 require 'sequel'

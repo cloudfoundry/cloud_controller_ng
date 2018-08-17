@@ -203,7 +203,7 @@ module VCAP::CloudController
       define_method("add_#{role}_by_user_id") do |guid, user_id|
         username = @uaa_client.usernames_for_ids([user_id])[user_id]
 
-        add_role(guid, role, user_id, username ? username : '')
+        add_role(guid, role, user_id, username || '')
       end
     end
 
@@ -250,7 +250,7 @@ module VCAP::CloudController
                 end
 
         username = @uaa_client.usernames_for_ids([user_id])[user_id]
-        remove_role(space, role, user_id, username ? username : '')
+        remove_role(space, role, user_id, username || '')
 
         [HTTP::NO_CONTENT, nil]
       end

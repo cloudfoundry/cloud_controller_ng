@@ -285,7 +285,7 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def bind_service(opts={})
-    status = opts[:status] ? opts[:status] : 201
+    status = opts[:status] || 201
     res_body = opts[:response_body] || {}
     stub_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: status, body: res_body.to_json)
@@ -318,7 +318,7 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def unbind_service(opts={})
-    status = opts[:status] ? opts[:status] : 204
+    status = opts[:status] || 204
     res_body = opts[:response_body] || {}
     stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: status, body: res_body.to_json)

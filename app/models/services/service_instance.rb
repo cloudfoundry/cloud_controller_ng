@@ -223,7 +223,7 @@ module VCAP::CloudController
     end
 
     def service_instance_usage_event_repository
-      @repository ||= Repositories::ServiceUsageEventRepository.new
+      @service_instance_usage_event_repository ||= Repositories::ServiceUsageEventRepository.new
     end
 
     def update_service_bindings

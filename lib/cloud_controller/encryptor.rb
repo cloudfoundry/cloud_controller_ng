@@ -99,10 +99,11 @@ module VCAP::CloudController
           end
         end
 
+        private
+
         def encrypted_fields
           @encrypted_fields ||= []
         end
-        private :encrypted_fields
 
         def set_field_as_encrypted(field_name, options={})
           field_name = field_name.to_sym
@@ -140,7 +141,6 @@ module VCAP::CloudController
           end
           alias_method_chain "#{field_name}=", 'encryption'
         end
-        private :set_field_as_encrypted
       end
     end
   end

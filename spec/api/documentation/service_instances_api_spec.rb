@@ -76,7 +76,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
 
       param_description = <<~EOF
         Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
-EOF
+      EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       before do
@@ -118,7 +118,7 @@ EOF
 
       param_description = <<~EOF
         Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
-EOF
+      EOF
       parameter :accepts_incomplete, param_description, valid_values: [true, false]
 
       before do
@@ -147,17 +147,17 @@ EOF
     delete '/v2/service_instances/:guid' do
       accepts_incomplete_description = <<~EOF
         Set to `true` if the client allows asynchronous provisioning. The cloud controller may respond before the service is ready for use.
-EOF
+      EOF
       purge_description = <<~EOF
         Recursively remove a service instance and child objects from Cloud Foundry database without making requests to a service broker.
         The user must have the cloud_controller.admin scope on their OAuth token in order to perform a purge.
-EOF
+      EOF
       recursive_description = <<~EOF
         Will delete service bindings, service keys, and routes associated with the service instance.
-EOF
+      EOF
       async_description = <<~EOF
         Will run the delete request in a background job. Recommended: 'true'.
-EOF
+      EOF
 
       parameter :accepts_incomplete, accepts_incomplete_description, valid_values: [true, false]
       parameter :purge, purge_description, valid_values: [true, false]

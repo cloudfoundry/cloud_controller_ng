@@ -238,7 +238,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
       end
 
-      return attributes, nil
+      [attributes, nil]
     rescue Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerApiTimeout,
            Errors::ServiceBrokerResponseMalformed,
@@ -252,7 +252,7 @@ module VCAP::Services::ServiceBrokers::V2
           description: e.message
         }
       }
-      return attributes, e
+      [attributes, e]
     end
 
     def fetch_service_instance(instance)

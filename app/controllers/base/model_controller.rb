@@ -105,8 +105,8 @@ module VCAP::CloudController::RestController
       )
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      Query.filtered_dataset_from_query_params(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
+      Query.filtered_dataset_from_query_params(model, dataset, query_params, opts)
     end
 
     # Enumerate the related objects to the one with the given guid.
@@ -126,7 +126,7 @@ module VCAP::CloudController::RestController
 
       all_relationships = {}
       [self.class.to_one_relationships, self.class.to_many_relationships].each do |rel|
-        all_relationships.merge!(rel) if rel && rel.any?
+        all_relationships.merge!(rel) if rel&.any?
       end
       associated_controller = VCAP::CloudController.controller_from_relationship(all_relationships[name])
       associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model)
@@ -215,27 +215,27 @@ module VCAP::CloudController::RestController
     # Raises an exception if the user does not have rights to perform
     # the operation on the object.
     #
-    # @param [Symbol] op The type of operation to check for access
+    # @param [Symbol] operation The type of operation to check for access
     #
     # @param [Object] obj The object for which to validate access.
     #
     # @param [User] user The user for which to validate access.
     #
     # @param [Roles] The roles for the current user or client.
-    def validate_access(op, obj, *args)
-      if @access_context.cannot?("#{op}_with_token".to_sym, obj)
+    def validate_access(operation, obj, *args)
+      if @access_context.cannot?("#{operation}_with_token".to_sym, obj)
         if obj.is_a? Class
           obj = obj.to_s
         end
-        logger.info('allowy.access-denied.insufficient-scope', op: "#{op}_with_token", obj: obj, user: user, roles: roles)
+        logger.info('allowy.access-denied.insufficient-scope', op: "#{operation}_with_token", obj: obj, user: user, roles: roles)
         raise CloudController::Errors::ApiError.new_from_details('InsufficientScope')
       end
 
-      if @access_context.cannot?(op, obj, *args)
+      if @access_context.cannot?(operation, obj, *args)
         if obj.is_a? Class
           obj = obj.to_s
         end
-        logger.info('allowy.access-denied.not-authorized', op: op, obj: obj, user: user, roles: roles)
+        logger.info('allowy.access-denied.not-authorized', op: operation, obj: obj, user: user, roles: roles)
         raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
       end
     end
@@ -247,11 +247,11 @@ module VCAP::CloudController::RestController
       self.class.model
     end
 
-    def redact_attributes(op, request_attributes)
+    def redact_attributes(operation, request_attributes)
       request_attributes.dup.tap do |changes|
         changes.each_key do |key|
           attrib = self.class.attributes[key.to_sym]
-          changes[key] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrib && attrib.redact_in?(op)
+          changes[key] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrib && attrib.redact_in?(operation)
         end
       end
     end
@@ -296,15 +296,15 @@ module VCAP::CloudController::RestController
     # Raises an exception if the object can't be found or if the current user
     # doesn't have access to it.
     #
-    # @param [Symbol] op The type of operation to check for access
+    # @param [Symbol] operation The type of operation to check for access
     #
     # @param [String] guid The GUID of the object to find.
     #
     # @return [Sequel::Model] The sequel model for the object, only if
     # the use has access.
-    def find_guid_and_validate_access(op, guid, find_model=model)
+    def find_guid_and_validate_access(operation, guid, find_model=model)
       obj = find_guid(guid, find_model)
-      validate_access(op, obj)
+      validate_access(operation, obj)
       obj
     end
 

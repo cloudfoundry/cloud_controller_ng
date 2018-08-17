@@ -19,7 +19,7 @@ module VCAP::CloudController
       space.db.transaction do
         space.lock!
 
-        space.isolation_segment_guid = isolation_segment_guid ? isolation_segment_guid : nil
+        space.isolation_segment_guid = isolation_segment_guid || nil
         space.save
 
         Repositories::SpaceEventRepository.new.record_space_update(

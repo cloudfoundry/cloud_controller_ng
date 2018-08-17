@@ -224,6 +224,8 @@ GEM
     i18n (0.9.5)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
+    jaro_winkler (1.5.1)
+    jaro_winkler (1.5.1-x86_64-darwin-17)
     json (1.8.6)
     json-schema (2.8.0)
       addressable (>= 2.4)
@@ -365,9 +367,10 @@ GEM
       json (~> 1.4, >= 1.4.6)
       mustache (~> 0.99, >= 0.99.4)
       rspec (>= 3.0.0)
-    rubocop (0.52.1)
+    rubocop (0.58.2)
+      jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
-      parser (>= 2.4.0.2, < 3.0)
+      parser (>= 2.5, != 2.5.1.1)
       powerpack (~> 0.1)
       rainbow (>= 2.2.2, < 4.0)
       ruby-progressbar (~> 1.7)
@@ -375,7 +378,7 @@ GEM
     ruby-debug-ide (0.7.0.beta4)
       rake (>= 0.8.1)
     ruby-mysql (2.9.14)
-    ruby-progressbar (1.9.0)
+    ruby-progressbar (1.10.0)
     ruby_dep (1.5.0)
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
@@ -509,7 +512,7 @@ DEPENDENCIES
   rspec-rails
   rspec-wait
   rspec_api_documentation
-  rubocop (~> 0.52.0)
+  rubocop (~> 0.58.2)
   ruby-debug-ide (>= 0.7.0.beta4)
   rubyzip!
   scientist

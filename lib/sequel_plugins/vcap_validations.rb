@@ -1,4 +1,3 @@
-
 module Sequel::Plugins::VcapValidations
   module InstanceMethods
     # Validates that an attribute is a valid http or https url

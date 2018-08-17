@@ -1,4 +1,4 @@
-$LOAD_PATH.unshift(File.expand_path('../models', __FILE__))
+$LOAD_PATH.unshift(File.expand_path('models', __dir__))
 
 require 'diego/bbs/models/actions.pb'
 require 'diego/bbs/models/actual_lrp.pb'

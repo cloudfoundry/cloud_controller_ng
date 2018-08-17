@@ -1,7 +1,7 @@
 module VCAP::RestAPI
   class RouteMappingQuery < Query
     def filtered_dataset
-      filter_args_from_query.inject(@ds) do |filter, cond|
+      filter_args_from_query.inject(@dataset) do |filter, cond|
         if cond.respond_to?(:str) && cond.str.starts_with?('app_guid')
           app_filter(filter, cond)
         else
@@ -10,8 +10,8 @@ module VCAP::RestAPI
       end
     end
 
-    def app_filter(ds, cond)
-      ds.where(cond)
+    def app_filter(dataset, cond)
+      dataset.where(cond)
     end
 
     private

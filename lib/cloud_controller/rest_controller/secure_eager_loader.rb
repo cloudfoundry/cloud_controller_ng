@@ -1,15 +1,15 @@
 module VCAP::CloudController::RestController
   class SecureEagerLoader
-    def eager_load_dataset(ds, starting_controller_class, default_visibility_filter, additional_visibility_filters, depth)
+    def eager_load_dataset(dataset, starting_controller_class, default_visibility_filter, additional_visibility_filters, depth)
       eager_load_hash = build_eager_load_hash(
         starting_controller_class,
-        ds.model,
+        dataset.model,
         default_visibility_filter,
         additional_visibility_filters,
         depth,
       )
 
-      ds.eager(eager_load_hash)
+      dataset.eager(eager_load_hash)
     end
 
     private
@@ -27,7 +27,7 @@ module VCAP::CloudController::RestController
       [associated_controller.to_one_relationships,
        associated_controller.to_many_relationships,
       ].each do |rel|
-        all_relationships.merge!(rel) if rel && rel.any?
+        all_relationships.merge!(rel) if rel&.any?
       end
 
       eager_load_hash = {}

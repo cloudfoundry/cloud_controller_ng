@@ -14,8 +14,8 @@ module VCAP::CloudController
       do_delete(find_guid_and_validate_access(:delete, guid))
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      EventQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
+      EventQuery.filtered_dataset_from_query_params(model, dataset, query_params, opts)
     end
 
     define_messages

@@ -21,7 +21,7 @@ module VCAP::CloudController::RestController
     # @param [RestController] controller Controller for the
     # dataset being paginated.
     #
-    # @param [Sequel::Dataset] ds Dataset to paginate.
+    # @param [Sequel::Dataset] dataset Dataset to paginate.
     #
     # @param [String] path Path used to fetch the dataset.
     #
@@ -38,7 +38,7 @@ module VCAP::CloudController::RestController
     #
     # @option opts [Integer] :max_inline Maximum number of objects to
     # expand inline in a relationship.
-    def render_json(controller, ds, path, opts, request_params)
+    def render_json(controller, dataset, path, opts, request_params)
       page = opts[:page] || 1
       order_applicator = OrderApplicator.new(opts)
       order_direction = opts[:order_direction] || 'asc'
@@ -53,7 +53,7 @@ module VCAP::CloudController::RestController
         raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', "inline_relations_depth must be <= #{@max_inline_relations_depth}")
       end
 
-      ordered_dataset = order_applicator.apply(ds)
+      ordered_dataset = order_applicator.apply(dataset)
       paginated_dataset = ordered_dataset.extension(:pagination).paginate(page, page_size)
 
       if paginated_dataset.prev_page

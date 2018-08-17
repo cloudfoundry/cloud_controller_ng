@@ -28,7 +28,7 @@ module VCAP::CloudController
       DIRECTION_TO_PREFIX = PREFIX_TO_DIRECTION.invert
 
       def user_provided_direction?(first_character)
-        PREFIX_TO_DIRECTION.keys.include? first_character
+        PREFIX_TO_DIRECTION.key?(first_character)
       end
 
       def prefix_to_direction(first_character)

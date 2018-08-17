@@ -68,7 +68,7 @@ RSpec.resource 'Routes', type: [:api, :legacy_api] do
 
       param_description = <<~EOF
         Set to `true` to generate a random port. Defaults to `false`. Supported for domains for TCP router groups only. Takes precedence over manually specified port.
-EOF
+      EOF
       parameter :generate_port, param_description, valid_values: [true, false]
 
       example 'Creating a Route' do

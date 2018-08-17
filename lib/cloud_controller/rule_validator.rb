@@ -44,9 +44,9 @@ module CloudController
         return false if NetAddr.ip_to_i(address_list[0]) > NetAddr.ip_to_i(address_list[1])
       end
 
-      return true
+      true
     rescue NetAddr::ValidationError
-      return false
+      false
     end
 
     def self.validate_boolean(bool)

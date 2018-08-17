@@ -9,7 +9,7 @@ require 'allowy'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'
-require File.expand_path('../../config/environment', __FILE__)
+require File.expand_path('../config/environment', __dir__)
 
 require 'yajl'
 require 'yajl/json_gem'

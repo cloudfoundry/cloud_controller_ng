@@ -60,7 +60,7 @@ module VCAP::CloudController
     end
 
     def use_requested_name_or_generate_name(message)
-      message.requested?(:name) ? message.name : Random.new.bytes(4).unpack('H*').first
+      message.requested?(:name) ? message.name : Random.new.bytes(4).unpack1('H*')
     end
 
     def validate_maximum_disk!(message)

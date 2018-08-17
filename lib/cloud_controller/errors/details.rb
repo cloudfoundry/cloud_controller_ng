@@ -2,7 +2,7 @@ module CloudController
   module Errors
     class Details
       def self.yaml_file_path
-        File.join(File.expand_path('../../../../vendor/errors', __FILE__), 'v2.yml')
+        File.join(File.expand_path('../../../vendor/errors', __dir__), 'v2.yml')
       end
 
       def self.details_by_code

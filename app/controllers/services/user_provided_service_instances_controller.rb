@@ -110,7 +110,7 @@ module VCAP::CloudController
       enqueue_deletion_job(delete_and_audit_job)
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
       # special case: we cannot query columns in the org table from the UPSI
       # table, so we have to join w/ orgs and then select on the spaces of the org
       orig_query = opts[:q] && opts[:q].clone
@@ -126,9 +126,9 @@ module VCAP::CloudController
       opts.delete(:q) if opts[:q].blank?
 
       if org_filters.empty?
-        super(model, ds, qp, opts)
+        super(model, dataset, query_params, opts)
       else
-        super(model, ds, qp, opts).where(space_id: select_on_org_filters_using_spaces(org_filters))
+        super(model, dataset, query_params, opts).where(space_id: select_on_org_filters_using_spaces(org_filters))
       end
     ensure
       opts[:q] = orig_query

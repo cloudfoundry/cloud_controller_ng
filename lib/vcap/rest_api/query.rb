@@ -14,7 +14,7 @@ module VCAP::RestAPI
     #
     # @param [Sequel::Model] model The model to query against
     #
-    # @param [Sequel::Dataset] ds The dataset to query against
+    # @param [Sequel::Dataset] dataset The dataset to query against
     #
     # @param [Set] queryable_attributes The attributes allowed to be used as
     # keys in a query.
@@ -22,9 +22,9 @@ module VCAP::RestAPI
     # @param [Hash] query_params A hash containing the full set of http
     # query parameters.  Currently, only :q is extracted and used as the query
     # string.  The :q entry is a key value pair of the form 'key:value'
-    def initialize(model, ds, queryable_attributes, query_params)
+    def initialize(model, dataset, queryable_attributes, query_params)
       @model = model
-      @ds = ds
+      @dataset = dataset
       @queryable_attributes = queryable_attributes
       @query = Array(query_params[:q])
     end
@@ -34,7 +34,7 @@ module VCAP::RestAPI
     #
     # @return [Sequel::Dataset]
     def filtered_dataset
-      filter_args_from_query.inject(@ds) do |filter, cond|
+      filter_args_from_query.inject(@dataset) do |filter, cond|
         filter.filter(cond)
       end
     end
@@ -44,7 +44,7 @@ module VCAP::RestAPI
     #
     # @param [Sequel::Model] model The model to query against
     #
-    # @param [Sequel::Dataset] ds The dataset to query against
+    # @param [Sequel::Dataset] dataset The dataset to query against
     #
     # @param [Set] queryable_attributes The attributes allowed to be used as
     # keys in a query.
@@ -55,10 +55,10 @@ module VCAP::RestAPI
     #
     # @return [Sequel::Dataset]
     def self.filtered_dataset_from_query_params(model,
-                                                ds,
+                                                dataset,
                                                 queryable_attributes,
                                                 query_params)
-      self.new(model, ds, queryable_attributes, query_params).filtered_dataset
+      self.new(model, dataset, queryable_attributes, query_params).filtered_dataset
     end
 
     private
@@ -194,7 +194,7 @@ module VCAP::RestAPI
     # Sequel uses tinyint(1) to store booleans in Mysql.
     # Mysql does not support using 't'/'f' for querying.
     def clean_up_boolean(_, q_val)
-      q_val == 't' || q_val == 'true'
+      %w(t true).include? q_val
     end
 
     def clean_up_integer(q_val)

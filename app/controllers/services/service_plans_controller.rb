@@ -103,20 +103,20 @@ module VCAP::CloudController
       end
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
       single_filter = opts[:q][0] if opts[:q]
 
       if single_filter && single_filter.start_with?('service_broker_guid')
         service_broker_guid = single_filter.split(/(:| IN )/)[2]
 
         Query.
-          filtered_dataset_from_query_params(model, ds, qp, { q: '' }).
+          filtered_dataset_from_query_params(model, dataset, query_params, { q: '' }).
           select_all(:service_plans).
           left_join(:services, id: :service_plans__service_id).
           left_join(:service_brokers, id: :services__service_broker_id).
           where(service_brokers__guid: service_broker_guid)
       else
-        super(model, ds, qp, opts)
+        super(model, dataset, query_params, opts)
       end
     end
 

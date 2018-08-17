@@ -12,7 +12,7 @@ namespace :db do
     filename = "#{version}_#{name}.rb"
     FileUtils.mkdir_p(migrations_dir)
 
-    open(File.join(migrations_dir, filename), 'w') do |f|
+    File.open(File.join(migrations_dir, filename), 'w') do |f|
       f.write <<~RUBY
         Sequel.migration do
           change do
@@ -208,7 +208,7 @@ namespace :db do
     db = VCAP::CloudController::DB.connect(RakeConfig.config.get(:db), db_logger)
 
     latest_migration_in_db = db[:schema_migrations].order(Sequel.desc(:filename)).first[:filename]
-    latest_migration_in_dir = File.basename(Dir['db/migrations/*'].sort.last)
+    latest_migration_in_dir = File.basename(Dir['db/migrations/*'].max)
 
     unless latest_migration_in_db == latest_migration_in_dir
       puts "Expected latest migration #{latest_migration_in_db} to equal #{latest_migration_in_dir}"

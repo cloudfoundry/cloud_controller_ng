@@ -140,7 +140,7 @@ module VCAP::CloudController
     end
 
     def app_usage_event_repository
-      @repository ||= Repositories::AppUsageEventRepository.new
+      @app_usage_event_repository ||= Repositories::AppUsageEventRepository.new
     end
   end
 end

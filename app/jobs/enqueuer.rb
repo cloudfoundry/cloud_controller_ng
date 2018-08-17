@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
 
       def load_delayed_job_plugins
-        @loaded_plugins ||= Delayed::Worker.new
+        @load_delayed_job_plugins ||= Delayed::Worker.new
       end
 
       def job_timeout

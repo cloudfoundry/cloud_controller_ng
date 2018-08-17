@@ -72,8 +72,8 @@ module VCAP::CloudController
 
     private
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
-      RouteMappingQuery.filtered_dataset_from_query_params(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
+      RouteMappingQuery.filtered_dataset_from_query_params(model, dataset, query_params, opts)
     end
 
     define_messages
@@ -86,8 +86,8 @@ module VCAP::CloudController
     def get_app_port(process_guid, app_port)
       if app_port.blank?
         process = ProcessModel.find(guid: process_guid)
-        if !process.nil?
-          return process.ports[0] unless process.ports.blank?
+        if !process.nil? && !process.ports.blank?
+          return process.ports[0]
         end
       end
 

@@ -8,7 +8,7 @@ RSpec.shared_examples 'an access control' do |operation, table, expected_error=n
         set_current_user_as_role(role: role, org: o, space: s, user: user)
 
         if respond_to?(:queryer)
-          can_read_globally = role == :admin || role == :admin_read_only || role == :global_auditor
+          can_read_globally = [:admin, :admin_read_only, :global_auditor].include?(role)
           can_write_globally = role == :admin
 
           can_write_to_org = can_write_globally

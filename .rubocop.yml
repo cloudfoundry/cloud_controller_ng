@@ -5,9 +5,6 @@ require:
 
 AllCops:
   TargetRubyVersion: 2.4
-  Include:
-    - '**/Gemfile'
-    - '**/Rakefile'
   Exclude:
     - vendor/**/*
     - lib/diego/bbs/models/**/*
@@ -70,6 +67,14 @@ Lint/ScriptPermission:
 Lint/UnifiedInteger:
   Exclude:
     - db/migrations/**/*
+
+Lint/UnneededCopDisableDirective:
+  Exclude:
+    - db/migrations/201[3-7]*
+
+Lint/UnneededCopEnableDirective:
+  Exclude:
+    - db/migrations/20130806175100_support_30char_identifiers_for_oracle.rb
 
 Lint/UnusedBlockArgument:
   Enabled: false
@@ -146,6 +151,26 @@ Naming/HeredocDelimiterNaming:
 Naming/PredicateName:
   Enabled: false
 
+Naming/UncommunicativeMethodParamName:
+  # Parameter names may be equal to or greater than this value
+  MinNameLength: 3
+  AllowNamesEndingInNumbers: true
+  # Whitelisted names that will not register an offense
+  AllowedNames:
+    - '_'
+    - e
+    - io
+    - id
+    - to
+    - by
+    - 'on'
+    - in
+    - at
+    - ip
+    - db
+  # Blacklisted names that will register an offense
+  ForbiddenNames: []
+
 Naming/VariableNumber:
   Enabled: false
 
@@ -179,6 +204,11 @@ Style/EachWithObject:
 Style/Encoding:
   Exclude:
     - '**/*.pb.rb'
+
+Style/ExpandPathArguments:
+  Exclude:
+    - 'db/migrations/20130911111938_encrypt_app_env_json.rb'
+    - 'db/migrations/201805*'
 
 Style/FormatString:
   EnforcedStyle: sprintf
@@ -249,7 +279,10 @@ Style/TernaryParentheses:
 Style/TrailingCommaInArguments:
   Enabled: false
 
-Style/TrailingCommaInLiteral:
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInHashLiteral:
   Enabled: false
 
 Style/TrailingUnderscoreVariable:

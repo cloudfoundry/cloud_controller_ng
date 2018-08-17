@@ -30,7 +30,7 @@ module VCAP::CloudController
 
     def setup_i18n
       CloudController::Errors::ApiError.setup_i18n(
-        Dir[File.expand_path('../../../vendor/errors/i18n/*.yml', __FILE__)],
+        Dir[File.expand_path('../../vendor/errors/i18n/*.yml', __dir__)],
         'en_US',
       )
     end
@@ -41,7 +41,7 @@ module VCAP::CloudController
     end
 
     def options_parser
-      @parser ||= OptionParser.new do |opts|
+      @options_parser ||= OptionParser.new do |opts|
         opts.on('-c', '--config [ARG]', 'Configuration File') do |opt|
           @config_file = opt
         end

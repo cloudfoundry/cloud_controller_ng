@@ -46,7 +46,6 @@ module VCAP::CloudController
           }
         }
       end
-      # rubocop:enable Metrics/BlockLength
 
       class << self
         def configure_components(config); end

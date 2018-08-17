@@ -13,7 +13,7 @@ module VCAP
         end
 
         def authorized_key
-          @auth_key ||= begin
+          @authorized_key ||= begin
             type = key.ssh_type
             data = [key.to_blob].pack('m0')
 

@@ -1,4 +1,4 @@
-$LOAD_PATH.unshift(File.expand_path('../models', __FILE__))
+$LOAD_PATH.unshift(File.expand_path('models', __dir__))
 
 require 'traffic_controller/models/envelope.pb'
 require 'traffic_controller/models/error.pb'

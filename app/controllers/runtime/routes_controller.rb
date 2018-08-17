@@ -187,7 +187,7 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'service_instance', route.class.table_name)
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
       orig_query = opts[:q] && opts[:q].clone
       org_index  = opts[:q].index { |query| query.start_with?('organization_guid:') } if opts[:q]
       orgs_index = opts[:q].index { |query| query.start_with?('organization_guid IN ') } if opts[:q]
@@ -205,7 +205,7 @@ module VCAP::CloudController
         opts[:q].delete(opts[:q][orgs_index])
       end
 
-      filtered_dataset = super(model, ds, qp, opts)
+      filtered_dataset = super(model, dataset, query_params, opts)
       opts[:q]         = orig_query
 
       if org_guids.any?
@@ -311,7 +311,7 @@ module VCAP::CloudController
     end
 
     def validated_router_group
-      @router_group ||=
+      @validated_router_group ||=
         begin
           routing_api_client.router_group(validated_domain.router_group_guid)
         rescue RoutingApi::RoutingApiDisabled

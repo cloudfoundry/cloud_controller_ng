@@ -174,11 +174,7 @@ module VCAP::Services
       end
 
       def user_guid(options)
-        if options[:user_guid]
-          options[:user_guid]
-        else
-          VCAP::CloudController::SecurityContext.current_user_guid
-        end
+        options[:user_guid] || VCAP::CloudController::SecurityContext.current_user_guid
       end
     end
   end

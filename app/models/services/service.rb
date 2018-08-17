@@ -26,8 +26,8 @@ module VCAP::CloudController
         dataset.filter(id: service_ids)
       end
 
-      def user_visibility_filter(current_user, op=nil)
-        visible_plans = ServicePlan.user_visible(current_user, op)
+      def user_visibility_filter(current_user, operation=nil)
+        visible_plans = ServicePlan.user_visible(current_user, operation)
         ids_from_plans = visible_plans.map(&:service_id).uniq
 
         { id: ids_from_plans }
@@ -136,7 +136,7 @@ module VCAP::CloudController
       metadata = JSON.parse(extra)
       metadata && metadata['shareable']
     rescue JSON::ParserError
-      return false
+      false
     end
 
     def volume_service?

@@ -34,15 +34,15 @@ module VCAP::CloudController
 
     private
 
-    def get_filtered_dataset_for_enumeration(model, ds, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
       after_guid = params['after_guid']
       if after_guid
         repository = Repositories::AppUsageEventRepository.new
         previous_event = repository.find(after_guid)
         raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
-        ds = ds.filter { id > previous_event.id }
+        dataset = dataset.filter { id > previous_event.id }
       end
-      super(model, ds, qp, opts)
+      super(model, dataset, query_params, opts)
     end
   end
 end

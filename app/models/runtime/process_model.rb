@@ -1,4 +1,3 @@
-
 require 'cloud_controller/process_observer'
 require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/errors/application_missing'
@@ -395,9 +394,9 @@ module VCAP::CloudController
       latest_build.try(:error_description) || latest_droplet.try(:error_description)
     end
 
-    def console=(c)
+    def console=(value)
       self.metadata ||= {}
-      self.metadata['console'] = c
+      self.metadata['console'] = value
     end
 
     def console
@@ -406,10 +405,10 @@ module VCAP::CloudController
       self.metadata && self.metadata['console'] == true
     end
 
-    def debug=(d)
+    def debug=(value)
       self.metadata ||= {}
       # We don't support sending nil through API
-      self.metadata['debug'] = (d == 'none') ? nil : d
+      self.metadata['debug'] = (value == 'none') ? nil : value
     end
 
     def debug
@@ -570,7 +569,7 @@ module VCAP::CloudController
     end
 
     def app_usage_event_repository
-      @repository ||= Repositories::AppUsageEventRepository.new
+      @app_usage_event_repository ||= Repositories::AppUsageEventRepository.new
     end
 
     def create_app_usage_buildpack_event
@@ -601,5 +600,4 @@ module VCAP::CloudController
       end
     end
   end
-  # rubocop:enable ClassLength
 end

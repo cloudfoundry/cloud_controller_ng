@@ -71,7 +71,7 @@ module VCAP::CloudController
           instances.all? { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING }
         rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
           logger.info("skipping-deployment-update-for-#{deployment.guid}")
-          return false
+          false
         end
 
         def instance_reporters
