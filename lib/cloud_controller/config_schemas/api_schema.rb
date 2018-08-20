@@ -207,6 +207,7 @@ module VCAP::CloudController
             key_file: String,
             cert_file: String,
             ca_file: String,
+            subject_name: String
           },
 
           loggregator: {

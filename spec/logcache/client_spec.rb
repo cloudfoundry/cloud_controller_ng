@@ -10,18 +10,19 @@ module Logcache
 
     let(:host) { 'doppler.service.cf.internal' }
     let(:port) { '8080' }
+    let(:tls_subject_name) { 'my-logcache' }
     let(:client_ca_path) { File.join(Paths::FIXTURES, 'certs/log_cache_ca.crt') }
     let(:client_cert_path) { File.join(Paths::FIXTURES, 'certs/log_cache.crt') }
     let(:client_key_path) { File.join(Paths::FIXTURES, 'certs/log_cache.key') }
     let(:credentials) { instance_double(GRPC::Core::ChannelCredentials) }
     let(:channel_arg_hash) do
       {
-        channel_args: { GRPC::Core::Channel::SSL_TARGET => 'log_cache' }
+        channel_args: { GRPC::Core::Channel::SSL_TARGET => tls_subject_name }
       }
     end
     let(:client) do
       Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                           client_cert_path: client_cert_path, client_key_path: client_key_path)
+                           client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name)
     end
     let(:expected_request_options) { { 'headers' => { 'Authorization' => 'bearer oauth-token' } } }
     let(:client_ca) { File.open(client_ca_path).read }

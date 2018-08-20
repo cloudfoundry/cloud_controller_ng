@@ -91,6 +91,7 @@ logcache_tls:
   key_file: 'spec/fixtures/certs/log_cache.key'
   cert_file: 'spec/fixtures/certs/log_cache.crt'
   ca_file: 'spec/fixtures/certs/log_cache_ca.crt'
+  subject_name: 'log_cache'
 
 doppler:
   url: 'wss://doppler.example.com:443'
