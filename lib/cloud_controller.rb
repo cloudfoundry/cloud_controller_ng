@@ -49,6 +49,7 @@ require 'controllers/base/front_controller'
 
 require 'cloud_controller/app_ssh_enabled'
 require 'cloud_controller/config'
+require 'cloud_controller/yaml_config'
 require 'cloud_controller/db'
 require 'cloud_controller/database_parts_parser'
 require 'cloud_controller/runner'

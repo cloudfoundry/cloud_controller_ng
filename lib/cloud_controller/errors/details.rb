@@ -1,3 +1,5 @@
+require 'cloud_controller/yaml_config'
+
 module CloudController
   module Errors
     class Details
@@ -6,7 +8,7 @@ module CloudController
       end
 
       def self.details_by_code
-        YAML.load_file(yaml_file_path)
+        VCAP::CloudController::YAMLConfig.safe_load_file(yaml_file_path)
       end
 
       def self.details_by_name

@@ -233,9 +233,9 @@ module VCAP::CloudController
       end
 
       let(:config_file) do
-        config = YAML.load_file(valid_config_file_path)
-        config[:directories] ||= { tmpdir: 'tmpdir' }
-        config[:directories][:diagnostics] = 'diagnostics/dir'
+        config = YAMLConfig.safe_load_file(valid_config_file_path)
+        config['directories'] ||= { 'tmpdir' => 'tmpdir' }
+        config['directories']['diagnostics'] = 'diagnostics/dir'
         file = Tempfile.new('config')
         file.write(YAML.dump(config))
         file.rewind

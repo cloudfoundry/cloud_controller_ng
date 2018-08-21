@@ -55,7 +55,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
 
       client = CloudFoundry::Perm::V1::Client.new(hostname: perm_hostname, port: perm_port, trusted_cas: ca_certs)
 
-      config = YAML.load_file('config/cloud_controller.yml')
+      config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
       config[:perm] = perm_config
       config_file = Tempfile.new('perm_config')
       config_file.write(config.to_json)
