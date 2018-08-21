@@ -17,6 +17,11 @@ module VCAP::CloudController
 
       def enqueue_pollable
         wrapped_job = PollableJobWrapper.new(@job)
+
+        if block_given?
+          wrapped_job = yield wrapped_job
+        end
+
         delayed_job = enqueue_job(wrapped_job)
         PollableJobModel.find_by_delayed_job(delayed_job)
       end

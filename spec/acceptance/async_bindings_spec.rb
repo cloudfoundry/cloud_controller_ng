@@ -23,6 +23,13 @@ module VCAP::CloudController
         stub_request(:delete, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+}).
           with(query: hash_including({ 'accepts_incomplete' => 'true' })).
           to_return(status: 202, body: '{}')
+        stub_request(:get, %r{/v2/service_instances/[[:alnum:]-]+/service_bindings/[[:alnum:]-]+/last_operation}).
+          with(query: hash_including(:plan_id, :service_id)).
+          to_return(status: 200, body: '{"state": "in progress"}')
+
+        stub_request(:delete, %r{/v3/apps/[[:alnum:]-]+}).
+          with(query: hash_including({ 'accepts_incomplete' => 'true' })).
+          to_return(status: 202, body: '{}')
       end
 
       context 'when a service instance is shared' do
@@ -69,11 +76,12 @@ module VCAP::CloudController
             it 'can unbind if the service instance is deleted recursively and accepts_incomplete is true' do
               delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
 
+              expect(last_response).to have_status_code(502)
+
               expect(a_request(:delete, unbind_url(source_binding)).with(query: { accepts_incomplete: true })).to have_been_made
               expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made
               expect(a_request(:delete, deprovision_url(service_instance)).with(query: { accepts_incomplete: true })).not_to have_been_made
 
-              expect(last_response).to have_status_code(502)
               body = JSON.parse(last_response.body)
               expect(body['error_code']).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
               expect(body['description']).to match multiple_async_unbind_in_progress_error(service_instance.name, source_app.name, target_app.name)
@@ -82,15 +90,71 @@ module VCAP::CloudController
             it 'can unbind if the service instance is deleted recursively' do
               delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true', admin_headers)
 
+              expect(last_response).to have_status_code(502)
+
               expect(a_request(:delete, unbind_url(source_binding))).to have_been_made
               expect(a_request(:delete, unbind_url(target_binding))).to have_been_made
               expect(a_request(:delete, deprovision_url(service_instance))).not_to have_been_made
 
-              expect(last_response).to have_status_code(502)
               body = JSON.parse(last_response.body)
               expect(body['error_code']).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
               expect(body['description']).to eq multiple_async_unbind_not_supported_error(service_instance.name)
             end
+          end
+        end
+      end
+
+      context 'when the request is made to v3' do
+        context 'and the service is bound to an application' do
+          let(:space) { Space.make }
+          let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
+          let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
+          let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
+          let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+          let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }
+
+          let!(:service_binding1) { ServiceBinding.make(app: app_model, service_instance: ManagedServiceInstance.make(space: space)) }
+          let!(:service_binding2) { ServiceBinding.make(app: app_model, service_instance: ManagedServiceInstance.make(space: space)) }
+
+          it 'returns a list of errors for the service bindings' do
+            delete("/v3/apps/#{app_model.guid}", nil, admin_headers)
+            expect(last_response).to have_status_code(202)
+
+            Delayed::Worker.new.work_off
+
+            expect(a_request(:delete, unbind_url(service_binding1)).with(query: { accepts_incomplete: true })).to have_been_made
+            expect(a_request(:delete, unbind_url(service_binding2)).with(query: { accepts_incomplete: true })).to have_been_made
+
+            get(last_response.headers['Location'], nil, admin_headers)
+            expect(last_response).to have_status_code(200)
+            parsed_response = JSON.parse(last_response.body)
+            expect(parsed_response['state']).to eq('FAILED')
+            expect(parsed_response['errors'].count).to eq(2)
+            expect(parsed_response['errors'][0]['title']).to eq('CF-UnprocessableEntity')
+            expect(parsed_response['errors'][0]['detail']).to match('An operation for the service binding .* is in progress')
+            expect(parsed_response['errors'][1]['title']).to eq('CF-UnprocessableEntity')
+            expect(parsed_response['errors'][1]['detail']).to match('An operation for the service binding .* is in progress')
+          end
+        end
+      end
+
+      context 'when the request is made to v2' do
+        context 'and the service is bound to an application' do
+          let(:process) { ProcessModelFactory.make }
+
+          let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+          let!(:service_binding2) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+
+          it 'returns a concatenated error for the service bindings' do
+            delete("/v2/apps/#{process.app.guid}", 'recursive=true', admin_headers)
+            expect(last_response).to have_status_code(502)
+
+            expect(a_request(:delete, unbind_url(service_binding1)).with(query: { accepts_incomplete: true })).to have_been_made
+            expect(a_request(:delete, unbind_url(service_binding2)).with(query: { accepts_incomplete: true })).to have_been_made
+
+            parsed_response = JSON.parse(last_response.body)
+            expect(parsed_response['error_code']).to eq('CF-AppRecursiveDeleteFailed')
+            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
           end
         end
       end

@@ -140,6 +140,9 @@ module VCAP::CloudController
         AppDelete.new(UserAuditInfo.from_context(SecurityContext)).delete_without_event([process.app])
       rescue Sequel::NoExistingObject
         raise self.class.not_found_exception(guid, AppModel)
+      rescue AppDelete::SubResourceError => e
+        error_message = e.underlying_errors.map { |err| "\t" + err.message }.join("\n")
+        raise CloudController::Errors::ApiError.new_from_details('AppRecursiveDeleteFailed', process.app.name, error_message)
       end
 
       @app_event_repository.record_app_delete_request(
