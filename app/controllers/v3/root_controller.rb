@@ -6,17 +6,18 @@ class RootController < ActionController::Base
           self:  {
             href: build_api_uri
           },
-          tasks: {
-            href: build_api_uri(path: '/tasks')
-          },
           apps: {
             href: build_api_uri(path: '/apps')
           },
           builds: {
             href: build_api_uri(path: '/builds')
           },
-          packages: {
-            href: build_api_uri(path: '/packages')
+          deployments: {
+            href: build_api_uri(path: '/deployments'),
+            experimental: true,
+          },
+          droplets: {
+            href: build_api_uri(path: '/droplets')
           },
           isolation_segments: {
             href: build_api_uri(path: '/isolation_segments')
@@ -24,22 +25,21 @@ class RootController < ActionController::Base
           organizations: {
             href: build_api_uri(path: '/organizations')
           },
-          spaces: {
-            href: build_api_uri(path: '/spaces')
+          packages: {
+            href: build_api_uri(path: '/packages')
           },
           processes: {
             href: build_api_uri(path: '/processes')
-          },
-          droplets: {
-            href: build_api_uri(path: '/droplets')
           },
           service_instances: {
             href: build_api_uri(path: '/service_instances'),
             experimental: true,
           },
-          deployments: {
-            href: build_api_uri(path: '/deployments'),
-            experimental: true,
+          spaces: {
+            href: build_api_uri(path: '/spaces')
+          },
+          tasks: {
+            href: build_api_uri(path: '/tasks')
           },
         }
       }, pretty: true)

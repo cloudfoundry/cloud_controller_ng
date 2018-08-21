@@ -9,13 +9,6 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['self']['href']).to eq(expected_uri)
     end
 
-    it 'returns a link to tasks' do
-      get :v3_root
-      hash = MultiJson.load(response.body)
-      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/tasks"
-      expect(hash['links']['tasks']['href']).to eq(expected_uri)
-    end
-
     it 'returns a link to apps' do
       get :v3_root
       hash = MultiJson.load(response.body)
@@ -30,11 +23,19 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['builds']['href']).to eq(expected_uri)
     end
 
-    it 'returns a link to packages' do
+    it 'returns a link to deployments' do
       get :v3_root
       hash = MultiJson.load(response.body)
-      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/packages"
-      expect(hash['links']['packages']['href']).to eq(expected_uri)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/deployments"
+      expect(hash['links']['deployments']['href']).to eq(expected_uri)
+      expect(hash['links']['deployments']['experimental']).to eq(true)
+    end
+
+    it 'returns a link to droplets' do
+      get :v3_root
+      hash = MultiJson.load(response.body)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/droplets"
+      expect(hash['links']['droplets']['href']).to eq(expected_uri)
     end
 
     it 'returns a link to isolation segments' do
@@ -51,11 +52,11 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['organizations']['href']).to eq(expected_uri)
     end
 
-    it 'returns a link to spaces' do
+    it 'returns a link to packages' do
       get :v3_root
       hash = MultiJson.load(response.body)
-      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/spaces"
-      expect(hash['links']['spaces']['href']).to eq(expected_uri)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/packages"
+      expect(hash['links']['packages']['href']).to eq(expected_uri)
     end
 
     it 'returns a link to processes' do
@@ -63,13 +64,6 @@ RSpec.describe RootController, type: :controller do
       hash = MultiJson.load(response.body)
       expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/processes"
       expect(hash['links']['processes']['href']).to eq(expected_uri)
-    end
-
-    it 'returns a link to droplets' do
-      get :v3_root
-      hash = MultiJson.load(response.body)
-      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/droplets"
-      expect(hash['links']['droplets']['href']).to eq(expected_uri)
     end
 
     it 'returns a link to service instances' do
@@ -80,12 +74,18 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['service_instances']['experimental']).to eq(true)
     end
 
-    it 'returns a link to deployments' do
+    it 'returns a link to spaces' do
       get :v3_root
       hash = MultiJson.load(response.body)
-      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/deployments"
-      expect(hash['links']['deployments']['href']).to eq(expected_uri)
-      expect(hash['links']['deployments']['experimental']).to eq(true)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/spaces"
+      expect(hash['links']['spaces']['href']).to eq(expected_uri)
+    end
+
+    it 'returns a link to tasks' do
+      get :v3_root
+      hash = MultiJson.load(response.body)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/tasks"
+      expect(hash['links']['tasks']['href']).to eq(expected_uri)
     end
   end
 end
