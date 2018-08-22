@@ -16,3 +16,4 @@ Name | Type | Description
 **disk_quota** | _integer_ | The maximum disk the instance is allowed to use.
 **fds_quota** | _integer_ | The maximum file descriptors the instance is allowed to use.
 **isolation_segment** | _string_ | The current isolation segment that the instance is running on. The value is `null` when the instance is not placed on a particular isolation segment.
+**details** | _string_ | Information about errors placing the instance. The value is `null`  if there are no placement errors.

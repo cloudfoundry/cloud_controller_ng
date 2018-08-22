@@ -387,6 +387,7 @@ RSpec.describe 'Processes' do
         'index'          => 0,
         'state'          => 'RUNNING',
         'isolation_segment' => 'very-isolated',
+        'details' => 'some-details',
         'usage' => {
           'time' => usage_time,
           'cpu'  => 80,
