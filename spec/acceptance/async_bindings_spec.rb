@@ -104,8 +104,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the request is made to v3' do
-        context 'and the service is bound to an application' do
+      context 'when DELETE /v3/apps/:guid is called' do
+        context 'and multiple service bindings exist' do
           let(:space) { Space.make }
           let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
           let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
@@ -138,8 +138,8 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the request is made to v2' do
-        context 'and the service is bound to an application' do
+      context 'when DELETE /v2/apps/:guid is called' do
+        context 'and multiple service bindings exist' do
           let(:process) { ProcessModelFactory.make }
 
           let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
@@ -154,6 +154,48 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-AppRecursiveDeleteFailed')
+            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
+          end
+        end
+      end
+
+      context 'when DELETE /v2/spaces/:guid is called' do
+        context 'and multiple service bindings exist' do
+          let(:process) { ProcessModelFactory.make }
+
+          let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+          let!(:service_binding2) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+
+          it 'returns a concatenated error for the service bindings' do
+            delete("/v2/spaces/#{process.space.guid}", 'recursive=true', admin_headers)
+            expect(last_response).to have_status_code(502)
+
+            expect(a_request(:delete, unbind_url(service_binding1)).with(query: { accepts_incomplete: true })).to have_been_made
+            expect(a_request(:delete, unbind_url(service_binding2)).with(query: { accepts_incomplete: true })).to have_been_made
+
+            parsed_response = JSON.parse(last_response.body)
+            expect(parsed_response['error_code']).to eq('CF-SpaceDeletionFailed')
+            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
+          end
+        end
+      end
+
+      context 'when DELETE /v2/organizations/:guid is called' do
+        context 'and multiple service bindings exist' do
+          let(:process) { ProcessModelFactory.make }
+
+          let!(:service_binding1) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+          let!(:service_binding2) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+
+          it 'returns a concatenated error for the service bindings' do
+            delete("/v2/organizations/#{process.organization.guid}", 'recursive=true', admin_headers)
+            expect(last_response).to have_status_code(502)
+
+            expect(a_request(:delete, unbind_url(service_binding1)).with(query: { accepts_incomplete: true })).to have_been_made
+            expect(a_request(:delete, unbind_url(service_binding2)).with(query: { accepts_incomplete: true })).to have_been_made
+
+            parsed_response = JSON.parse(last_response.body)
+            expect(parsed_response['error_code']).to eq('CF-OrganizationDeletionFailed')
             expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
           end
         end
