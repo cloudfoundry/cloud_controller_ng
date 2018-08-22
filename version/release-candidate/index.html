@@ -8559,7 +8559,9 @@ excluded in the response based on the user&rsquo;s role.</p>
 </code></pre>
 <pre class="highlight yaml"><code><span class="nn">---</span>
 <span class="s">applications</span><span class="pi">:</span>
-<span class="pi">-</span> <span class="s">buildpack</span><span class="pi">:</span> <span class="s">ruby_buildpack</span>
+<span class="pi">-</span> <span class="s">buildpacks</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">ruby_buildpack</span>
+  <span class="pi">-</span> <span class="s">java_buildpack</span>
   <span class="s">env</span><span class="pi">:</span>
     <span class="s">VAR1</span><span class="pi">:</span> <span class="s">value1</span>
     <span class="s">VAR2</span><span class="pi">:</span> <span class="s">value2</span>
@@ -8570,7 +8572,6 @@ excluded in the response based on the user&rsquo;s role.</p>
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
   <span class="s">stack</span><span class="pi">:</span> <span class="s">cflinuxfs2</span>
-
   <span class="s">processes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">web</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">start-web.sh</span>
@@ -8599,10 +8600,6 @@ excluded in the response based on the user&rsquo;s role.</p>
 <th>Description</th>
 </tr>
 </thead><tbody>
-<tr>
-<td><strong>buildpack</strong></td>
-<td>a) Blank OR <code class="prettyprint">default</code> OR <code class="prettyprint">null</code> will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack. <br>DEPRECATED in favor of the <code class="prettyprint">buildpacks</code> field below.</td>
-</tr>
 <tr>
 <td><strong>buildpacks</strong></td>
 <td>Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy <code class="prettyprint">buildpack</code> field.</td>
@@ -8634,6 +8631,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>stack</strong></td>
 <td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code>.</td>
+</tr>
+<tr>
+<td><strong>buildpack</strong></td>
+<td><strong>DEPRECATED in favor of the <code class="prettyprint">buildpacks</code> field above.</strong> <br> a) Blank OR <code class="prettyprint">default</code> OR <code class="prettyprint">null</code> will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.</td>
 </tr>
 </tbody></table>
 
