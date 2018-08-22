@@ -21,6 +21,12 @@ module VCAP::CloudController
           end
 
           buildpack = buildpacks.first
+          if buildpack&.locked
+            logger.info "Buildpack #{name} locked, not updated"
+            return
+          end
+
+          created = false
           if buildpack.nil?
             buildpacks_lock = Locking[name: 'buildpacks']
             buildpacks_lock.db.transaction do
@@ -28,9 +34,6 @@ module VCAP::CloudController
               buildpack = Buildpack.create(name: name)
             end
             created = true
-          elsif buildpack.locked
-            logger.info "Buildpack #{name} locked, not updated"
-            return
           end
 
           begin
