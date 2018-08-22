@@ -1,6 +1,6 @@
 var gulp = require('gulp');
 var exec = require('child_process').exec;
-var webserver = require('gulp-webserver');
+var express = require('express');
 var checkPages = require("check-pages");
 var globber = require("glob");
 
@@ -14,7 +14,7 @@ function displayErrors(err, stdout, stderr) {
   }
 }
 
-gulp.task('middleman', function(cb) {
+gulp.task('build', function(cb) {
   exec('bundle exec middleman build', function(err, stdout, stderr) {
     if (err) {
       return displayErrors(err, stdout, stderr);
@@ -23,18 +23,17 @@ gulp.task('middleman', function(cb) {
   });
 });
 
-gulp.task('webserver', gulp.series('middleman', function() {
-  gulp.src('build').pipe(webserver({
-    livereload: true
-  }));
-}));
-
-gulp.task('watch', function() {
-  gulp.watch(['source/**/*'], ['middleman']);
+gulp.task('webserver', function(cb) {
+  exec('bundle exec middleman server -p 8000', function(err, stdout, stderr) {
+    if (err) {
+      return displayErrors(err, stdout, stderr);
+    }
+    cb();
+  });
+  console.log("Your docs are waiting for you at http://localhost:8000")
 });
 
-gulp.task('default', gulp.series('middleman', 'webserver', 'watch'));
-
+gulp.task('default', gulp.series('webserver'));
 
 var checkPagesOptions = {
   checkLinks: true,
@@ -43,12 +42,12 @@ var checkPagesOptions = {
 };
 
 var checkPathAndExit = function(path, options, done) {
-  var stream = gulp.src(path).pipe(webserver({
-    livereload: false
-  }));
+  var app = express();
+  app.use(express.static(path));
+  var server = app.listen({port: 8000});
 
   return checkPages(console, options, function(err, stdout, stderr) {
-    stream.emit("kill");
+    server.close();
     done();
 
     if (err != undefined) {
@@ -59,7 +58,7 @@ var checkPathAndExit = function(path, options, done) {
   });
 };
 
-gulp.task("checkV3docs", gulp.series("middleman", function(done) {
+gulp.task("checkV3docs", gulp.series("build", function(done) {
   checkPagesOptions.pageUrls = [
     'http://localhost:8000/'
   ];
