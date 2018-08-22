@@ -12,31 +12,31 @@ module VCAP::CloudController
       buildpack_install_jobs = []
 
       buildpacks.each do |bpack|
-        buildpack = bpack.deep_symbolize_keys
+        buildpack_opts = bpack.deep_symbolize_keys
 
-        buildpack_name = buildpack.delete(:name)
+        buildpack_name = buildpack_opts.delete(:name)
         if buildpack_name.nil?
-          logger.error "A name must be specified for the buildpack: #{buildpack}"
+          logger.error "A name must be specified for the buildpack_opts: #{buildpack_opts}"
           next
         end
 
-        package = buildpack.delete(:package)
-        buildpack_file = buildpack.delete(:file)
+        package = buildpack_opts.delete(:package)
+        buildpack_file = buildpack_opts.delete(:file)
         if package.nil? && buildpack_file.nil?
-          logger.error "A package or file must be specified for the buildpack: #{bpack}"
+          logger.error "A package or file must be specified for the buildpack_opts: #{bpack}"
           next
         end
 
         buildpack_file = buildpack_zip(package, buildpack_file)
         if buildpack_file.nil?
-          logger.error "No file found for the buildpack: #{bpack}"
+          logger.error "No file found for the buildpack_opts: #{bpack}"
           next
         elsif !File.file?(buildpack_file)
-          logger.error "File not found: #{buildpack_file}, for the buildpack: #{bpack}"
+          logger.error "File not found: #{buildpack_file}, for the buildpack_opts: #{bpack}"
           next
         end
 
-        buildpack_install_jobs << VCAP::CloudController::Jobs::Runtime::BuildpackInstaller.new(buildpack_name, buildpack_file, buildpack)
+        buildpack_install_jobs << VCAP::CloudController::Jobs::Runtime::BuildpackInstaller.new(buildpack_name, buildpack_file, buildpack_opts)
       end
 
       run_canary(buildpack_install_jobs)
