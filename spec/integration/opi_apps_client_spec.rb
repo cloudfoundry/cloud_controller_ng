@@ -6,7 +6,7 @@ require 'cloud_controller/opi/apps_client'
 require 'spec_helper'
 
 # This spec requires the OPI binary to be in $PATH
-RSpec.describe(OPI::Client) do
+RSpec.describe 'OPI::Client', opi: true do
   let(:opi_url) { 'http://localhost:8085' }
   subject(:client) { described_class.new(opi_url) }
   let(:process) { double(guid: 'jeff',

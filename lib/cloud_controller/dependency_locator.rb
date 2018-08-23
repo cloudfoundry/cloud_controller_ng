@@ -87,7 +87,7 @@ module CloudController
     end
 
     def bbs_instances_client
-      @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_bbs_instances_client)
+      @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_instances_client)
     end
 
     def traffic_controller_client
@@ -419,6 +419,18 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsTaskClient.new(bbs_client)
+    end
+
+    def build_instances_client
+      if config.get(:opi, :enabled)
+        build_opi_instances_client
+      else
+        build_bbs_instances_client
+      end
+    end
+
+    def build_opi_instances_client
+      ::OPI::InstancesClient.new(config.get(:opi, :url))
     end
 
     def build_bbs_instances_client

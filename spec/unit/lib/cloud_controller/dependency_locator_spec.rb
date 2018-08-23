@@ -596,4 +596,42 @@ RSpec.describe CloudController::DependencyLocator do
       end
     end
   end
+
+  describe '#build_instances_client' do
+    let(:diego_client) { double }
+    context 'opi is disabled' do
+      before do
+        allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      end
+
+      it 'uses diego' do
+        expect(VCAP::CloudController::Diego::BbsInstancesClient).to receive(:new).with(diego_client)
+        expect(::OPI::InstancesClient).to_not receive(:new)
+        locator.bbs_instances_client
+      end
+    end
+
+    context 'opi is enabled' do
+      before do
+        TestConfig.override({
+          opi: {
+            enabled: true,
+            url: 'http://custom-opi-url.service.cf.internal'
+          }
+        })
+        allow(::Diego::Client).to receive(:new)
+      end
+
+      it 'uses the opi apps client' do
+        expect(VCAP::CloudController::Diego::BbsInstancesClient).to_not receive(:new)
+        expect(::OPI::InstancesClient).to receive(:new)
+        locator.bbs_instances_client
+      end
+
+      it 'uses the configured opi url' do
+        expect(::OPI::InstancesClient).to receive(:new).with('http://custom-opi-url.service.cf.internal')
+        locator.bbs_instances_client
+      end
+    end
+  end
 end
