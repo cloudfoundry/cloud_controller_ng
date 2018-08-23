@@ -6155,6 +6155,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td><em>string</em></td>
 <td>The current isolation segment that the instance is running on. The value is <code class="prettyprint">null</code> when the instance is not placed on a particular isolation segment.</td>
 </tr>
+<tr>
+<td><strong>details</strong></td>
+<td><em>string</em></td>
+<td>Information about errors placing the instance. The value is <code class="prettyprint">null</code>  if there are no placement errors.</td>
+</tr>
 </tbody></table>
 
           <h3 id="get-a-process">Get a process</h3>
@@ -6276,7 +6281,8 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"mem_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">268435456</span><span class="p">,</span><span class="w">
       </span><span class="nt">"disk_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">1073741824</span><span class="p">,</span><span class="w">
       </span><span class="nt">"fds_quota"</span><span class="p">:</span><span class="w"> </span><span class="mi">16384</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"isolation_segment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example_iso_segment"</span><span class="w">
+      </span><span class="nt">"isolation_segment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example_iso_segment"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
