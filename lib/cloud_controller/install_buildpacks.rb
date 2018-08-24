@@ -9,8 +9,11 @@ module VCAP::CloudController
     def install(buildpacks)
       return unless buildpacks
 
+      job_factory = VCAP::CloudController::Jobs::Runtime::BuildpackInstallerFactory.new
+
       buildpack_install_jobs = []
 
+      factory_options = []
       buildpacks.each do |bpack|
         buildpack_opts = bpack.deep_symbolize_keys
 
@@ -36,9 +39,16 @@ module VCAP::CloudController
           next
         end
 
-        buildpack_install_jobs << VCAP::CloudController::Jobs::Runtime::BuildpackInstaller.new(buildpack_name, buildpack_file, buildpack_opts)
+        detected_stack = VCAP::CloudController::Buildpacks::StackNameExtractor.extract_from_file(buildpack_file)
+        factory_options << { name: buildpack_name, file: buildpack_file, options: buildpack_opts, stack: detected_stack }
       end
 
+      buildpacks_by_name = factory_options.group_by { |options| options[:name] }
+      buildpacks_by_name.each do |name, buildpack_options|
+        buildpack_install_jobs << job_factory.plan(name, buildpack_options)
+      end
+
+      buildpack_install_jobs.flatten!
       run_canary(buildpack_install_jobs)
       enqueue_remaining_jobs(buildpack_install_jobs)
     end

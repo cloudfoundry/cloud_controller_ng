@@ -4,10 +4,9 @@ module VCAP::CloudController
   RSpec.describe InstallBuildpacks do
     describe 'installs buildpacks' do
       let(:installer) { InstallBuildpacks.new(TestConfig.config_instance) }
-      let(:job) { instance_double(Jobs::Runtime::BuildpackInstaller) }
-      let(:job2) { instance_double(Jobs::Runtime::BuildpackInstaller) }
-      let(:job3) { instance_double(Jobs::Runtime::BuildpackInstaller) }
+
       let(:enqueuer) { instance_double(Jobs::Enqueuer) }
+      let(:job_factory) { instance_double(Jobs::Runtime::BuildpackInstallerFactory) }
       let(:install_buildpack_config) do
         {
           install_buildpacks: [
@@ -18,10 +17,16 @@ module VCAP::CloudController
           ]
         }
       end
+      let(:canary_job) { double(:canary_job, perform: nil) }
+      let(:enqueued_job1) { double(:enqueued_job1, perform: nil) }
+      let(:enqueued_job2) { double(:enqueued_job2, perform: nil) }
 
       before do
         TestConfig.override(install_buildpack_config)
-        allow(job).to receive(:perform)
+
+        allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file)
+        allow(installer.logger).to receive(:error)
+        allow(Jobs::Runtime::BuildpackInstallerFactory).to receive(:new).and_return(job_factory)
       end
 
       describe 'installing buildpacks' do
@@ -36,41 +41,66 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple buildpacks' do
+          let(:buildpack1a_file) { 'abuildpacka.zip' }
+          let(:buildpack1b_file) { 'abuildpackb.zip' }
+          let(:buildpack2_file) { 'abuildpack2.zip' }
+
+          let(:buildpack1a_fields) do
+            { name: 'buildpack1', file: buildpack1a_file, stack: 'cflinuxfs11', options: {} }
+          end
+          let(:buildpack1b_fields) do
+            { name: 'buildpack1', file: buildpack1b_file, stack: 'cflinuxfs12', options: {} }
+          end
+          let(:buildpack2_fields) do
+            { name: 'buildpack2', file: buildpack2_file, stack: nil, options: {} }
+          end
+
           before do
-            expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').and_return(['abuildpack.zip'])
-            expect(File).to receive(:file?).with('abuildpack.zip').and_return(true)
-            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg/*.zip').and_return(['otherbp.zip'])
-            expect(File).to receive(:file?).with('otherbp.zip').and_return(true)
-            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg2/*.zip').and_return(['otherbp2.zip'])
-            expect(File).to receive(:file?).with('otherbp2.zip').and_return(true)
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').
+              and_return([buildpack1a_file])
+            expect(File).to receive(:file?).with(buildpack1a_file).
+              and_return(true)
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg/*.zip').
+              and_return([buildpack1b_file])
+            expect(File).to receive(:file?).with(buildpack1b_file).
+              and_return(true)
+            expect(Dir).to receive(:[]).with('/var/vcap/packages/myotherpkg2/*.zip').
+              and_return([buildpack2_file])
+            expect(File).to receive(:file?).with(buildpack2_file).
+              and_return(true)
 
             TestConfig.config[:install_buildpacks].concat [
-              { 'name' => 'buildpack2', 'package' => 'myotherpkg' },
-              { 'name' => 'buildpack3', 'package' => 'myotherpkg2' },
+              { 'name' => 'buildpack1', 'package' => 'myotherpkg' },
+              { 'name' => 'buildpack2', 'package' => 'myotherpkg2' },
             ]
 
-            expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack1', 'abuildpack.zip', {}).and_return(job)
-            allow(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack2', 'otherbp.zip', {}).and_return(job2)
-            allow(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack3', 'otherbp2.zip', {}).and_return(job3)
+            allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file).with(buildpack1a_file).and_return('cflinuxfs11')
+            allow(Buildpacks::StackNameExtractor).to receive(:extract_from_file).with(buildpack1b_file).and_return('cflinuxfs12')
+
+            allow(job_factory).to receive(:plan).with('buildpack1', [buildpack1a_fields, buildpack1b_fields]).and_return([canary_job, enqueued_job1])
+            allow(job_factory).to receive(:plan).with('buildpack2', [buildpack2_fields]).and_return([enqueued_job2])
             allow(Jobs::Enqueuer).to receive(:new).and_return(enqueuer)
           end
 
           it 'tries to install the first buildpack in-process (canary)' do
-            expect(job).to receive(:perform).exactly(1).times
+            expect(canary_job).to receive(:perform).once
 
             expect(enqueuer).to receive(:enqueue).twice
-            expect(job2).not_to receive(:perform)
-            expect(job3).not_to receive(:perform)
+            expect(enqueued_job1).not_to receive(:perform)
+            expect(enqueued_job2).not_to receive(:perform)
 
             installer.install(TestConfig.config_instance.get(:install_buildpacks))
+
+            expect(job_factory).to have_received(:plan).with('buildpack1', [buildpack1a_fields, buildpack1b_fields])
+            expect(job_factory).to have_received(:plan).with('buildpack2', [buildpack2_fields])
           end
 
           context 'when the canary successfully installs' do
             it 'enqueues the rest of the buildpack install jobs' do
-              allow(job).to receive(:perform)
+              allow(canary_job).to receive(:perform)
 
-              expect(Jobs::Enqueuer).to receive(:new).with(job2, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
-              expect(Jobs::Enqueuer).to receive(:new).with(job3, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
+              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job1, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
+              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job2, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
 
               expect(enqueuer).to receive(:enqueue).twice
 
@@ -80,7 +110,7 @@ module VCAP::CloudController
 
           context 'when the canary does not survive' do
             it 'does NOT enqueue any of the buildpack install jobs and raises an error' do
-              allow(job).to receive(:perform).and_raise 'BOOM'
+              allow(canary_job).to receive(:perform).and_raise 'BOOM'
 
               expect(Jobs::Enqueuer).not_to receive(:new)
 
@@ -119,9 +149,10 @@ module VCAP::CloudController
         end
 
         it 'uses the file override' do
-          expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack1', 'another.zip', {}).and_return(job)
-          expect(job).to receive(:perform)
+          # call install
+          # verify that job_factory.plan was called with the right file
           expect(File).to receive(:file?).with('another.zip').and_return(true)
+          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: {} }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -134,10 +165,8 @@ module VCAP::CloudController
 
         it 'succeeds when no package is specified' do
           TestConfig.config[:install_buildpacks][0].delete('package')
-
-          expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).with('buildpack1', 'another.zip', {}).and_return(job)
-          expect(job).to receive(:perform)
           expect(File).to receive(:file?).with('another.zip').and_return(true)
+          expect(job_factory).to receive(:plan).with('buildpack1', [{ name: 'buildpack1', file: 'another.zip', stack: nil, options: {} }])
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
         end
@@ -159,7 +188,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'additional options' do
+      describe 'additional options' do
         let(:install_buildpack_config) do
           {
             install_buildpacks: [
@@ -174,18 +203,35 @@ module VCAP::CloudController
           }
         end
 
-        it 'the config is valid' do
+        it 'has a valid config' do
           TestConfig.config[:nginx][:instance_socket] = 'mysocket'
+
           expect { Config.new(TestConfig.config) }.not_to raise_error
         end
 
-        it 'passes optional attributes to the job' do
-          expect(Jobs::Runtime::BuildpackInstaller).to receive(:new).
-            with('buildpack1', 'abuildpack.zip', { enabled: true, locked: false, position: 5 }).and_return(job)
-          expect(Dir).to receive(:[]).with('/var/vcap/packages/mybuildpackpkg/*.zip').and_return(['abuildpack.zip'])
-          expect(File).to receive(:file?).with('abuildpack.zip').and_return(true)
+        it 'passes optional attributes to the job factory' do
+          expect(Dir).to receive(:[]).
+            with('/var/vcap/packages/mybuildpackpkg/*.zip').
+            and_return(['abuildpack.zip'])
+          expect(File).to receive(:file?).
+            with('abuildpack.zip').
+            and_return(true)
+
+          expect(job_factory).to receive(:plan).
+            with('buildpack1',
+              [{ name: 'buildpack1',
+                 file: 'abuildpack.zip',
+                 stack: nil,
+                 options: {
+                  enabled: true,
+                  locked: false,
+                  position: 5
+                } }]
+            )
 
           installer.install(TestConfig.config_instance.get(:install_buildpacks))
+
+          expect(installer.logger).to_not have_received(:error)
         end
       end
     end

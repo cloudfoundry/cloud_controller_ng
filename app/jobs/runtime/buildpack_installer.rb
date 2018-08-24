@@ -2,54 +2,14 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class BuildpackInstaller < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :file, :opts
+        attr_accessor :name, :file, :options, :guid_to_upgrade, :stack_name, :action
 
-        def initialize(name, file, opts)
-          @name = name
-          @file = file
-          @opts = opts
-        end
-
-        def perform
-          logger = Steno.logger('cc.background')
-          logger.info "Installing buildpack #{name}"
-
-          buildpacks = find_existing_buildpacks
-          if buildpacks.count > 1
-            logger.error "Update failed: Unable to determine buildpack to update as there are multiple buildpacks named #{name} for different stacks."
-            return
-          end
-
-          buildpack = buildpacks.first
-          if buildpack&.locked
-            logger.info "Buildpack #{name} locked, not updated"
-            return
-          end
-
-          created = false
-          if buildpack.nil?
-            buildpacks_lock = Locking[name: 'buildpacks']
-            buildpacks_lock.db.transaction do
-              buildpacks_lock.lock!
-              buildpack = Buildpack.create(name: name)
-            end
-            created = true
-          end
-
-          begin
-            buildpack_uploader.upload_buildpack(buildpack, file, File.basename(file))
-          rescue => e
-            if created
-              buildpack.destroy
-            end
-            raise e
-          end
-
-          buildpack.update(opts)
-          logger.info "Buildpack #{name} installed or updated"
-        rescue => e
-          logger.error("Buildpack #{name} failed to install or update. Error: #{e.inspect}")
-          raise e
+        def initialize(job_options)
+          @name = job_options[:name]
+          @file = job_options[:file]
+          @options = job_options[:options]
+          @stack_name = job_options[:stack]
+          @guid_to_upgrade = job_options[:upgrade_buildpack_guid]
         end
 
         def max_attempts
@@ -67,16 +27,8 @@ module VCAP::CloudController
 
         private
 
-        def find_existing_buildpacks
-          stack = VCAP::CloudController::Buildpacks::StackNameExtractor.extract_from_file(file)
-          if stack.present?
-            buildpacks_by_stack = Buildpack.where(name: name, stack: stack)
-            return buildpacks_by_stack if buildpacks_by_stack.any?
-            return Buildpack.where(name: name, stack: nil)
-            # XTEAM: We were reconsidering whether or not we should overwrite buildpacks of unknown stack during install
-          end
-
-          Buildpack.where(name: name)
+        def logger
+          @logger ||= Steno.logger('cc.background')
         end
       end
     end
