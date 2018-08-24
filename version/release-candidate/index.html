@@ -9251,6 +9251,7 @@ applications:
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
@@ -9313,7 +9314,8 @@ applications:
       "route": {
         "guid": "[route_guid]"
       }
-    }
+    },
+    "weight": 55
   }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -9325,6 +9327,7 @@ applications:
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
@@ -9384,6 +9387,12 @@ applications:
 <td>A relationship to a process. This relationship is specified by <code class="prettyprint">type</code> instead of <code class="prettyprint">guid</code>.</td>
 <td></td>
 </tr>
+<tr>
+<td><strong>weight</strong></td>
+<td>int</td>
+<td>A relative weight for your application that must be between 1 and 128.</td>
+<td></td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -9417,6 +9426,7 @@ applications:
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
@@ -9532,6 +9542,7 @@ applications:
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">65</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
@@ -9551,6 +9562,7 @@ applications:
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="w">
@@ -9645,6 +9657,7 @@ applications:
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">65</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
@@ -9664,6 +9677,7 @@ applications:
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="w">
