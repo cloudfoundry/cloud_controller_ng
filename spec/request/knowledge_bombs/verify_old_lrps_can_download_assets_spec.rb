@@ -28,3 +28,15 @@ RSpec.describe 'StagingsController download endpoint exists' do
     end
   end
 end
+
+RSpec.describe 'StagingsController download endpoint exists' do
+  describe 'GET /internal/v2/droplets/:guid/:droplet_checksum/download' do
+    let(:droplet) { VCAP::CloudController::DropletModel.make }
+    context 'when an lrp tries to download a droplet' do
+      it 'returns neither a 404 nor a redirect' do
+        get "/internal/v2/droplets/#{droplet.guid}/#{droplet.sha256_checksum}/download", nil, {}
+        expect(last_response.status).to eq(401), last_response.headers['Location']
+      end
+    end
+  end
+end
