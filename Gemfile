@@ -62,7 +62,7 @@ gem 'cf-perm', '~> 0.0.10'
 gem 'scientist'
 
 group :db do
-  gem 'mysql2', '~> 0.4.10'
+  gem 'mysql2', '~> 0.4.10' # 0.4.x works with Rails 4.2.5-5.x, 0.5.x works with Rails 5.0.7, 5.1.6, and higher
   gem 'pg'
 end
 
