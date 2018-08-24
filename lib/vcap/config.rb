@@ -1,3 +1,4 @@
+require 'cloud_controller/yaml_config'
 require 'yaml'
 require 'membrane'
 
@@ -11,7 +12,7 @@ module VCAP
       end
 
       def from_file(filename, symbolize_keys=true)
-        config = YAML.load_file(filename)
+        config = VCAP::CloudController::YAMLConfig.safe_load_file(filename)
         config = deep_symbolize_keys_except_in_arrays(config) if symbolize_keys
         @schema.validate(config)
         config

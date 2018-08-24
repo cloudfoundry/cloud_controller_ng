@@ -816,6 +816,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
       allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
+      allow(AppsV3Controller::DeleteAppErrorTranslatorJob).to receive(:new).and_call_original
     end
 
     context 'permissions' do
@@ -882,6 +883,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         app_model.guid,
         app_delete_stub,
       )
+      expect(AppsV3Controller::DeleteAppErrorTranslatorJob).to have_received(:new)
     end
 
     it 'creates a job to track the deletion and returns it in the location header' do
@@ -2075,6 +2077,36 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq(200)
         end
+      end
+    end
+  end
+
+  describe 'DeleteAppErrorTranslatorJob' do
+    let(:error_translator) { AppsV3Controller::DeleteAppErrorTranslatorJob.new(job) }
+    let(:job) {}
+
+    context 'when the error is a SubResourceError' do
+      it 'should translate it to CompoundError with underlying API errors' do
+        translated_error = error_translator.translate_error(VCAP::CloudController::AppDelete::SubResourceError.new([
+          StandardError.new('oops-1'),
+          StandardError.new('oops-2'),
+        ]))
+
+        expect(translated_error).to be_a(CloudController::Errors::CompoundError)
+        expect(translated_error.underlying_errors).to match_array([
+          CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-1'),
+          CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'oops-2'),
+        ])
+      end
+    end
+
+    context 'when the error is not a SubResourceError' do
+      it 'should just return it' do
+        err = StandardError.new('oops')
+
+        translated_error = error_translator.translate_error(err)
+
+        expect(translated_error).to eq(err)
       end
     end
   end

@@ -31,7 +31,13 @@ module VCAP::Services::ServiceBrokers::V2
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
-      response          = @http_client.put(path, body)
+
+      begin
+        response = @http_client.put(path, body)
+      rescue Errors::HttpClientTimeout => e
+        @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
+        raise e
+      end
 
       parsed_response     = @response_parser.parse_provision(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}
@@ -51,7 +57,7 @@ module VCAP::Services::ServiceBrokers::V2
       return_values[:last_operation][:state] = state || 'succeeded'
 
       return_values
-    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_provision(@attrs, instance)
       raise e
     rescue Errors::ServiceBrokerResponseMalformed => e
@@ -89,11 +95,17 @@ module VCAP::Services::ServiceBrokers::V2
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response        = @http_client.put(path, body)
+      begin
+        response = @http_client.put(path, body)
+      rescue Errors::HttpClientTimeout => e
+        @orphan_mitigator.cleanup_failed_key(@attrs, key)
+        raise e
+      end
+
       parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
 
       { credentials: parsed_response['credentials'] }
-    rescue Errors::ServiceBrokerApiTimeout, Errors::ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerBadResponse => e
       @orphan_mitigator.cleanup_failed_key(@attrs, key)
       raise e
     end
@@ -110,7 +122,12 @@ module VCAP::Services::ServiceBrokers::V2
       body              = body.reject { |_, v| v.nil? }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
 
-      response = @http_client.put(path, body)
+      begin
+        response = @http_client.put(path, body)
+      rescue Errors::HttpClientTimeout => e
+        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+        raise e
+      end
 
       parsed_response = @response_parser.parse_bind(path, response, service_guid: binding.service.guid)
 
@@ -135,8 +152,7 @@ module VCAP::Services::ServiceBrokers::V2
         binding: attributes,
         operation: parsed_response['operation']
       }
-    rescue Errors::ServiceBrokerApiTimeout,
-           Errors::ServiceBrokerBadResponse,
+    rescue Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerInvalidVolumeMounts,
            Errors::ServiceBrokerInvalidSyslogDrainUrl => e
       @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
@@ -238,7 +254,7 @@ module VCAP::Services::ServiceBrokers::V2
         attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
       end
 
-      return attributes, nil
+      [attributes, nil]
     rescue Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerApiTimeout,
            Errors::ServiceBrokerResponseMalformed,
@@ -252,7 +268,7 @@ module VCAP::Services::ServiceBrokers::V2
           description: e.message
         }
       }
-      return attributes, e
+      [attributes, e]
     end
 
     def fetch_service_instance(instance)

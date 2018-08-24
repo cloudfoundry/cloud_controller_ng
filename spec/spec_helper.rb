@@ -40,9 +40,9 @@ end
 # free to delete them.
 
 init_block = proc do
-  $LOAD_PATH.push(File.expand_path('../', __FILE__))
+  $LOAD_PATH.push(File.expand_path(__dir__))
 
-  require File.expand_path('../../config/boot', __FILE__)
+  require File.expand_path('../config/boot', __dir__)
 
   if ENV['COVERAGE']
     require 'simplecov'

@@ -55,7 +55,7 @@ module Credhub
     end
 
     def auth_header
-      @_uaa_auth_header ||= uaa_client.token_info.auth_header
+      @auth_header ||= uaa_client.token_info.auth_header
     end
 
     def logger

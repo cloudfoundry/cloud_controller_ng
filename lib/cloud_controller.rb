@@ -9,7 +9,7 @@ require 'allowy'
 require 'uaa/token_coder'
 
 require 'sinatra/vcap'
-require File.expand_path('../../config/environment', __FILE__)
+require File.expand_path('../config/environment', __dir__)
 
 require 'yajl'
 require 'yajl/json_gem'
@@ -49,6 +49,7 @@ require 'controllers/base/front_controller'
 
 require 'cloud_controller/app_ssh_enabled'
 require 'cloud_controller/config'
+require 'cloud_controller/yaml_config'
 require 'cloud_controller/db'
 require 'cloud_controller/database_parts_parser'
 require 'cloud_controller/runner'

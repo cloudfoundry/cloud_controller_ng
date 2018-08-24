@@ -29,7 +29,7 @@ module VCAP::CloudController
         record_audit_event(package, source_package, user_audit_info) if record_event
       end
 
-      return package
+      package
     rescue Sequel::ValidationFailed => e
       raise InvalidPackage.new(e.message)
     end

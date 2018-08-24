@@ -302,10 +302,12 @@ module VCAP::CloudController
       end
     end
 
-    def get_filtered_dataset_for_enumeration(model, ds_without_eager, qp, opts)
+    def get_filtered_dataset_for_enumeration(model, dataset_without_eager, query_params, opts)
       # special case: Sequel does not support querying columns not on the current table, so
       # when filtering by org_guid we have to join tables before executing the query.
-      ds = ds_without_eager.eager_graph_with_options(:service_plan).eager_graph_with_options(:service_instance_operation)
+      dataset = dataset_without_eager.
+                eager_graph_with_options(:service_plan).
+                eager_graph_with_options(:service_instance_operation)
 
       orig_query = opts[:q] && opts[:q].clone
       org_filters = []
@@ -334,10 +336,10 @@ module VCAP::CloudController
         opts[:q] = other_filters
       end
 
-      ds = super(model, ds, qp, opts)
-      ds = ds.where(space_id: select_spaces_based_on_org_filters(org_filters)) if !org_filters.empty?
-      ds = select_service_instances_based_on_name_filters(ds, name_filters) if !name_filters.empty?
-      ds
+      dataset = super(model, dataset, query_params, opts)
+      dataset = dataset.where(space_id: select_spaces_based_on_org_filters(org_filters)) unless org_filters.empty?
+      dataset = select_service_instances_based_on_name_filters(dataset, name_filters) unless name_filters.empty?
+      dataset
     ensure
       opts[:q] = orig_query
     end

@@ -123,7 +123,9 @@ class AppsV3Controller < ApplicationController
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+    job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable do |pollable_job|
+      DeleteAppErrorTranslatorJob.new(pollable_job)
+    end
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
@@ -274,6 +276,18 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
+  class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob
+    include V3ErrorsHelper
+
+    def translate_error(e)
+      if e.instance_of?(VCAP::CloudController::AppDelete::SubResourceError)
+        underlying_errors = e.underlying_errors.map { |err| unprocessable(err.message) }
+        e = CloudController::Errors::CompoundError.new(underlying_errors)
+      end
+      e
+    end
   end
 
   private

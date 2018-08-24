@@ -74,7 +74,7 @@ module VCAP::CloudController
 
     class ConfigFile
       def initialize(file_path)
-        @hash = YAML.load_file(file_path).tap do |h|
+        @hash = YAMLConfig.safe_load_file(file_path).tap do |h|
           Schema.validate(h)
         end
       end

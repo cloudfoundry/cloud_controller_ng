@@ -66,7 +66,7 @@ module VCAP::CloudController
 
         context 'when no config values are provided' do
           let(:cc_config_file) do
-            config = YAML.load_file('config/cloud_controller.yml')
+            config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
             config['db'].delete('database')
 
             file = Tempfile.new('cc_config.yml')
@@ -112,14 +112,14 @@ module VCAP::CloudController
         context 'when config values are provided' do
           context 'and the values are valid' do
             let(:cc_config_file) do
-              config = YAML.load_file('config/cloud_controller.yml')
+              config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
               config['stacks_file'] = '/tmp/foo'
               config['database_encryption'] = {
-                keys: {
-                  foo: 'bar',
-                  head: 'banging'
+                'keys' => {
+                  'foo' => 'bar',
+                  'head' => 'banging'
                 },
-                current_key_label: 'foo'
+                'current_key_label' => 'foo'
               }
 
               file = Tempfile.new('cc_config.yml')
@@ -167,7 +167,7 @@ module VCAP::CloudController
 
             context 'when the staging auth is already url encoded' do
               let(:cc_config_file) do
-                config = YAML.load_file('config/cloud_controller.yml')
+                config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
                 config['staging']['auth']['user'] = 'f%40t%3A%25a'
                 config['staging']['auth']['password'] = 'm%40%2Fn!'
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
 
           context 'and the password contains double quotes' do
             let(:cc_config_file) do
-              config = YAML.load_file('config/cloud_controller.yml')
+              config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
               config['staging']['auth']['password'] = 'pass"wor"d'
 
               file = Tempfile.new('cc_config.yml')
@@ -210,7 +210,7 @@ module VCAP::CloudController
 
           context 'and the values are invalid' do
             let(:cc_config_file) do
-              config = YAML.load_file('config/cloud_controller.yml')
+              config = YAMLConfig.safe_load_file('config/cloud_controller.yml')
               config['staging']['auth']['user'] = 'f@t:%a'
               config['staging']['auth']['password'] = 'm@/n!'
 

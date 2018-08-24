@@ -802,32 +802,6 @@ module VCAP::CloudController
     end
 
     describe 'command' do
-      it 'stores the command in its own column, not metadata' do
-        process = ProcessModelFactory.make(command: 'foobar')
-        expect(process.metadata).to eq('command' => 'foobar')
-        expect(process.metadata_without_command).to_not eq('command' => 'foobar')
-        process.save
-        expect(process.metadata).to eq('command' => 'foobar')
-        expect(process.metadata_without_command).to_not eq('command' => 'foobar')
-        process.refresh
-        expect(process.metadata).to eq('command' => 'foobar')
-        expect(process.metadata_without_command).to_not eq('command' => 'foobar')
-        expect(process.command).to eq('foobar')
-      end
-
-      it 'saves the field as nil when initializing to empty string' do
-        process = ProcessModelFactory.make(command: '')
-        expect(process.command).to eq(nil)
-      end
-
-      it 'saves the field as nil when overriding to empty string' do
-        process         = ProcessModelFactory.make(command: 'echo hi')
-        process.command = ''
-        process.save
-        process.refresh
-        expect(process.command).to eq(nil)
-      end
-
       it 'saves the field as nil when set to nil' do
         process         = ProcessModelFactory.make(command: 'echo hi')
         process.command = nil
@@ -836,12 +810,12 @@ module VCAP::CloudController
         expect(process.command).to eq(nil)
       end
 
-      it 'falls back to metadata value if command is not present' do
+      it 'does not fall back to metadata value if command is not present' do
         process         = ProcessModelFactory.make(metadata: { command: 'echo hi' })
         process.command = nil
         process.save
         process.refresh
-        expect(process.command).to eq('echo hi')
+        expect(process.command).to be_nil
       end
     end
 

@@ -19,7 +19,7 @@ module IntegrationSetup
     @cc_pids ||= []
 
     config_file = opts[:config] || 'config/cloud_controller.yml'
-    config = YAML.load_file(config_file)
+    config = VCAP::CloudController::YAMLConfig.safe_load_file(config_file)
 
     FileUtils.rm(config['pid_filename']) if File.exist?(config['pid_filename'])
 

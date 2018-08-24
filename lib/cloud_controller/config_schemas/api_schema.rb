@@ -9,6 +9,7 @@ module VCAP::CloudController
           external_port: Integer,
           external_domain: String,
           temporary_disable_deployments: bool,
+          temporary_use_logcache: bool,
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,
@@ -195,6 +196,18 @@ module VCAP::CloudController
             max_results_per_page: Integer,
             default_results_per_page: Integer,
             max_inline_relations_depth: Integer,
+          },
+
+          logcache: {
+            host: String,
+            port: Integer,
+          },
+
+          logcache_tls: {
+            key_file: String,
+            cert_file: String,
+            ca_file: String,
+            subject_name: String
           },
 
           loggregator: {

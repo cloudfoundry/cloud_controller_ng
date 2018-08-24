@@ -18,7 +18,7 @@ module VCAP::CloudController
     model_class_name :ProcessModel
     self.not_found_exception_name = 'AppNotFound'
 
-    def check_authentication(op)
+    def check_authentication(operation)
       auth                  = env['HTTP_AUTHORIZATION']
       grace_period          = config.get(:app_bits_upload_grace_period_in_seconds)
       relaxed_token_decoder = VCAP::CloudController::UaaTokenDecoder.new(config.get(:uaa), grace_period)

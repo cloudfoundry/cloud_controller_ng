@@ -2,7 +2,7 @@ module VCAP::CloudController
   module Repositories
     class DropletEventRepository
       def self.record_create_by_staging(droplet, user_audit_info, v3_app_name, space_guid, org_guid)
-        Loggregator.emit(droplet.app_guid, "Creating droplet for app with guid #{droplet.app_guid}")
+        VCAP::Loggregator.emit(droplet.app_guid, "Creating droplet for app with guid #{droplet.app_guid}")
 
         metadata = {
           droplet_guid: droplet.guid,
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       def self.record_create_by_copying(new_droplet_guid, source_droplet_guid, user_audit_info, v3_app_guid, v3_app_name, space_guid, org_guid)
-        Loggregator.emit(v3_app_guid, "Creating droplet for app with guid #{v3_app_guid}")
+        VCAP::Loggregator.emit(v3_app_guid, "Creating droplet for app with guid #{v3_app_guid}")
 
         metadata = {
           droplet_guid: new_droplet_guid,
@@ -52,7 +52,7 @@ module VCAP::CloudController
       end
 
       def self.record_delete(droplet, user_audit_info, v3_app_name, space_guid, org_guid)
-        Loggregator.emit(droplet.app_guid, "Deleting droplet for app with guid #{droplet.app_guid}")
+        VCAP::Loggregator.emit(droplet.app_guid, "Deleting droplet for app with guid #{droplet.app_guid}")
 
         metadata = { droplet_guid: droplet.guid }
 
@@ -74,7 +74,7 @@ module VCAP::CloudController
 
       # Emit this event once we have droplet download capability
       def self.record_download(droplet, user_audit_info, v3_app_name, space_guid, org_guid)
-        Loggregator.emit(droplet.app_guid, "Downloading droplet for app with guid #{droplet.app_guid}")
+        VCAP::Loggregator.emit(droplet.app_guid, "Downloading droplet for app with guid #{droplet.app_guid}")
 
         metadata = { droplet_guid: droplet.guid }
 

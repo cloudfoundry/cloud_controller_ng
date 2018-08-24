@@ -1,4 +1,3 @@
-
 require 'cloud_controller/process_observer'
 require 'cloud_controller/database_uri_generator'
 require 'cloud_controller/errors/application_missing'
@@ -26,6 +25,7 @@ module VCAP::CloudController
       self.memory           ||= Config.config.get(:default_app_memory)
       self.disk_quota       ||= Config.config.get(:default_app_disk_in_mb)
       self.file_descriptors ||= Config.config.get(:instance_file_descriptor_limit)
+      self.metadata         ||= {}
     end
 
     NO_APP_PORT_SPECIFIED = -1
@@ -355,26 +355,12 @@ module VCAP::CloudController
       db.after_commit { ProcessObserver.deleted(self) }
     end
 
-    def metadata_with_command
-      result = metadata_without_command || self.metadata = {}
-      command ? result.merge('command' => command) : result
-    end
-
-    alias_method_chain :metadata, :command
-
-    def command_with_fallback
-      cmd = command_without_fallback.presence
-      cmd || metadata_without_command && metadata_without_command['command']
-    end
-
-    alias_method_chain :command, :fallback
-
     def execution_metadata
       current_droplet.try(:execution_metadata) || ''
     end
 
     def specified_or_detected_command
-      command || detected_start_command
+      command.presence || detected_start_command
     end
 
     def detected_start_command
@@ -402,9 +388,9 @@ module VCAP::CloudController
       latest_build.try(:error_description) || latest_droplet.try(:error_description)
     end
 
-    def console=(c)
+    def console=(value)
       self.metadata ||= {}
-      self.metadata['console'] = c
+      self.metadata['console'] = value
     end
 
     def console
@@ -413,10 +399,10 @@ module VCAP::CloudController
       self.metadata && self.metadata['console'] == true
     end
 
-    def debug=(d)
+    def debug=(value)
       self.metadata ||= {}
       # We don't support sending nil through API
-      self.metadata['debug'] = (d == 'none') ? nil : d
+      self.metadata['debug'] = (value == 'none') ? nil : value
     end
 
     def debug
@@ -577,7 +563,7 @@ module VCAP::CloudController
     end
 
     def app_usage_event_repository
-      @repository ||= Repositories::AppUsageEventRepository.new
+      @app_usage_event_repository ||= Repositories::AppUsageEventRepository.new
     end
 
     def create_app_usage_buildpack_event
@@ -608,5 +594,4 @@ module VCAP::CloudController
       end
     end
   end
-  # rubocop:enable ClassLength
 end

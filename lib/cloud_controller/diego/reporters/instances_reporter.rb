@@ -71,7 +71,7 @@ module VCAP::CloudController
         running_indices.length
       rescue => e
         logger.error('number_of_starting_and_running_instances_for_process.error', error: e.to_s)
-        return UNKNOWN_INSTANCE_COUNT
+        UNKNOWN_INSTANCE_COUNT
       end
 
       def crashed_instances_for_app(process)

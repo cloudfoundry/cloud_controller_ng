@@ -463,6 +463,46 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
+  context '#traffic_controller_client' do
+    it 'returns the tc client' do
+      expect(locator.traffic_controller_client).to be_an_instance_of(TrafficController::Client)
+    end
+  end
+
+  describe '#traffic_controller_compatible_logcache_client' do
+    let(:logcache_client) { instance_double(Logcache::Client) }
+    before do
+      TestConfig.override(
+        {
+          logcache: {
+            host: 'some-logcache-host',
+            port: 1234,
+          },
+          logcache_tls: {
+            ca_file: 'logcache-ca',
+            cert_file: 'logcache-client-ca',
+            key_file: 'logcache-client-key',
+            subject_name: 'some-tls-cert-san'
+          }
+        }
+      )
+
+      allow(Logcache::Client).to receive(:new).and_return(logcache_client)
+    end
+
+    it 'returns the tc-decorated client' do
+      expect(locator.traffic_controller_compatible_logcache_client).to be_an_instance_of(Logcache::TrafficControllerDecorator)
+      expect(Logcache::Client).to have_received(:new).with(
+        host: 'some-logcache-host',
+        port: 1234,
+        client_ca_path: 'logcache-ca',
+        client_cert_path: 'logcache-client-ca',
+        client_key_path: 'logcache-client-key',
+        tls_subject_name: 'some-tls-cert-san'
+      )
+    end
+  end
+
   describe '#perm_client' do
     it 'returns the perm client' do
       expect(locator.perm_client).to be_an_instance_of(VCAP::CloudController::Perm::Client)

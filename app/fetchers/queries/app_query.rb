@@ -1,7 +1,7 @@
 module VCAP::RestAPI
   class AppQuery < Query
     def filtered_dataset
-      filter_args_from_query.inject(@ds) do |filter, cond|
+      filter_args_from_query.inject(@dataset) do |filter, cond|
         if cond.is_a?(Hash)
           if cond.key?(:organization)
             org_filter(filter, cond)
@@ -18,14 +18,14 @@ module VCAP::RestAPI
       end
     end
 
-    def org_filter(ds, cond)
-      ds.where(space: VCAP::CloudController::Space.where(organization: cond[:organization]))
+    def org_filter(dataset, cond)
+      dataset.where(space: VCAP::CloudController::Space.where(organization: cond[:organization]))
     end
 
-    def stack_filter(ds, cond)
+    def stack_filter(dataset, cond)
       stack_names = cond[:stack].select(:name)
 
-      ds.where(
+      dataset.where(
         app: VCAP::CloudController::AppModel.where(
           buildpack_lifecycle_data: VCAP::CloudController::BuildpackLifecycleDataModel.where(stack: stack_names).
             exclude(app_guid: nil).
@@ -34,8 +34,8 @@ module VCAP::RestAPI
       )
     end
 
-    def name_filter(ds, cond)
-      ds.where(app: VCAP::CloudController::AppModel.filter(cond))
+    def name_filter(dataset, cond)
+      dataset.where(app: VCAP::CloudController::AppModel.filter(cond))
     end
 
     def raise_if_column_is_missing(query_key, column)

@@ -19,7 +19,7 @@ module VCAP::CloudController
     def data_content
       return if data.nil?
       errors.add(:data, 'can only accept one key') unless data.keys.length == 1
-      errors.add(:data, "can only accept key 'guid'") unless data.keys.include?(:guid)
+      errors.add(:data, "can only accept key 'guid'") unless data.key?(:guid)
       errors.add(:data, "#{isolation_segment_guid} must be a string") if isolation_segment_guid && !isolation_segment_guid.is_a?(String)
     end
   end

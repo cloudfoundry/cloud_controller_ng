@@ -207,11 +207,11 @@ class VCAP::CloudController::Permissions::Queryer
     experiment.run
   end
 
-  def compare_arrays(a, b)
-    if a.is_a?(Array) && b.is_a?(Array)
-      a.sort == b.sort
+  def compare_arrays(left, right)
+    if left.is_a?(Array) && right.is_a?(Array)
+      left.sort == right.sort
     else
-      a == b
+      left == right
     end
   end
 end

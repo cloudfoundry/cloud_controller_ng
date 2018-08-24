@@ -147,7 +147,7 @@ module VCAP::Services
       rescue SocketError, Errno::ECONNREFUSED => error
         raise Errors::ServiceBrokerApiUnreachable.new(uri.to_s, method, error)
       rescue HTTPClient::TimeoutError => error
-        raise Errors::ServiceBrokerApiTimeout.new(uri.to_s, method, error)
+        raise Errors::HttpClientTimeout.new(uri.to_s, method, error)
       rescue => error
         raise HttpRequestError.new(error.message, uri.to_s, method, error)
       end
@@ -174,11 +174,7 @@ module VCAP::Services
       end
 
       def user_guid(options)
-        if options[:user_guid]
-          options[:user_guid]
-        else
-          VCAP::CloudController::SecurityContext.current_user_guid
-        end
+        options[:user_guid] || VCAP::CloudController::SecurityContext.current_user_guid
       end
     end
   end

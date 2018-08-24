@@ -74,16 +74,16 @@ module VCAP::CloudController::RestController
     # so that they can be investigated and have more accurate error
     # reporting added.
     #
-    # @param [Symbol] op The method to dispatch to.
+    # @param [Symbol] operation The method to dispatch to.
     #
     # @param [Array] args The arguments to the method being dispatched to.
     #
     # @return [Object] Returns an array of [http response code, Header hash,
     # body string], or just a body string.
-    def dispatch(op, *args)
-      logger.debug 'cc.dispatch', endpoint: op, args: args
-      check_authentication(op)
-      send(op, *args)
+    def dispatch(operation, *args)
+      logger.debug 'cc.dispatch', endpoint: operation, args: args
+      check_authentication(operation)
+      send(operation, *args)
     rescue Sequel::ValidationFailed => e
       raise self.class.translate_validation_exception(e, request_attrs)
     rescue Sequel::HookFailed => e
@@ -131,10 +131,10 @@ module VCAP::CloudController::RestController
       set_header('X-Cf-Warnings', new_warning)
     end
 
-    def check_authentication(op)
+    def check_authentication(operation)
       # The logic here is a bit oddly ordered, but it supports the
       # legacy calls setting a user, but not providing a token.
-      return if self.class.allow_unauthenticated_access?(op)
+      return if self.class.allow_unauthenticated_access?(operation)
       return if VCAP::CloudController::SecurityContext.current_user
 
       if VCAP::CloudController::SecurityContext.missing_token?
@@ -302,11 +302,11 @@ module VCAP::CloudController::RestController
         end
       end
 
-      def allow_unauthenticated_access?(op)
+      def allow_unauthenticated_access?(operation)
         if @allow_unauthenticated_access_to_all_ops
           @allow_unauthenticated_access_to_all_ops
         elsif @allow_unauthenticated_access_ops
-          @allow_unauthenticated_access_ops.include?(op)
+          @allow_unauthenticated_access_ops.include?(operation)
         end
       end
 

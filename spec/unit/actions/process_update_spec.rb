@@ -209,7 +209,6 @@ module VCAP::CloudController
 
             process.reload
             expect(process.command).to be_nil
-            expect(process.command_without_fallback).to be_nil
           end
         end
 
@@ -221,7 +220,6 @@ module VCAP::CloudController
 
             process.reload
             expect(process.command).to be_nil
-            expect(process.command_without_fallback).to be_nil
           end
         end
       end

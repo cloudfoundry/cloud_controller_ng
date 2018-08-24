@@ -3,7 +3,7 @@ require 'loggregator'
 
 module CCInitializers
   def self.new_relic_loggregator_instrumentation(_)
-    Loggregator.class_eval do
+    VCAP::Loggregator.class_eval do
       include ::NewRelic::Agent::MethodTracer
 
       class << self

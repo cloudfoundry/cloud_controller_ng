@@ -7,6 +7,7 @@ gem 'clockwork', require: false
 gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.1'
 gem 'eventmachine', '~> 1.0.9'
+gem 'googleapis-common-protos'
 gem 'httpclient'
 gem 'i18n'
 gem 'json-schema'
@@ -27,7 +28,6 @@ gem 'public_suffix'
 gem 'rake'
 gem 'rfc822'
 gem 'rubyzip', git: 'https://github.com/rubyzip/rubyzip.git', ref: '8887b70'
-
 gem 'sequel'
 gem 'sinatra', '~> 1.4'
 gem 'sinatra-contrib'
@@ -50,7 +50,7 @@ gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-r
 gem 'bits_service_client', '~> 3.0'
 gem 'fog-aliyun'
 gem 'fog-aws'
-gem 'fog-azure-rm'
+gem 'fog-azure-rm', git: 'https://github.com/fog/fog-azure-rm.git', branch: 'fog-arm-cf'
 gem 'fog-google'
 gem 'fog-local'
 gem 'fog-openstack'
@@ -62,7 +62,7 @@ gem 'cf-perm', '~> 0.0.10'
 gem 'scientist'
 
 group :db do
-  gem 'mysql2', '~> 0.4.10'
+  gem 'mysql2', '~> 0.4.10' # 0.4.x works with Rails 4.2.5-5.x, 0.5.x works with Rails 5.0.7, 5.1.6, and higher
   gem 'pg'
 end
 
@@ -85,7 +85,7 @@ group :test do
   gem 'rspec-rails'
   gem 'rspec-wait'
   gem 'rspec_api_documentation'
-  gem 'rubocop', '~> 0.52.0'
+  gem 'rubocop', '~> 0.58.2'
   gem 'timecop'
   gem 'webmock', '> 2.3.1'
 end

@@ -3,7 +3,7 @@ module VCAP::CloudController
     attr_reader :uaa_target, :client_id, :secret, :ca_file, :http_timeout
 
     def self.default_http_timeout
-      @http_timeout ||= VCAP::CloudController::Config.config.get(:uaa, :client_timeout)
+      @default_http_timeout ||= VCAP::CloudController::Config.config.get(:uaa, :client_timeout)
     end
 
     def initialize(uaa_target:, client_id:, secret:, ca_file:)
@@ -64,7 +64,7 @@ module VCAP::CloudController
       filter_string = %(username eq "#{username}")
       results       = scim.query(:user_id, includeInactive: true, filter: filter_string)
 
-      return results['resources'].map { |resource| resource['origin'] }
+      results['resources'].map { |resource| resource['origin'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve origins from UAA: #{e.inspect}")
       raise UaaUnavailable.new(e)

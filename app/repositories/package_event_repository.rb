@@ -3,7 +3,7 @@ module VCAP::CloudController
     class PackageEventRepository
       def self.record_app_package_create(package, user_audit_info, request_attrs)
         app_guid = request_attrs.delete('app_guid')
-        Loggregator.emit(app_guid, "Adding app package for app with guid #{app_guid}")
+        VCAP::Loggregator.emit(app_guid, "Adding app package for app with guid #{app_guid}")
 
         metadata = {
           package_guid: package.guid,
@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       def self.record_app_package_copy(package, user_audit_info, source_package_guid)
         app = package.app
-        Loggregator.emit(app.guid, "Adding app package for app with guid #{app.guid} copied from package with guid #{source_package_guid}")
+        VCAP::Loggregator.emit(app.guid, "Adding app package for app with guid #{app.guid} copied from package with guid #{source_package_guid}")
         metadata = {
           package_guid: package.guid,
           request:      {
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_package_upload(package, user_audit_info)
-        Loggregator.emit(package.app.guid, "Uploading app package for app with guid #{package.app.guid}")
+        VCAP::Loggregator.emit(package.app.guid, "Uploading app package for app with guid #{package.app.guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.package.upload'
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_upload_bits(package, user_audit_info)
-        Loggregator.emit(package.app.guid, "Uploading bits for app with guid #{package.app.guid}")
+        VCAP::Loggregator.emit(package.app.guid, "Uploading bits for app with guid #{package.app.guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.upload-bits'
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_package_delete(package, user_audit_info)
-        Loggregator.emit(package.app.guid, "Deleting app package for app with guid #{package.app.guid}")
+        VCAP::Loggregator.emit(package.app.guid, "Deleting app package for app with guid #{package.app.guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.package.delete'
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
       end
 
       def self.record_app_package_download(package, user_audit_info)
-        Loggregator.emit(package.app.guid, "Downloading app package for app with guid #{package.app.guid}")
+        VCAP::Loggregator.emit(package.app.guid, "Downloading app package for app with guid #{package.app.guid}")
         metadata = { package_guid: package.guid }
         type     = 'audit.app.package.download'
 

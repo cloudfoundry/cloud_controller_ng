@@ -15,7 +15,10 @@ RSpec.describe 'Cloud controller Loggregator Integration', type: :integration do
 
     base_cc_config_file = 'config/cloud_controller.yml'
     port_8181_overrides = 'spec/fixtures/config/port_8181_config.yml'
-    config = YAML.load_file(base_cc_config_file).deep_merge(YAML.load_file(port_8181_overrides))
+    config = VCAP::CloudController::YAMLConfig.safe_load_file(base_cc_config_file).deep_merge(
+      VCAP::CloudController::YAMLConfig.safe_load_file(port_8181_overrides)
+    )
+
     @cc_config_file = Tempfile.new('cc_config.yml')
     @cc_config_file.write(YAML.dump(config))
     @cc_config_file.close

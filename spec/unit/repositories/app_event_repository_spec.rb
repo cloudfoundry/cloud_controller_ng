@@ -37,7 +37,7 @@ module VCAP::CloudController
             'docker_credentials' => '[PRIVATE DATA HIDDEN]',
           }
 
-          expect(Loggregator).to receive(:emit).with(process.guid, "Updated app with guid #{process.guid} (#{expected_request_field})")
+          expect(VCAP::Loggregator).to receive(:emit).with(process.guid, "Updated app with guid #{process.guid} (#{expected_request_field})")
 
           event = app_event_repository.record_app_update(process, space, user_audit_info, attrs).reload
 
@@ -108,7 +108,7 @@ module VCAP::CloudController
         end
 
         it 'logs the event' do
-          expect(Loggregator).to receive(:emit).with(process.guid, "Created app with guid #{process.guid}")
+          expect(VCAP::Loggregator).to receive(:emit).with(process.guid, "Created app with guid #{process.guid}")
 
           app_event_repository.record_app_create(process, process.space, user_audit_info, request_attrs)
         end
@@ -140,7 +140,7 @@ module VCAP::CloudController
         end
 
         it 'logs the event' do
-          expect(Loggregator).to receive(:emit).with(process.guid, "Deleted app with guid #{process.guid}")
+          expect(VCAP::Loggregator).to receive(:emit).with(process.guid, "Deleted app with guid #{process.guid}")
 
           app_event_repository.record_app_delete_request(process, space, user_audit_info, false)
         end
@@ -218,7 +218,7 @@ module VCAP::CloudController
         end
 
         it 'logs the event' do
-          expect(Loggregator).to receive(:emit).with(exiting_process.guid, "App instance exited with guid #{exiting_process.guid} payload: #{droplet_exited_payload}")
+          expect(VCAP::Loggregator).to receive(:emit).with(exiting_process.guid, "App instance exited with guid #{exiting_process.guid} payload: #{droplet_exited_payload}")
 
           app_event_repository.create_app_exit_event(exiting_process, droplet_exited_payload)
         end

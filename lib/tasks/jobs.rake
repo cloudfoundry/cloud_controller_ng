@@ -57,8 +57,8 @@ namespace :jobs do
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")
       if config.get(:loggregator) && config.get(:loggregator, :router)
-        Loggregator.emitter = LoggregatorEmitter::Emitter.new(config.get(:loggregator, :router), 'cloud_controller', 'API', config.get(:index))
-        Loggregator.logger = logger
+        VCAP::Loggregator.emitter = LoggregatorEmitter::Emitter.new(config.get(:loggregator, :router), 'cloud_controller', 'API', config.get(:index))
+        VCAP::Loggregator.logger = logger
       end
       Delayed::Worker.destroy_failed_jobs = false
       Delayed::Worker.max_attempts = 3

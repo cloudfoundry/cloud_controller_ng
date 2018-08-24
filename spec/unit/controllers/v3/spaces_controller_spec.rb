@@ -195,6 +195,17 @@ RSpec.describe SpacesV3Controller, type: :controller do
             ])
           end
         end
+
+        describe 'guids' do
+          it 'returns the list of matching spaces' do
+            get :index, { guids: "#{org1_space.guid},#{org2_space.guid}" }
+
+            expect(response.status).to eq(200)
+            expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
+              org1_space.guid, org2_space.guid
+            ])
+          end
+        end
       end
 
       context 'when the user does NOT have global read access' do
@@ -210,6 +221,17 @@ RSpec.describe SpacesV3Controller, type: :controller do
             expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
               'Alpaca',
             ])
+          end
+
+          describe 'guids' do
+            it 'returns the list of readable matching spaces' do
+              get :index, { guids: "#{org1_space.guid},#{org2_space.guid}" }
+
+              expect(response.status).to eq(200)
+              expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
+                org1_space.guid
+              ])
+            end
           end
         end
       end

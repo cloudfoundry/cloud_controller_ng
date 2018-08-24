@@ -11,6 +11,8 @@ require 'cloud_controller/blob_sender/nginx_blob_sender'
 require 'cloud_controller/blob_sender/default_blob_sender'
 require 'cloud_controller/blob_sender/missing_blob_handler'
 require 'traffic_controller/client'
+require 'logcache/client'
+require 'logcache/traffic_controller_decorator'
 require 'cloud_controller/diego/task_recipe_builder'
 require 'cloud_controller/diego/app_recipe_builder'
 require 'cloud_controller/diego/bbs_apps_client'
@@ -88,6 +90,15 @@ module CloudController
 
     def traffic_controller_client
       @dependencies[:traffic_controller_client] || register(:traffic_controller_client, build_traffic_controller_client)
+    end
+
+    def logcache_client
+      @dependencies[:logcache_client] || register(:logcache_client, build_logcache_client)
+    end
+
+    def traffic_controller_compatible_logcache_client
+      @dependencies[:traffic_controller_compatible_logcache_client] ||
+          register(:traffic_controller_compatible_logcache_client, Logcache::TrafficControllerDecorator.new(logcache_client))
     end
 
     def upload_handler
@@ -409,6 +420,17 @@ module CloudController
 
     def build_traffic_controller_client
       TrafficController::Client.new(url: config.get(:loggregator, :internal_url))
+    end
+
+    def build_logcache_client
+      Logcache::Client.new(
+        host: config.get(:logcache, :host),
+        port: config.get(:logcache, :port),
+        client_ca_path: config.get(:logcache_tls, :ca_file),
+        client_cert_path: config.get(:logcache_tls, :cert_file),
+        client_key_path: config.get(:logcache_tls, :key_file),
+        tls_subject_name: config.get(:logcache_tls, :subject_name)
+      )
     end
 
     def create_object_renderer(opts={})

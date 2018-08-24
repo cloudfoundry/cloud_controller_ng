@@ -20,7 +20,7 @@ module VCAP::CloudController
       private
 
       def record_space_role_event(type, space, assignee, actor_audit_info, request_attrs)
-        username = assignee.username ? assignee.username : ''
+        username = assignee.username || ''
         Event.create(
           type:           type,
           space:          space,
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       def record_organization_role_event(type, organization, assignee, actor_audit_info, request_attrs)
-        username = assignee.username ? assignee.username : ''
+        username = assignee.username || ''
         Event.create(
           type:              type,
           organization_guid: organization.guid,

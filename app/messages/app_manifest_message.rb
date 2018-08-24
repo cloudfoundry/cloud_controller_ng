@@ -240,7 +240,8 @@ module VCAP::CloudController
 
     def validate_byte_format(human_readable_byte_value, attribute_name)
       byte_converter.convert_to_mb(human_readable_byte_value)
-      return
+
+      nil
     rescue ByteConverter::InvalidUnitsError
       "#{attribute_name} must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB"
     rescue ByteConverter::NonNumericError

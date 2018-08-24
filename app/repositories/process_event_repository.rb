@@ -6,7 +6,7 @@ module VCAP::CloudController
       extend AppManifestEventMixins
 
       def self.record_create(process, user_audit_info, manifest_triggered: false)
-        Loggregator.emit(process.app.guid, "Added process: \"#{process.type}\"")
+        VCAP::Loggregator.emit(process.app.guid, "Added process: \"#{process.type}\"")
 
         metadata = add_manifest_triggered(manifest_triggered, {
           process_guid: process.guid,
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       def self.record_delete(process, user_audit_info)
-        Loggregator.emit(process.app.guid, "Deleting process: \"#{process.type}\"")
+        VCAP::Loggregator.emit(process.app.guid, "Deleting process: \"#{process.type}\"")
 
         create_event(
           process:        process,
@@ -40,7 +40,7 @@ module VCAP::CloudController
       end
 
       def self.record_update(process, user_audit_info, request, manifest_triggered: false)
-        Loggregator.emit(process.app.guid, "Updating process: \"#{process.type}\"")
+        VCAP::Loggregator.emit(process.app.guid, "Updating process: \"#{process.type}\"")
 
         request           = request.dup.symbolize_keys
         request[:command] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if request.key?(:command)
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       def self.record_scale(process, user_audit_info, request, manifest_triggered: false)
-        Loggregator.emit(process.app.guid, "Scaling process: \"#{process.type}\"")
+        VCAP::Loggregator.emit(process.app.guid, "Scaling process: \"#{process.type}\"")
 
         metadata = add_manifest_triggered(manifest_triggered, {
           process_guid: process.guid,
@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       def self.record_terminate(process, user_audit_info, index)
-        Loggregator.emit(process.app.guid, "Terminating process: \"#{process.type}\", index: \"#{index}\"")
+        VCAP::Loggregator.emit(process.app.guid, "Terminating process: \"#{process.type}\", index: \"#{index}\"")
 
         create_event(
           process:        process,
@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
 
       def self.record_crash(process, crash_payload)
-        Loggregator.emit(process.app.guid, "Process has crashed with type: \"#{process.type}\"")
+        VCAP::Loggregator.emit(process.app.guid, "Process has crashed with type: \"#{process.type}\"")
 
         create_event(
           process:    process,

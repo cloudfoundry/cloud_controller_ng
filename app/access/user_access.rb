@@ -63,7 +63,7 @@ module VCAP::CloudController
       return true if admin_user? || admin_read_only_user?
       # allow related enumerations for certain models
       related_model = params && params[:related_model]
-      related_model == Organization || related_model == Space
+      [Organization, Space].include? related_model
     end
 
     def read?(user)

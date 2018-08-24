@@ -89,7 +89,7 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces' do
-    it 'returns a paginated list of orgs the user has access to' do
+    it 'returns a paginated list of spaces the user has access to' do
       get '/v3/spaces?per_page=2', nil, user_header
       expect(last_response.status).to eq(200)
 

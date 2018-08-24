@@ -27,7 +27,7 @@ module VCAP::CloudController
   end
 
   def self.controller_from_name_mapping
-    @controller_from_name ||= {}
+    @controller_from_name_mapping ||= {}
   end
 
   def self.set_controller_for_model_name(model_name:, controller:)

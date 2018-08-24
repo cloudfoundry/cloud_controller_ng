@@ -12,13 +12,13 @@ module VCAP
 
     def num_cores
       if RUBY_PLATFORM.match?(/linux/)
-        return `cat /proc/cpuinfo | grep processor | wc -l`.to_i
+        `cat /proc/cpuinfo | grep processor | wc -l`.to_i
       elsif RUBY_PLATFORM.match?(/darwin/)
         `sysctl -n hw.ncpu`.strip.to_i
       elsif RUBY_PLATFORM.match?(/freebsd|netbsd/)
         `sysctl hw.ncpu`.strip.to_i
       else
-        return 1 # unknown..
+        1 # unknown..
       end
     rescue
       # In any case, let's always assume that there is 1 core

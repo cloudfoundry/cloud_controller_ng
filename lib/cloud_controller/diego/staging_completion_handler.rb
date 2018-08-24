@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       def self.success_parser
-        @staging_response_schema ||= Membrane::SchemaParser.parse(&schema)
+        @success_parser ||= Membrane::SchemaParser.parse(&schema)
       end
 
       private
@@ -69,7 +69,7 @@ module VCAP::CloudController
           )
         end
 
-        Loggregator.emit_error(build.guid, "Failed to stage build: #{payload[:error][:message]}")
+        VCAP::Loggregator.emit_error(build.guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
       def handle_success(payload, with_start)
@@ -146,7 +146,7 @@ module VCAP::CloudController
       end
 
       def error_parser
-        @error_schema ||= Membrane::SchemaParser.parse do
+        @error_parser ||= Membrane::SchemaParser.parse do
           {
             error: {
               id:      String,

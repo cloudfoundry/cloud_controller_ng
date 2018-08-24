@@ -70,7 +70,7 @@ module VCAP::CloudController
         clock_opts = {
           name: cleanup_config[:name],
           at: cleanup_config[:time],
-          priority: cleanup_config[:priority] ? cleanup_config[:priority] : Clock::HIGH_PRIORITY
+          priority: cleanup_config[:priority] || Clock::HIGH_PRIORITY
         }
 
         @clock.schedule_daily_job(clock_opts) do

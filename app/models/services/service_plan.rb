@@ -67,13 +67,13 @@ module VCAP::CloudController
       end
     end
 
-    def self.user_visible(user, admin_override=false, op=nil)
-      dataset.filter(user_visibility(user, admin_override, op))
+    def self.user_visible(user, admin_override=false, operation=nil)
+      dataset.filter(user_visibility(user, admin_override, operation))
     end
 
-    def self.user_visibility(user, admin_override, op=nil)
+    def self.user_visibility(user, admin_override, operation=nil)
       if !admin_override && user
-        op == :read ? user_visibility_show_filter(user) : user_visibility_list_filter(user)
+        operation == :read ? user_visibility_show_filter(user) : user_visibility_list_filter(user)
       else
         super(user, admin_override)
       end

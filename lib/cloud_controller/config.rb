@@ -123,7 +123,7 @@ module VCAP::CloudController
 
     def valid_config_path?(keys, some_schema)
       keys.each do |key|
-        if some_schema.is_a?(Membrane::Schemas::Record) && some_schema.schemas.keys.include?(key)
+        if some_schema.is_a?(Membrane::Schemas::Record) && some_schema.schemas.key?(key)
           some_schema = some_schema.schemas[key]
         else
           invalid_config_path!(keys)

@@ -42,11 +42,7 @@ module VCAP::CloudController
     private
 
     def buildpacks_to_use
-      if staging_message.buildpack_data.buildpacks
-        staging_message.buildpack_data.buildpacks
-      else
-        @package.app.lifecycle_data.buildpacks
-      end
+      staging_message.buildpack_data.buildpacks || @package.app.lifecycle_data.buildpacks
     end
 
     def requested_stack

@@ -47,7 +47,7 @@ module VCAP::Services::ServiceBrokers
             Plan plan-2
               Schemas
                 Schemas must be valid
-HEREDOC
+        HEREDOC
       end
     end
   end

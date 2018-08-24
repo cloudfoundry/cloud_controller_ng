@@ -1,4 +1,5 @@
 require 'traffic_controller/client'
+require 'logcache/client'
 require 'cloud_controller/diego/reporters/reporter_mixins'
 
 module VCAP::CloudController
@@ -6,9 +7,9 @@ module VCAP::CloudController
     class InstancesStatsReporter
       include ReporterMixins
 
-      def initialize(bbs_instances_client, traffic_controller_client)
-        @bbs_instances_client      = bbs_instances_client
-        @traffic_controller_client = traffic_controller_client
+      def initialize(bbs_instances_client, logstats_client)
+        @bbs_instances_client = bbs_instances_client
+        @logstats_client = logstats_client
       end
 
       def stats_for_app(process)
@@ -17,8 +18,8 @@ module VCAP::CloudController
         formatted_current_time = Time.now.to_datetime.rfc3339
 
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
-        envelopes = @traffic_controller_client.container_metrics(
-          app_guid: process.guid,
+        envelopes = @logstats_client.container_metrics(
+          source_guid: process.guid,
           auth_token: VCAP::CloudController::SecurityContext.auth_token,
         )
         actual_lrps = bbs_instances_client.lrp_instances(process)
