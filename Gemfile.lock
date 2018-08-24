@@ -347,7 +347,7 @@ GEM
       rspec-expectations (>= 2.99.0.beta1)
     rspec-core (3.8.0)
       rspec-support (~> 3.8.0)
-    rspec-expectations (3.8.0)
+    rspec-expectations (3.8.1)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
     rspec-instafail (1.0.0)
@@ -512,11 +512,11 @@ DEPENDENCIES
   rake
   rfc822
   roodi
-  rspec
+  rspec (~> 3.8.0)
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails
+  rspec-rails (~> 3.8.0)
   rspec-wait
   rspec_api_documentation
   rubocop (~> 0.58.2)

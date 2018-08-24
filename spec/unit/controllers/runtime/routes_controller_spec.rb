@@ -585,8 +585,8 @@ module VCAP::CloudController
 
                 expect(last_response.status).to eq(201)
                 expect(last_response.body).to include("\"port\": #{generated_port}")
-                expect(last_response.headers).to include('X-CF-Warnings')
-                expect(last_response.headers['X-CF-Warnings']).to include(port_override_warning)
+                expect(last_response.headers).to include('X-Cf-Warnings')
+                expect(last_response.headers['X-Cf-Warnings']).to include(port_override_warning)
               end
             end
 
@@ -607,7 +607,7 @@ module VCAP::CloudController
 
                 expect(last_response.status).to eq(201)
                 expect(last_response.body).to include("\"port\": #{generated_port + 1}")
-                expect(last_response.headers).not_to include('X-CF-Warnings')
+                expect(last_response.headers).not_to include('X-Cf-Warnings')
               end
             end
           end

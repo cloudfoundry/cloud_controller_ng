@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       context 'when no user_guid filter is provided' do
         it 'should return a list of all users with their associated roles' do
-          users = OrganizationUserRolesFetcher.fetch(org)
+          users = OrganizationUserRolesFetcher.fetch(org).to_a
           expect(users).to include(everything_user, manager, auditor, biller, user)
           expect(users).not_to include(not_a_user)
         end
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       context 'when a user_guid is specified' do
         it 'should return a list of associated roles for that user_guid' do
-          users = OrganizationUserRolesFetcher.fetch(org, user_guid: auditor.guid)
+          users = OrganizationUserRolesFetcher.fetch(org, user_guid: auditor.guid).to_a
           expect(users.map(&:guid)).to include(auditor.guid)
           expect(users.map(&:guid)).not_to include(everything_user.guid, manager.guid, biller.guid, user.guid, not_a_user.guid)
         end
