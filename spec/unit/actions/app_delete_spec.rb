@@ -116,7 +116,7 @@ module VCAP::CloudController
             end
 
             it 'tells copilot to unmap the route' do
-              expect(copilot_client).to receive(:unmap_route).with({ capi_process_guid: process.guid, route_guid: route.guid })
+              expect(copilot_client).to receive(:unmap_route).with({ capi_process_guid: process.guid, route_guid: route.guid, route_weight: 1 })
               app_delete.delete(app_dataset)
             end
 
