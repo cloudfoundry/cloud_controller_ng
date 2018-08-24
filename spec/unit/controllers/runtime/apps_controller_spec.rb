@@ -1116,34 +1116,73 @@ module VCAP::CloudController
         end
       end
 
-      context 'non recursive deletion' do
-        context 'with NON-empty service_binding association' do
-          let!(:svc_instance) { ManagedServiceInstance.make(space: process.space) }
-          let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: svc_instance) }
-          let(:guid_pattern) { '[[:alnum:]-]+' }
+      describe 'recursive deletion' do
+        let!(:svc_instance) { ManagedServiceInstance.make(space: process.space) }
+        let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: svc_instance) }
+        let(:guid_pattern) { '[[:alnum:]-]+' }
+        let(:broker_response_code) { 200 }
 
+        before do
+          service_broker = svc_instance.service.service_broker
+          uri            = URI(service_broker.broker_url)
+          broker_url     = uri.host + uri.path
+          stub_request(
+            :delete,
+            %r{https://#{broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
+            with(basic_auth: basic_auth(service_broker: service_broker)).
+            to_return(status: broker_response_code, body: '{}')
+        end
+
+        context 'when recursive=false is set' do
           before do
-            service_broker = svc_instance.service.service_broker
-            uri            = URI(service_broker.broker_url)
-            broker_url     = uri.host + uri.path
-            stub_request(
-              :delete,
-              %r{https://#{broker_url}/v2/service_instances/#{guid_pattern}/service_bindings/#{guid_pattern}}).
-              with(basic_auth: basic_auth(service_broker: service_broker)).
-              to_return(status: 200, body: '{}')
+            delete_app
           end
 
           it 'should raise an error' do
-            delete_app
-
             expect(last_response.status).to eq(400)
             expect(decoded_response['description']).to match(/service_bindings/i)
           end
+        end
 
+        context 'when recursive=true is set' do
           it 'should succeed on a recursive delete' do
             delete "/v2/apps/#{process.app.guid}?recursive=true"
 
             expect(last_response).to have_status_code(204)
+          end
+
+          context 'when the service binding unbind is asynchronous' do
+            let(:broker_response_code) { 202 }
+
+            it 'returns an error' do
+              delete "/v2/apps/#{process.app.guid}?recursive=true"
+
+              expect(last_response).to have_status_code(502)
+              body = JSON.parse(last_response.body)
+              expect(body['error_code']).to include 'CF-AppRecursiveDeleteFailed'
+
+              err_msg = body['description']
+              expect(err_msg).to match "^Deletion of app #{process.app.name} failed because one or more associated resources could not be deleted\.\n\n"
+            end
+          end
+
+          context 'when the error is a SubResource error' do
+            before do
+              errs = [StandardError.new('oops-1'), StandardError.new('oops-2')]
+              allow_any_instance_of(AppDelete).to receive(:delete_without_event).and_raise(VCAP::CloudController::AppDelete::SubResourceError.new(errs))
+            end
+
+            it 'returns all errors contained within it from the action' do
+              delete "/v2/apps/#{process.guid}?recursive=true"
+
+              expect(last_response).to have_status_code(502)
+
+              body = JSON.parse(last_response.body)
+
+              err_msg = body['description']
+              expect(err_msg).to match 'oops-1'
+              expect(err_msg).to match 'oops-2'
+            end
           end
         end
       end

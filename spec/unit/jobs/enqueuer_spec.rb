@@ -98,6 +98,21 @@ module VCAP::CloudController::Jobs
         latest_job = VCAP::CloudController::PollableJobModel.last
         expect(result).to eq(latest_job)
       end
+
+      context 'when a block is given' do
+        it 'should wrap the pollable job with the result from the block' do
+          original_enqueue = Delayed::Job.method(:enqueue)
+          expect(Delayed::Job).to receive(:enqueue) do |enqueued_job, opts|
+            expect(enqueued_job.handler.handler).to be_a ErrorTranslatorJob
+            expect(enqueued_job.handler.handler.handler).to be_a PollableJobWrapper
+            original_enqueue.call(enqueued_job, opts)
+          end
+
+          Enqueuer.new(wrapped_job, opts).enqueue_pollable do |pollable_job|
+            ErrorTranslatorJob.new(pollable_job)
+          end
+        end
+      end
     end
 
     describe '#run_inline' do

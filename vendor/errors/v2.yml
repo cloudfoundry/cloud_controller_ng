@@ -563,6 +563,11 @@
   http_code: 400
   message: "Docker credentials can only be supplied for apps with a 'docker_image'"
 
+150009:
+  name: AppRecursiveDeleteFailed
+  http_code: 502
+  message: "Deletion of app %s failed because one or more associated resources could not be deleted.\n\n%s"
+
 160001:
   name: AppBitsUploadInvalid
   http_code: 400

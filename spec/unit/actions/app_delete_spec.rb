@@ -160,6 +160,68 @@ module VCAP::CloudController
             expect(app.exists?).to be_falsey
           end
 
+          context 'when service binding delete occurs asynchronously' do
+            let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+
+            before do
+              allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+              allow(client).to receive(:unbind).and_return({ async: true })
+            end
+
+            context 'with a single service binding' do
+              let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+
+              it 'should always call the broker with accepts_incomplete true' do
+                expect(client).to receive(:unbind).with(binding1, user_audit_info.user_guid, true)
+
+                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
+              end
+
+              it 'return an error that a service binding is being deleted asynchronously' do
+                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
+                  expect(err.underlying_errors).to match_array(
+                    [
+                      AppDelete::AsyncBindingDeletionsTriggered.new(
+                        "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
+                      )
+                    ]
+                  )
+                end
+              end
+
+              it 'should not delete the app' do
+                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
+                expect(binding1.exists?).to be_truthy
+                expect(app.exists?).to be_truthy
+              end
+
+              it 'should not rollback the enqueuing of a job to delete the service binding' do
+                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError)
+                expect(Delayed::Job.count).to eq 1
+              end
+            end
+
+            context 'with multiple service bindings' do
+              let!(:binding1) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+              let!(:binding2) { ServiceBinding.make(app: app, service_instance: ManagedServiceInstance.make(space: app.space)) }
+
+              it 'returns some errors describing that the service bindings are being deleted asynchronously' do
+                expect { app_delete.delete(app_dataset) }.to raise_error(AppDelete::SubResourceError) do |err|
+                  expect(err.underlying_errors).to match_array(
+                    [
+                      AppDelete::AsyncBindingDeletionsTriggered.new(
+                        "An operation for the service binding between app #{binding1.app.name} and service instance #{binding1.service_instance.name} is in progress."
+                      ),
+                      AppDelete::AsyncBindingDeletionsTriggered.new(
+                        "An operation for the service binding between app #{binding2.app.name} and service instance #{binding2.service_instance.name} is in progress."
+                      )
+                    ]
+                  )
+                end
+              end
+            end
+          end
+
           context 'when service binding delete returns errors' do
             before do
               allow_any_instance_of(ServiceBindingDelete).to receive(:delete).and_return([[StandardError.new('first'), StandardError.new('second')], []])
