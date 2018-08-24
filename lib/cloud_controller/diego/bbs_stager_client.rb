@@ -8,12 +8,15 @@ module VCAP::CloudController
         ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
       ].freeze
 
-      def initialize(client)
+      def initialize(client, config)
         @client = client
+        @config = config
       end
 
-      def stage(staging_guid, staging_message)
+      def stage(staging_guid, staging_details)
         logger.info('stage.request', staging_guid: staging_guid)
+
+        staging_message = task_recipe_builder.build_staging_task(@config, staging_details)
 
         begin
           response = client.desire_task(task_guid: staging_guid, task_definition: staging_message, domain: STAGING_DOMAIN)
@@ -54,6 +57,10 @@ module VCAP::CloudController
 
       def logger
         @logger ||= Steno.logger('cc.bbs.stager_client')
+      end
+
+      def task_recipe_builder
+        @task_recipe_builder ||= TaskRecipeBuilder.new
       end
     end
   end

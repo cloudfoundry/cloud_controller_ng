@@ -4,6 +4,7 @@ require 'multi_json'
 require_relative '../../vcap/vars_builder'
 require 'json'
 require 'ostruct'
+require 'cloud_controller/opi/helpers'
 
 module OPI
   class Client
@@ -22,7 +23,7 @@ module OPI
 
       resp = @client.get(path)
       resp_json = JSON.parse(resp.body)
-      resp_json['desired_lrp_scheduling_infos'].map { |h| recursive_ostruct(h) }
+      resp_json['desired_lrp_scheduling_infos'].map { |h| OPI.recursive_ostruct(h) }
     end
 
     def update_app(process, _)
@@ -30,7 +31,7 @@ module OPI
 
       response = @client.post(path, body: update_body(process))
       if response.status_code != 200
-        response_json = recursive_ostruct(JSON.parse(response.body))
+        response_json = OPI.recursive_ostruct(JSON.parse(response.body))
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', response_json.error.message)
       end
       response
@@ -44,7 +45,7 @@ module OPI
         return nil
       end
 
-      desired_lrp_response = recursive_ostruct(JSON.parse(response.body))
+      desired_lrp_response = OPI.recursive_ostruct(JSON.parse(response.body))
       desired_lrp_response.desired_lrp
     end
 
@@ -98,13 +99,6 @@ module OPI
       end
 
       { 'cf-router' => http_routes }
-    end
-
-    def recursive_ostruct(hash)
-      OpenStruct.new(hash.map { |key, value|
-        new_val = value.is_a?(Hash) ? recursive_ostruct(value) : value
-        [key, new_val]
-      }.to_h)
     end
 
     def vcap_application(process)

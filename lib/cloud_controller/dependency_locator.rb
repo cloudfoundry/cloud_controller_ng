@@ -28,6 +28,7 @@ require 'cloud_controller/packager/bits_service_packer'
 require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
 require 'cloud_controller/opi/instances_client'
+require 'cloud_controller/opi/stager_client'
 
 require 'bits_service_client'
 
@@ -79,7 +80,7 @@ module CloudController
     end
 
     def bbs_stager_client
-      @dependencies[:bbs_stager_client] || register(:bbs_stager_client, build_bbs_stager_client)
+      @dependencies[:bbs_stager_client] || register(:bbs_stager_client, build_stager_client)
     end
 
     def bbs_task_client
@@ -366,8 +367,27 @@ module CloudController
 
     private
 
+    def build_stager_client
+      if config.get(:opi, :opi_staging)
+        build_opi_stager_client
+      else
+        build_bbs_stager_client
+      end
+    end
+
+    def build_opi_stager_client
+      ::OPI::StagerClient.new(config.get(:opi, :url), @config)
+    end
+
     def build_bbs_stager_client
-      VCAP::CloudController::Diego::BbsStagerClient.new(build_bbs_client)
+      bbs_client = ::Diego::Client.new(
+        url: config.get(:diego, :bbs, :url),
+        ca_cert_file: config.get(:diego, :bbs, :ca_file),
+        client_cert_file: config.get(:diego, :bbs, :cert_file),
+        client_key_file: config.get(:diego, :bbs, :key_file),
+    )
+
+      VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client, @config)
     end
 
     def build_copilot_client
