@@ -19,6 +19,10 @@ module VCAP::CloudController
 
         raise_if_instance_locked(service_instance)
 
+        service_instance.service_bindings.each do |binding|
+          raise_if_binding_locked(binding)
+        end
+
         service_instance.save_with_new_operation({}, { type: @type, state: 'in progress' })
         @needs_unlock = true
       end

@@ -11,26 +11,59 @@ module VCAP::CloudController
     end
 
     describe 'locking' do
-      before do
-        updater_lock.lock!
-      end
-
-      it 'creates a new service instance operation' do
-        expect(service_instance.last_operation.guid).not_to eq(operation.guid)
-      end
-
-      it 'sets the last operation of the service instance to "in progress"' do
-        expect(service_instance.last_operation.state).to eq('in progress')
-      end
-
-      it 'sets the last operation type to "update"' do
-        expect(service_instance.last_operation.type).to eq('update')
-      end
-
-      it 'does not let you lock again' do
-        expect {
+      context 'when the instance is unlocked' do
+        before do
           updater_lock.lock!
-        }.to raise_error CloudController::Errors::ApiError
+        end
+
+        it 'creates a new service instance operation' do
+          expect(service_instance.last_operation.guid).not_to eq(operation.guid)
+        end
+
+        it 'sets the last operation of the service instance to "in progress"' do
+          expect(service_instance.last_operation.state).to eq('in progress')
+        end
+
+        it 'sets the last operation type to "update"' do
+          expect(service_instance.last_operation.type).to eq('update')
+        end
+
+        it 'does not let you lock again' do
+          expect {
+            updater_lock.lock!
+          }.to raise_error CloudController::Errors::ApiError
+        end
+      end
+
+      context 'when the instance already has an operation in progress' do
+        before do
+          service_instance.service_instance_operation = ServiceInstanceOperation.make(state: 'in progress')
+        end
+
+        it 'raises an AsyncServiceInstanceOperationInProgress error' do
+          expect {
+            updater_lock.lock!
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('AsyncServiceInstanceOperationInProgress')
+          end
+        end
+      end
+
+      context 'when the instance has a service binding with an operation in progress' do
+        let!(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
+        let!(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+
+        before do
+          service_binding_2.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
+        end
+
+        it 'raises an AsyncServiceBindingOperationInProgress error' do
+          expect {
+            updater_lock.lock!
+          }.to raise_error CloudController::Errors::ApiError do |err|
+            expect(err.name).to eq('AsyncServiceBindingOperationInProgress')
+          end
+        end
       end
     end
 

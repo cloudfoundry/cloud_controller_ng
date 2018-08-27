@@ -391,7 +391,7 @@
 90008:
   name: AsyncServiceBindingOperationInProgress
   http_code: 409
-  message: "An operation for the service binding is in progress."
+  message: "A service binding operation is in progress."
 
 100001:
   name: AppInvalid
