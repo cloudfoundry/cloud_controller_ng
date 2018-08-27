@@ -215,6 +215,32 @@ module VCAP::CloudController
           end
         end
 
+        context 'when there is a binding with operation in progress' do
+          let(:service_binding_1) { ServiceBinding.make(service_instance: service_instance) }
+          let!(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', service_binding_id: service_binding_1.id) }
+          let(:service_binding_2) { ServiceBinding.make(service_instance: service_instance) }
+
+          before do
+            stub_unbind(service_binding_1, accepts_incomplete: true, status: 202, body: {}.to_json)
+            stub_unbind(service_binding_2, accepts_incomplete: true, status: 202, body: {}.to_json)
+          end
+
+          it 'returns an error that does not contain duplicate messages' do
+            errors, _ = service_instance_delete.delete([service_instance])
+            expect(errors).to have(1).item
+            error = errors.first
+
+            msg = error.message
+            instance_name = service_instance.name
+
+            expect(error).to be_instance_of(CloudController::Errors::ApiError)
+            expect(msg).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted\.\n\n"
+            expect(msg).to match "\tAn operation for the service binding between app #{service_binding_1.app.name} and service instance #{instance_name} is in progress\."
+            expect(msg).to match "\tAn operation for the service binding between app #{service_binding_2.app.name} and service instance #{instance_name} is in progress\."
+            expect(msg).not_to match 'A service binding operation is in progress.'
+          end
+        end
+
         it 'updates the instance to be in progress' do
           service_instance_delete.delete([service_instance])
           expect(service_instance.last_operation.state).to eq 'in progress'

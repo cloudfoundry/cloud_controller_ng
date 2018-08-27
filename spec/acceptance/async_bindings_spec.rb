@@ -242,6 +242,42 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when DELETE /v2/service_instances/:guid is called and when an async binding operation is in progress' do
+        let(:process) { ProcessModelFactory.make }
+        let(:service_binding) { ServiceBinding.make(app: process.app, service_instance: ManagedServiceInstance.make(space: process.space)) }
+        let!(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type, service_binding_id: service_binding.id) }
+
+        context 'when the binding operation is create' do
+          let(:operation_type) { 'create' }
+
+          it 'returns an operation in progress error' do
+            delete("/v2/service_instances/#{service_binding.service_instance.guid}?accepts_incomplete=true&recursive=true", {}, admin_headers)
+            expect(last_response).to have_status_code(502)
+
+            expect(a_request(:delete, deprovision_url(service_binding.service_instance))).not_to have_been_made
+
+            parsed_response = JSON.parse(last_response.body)
+            expect(parsed_response['error_code']).to eq('CF-ServiceInstanceRecursiveDeleteFailed')
+            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress./)
+          end
+        end
+
+        context 'when the binding operation is delete' do
+          let(:operation_type) { 'delete' }
+
+          it 'returns an operation in progress error' do
+            delete("/v2/service_instances/#{service_binding.service_instance.guid}?accepts_incomplete=true&recursive=true", {}, admin_headers)
+            expect(last_response).to have_status_code(502)
+
+            expect(a_request(:delete, deprovision_url(service_binding.service_instance))).not_to have_been_made
+
+            parsed_response = JSON.parse(last_response.body)
+            expect(parsed_response['error_code']).to eq('CF-ServiceInstanceRecursiveDeleteFailed')
+            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress./)
+          end
+        end
+      end
     end
 
     context 'when the broker returns 410 on last_operation during binding creation' do
