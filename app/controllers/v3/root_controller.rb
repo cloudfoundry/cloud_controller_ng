@@ -36,7 +36,11 @@ class RootController < ActionController::Base
           service_instances: {
             href: build_api_uri(path: '/service_instances'),
             experimental: true,
-          }
+          },
+          deployments: {
+            href: build_api_uri(path: '/deployments'),
+            experimental: true,
+          },
         }
       }, pretty: true)
   end
