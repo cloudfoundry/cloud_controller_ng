@@ -37,13 +37,99 @@ RSpec.describe DeploymentsController, type: :controller do
         expect(response.status).to eq(201)
       end
 
-      it 'creates a deployment' do
-        expect(VCAP::CloudController::DeploymentCreate).
-          to receive(:create).
-          with(app: app, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
-          and_call_original
+      context 'when a droplet is not provided' do
+        it 'creates a deployment' do
+          expect(VCAP::CloudController::DeploymentCreate).
+            to receive(:create).
+            with(app: app, droplet: nil, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
+            and_call_original
 
-        post :create, body: req_body
+          post :create, body: req_body
+        end
+      end
+
+      context 'when a droplet is provided' do
+        let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { web: 'start-me-up' }) }
+        let(:req_body) do
+          {
+            droplet: {
+              guid: other_droplet.guid
+            },
+            relationships: {
+              app: {
+                data: {
+                  guid: app_guid
+                }
+              }
+            },
+          }
+        end
+
+        it 'creates a deployment' do
+          expect(VCAP::CloudController::DeploymentCreate).
+            to receive(:create).
+            with(app: app, droplet: other_droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
+            and_call_original
+
+          post :create, body: req_body
+        end
+
+        it 'sets the app droplet to the provided droplet' do
+          post :create, body: req_body
+
+          expect(app.reload.droplet).to eq(other_droplet)
+        end
+
+        context 'the droplet is not associated with the application' do
+          let(:unassociated_droplet) { VCAP::CloudController::DropletModel.make }
+          let(:req_body) do
+            {
+              droplet: {
+                guid: unassociated_droplet.guid
+              },
+              relationships: {
+                app: {
+                  data: {
+                    guid: app_guid
+                  }
+                }
+              },
+            }
+          end
+
+          it 'returns a 422' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include('UnprocessableEntity')
+            expect(response.body).to include('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
+          end
+        end
+
+        context 'the droplet does not exist' do
+          let(:req_body) do
+            {
+              droplet: {
+                guid: 'pitter-patter-zim-zoom'
+              },
+              relationships: {
+                app: {
+                  data: {
+                    guid: app_guid
+                  }
+                }
+              },
+            }
+          end
+
+          it 'returns a 422' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include('UnprocessableEntity')
+            expect(response.body).to include('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
+          end
+        end
       end
 
       context 'when the app does not exist' do

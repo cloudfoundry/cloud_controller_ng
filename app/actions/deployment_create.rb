@@ -1,8 +1,8 @@
 module VCAP::CloudController
   class DeploymentCreate
     class << self
-      def create(app:, user_audit_info:)
-        deployment = DeploymentModel.new(app: app, state: DeploymentModel::DEPLOYING_STATE, droplet: app.droplet)
+      def create(app:, user_audit_info:, droplet:)
+        deployment = DeploymentModel.new(app: app, state: DeploymentModel::DEPLOYING_STATE, droplet: droplet || app.droplet)
         DeploymentModel.db.transaction do
           deployment.save
 

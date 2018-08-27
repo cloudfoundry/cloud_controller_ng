@@ -3,7 +3,7 @@ require 'missing_process_create'
 module VCAP::CloudController
   class SetCurrentDroplet
     class InvalidApp < StandardError; end
-    class Error < StandardError; end
+    class InvalidDroplet < StandardError; end
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
@@ -48,7 +48,7 @@ module VCAP::CloudController
     end
 
     def unable_to_assign!
-      raise Error.new('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
+      raise InvalidDroplet.new('Unable to assign current droplet. Ensure the droplet exists and belongs to this app.')
     end
   end
 end

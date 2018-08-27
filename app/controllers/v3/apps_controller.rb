@@ -250,7 +250,7 @@ class AppsV3Controller < ApplicationController
       related_resource_name: 'droplets',
       app_model:             app
     )
-  rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::Error => e
+  rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::InvalidDroplet => e
     unprocessable!(e.message)
   end
 

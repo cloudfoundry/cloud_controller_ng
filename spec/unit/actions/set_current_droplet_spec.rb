@@ -59,7 +59,7 @@ module VCAP::CloudController
             other_droplet = DropletModel.make
             expect {
               set_current_droplet.update_to(app_model, other_droplet)
-            }.to raise_error SetCurrentDroplet::Error, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+            }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
           end
         end
 
@@ -67,7 +67,7 @@ module VCAP::CloudController
           it 'raises an error' do
             expect {
               set_current_droplet.update_to(app_model, nil)
-            }.to raise_error SetCurrentDroplet::Error, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+            }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
           end
         end
       end

@@ -24,15 +24,25 @@ class DeploymentsController < ApplicationController
 
   def create
     deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
+
     app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
 
-    deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info)
+    droplet_guid = HashUtils.dig(params[:body], :droplet, :guid)
+    if droplet_guid
+      droplet = DropletModel.find(guid: droplet_guid, app: app)
 
-    response = Presenters::V3::DeploymentPresenter.new(deployment)
+      begin
+        SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
+      rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::InvalidDroplet => e
+        unprocessable!(e.message)
+      end
+    end
 
-    render status: :created, json: response.to_json
+    deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
+
+    render status: :created, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end
 
   def show

@@ -16,49 +16,102 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'POST /v3/deployments' do
-    let(:create_request) do
-      {
-        relationships: {
-          app: {
-            data: {
-              guid: app_model.guid
+    context 'when a droplet is not supplied with the request' do
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      it 'should create a deployment object' do
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
+        parsed_response = MultiJson.load(last_response.body)
+
+        deployment = VCAP::CloudController::DeploymentModel.last
+
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYING',
+          'droplet' => {
+            'guid' => droplet.guid
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
             }
           },
-        }
-      }
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
     end
 
-    it 'should create a deployment object' do
-      post '/v3/deployments', create_request.to_json, user_header
-      expect(last_response.status).to eq(201)
-      parsed_response = MultiJson.load(last_response.body)
-
-      deployment = VCAP::CloudController::DeploymentModel.last
-
-      expect(parsed_response).to be_a_response_like({
-        'guid' => deployment.guid,
-        'state' => 'DEPLOYING',
-        'droplet' => {
-          'guid' => droplet.guid
-        },
-        'created_at' => iso8601,
-        'updated_at' => iso8601,
-        'relationships' => {
-          'app' => {
-            'data' => {
-              'guid' => app_model.guid
-            }
-          }
-        },
-        'links' => {
-          'self' => {
-            'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+    context 'when a droplet is supplied with the request' do
+      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
+      let(:create_request) do
+        {
+          droplet: {
+            guid: other_droplet.guid
           },
-          'app' => {
-            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
           }
         }
-      })
+      end
+
+      it 'creates a deployment object with that droplet' do
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
+        parsed_response = MultiJson.load(last_response.body)
+
+        deployment = VCAP::CloudController::DeploymentModel.last
+
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYING',
+          'droplet' => {
+            'guid' => other_droplet.guid
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
     end
   end
 
