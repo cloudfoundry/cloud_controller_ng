@@ -2,8 +2,9 @@ require 'missing_process_create'
 
 module VCAP::CloudController
   class SetCurrentDroplet
-    class InvalidApp < StandardError; end
-    class InvalidDroplet < StandardError; end
+    class Error < StandardError; end
+    class InvalidApp < Error; end
+    class InvalidDroplet < Error; end
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info

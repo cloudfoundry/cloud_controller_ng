@@ -35,7 +35,7 @@ class DeploymentsController < ApplicationController
 
       begin
         SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
-      rescue SetCurrentDroplet::InvalidApp, SetCurrentDroplet::InvalidDroplet => e
+      rescue SetCurrentDroplet::Error => e
         unprocessable!(e.message)
       end
     end

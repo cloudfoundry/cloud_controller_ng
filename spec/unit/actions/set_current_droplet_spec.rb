@@ -56,7 +56,7 @@ module VCAP::CloudController
       describe 'error cases' do
         context 'when the droplet is not associated with the application' do
           it 'raises an error' do
-            other_droplet = DropletModel.make
+            other_droplet = DropletModel.make { }
             expect {
               set_current_droplet.update_to(app_model, other_droplet)
             }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
