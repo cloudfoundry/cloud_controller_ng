@@ -106,16 +106,20 @@ module VCAP::CloudController
 
     def delete_service_bindings(service_instance)
       service_binding_deleter = ServiceBindingDelete.new(@event_repository.user_audit_info, @accepts_incomplete)
-      errors, warnings = service_binding_deleter.delete(service_instance.service_bindings)
-      async_unbinds = service_instance.service_bindings_dataset.all.select(&:operation_in_progress?)
 
-      async_unbinds.each do |service_binding|
+      errors, warnings = service_binding_deleter.delete(service_instance.service_bindings)
+      errors.reject! { |err| err.instance_of?(CloudController::Errors::ApiError) && err.code == 90008 }
+      bindings_in_progress(service_instance).each do |service_binding|
         errors << StandardError.new(
           "An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress."
         )
       end
 
       [errors, warnings]
+    end
+
+    def bindings_in_progress(service_instance)
+      service_instance.service_bindings_dataset.all.select(&:operation_in_progress?)
     end
 
     def delete_service_keys(service_instance)
