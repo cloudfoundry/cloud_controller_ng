@@ -34,10 +34,9 @@ module VCAP::CloudController
 
       buildpack = nil
       model.db.transaction do
+        Locking[name: 'buildpacks'].lock!
         buildpack = model.create_from_hash(request_attrs.except('position'))
         validate_access(:create, buildpack, request_attrs)
-        Locking[name: 'buildpacks'].lock!
-
         buildpack.move_to(position)
       end
 
@@ -62,11 +61,8 @@ module VCAP::CloudController
 
       new_position = request_attrs['position']
       model.db.transaction do
-        buildpack.lock!
-        buildpack.update_from_hash(request_attrs.except('position'))
-      end
-      model.db.transaction do
         Locking[name: 'buildpacks'].lock!
+        buildpack.update_from_hash(request_attrs.except('position'))
         buildpack.move_to(new_position) if new_position.present?
       end
 
