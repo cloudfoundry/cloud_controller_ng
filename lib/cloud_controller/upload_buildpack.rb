@@ -29,7 +29,7 @@ module VCAP::CloudController
 
       begin
         Buildpack.db.transaction do
-          buildpack.lock!
+          Locking[name: 'buildpacks'].lock!
           old_buildpack_key = buildpack.key
           buildpack.update(
             key: new_key,
