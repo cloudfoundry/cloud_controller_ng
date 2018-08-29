@@ -12,6 +12,8 @@ Name | Type | Description
 **state** | _string_ | The state of the deployment.
 **guid** | _uuid_ | Unique identifier for the deployment.
 **app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating.
+**droplet** | _object_ | The droplet the deployment is transitioning the app to.
+**previous_droplet** | _object_ | The app's [current droplet](#get-current-droplet-association-for-an-app) before the deployment was created.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **links** | [_links object_](#links) | Links to related resources.

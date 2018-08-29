@@ -10,6 +10,9 @@ curl "https://api.example.org/v3/deployments" \
 -H "Authorization: bearer [token]" \
 -H "Content-type: application/json" \
 -d '{
+  "droplet": {
+    "guid": "[droplet-guid]"
+  },
   "relationships": {
     "app": {
       "data": {
@@ -33,6 +36,18 @@ Content-Type: application/json
 
 #### Definition
 `POST /v3/deployments`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**app** | [_to-one relationship_](#to-one-relationships) | The app to deploy a droplet for.
+
+#### Optional Parameters
+
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**droplet** | _object_ | The droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet | The app's [current droplet](#get-current-droplet-association-for-an-app)
 
 #### Permitted Roles
  |
