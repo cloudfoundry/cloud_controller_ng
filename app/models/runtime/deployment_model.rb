@@ -15,6 +15,12 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
+    many_to_one :previous_droplet,
+      class: 'VCAP::CloudController::DropletModel',
+      key: :previous_droplet_guid,
+      primary_key: :guid,
+      without_guid_generation: true
+
     many_to_one :deploying_web_process,
       class: 'VCAP::CloudController::ProcessModel',
       key: :deploying_web_process_guid,

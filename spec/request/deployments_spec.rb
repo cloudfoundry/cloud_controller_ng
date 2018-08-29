@@ -4,7 +4,7 @@ RSpec.describe 'Deployments' do
   let(:user) { make_developer_for_space(space) }
   let(:space) { app_model.space }
   let(:app_model) { droplet.app }
-  let(:droplet) { VCAP::CloudController::DropletModel.make }
+  let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web': 'webby' }) }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { Sham.email }
@@ -29,7 +29,7 @@ RSpec.describe 'Deployments' do
         }
       end
 
-      it 'should create a deployment object' do
+      it 'should create a deployment object using the current droplet from the app' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
         parsed_response = MultiJson.load(last_response.body)
@@ -40,6 +40,9 @@ RSpec.describe 'Deployments' do
           'guid' => deployment.guid,
           'state' => 'DEPLOYING',
           'droplet' => {
+            'guid' => droplet.guid
+          },
+          'previous_droplet' => {
             'guid' => droplet.guid
           },
           'created_at' => iso8601,
@@ -93,6 +96,9 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => other_droplet.guid
           },
+          'previous_droplet' => {
+            'guid' => droplet.guid
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -116,10 +122,15 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'GET /v3/deployments/:guid' do
-    let(:original_droplet) { VCAP::CloudController::DropletModel.make }
+    let(:old_droplet) { VCAP::CloudController::DropletModel.make }
 
     it 'should get and display the deployment' do
-      deployment = VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model, droplet: original_droplet)
+      deployment = VCAP::CloudController::DeploymentModel.make(
+        state: 'DEPLOYING',
+        app: app_model,
+        droplet: droplet,
+        previous_droplet: old_droplet
+      )
 
       get "/v3/deployments/#{deployment.guid}", nil, user_header
       expect(last_response.status).to eq(200)
@@ -129,7 +140,10 @@ RSpec.describe 'Deployments' do
         'guid' => deployment.guid,
         'state' => 'DEPLOYING',
         'droplet' => {
-          'guid' => original_droplet.guid
+          'guid' => droplet.guid
+        },
+        'previous_droplet' => {
+          'guid' => old_droplet.guid
         },
         'created_at' => iso8601,
         'updated_at' => iso8601,
@@ -161,7 +175,7 @@ RSpec.describe 'Deployments' do
     let(:space) { app_model.space }
     let(:app_model) { droplet.app }
     let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model, droplet: app_model.droplet) }
+    let!(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model, droplet: app_model.droplet, previous_droplet: app_model.droplet) }
 
     context 'with an admin who can see all deployments' do
       let(:admin_user_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
@@ -203,6 +217,9 @@ RSpec.describe 'Deployments' do
               'droplet' => {
                 'guid' => droplet.guid
               },
+              'previous_droplet' => {
+                'guid' => droplet.guid
+              },
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -226,6 +243,9 @@ RSpec.describe 'Deployments' do
               'state' => 'DEPLOYING',
               'droplet' => {
                 'guid' => droplet2.guid
+              },
+              'previous_droplet' => {
+                'guid' => nil
               },
               'created_at' => iso8601,
               'updated_at' => iso8601,
@@ -281,6 +301,9 @@ RSpec.describe 'Deployments' do
               'guid' => deployment.guid,
               'state' => 'DEPLOYING',
               'droplet' => {
+                'guid' => droplet.guid
+              },
+              'previous_droplet' => {
                 'guid' => droplet.guid
               },
               'created_at' => iso8601,

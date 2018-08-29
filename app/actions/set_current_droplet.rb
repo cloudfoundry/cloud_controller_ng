@@ -34,6 +34,8 @@ module VCAP::CloudController
       end
 
       app
+    rescue MissingProcessCreate::ProcessTypesNotFound => e
+      raise InvalidDroplet.new(e.message)
     rescue Sequel::ValidationFailed => e
       raise InvalidApp.new(e.message)
     end

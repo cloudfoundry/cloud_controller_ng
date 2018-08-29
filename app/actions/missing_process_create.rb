@@ -17,7 +17,7 @@ module VCAP::CloudController
         evaluate_processes(app, app.droplet.process_types)
       else
         @logger.warn('no process_types found', guid: app.guid)
-        raise ProcessTypesNotFound
+        raise ProcessTypesNotFound.new("Unable to create process types for this app's droplet. Please provide a droplet with valid process types.")
       end
     end
 

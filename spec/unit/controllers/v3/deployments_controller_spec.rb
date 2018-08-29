@@ -3,9 +3,9 @@ require 'permissions_spec_helper'
 
 RSpec.describe DeploymentsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
-  let(:app) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+  let(:app) { VCAP::CloudController::AppModel.make }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app) }
-  let(:droplet) { VCAP::CloudController::DropletModel.make }
+  let(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'spider' }) }
   let(:app_guid) { app.guid }
   let(:space) { app.space }
   let(:org) { space.organization }
@@ -13,6 +13,7 @@ RSpec.describe DeploymentsController, type: :controller do
   describe '#create' do
     before do
       TestConfig.override(temporary_disable_deployments: false)
+      app.update(droplet: droplet)
     end
     let(:req_body) do
       {
@@ -38,10 +39,10 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when a droplet is not provided' do
-        it 'creates a deployment' do
+        it 'creates a deployment using the app\'s current droplet' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).
-            with(app: app, droplet: nil, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
+            with(app: app, droplet: app.droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
             and_call_original
 
           post :create, body: req_body

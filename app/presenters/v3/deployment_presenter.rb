@@ -9,6 +9,9 @@ module VCAP::CloudController::Presenters::V3
         droplet: {
           guid: deployment.droplet_guid
         },
+        previous_droplet: {
+          guid: deployment.previous_droplet_guid
+        },
         created_at: deployment.created_at,
         updated_at: deployment.updated_at,
         relationships: {

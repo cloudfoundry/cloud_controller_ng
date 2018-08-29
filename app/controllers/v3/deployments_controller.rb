@@ -30,17 +30,17 @@ class DeploymentsController < ApplicationController
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
 
     droplet_guid = HashUtils.dig(params[:body], :droplet, :guid)
-    if droplet_guid
-      droplet = DropletModel.find(guid: droplet_guid, app: app)
+    droplet = if droplet_guid
+                DropletModel.find(guid: droplet_guid)
+              else
+                app.droplet
+              end
 
-      begin
-        SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
-      rescue SetCurrentDroplet::Error => e
-        unprocessable!(e.message)
-      end
+    begin
+      deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
+    rescue DeploymentCreate::SetCurrentDropletError => e
+      unprocessable!(e.message)
     end
-
-    deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
 
     render status: :created, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end

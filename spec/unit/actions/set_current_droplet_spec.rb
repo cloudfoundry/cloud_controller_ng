@@ -56,7 +56,7 @@ module VCAP::CloudController
       describe 'error cases' do
         context 'when the droplet is not associated with the application' do
           it 'raises an error' do
-            other_droplet = DropletModel.make { }
+            other_droplet = DropletModel.make
             expect {
               set_current_droplet.update_to(app_model, other_droplet)
             }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
@@ -68,6 +68,18 @@ module VCAP::CloudController
             expect {
               set_current_droplet.update_to(app_model, nil)
             }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+          end
+        end
+
+        context 'when we fail to create missing processes' do
+          before do
+            allow(current_process_types).to receive(:create_from_current_droplet).and_raise(MissingProcessCreate::ProcessTypesNotFound, 'some message')
+          end
+
+          it 'raises an error' do
+            expect {
+              set_current_droplet.update_to(app_model, droplet)
+            }.to raise_error SetCurrentDroplet::InvalidDroplet, 'some message'
           end
         end
       end
