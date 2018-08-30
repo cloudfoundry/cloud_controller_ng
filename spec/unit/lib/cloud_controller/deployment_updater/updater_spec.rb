@@ -119,6 +119,16 @@ module VCAP::CloudController
             expect(ProcessModel.map(&:type)).to match_array(['web', 'worker', 'clock'])
           end
 
+          it 'deletes all route mappings affiliated with the deploying process' do
+            expect(RouteMappingModel.where(app: deploying_web_process.app,
+                                           process_type: deploying_web_process.type)).to have(1).items
+
+            deployer.update
+
+            expect(RouteMappingModel.where(app: deploying_web_process.app,
+                                           process_type: deploying_web_process.type)).to have(0).items
+          end
+
           it 'puts the deployment into its finished DEPLOYED_STATE' do
             deployer.update
             deployment.reload

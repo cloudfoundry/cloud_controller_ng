@@ -79,6 +79,8 @@ module VCAP::CloudController
         end
 
         def promote_deploying_web_process(deploying_web_process, original_web_process)
+          RouteMappingModel.where(app: deploying_web_process.app,
+                                  process_type: deploying_web_process.type).map(&:delete)
           deploying_web_process.update(type: ProcessTypes::WEB)
           original_web_process.delete
         end
