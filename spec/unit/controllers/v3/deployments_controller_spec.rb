@@ -370,4 +370,62 @@ RSpec.describe DeploymentsController, type: :controller do
       end
     end
   end
+
+  describe '#cancel' do
+    let!(:deployment) do
+      VCAP::CloudController::DeploymentModel.make(
+        state: 'DEPLOYING',
+        app: app,
+        previous_droplet: VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'www' })
+      )
+    end
+
+    before do
+      set_current_user_as_admin(user: user)
+    end
+
+    it 'returns 404 not found when the deployment does not exist' do
+      post :cancel, guid: 'non-existant-giud'
+
+      expect(response.status).to eq(404)
+    end
+
+    it 'returns a 200 and cancels the deployment' do
+      expect(VCAP::CloudController::DeploymentCancel).to receive(:cancel).with(deployment: deployment, user_audit_info: anything)
+
+      post :cancel, guid: deployment.guid
+
+      expect(response.status).to eq(200)
+      expect(response.body).to be_empty
+    end
+
+    describe 'when canceling the deployment raises an error' do
+      it 'returns a 422' do
+        error = VCAP::CloudController::DeploymentCancel::Error.new 'something went awry'
+        allow(VCAP::CloudController::DeploymentCancel).to receive(:cancel).and_raise(error)
+
+        post :cancel, guid: deployment.guid
+
+        expect(response.status).to eq(422)
+        expect(response.body).to match /awry/
+      end
+    end
+
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) do
+        {
+          'admin' => 200,
+          'admin_read_only' => 404,
+          'global_auditor' => 404,
+          'space_developer' => 200,
+          'space_manager' => 404,
+          'space_auditor' => 404,
+          'org_manager' => 404,
+          'org_auditor' => 404,
+          'org_billing_manager' => 404,
+        }
+      end
+      let(:api_call) { lambda { post :cancel, guid: deployment.guid } }
+    end
+  end
 end

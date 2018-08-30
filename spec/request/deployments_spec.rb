@@ -329,4 +329,27 @@ RSpec.describe 'Deployments' do
       end
     end
   end
+
+  describe 'POST /v3/deployments/:guid/actions/cancel' do
+    context 'when the deployment is running and has a previous droplet' do
+      let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
+
+      it 'changes the deployment state to CANCELED and rolls the ' do
+        deployment = VCAP::CloudController::DeploymentModel.make(
+          state: 'DEPLOYING',
+          app: app_model,
+          droplet: droplet,
+          previous_droplet: old_droplet
+        )
+
+        post "/v3/deployments/#{deployment.guid}/actions/cancel", {}.to_json, user_header
+        expect(last_response.status).to eq(200), last_response.body
+
+        expect(last_response.body).to be_empty
+        expect(deployment.reload.state).to eq('CANCELED')
+
+        expect(app_model.reload.droplet).to eq(old_droplet)
+      end
+    end
+  end
 end

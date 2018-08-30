@@ -62,6 +62,7 @@ Rails.application.routes.draw do
   post '/deployments', to: 'deployments#create'
   get '/deployments/', to: 'deployments#index'
   get '/deployments/:guid', to: 'deployments#show'
+  post '/deployments/:guid/actions/cancel', to: 'deployments#cancel'
 
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'

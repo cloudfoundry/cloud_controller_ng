@@ -2,6 +2,7 @@ require 'messages/deployments_list_message'
 require 'fetchers/deployment_list_fetcher'
 require 'presenters/v3/deployment_presenter'
 require 'actions/deployment_create'
+require 'actions/deployment_cancel'
 
 class DeploymentsController < ApplicationController
   def index
@@ -52,6 +53,20 @@ class DeploymentsController < ApplicationController
       permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
+  end
+
+  def cancel
+    deployment = DeploymentModel.find(guid: params[:guid])
+
+    resource_not_found!(:deployment) unless deployment && permission_queryer.can_write_to_space?(deployment.app.space_guid)
+
+    begin
+      DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+    rescue DeploymentCancel::Error => e
+      unprocessable!(e.message)
+    end
+
+    render status: :ok, nothing: true
   end
 
   private
