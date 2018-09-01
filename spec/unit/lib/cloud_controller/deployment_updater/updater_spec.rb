@@ -34,12 +34,12 @@ module VCAP::CloudController
       context 'when all new deploying_web_processes are running' do
         context 'when a deployment is in flight' do
           it 'is locked' do
-            allow(DeploymentModel).to receive(:where).and_return([deployment])
+            allow(DeploymentModel).to receive(:where).and_return(instance_double(Sequel::Dataset, all: [deployment]))
             allow(deployment).to receive(:lock!).and_call_original
 
             deployer.update
 
-            expect(deployment).to have_received(:lock!)
+            expect(deployment).to have_received(:lock!).twice
           end
 
           it 'scales the web process down by one' do
@@ -298,6 +298,106 @@ module VCAP::CloudController
           deployer.update
 
           expect(workpool).to have_received(:drain)
+        end
+      end
+
+      context 'when the deployment is in state CANCELING' do
+        let(:canceling_web_process_instances_count) { 2 }
+        let(:canceling_deploying_web_process_instances_count) { 3 }
+        let(:canceling_web_process) do
+          ProcessModel.make(instances: canceling_web_process_instances_count, type: 'web')
+        end
+        let(:canceling_deploying_web_process) do
+          ProcessModel.make(
+            app: app,
+            instances: canceling_deploying_web_process_instances_count,
+            type: "web-deployment-#{deployment.guid}")
+        end
+        let(:app) { canceling_web_process.app }
+        let(:deploying_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'oh-no!' }) }
+        let(:previous_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'yee-haw!' }) }
+        let!(:canceling_deployment) do
+          DeploymentModel.make(
+            app: app,
+            droplet: deploying_droplet,
+            previous_droplet: previous_droplet,
+            deploying_web_process: canceling_deploying_web_process,
+            state: 'CANCELING'
+          )
+        end
+
+        before do
+          app.update(droplet: previous_droplet)
+          allow(workpool).to receive(:submit).with(canceling_deployment, logger).and_yield(canceling_deployment, logger)
+        end
+
+        it 'deletes the deploying process' do
+          deployer.update
+          expect(ProcessModel.find(guid: canceling_deploying_web_process.guid)).to be_nil
+        end
+
+        context 'when routes are mapped' do
+          let(:deploying_process_route) { Route.make(space: canceling_deploying_web_process.space) }
+
+          before do
+            RouteMappingModel.make(app: app, route: deploying_process_route,
+                                   process_type: canceling_deploying_web_process.type)
+          end
+
+          it 'deletes the deploying web process and associated routes' do
+            deployer.update
+            expect(RouteMappingModel.find(app: app, process_type: canceling_deploying_web_process.type)).to be_nil
+          end
+
+          it 'tells co-pilot the routes are unmapped', isolation: :truncation do
+            TestConfig.override(copilot: { enabled: true })
+            allow(Copilot::Adapter).to receive(:unmap_route)
+            deployer.update
+            expect(Copilot::Adapter).to have_received(:unmap_route).once
+          end
+        end
+
+        it 'sets the deployment to CANCELED' do
+          deployer.update
+          expect(canceling_deployment.state).to eq('CANCELED')
+        end
+
+        describe 'inferring the correct number of instances' do
+          context 'when there are n + 1 process instances' do
+            context 'when there is 1 original instance' do
+              let(:canceling_web_process_instances_count) { 1 }
+              let(:canceling_deploying_web_process_instances_count) { 6 }
+
+              it 'rolls back to the correct number of instances' do
+                deployer.update
+                expect(canceling_web_process.reload.instances).to eq(6)
+                expect(canceling_deploying_web_process.exists?).to be false
+                expect(canceling_web_process.droplet_checksum).to eq(canceling_deployment.previous_droplet.checksum)
+              end
+            end
+
+            context 'when there is more than 1 original' do
+              let(:canceling_web_process_instances_count) { 2 }
+              let(:canceling_deploying_web_process_instances_count) { 5 }
+
+              it 'rolls back to the correct number of instances' do
+                deployer.update
+                expect(canceling_web_process.reload.instances).to eq(6)
+                expect(canceling_deploying_web_process.exists?).to be false
+              end
+            end
+          end
+
+          context 'when there are n total process instances (because the deployment is fully scaled, but not yet DEPLOYED)' do
+            let(:canceling_web_process_instances_count) { 0 }
+            let(:canceling_deploying_web_process_instances_count) { 6 }
+
+            it 'rolls back to the correct number of instances' do
+              deployer.update
+              expect(canceling_web_process.reload.instances).to eq(6)
+              expect(canceling_deploying_web_process.exists?).to be false
+            end
+          end
         end
       end
     end

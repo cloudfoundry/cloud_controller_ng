@@ -9,7 +9,7 @@ Example Deployment object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | The state of the deployment. Valid values are `DEPLOYING`, `DEPLOYED`, or `CANCELED`.
+**state** | _string_ | The state of the deployment. Valid values are `DEPLOYING`, `DEPLOYED`, `CANCELING`, or `CANCELED`.
 **guid** | _uuid_ | Unique identifier for the deployment.
 **app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating.
 **droplet** | _object_ | The droplet the deployment is transitioning the app to.

@@ -3,6 +3,7 @@ module VCAP::CloudController
     DEPLOYMENT_STATES = [
       DEPLOYING_STATE = 'DEPLOYING'.freeze,
       DEPLOYED_STATE = 'DEPLOYED'.freeze,
+      CANCELING_STATE = 'CANCELING'.freeze,
       CANCELED_STATE = 'CANCELED'.freeze
     ].freeze
 

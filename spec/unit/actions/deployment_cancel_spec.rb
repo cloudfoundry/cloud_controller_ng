@@ -31,10 +31,10 @@ module VCAP::CloudController
       context 'when the deployment is in the DEPLOYING state' do
         let(:state) { DeploymentModel::DEPLOYING_STATE }
 
-        it 'sets the deployments state to CANCELED' do
-          expect(deployment.state).to_not eq('CANCELED')
+        it 'sets the deployments state to CANCELING' do
+          expect(deployment.state).to_not eq('CANCELING')
           DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          expect(deployment.reload.state).to eq('CANCELED')
+          expect(deployment.reload.state).to eq('CANCELING')
         end
 
         it "resets the app's current droplet to the previous droplet from the deploy" do
@@ -72,55 +72,6 @@ module VCAP::CloudController
             expect {
               DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
             }.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
-          end
-        end
-
-        context 'when routes are mapped' do
-          let(:deploying_process_route) { Route.make(space: deploying_web_process.space) }
-
-          it 'deletes the deploying web process and associated routes' do
-            RouteMappingModel.make(app: deploying_web_process.app, route: deploying_process_route,
-                                   process_type: deploying_web_process.type)
-            DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-            expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
-            expect(RouteMappingModel.find(app: app, process_type: deploying_web_process.type)).to be_nil
-          end
-        end
-
-        describe 'inferring the correct number of instances' do
-          context 'when there are n + 1 process instances' do
-            context 'when there is 1 original instance' do
-              let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 1, state: 'STARTED', app: app) }
-              let(:deploying_web_process) { ProcessModelFactory.make(space: space, instances: 6, state: 'STARTED', app: app, type: 'web-deployment-deployment-guid') }
-
-              it 'rolls back to the correct number of instances' do
-                DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-                expect(original_web_process.reload.instances).to eq(6)
-                expect(deploying_web_process.exists?).to be false
-              end
-            end
-
-            context 'when there is more than 1 original' do
-              let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 2, state: 'STARTED', app: app) }
-              let(:deploying_web_process) { ProcessModelFactory.make(space: space, instances: 5, state: 'STARTED', app: app, type: 'web-deployment-deployment-guid') }
-
-              it 'rolls back to the correct number of instances' do
-                DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-                expect(original_web_process.reload.instances).to eq(6)
-                expect(deploying_web_process.exists?).to be false
-              end
-            end
-          end
-
-          context 'when there are n total process instances (because the deployment is fully scaled, but not yet DEPLOYED)' do
-            let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 0, state: 'STARTED', app: app) }
-            let(:deploying_web_process) { ProcessModelFactory.make(space: space, instances: 6, state: 'STARTED', app: app, type: 'web-deployment-deployment-guid') }
-
-            it 'rolls back to the correct number of instances' do
-              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-              expect(original_web_process.reload.instances).to eq(6)
-              expect(deploying_web_process.exists?).to be false
-            end
           end
         end
       end
