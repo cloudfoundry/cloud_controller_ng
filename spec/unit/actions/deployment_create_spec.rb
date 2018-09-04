@@ -5,8 +5,8 @@ module VCAP::CloudController
   RSpec.describe DeploymentCreate do
     let(:app) { VCAP::CloudController::AppModel.make }
     let!(:web_process) { VCAP::CloudController::ProcessModel.make(app: app) }
-    let(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
-    let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
+    let(:original_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
+    let(:next_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
     let!(:route1) { VCAP::CloudController::Route.make(space: app.space) }
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route1, process_type: web_process.type) }
     let!(:route2) { VCAP::CloudController::Route.make(space: app.space) }
@@ -14,7 +14,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
 
     before do
-      app.update(droplet: droplet)
+      app.update(droplet: original_droplet)
     end
 
     describe '#create' do
@@ -23,34 +23,34 @@ module VCAP::CloudController
           deployment = nil
 
           expect {
-            deployment = DeploymentCreate.create(app: app, droplet: other_droplet, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
           }.to change { DeploymentModel.count }.by(1)
 
           expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
           expect(deployment.app_guid).to eq(app.guid)
-          expect(deployment.droplet_guid).to eq(other_droplet.guid)
-          expect(deployment.previous_droplet).to eq(droplet)
+          expect(deployment.droplet_guid).to eq(next_droplet.guid)
+          expect(deployment.previous_droplet).to eq(original_droplet)
         end
 
         it 'sets the current droplet of the app to be the provided droplet' do
-          DeploymentCreate.create(app: app, droplet: other_droplet, user_audit_info: user_audit_info)
+          DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
 
-          expect(app.droplet).to eq(other_droplet)
+          expect(app.droplet).to eq(next_droplet)
         end
 
         context 'when the app does not have a droplet set' do
           let(:app_without_current_droplet) { VCAP::CloudController::AppModel.make }
-          let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_without_current_droplet, process_types: { 'web' => 'asdf' }) }
+          let(:next_droplet) { VCAP::CloudController::DropletModel.make(app: app_without_current_droplet, process_types: { 'web' => 'asdf' }) }
 
           it 'sets the droplet on the deployment' do
-            deployment = DeploymentCreate.create(app: app_without_current_droplet, droplet: droplet, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app: app_without_current_droplet, droplet: next_droplet, user_audit_info: user_audit_info)
 
             expect(deployment.app).to eq(app_without_current_droplet)
-            expect(deployment.droplet).to eq(droplet)
+            expect(deployment.droplet).to eq(next_droplet)
           end
 
           it 'has a nil previous droplet' do
-            deployment = DeploymentCreate.create(app: app_without_current_droplet, droplet: droplet, user_audit_info: user_audit_info)
+            deployment = DeploymentCreate.create(app: app_without_current_droplet, droplet: next_droplet, user_audit_info: user_audit_info)
 
             expect(deployment.previous_droplet).to eq(nil)
           end
