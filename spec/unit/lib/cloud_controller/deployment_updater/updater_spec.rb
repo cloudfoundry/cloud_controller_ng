@@ -322,6 +322,7 @@ module VCAP::CloudController
             droplet: deploying_droplet,
             previous_droplet: previous_droplet,
             deploying_web_process: canceling_deploying_web_process,
+            original_web_process_instance_count: 6,
             state: 'CANCELING'
           )
         end
@@ -357,47 +358,16 @@ module VCAP::CloudController
           end
         end
 
+        it 'rolls back to the correct number of instances' do
+          deployer.update
+          expect(canceling_web_process.reload.instances).to eq(6)
+          expect(canceling_deploying_web_process.exists?).to be false
+          expect(canceling_web_process.droplet_checksum).to eq(canceling_deployment.previous_droplet.checksum)
+        end
+
         it 'sets the deployment to CANCELED' do
           deployer.update
           expect(canceling_deployment.state).to eq('CANCELED')
-        end
-
-        describe 'inferring the correct number of instances' do
-          context 'when there are n + 1 process instances' do
-            context 'when there is 1 original instance' do
-              let(:canceling_web_process_instances_count) { 1 }
-              let(:canceling_deploying_web_process_instances_count) { 6 }
-
-              it 'rolls back to the correct number of instances' do
-                deployer.update
-                expect(canceling_web_process.reload.instances).to eq(6)
-                expect(canceling_deploying_web_process.exists?).to be false
-                expect(canceling_web_process.droplet_checksum).to eq(canceling_deployment.previous_droplet.checksum)
-              end
-            end
-
-            context 'when there is more than 1 original' do
-              let(:canceling_web_process_instances_count) { 2 }
-              let(:canceling_deploying_web_process_instances_count) { 5 }
-
-              it 'rolls back to the correct number of instances' do
-                deployer.update
-                expect(canceling_web_process.reload.instances).to eq(6)
-                expect(canceling_deploying_web_process.exists?).to be false
-              end
-            end
-          end
-
-          context 'when there are n total process instances (because the deployment is fully scaled, but not yet DEPLOYED)' do
-            let(:canceling_web_process_instances_count) { 0 }
-            let(:canceling_deploying_web_process_instances_count) { 6 }
-
-            it 'rolls back to the correct number of instances' do
-              deployer.update
-              expect(canceling_web_process.reload.instances).to eq(6)
-              expect(canceling_deploying_web_process.exists?).to be false
-            end
-          end
         end
       end
     end

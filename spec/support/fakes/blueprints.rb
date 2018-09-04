@@ -101,6 +101,7 @@ module VCAP::CloudController
     app { AppModel.make }
     droplet { DropletModel.make(app: app) }
     deploying_web_process { ProcessModel.make(app: app, type: "web-deployment-#{Sham.guid}") }
+    original_web_process_instance_count { 1 }
   end
 
   TaskModel.blueprint do

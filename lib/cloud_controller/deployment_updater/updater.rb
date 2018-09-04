@@ -99,22 +99,12 @@ module VCAP::CloudController
             original_web_process.lock!
             deploying_web_process.lock!
 
-            original_web_process.update(
-              instances: infer_original_instance_count(original_web_process, deploying_web_process)
-            )
+            original_web_process.update(instances: deployment.original_web_process_instance_count)
 
             RouteMappingModel.where(app: app, process_type: deploying_web_process.type).map(&:destroy)
             deploying_web_process.destroy
             deployment.update(state: DeploymentModel::CANCELED_STATE)
             logger.info("ran-cancel-deployment-for-#{deployment.guid}")
-          end
-        end
-
-        def infer_original_instance_count(original_web_process, deploying_web_process)
-          if original_web_process.instances <= 1
-            deploying_web_process.instances
-          else
-            original_web_process.instances + deploying_web_process.instances - 1
           end
         end
 

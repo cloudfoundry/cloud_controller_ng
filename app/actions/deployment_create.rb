@@ -11,19 +11,19 @@ module VCAP::CloudController
           raise SetCurrentDropletError.new(e.message)
         end
 
+        web_process = app.web_process
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
           droplet: droplet,
-          previous_droplet: previous_droplet
+          previous_droplet: previous_droplet,
+          original_web_process_instance_count: web_process.instances,
         )
 
         DeploymentModel.db.transaction do
           deployment.save
 
-          web_process = app.web_process
           process = create_deployment_process(app, deployment.guid, web_process)
-
           deployment.update(deploying_web_process: process)
           web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info, r, process) }
         end
