@@ -8,7 +8,7 @@ module VCAP::CloudController
       def cancel(deployment:, user_audit_info:)
         deployment.db.transaction do
           deployment.lock!
-          reject_invalid_states!(deployment) if invalid_states?(deployment)
+          reject_invalid_states!(deployment) unless valid_state?(deployment)
 
           begin
             SetCurrentDroplet.new(user_audit_info).update_to(deployment.app, deployment.previous_droplet)
@@ -22,8 +22,10 @@ module VCAP::CloudController
 
       private
 
-      def invalid_states?(deployment)
-        [DeploymentModel::DEPLOYED_STATE, DeploymentModel::CANCELED_STATE].include? deployment.state
+      def valid_state?(deployment)
+        [
+          DeploymentModel::DEPLOYING_STATE,
+        ].include?(deployment.state)
       end
 
       def reject_invalid_states!(deployment)

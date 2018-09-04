@@ -95,6 +95,16 @@ module VCAP::CloudController
           }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a CANCELED deployment')
         end
       end
+
+      context 'when the deployment is in the CANCELING state' do
+        let(:state) { DeploymentModel::CANCELING_STATE }
+
+        it 'raises an error' do
+          expect {
+            DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a CANCELING deployment')
+        end
+      end
     end
   end
 end
