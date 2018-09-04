@@ -6,4 +6,28 @@ ignore:
     - '*':
         reason: None Given
         expires: 2018-10-04T22:06:09.286Z
+  SNYK-RUBY-NOKOGIRI-20299:
+    - '*':
+        reason: None Given
+        expires: 2018-10-04T22:22:05.618Z
+  SNYK-RUBY-ERUBIS-20482:
+    - '*':
+        reason: None Given
+        expires: 2018-10-04T22:25:04.050Z
+  SNYK-RUBY-RAILTIES-20454:
+    - '*':
+        reason: None Given
+        expires: 2018-10-04T22:25:17.771Z
+  SNYK-RUBY-SINATRA-22027:
+    - '*':
+        reason: None Given
+        expires: 2018-10-04T22:25:27.201Z
+  SNYK-RUBY-SINATRA-20488:
+    - '*':
+        reason: None Given
+        expires: 2018-10-04T22:25:53.799Z
+  SNYK-RUBY-RACKPROTECTION-20394:
+    - '*':
+        reason: None Given
+        expires: 2018-10-04T22:26:10.440Z
 patch: {}
