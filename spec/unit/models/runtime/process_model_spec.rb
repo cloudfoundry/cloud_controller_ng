@@ -1151,6 +1151,12 @@ module VCAP::CloudController
           end
         end
 
+        it 'should not update the version when its been asked not to' do
+          process.memory = 2048
+          process.skip_process_version_update = true
+          expect { process.save }.not_to change(process, :version)
+        end
+
         it 'should update the version when changing :memory' do
           process.memory = 2048
           expect { process.save }.to change(process, :version)

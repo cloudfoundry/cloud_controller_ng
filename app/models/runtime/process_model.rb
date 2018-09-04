@@ -141,7 +141,7 @@ module VCAP::CloudController
     ].freeze
 
     # Last staging response which will contain streaming log url
-    attr_accessor :last_stager_response, :skip_process_observer_on_update
+    attr_accessor :last_stager_response, :skip_process_observer_on_update, :skip_process_version_update
 
     alias_method :diego?, :diego
 
@@ -302,13 +302,15 @@ module VCAP::CloudController
       # this is to indicate that the running state of an application has changed,
       # and that the system should converge on this new version.
 
-      (column_changed?(:state) ||
+      !skip_process_version_update &&
+      started? &&
+        (column_changed?(:state) ||
         column_changed?(:memory) ||
         column_changed?(:health_check_type) ||
         column_changed?(:health_check_http_endpoint) ||
         column_changed?(:enable_ssh) ||
         @ports_changed_by_user
-      ) && started?
+      )
     end
 
     def enable_ssh

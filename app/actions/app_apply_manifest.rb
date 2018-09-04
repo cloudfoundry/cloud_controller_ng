@@ -28,6 +28,7 @@ module VCAP::CloudController
 
       message.manifest_process_scale_messages.each do |manifest_process_scale_msg|
         process = find_process(app, manifest_process_scale_msg.type)
+        process.skip_process_version_update = true if manifest_process_scale_msg.requested?(:memory)
         process_scale = ProcessScale.new(@user_audit_info, process, manifest_process_scale_msg.to_process_scale_message, manifest_triggered: true)
         process_scale.scale
       end
