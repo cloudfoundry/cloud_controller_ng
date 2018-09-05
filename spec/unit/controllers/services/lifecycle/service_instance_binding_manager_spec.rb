@@ -90,7 +90,7 @@ module VCAP::CloudController
 
         it 'tells the broker client to bind the route and the service instance' do
           expect_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).
-            to receive(:bind).with(anything, arbitrary_parameters).
+            to receive(:bind).with(anything, arbitrary_parameters: arbitrary_parameters).
             and_return({ async: false, binding: {} })
 
           manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)

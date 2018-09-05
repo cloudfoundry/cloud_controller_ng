@@ -957,14 +957,14 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'makes a put request with correct path' do
-        client.bind(binding, arbitrary_parameters)
+        client.bind(binding)
 
         expect(http_client).to have_received(:put).
           with("/v2/service_instances/#{binding.service_instance.guid}/service_bindings/#{binding.guid}", anything)
       end
 
       it 'makes a put request with correct message' do
-        client.bind(binding, arbitrary_parameters)
+        client.bind(binding)
 
         expect(http_client).to have_received(:put).
           with(anything,
@@ -981,7 +981,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'sets the credentials on the binding' do
-        attributes = client.bind(binding, arbitrary_parameters)
+        attributes = client.bind(binding)
         # ensure attributes return match ones for the database
         binding.set(attributes[:binding])
         binding.save
@@ -993,7 +993,7 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'returns async false for synchronous creation' do
-        response = client.bind(binding, arbitrary_parameters)
+        response = client.bind(binding)
         expect(response[:async]).to eq(false)
       end
 
@@ -1001,7 +1001,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:arbitrary_parameters) { { 'name' => 'value' } }
 
         it 'make a put request with arbitrary parameters' do
-          client.bind(binding, arbitrary_parameters)
+          client.bind(binding, arbitrary_parameters: arbitrary_parameters)
           expect(http_client).to have_received(:put).
             with(anything,
               hash_including(
@@ -1016,7 +1016,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:accepts_incomplete) { true }
 
           it 'make a put request with accepts_incomplete true' do
-            client.bind(binding, arbitrary_parameters, accepts_incomplete)
+            client.bind(binding, accepts_incomplete: accepts_incomplete)
             expect(http_client).to have_received(:put).
               with(/accepts_incomplete=true/, anything)
           end
@@ -1025,7 +1025,7 @@ module VCAP::Services::ServiceBrokers::V2
             let(:code) { 202 }
 
             it 'returns async true' do
-              response = client.bind(binding, arbitrary_parameters, accepts_incomplete)
+              response = client.bind(binding, accepts_incomplete: accepts_incomplete)
               expect(response[:async]).to eq(true)
             end
 
@@ -1033,7 +1033,7 @@ module VCAP::Services::ServiceBrokers::V2
               let(:response_data) { { operation: '123' } }
 
               it 'returns the operation attribute' do
-                response = client.bind(binding, arbitrary_parameters, accepts_incomplete)
+                response = client.bind(binding, accepts_incomplete: accepts_incomplete)
                 expect(response[:operation]).to eq('123')
               end
             end
@@ -1044,7 +1044,7 @@ module VCAP::Services::ServiceBrokers::V2
           let(:accepts_incomplete) { false }
 
           it 'make a put request without the accepts_incomplete query parameter' do
-            client.bind(binding, arbitrary_parameters, accepts_incomplete)
+            client.bind(binding, accepts_incomplete: accepts_incomplete)
             expect(http_client).to have_received(:put).
               with(/^((?!accepts_incomplete).)*$/, anything)
           end
@@ -1055,7 +1055,7 @@ module VCAP::Services::ServiceBrokers::V2
         let(:binding) { VCAP::CloudController::RouteBinding.make }
 
         it 'does not send the app_guid in the request' do
-          client.bind(binding, arbitrary_parameters)
+          client.bind(binding)
 
           expect(http_client).to have_received(:put).
             with(anything,
@@ -1077,7 +1077,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'sets the syslog_drain_url on the binding' do
-          attributes = client.bind(binding, arbitrary_parameters)
+          attributes = client.bind(binding)
           # ensure attributes return match ones for the database
           binding.set(attributes[:binding])
           binding.save
@@ -1092,7 +1092,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises an error and initiates orphan mitigation' do
             expect {
-              client.bind(binding, arbitrary_parameters)
+              client.bind(binding)
             }.to raise_error(Errors::ServiceBrokerInvalidSyslogDrainUrl)
 
             expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
@@ -1108,7 +1108,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'does not set the syslog_drain_url on the binding' do
-          client.bind(binding, arbitrary_parameters)
+          client.bind(binding)
           expect(binding.syslog_drain_url).to_not be
         end
       end
@@ -1128,7 +1128,7 @@ module VCAP::Services::ServiceBrokers::V2
         end
 
         it 'stores the volume mount on the service binding' do
-          attributes = client.bind(binding, arbitrary_parameters)
+          attributes = client.bind(binding)
 
           binding.set(attributes[:binding])
           binding.save
@@ -1148,7 +1148,7 @@ module VCAP::Services::ServiceBrokers::V2
 
           it 'raises an error and initiates orphan mitigation' do
             expect {
-              client.bind(binding, arbitrary_parameters)
+              client.bind(binding)
             }.to raise_error(Errors::ServiceBrokerInvalidVolumeMounts)
 
             expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
@@ -1174,7 +1174,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and cleans up the failed binding' do
               expect {
-                client.bind(binding, arbitrary_parameters)
+                client.bind(binding)
               }.to raise_error(Errors::HttpClientTimeout)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).
@@ -1196,7 +1196,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error but does not clean up the binding' do
               expect {
-                client.bind(binding, arbitrary_parameters)
+                client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
 
               expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
@@ -1208,7 +1208,7 @@ module VCAP::Services::ServiceBrokers::V2
 
             it 'propagates the error and follows up with a deprovision request' do
               expect {
-                client.bind(binding, arbitrary_parameters)
+                client.bind(binding)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
@@ -1325,7 +1325,7 @@ module VCAP::Services::ServiceBrokers::V2
             let(:code) { 202 }
 
             it 'returns async true' do
-              response = client.unbind(binding, arbitrary_parameters, accepts_incomplete)
+              response = client.unbind(binding)
               expect(response[:async]).to eq(true)
             end
 
