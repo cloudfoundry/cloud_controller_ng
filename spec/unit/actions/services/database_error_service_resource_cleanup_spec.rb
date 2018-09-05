@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-RSpec.describe 'Synchronous orphan mitigation' do
+RSpec.describe 'DatabaseErrorServiceResourceCleanup' do
   let(:logger) { double }
   let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
-  subject { VCAP::CloudController::SynchronousOrphanMitigate.new(logger) }
+  subject { VCAP::CloudController::DatabaseErrorServiceResourceCleanup.new(logger) }
 
   before do
     allow(logger).to receive(:info)
@@ -25,7 +25,7 @@ RSpec.describe 'Synchronous orphan mitigation' do
     it 'attempts to deprovision the service instance' do
       subject.attempt_deprovision_instance(service_instance)
 
-      expect(client).to have_received(:deprovision).with(service_instance)
+      expect(client).to have_received(:deprovision).with(service_instance, accepts_incomplete: true)
     end
 
     it 'logs that it is attempting to orphan mitigate' do
@@ -70,7 +70,7 @@ RSpec.describe 'Synchronous orphan mitigation' do
     it 'attempts to unbind the binding' do
       subject.attempt_unbind(service_binding)
 
-      expect(client).to have_received(:unbind).with(service_binding)
+      expect(client).to have_received(:unbind).with(service_binding, nil, true)
     end
 
     it 'logs that it is attempting to orphan mitigate' do

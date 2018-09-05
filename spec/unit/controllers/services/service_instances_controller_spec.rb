@@ -3,7 +3,6 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::ServiceInstancesController, :services do
     let(:service_broker_url_regex) { %r{http://example.com/v2/service_instances/(.*)} }
-    let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
     let(:logger) { double(:logger) }
 
     describe 'Query Parameters' do
@@ -542,7 +541,6 @@ module VCAP::CloudController
               stub_request(:put, service_broker_url_regex).
                 with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
                 to_return(status: 422, body: { error: 'AsyncRequired' }.to_json, headers: { 'Content-Type' => 'application/json' })
-              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
               allow(logger).to receive(:error)
             end
 
@@ -759,7 +757,6 @@ module VCAP::CloudController
             )
           end
           let(:response_code) { 409 }
-          let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
           let(:body) do
             {
               dashboard_url: 'http://example-dashboard.com/9189kdfsk0vfnku',
@@ -767,7 +764,6 @@ module VCAP::CloudController
           end
 
           before do
-            allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
             allow(logger).to receive(:error)
           end
 
@@ -969,7 +965,6 @@ module VCAP::CloudController
             end
 
             before do
-              allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
               allow(logger).to receive(:error)
             end
 
@@ -992,7 +987,6 @@ module VCAP::CloudController
               let(:delete_request_status) { 202 }
 
               before do
-                allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
                 allow(logger).to receive(:error)
               end
 

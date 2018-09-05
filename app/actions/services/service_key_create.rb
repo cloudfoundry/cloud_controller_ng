@@ -1,4 +1,4 @@
-require 'actions/services/synchronous_orphan_mitigate'
+require 'actions/services/database_error_service_resource_cleanup'
 require 'actions/services/locks/lock_check'
 
 module VCAP::CloudController
@@ -25,8 +25,8 @@ module VCAP::CloudController
           service_key.save
         rescue => e
           @logger.error "Failed to save state of create for service key #{service_key.guid} with exception: #{e}"
-          orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
-          orphan_mitigator.attempt_delete_key(service_key)
+          service_resource_cleanup = DatabaseErrorServiceResourceCleanup.new(@logger)
+          service_resource_cleanup.attempt_delete_key(service_key)
           raise
         end
       rescue => e

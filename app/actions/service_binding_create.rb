@@ -1,4 +1,4 @@
-require 'actions/services/synchronous_orphan_mitigate'
+require 'actions/services/database_error_service_resource_cleanup'
 require 'actions/services/locks/lock_check'
 require 'repositories/service_binding_event_repository'
 require 'jobs/services/service_binding_state_fetch'
@@ -58,7 +58,7 @@ module VCAP::CloudController
         end
       rescue => e
         logger.error "Failed to save state of create for service binding #{binding.guid} with exception: #{e}"
-        mitigate_orphan(binding)
+        cleanup_binding_without_db(binding)
         raise e
       end
 
@@ -71,9 +71,9 @@ module VCAP::CloudController
       client.bind(service_binding, parameters, accepts_incomplete)
     end
 
-    def mitigate_orphan(binding)
-      orphan_mitigator = SynchronousOrphanMitigate.new(logger)
-      orphan_mitigator.attempt_unbind(binding)
+    def cleanup_binding_without_db(binding)
+      service_resource_cleanup = DatabaseErrorServiceResourceCleanup.new(logger)
+      service_resource_cleanup.attempt_unbind(binding)
     end
 
     def bindable_in_space?(service_instance, app_space)

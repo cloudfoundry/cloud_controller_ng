@@ -91,18 +91,18 @@ module VCAP::CloudController
       end
 
       context 'when the instance fails to save to the db' do
-        let(:mock_orphan_mitigator) { double(:mock_orphan_mitigator, attempt_deprovision_instance: nil) }
+        let(:mock_service_resource_cleanup) { double(:mock_service_resource_cleanup, attempt_deprovision_instance: nil) }
         before do
-          allow(SynchronousOrphanMitigate).to receive(:new).and_return(mock_orphan_mitigator)
+          allow(DatabaseErrorServiceResourceCleanup).to receive(:new).and_return(mock_service_resource_cleanup)
           allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
           allow(logger).to receive(:error)
         end
 
-        it 'attempts synchronous orphan mitigation' do
+        it 'attempts to deprovision the instance without using the database' do
           expect {
             create_action.create(request_attrs, false)
           }.to raise_error(RuntimeError)
-          expect(mock_orphan_mitigator).to have_received(:attempt_deprovision_instance)
+          expect(mock_service_resource_cleanup).to have_received(:attempt_deprovision_instance)
         end
 
         it 'logs that it was unable to save' do
