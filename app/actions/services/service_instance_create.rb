@@ -1,4 +1,4 @@
-require 'actions/services/synchronous_orphan_mitigate'
+require 'actions/services/database_error_service_resource_cleanup'
 require 'jobs/services/service_instance_state_fetch'
 
 module VCAP::CloudController
@@ -25,7 +25,7 @@ module VCAP::CloudController
       begin
         service_instance.save_with_new_operation(broker_response[:instance], broker_response[:last_operation])
       rescue => e
-        mitigate_orphan(e, service_instance)
+        cleanup_instance_without_db(e, service_instance)
       end
 
       if service_instance.operation_in_progress?
@@ -50,10 +50,10 @@ module VCAP::CloudController
       enqueuer.enqueue
     end
 
-    def mitigate_orphan(e, service_instance, message: 'Failed to save while creating service instance')
+    def cleanup_instance_without_db(e, service_instance, message: 'Failed to save while creating service instance')
       @logger.error "#{message} #{service_instance.guid} with exception: #{e}."
-      orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
-      orphan_mitigator.attempt_deprovision_instance(service_instance)
+      service_resource_cleanup = DatabaseErrorServiceResourceCleanup.new(@logger)
+      service_resource_cleanup.attempt_deprovision_instance(service_instance)
       raise e
     end
   end

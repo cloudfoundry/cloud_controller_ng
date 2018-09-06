@@ -1,12 +1,12 @@
 module VCAP::CloudController
-  class SynchronousOrphanMitigate
+  class DatabaseErrorServiceResourceCleanup
     def initialize(logger)
       @logger = logger
     end
 
     def attempt_deprovision_instance(service_instance)
       @logger.info "Attempting synchronous orphan mitigation for service instance #{service_instance.guid}"
-      client(service_instance).deprovision(service_instance)
+      client(service_instance).deprovision(service_instance, accepts_incomplete: true)
       @logger.info "Success deprovisioning orphaned service instance #{service_instance.guid}"
     rescue => e
       @logger.error "Unable to deprovision orphaned service instance #{service_instance.guid}: #{e}"
@@ -24,7 +24,7 @@ module VCAP::CloudController
     def attempt_unbind(service_binding)
       @logger.info "Attempting synchronous orphan mitigation for service binding #{service_binding.guid}"
       service_instance = service_binding.service_instance
-      client(service_instance).unbind(service_binding)
+      client(service_instance).unbind(service_binding, nil, true)
       @logger.info "Success unbinding orphaned service binding #{service_binding.guid}"
     rescue => e
       @logger.error "Unable to delete orphaned service binding #{service_binding.guid}: #{e}"

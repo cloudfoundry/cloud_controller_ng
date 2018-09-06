@@ -86,9 +86,9 @@ module VCAP::CloudController
       broker_response[:binding]
     end
 
-    def mitigate_orphan(binding)
-      orphan_mitigator = SynchronousOrphanMitigate.new(@logger)
-      orphan_mitigator.attempt_unbind(binding)
+    def cleanup_binding_without_db(binding)
+      service_resource_cleanup = DatabaseErrorServiceResourceCleanup.new(@logger)
+      service_resource_cleanup.attempt_unbind(binding)
     end
 
     def save_route_binding(route_binding)
@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
     rescue => e
       @logger.error "Failed to save binding for route: #{route_binding.route.guid} and service instance: #{route_binding.service_instance.guid} with exception: #{e}"
-      mitigate_orphan(route_binding)
+      cleanup_binding_without_db(route_binding)
       raise e
     end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
       route_binding.notify_diego if attributes_to_update[:route_service_url]
     rescue => e
       @logger.error "Failed to update route: #{route_binding.route.guid} and service_instance: #{route_binding.service_instance.guid} with exception: #{e}"
-      mitigate_orphan(route_binding)
+      cleanup_binding_without_db(route_binding)
       route_binding.destroy
       raise e
     end

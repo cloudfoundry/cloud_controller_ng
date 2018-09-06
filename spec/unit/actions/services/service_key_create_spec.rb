@@ -59,12 +59,12 @@ module VCAP::CloudController
         end
 
         it 'immediately attempts to unbind the service instance' do
-          expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_delete_key)
+          expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_delete_key)
           subject.create(service_instance, key_attrs, {})
         end
 
         it 'logs that the unbind failed' do
-          allow_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_delete_key)
+          allow_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_delete_key)
           subject.create(service_instance, key_attrs, {})
           expect(logger).to have_received(:error).with /Failed to save/
         end

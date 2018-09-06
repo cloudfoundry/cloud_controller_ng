@@ -338,8 +338,8 @@ module VCAP::CloudController
               }.to raise_error('failed').and not_change(ServiceBinding, :count)
             end
 
-            it 'should trigger orphan mitigation' do
-              expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+            it 'should attempt to unbind without using the database' do
+              expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_unbind)
 
               expect {
                 service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
@@ -358,8 +358,8 @@ module VCAP::CloudController
               }.to raise_error(ServiceBindingCreate::ServiceBrokerInvalidBindingsRetrievable)
             end
 
-            it 'should trigger orphan mitigation' do
-              expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+            it 'should attempt to unbind without using the database' do
+              expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_unbind)
 
               begin
                 service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
@@ -385,7 +385,7 @@ module VCAP::CloudController
           end
 
           it 'raises an error' do
-            expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+            expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_unbind)
 
             expect {
               service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
@@ -422,7 +422,7 @@ module VCAP::CloudController
           end
 
           it 'immediately attempts to unbind the service instance' do
-            expect_any_instance_of(SynchronousOrphanMitigate).to receive(:attempt_unbind)
+            expect_any_instance_of(DatabaseErrorServiceResourceCleanup).to receive(:attempt_unbind)
 
             expect {
               service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
