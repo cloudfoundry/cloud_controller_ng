@@ -20,7 +20,11 @@ module VCAP::CloudController
       def rotate_for_class(klass, batch_size)
         loop do
           current_key_label = Encryptor.current_encryption_key_label
-          rows = klass.exclude(encryption_key_label: current_key_label).limit(batch_size).all
+          rows = klass.
+                 exclude(encryption_key_label: current_key_label).
+                 or(encryption_key_label: nil).
+                 limit(batch_size).
+                 all
           break if rows.count == 0
 
           rotate_batch(klass, rows)
