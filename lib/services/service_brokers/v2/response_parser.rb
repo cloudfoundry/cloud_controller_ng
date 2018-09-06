@@ -25,7 +25,8 @@ module VCAP::Services
               FailingValidator.new(Errors::ServiceBrokerConflict)
             when 422
               FailWhenValidator.new('error',
-                                    { 'AsyncRequired' => Errors::AsyncRequired },
+                                    { 'AsyncRequired' => Errors::AsyncRequired,
+                                      'ConcurrencyError' => Errors::ConcurrencyError },
                                     FailingValidator.new(Errors::ServiceBrokerBadResponse))
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
@@ -53,7 +54,8 @@ module VCAP::Services
             when 422
               FailWhenValidator.new('error',
                                     { 'RequiresApp' => Errors::AppRequired,
-                                      'AsyncRequired' => Errors::AsyncRequired },
+                                      'AsyncRequired' => Errors::AsyncRequired,
+                                      'ConcurrencyError' => Errors::ConcurrencyError },
                                       FailingValidator.new(Errors::ServiceBrokerBadResponse))
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)

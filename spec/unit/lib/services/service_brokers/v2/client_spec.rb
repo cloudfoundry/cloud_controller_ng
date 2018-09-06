@@ -312,6 +312,18 @@ module VCAP::Services::ServiceBrokers::V2
             end
           end
 
+          context 'ConcurrencyError error' do
+            let(:error) { Errors::ConcurrencyError.new(uri, :put, response) }
+
+            it 'propagates the error and does not issue a deprovision' do
+              expect {
+                client.provision(instance)
+              }.to raise_error(Errors::ConcurrencyError)
+
+              expect(orphan_mitigator).not_to have_received(:cleanup_failed_provision)
+            end
+          end
+
           context 'ServiceBrokerResponseMalformed error' do
             let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response, '') }
 
@@ -879,13 +891,12 @@ module VCAP::Services::ServiceBrokers::V2
           context 'Errors::ServiceBrokerApiTimeout error' do
             let(:error) { Errors::HttpClientTimeout.new(uri, :put, Timeout::Error.new) }
 
-            it 'propagates the error and follows up with a deprovision request' do
+            it 'propagates the error and follows up with a unbind request' do
               expect {
                 client.create_service_key(key)
               }.to raise_error(Errors::HttpClientTimeout)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_key).
-                with(client_attrs, key)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_key)
             end
           end
         end
@@ -901,7 +912,7 @@ module VCAP::Services::ServiceBrokers::V2
           context 'Errors::ServiceBrokerApiTimeout error' do
             let(:error) { Errors::ServiceBrokerApiTimeout.new(uri, :put, Timeout::Error.new) }
 
-            it 'propagates the error and follows up with a deprovision request' do
+            it 'propagates the error and follows up with an unbind request' do
               expect {
                 client.create_service_key(key)
               }.to raise_error(Errors::ServiceBrokerApiTimeout)
@@ -913,12 +924,24 @@ module VCAP::Services::ServiceBrokers::V2
           context 'ServiceBrokerBadResponse error' do
             let(:error) { Errors::ServiceBrokerBadResponse.new(uri, :put, response) }
 
-            it 'propagates the error and follows up with a deprovision request' do
+            it 'propagates the error and follows up with an unbind request' do
               expect {
                 client.create_service_key(key)
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
-              expect(orphan_mitigator).to have_received(:cleanup_failed_key).with(client_attrs, key)
+              expect(orphan_mitigator).to have_received(:cleanup_failed_key)
+            end
+          end
+
+          context 'ConcurrencyError error' do
+            let(:error) { Errors::ConcurrencyError.new(uri, :put, response) }
+
+            it 'propagates the error and does not issue an unbind' do
+              expect {
+                client.create_service_key(key)
+              }.to raise_error(Errors::ConcurrencyError)
+
+              expect(orphan_mitigator).not_to have_received(:cleanup_failed_key)
             end
           end
         end
@@ -1212,6 +1235,18 @@ module VCAP::Services::ServiceBrokers::V2
               }.to raise_error(Errors::ServiceBrokerBadResponse)
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+            end
+          end
+
+          context 'ConcurrencyError error' do
+            let(:error) { Errors::ConcurrencyError.new(uri, :put, response) }
+
+            it 'propagates the error and does not issue an unbind' do
+              expect {
+                client.bind(binding, arbitrary_parameters)
+              }.to raise_error(Errors::ConcurrencyError)
+
+              expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
             end
           end
         end
