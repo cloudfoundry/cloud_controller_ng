@@ -2,32 +2,40 @@ module VCAP::CloudController
   class RotateDatabaseKey
     class << self
       def perform(batch_size: 1000)
+        @logger = Steno.logger('cc.rotate_database_key')
+
         no_encryption_key! unless Encryptor.current_encryption_key_label.present?
 
         VCAP::CloudController::Encryptor.encrypted_classes.each do |klass|
-          logger.info("rotating encryption key for class #{klass}")
+          logger.info("Rotating encryption key for class #{klass}")
           rotate_for_class(klass.constantize, batch_size)
-          logger.info("done rotating encryption key for class #{klass}")
+          logger.info("Done rotating encryption key for class #{klass}")
         end
       end
 
       private
+
+      attr_accessor :logger
 
       def no_encryption_key!
         raise CloudController::Errors::ApiError.new_from_details('NoCurrentEncryptionKey')
       end
 
       def rotate_for_class(klass, batch_size)
+        current_key_label = Encryptor.current_encryption_key_label
+        rows_needing_rotation = klass.
+                                exclude(encryption_key_label: current_key_label).
+                                or(encryption_key_label: nil)
+
+        logger.info("#{rows_needing_rotation.count} rows of #{klass} are not encrypted with the current key and will be rotated")
         loop do
-          current_key_label = Encryptor.current_encryption_key_label
-          rows = klass.
-                 exclude(encryption_key_label: current_key_label).
-                 or(encryption_key_label: nil).
+          rows = rows_needing_rotation.
                  limit(batch_size).
                  all
           break if rows.count == 0
 
           rotate_batch(klass, rows)
+          logger.info("Rotated batch of #{rows.count} rows of #{klass}")
         end
       end
 
@@ -55,10 +63,6 @@ module VCAP::CloudController
       def encrypt_field(field, row)
         field_name = field[:field_name]
         row.public_send("#{field_name}=".to_sym, row.public_send(field_name.to_sym))
-      end
-
-      def logger
-        @logger ||= Steno.logger('cc.rotate_database_key')
       end
     end
   end
