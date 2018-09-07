@@ -18,14 +18,14 @@ module VCAP::CloudController
     attr_reader :message
 
     def filter(app_dataset)
-      DeploymentModel.dataset.where(app: filter_app_dataset(app_dataset))
-    end
-
-    def filter_app_dataset(app_dataset)
       if message.requested? :app_guids
         app_dataset = app_dataset.where(app_guid: message.app_guids)
       end
-      app_dataset
+      dataset = DeploymentModel.dataset.where(app: app_dataset)
+      if message.requested? :states
+        dataset = dataset.where(state: message.states)
+      end
+      dataset
     end
   end
 end

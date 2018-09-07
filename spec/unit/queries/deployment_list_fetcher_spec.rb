@@ -15,10 +15,10 @@ module VCAP::CloudController
     let(:app3_in_space2) { AppModel.make(space_guid: space2.guid, guid: 'app3') }
     let(:app4_in_space3) { AppModel.make(space_guid: space3.guid, guid: 'app4') }
 
-    let!(:deployment_for_app1_space1) { DeploymentModel.make(app_guid: app_in_space1.guid) }
-    let!(:deployment_for_app2_space1) { DeploymentModel.make(app_guid: app2_in_space1.guid) }
-    let!(:deployment_for_app3_space2) { DeploymentModel.make(app_guid: app3_in_space2.guid) }
-    let!(:deployment_for_app4_space3) { DeploymentModel.make(app_guid: app4_in_space3.guid) }
+    let!(:deployment_for_app1_space1) { DeploymentModel.make(app_guid: app_in_space1.guid, state: 'DEPLOYED') }
+    let!(:deployment_for_app2_space1) { DeploymentModel.make(app_guid: app2_in_space1.guid, state: 'CANCELING') }
+    let!(:deployment_for_app3_space2) { DeploymentModel.make(app_guid: app3_in_space2.guid, state: 'CANCELED') }
+    let!(:deployment_for_app4_space3) { DeploymentModel.make(app_guid: app4_in_space3.guid, state: 'DEPLOYING') }
 
     subject(:fetcher) { DeploymentListFetcher.new(message: message) }
     let(:pagination_options) { PaginationOptions.new({}) }
@@ -41,6 +41,15 @@ module VCAP::CloudController
         let(:filters) { { app_guids: [app_in_space1.guid, app3_in_space2.guid] } }
 
         it 'returns all of the deployments with the requested app guids' do
+          results = fetcher.fetch_all.all
+          expect(results).to match_array([deployment_for_app1_space1, deployment_for_app3_space2])
+        end
+      end
+
+      context 'filtering states' do
+        let(:filters) { { states: %w/DEPLOYED CANCELED/ } }
+
+        it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all.all
           expect(results).to match_array([deployment_for_app1_space1, deployment_for_app3_space2])
         end
@@ -68,6 +77,15 @@ module VCAP::CloudController
         it 'returns all the deployments associated with the requested app guid' do
           results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
           expect(results.all).to match_array([deployment_for_app1_space1, deployment_for_app4_space3])
+        end
+      end
+
+      describe 'filtering on states' do
+        let(:filters) { { states: %w/DEPLOYED CANCELED/ } }
+
+        it 'returns all the deployments associated with the requested states' do
+          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+          expect(results.all).to match_array([deployment_for_app1_space1])
         end
       end
     end

@@ -367,6 +367,27 @@ RSpec.describe DeploymentsController, type: :controller do
             expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
           end
         end
+
+        context 'when querying by states' do
+          let(:states_list) { 'DEPLOYED,CANCELED' }
+          let(:params) { { states: states_list } }
+          let!(:deployed_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYED', app: app) }
+          let!(:canceled_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app) }
+
+          it 'gets only the requested deployments' do
+            get :index, params
+
+            expect(response.status).to eq(200)
+            expect(parsed_body['resources'].map { |r| r['guid'] }).to match_array([deployed_deployment.guid, canceled_deployment.guid])
+          end
+
+          it 'echo the params in the pagination links' do
+            get :index, params.merge({ per_page: 1 })
+
+            expect(response.status).to eq(200)
+            expect(parsed_body['pagination']['next']['href']).to match(/states=#{CGI.escape(states_list)}/)
+          end
+        end
       end
     end
   end

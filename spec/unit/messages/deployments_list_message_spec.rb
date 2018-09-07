@@ -9,7 +9,8 @@ module VCAP::CloudController
           'page'      => 1,
           'per_page'  => 5,
           'order_by'  => 'created_at',
-          'app_guids' => 'appguid1,appguid2'
+          'app_guids' => 'appguid1,appguid2',
+          'states' => 'DEPLOYED,CANCELED',
         }
       end
 
@@ -19,7 +20,8 @@ module VCAP::CloudController
         expect(message).to be_a(DeploymentsListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
-        expect(message.app_guids).to eq(['appguid1', 'appguid2'])
+        expect(message.app_guids).to match_array(['appguid1', 'appguid2'])
+        expect(message.states).to match_array(['CANCELED', 'DEPLOYED'])
         expect(message.order_by).to eq('created_at')
       end
 
@@ -30,6 +32,7 @@ module VCAP::CloudController
         expect(message.requested?(:per_page)).to be true
         expect(message.requested?(:app_guids)).to be true
         expect(message.requested?(:order_by)).to be true
+        expect(message.requested?(:states)).to be true
       end
     end
 
@@ -40,6 +43,7 @@ module VCAP::CloudController
           page:      1,
           per_page:  5,
           order_by:  'created_at',
+          states: [],
         })
         expect(message).to be_valid
       end
@@ -67,6 +71,12 @@ module VCAP::CloudController
         message = DeploymentsListMessage.new app_guids: 'tricked you, not an array'
         expect(message).to be_invalid
         expect(message.errors[:app_guids].length).to eq 1
+      end
+
+      it 'validates states is an array' do
+        message = DeploymentsListMessage.new states: 'tricked you, not an array'
+        expect(message).to be_invalid
+        expect(message.errors[:states].length).to eq 1
       end
     end
   end
