@@ -207,6 +207,22 @@ RSpec.describe Logcache::TrafficControllerDecorator do
     describe 'walking the log cache' do
       let(:lookback_window) { 2.minutes }
 
+      context 'when log cache never stops returning results' do
+        let(:envelopes_max_limit_first_page) { generate_batch(1000) }
+
+        let(:logcache_response_max_limit_first_page) { Logcache::V1::ReadResponse.new(envelopes: envelopes_max_limit_first_page) }
+
+        before do
+          allow(wrapped_logcache_client).to receive(:container_metrics).and_return(logcache_response_max_limit_first_page)
+        end
+
+        it 'stops requesting additional pages of metrics after 100 calls' do
+          subject
+
+          expect(wrapped_logcache_client).to have_received(:container_metrics).exactly(100).times
+        end
+      end
+
       context 'when the log cache has fewer than 1000 envelopes for the time window' do
         let(:envelopes) { generate_batch(999) }
 
