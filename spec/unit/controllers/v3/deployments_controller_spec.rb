@@ -47,6 +47,29 @@ RSpec.describe DeploymentsController, type: :controller do
 
           post :create, body: req_body
         end
+
+        context 'the app does not have a current droplet' do
+          let(:app_without_droplet) { VCAP::CloudController::AppModel.make(space: space) }
+          let(:req_body) do
+            {
+             relationships: {
+                app: {
+                  data: {
+                    guid: app_without_droplet.guid
+                  }
+                }
+              },
+            }
+          end
+
+          it 'returns a 422' do
+            post :create, body: req_body
+
+            expect(response.status).to eq 422
+            expect(response.body).to include('UnprocessableEntity')
+            expect(response.body).to include('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.')
+          end
+        end
       end
 
       context 'when a droplet is provided' do

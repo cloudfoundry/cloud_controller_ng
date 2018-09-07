@@ -31,11 +31,12 @@ class DeploymentsController < ApplicationController
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
 
     droplet_guid = HashUtils.dig(params[:body], :droplet, :guid)
-    droplet = if droplet_guid
-                DropletModel.find(guid: droplet_guid)
-              else
-                app.droplet
-              end
+    if droplet_guid
+      droplet = DropletModel.find(guid: droplet_guid)
+    else
+      droplet = app.droplet
+      unprocessable!('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.') unless droplet
+    end
 
     begin
       deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
