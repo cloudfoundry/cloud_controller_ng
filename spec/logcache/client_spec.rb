@@ -45,13 +45,15 @@ module Logcache
 
       it 'calls Logcache with the correct parameters and returns envelopes' do
         expect(
-          client.container_metrics(source_guid: process.guid, envelope_limit: 1000)
+          client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
         ).to eq([42, :woof])
 
         expect(Logcache::V1::ReadRequest).to have_received(:new).with(
           source_id: process.guid,
           limit: 1000,
           descending: true,
+          start_time: 100,
+          end_time: 101,
           envelope_types: [:GAUGE]
         )
         expect(logcache_service).to have_received(:read).with(logcache_request)

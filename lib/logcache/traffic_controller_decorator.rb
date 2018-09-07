@@ -1,4 +1,5 @@
 require 'logcache/client'
+require 'utils/time_utils'
 
 module Logcache
   class TrafficControllerDecorator
@@ -7,16 +8,39 @@ module Logcache
     end
 
     def container_metrics(auth_token: nil, source_guid:)
-      current_desired_instance_count = VCAP::CloudController::ProcessModel.find(guid: source_guid).instances
-      envelopes = @logcache_client.container_metrics(
-        source_guid: source_guid,
-        envelope_limit: num_envelopes_to_fetch(current_desired_instance_count)
-      ).envelopes.batch
+      now = Time.now
+      start_time = TimeUtils.to_nanoseconds(now - 2.minutes)
+      end_time = TimeUtils.to_nanoseconds(now)
+      final_envelopes = []
 
-      envelopes.uniq(&:instance_id).map { |envelope| convert_to_traffic_controller_envelope(source_guid, envelope) }
+      loop do
+        new_envelopes = get_container_metrics(
+          start_time: start_time,
+          end_time: end_time,
+          source_guid: source_guid
+        )
+
+        final_envelopes += new_envelopes
+        break if new_envelopes.size < Logcache::Client::MAX_LIMIT
+
+        end_time = new_envelopes.last.timestamp - 1
+      end
+
+      final_envelopes.uniq(&:instance_id).map do |envelope|
+        convert_to_traffic_controller_envelope(source_guid, envelope)
+      end
     end
 
     private
+
+    def get_container_metrics(start_time:, end_time:, source_guid:)
+      @logcache_client.container_metrics(
+        start_time: start_time,
+        end_time: end_time,
+        source_guid: source_guid,
+        envelope_limit: Logcache::Client::MAX_LIMIT
+      ).envelopes.batch
+    end
 
     def convert_to_traffic_controller_envelope(source_guid, logcache_envelope)
       new_envelope = {
@@ -36,12 +60,6 @@ module Logcache
       TrafficController::Models::Envelope.new(
         containerMetric: TrafficController::Models::ContainerMetric.new(new_envelope)
       )
-    end
-
-    def num_envelopes_to_fetch(num_instances)
-      process_count_with_padding = num_instances * 2
-
-      [[process_count_with_padding, Logcache::Client::MAX_LIMIT].min, Logcache::Client::DEFAULT_LIMIT].max
     end
   end
 end

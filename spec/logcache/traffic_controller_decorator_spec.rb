@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'logcache/traffic_controller_decorator'
+require 'utils/time_utils'
 
 RSpec.describe Logcache::TrafficControllerDecorator do
   subject { described_class.new(wrapped_logcache_client).container_metrics(source_guid: process_guid) }
@@ -11,6 +12,22 @@ RSpec.describe Logcache::TrafficControllerDecorator do
   let(:logcache_response) { Logcache::V1::ReadResponse.new(envelopes: envelopes) }
   let(:envelopes) { Loggregator::V2::EnvelopeBatch.new }
 
+  def generate_batch(size, offset: 0, last_timestamp: TimeUtils.to_nanoseconds(Time.now), cpu_percentage: 100)
+    batch = (1..size).to_a.map do |i|
+      Loggregator::V2::Envelope.new(
+        timestamp: last_timestamp,
+        source_id: process_guid,
+        gauge: Loggregator::V2::Gauge.new(metrics: {
+          'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: cpu_percentage),
+          'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 2),
+          'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 3),
+        }),
+        instance_id: (offset + i).to_s
+      )
+    end
+    Loggregator::V2::EnvelopeBatch.new(batch: batch)
+  end
+
   describe 'converting from Logcache to TrafficController' do
     before do
       allow(wrapped_logcache_client).to receive(:container_metrics).and_return(logcache_response)
@@ -20,48 +37,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       subject
 
       expect(wrapped_logcache_client).to have_received(:container_metrics).with(
-        source_guid: process_guid,
-        envelope_limit: 100
+        hash_including(source_guid: process_guid)
       )
-    end
-
-    context 'when there are a small number of process instances' do
-      let(:num_instances) { 11 }
-
-      it 'retrieves a minimum of 100 envelopes' do
-        subject
-
-        expect(wrapped_logcache_client).to have_received(:container_metrics).with(
-          source_guid: process_guid,
-          envelope_limit: 100
-        )
-      end
-    end
-
-    context 'when there are over 100 process instances' do
-      let(:num_instances) { 100 }
-
-      it 'retrieves twice as many envelopes as instances' do
-        subject
-
-        expect(wrapped_logcache_client).to have_received(:container_metrics).with(
-          source_guid: process_guid,
-          envelope_limit: 200
-        )
-      end
-    end
-
-    context 'when there are over 500 process instances' do
-      let(:num_instances) { 501 }
-
-      it 'retrieves a maximum of 1000 envelopes' do
-        subject
-
-        expect(wrapped_logcache_client).to have_received(:container_metrics).with(
-          source_guid: process_guid,
-          envelope_limit: 1000
-        )
-      end
     end
 
     context 'when given an empty envelope batch' do
@@ -132,7 +109,7 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       }
       let(:num_instances) { 3 }
 
-      it 'returns an array of one envelope, formatted as Traffic Controller would' do
+      it 'returns an array of envelopes, formatted as Traffic Controller would' do
         expect(subject.first.containerMetric.applicationId).to eq(process_guid)
         expect(subject.first.containerMetric.instanceIndex).to eq(1)
         expect(subject.first.containerMetric.cpuPercentage).to eq(10)
@@ -195,6 +172,96 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         expect(subject.first.containerMetric.instanceIndex).to eq(1)
         expect(subject.first.containerMetric.cpuPercentage).to eq(10)
         expect(subject.second.containerMetric.instanceIndex).to eq(2)
+      end
+    end
+
+    context 'when there are envelopes for the same instance id across multiple pages' do
+      let(:call_time) { Time.at(1536269249, 784009.985) }
+      let(:call_time_ns) { TimeUtils.to_nanoseconds(call_time) }
+      let(:last_envelope_time_first_page) { call_time - 1.minute }
+      let(:last_envelope_time_first_page_ns) { TimeUtils.to_nanoseconds(last_envelope_time_first_page) }
+      let(:last_envelope_time_final_page) { call_time - 1.minute - 30.seconds }
+      let(:last_envelope_time_final_page_ns) { TimeUtils.to_nanoseconds(last_envelope_time_final_page) }
+
+      let(:envelopes_max_limit_first_page) { generate_batch(1000, last_timestamp: last_envelope_time_first_page_ns, cpu_percentage: 34) }
+      let(:envelopes_under_limit_final_page) { generate_batch(1, last_timestamp: last_envelope_time_final_page_ns, cpu_percentage: 10) }
+
+      let(:logcache_response_max_limit_first_page) { Logcache::V1::ReadResponse.new(envelopes: envelopes_max_limit_first_page) }
+      let(:logcache_response_under_limit_final_page) { Logcache::V1::ReadResponse.new(envelopes: envelopes_under_limit_final_page) }
+
+      before do
+        responses = [logcache_response_max_limit_first_page, logcache_response_under_limit_final_page]
+        allow(wrapped_logcache_client).to receive(:container_metrics).and_return(*responses)
+      end
+
+      it 'only returns the most recent envelope for that instance' do
+        Timecop.freeze(call_time) do
+          expect(subject).to have(1000).items
+
+          expect(subject.first.containerMetric.instanceIndex).to eq(1)
+          expect(subject.first.containerMetric.cpuPercentage).to eq(34.0)
+        end
+      end
+    end
+
+    describe 'walking the log cache' do
+      let(:lookback_window) { 2.minutes }
+
+      context 'when the log cache has fewer than 1000 envelopes for the time window' do
+        let(:envelopes) { generate_batch(999) }
+
+        it 'returns with all the metrics' do
+          expect(subject).to have(999).items
+        end
+
+        it 'requests envelopes from the last two minutes' do
+          Timecop.freeze do
+            subject
+
+            start_time = TimeUtils.to_nanoseconds((Time.now - lookback_window))
+            end_time = TimeUtils.to_nanoseconds(Time.now)
+            expect(wrapped_logcache_client).to have_received(:container_metrics).
+              with(hash_including(start_time: start_time, end_time: end_time))
+          end
+        end
+      end
+
+      context 'when log cache has more than 1000 envelopes for the time window' do
+        let(:call_time) { Time.at(1536269249, 784009.985) }
+        let(:call_time_ns) { TimeUtils.to_nanoseconds(call_time) }
+        let(:last_envelope_time_first_page) { call_time - 1.minute }
+        let(:last_envelope_time_first_page_ns) { TimeUtils.to_nanoseconds(last_envelope_time_first_page) }
+        let(:last_envelope_time_second_page) { call_time - 1.minute - 30.seconds }
+        let(:last_envelope_time_second_page_ns) { TimeUtils.to_nanoseconds(last_envelope_time_second_page) }
+
+        let(:envelopes_max_limit_first_page) { generate_batch(1000, offset: 0, last_timestamp: last_envelope_time_first_page_ns) }
+        let(:envelopes_max_limit_second_page) { generate_batch(1000, offset: 1000, last_timestamp: last_envelope_time_second_page_ns) }
+        let(:envelopes_under_limit_final_page) { generate_batch(1, offset: 2000) }
+
+        let(:logcache_response_max_limit_first_page) { Logcache::V1::ReadResponse.new(envelopes: envelopes_max_limit_first_page) }
+        let(:logcache_response_max_limit_second_page) { Logcache::V1::ReadResponse.new(envelopes: envelopes_max_limit_second_page) }
+        let(:logcache_response_under_limit_final_page) { Logcache::V1::ReadResponse.new(envelopes: envelopes_under_limit_final_page) }
+
+        before do
+          responses = [logcache_response_max_limit_first_page, logcache_response_max_limit_second_page, logcache_response_under_limit_final_page]
+          allow(wrapped_logcache_client).to receive(:container_metrics).and_return(*responses)
+        end
+
+        it 'iterates, using the last envelopes timestamp to narrow the window, until it hits a page with < 1000 envelopes' do
+          Timecop.freeze(call_time) do
+            expect(subject).to have(2001).items
+
+            start_time = TimeUtils.to_nanoseconds((call_time - lookback_window))
+            expect(wrapped_logcache_client).to have_received(:container_metrics).
+              with(hash_including(start_time: start_time, end_time: call_time_ns))
+
+            expect(wrapped_logcache_client).to have_received(:container_metrics).
+              with(hash_including(start_time: start_time, end_time: last_envelope_time_first_page_ns - 1))
+
+            expect(wrapped_logcache_client).to have_received(:container_metrics).
+              with(hash_including(start_time: start_time, end_time: last_envelope_time_second_page_ns - 1))
+          end
+        end
       end
     end
   end

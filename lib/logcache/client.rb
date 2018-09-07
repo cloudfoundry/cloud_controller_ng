@@ -17,10 +17,12 @@ module Logcache
       )
     end
 
-    def container_metrics(source_guid:, envelope_limit: DEFAULT_LIMIT)
+    def container_metrics(source_guid:, envelope_limit: DEFAULT_LIMIT, start_time:, end_time:)
       service.read(
         Logcache::V1::ReadRequest.new(
           source_id: source_guid,
+          start_time: start_time,
+          end_time: end_time,
           limit: envelope_limit,
           descending: true,
           envelope_types: [:GAUGE]
