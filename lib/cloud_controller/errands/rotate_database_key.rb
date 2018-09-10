@@ -6,7 +6,7 @@ module VCAP::CloudController
 
         no_encryption_key! unless Encryptor.current_encryption_key_label.present?
 
-        VCAP::CloudController::Encryptor.encrypted_classes.each do |klass|
+        Encryptor.encrypted_classes.each do |klass|
           logger.info("Rotating encryption key for class #{klass}")
           rotate_for_class(klass.constantize, batch_size)
           logger.info("Done rotating encryption key for class #{klass}")

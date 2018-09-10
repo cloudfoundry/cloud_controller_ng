@@ -217,4 +217,14 @@ namespace :db do
 
     puts 'Successfully applied latest migrations to CF deployment'
   end
+
+  desc 'Validate Deployments are not missing encryption keys'
+  task :validate_encryption_keys do
+    RakeConfig.context = :api
+
+    require 'cloud_controller/validate_database_keys'
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
+      VCAP::CloudController::ValidateDatabaseKeys.validate!(RakeConfig.config)
+    end
+  end
 end
