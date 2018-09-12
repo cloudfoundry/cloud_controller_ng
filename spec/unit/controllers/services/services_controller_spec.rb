@@ -222,15 +222,66 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the user has an invalid auth token' do
-        it 'raises an InvalidAuthToken error' do
-          set_current_user(User.make, token: :invalid_token)
+      context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+        end
+
+        it 'a user can view public and active services' do
           get '/v2/services'
-          expect(last_response.status).to eq 401
+          expect(last_response.status).to eq 200
+        end
+      end
+
+      context 'when the user has an invalid auth token' do
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is disabled' do
+          it 'raises an InvalidAuthToken error' do
+            set_current_user(User.make, token: :invalid_token)
+            get '/v2/services'
+
+            expect(last_response.status).to eq 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+          end
+        end
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+          it 'continues to raise an InvalidAuthToken error' do
+            set_current_user(User.make, token: :invalid_token)
+            get '/v2/services'
+
+            expect(last_response.status).to eq 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+          end
         end
       end
 
       context 'when the user has no auth token' do
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is disabled' do
+          it 'they can view public and active services' do
+            set_current_user(nil)
+            get '/v2/services'
+
+            expect(last_response.status).to eq 200
+            expect(decoded_guids).to eq([public_and_active.guid])
+          end
+        end
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'they cannot view public and active services' do
+            set_current_user(nil)
+            get '/v2/services'
+            expect(last_response.status).to eq 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-NotAuthenticated'
+          end
+        end
+
         it 'does not allow the unauthed user to use inline-relations-depth' do
           set_current_user(nil)
           get '/v2/services?inline-relations-depth=1'

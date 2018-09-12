@@ -448,10 +448,33 @@ module VCAP::CloudController
           expect(returned_service_guids).to match_array expected_service_guids
           expect(returned_plan_guids).not_to include(different_service_plan.guid)
         end
+
+        context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'returns a 200' do
+            get '/v2/service_plans'
+            expect(last_response).to have_status_code 200
+          end
+        end
       end
 
       context 'when the user is not logged in' do
         before { set_current_user(nil) }
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'returns a 401 Not Authenticated' do
+            get '/v2/service_plans'
+            expect(last_response).to have_status_code(401)
+            expect(decoded_response.fetch('error_code')).to eq 'CF-NotAuthenticated'
+          end
+        end
 
         it 'returns plans that are public and active' do
           get '/v2/service_plans'
@@ -498,6 +521,20 @@ module VCAP::CloudController
           set_current_user(developer, token: :invalid_token)
           get '/v2/service_plans'
           expect(last_response.status).to eq 401
+          expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+        end
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'continues to raise an InvalidAuthToken error' do
+            set_current_user(developer, token: :invalid_token)
+            get '/v2/service_plans'
+            expect(last_response.status).to eq 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+          end
         end
       end
     end
