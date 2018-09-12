@@ -866,6 +866,23 @@ module VCAP::CloudController
           end
         end
 
+        context 'when there is an error raised from deleting the binding' do
+          before do
+            service_binding_deleter = instance_double(ServiceBindingDelete)
+
+            allow(ServiceBindingDelete).to receive(:new).and_return(service_binding_deleter)
+            allow(service_binding_deleter).to receive(:foreground_delete_request).and_raise(CloudController::Errors::ApiError.new_from_details('ServiceBrokerAsyncRequired'))
+          end
+
+          it 'does not rescue the error' do
+            delete "/v2/service_bindings/#{service_binding.guid}"
+
+            expect(last_response).to have_status_code(400)
+            hash_body = JSON.parse(last_response.body)
+            expect(hash_body['description']).to eq('This service plan requires client support for asynchronous service operations.')
+          end
+        end
+
         context 'when the user does not belong to the space' do
           it 'returns a 403' do
             set_current_user(User.make)
