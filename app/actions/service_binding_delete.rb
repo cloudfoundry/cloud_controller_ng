@@ -70,7 +70,11 @@ module VCAP::CloudController
       client.unbind(service_binding, @user_audit_info.user_guid, @accepts_incomplete)
     rescue => e
       logger.error("Failed unbinding #{service_binding.guid}: #{e.message}")
-      raise e
+      raise_wrapped_error(service_binding, e)
+    end
+
+    def raise_wrapped_error(service_binding, err)
+      raise err.exception("Service broker failed to delete service binding for instance #{service_binding.service_instance.name}: #{err.message}")
     end
 
     def each_with_error_aggregation(list)

@@ -3880,6 +3880,17 @@ module VCAP::CloudController
           service_binding_uri = service_binding_url(route_binding, query)
           expect(a_request(:delete, service_binding_uri)).to have_been_made
         end
+
+        context 'when the broker returns an error' do
+          before do
+            stub_unbind(route_binding, status: 500)
+          end
+
+          it 'is decorated with service instance information' do
+            delete "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
+            expect(decoded_response['description']).to include("Service broker failed to delete service binding for instance #{service_instance.name}")
+          end
+        end
       end
 
       context 'when the service_instance does not exist' do

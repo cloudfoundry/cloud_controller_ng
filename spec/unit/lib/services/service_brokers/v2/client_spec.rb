@@ -1281,11 +1281,11 @@ module VCAP::Services::ServiceBrokers::V2
         end
         let(:response_body) { response_data.to_json }
 
-        it 'raises a ServiceBrokerBadResponse error with the instance name' do
+        it 're-raises the error ' do
           expect {
             client.unbind(binding)
           }.to raise_error(Errors::ServiceBrokerBadResponse).
-            with_message("Service broker failed to delete service binding for instance #{binding.service_instance.name}: Service broker error: Could not delete binding")
+            with_message('Service broker error: Could not delete binding')
         end
       end
 

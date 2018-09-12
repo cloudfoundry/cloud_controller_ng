@@ -1158,6 +1158,18 @@ module VCAP::CloudController
             expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
           end
         end
+
+        context 'when the broker returns an error' do
+          before do
+            stub_unbind(service_binding, status: 500)
+          end
+
+          it 'is decorated with service instance information' do
+            delete "/v2/service_bindings/#{service_binding.guid}"
+
+            expect(decoded_response['description']).to include("Service broker failed to delete service binding for instance #{service_instance.name}")
+          end
+        end
       end
     end
 

@@ -584,6 +584,15 @@ module VCAP::CloudController
         expect(decoded_response.fetch('description')).to eq("The service key could not be found: #{service_key_guid}")
       end
 
+      context 'when the broker returns an error' do
+        let(:unbind_status) { 500 }
+
+        it 'is decorated with service instance information' do
+          delete "/v2/service_keys/#{service_key.guid}"
+          expect(decoded_response['description']).to include("Service broker failed to delete service binding for instance #{instance.name}")
+        end
+      end
+
       context 'Not authorized to perform delete operation' do
         let(:manager) { make_manager_for_space(instance.space) }
         let(:auditor) { make_auditor_for_space(instance.space) }
@@ -645,6 +654,7 @@ module VCAP::CloudController
         expect(event.metadata).to include({ 'request' => {} })
       end
     end
+
     describe 'GET', '/v2/service_keys/:service_key_guid/parameters' do
       let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
