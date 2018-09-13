@@ -237,7 +237,8 @@ module VCAP::CloudController
             expect(msg).to match "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted\.\n\n"
             expect(msg).to match "\tAn operation for the service binding between app #{service_binding_1.app.name} and service instance #{instance_name} is in progress\."
             expect(msg).to match "\tAn operation for the service binding between app #{service_binding_2.app.name} and service instance #{instance_name} is in progress\."
-            expect(msg).not_to match 'A service binding operation is in progress.'
+
+            expect(msg.split("\t")).to have(3).items
           end
         end
 
