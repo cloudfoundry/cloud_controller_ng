@@ -85,6 +85,10 @@ module VCAP::CloudController
       desired_state == ProcessModel::STOPPED
     end
 
+    def webish_processes
+      processes.select { |p| ProcessTypes.webish?(p.type) }
+    end
+
     def self.user_visibility_filter(user)
       space_guids = Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
                     union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).
