@@ -74,7 +74,8 @@ module VCAP::CloudController
     end
 
     def raise_wrapped_error(service_binding, err)
-      raise err.exception("Service broker failed to delete service binding for instance #{service_binding.service_instance.name}: #{err.message}")
+      raise err.exception(
+        "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: #{err.message}")
     end
 
     def each_with_error_aggregation(list)

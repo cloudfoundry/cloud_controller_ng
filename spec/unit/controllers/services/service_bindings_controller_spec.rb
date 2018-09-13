@@ -1167,7 +1167,8 @@ module VCAP::CloudController
           it 'is decorated with service instance information' do
             delete "/v2/service_bindings/#{service_binding.guid}"
 
-            expect(decoded_response['description']).to include("Service broker failed to delete service binding for instance #{service_instance.name}")
+            expect(decoded_response['description']).to(
+              include("An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed"))
           end
         end
       end

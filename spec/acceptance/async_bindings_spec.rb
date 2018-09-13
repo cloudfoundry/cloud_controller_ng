@@ -65,7 +65,7 @@ module VCAP::CloudController
             expect(last_response).to have_status_code(502)
             body = JSON.parse(last_response.body)
             expect(body['error_code']).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
-            expect(body['description']).to eq async_unbind_not_supported_error(service_instance.name)
+            expect(body['description']).to eq async_unbind_not_supported_error(service_instance.name, target_app.name)
           end
 
           context 'and when there are bindings in the source space' do
@@ -98,7 +98,7 @@ module VCAP::CloudController
 
               body = JSON.parse(last_response.body)
               expect(body['error_code']).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
-              expect(body['description']).to eq multiple_async_unbind_not_supported_error(service_instance.name)
+              expect(body['description']).to eq multiple_async_unbind_not_supported_error(service_instance.name, source_binding.app.name, target_binding.app.name)
             end
           end
         end
@@ -154,7 +154,9 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-AppRecursiveDeleteFailed')
-            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
+            expect(parsed_response['description']).to match(
+              /An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m
+            )
           end
         end
       end
@@ -175,7 +177,9 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-SpaceDeletionFailed')
-            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
+            expect(parsed_response['description']).to match(
+              /An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m
+            )
           end
         end
       end
@@ -196,7 +200,9 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-OrganizationDeletionFailed')
-            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m)
+            expect(parsed_response['description']).to match(
+              /An operation for the service binding .* is in progress.*An operation for the service binding .* is in progress/m
+            )
           end
         end
       end
@@ -223,7 +229,8 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-AsyncServiceBindingOperationInProgress')
-            expect(parsed_response['description']).to match(/A service binding operation is in progress./)
+            expect(parsed_response['description']).to(
+              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./))
           end
         end
 
@@ -238,7 +245,8 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-AsyncServiceBindingOperationInProgress')
-            expect(parsed_response['description']).to match(/A service binding operation is in progress./)
+            expect(parsed_response['description']).to(
+              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./))
           end
         end
       end
@@ -259,7 +267,8 @@ module VCAP::CloudController
 
             parsed_response = JSON.parse(last_response.body)
             expect(parsed_response['error_code']).to eq('CF-ServiceInstanceRecursiveDeleteFailed')
-            expect(parsed_response['description']).to match(/An operation for the service binding .* is in progress./)
+            expect(parsed_response['description']).to(
+              match(/An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress./))
           end
         end
 
@@ -319,20 +328,23 @@ module VCAP::CloudController
       "\tAn operation for the service binding between app #{app_name} and service instance #{instance_name} is in progress."
   end
 
-  def multiple_async_unbind_in_progress_error(instance_name, *apps_name)
+  def multiple_async_unbind_in_progress_error(instance_name, app_name_1, app_name_2)
     "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n" \
-      "\tAn operation for the service binding between app .+ and service instance #{instance_name} is in progress.\n\n" \
-      "\tAn operation for the service binding between app .+ and service instance #{instance_name} is in progress.$"
+      "\tAn operation for the service binding between app #{app_name_1} and service instance #{instance_name} is in progress.\n\n" \
+      "\tAn operation for the service binding between app #{app_name_2} and service instance #{instance_name} is in progress.$"
   end
 
-  def async_unbind_not_supported_error(instance_name)
+  def async_unbind_not_supported_error(instance_name, app_name)
     "Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n" \
-      "\tService broker failed to delete service binding for instance #{instance_name}: This service plan requires client support for asynchronous service operations."
+      "\tAn unbind operation for the service binding between app #{app_name} and service instance #{instance_name} failed: " \
+      'This service plan requires client support for asynchronous service operations.'
   end
 
-  def multiple_async_unbind_not_supported_error(instance_name)
+  def multiple_async_unbind_not_supported_error(instance_name, app_name_1, app_name_2)
     "Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n" \
-      "\tService broker failed to delete service binding for instance #{instance_name}: This service plan requires client support for asynchronous service operations.\n\n" \
-      "\tService broker failed to delete service binding for instance #{instance_name}: This service plan requires client support for asynchronous service operations."
+      "\tAn unbind operation for the service binding between app #{app_name_1} and service instance #{instance_name} failed: " \
+      "This service plan requires client support for asynchronous service operations.\n\n" \
+      "\tAn unbind operation for the service binding between app #{app_name_2} and service instance #{instance_name} failed: " \
+      'This service plan requires client support for asynchronous service operations.'
   end
 end
