@@ -44,7 +44,7 @@ module VCAP::CloudController
           let(:target_app) { AppModel.make(space: target_space) }
           let!(:target_binding) { ServiceBinding.make(app: target_app, service_instance: service_instance) }
 
-          it 'can unbind if the service instance is deleted recursively and accepts_incomplete is true' do
+          it 'issues an unbind and fails the instance deletion if the service instance is deleted recursively and accepts_incomplete is true' do
             delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
 
             expect(a_request(:delete, unbind_url(target_binding)).with(query: { accepts_incomplete: true })).to have_been_made
@@ -56,7 +56,7 @@ module VCAP::CloudController
             expect(body['description']).to eq async_unbind_in_progress_error(service_instance.name, target_app.name)
           end
 
-          it 'can unbind if the service instance is deleted recursively and accepts_incomplete is not set' do
+          it 'fails to unbind if the service instance is deleted recursively and accepts_incomplete is not set' do
             delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true', admin_headers)
 
             expect(a_request(:delete, unbind_url(target_binding))).to have_been_made
@@ -73,7 +73,7 @@ module VCAP::CloudController
             let(:source_app) { AppModel.make(space: source_space) }
             let!(:source_binding) { ServiceBinding.make(app: source_app, service_instance: service_instance) }
 
-            it 'can unbind if the service instance is deleted recursively and accepts_incomplete is true' do
+            it 'issues unbinds and fails the instance deletion if the service instance is deleted recursively and accepts_incomplete is true' do
               delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true&accepts_incomplete=true', admin_headers)
 
               expect(last_response).to have_status_code(502)
@@ -87,7 +87,7 @@ module VCAP::CloudController
               expect(body['description']).to match multiple_async_unbind_in_progress_error(service_instance.name, source_app.name, target_app.name)
             end
 
-            it 'can unbind if the service instance is deleted recursively' do
+            it 'fails to unbind if the service instance is deleted recursively' do
               delete("/v2/service_instances/#{service_instance.guid}", 'recursive=true', admin_headers)
 
               expect(last_response).to have_status_code(502)
