@@ -5,8 +5,16 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Updater do
     let(:web_process) { ProcessModel.make(instances: 2) }
     let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5) }
+    let(:original_web_process_instance_count) { 6 }
 
-    let!(:deployment) { DeploymentModel.make(app: web_process.app, deploying_web_process: deploying_web_process, state: 'DEPLOYING') }
+    let!(:deployment) do
+      DeploymentModel.make(
+        app: web_process.app,
+        deploying_web_process: deploying_web_process,
+        state: 'DEPLOYING',
+        original_web_process_instance_count: original_web_process_instance_count
+      )
+    end
 
     let(:deployer) { DeploymentUpdater::Updater }
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
@@ -59,33 +67,21 @@ module VCAP::CloudController
           end
         end
 
-        context 'when a deployment is in its final iteration' do
-          let(:web_process) { ProcessModel.make(instances: 1) }
-          let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5, guid: "I'm just a webish guid") }
-
-          it 'scales the original web process down by one' do
-            expect {
-              deployer.update
-            }.to change {
-              web_process.reload.instances
-            }.by(-1)
-          end
-
-          it 'does not scale up the deploying web process' do
-            expect {
-              deployer.update
-            }.not_to change {
-              deploying_web_process.reload.instances
-            }
-          end
-        end
-
-        context 'deployments where web process is at zero' do
+        context 'when the deployment process has reached original_web_process_instance_count' do
           let!(:space) { web_process.space }
 
           let(:app_guid) { "I'm the real web guid" }
           let(:the_best_app) { AppModel.make(name: 'clem', guid: app_guid) }
-          let(:web_process) { ProcessModel.make(app: the_best_app, guid: app_guid, instances: 2) }
+          let(:web_process) { ProcessModel.make(app: the_best_app, guid: app_guid, instances: 1) }
+          let(:deploying_web_process) {
+            ProcessModel.make(
+              app: web_process.app,
+              type: 'web-deployment-guid-1',
+              instances: original_web_process_instance_count,
+              guid: "I'm just a webish guid"
+            )
+          }
+
           let!(:non_web_process1) { ProcessModel.make(app: the_best_app, instances: 2, type: 'worker') }
           let!(:non_web_process2) { ProcessModel.make(app: the_best_app, instances: 2, type: 'clock') }
 
@@ -96,13 +92,11 @@ module VCAP::CloudController
 
           before do
             allow(ProcessRestart).to receive(:restart)
-            web_process.update(instances: 0)
           end
 
           it 'replaces the existing web process with the deploying_web_process' do
             deploying_web_process_guid = deploying_web_process.guid
             expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-1', 'worker', 'clock'])
-            expect(deploying_web_process.instances).to eq(5)
 
             deployer.update
 
@@ -111,7 +105,7 @@ module VCAP::CloudController
 
             after_web_process = the_best_app.web_process
             expect(after_web_process.guid).to eq(deploying_web_process_guid)
-            expect(after_web_process.instances).to eq(5)
+            expect(after_web_process.instances).to eq(original_web_process_instance_count)
 
             expect(ProcessModel.find(guid: deploying_web_process_guid)).not_to be_nil
             expect(ProcessModel.find(guid: the_best_app.guid)).to be_nil

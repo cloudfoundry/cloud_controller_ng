@@ -70,17 +70,14 @@ module VCAP::CloudController
 
             return unless ready_to_scale?(deployment, logger)
 
-            case original_web_process.instances
-            when 0 # deploying web process is fully scaled
+            if deploying_web_process.instances < deployment.original_web_process_instance_count
+              original_web_process.update(instances: original_web_process.instances - 1)
+              deploying_web_process.update(instances: deploying_web_process.instances + 1)
+            else
               promote_deploying_web_process(deploying_web_process, original_web_process)
 
               restart_non_web_processes(app)
               deployment.update(state: DeploymentModel::DEPLOYED_STATE)
-            when 1 # do not increment deploying web process because upon deploy, an initial deploying web process was created
-              original_web_process.update(instances: original_web_process.instances - 1)
-            else
-              original_web_process.update(instances: original_web_process.instances - 1)
-              deploying_web_process.update(instances: deploying_web_process.instances + 1)
             end
           end
 
