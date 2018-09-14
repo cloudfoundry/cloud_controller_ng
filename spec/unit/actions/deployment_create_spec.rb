@@ -99,6 +99,44 @@ module VCAP::CloudController
             }.to raise_error DeploymentCreate::SetCurrentDropletError, /Ensure the droplet exists and belongs to this app/
           end
         end
+
+        context 'when there is an existing deployment' do
+          let(:originally_desired_instance_count) { 10 }
+          let!(:existing_deployment) do
+            DeploymentModel.make(
+              app: app,
+              state: DeploymentModel::DEPLOYING_STATE,
+              droplet: nil,
+              previous_droplet: original_droplet,
+              original_web_process_instance_count: originally_desired_instance_count,
+            )
+          end
+
+          before do
+            web_process.update(instances: 5)
+            web_process.save
+          end
+
+          it 'creates a new deployment with the instance count from the existing deployment' do
+            deployment = nil
+
+            expect {
+              deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
+            }.to change { DeploymentModel.count }.by(1)
+
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            expect(deployment.app_guid).to eq(app.guid)
+            expect(deployment.droplet_guid).to eq(next_droplet.guid)
+            expect(deployment.previous_droplet).to eq(original_droplet)
+            expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
+          end
+
+          it 'sets the existing deployment to DEPLOYED' do
+            DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
+
+            expect(existing_deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          end
+        end
       end
 
       context 'when a nil droplet is provided' do

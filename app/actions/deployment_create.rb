@@ -12,15 +12,26 @@ module VCAP::CloudController
         end
 
         web_process = app.web_process
+        previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
+
+        desired_instances = web_process.instances
+        if previous_deployment
+          desired_instances = previous_deployment.original_web_process_instance_count
+        end
+
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
           droplet: droplet,
           previous_droplet: previous_droplet,
-          original_web_process_instance_count: web_process.instances,
+          original_web_process_instance_count: desired_instances,
         )
 
         DeploymentModel.db.transaction do
+          if previous_deployment
+            previous_deployment.update(state: DeploymentModel::DEPLOYED_STATE)
+            previous_deployment.save
+          end
           deployment.save
 
           process = create_deployment_process(app, deployment.guid, web_process)
