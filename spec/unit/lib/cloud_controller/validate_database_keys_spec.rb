@@ -47,13 +47,13 @@ module VCAP::CloudController
         end
       end
 
-      context 'when all rows have a nil encryption_key_label' do
+      context 'when all rows have blank encryption_key_labels' do
         before do
           app1.update(encryption_key_label: nil)
-          app2.update(encryption_key_label: nil)
+          app2.update(encryption_key_label: '')
           app3.update(encryption_key_label: nil)
           historical_app.update(encryption_key_label: nil)
-          service_binding.update(encryption_key_label: nil)
+          service_binding.update(encryption_key_label: '')
           service_instance.update(encryption_key_label: nil)
         end
 
@@ -133,9 +133,9 @@ module VCAP::CloudController
           app1.update(encryption_key_label: label1)
           app2.update(encryption_key_label: label2)
           app3.update(encryption_key_label: label3)
-          historical_app.update(encryption_key_label: nil)
+          historical_app.update(encryption_key_label: '')
           service_binding.update(encryption_key_label: nil)
-          service_instance.update(encryption_key_label: nil)
+          service_instance.update(encryption_key_label: '')
         end
 
         context 'when both the db_encryption_key and all custom encryption_keys are present' do
