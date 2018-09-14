@@ -61,20 +61,20 @@ module VCAP::CloudController
             deployment.lock!
 
             app = deployment.app
-            original_web_process = app.web_process
+            oldest_web_process = app.oldest_webish_process
             deploying_web_process = deployment.deploying_web_process
 
             app.lock!
-            original_web_process.lock!
+            oldest_web_process.lock!
             deploying_web_process.lock!
 
             return unless ready_to_scale?(deployment, logger)
 
             if deploying_web_process.instances < deployment.original_web_process_instance_count
-              original_web_process.update(instances: original_web_process.instances - 1)
+              oldest_web_process.update(instances: oldest_web_process.instances - 1)
               deploying_web_process.update(instances: deploying_web_process.instances + 1)
             else
-              promote_deploying_web_process(deploying_web_process, original_web_process)
+              promote_deploying_web_process(deploying_web_process, oldest_web_process)
 
               restart_non_web_processes(app)
               deployment.update(state: DeploymentModel::DEPLOYED_STATE)

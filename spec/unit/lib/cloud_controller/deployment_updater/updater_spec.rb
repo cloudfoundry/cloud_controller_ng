@@ -3,7 +3,8 @@ require 'cloud_controller/deployment_updater/updater'
 
 module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Updater do
-    let(:web_process) { ProcessModel.make(instances: 2) }
+    let(:a_day_ago) { Time.now - 1.day }
+    let(:web_process) { ProcessModel.make(instances: 2, created_at: a_day_ago) }
     let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5) }
     let(:original_web_process_instance_count) { 6 }
 
@@ -72,8 +73,8 @@ module VCAP::CloudController
 
           let(:app_guid) { "I'm the real web guid" }
           let(:the_best_app) { AppModel.make(name: 'clem', guid: app_guid) }
-          let(:web_process) { ProcessModel.make(app: the_best_app, guid: app_guid, instances: 1) }
-          let(:deploying_web_process) {
+          let!(:web_process) { ProcessModel.make(app: the_best_app, guid: app_guid, instances: 1, created_at: a_day_ago) }
+          let!(:deploying_web_process) {
             ProcessModel.make(
               app: web_process.app,
               type: 'web-deployment-guid-1',
@@ -162,7 +163,7 @@ module VCAP::CloudController
       end
 
       context 'when the deployment is in state DEPLOYED' do
-        let(:finished_web_process) { ProcessModel.make(instances: 0) }
+        let(:finished_web_process) { ProcessModel.make(instances: 0, created_at: a_day_ago) }
         let(:finished_deploying_web_process_guid) { ProcessModel.make(instances: 2) }
         let!(:finished_deployment) { DeploymentModel.make(app: finished_web_process.app, deploying_web_process: finished_deploying_web_process_guid, state: 'DEPLOYED') }
 
@@ -185,7 +186,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when one of the deploying_wed_process instances is starting' do
+      context 'when one of the deploying_web_process instances is starting' do
         let(:all_instances_results) {
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2 },
@@ -209,7 +210,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when one of the deploying_wed_process instances is failing' do
+      context 'when one of the deploying_web_process instances is failing' do
         let(:all_instances_results) {
           {
             0 => { state: 'RUNNING', uptime: 50, since: 2 },

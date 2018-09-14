@@ -373,14 +373,15 @@ module VCAP::CloudController
       end
     end
 
-    describe '#webish_processes' do
-      let!(:web_process) { ProcessModel.make(app: app_model, type: 'web') }
+    describe '#oldest_webish_process' do
+      let(:a_day_ago) { Time.now - 1.day }
+      let!(:web_process) { ProcessModel.make(app: app_model, type: 'web', created_at: a_day_ago) }
       let!(:webish_process_1) { ProcessModel.make(app: app_model, type: 'web-deployment-guid-1') }
       let!(:webish_process_2) { ProcessModel.make(app: app_model, type: 'web-deployment-guid-2') }
       let!(:worker_process) { ProcessModel.make(app: app_model, type: 'worker') }
 
-      it 'returns the webish processes' do
-        expect(app_model.reload.webish_processes).to match_array([web_process, webish_process_1, webish_process_2])
+      it 'returns the oldest webish processes' do
+        expect(app_model.reload.oldest_webish_process).to eq(web_process)
       end
     end
   end
