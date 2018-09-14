@@ -83,8 +83,15 @@ module VCAP::CloudController
               expect(a_request(:delete, deprovision_url(service_instance)).with(query: { accepts_incomplete: true })).not_to have_been_made
 
               body = JSON.parse(last_response.body)
-              expect(body['error_code']).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
-              expect(body['description']).to match multiple_async_unbind_in_progress_error(service_instance.name, source_app.name, target_app.name)
+              err_code = body['error_code']
+              err_msg = body['description']
+
+              expect(err_code).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
+              expect(err_msg).to match "^Deletion of service instance #{service_instance.name} failed because one or more associated resources could not be deleted.$"
+              expect(err_msg).to match "^\tAn operation for the service binding between app #{source_app.name} and service instance #{service_instance.name} is in progress.$"
+              expect(err_msg).to match "^\tAn operation for the service binding between app #{target_app.name} and service instance #{service_instance.name} is in progress.$"
+
+              expect(err_msg.split("\t")).to have(3).items
             end
 
             it 'fails to unbind if the service instance is deleted recursively' do
@@ -97,8 +104,16 @@ module VCAP::CloudController
               expect(a_request(:delete, deprovision_url(service_instance))).not_to have_been_made
 
               body = JSON.parse(last_response.body)
-              expect(body['error_code']).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
-              expect(body['description']).to eq multiple_async_unbind_not_supported_error(service_instance.name, source_binding.app.name, target_binding.app.name)
+              err_code = body['error_code']
+              err_msg = body['description']
+              expect(err_code).to eq 'CF-ServiceInstanceRecursiveDeleteFailed'
+              expect(err_msg).to match "^Deletion of service instance #{service_instance.name} failed because one or more associated resources could not be deleted.$"
+              expect(err_msg).to match "^\tAn unbind operation for the service binding between app #{target_app.name} and service instance #{service_instance.name} failed: " \
+                'This service plan requires client support for asynchronous service operations.$'
+              expect(err_msg).to match "^\tAn unbind operation for the service binding between app #{source_app.name} and service instance #{service_instance.name} failed: " \
+                'This service plan requires client support for asynchronous service operations.$'
+
+              expect(err_msg.split("\t")).to have(3).items
             end
           end
         end
@@ -328,23 +343,9 @@ module VCAP::CloudController
       "\tAn operation for the service binding between app #{app_name} and service instance #{instance_name} is in progress."
   end
 
-  def multiple_async_unbind_in_progress_error(instance_name, app_name_1, app_name_2)
-    "^Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n" \
-      "\tAn operation for the service binding between app #{app_name_1} and service instance #{instance_name} is in progress.\n\n" \
-      "\tAn operation for the service binding between app #{app_name_2} and service instance #{instance_name} is in progress.$"
-  end
-
   def async_unbind_not_supported_error(instance_name, app_name)
     "Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n" \
       "\tAn unbind operation for the service binding between app #{app_name} and service instance #{instance_name} failed: " \
-      'This service plan requires client support for asynchronous service operations.'
-  end
-
-  def multiple_async_unbind_not_supported_error(instance_name, app_name_1, app_name_2)
-    "Deletion of service instance #{instance_name} failed because one or more associated resources could not be deleted.\n\n" \
-      "\tAn unbind operation for the service binding between app #{app_name_1} and service instance #{instance_name} failed: " \
-      "This service plan requires client support for asynchronous service operations.\n\n" \
-      "\tAn unbind operation for the service binding between app #{app_name_2} and service instance #{instance_name} failed: " \
       'This service plan requires client support for asynchronous service operations.'
   end
 end
