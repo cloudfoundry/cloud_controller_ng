@@ -53,7 +53,8 @@ module VCAP::CloudController
 
       def missing_database_encryption_keys_message(missing_key_labels)
         key_names = missing_key_labels.sort.map { |x| "'#{x}'" }.join(', ')
-        "Encryption key(s) #{key_names} are still in use but not present in 'cc.database_encryption.keys'"
+        "Encryption key(s) #{key_names} are still in use but not present in 'cc.database_encryption.keys'
+          See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information."
       end
     end
   end
