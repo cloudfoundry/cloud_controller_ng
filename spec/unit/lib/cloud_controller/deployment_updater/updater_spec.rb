@@ -5,6 +5,7 @@ module VCAP::CloudController
   RSpec.describe DeploymentUpdater::Updater do
     let(:a_day_ago) { Time.now - 1.day }
     let(:web_process) { ProcessModel.make(instances: 2, created_at: a_day_ago) }
+    let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
     let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5) }
     let(:original_web_process_instance_count) { 6 }
 
@@ -158,6 +159,48 @@ module VCAP::CloudController
             deployer.update
 
             expect(workpool).to have_received(:drain)
+          end
+        end
+
+        context 'when the (oldest) web process will be at zero instances' do
+          let(:web_process) { ProcessModel.make(instances: 1, created_at: a_day_ago, type: 'web') }
+
+          it 'destroys the oldest webish process' do
+            deployer.update
+            expect(ProcessModel.all.map(&:guid)).not_to include(web_process.guid)
+          end
+
+          it 'does not destroy any route mappings' do
+            expect do
+              deployer.update
+            end.not_to change {
+              RouteMappingModel.count
+            }
+          end
+        end
+
+        context 'when the oldest webish process will be at zero instances and is not web' do
+          let(:oldest_webish_process) do
+            ProcessModel.make(
+              instances: 1,
+              app: web_process.app,
+              created_at: a_day_ago - 10,
+              type: 'web-deployment-middle-train-car'
+            )
+          end
+
+          let!(:oldest_route_mapping) do
+            RouteMappingModel.make(app: oldest_webish_process.app, process_type: oldest_webish_process.type)
+          end
+
+          it 'destroys the oldest webish process' do
+            deployer.update
+            expect(ProcessModel.all.map(&:guid)).not_to include(oldest_webish_process.guid)
+          end
+
+          it 'destroys the old webish route mapping' do
+            deployer.update
+            expect(RouteMappingModel.where(app: web_process.app).map(&:process_type)).not_to include(oldest_webish_process.type)
           end
         end
       end
