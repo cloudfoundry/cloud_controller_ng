@@ -20,28 +20,20 @@ module VCAP::CloudController
           raise DatabaseEncryptionKeyMissingError.new('No database encryption keys are specified')
         end
 
-        msgs = []
-
-        # 2. blank encryption_key_label fields require :db_encryption_key
-        if rows_encrypted_with_original_key && original_key.blank?
-          msgs << "Encryption key from 'cc.db_encryption_key' is still in use, but no longer present in manifest."
+        errors = []
+        if legacy_db_encryption_key_in_use?(original_key)
+          errors << "Encryption key from 'cc.db_encryption_key' is still in use, but no longer present in manifest."
         end
 
-        # 3: non-blank encryption_key_label fields require labels defined in :database_encryption
-        missing_key_labels = missing_db_encryption_keys(defined_encryption_key_labels)
-        if !missing_key_labels.empty?
-          key_names = missing_key_labels.sort.map { |x| "'#{x}'" }.join(', ')
-          msgs << "Encryption key(s) #{key_names} are still in use but not present in 'cc.database_encryption.keys'"
-        end
+        missing_key_labels = missing_database_encryption_keys(defined_encryption_key_labels)
+        errors << missing_database_encryption_keys_message(missing_key_labels) if missing_key_labels.present?
 
-        if msgs.size > 0
-          raise DatabaseEncryptionKeyMissingError.new(msgs.join("\n"))
-        end
+        raise DatabaseEncryptionKeyMissingError.new(errors.join("\n")) if errors.present?
       end
 
       private
 
-      def missing_db_encryption_keys(defined_encryption_key_labels)
+      def missing_database_encryption_keys(defined_encryption_key_labels)
         used_encryption_key_labels = Set.new(Encryptor.encrypted_classes.map do |klass|
           klass.constantize.select(:encryption_key_label).distinct.map(&:encryption_key_label)
         end.flatten.reject(&:blank?).map(&:to_sym))
@@ -52,6 +44,15 @@ module VCAP::CloudController
         Encryptor.encrypted_classes.any? do |klass|
           klass.constantize.find(encryption_key_label: ['', nil])
         end
+      end
+
+      def legacy_db_encryption_key_in_use?(original_key)
+        rows_encrypted_with_original_key && original_key.blank?
+      end
+
+      def missing_database_encryption_keys_message(missing_key_labels)
+        key_names = missing_key_labels.sort.map { |x| "'#{x}'" }.join(', ')
+        "Encryption key(s) #{key_names} are still in use but not present in 'cc.database_encryption.keys'"
       end
     end
   end
