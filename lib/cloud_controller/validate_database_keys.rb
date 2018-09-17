@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         errors = []
         if legacy_db_encryption_key_in_use?(original_key)
-          errors << "Encryption key from 'cc.db_encryption_key' is still in use, but no longer present in manifest."
+          errors << "Encryption key from 'cc.db_encryption_key' is still in use, but no longer present in manifest.  See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information."
         end
 
         missing_key_labels = missing_database_encryption_keys(defined_encryption_key_labels)
