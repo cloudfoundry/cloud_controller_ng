@@ -21,15 +21,5 @@ module VCAP::CloudController
       route = generator.route
       expect(route).to match(/^\w+-\w+$/)
     end
-
-    it 'generates the same values for the same seed' do
-      generator.seed(1234)
-      route1 = generator.route
-
-      generator.seed(1234)
-      route2 = generator.route
-
-      expect(route1).to be == route2
-    end
   end
 end

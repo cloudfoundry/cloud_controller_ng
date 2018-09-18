@@ -592,5 +592,91 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '.seed_encryption_key_sentinels' do
+      let(:label1) { 'encryption_key_label_1' }
+      let(:label2) { 'encryption_key_label_2' }
+      let(:label3) { 'encryption_key_label_3' }
+
+      let(:database_encryption_keys_config) do
+        {
+          database_encryption: { keys:
+            {
+              label1.to_sym => 'secret_key1',
+              label2.to_sym => 'secret_key2',
+              label3.to_sym => 'secret_key3',
+            },
+                                 current_key_label: label2,
+          }
+        }
+      end
+
+      context 'when database_encryption keys are present' do
+        context 'when the table is empty' do
+          let(:config) { Config.new(database_encryption_keys_config) }
+
+          it 'populates the encryption key sentinels' do
+            Seeds.seed_encryption_key_sentinels(config)
+
+            label1_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label1)
+            decrypted_value = Encryptor.decrypt_raw(label1_sentinel.encrypted_value, 'secret_key1', label1_sentinel.salt)
+            expect(decrypted_value).to eq(label1_sentinel.expected_value)
+
+            label2_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label2)
+            decrypted_value = Encryptor.decrypt_raw(label2_sentinel.encrypted_value, 'secret_key2', label2_sentinel.salt)
+            expect(decrypted_value).to eq(label2_sentinel.expected_value)
+
+            label3_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label3)
+            decrypted_value = Encryptor.decrypt_raw(label3_sentinel.encrypted_value, 'secret_key3', label3_sentinel.salt)
+            expect(decrypted_value).to eq(label3_sentinel.expected_value)
+          end
+        end
+
+        context 'when the encryption keys already exist' do
+          let(:updated_database_encryption_keys_config) do
+            {
+              database_encryption: { keys:
+                {
+                  label1.to_sym => 'new_secret_1',
+                  label2.to_sym => 'new_secret_2',
+                  label3.to_sym => 'new_secret_3',
+                },
+                                     current_key_label: label2,
+              }
+            }
+          end
+
+          let(:config) { Config.new(database_encryption_keys_config) }
+          let(:updated_config) { Config.new(updated_database_encryption_keys_config) }
+
+          it 'does not change the existing values' do
+            Seeds.seed_encryption_key_sentinels(config)
+            Seeds.seed_encryption_key_sentinels(updated_config)
+
+            label1_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label1)
+            decrypted_value = Encryptor.decrypt_raw(label1_sentinel.encrypted_value, 'secret_key1', label1_sentinel.salt)
+            expect(decrypted_value).to eq(label1_sentinel.expected_value)
+
+            label2_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label2)
+            decrypted_value = Encryptor.decrypt_raw(label2_sentinel.encrypted_value, 'secret_key2', label2_sentinel.salt)
+            expect(decrypted_value).to eq(label2_sentinel.expected_value)
+
+            label3_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label3)
+            decrypted_value = Encryptor.decrypt_raw(label3_sentinel.encrypted_value, 'secret_key3', label3_sentinel.salt)
+            expect(decrypted_value).to eq(label3_sentinel.expected_value)
+          end
+        end
+      end
+
+      context 'when database_encryption keys are not present' do
+        let(:config) { Config.new({}) }
+
+        it 'does not break' do
+          expect {
+            Seeds.seed_encryption_key_sentinels(config)
+          }.not_to raise_error
+        end
+      end
+    end
   end
 end

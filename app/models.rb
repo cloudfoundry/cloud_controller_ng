@@ -59,6 +59,7 @@ require 'models/runtime/locking'
 require 'models/runtime/clock_job'
 require 'models/runtime/system_audit_user'
 require 'models/runtime/deployment_model'
+require 'models/runtime/encryption_key_sentinel_model'
 
 require 'models/services/service'
 require 'models/services/service_binding'

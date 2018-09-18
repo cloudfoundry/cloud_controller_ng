@@ -20,6 +20,10 @@ module VCAP::CloudController
         label = current_encryption_key_label
         key = key_to_use(label)
 
+        encrypt_raw(input, key, salt)
+      end
+
+      def encrypt_raw(input, key, salt)
         Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt, key))
       end
 
@@ -28,6 +32,10 @@ module VCAP::CloudController
 
         key = key_to_use(label)
 
+        decrypt_raw(encrypted_input, key, salt)
+      end
+
+      def decrypt_raw(encrypted_input, key, salt)
         run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key)
       end
 

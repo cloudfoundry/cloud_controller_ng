@@ -3,6 +3,16 @@ require 'cloud_controller/validate_database_keys'
 
 module VCAP::CloudController
   RSpec.describe ValidateDatabaseKeys do
+    describe '.validate!' do
+      let(:config) { Config.new({}) }
+
+      it 'calls .can_decrypt_all_rows! and .validate_encryption_key_values_unchanged! in the correct order' do
+        expect(ValidateDatabaseKeys).to receive(:can_decrypt_all_rows!).with(config).ordered
+        expect(ValidateDatabaseKeys).to receive(:validate_encryption_key_values_unchanged!).with(config).ordered
+        ValidateDatabaseKeys.validate!(config)
+      end
+    end
+
     describe '.can_decrypt_all_rows!' do
       let(:space) { Space.first }
       let(:historical_app) { AppModel.make(space: space) }
@@ -42,7 +52,7 @@ module VCAP::CloudController
 
         it 'raises an error' do
           expect {
-            ValidateDatabaseKeys. can_decrypt_all_rows!(config)
+            ValidateDatabaseKeys.can_decrypt_all_rows!(config)
           }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError, /No database encryption keys are specified/)
         end
       end
@@ -188,6 +198,184 @@ module VCAP::CloudController
             }.to raise_error(ValidateDatabaseKeys::DatabaseEncryptionKeyMissingError,
               /Encryption key from 'cc.db_encryption_key'.*Encryption key\(s\) '#{label3}' are still in use but not present in 'cc.database_encryption.keys'/m)
           end
+        end
+      end
+    end
+
+    describe '.validate_encryption_key_values_unchanged!' do
+      let(:label1) { 'encryption_key_label_1' }
+      let(:label2) { 'encryption_key_label_2' }
+      let(:label3) { 'encryption_key_label_3' }
+      let(:label1_sentinel) { 'sentinel_1' }
+      let(:label2_sentinel) { 'sentinel_2' }
+      let(:label3_sentinel) { 'sentinel_3' }
+      let(:label1_secret_key) { 'secret_key_1' }
+      let(:label2_secret_key) { 'secret_key_2' }
+      let(:label3_secret_key) { 'secret_key_3' }
+      let(:morton_salt) { Encryptor.generate_salt }
+      let(:label1_encrypted_value) { Encryptor.encrypt_raw(label1_sentinel, label1_secret_key, morton_salt) }
+      let(:label2_encrypted_value) { Encryptor.encrypt_raw(label2_sentinel, label2_secret_key, morton_salt) }
+      let(:label3_encrypted_value) { Encryptor.encrypt_raw(label3_sentinel, label3_secret_key, morton_salt) }
+
+      let(:config) { Config.new(database_encryption_keys_config) }
+      let(:database_encryption_keys_config) do {
+        database_encryption: { keys:
+          {
+            label1.to_sym => label1_secret_key,
+            label2.to_sym => label2_secret_key,
+            label3.to_sym => label3_secret_key,
+          },
+                               current_key_label: label2,
+        }
+      }
+      end
+
+      context 'when every key in the config can decrypt a sentinel value' do
+        before do
+          EncryptionKeySentinelModel.create(
+            expected_value: label1_sentinel,
+            encrypted_value: label1_encrypted_value,
+            encryption_key_label: label1,
+            salt: morton_salt
+          )
+          EncryptionKeySentinelModel.create(
+            expected_value: label2_sentinel,
+            encrypted_value: label2_encrypted_value,
+            encryption_key_label: label2,
+            salt: morton_salt
+          )
+          EncryptionKeySentinelModel.create(
+            expected_value: label3_sentinel,
+            encrypted_value: label3_encrypted_value,
+            encryption_key_label: label3,
+            salt: morton_salt
+          )
+        end
+
+        it 'does not raise an error' do
+          expect {
+            ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
+          }.not_to raise_error
+        end
+      end
+
+      context 'when some keys in the config incorrectly decrypt a sentinel value' do
+        let(:changed_encryption_key) { 'bogus-changed-key' }
+        let(:changed_encryption_key2) { 'bogus-changed-key2' }
+        let(:database_encryption_keys_config) do
+          {
+            database_encryption: {
+              keys: {
+                label1.to_sym => changed_encryption_key,
+                label2.to_sym => changed_encryption_key2,
+                label3.to_sym => label3_secret_key,
+              },
+              current_key_label: label2,
+            }
+          }
+        end
+
+        before do
+          EncryptionKeySentinelModel.create(
+            expected_value: label1_sentinel,
+            encrypted_value: label1_encrypted_value,
+            encryption_key_label: label1,
+            salt: morton_salt
+          )
+          EncryptionKeySentinelModel.create(
+            expected_value: label2_sentinel,
+            encrypted_value: label2_encrypted_value,
+            encryption_key_label: label2,
+            salt: morton_salt
+          )
+          EncryptionKeySentinelModel.create(
+            expected_value: label3_sentinel,
+            encrypted_value: label3_encrypted_value,
+            encryption_key_label: label3,
+            salt: morton_salt
+          )
+        end
+
+        context 'when the expected value does not match the decrypted value' do
+          before do
+            allow(Encryptor).to receive(:decrypt_raw).and_call_original
+            allow(Encryptor).to receive(:decrypt_raw).with(label1_encrypted_value, changed_encryption_key, morton_salt).and_return('gibberish')
+            allow(Encryptor).to receive(:decrypt_raw).with(label2_encrypted_value, changed_encryption_key2, morton_salt).and_return('gibberish2')
+          end
+
+          it 'raises an EncryptionKeySentinelDecryptionMismatchError' do
+            expected_message = "Encryption key(s) '#{label1}', '#{label2}' have had their values changed. " \
+                               'Label and value pairs should not change, rather a new label and value pair should be added. ' \
+                               'See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information.'
+            expect {
+              ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
+            }.to raise_error(ValidateDatabaseKeys::EncryptionKeySentinelDecryptionMismatchError, expected_message)
+          end
+        end
+
+        context 'when a bad decrypt error is raised' do
+          let(:morton_salt) { 'HelloEli' }
+
+          it 'raises an EncryptionKeySentinelDecryptionMismatchError' do
+            expected_message = "Encryption key(s) '#{label1}', '#{label2}' have had their values changed. " \
+                             'Label and value pairs should not change, rather a new label and value pair should be added. ' \
+                             'See https://docs.cloudfoundry.org/adminguide/encrypting-cc-db.html for more information.'
+            expect {
+              ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
+            }.to raise_error(ValidateDatabaseKeys::EncryptionKeySentinelDecryptionMismatchError, expected_message)
+          end
+        end
+      end
+
+      context 'pruning deleted keys' do
+        let(:database_encryption_keys_config) do {
+            database_encryption: { keys:
+                                       {
+                                           label2.to_sym => label2_secret_key,
+                                           label3.to_sym => label3_secret_key,
+                                       },
+                                   current_key_label: label2,
+            }
+        }
+        end
+
+        before do
+          EncryptionKeySentinelModel.create(
+            expected_value: label1_sentinel,
+            encrypted_value: label1_encrypted_value,
+            encryption_key_label: label1,
+            salt: morton_salt
+          )
+          EncryptionKeySentinelModel.create(
+            expected_value: label1_sentinel,
+            encrypted_value: label1_encrypted_value,
+            encryption_key_label: 'another-extra-label',
+            salt: morton_salt
+          )
+
+          EncryptionKeySentinelModel.create(
+            expected_value: label2_sentinel,
+            encrypted_value: label2_encrypted_value,
+            encryption_key_label: label2,
+            salt: morton_salt
+          )
+          EncryptionKeySentinelModel.create(
+            expected_value: label3_sentinel,
+            encrypted_value: label3_encrypted_value,
+            encryption_key_label: label3,
+            salt: morton_salt
+          )
+        end
+
+        it 'trims sentinel values belonging to keys that no longer exist in the config' do
+          expect(EncryptionKeySentinelModel.count).to eq(4)
+          ValidateDatabaseKeys.validate_encryption_key_values_unchanged!(config)
+          expect(EncryptionKeySentinelModel.find(encryption_key_label: label1)).to be_nil
+          expect(EncryptionKeySentinelModel.find(encryption_key_label: 'another-extra-label')).to be_nil
+
+          expect(EncryptionKeySentinelModel.count).to eq(2)
+          expect(EncryptionKeySentinelModel.find(encryption_key_label: label2)).to be_present
+          expect(EncryptionKeySentinelModel.find(encryption_key_label: label3)).to be_present
         end
       end
     end
