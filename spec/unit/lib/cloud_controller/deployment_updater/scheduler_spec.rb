@@ -26,7 +26,7 @@ module VCAP::CloudController
 
         allow(lock_worker).to receive(:acquire_lock_and).and_yield
         allow(DeploymentUpdater::Scheduler).to receive(:sleep)
-        allow(DeploymentUpdater::Updater).to receive(:update)
+        allow(DeploymentUpdater::Dispatcher).to receive(:dispatch)
         allow(CloudController::DependencyLocator.instance).to receive(:statsd_client).and_return(statsd_client)
         allow(statsd_client).to receive(:time).and_yield
       end
@@ -47,10 +47,10 @@ module VCAP::CloudController
         expect(Locket::LockWorker).to have_received(:new).with(lock_runner)
       end
 
-      it 'runs the DeploymentUpdater::Updater sleeps for the configured frequency' do
+      it 'runs the DeploymentUpdater::Dispatcher sleeps for the configured frequency' do
         update_duration = 5
         Timecop.freeze do
-          allow(DeploymentUpdater::Updater).to receive(:update) do
+          allow(DeploymentUpdater::Dispatcher).to receive(:dispatch) do
             Timecop.travel(update_duration)
             true
           end
@@ -67,7 +67,7 @@ module VCAP::CloudController
       it 'should not sleep if updater takes longer than the configure frequency' do
         update_duration = update_frequency + 1
         Timecop.freeze do
-          allow(DeploymentUpdater::Updater).to receive(:update) do
+          allow(DeploymentUpdater::Dispatcher).to receive(:dispatch) do
             Timecop.travel(update_duration)
             true
           end
@@ -91,9 +91,9 @@ module VCAP::CloudController
           DeploymentUpdater::Scheduler.start
           expect(statsd_client).to have_received(:time).with('cc.deployments.update.duration')
 
-          expect(DeploymentUpdater::Updater).to_not have_received(:update)
+          expect(DeploymentUpdater::Dispatcher).to_not have_received(:dispatch)
           timed_block.call
-          expect(DeploymentUpdater::Updater).to have_received(:update)
+          expect(DeploymentUpdater::Dispatcher).to have_received(:dispatch)
         end
       end
     end

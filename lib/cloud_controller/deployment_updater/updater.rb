@@ -1,145 +1,146 @@
-require 'actions/process_restart'
-
 module VCAP::CloudController
   module DeploymentUpdater
     class Updater
-      class << self
-        def update
-          logger = Steno.logger('cc.deployment_updater.update')
-          logger.info('run-deployment-update')
+      attr_reader :deployment, :logger
 
-          deployments_to_scale = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE).all
-          deployments_to_cancel = DeploymentModel.where(state: DeploymentModel::CANCELING_STATE).all
+      def initialize(deployment, logger)
+        @deployment = deployment
+        @logger = logger
+      end
 
-          begin
-            workpool = WorkPool.new(50)
-
-            logger.info("scaling #{deployments_to_scale.size} deployments")
-            deployments_to_scale.each do |deployment|
-              workpool.submit(deployment, logger) do |d, l|
-                begin
-                  scale_deployment(d, l)
-                rescue => e
-                  error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
-                  logger.error(
-                    'error-scaling-deployment',
-                    deployment_guid: d.guid,
-                    error: error_name,
-                    error_message: e.message,
-                    backtrace: e.backtrace.join("\n")
-                  )
-                end
-              end
-            end
-
-            logger.info("canceling #{deployments_to_cancel.size} deployments")
-            deployments_to_cancel.each do |deployment|
-              workpool.submit(deployment, logger) do |d, l|
-                begin
-                  cancel_deployment(d, l)
-                rescue => e
-                  error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
-                  logger.error(
-                    'error-canceling-deployment',
-                    deployment_guid: d.guid,
-                    error: error_name,
-                    error_message: e.message,
-                    backtrace: e.backtrace.join("\n")
-                  )
-                end
-              end
-            end
-          ensure
-            workpool.drain
-          end
-        end
-
-        private
-
-        def scale_deployment(deployment, logger)
-          deployment.db.transaction do
-            deployment.lock!
-
-            app = deployment.app
-            oldest_web_process = app.oldest_webish_process
-            deploying_web_process = deployment.deploying_web_process
-
-            app.lock!
-            oldest_web_process.lock!
-            deploying_web_process.lock!
-
-            return unless ready_to_scale?(deployment, logger)
-
-            if deploying_web_process.instances < deployment.original_web_process_instance_count
-              scale_down(oldest_web_process)
-              deploying_web_process.update(instances: deploying_web_process.instances + 1)
-            else
-              promote_deploying_web_process(deploying_web_process, oldest_web_process)
-
-              restart_non_web_processes(app)
-              deployment.update(state: DeploymentModel::DEPLOYED_STATE)
-            end
-          end
-
+      def scale
+        with_error_logging('error-scaling-deployment') do
+          scale_deployment
           logger.info("ran-deployment-update-for-#{deployment.guid}")
         end
+      end
 
-        def scale_down(webish_process)
-          if webish_process.instances > 1
-            webish_process.update(instances: webish_process.instances - 1)
-          else
-            webish_process.destroy
-            if webish_process.type != 'web'
-              RouteMappingModel.where(app: webish_process.app, process_type: webish_process.type).map(&:destroy)
-            end
+      def cancel
+        with_error_logging('error-canceling-deployment') do
+          cancel_deployment
+          logger.info("ran-cancel-deployment-for-#{deployment.guid}")
+        end
+      end
+
+      private
+
+      def with_error_logging(error_message)
+        yield
+      rescue => e
+        error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
+        logger.error(
+          error_message,
+            deployment_guid: deployment.guid,
+            error: error_name,
+            error_message: e.message,
+            backtrace: e.backtrace.join("\n")
+        )
+      end
+
+      def cancel_deployment
+        deployment.db.transaction do
+          deployment.lock!
+
+          original_web_process = app.web_process
+
+          app.lock!
+          original_web_process.lock!
+          deploying_web_process.lock!
+
+          original_web_process.update(instances: deployment.original_web_process_instance_count)
+
+          cleanup_webish_process(deploying_web_process)
+
+          deployment.update(state: DeploymentModel::CANCELED_STATE)
+        end
+      end
+
+      def scale_deployment
+        deployment.db.transaction do
+          deployment.lock!
+
+          oldest_web_process.lock!
+          app.lock!
+          deploying_web_process.lock!
+
+          return unless ready_to_scale?
+
+          if deploying_web_process.instances >= deployment.original_web_process_instance_count
+            finalize_deployment
+            return
           end
+
+          scale_down_oldest_web_process
+          deploying_web_process.update(instances: deploying_web_process.instances + 1)
         end
+      end
 
-        def cancel_deployment(deployment, logger)
-          deployment.db.transaction do
-            deployment.lock!
+      def app
+        @app ||= deployment.app
+      end
 
-            app = deployment.app
-            original_web_process = app.web_process
-            deploying_web_process = deployment.deploying_web_process
+      def deploying_web_process
+        @deploying_web_process ||= deployment.deploying_web_process
+      end
 
-            app.lock!
-            original_web_process.lock!
-            deploying_web_process.lock!
+      def oldest_web_process
+        @oldest_web_process ||= app.oldest_webish_process
+      end
 
-            original_web_process.update(instances: deployment.original_web_process_instance_count)
-
-            RouteMappingModel.where(app: app, process_type: deploying_web_process.type).map(&:destroy)
-            deploying_web_process.destroy
-            deployment.update(state: DeploymentModel::CANCELED_STATE)
-            logger.info("ran-cancel-deployment-for-#{deployment.guid}")
-          end
+      def scale_down_oldest_web_process
+        if oldest_web_process.instances > 1
+          oldest_web_process.update(instances: oldest_web_process.instances - 1)
+        else
+          cleanup_webish_process(oldest_web_process)
         end
+      end
 
-        def ready_to_scale?(deployment, logger)
-          instances = instance_reporters.all_instances_for_app(deployment.deploying_web_process)
-          instances.all? { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING }
-        rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
-          logger.info("skipping-deployment-update-for-#{deployment.guid}")
-          false
+      def cleanup_webish_process(process)
+        if process.type != 'web'
+          RouteMappingModel.where(app: app, process_type: process.type).map(&:destroy)
         end
+        process.destroy
+      end
 
-        def instance_reporters
-          CloudController::DependencyLocator.instance.instances_reporters
-        end
+      def finalize_deployment
+        promote_deploying_web_process
 
-        def promote_deploying_web_process(deploying_web_process, oldest_web_process)
-          RouteMappingModel.where(app: deploying_web_process.app,
-                                  process_type: deploying_web_process.type).map(&:destroy)
-          deploying_web_process.update(type: ProcessTypes::WEB)
-          oldest_web_process.destroy
-        end
+        cleanup_interim_deployment_processes
 
-        def restart_non_web_processes(app)
-          app.processes.reject(&:web?).each do |process|
-            VCAP::CloudController::ProcessRestart.restart(process: process, config: Config.config, stop_in_runtime: true)
-          end
+        restart_non_web_processes
+        deployment.update(state: DeploymentModel::DEPLOYED_STATE)
+      end
+
+      def promote_deploying_web_process
+        RouteMappingModel.where(app: deploying_web_process.app,
+                                process_type: deploying_web_process.type).map(&:destroy)
+        deploying_web_process.update(type: ProcessTypes::WEB)
+        oldest_web_process.destroy
+      end
+
+      def cleanup_interim_deployment_processes
+        app.processes.select { |p| ProcessTypes.webish?(p.type) }.each do |webish_process|
+          next if webish_process.guid == deploying_web_process.guid
+          cleanup_webish_process(webish_process)
         end
+      end
+
+      def restart_non_web_processes
+        app.processes.reject(&:web?).each do |process|
+          VCAP::CloudController::ProcessRestart.restart(process: process, config: Config.config, stop_in_runtime: true)
+        end
+      end
+
+      def ready_to_scale?
+        instances = instance_reporters.all_instances_for_app(deployment.deploying_web_process)
+        instances.all? { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING }
+      rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
+        logger.info("skipping-deployment-update-for-#{deployment.guid}")
+        false
+      end
+
+      def instance_reporters
+        CloudController::DependencyLocator.instance.instances_reporters
       end
     end
   end

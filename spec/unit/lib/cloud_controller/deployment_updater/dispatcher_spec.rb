@@ -1,9 +1,10 @@
 require 'spec_helper'
-require 'cloud_controller/deployment_updater/updater'
+require 'cloud_controller/deployment_updater/dispatcher'
 
 module VCAP::CloudController
-  RSpec.describe DeploymentUpdater::Updater do
+  RSpec.describe DeploymentUpdater::Dispatcher do
     let(:a_day_ago) { Time.now - 1.day }
+    let(:an_hour_ago) { Time.now - 1.hour }
     let(:web_process) { ProcessModel.make(instances: 2, created_at: a_day_ago) }
     let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
     let(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-1', instances: 5) }
@@ -18,7 +19,7 @@ module VCAP::CloudController
       )
     end
 
-    let(:deployer) { DeploymentUpdater::Updater }
+    let(:deployer) { DeploymentUpdater::Dispatcher }
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:all_instances_results) {
       {
@@ -47,14 +48,14 @@ module VCAP::CloudController
             allow(DeploymentModel).to receive(:where).and_return(instance_double(Sequel::Dataset, all: [deployment]))
             allow(deployment).to receive(:lock!).and_call_original
 
-            deployer.update
+            deployer.dispatch
 
             expect(deployment).to have_received(:lock!).twice
           end
 
           it 'scales the web process down by one' do
             expect {
-              deployer.update
+              deployer.dispatch
             }.to change {
               web_process.reload.instances
             }.by(-1)
@@ -62,7 +63,7 @@ module VCAP::CloudController
 
           it 'scales up the new web process by one' do
             expect {
-              deployer.update
+              deployer.dispatch
             }.to change {
               deploying_web_process.reload.instances
             }.by(1)
@@ -84,6 +85,18 @@ module VCAP::CloudController
             )
           }
 
+          let!(:interim_deploying_web_process) {
+            ProcessModel.make(
+              app: web_process.app,
+              created_at: an_hour_ago,
+              type: 'web-deployment-guid-interim',
+              instances: 1,
+              guid: 'interim-guid'
+            )
+          }
+
+          let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
+
           let!(:non_web_process1) { ProcessModel.make(app: the_best_app, instances: 2, type: 'worker') }
           let!(:non_web_process2) { ProcessModel.make(app: the_best_app, instances: 2, type: 'clock') }
 
@@ -98,9 +111,9 @@ module VCAP::CloudController
 
           it 'replaces the existing web process with the deploying_web_process' do
             deploying_web_process_guid = deploying_web_process.guid
-            expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-1', 'worker', 'clock'])
+            expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-interim', 'web-deployment-guid-1', 'worker', 'clock'])
 
-            deployer.update
+            deployer.dispatch
 
             deployment.reload
             the_best_app.reload
@@ -119,21 +132,27 @@ module VCAP::CloudController
             expect(RouteMappingModel.where(app: deploying_web_process.app,
                                            process_type: deploying_web_process.type)).to have(1).items
 
-            deployer.update
+            deployer.dispatch
 
             expect(RouteMappingModel.where(app: deploying_web_process.app,
                                            process_type: deploying_web_process.type)).to have(0).items
           end
 
+          it 'cleans up any extra processes and route mappings from the deployment train' do
+            deployer.dispatch
+            expect(ProcessModel.find(guid: interim_deploying_web_process.guid)).to be_nil
+            expect(RouteMappingModel.find(process_type: interim_deploying_web_process.type)).to be_nil
+          end
+
           it 'puts the deployment into its finished DEPLOYED_STATE' do
-            deployer.update
+            deployer.dispatch
             deployment.reload
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
           end
 
           it 'restarts the non-web processes, but not the web process' do
-            deployer.update
+            deployer.dispatch
             deployment.reload
 
             expect(ProcessRestart).
@@ -156,7 +175,7 @@ module VCAP::CloudController
           end
 
           it 'drains the workpool' do
-            deployer.update
+            deployer.dispatch
 
             expect(workpool).to have_received(:drain)
           end
@@ -166,13 +185,13 @@ module VCAP::CloudController
           let(:web_process) { ProcessModel.make(instances: 1, created_at: a_day_ago, type: 'web') }
 
           it 'destroys the oldest webish process' do
-            deployer.update
+            deployer.dispatch
             expect(ProcessModel.all.map(&:guid)).not_to include(web_process.guid)
           end
 
           it 'does not destroy any route mappings' do
             expect do
-              deployer.update
+              deployer.dispatch
             end.not_to change {
               RouteMappingModel.count
             }
@@ -194,12 +213,12 @@ module VCAP::CloudController
           end
 
           it 'destroys the oldest webish process' do
-            deployer.update
+            deployer.dispatch
             expect(ProcessModel.all.map(&:guid)).not_to include(oldest_webish_process.guid)
           end
 
           it 'destroys the old webish route mapping' do
-            deployer.update
+            deployer.dispatch
             expect(RouteMappingModel.where(app: web_process.app).map(&:process_type)).not_to include(oldest_webish_process.type)
           end
         end
@@ -216,13 +235,13 @@ module VCAP::CloudController
 
         it 'does not scale the deployment' do
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             finished_web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             finished_deploying_web_process_guid.reload.instances
           }
@@ -240,13 +259,13 @@ module VCAP::CloudController
 
         it 'does not scales the process' do
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             deploying_web_process.reload.instances
           }
@@ -264,13 +283,13 @@ module VCAP::CloudController
 
         it 'does not scale the process' do
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             deploying_web_process.reload.instances
           }
@@ -284,13 +303,13 @@ module VCAP::CloudController
 
         it 'does not scale the process' do
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             web_process.reload.instances
           }
 
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             deploying_web_process.reload.instances
           }
@@ -303,14 +322,12 @@ module VCAP::CloudController
 
         before do
           allow(workpool).to receive(:submit).with(failing_deployment, logger).and_yield(failing_deployment, logger)
-
-          allow(deployer).to receive(:scale_deployment).with(deployment, logger).and_call_original
-          allow(deployer).to receive(:scale_deployment).with(failing_deployment, logger).and_raise(StandardError.new('Something real bad happened'))
+          allow(failing_deployment).to receive(:app).and_raise(StandardError.new('Something real bad happened'))
         end
 
         it 'logs the error' do
           expect {
-            deployer.update
+            deployer.dispatch
           }.not_to change {
             failing_process.reload.instances
           }
@@ -326,14 +343,14 @@ module VCAP::CloudController
 
         it 'is able to scale the other deployments' do
           expect {
-            deployer.update
+            deployer.dispatch
           }.to change {
             deploying_web_process.reload.instances
           }.by(1)
         end
 
         it 'still drains the workpool' do
-          deployer.update
+          deployer.dispatch
 
           expect(workpool).to have_received(:drain)
         end
@@ -371,7 +388,7 @@ module VCAP::CloudController
         end
 
         it 'deletes the deploying process' do
-          deployer.update
+          deployer.dispatch
           expect(ProcessModel.find(guid: canceling_deploying_web_process.guid)).to be_nil
         end
 
@@ -384,27 +401,27 @@ module VCAP::CloudController
           end
 
           it 'deletes the deploying web process and associated routes' do
-            deployer.update
+            deployer.dispatch
             expect(RouteMappingModel.find(app: app, process_type: canceling_deploying_web_process.type)).to be_nil
           end
 
           it 'tells co-pilot the routes are unmapped', isolation: :truncation do
             TestConfig.override(copilot: { enabled: true })
             allow(Copilot::Adapter).to receive(:unmap_route)
-            deployer.update
+            deployer.dispatch
             expect(Copilot::Adapter).to have_received(:unmap_route).once
           end
         end
 
         it 'rolls back to the correct number of instances' do
-          deployer.update
+          deployer.dispatch
           expect(canceling_web_process.reload.instances).to eq(6)
           expect(canceling_deploying_web_process.exists?).to be false
           expect(canceling_web_process.droplet_checksum).to eq(canceling_deployment.previous_droplet.checksum)
         end
 
         it 'sets the deployment to CANCELED' do
-          deployer.update
+          deployer.dispatch
           expect(canceling_deployment.state).to eq('CANCELED')
         end
       end

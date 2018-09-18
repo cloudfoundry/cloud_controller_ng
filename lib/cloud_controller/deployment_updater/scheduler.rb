@@ -1,4 +1,4 @@
-require 'cloud_controller/deployment_updater/updater'
+require 'cloud_controller/deployment_updater/dispatcher'
 require 'locket/lock_worker'
 require 'locket/lock_runner'
 
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
           update_start_time = Time.now
           statsd_client.time('cc.deployments.update.duration') do
-            Updater.update
+            Dispatcher.dispatch
           end
           update_duration = Time.now - update_start_time
           logger.info("Update loop took #{update_duration}s")

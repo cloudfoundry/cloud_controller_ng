@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'actions/deployment_cancel'
-require 'cloud_controller/deployment_updater/updater'
+require 'cloud_controller/deployment_updater/dispatcher'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCancel do
