@@ -97,6 +97,40 @@ module VCAP::CloudController
           }.to raise_error(ProcessScale::InvalidProcess, 'the message')
         end
       end
+
+      context 'when the parent app is being deployed' do
+        before do
+          VCAP::CloudController::DeploymentModel.make(app: app, state: 'DEPLOYING')
+        end
+
+        it 'succeeds if the process is not webish' do
+          process.type = 'not-webish'
+
+          expect(process.instances).to eq(1)
+          expect(process.memory).to eq(1024)
+          expect(process.disk_quota).to eq(50)
+
+          process_scale.scale
+
+          expect(process.reload.instances).to eq(2)
+          expect(process.reload.memory).to eq(100)
+          expect(process.reload.disk_quota).to eq(200)
+        end
+
+        it 'fails if the process is webish' do
+          process.type = 'web'
+
+          expect(process.instances).to eq(1)
+          expect(process.memory).to eq(1024)
+          expect(process.disk_quota).to eq(50)
+
+          expect { process_scale.scale }.to raise_error(ProcessScale::InvalidProcess, 'ScaleDisabledDuringDeployment')
+
+          expect(process.reload.instances).to eq(1)
+          expect(process.reload.memory).to eq(1024)
+          expect(process.reload.disk_quota).to eq(50)
+        end
+      end
     end
   end
 end

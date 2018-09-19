@@ -18,5 +18,31 @@ module VCAP::CloudController
     it 'has a deploying web process' do
       expect(deployment.deploying_web_process).to eq(deploying_web_process)
     end
+
+    describe '#deploying?' do
+      it 'returns true if the deployment is deploying' do
+        deployment.state = 'DEPLOYING'
+
+        expect(deployment.deploying?).to be(true)
+      end
+
+      it 'returns false if the deployment has been deployed' do
+        deployment.state = 'DEPLOYED'
+
+        expect(deployment.deploying?).to be(false)
+      end
+
+      it 'returns false if the deployment is canceling' do
+        deployment.state = 'CANCELING'
+
+        expect(deployment.deploying?).to be(false)
+      end
+
+      it 'returns false if the deployment has been canceled' do
+        deployment.state = 'CANCELED'
+
+        expect(deployment.deploying?).to be(false)
+      end
+    end
   end
 end

@@ -384,5 +384,28 @@ module VCAP::CloudController
         expect(app_model.reload.oldest_webish_process).to eq(web_process)
       end
     end
+
+    describe '#deploying?' do
+      it 'returns false when the app has no deployments' do
+        expect(app_model.deploying?).to be(false)
+      end
+
+      it 'returns false when the app has no deployments that are being deployed' do
+        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYED', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+
+        expect(app_model.deploying?).to be(false)
+      end
+
+      it 'returns true when the app has a deployment that is being deployed' do
+        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYED', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+
+        expect(app_model.deploying?).to be(true)
+      end
+    end
   end
 end

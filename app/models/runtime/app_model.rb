@@ -91,6 +91,10 @@ module VCAP::CloudController
         min_by(&:created_at)
     end
 
+    def deploying?
+      deployments.any?(&:deploying?)
+    end
+
     def self.user_visibility_filter(user)
       space_guids = Space.join(:spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
                     union(Space.join(:spaces_managers, space_id: :id, user_id: user.id).select(:spaces__guid)).

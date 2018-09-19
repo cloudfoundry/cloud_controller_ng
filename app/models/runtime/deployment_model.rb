@@ -36,5 +36,9 @@ module VCAP::CloudController
         where(state: DeploymentModel::DEPLOYING_STATE).count
       end
     end
+
+    def deploying?
+      state == DEPLOYING_STATE
+    end
   end
 end

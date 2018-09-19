@@ -10,6 +10,10 @@ module VCAP::CloudController
     end
 
     def scale
+      if @process.web? && @process.app.deploying?
+        raise InvalidProcess.new('ScaleDisabledDuringDeployment')
+      end
+
       @process.db.transaction do
         @process.app.lock!
         @process.lock!

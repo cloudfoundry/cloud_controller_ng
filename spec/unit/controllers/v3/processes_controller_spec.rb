@@ -690,6 +690,38 @@ RSpec.describe ProcessesController, type: :controller do
       end
     end
 
+    context 'when the app is being deployed' do
+      before do
+        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app)
+      end
+
+      it 'succeeds if the process is not a webish process' do
+        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'this-is-not-webish')
+
+        put :scale, { process_guid: process.guid, body: req_body }
+
+        expect(response.status).to eq(202)
+      end
+
+      it 'raises 422 if the process is a web process' do
+        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web')
+
+        put :scale, { process_guid: process.guid, body: req_body }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('ScaleDisabledDuringDeployment')
+      end
+
+      it 'raises 422 if the process is a webish process' do
+        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web-deployment-test')
+
+        put :scale, { process_guid: process.guid, body: req_body }
+
+        expect(response.status).to eq(422)
+        expect(response.body).to include('ScaleDisabledDuringDeployment')
+      end
+    end
+
     context 'permissions' do
       context 'when the user cannot read the process' do
         before do

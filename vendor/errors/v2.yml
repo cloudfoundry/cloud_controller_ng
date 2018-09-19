@@ -1213,3 +1213,8 @@
   name: NoCurrentEncryptionKey
   http_code: 422
   message: "Please set the desired encryption key in the manifest at ‘cc.database_encryption.current_key_label’"
+
+390016:
+  name: ScaleDisabledDuringDeployment
+  http_code: 422
+  message: "Cannot scale this process while a deployment is in flight."
