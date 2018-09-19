@@ -12,6 +12,10 @@ module VCAP::CloudController
         @bbs_instances_client = bbs_instances_client
       end
 
+      def self.singleton_workpool
+        @singleton_workpool ||= WorkPool.new(50)
+      end
+
       def all_instances_for_app(process)
         instances = {}
         bbs_instances_client.lrp_instances(process).each do |actual_lrp|
@@ -39,17 +43,17 @@ module VCAP::CloudController
 
       def number_of_starting_and_running_instances_for_processes(processes)
         instances = {}
-        workpool = WorkPool.new(50)
         queue = Queue.new
 
+        # Enqueue requests to BBS in the WorkPool to be processed concurrently
         processes.each do |process|
-          workpool.submit(instances, process) do |i, p|
+          self.class.singleton_workpool.submit(process) do |p|
             queue << [p.guid, number_of_starting_and_running_instances_for_process(p)]
           end
         end
 
-        workpool.drain
-        until queue.empty?
+        # Collect results of each request, Queue#pop will block while the queue is empty
+        processes.each do
           guid, info = queue.pop
           instances[guid] = info
         end

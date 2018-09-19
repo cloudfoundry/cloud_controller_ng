@@ -255,6 +255,12 @@ module VCAP::CloudController
           expect(bbs_instances_client).not_to have_received(:lrp_instances).with(process_b)
         end
 
+        it 'does not instantiate multiple WorkPools' do
+          expect(WorkPool).to receive(:new).once.and_call_original
+          instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
+          instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
+        end
+
         context '"UNCLAIMED" instances' do
           let(:bbs_instances_response_a) do
             [
