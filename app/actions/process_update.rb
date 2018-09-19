@@ -10,6 +10,10 @@ module VCAP::CloudController
     end
 
     def update(process, message, strategy_class)
+      if process.web? && process.app.deploying?
+        raise InvalidProcess.new('ProcessUpdateDisabledDuringDeployment')
+      end
+
       strategy = strategy_class.new(message, process)
       process.db.transaction do
         process.lock!

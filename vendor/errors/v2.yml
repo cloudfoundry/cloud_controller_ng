@@ -1218,3 +1218,8 @@
   name: ScaleDisabledDuringDeployment
   http_code: 422
   message: "Cannot scale this process while a deployment is in flight."
+
+390017:
+  name: ProcessUpdateDisabledDuringDeployment
+  http_code: 422
+  message: "Cannot update this process while a deployment is in flight."
