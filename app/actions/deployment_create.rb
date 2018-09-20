@@ -1,3 +1,5 @@
+require 'repositories/deployment_event_repository'
+
 module VCAP::CloudController
   class DeploymentCreate
     class SetCurrentDropletError < StandardError; end
@@ -38,7 +40,7 @@ module VCAP::CloudController
           deployment.update(deploying_web_process: process)
           web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info, r, process) }
         end
-
+        record_audit_event(deployment, droplet, user_audit_info)
         deployment
       end
 
@@ -63,6 +65,18 @@ module VCAP::CloudController
           health_check_invocation_timeout: web_process.health_check_invocation_timeout,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
+        )
+      end
+
+      def record_audit_event(deployment, droplet, user_audit_info)
+        app = deployment.app
+        Repositories::DeploymentEventRepository.record_create(
+          deployment,
+            droplet,
+            user_audit_info,
+            app.name,
+            app.space_guid,
+            app.space.organization_guid
         )
       end
     end

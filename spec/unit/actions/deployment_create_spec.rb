@@ -72,6 +72,27 @@ module VCAP::CloudController
           expect(deploying_web_process.routes).to contain_exactly(route1, route2)
         end
 
+        it 'records an audit event for the deployment' do
+          deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
+
+          event = Event.last
+          expect(event.type).to eq('audit.app.deployment.create')
+          expect(event.actor).to eq('123')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq('connor@example.com')
+          expect(event.actor_username).to eq('braa')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.timestamp).to be
+          expect(event.space_guid).to eq(app.space_guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+          expect(event.metadata).to eq({
+                                           'droplet_guid' => next_droplet.guid,
+                                           'deployment_guid' => deployment.guid,
+                                       })
+        end
+
         context 'when the app does not have a droplet set' do
           let(:app_without_current_droplet) { VCAP::CloudController::AppModel.make }
           let(:next_droplet) { VCAP::CloudController::DropletModel.make(app: app_without_current_droplet, process_types: { 'web' => 'asdf' }) }
@@ -87,6 +108,27 @@ module VCAP::CloudController
             deployment = DeploymentCreate.create(app: app_without_current_droplet, droplet: next_droplet, user_audit_info: user_audit_info)
 
             expect(deployment.previous_droplet).to eq(nil)
+          end
+
+          it 'records an audit event for the deployment' do
+            deployment = DeploymentCreate.create(app: app_without_current_droplet, droplet: next_droplet, user_audit_info: user_audit_info)
+
+            event = Event.last
+            expect(event.type).to eq('audit.app.deployment.create')
+            expect(event.actor).to eq('123')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('connor@example.com')
+            expect(event.actor_username).to eq('braa')
+            expect(event.actee).to eq(app_without_current_droplet.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app_without_current_droplet.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app_without_current_droplet.space_guid)
+            expect(event.organization_guid).to eq(app_without_current_droplet.space.organization.guid)
+            expect(event.metadata).to eq({
+                                             'droplet_guid' => next_droplet.guid,
+                                             'deployment_guid' => deployment.guid,
+                                         })
           end
         end
 
