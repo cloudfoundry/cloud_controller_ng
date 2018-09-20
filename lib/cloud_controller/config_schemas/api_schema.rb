@@ -306,8 +306,8 @@ module VCAP::CloudController
             enabled: bool,
             optional(:hostname) => String,
             optional(:port) => Integer,
-            timeout_in_milliseconds: Integer,
-            ca_cert_path: String,
+            optional(:timeout_in_milliseconds) => Integer,
+            optional(:ca_cert_path) => String,
             optional(:query_raise_on_mismatch) => bool,
           },
 
