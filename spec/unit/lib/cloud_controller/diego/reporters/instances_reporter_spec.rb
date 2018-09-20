@@ -256,7 +256,8 @@ module VCAP::CloudController
         end
 
         it 'does not instantiate multiple WorkPools' do
-          expect(WorkPool).to receive(:new).once.and_call_original
+          expect(WorkPool).to receive(:new).at_most(:once).and_call_original
+
           instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
           instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
         end
