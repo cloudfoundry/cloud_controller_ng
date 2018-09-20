@@ -4,13 +4,18 @@ module VCAP::CloudController
   module Perm
     class Client
       def self.build_from_config(config, file_opener)
-        hostname = config.get(:perm, :hostname)
-        port = config.get(:perm, :port)
         enabled = config.get(:perm, :enabled)
-        ca_cert_path = config.get(:perm, :ca_cert_path)
-        timeout = config.get(:perm, :timeout_in_milliseconds) / 1000.0
+
+        hostname = ''
+        port = 0
+        timeout = 0
         trusted_cas = []
+
         if enabled
+          hostname = config.get(:perm, :hostname)
+          port = config.get(:perm, :port)
+          ca_cert_path = config.get(:perm, :ca_cert_path)
+          timeout = config.get(:perm, :timeout_in_milliseconds) / 1000.0
           trusted_cas << file_opener.open(ca_cert_path).read
         end
 
