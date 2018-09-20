@@ -6,14 +6,22 @@ module VCAP::CloudController
     subject(:updater) { DeploymentUpdater::Updater.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let!(:web_process) { ProcessModel.make(instances: current_web_instances, created_at: a_day_ago) }
+    let!(:web_process) { ProcessModel.make(instances: current_web_instances, created_at: a_day_ago, guid: 'guid-original') }
     let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
-    let!(:deploying_web_process) { ProcessModel.make(app: web_process.app, type: 'web-deployment-guid-final', instances: current_deploying_instances) }
+    let!(:deploying_web_process) do
+      ProcessModel.make(
+        app: web_process.app,
+        type: 'web-deployment-guid-final',
+        instances: current_deploying_instances,
+        guid: 'guid-final'
+      )
+    end
     let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
     let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }
     let(:current_web_instances) { 2 }
     let(:current_deploying_instances) { 5 }
+    let(:app) { web_process.app }
 
     let(:deployment) do
       DeploymentModel.make(
@@ -35,7 +43,7 @@ module VCAP::CloudController
     let(:instances_reporters) { double(:instance_reporters) }
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
 
-    describe '.scale' do
+    describe '#scale' do
       before do
         allow(CloudController::DependencyLocator.instance).to receive(:instances_reporters).and_return(instances_reporters)
         allow(instances_reporters).to receive(:all_instances_for_app).and_return(all_instances_results)
@@ -323,6 +331,31 @@ module VCAP::CloudController
       it 'sets the deployment to CANCELED' do
         subject.cancel
         expect(deployment.state).to eq('CANCELED')
+      end
+
+      context 'when there are interim deployments' do
+        let!(:interim_deploying_web_process) {
+          ProcessModel.make(
+            app: app,
+            created_at: an_hour_ago,
+            type: 'web-deployment-guid-interim',
+            instances: 1,
+            guid: 'guid-interim'
+          )
+        }
+
+        let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
+
+        it 'it scales up the most recent interim web process' do
+          subject.cancel
+          expect(interim_deploying_web_process.reload.instances).to eq(original_web_process_instance_count)
+          expect(app.reload.web_process.guid).to eq(interim_deploying_web_process.guid)
+        end
+
+        it 'sets the most recent interim web process as the only web process' do
+          subject.cancel
+          expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+        end
       end
     end
   end

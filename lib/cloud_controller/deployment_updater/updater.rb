@@ -41,15 +41,18 @@ module VCAP::CloudController
         deployment.db.transaction do
           deployment.lock!
 
-          original_web_process = app.web_process
-
           app.lock!
-          original_web_process.lock!
           deploying_web_process.lock!
 
-          original_web_process.update(instances: deployment.original_web_process_instance_count)
+          prior_webish_process = app.processes.
+                                 select(&:web?).
+                                 reject { |p| p.guid == deploying_web_process.guid }.
+                                 max_by(&:created_at)
+          prior_webish_process.lock!
 
-          cleanup_webish_process(deploying_web_process)
+          prior_webish_process.update(instances: deployment.original_web_process_instance_count, type: 'web')
+
+          cleanup_webish_processes_except(prior_webish_process)
 
           deployment.update(state: DeploymentModel::CANCELED_STATE)
         end
@@ -105,7 +108,7 @@ module VCAP::CloudController
       def finalize_deployment
         promote_deploying_web_process
 
-        cleanup_interim_deployment_processes
+        cleanup_webish_processes_except(deploying_web_process)
 
         restart_non_web_processes
         deployment.update(state: DeploymentModel::DEPLOYED_STATE)
@@ -118,11 +121,11 @@ module VCAP::CloudController
         oldest_web_process.destroy
       end
 
-      def cleanup_interim_deployment_processes
-        app.processes.select { |p| ProcessTypes.webish?(p.type) }.each do |webish_process|
-          next if webish_process.guid == deploying_web_process.guid
-          cleanup_webish_process(webish_process)
-        end
+      def cleanup_webish_processes_except(protected_process)
+        app.processes.
+          select(&:web?).
+          reject { |p| p.guid == protected_process.guid }.
+          each { |p| cleanup_webish_process(p) }
       end
 
       def restart_non_web_processes
