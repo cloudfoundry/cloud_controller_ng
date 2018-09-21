@@ -234,7 +234,7 @@ class AppsV3Controller < ApplicationController
 
   def assign_current_droplet
     app_guid     = params[:guid]
-    droplet_guid = HashUtils.dig(params[:body], 'data', 'guid')
+    droplet_guid = params[:body].dig(:data, :guid)
     cannot_remove_droplet! if params[:body].key?('data') && droplet_guid.nil?
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 

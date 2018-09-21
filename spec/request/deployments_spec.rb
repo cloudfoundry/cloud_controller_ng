@@ -32,7 +32,6 @@ RSpec.describe 'Deployments' do
       it 'should create a deployment object using the current droplet from the app' do
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201)
-        parsed_response = MultiJson.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
 

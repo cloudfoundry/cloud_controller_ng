@@ -29,7 +29,7 @@ gem 'rake'
 gem 'rfc822'
 gem 'rubyzip', git: 'https://github.com/rubyzip/rubyzip.git', ref: '8887b70'
 gem 'sequel'
-gem 'sinatra', '~> 1.4'
+gem 'sinatra', '~> 2.0'
 gem 'sinatra-contrib'
 gem 'statsd-ruby', '~> 1.4.0'
 gem 'steno'
@@ -40,10 +40,11 @@ gem 'vmstat', '~> 2.0'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 4.2'
-gem 'actionview', '~> 4.2'
-gem 'activemodel', '~> 4.2'
-gem 'railties', '~> 4.2'
+gem 'rails', '5.0'
+gem 'actionpack', '5.0'
+gem 'actionview', '5.0'
+gem 'activemodel', '5.0'
+gem 'railties', '5.0'
 
 # Blobstore and Bits Service Dependencies
 gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122

@@ -26,12 +26,12 @@ class DeploymentsController < ApplicationController
   def create
     deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
 
-    app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
+    app_guid = params[:body].dig(:relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
     unprocessable!('Cannot create a deployment for a STOPPED app.') if app.stopped?
 
-    droplet_guid = HashUtils.dig(params[:body], :droplet, :guid)
+    droplet_guid = params[:body].dig(:droplet, :guid)
     if droplet_guid
       droplet = DropletModel.find(guid: droplet_guid)
     else
@@ -68,7 +68,7 @@ class DeploymentsController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render status: :ok, nothing: true
+    head :ok
   end
 
   private

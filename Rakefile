@@ -45,5 +45,3 @@ task :check_doc_links do
     end
   end
 end
-
-Rake::Task['doc:app'].clear
