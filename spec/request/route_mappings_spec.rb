@@ -77,6 +77,47 @@ RSpec.describe 'Route Mappings' do
     end
   end
 
+  describe 'PATCH /v3/route_mappings/:route_mapping_guid' do
+    let(:original_weight) { 55 }
+    let(:updated_weight) { original_weight }
+    let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, weight: original_weight, app_port: 8080) }
+
+    it 'updates the route mapping' do
+      body = {
+          weight: updated_weight
+      }
+
+      patch "/v3/route_mappings/#{route_mapping.guid}", body.to_json, developer_headers
+
+      expect(last_response.status).to eq(201), last_response.body
+
+      expected_response = {
+          'guid'       => route_mapping.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+
+          'weight'     => updated_weight,
+          'links'      => {
+              'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
+              'app'     => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+              'route'   => { 'href' => "#{link_prefix}/v2/routes/#{route.guid}" },
+              'process' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes/web" }
+          }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      # verify response
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      # verify mapping
+      route_mapping.reload
+      expect(route_mapping.app_guid).to eq(app_model.guid)
+      expect(route_mapping.route_guid).to eq(route.guid)
+      expect(route_mapping.weight).to eq(updated_weight)
+    end
+  end
+
   describe 'GET /v3/route_mappings' do
     let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'worker') }

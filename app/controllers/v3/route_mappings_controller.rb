@@ -1,4 +1,5 @@
 require 'messages/route_mappings_create_message'
+require 'messages/route_mappings_update_message'
 require 'messages/route_mappings_list_message'
 require 'fetchers/route_mapping_list_fetcher'
 require 'fetchers/add_route_fetcher'
@@ -51,6 +52,19 @@ class RouteMappingsController < ApplicationController
     rescue ::VCAP::CloudController::RouteMappingCreate::InvalidRouteMapping => e
       unprocessable!(e.message)
     end
+
+    render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
+  end
+
+  def update
+    message = RouteMappingsUpdateMessage.new(params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
+    route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)
+
+    route_mapping.update(weight: message.weight)
 
     render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
   end

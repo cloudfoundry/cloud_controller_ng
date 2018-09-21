@@ -136,6 +136,84 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
   end
 
+  describe '#update' do
+    let(:original_weight) { 3 }
+    let(:updated_weight) { original_weight + 10 }
+    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route, weight: original_weight) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:req_body) do
+      {
+        weight: updated_weight
+      }
+    end
+
+    before do
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_write_access(user, space: space)
+    end
+
+    it 'updates the route mapping weight' do
+      patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+      expect(response.status).to eq(201)
+      expect(parsed_body['guid']).to eq(route_mapping.guid)
+      expect(parsed_body['weight']).to eq(updated_weight)
+    end
+
+    context 'when there is a validation error' do
+      let(:updated_weight) { 'infinity' }
+
+      it 'raises an unprocessable error' do
+        patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have read scope' do
+        before do
+          set_current_user(user, scopes: [])
+        end
+
+        it 'raises 403' do
+          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+
+      context 'when the user does not have read permissions on the app space' do
+        before do
+          disallow_user_read_access(user, space: space)
+        end
+
+        it 'returns a 404 ResourceNotFound' do
+          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+
+          expect(response.status).to eq 404
+          expect(response.body).to include 'ResourceNotFound'
+          expect(response.body).to include 'Route mapping not found'
+        end
+      end
+
+      context 'when the user can read but cannot write to the space' do
+        before do
+          allow_user_read_access_for(user, spaces: [space])
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'raises ApiError NotAuthorized' do
+          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
+    end
+  end
+
   describe '#show' do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
