@@ -8,6 +8,7 @@ require 'presenters/v3/route_mapping_presenter'
 require 'actions/route_mapping_create'
 require 'actions/route_mapping_delete'
 require 'controllers/v3/mixins/app_sub_resource'
+require 'cloud_controller/copilot/adapter'
 
 class RouteMappingsController < ApplicationController
   include AppSubResource
@@ -65,6 +66,11 @@ class RouteMappingsController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)
 
     route_mapping.update(weight: message.weight)
+    begin
+      Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
+    rescue Copilot::Adapter::CopilotUnavailable => e
+      logger.error("failed communicating with copilot backend: #{e.message}")
+    end
 
     render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
   end

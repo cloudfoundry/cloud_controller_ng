@@ -157,6 +157,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       expect(response.status).to eq(201)
       expect(parsed_body['guid']).to eq(route_mapping.guid)
       expect(parsed_body['weight']).to eq(updated_weight)
+      expect(route_mapping.reload.weight).to eq(updated_weight)
     end
 
     context 'when there is a validation error' do
@@ -167,6 +168,38 @@ RSpec.describe RouteMappingsController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
+      end
+    end
+
+    context 'when copilot is enabled' do
+      before do
+        TestConfig.override(copilot: { enabled: true })
+        allow(VCAP::CloudController::Copilot::Adapter).to receive(:map_route)
+      end
+
+      it 'delegates to the copilot handler to notify copilot' do
+        patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+        expect(route_mapping.reload.weight).to eq(updated_weight)
+        expect(VCAP::CloudController::Copilot::Adapter).to have_received(:map_route).with(route_mapping)
+      end
+
+      context 'when VCAP::CloudController::Copilot::Adapter#map_route errors out' do
+        let(:event_repository) { double(Repositories::AppEventRepository) }
+        let(:logger) { instance_double(Steno::Logger, error: nil) }
+
+        before do
+          allow(VCAP::CloudController::Copilot::Adapter).to receive(:map_route).and_raise(VCAP::CloudController::Copilot::Adapter::CopilotUnavailable.new('some-error'))
+          allow(logger).to receive(:error)
+          allow(Steno).to receive(:logger).and_return(logger)
+        end
+
+        it 'logs and swallows the error' do
+          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+          expect(VCAP::CloudController::Copilot::Adapter).to have_received(:map_route).with(route_mapping)
+          expect(logger).to have_received(:error).with('failed communicating with copilot backend: some-error')
+          expect(route_mapping.reload.weight).to eq(updated_weight)
+          expect(response.status).to eq(201)
+        end
       end
     end
 
