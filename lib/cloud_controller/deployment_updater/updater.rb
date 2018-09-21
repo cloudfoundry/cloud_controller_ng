@@ -49,8 +49,9 @@ module VCAP::CloudController
                                  max_by(&:created_at)
           prior_webish_process.lock!
 
-          prior_webish_process.update(instances: deployment.original_web_process_instance_count, type: 'web')
+          prior_webish_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
 
+          cleanup_webish_route_mappings
           cleanup_webish_processes_except(prior_webish_process)
 
           deployment.update(state: DeploymentModel::CANCELED_STATE)
@@ -101,9 +102,19 @@ module VCAP::CloudController
         end
       end
 
+      def cleanup_webish_route_mappings
+        RouteMappingModel.
+          where(app: app).
+          reject { |r| r.process_type == ProcessTypes::WEB }.
+          select { |r| ProcessTypes.webish?(r.process_type) }.
+          map(&:destroy)
+      end
+
       def cleanup_webish_process(process)
-        if process.type != 'web'
-          RouteMappingModel.where(app: app, process_type: process.type).map(&:destroy)
+        if process.type != ProcessTypes::WEB
+          RouteMappingModel.
+            where(app: app, process_type: process.type).
+            map(&:destroy)
         end
         process.destroy
       end

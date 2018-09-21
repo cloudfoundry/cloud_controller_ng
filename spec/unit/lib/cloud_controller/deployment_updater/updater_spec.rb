@@ -344,7 +344,12 @@ module VCAP::CloudController
           )
         }
 
-        let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
+        let!(:interim_route_mapping) {
+          RouteMappingModel.make(
+            app: web_process.app,
+            process_type: interim_deploying_web_process.type
+          )
+        }
 
         it 'it scales up the most recent interim web process' do
           subject.cancel
@@ -355,6 +360,11 @@ module VCAP::CloudController
         it 'sets the most recent interim web process as the only web process' do
           subject.cancel
           expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+        end
+
+        it 'removes all previous webish route mappings' do
+          subject.cancel
+          expect(RouteMappingModel.map(&:process_type)).to contain_exactly(ProcessTypes::WEB)
         end
       end
     end
