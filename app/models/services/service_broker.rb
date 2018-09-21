@@ -20,7 +20,6 @@ module VCAP::CloudController
       validates_presence :auth_username
       validates_presence :auth_password
       validates_unique :name
-      validates_unique :broker_url
       validates_url :broker_url
       validates_url_no_basic_auth
     end

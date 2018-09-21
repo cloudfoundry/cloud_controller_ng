@@ -126,51 +126,5 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
     end
-
-    describe '#cc_plan' do
-      let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
-      let(:cc_service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
-      let(:plan_broker_provided_id) { SecureRandom.uuid }
-      let(:catalog_service) do
-        CatalogService.new(service_broker,
-          'id' => cc_service.broker_provided_id,
-          'name' => 'my-service-name',
-          'description' => 'my service description',
-          'bindable' => true,
-          'plans' => [{
-            'id' => plan_broker_provided_id,
-            'name' => 'my-plan-name',
-            'description' => 'my plan description'
-          }]
-        )
-      end
-      let(:catalog_plan) do
-        CatalogPlan.new(catalog_service,
-          'id' => plan_broker_provided_id,
-          'name' => 'my-plan-name',
-          'description' => 'my plan description',
-        )
-      end
-
-      context 'when a ServicePlan exists for the same Service with the same broker_provided_id' do
-        let!(:cc_plan) do
-          VCAP::CloudController::ServicePlan.make(service: cc_service, unique_id: plan_broker_provided_id)
-        end
-
-        it 'returns that ServicePlan' do
-          expect(catalog_plan.cc_plan).to eq(cc_plan)
-        end
-      end
-
-      context 'when a ServicePlan exists for a different Service with the same broker_provided_id' do
-        before do
-          VCAP::CloudController::ServicePlan.make(unique_id: plan_broker_provided_id)
-        end
-
-        it 'returns nil' do
-          expect(catalog_plan.cc_plan).to be_nil
-        end
-      end
-    end
   end
 end

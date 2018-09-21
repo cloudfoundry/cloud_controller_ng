@@ -46,7 +46,6 @@ module VCAP::CloudController
       validates_presence :service,             message: 'is required'
       validates_presence :unique_id,           message: 'is required'
       validates_unique [:service_id, :name],   message: Sequel.lit("Plan names must be unique within a service. Service #{service.try(:label)} already has a plan named #{name}")
-      validates_unique :unique_id,             message: Sequel.lit('Plan ids must be unique')
       validate_private_broker_plan_not_public
     end
 

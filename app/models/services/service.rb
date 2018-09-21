@@ -73,12 +73,7 @@ module VCAP::CloudController
       validates_presence :description, message: 'is required'
       validates_presence :bindable, message: 'is required'
       validates_url :info_url, message: 'must be a valid url'
-      validates_unique :unique_id, message: Sequel.lit('Service ids must be unique')
       validates_max_length 2048, :tag_contents, message: Sequel.lit("Service tags for service #{label} must be 2048 characters or less.")
-
-      validates_unique :label, message: Sequel.lit('Service name must be unique') do |ds|
-        ds.exclude(service_broker_id: nil)
-      end
     end
 
     serialize_attributes :json, :tags, :requires

@@ -3,6 +3,20 @@ require 'spec_helper'
 RSpec.describe 'Service Broker' do
   include VCAP::CloudController::BrokerApiHelper
 
+  let(:small_plan) {
+    {
+      id: 'plan-1',
+      name: 'small',
+      description: 'A small shared database with 100mb storage quota and 10 connections',
+      schemas: {
+        service_instance: {
+          create: {
+            parameters: { '$schema': 'http://json-schema.org/draft-04/schema#', properties: {} }
+          }
+        }
+      }
+    }
+  }
   let(:catalog_with_no_plans) { {
     services:
     [{
@@ -659,6 +673,123 @@ RSpec.describe 'Service Broker' do
         resources.each do |plan|
           expect(plan['entity']['schemas']).to eq(schema)
         end
+      end
+    end
+
+    context 'when a service brokera already exists with the same URL' do
+      before do
+        stub_catalog_fetch(200, catalog_with_small_plan)
+
+        post('/v2/service_brokers', {
+          name: 'some-broker',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+      end
+
+      it 'fails when the provided broker name is the same' do
+        post('/v2/service_brokers', {
+          name: 'some-broker',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+        expect(last_response.status).to eql(400)
+        expect(decoded_response['code']).to eql(270002)
+        expect(decoded_response['description']).to eql('The service broker name is taken')
+      end
+
+      it 'succeeds when the provided broker name is different' do
+        post('/v2/service_brokers', {
+          name: 'some-other-broker',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+        expect(last_response.status).to eql(201)
+      end
+    end
+
+    context 'when a service broker already exists with a different URL but the same catalog' do
+      before do
+        stub_catalog_fetch(200, catalog_with_small_plan, 'broker-url')
+        stub_catalog_fetch(200, catalog_with_small_plan, 'different-broker-url')
+
+        post('/v2/service_brokers', {
+          name: 'some-broker',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+        expect(last_response).to have_status_code(201)
+      end
+
+      it 'succeeds when the provided broker name is different' do
+        post('/v2/service_brokers', {
+          name: 'some-other-broker',
+          broker_url: 'http://different-broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+        expect(last_response).to have_status_code(201)
+      end
+
+      it 'fails when the provided broker name is the same' do
+        post('/v2/service_brokers', {
+          name: 'some-broker',
+          broker_url: 'http://different-broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+        expect(last_response).to have_status_code(400)
+        expect(decoded_response['code']).to eql(270002)
+        expect(decoded_response['description']).to eql('The service broker name is taken')
+      end
+    end
+
+    context 'when a service broker already exists with the same dashboard_client client_id' do
+      before do
+        UAARequests.stub_all
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(status: 404)
+        stub_catalog_fetch(200, catalog_with_small_plan)
+
+        post('/v2/service_brokers', {
+          name: 'some-broker',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+        expect(last_response).to have_status_code(201)
+      end
+
+      it 'fails with a uniqueness error' do
+        stub_request(:get, %r{https://uaa.service.cf.internal/oauth/clients/client-1}).to_return(
+          body:    { client_id: 'client-1' }.to_json,
+          status:  200,
+          headers: { 'content-type' => 'application/json' })
+
+        stub_catalog_fetch(200, {
+          services: [{
+            id: '12345',
+            name: 'MySQL',
+            description: 'A MySQL service, duh!',
+            bindable: true,
+            plans: [small_plan],
+            dashboard_client: { id: 'client-1', secret: 'shhhhh', redirect_uri: 'http://example.com/client-id' }
+          }]
+        }, 'some-other-broker-url')
+
+        post('/v2/service_brokers', {
+          name: 'some-other-broker',
+          broker_url: 'http://some-other-broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+
+        expect(last_response).to have_status_code(502)
+        expect(decoded_response['code']).to eql(270012)
+        expect(decoded_response['description']).to match('Service dashboard client id must be unique')
       end
     end
   end
