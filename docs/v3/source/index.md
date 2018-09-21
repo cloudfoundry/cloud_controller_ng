@@ -145,6 +145,7 @@ includes:
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create
+  - experimental_resources/route_mappings/update
   - experimental_resources/route_mappings/get
   - experimental_resources/route_mappings/delete
   - experimental_resources/route_mappings/list
