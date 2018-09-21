@@ -10,7 +10,7 @@ module VCAP::CloudController
           # fqdn will require eager loading domains in the sql query
           routes: Route.all,
           route_mappings: RouteMappingModel.all,
-          processes: ProcessModel.where(type: 'web').all
+          processes: ProcessModel.where(type: ProcessTypes::WEB).all
         )
         logger.info('finished-copilot-sync')
       end

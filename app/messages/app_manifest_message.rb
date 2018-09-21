@@ -345,8 +345,8 @@ module VCAP::CloudController
     def validate_top_level_web_process!
       memory_error = validate_byte_format(memory, 'Memory')
       disk_error = validate_byte_format(disk_quota, 'Disk quota')
-      add_process_error!(memory_error, 'web') if memory_error
-      add_process_error!(disk_error, 'web') if disk_error
+      add_process_error!(memory_error, ProcessTypes::WEB) if memory_error
+      add_process_error!(disk_error, ProcessTypes::WEB) if disk_error
     end
 
     def validate_buildpack_and_buildpacks_combination!
