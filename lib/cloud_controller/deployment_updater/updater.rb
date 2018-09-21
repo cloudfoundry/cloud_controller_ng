@@ -44,8 +44,7 @@ module VCAP::CloudController
           app.lock!
           deploying_web_process.lock!
 
-          prior_webish_process = app.processes.
-                                 select(&:web?).
+          prior_webish_process = web_processes.
                                  reject { |p| p.guid == deploying_web_process.guid }.
                                  max_by(&:created_at)
           prior_webish_process.lock!
@@ -87,7 +86,11 @@ module VCAP::CloudController
       end
 
       def oldest_web_process
-        @oldest_web_process ||= app.oldest_webish_process
+        @oldest_web_process ||= web_processes.min_by(&:created_at)
+      end
+
+      def web_processes
+        app.processes.select(&:web?)
       end
 
       def scale_down_oldest_web_process
@@ -122,8 +125,7 @@ module VCAP::CloudController
       end
 
       def cleanup_webish_processes_except(protected_process)
-        app.processes.
-          select(&:web?).
+        web_processes.
           reject { |p| p.guid == protected_process.guid }.
           each { |p| cleanup_webish_process(p) }
       end

@@ -373,18 +373,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#oldest_webish_process' do
-      let(:a_day_ago) { Time.now - 1.day }
-      let!(:web_process) { ProcessModel.make(app: app_model, type: 'web', created_at: a_day_ago) }
-      let!(:webish_process_1) { ProcessModel.make(app: app_model, type: 'web-deployment-guid-1') }
-      let!(:webish_process_2) { ProcessModel.make(app: app_model, type: 'web-deployment-guid-2') }
-      let!(:worker_process) { ProcessModel.make(app: app_model, type: 'worker') }
-
-      it 'returns the oldest webish processes' do
-        expect(app_model.reload.oldest_webish_process).to eq(web_process)
-      end
-    end
-
     describe '#deploying?' do
       it 'returns false when the app has no deployments' do
         expect(app_model.deploying?).to be(false)

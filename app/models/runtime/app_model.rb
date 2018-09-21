@@ -85,12 +85,6 @@ module VCAP::CloudController
       desired_state == ProcessModel::STOPPED
     end
 
-    def oldest_webish_process
-      processes.
-        select { |p| ProcessTypes.webish?(p.type) }.
-        min_by(&:created_at)
-    end
-
     def deploying?
       deployments.any?(&:deploying?)
     end
