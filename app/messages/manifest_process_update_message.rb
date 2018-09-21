@@ -31,7 +31,7 @@ module VCAP::CloudController
 
     validates :health_check_invocation_timeout,
       allow_nil: true,
-      numericality: { only_integer: true, greater_than_or_equal_to: 1 }, 
+      numericality: { only_integer: true, greater_than_or_equal_to: 1 },
       if: proc { |a| a.requested?(:health_check_invocation_timeout) }
 
     validates :timeout,

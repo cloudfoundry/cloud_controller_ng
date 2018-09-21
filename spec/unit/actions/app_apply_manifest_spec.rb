@@ -430,7 +430,6 @@ module VCAP::CloudController
               app_apply_manifest.apply(app.guid, message)
               expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
               expect(process_update).to have_received(:update).with(process, manifest_process_update_message, ManifestStrategy)
-              expect(process.reload.health_check_invocation_timeout).to eq(47)
             end
           end
         end

@@ -148,10 +148,10 @@ module VCAP::CloudController
             expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
           end
         end
-        
+
         context 'when health check timeout is 0' do
           let(:params) { { health_check_invocation_timeout: 0 } }
-          
+
           it 'is not valid' do
             expect(message).not_to be_valid
             expect(message.errors.count).to eq(1)
