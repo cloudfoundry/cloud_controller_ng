@@ -78,6 +78,7 @@ RSpec.describe AppManifestsController, type: :controller do
           { 'applications' => [{ 'name' => 'blah', 'instances' => -1, 'memory' => '10NOTaUnit',
                                  'command' => '', 'env' => 42,
                                  'health-check-http-endpoint' => '/endpoint',
+                                 'health-check-invocation-timeout' => -22,
                                  'health-check-type' => 'foo',
                                  'timeout' => -42,
                                  'random-route' => -42,
@@ -89,7 +90,7 @@ RSpec.describe AppManifestsController, type: :controller do
           post :apply_manifest, guid: app_model.guid, body: request_body
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
-          expect(errors.size).to eq(9)
+          expect(errors.size).to eq(10)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
               'detail' => 'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
@@ -113,6 +114,10 @@ RSpec.describe AppManifestsController, type: :controller do
               'code' => 10008
             }, {
               'detail' => 'Process "web": Health check type must be "port", "process", or "http"',
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }, {
+              'detail' => 'Process "web": Health check invocation timeout must be greater than or equal to 1',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
@@ -336,6 +341,27 @@ RSpec.describe AppManifestsController, type: :controller do
         expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.health_check_http_endpoint).to eq '/health'
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes a health-check-invocation-timeout' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'health-check-invocation-timeout' => 55 }] }
+      end
+
+      it 'sets the command' do
+        post :apply_manifest, guid: app_model.guid, body: request_body
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.health_check_invocation_timeout).to eq '55'
           expect(action).to eq app_apply_manifest_action
         end
       end

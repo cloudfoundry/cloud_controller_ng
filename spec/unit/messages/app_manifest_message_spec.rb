@@ -485,6 +485,7 @@ module VCAP::CloudController
                 'disk_quota' => '100',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
+                'health_check_invocation_timeout' => 'yucca',
                 'command' => '',
                 'timeout' => 'yam'
               }
@@ -497,16 +498,17 @@ module VCAP::CloudController
                 'disk_quota' => '100',
                 'health_check_type' => 'sweet_potato',
                 'health_check_http_endpoint' => '/healthcheck_potato',
+                'health_check_invocation_timeout' => 'yucca',
                 'command' => '',
                 'timeout' => 'yam'
               }
             end
-            let(:params) { { processes: [process1, process2] } }
+            let(:params) do { processes: [process1, process2] } end
 
             it 'includes the type of the process in the error message' do
               message = AppManifestMessage.create_from_yml(params)
               expect(message).to_not be_valid
-              expect(message.errors.count).to eq(14)
+              expect(message.errors.count).to eq(16)
               expect(message.errors.full_messages).to match_array([
                 'Process "type1": Command must be between 1 and 4096 characters',
                 'Process "type1": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
@@ -515,6 +517,7 @@ module VCAP::CloudController
                 'Process "type1": Timeout is not a number',
                 'Process "type1": Health check type must be "port", "process", or "http"',
                 'Process "type1": Health check type must be "http" to set a health check HTTP endpoint',
+                'Process "type1": Health check invocation timeout is not a number',
                 'Process "type2": Command must be between 1 and 4096 characters',
                 'Process "type2": Disk quota must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
                 'Process "type2": Instances is not a number',
@@ -522,6 +525,7 @@ module VCAP::CloudController
                 'Process "type2": Timeout is not a number',
                 'Process "type2": Health check type must be "port", "process", or "http"',
                 'Process "type2": Health check type must be "http" to set a health check HTTP endpoint',
+                'Process "type2": Health check invocation timeout is not a number',
               ])
             end
           end
@@ -983,6 +987,7 @@ module VCAP::CloudController
             'command' => command,
             'health-check-type' => health_check_type,
             'health-check-http-endpoint' => health_check_http_endpoint,
+            'health-check-invocation-timeout' => health_check_invocation_timeout,
             'timeout' => health_check_timeout
           }
         end
@@ -990,6 +995,7 @@ module VCAP::CloudController
         let(:command) { 'new-command' }
         let(:health_check_type) { 'http' }
         let(:health_check_http_endpoint) { '/endpoint' }
+        let(:health_check_invocation_timeout) { 1361 }
         let(:health_check_timeout) { 10 }
 
         context 'when new properties are specified' do
@@ -1001,6 +1007,7 @@ module VCAP::CloudController
             expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
             expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/endpoint')
             expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
+            expect(message.manifest_process_update_messages.first.health_check_invocation_timeout).to eq(1361)
           end
         end
 
@@ -1025,6 +1032,18 @@ module VCAP::CloudController
               expect(message).to be_valid
               expect(message.manifest_process_update_messages.length).to eq(1)
               expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
+            end
+          end
+
+          context 'health check invocation timeout without other health check parameters' do
+            let(:health_check_invocation_timeout) { 2493 }
+            let(:parsed_yaml) { { "health_check_invocation_timeout": health_check_invocation_timeout } }
+
+            it 'sets the health check timeout in the message' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_invocation_timeout).to eq(2493)
             end
           end
 

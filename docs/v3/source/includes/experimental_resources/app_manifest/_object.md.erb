@@ -27,6 +27,7 @@ applications:
     disk_quota: 512M
     health-check-http-endpoint: /healthcheck
     health-check-type: http
+    health-check-invocation-timeout: 10
     instances: 3
     memory: 500M
     timeout: 10
@@ -66,6 +67,7 @@ Field | Description
 **command** | The command used to start the process. This overrides start commands from [Procfiles](#procfiles) and buildpacks.
 **disk_quota** | The disk limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
 **health-check-http-endpoint** | Endpoint called to determine if the app is healthy.
+**health-check-invocation-timeout** | The timeout in seconds for individual health check requests for http and port health checks.
 **health-check-type** | Type of health check to perform. `none` is deprecated and an alias to `process`.
 **instances** | The number of instances to run.
 **memory** | The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.

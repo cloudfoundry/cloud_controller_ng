@@ -17,6 +17,8 @@ module VCAP::CloudController
       :disk_quota,
       :env,
       :health_check_http_endpoint,
+      :health_check_invocation_timeout,
+      :health_check_timeout,
       :health_check_type,
       :timeout,
       :instances,
@@ -154,6 +156,7 @@ module VCAP::CloudController
       mapping[:command] = command || 'null' if requested?(:command)
       mapping[:health_check_http_endpoint] = health_check_http_endpoint if requested?(:health_check_http_endpoint)
       mapping[:timeout] = timeout if requested?(:timeout)
+      mapping[:health_check_invocation_timeout] = health_check_invocation_timeout if requested?(:health_check_invocation_timeout)
 
       if requested?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(health_check_type)
@@ -166,12 +169,15 @@ module VCAP::CloudController
       mapping = {}
       mapping[:command] = params[:command] || 'null' if params.key?(:command)
       mapping[:health_check_http_endpoint] = params[:health_check_http_endpoint] if params.key?(:health_check_http_endpoint)
+      mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
+      mapping[:health_check_invocation_timeout] = params[:health_check_invocation_timeout] if params.key?(:health_check_invocation_timeout)
       mapping[:timeout] = params[:timeout] if params.key?(:timeout)
       mapping[:type] = params[:type]
 
       if params.key?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(params[:health_check_type])
         mapping[:health_check_http_endpoint] ||= '/' if params[:health_check_type] == HealthCheckTypes::HTTP
+        mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       end
       mapping
     end

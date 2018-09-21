@@ -120,6 +120,46 @@ module VCAP::CloudController
         end
       end
 
+      context 'when health check timeout is a number' do
+        let(:params) { { health_check_invocation_timeout: 333 } }
+
+        it 'is valid' do
+          expect(message).to be_valid
+        end
+      end
+
+      context 'when health check timeout is not a number' do
+        let(:params) { { health_check_invocation_timeout: 'velma' } }
+
+        it 'is not valid' do
+          expect(message).not_to be_valid
+          expect(message.errors.count).to eq(1)
+          expect(message.errors[:health_check_invocation_timeout]).to include('is not a number')
+        end
+      end
+
+      context 'when health check timeout is not a valid number' do
+        context 'when health check timeout is negative' do
+          let(:params) { { health_check_invocation_timeout: -10_000 } }
+
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+          end
+        end
+        
+        context 'when health check timeout is 0' do
+          let(:params) { { health_check_invocation_timeout: 0 } }
+          
+          it 'is not valid' do
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors[:health_check_invocation_timeout]).to include('must be greater than or equal to 1')
+          end
+        end
+      end
+
       describe 'timeout' do
         context 'when timeout is not an number' do
           let(:params) { { timeout: 'hello there' } }
