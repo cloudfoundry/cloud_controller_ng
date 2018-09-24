@@ -65,11 +65,13 @@ class RouteMappingsController < ApplicationController
     route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)
 
-    route_mapping.update(weight: message.weight)
-    begin
-      Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
-    rescue Copilot::Adapter::CopilotUnavailable => e
-      logger.error("failed communicating with copilot backend: #{e.message}")
+    if message.requested?(:weight)
+      route_mapping.update(weight: message.weight)
+      begin
+        Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
+      rescue Copilot::Adapter::CopilotUnavailable => e
+        logger.error("failed communicating with copilot backend: #{e.message}")
+      end
     end
 
     render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)

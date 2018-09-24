@@ -171,6 +171,18 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
     end
 
+    context 'when there is no weight in the patch' do
+      let(:req_body) do
+        {}
+      end
+
+      it 'does not change the weight' do
+        patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+        expect(response.status).to eq(201)
+        expect(route_mapping.reload.weight).to eq(original_weight)
+      end
+    end
+
     context 'when copilot is enabled' do
       before do
         TestConfig.override(copilot: { enabled: true })
