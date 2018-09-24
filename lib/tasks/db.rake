@@ -104,11 +104,6 @@ namespace :db do
     rollback(number_to_rollback)
   end
 
-  namespace :migrate do
-    desc 'Rollback the most recent migration and remigrate to current'
-    task redo: [:rollback, :migrate]
-  end
-
   namespace :dev do
     desc 'Migrate the database set in spec/support/bootstrap/db_config'
     task :migrate do
