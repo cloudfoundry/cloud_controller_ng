@@ -31,28 +31,8 @@ module VCAP::CloudController
         }.to raise_error(Sequel::ValidationFailed, /must be between 1 and 128/)
       end
 
-      context 'when copilot is disabled', isolation: :truncation do
+      describe 'copilot integration', isolation: :truncation do
         before do
-          TestConfig.override({ copilot: { enabled: false } })
-        end
-
-        context 'on delete' do
-          it 'does not talk to copilot' do
-            route_mapping = RouteMappingModel.make({
-              app: app_model,
-              route: route,
-              process_type: 'buckeyes',
-              app_port: -1
-            })
-            expect(Copilot::Adapter).to_not receive(:unmap_route)
-            route_mapping.destroy
-          end
-        end
-      end
-
-      context 'when copilot is enabled', isolation: :truncation do
-        before do
-          TestConfig.override({ copilot: { enabled: true } })
           allow(Copilot::Adapter).to receive(:unmap_route)
         end
 

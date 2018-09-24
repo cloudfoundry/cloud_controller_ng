@@ -27,7 +27,7 @@ module VCAP::CloudController
       super
 
       db.after_commit do
-        Copilot::Adapter.unmap_route(self) if Config.config.get(:copilot, :enabled)
+        Copilot::Adapter.unmap_route(self)
       end
     end
 

@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       describe '#create_route' do
         before do
-          allow(Copilot::Adapter).to receive(:new)
+          allow(Copilot::Adapter).to receive(:create_route)
           allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
           allow(route_event_repo).to receive(:record_route_create)
         end
@@ -45,37 +45,15 @@ module VCAP::CloudController
           end
         end
 
-        context 'when copilot is disabled' do
-          it 'creates a route without notifying copilot' do
-            expect {
-              route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
+        it 'creates a route and notifies copilot' do
+          expect {
+            route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
 
-              expect(Copilot::Adapter).not_to have_received(:new)
-              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
-              expect(route.host).to eq(host)
-              expect(route.path).to eq(path)
-            }.to change { Route.count }.by(1)
-          end
-        end
-
-        context 'when copilot is enabled' do
-          before do
-            TestConfig.override(copilot: { enabled: true })
-            allow(Copilot::Adapter).to receive(:create_route)
-            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-            allow(route_event_repo).to receive(:record_route_create)
-          end
-
-          it 'creates a route and notifies copilot' do
-            expect {
-              route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
-
-              expect(Copilot::Adapter).to have_received(:create_route).with(route)
-              expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
-              expect(route.host).to eq(host)
-              expect(route.path).to eq(path)
-            }.to change { Route.count }.by(1)
-          end
+            expect(Copilot::Adapter).to have_received(:create_route).with(route)
+            expect(route_event_repo).to have_received(:record_route_create).with(route, user_audit_info, route_hash, manifest_triggered: false)
+            expect(route.host).to eq(host)
+            expect(route.path).to eq(path)
+          }.to change { Route.count }.by(1)
         end
       end
     end

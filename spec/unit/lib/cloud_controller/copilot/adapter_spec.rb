@@ -12,6 +12,7 @@ module VCAP::CloudController
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
       allow(Steno).to receive(:logger).and_return(fake_logger)
+      TestConfig.override(copilot: { enabled: true })
     end
 
     describe '#create_route' do
@@ -47,6 +48,17 @@ module VCAP::CloudController
         it 'logs the error' do
           adapter.create_route(route)
           expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
+        end
+      end
+
+      context 'when copilot is disabled' do
+        before do
+          TestConfig.override(copilot: { enabled: false })
+        end
+
+        it 'does not actually talk to copilot' do
+          adapter.create_route(route)
+          expect(copilot_client).not_to have_received(:upsert_route)
         end
       end
     end
@@ -89,6 +101,17 @@ module VCAP::CloudController
           expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
+
+      context 'when copilot is disabled' do
+        before do
+          TestConfig.override(copilot: { enabled: false })
+        end
+
+        it 'does not actually talk to copilot' do
+          adapter.map_route(route_mapping)
+          expect(copilot_client).not_to have_received(:map_route)
+        end
+      end
     end
 
     describe '#unmap_route' do
@@ -124,6 +147,17 @@ module VCAP::CloudController
           expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
+
+      context 'when copilot is disabled' do
+        before do
+          TestConfig.override(copilot: { enabled: false })
+        end
+
+        it 'does not actually talk to copilot' do
+          adapter.unmap_route(route_mapping)
+          expect(copilot_client).not_to have_received(:unmap_route)
+        end
+      end
     end
 
     describe '#upsert_capi_diego_process_association' do
@@ -153,6 +187,17 @@ module VCAP::CloudController
           expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
+
+      context 'when copilot is disabled' do
+        before do
+          TestConfig.override(copilot: { enabled: false })
+        end
+
+        it 'does not actually talk to copilot' do
+          adapter.upsert_capi_diego_process_association(process)
+          expect(copilot_client).not_to have_received(:upsert_capi_diego_process_association)
+        end
+      end
     end
 
     describe '#delete_capi_diego_process_association' do
@@ -174,6 +219,17 @@ module VCAP::CloudController
         it 'logs the error' do
           adapter.delete_capi_diego_process_association(process)
           expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
+        end
+      end
+
+      context 'when copilot is disabled' do
+        before do
+          TestConfig.override(copilot: { enabled: false })
+        end
+
+        it 'does not actually talk to copilot' do
+          adapter.delete_capi_diego_process_association(process)
+          expect(copilot_client).not_to have_received(:delete_capi_diego_process_association)
         end
       end
     end

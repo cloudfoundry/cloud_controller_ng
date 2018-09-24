@@ -11,7 +11,7 @@ module VCAP::CloudController
           route = Route.create_from_hash(route_hash)
           @access_validator.validate_access(:create, route)
 
-          Copilot::Adapter.create_route(route) if Config.config.get(:copilot, :enabled)
+          Copilot::Adapter.create_route(route)
 
           route
         end

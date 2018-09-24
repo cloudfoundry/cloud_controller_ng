@@ -74,6 +74,8 @@ module VCAP::CloudController
         end
 
         def with_guardrails
+          return unless Config.config.get(:copilot, :enabled)
+
           yield
         rescue StandardError => e
           logger.error("failed communicating with copilot backend: #{e.message}")

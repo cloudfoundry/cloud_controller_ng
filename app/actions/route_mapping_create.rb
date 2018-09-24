@@ -30,7 +30,7 @@ module VCAP::CloudController
         RouteMappingModel.db.transaction do
           route_mapping.save
           route_handler.update_route_information
-          Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
+          Copilot::Adapter.map_route(route_mapping)
 
           Repositories::AppEventRepository.new.record_map_route(
             process.app,

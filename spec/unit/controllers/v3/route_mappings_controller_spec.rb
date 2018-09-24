@@ -183,9 +183,8 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
     end
 
-    context 'when copilot is enabled' do
+    describe 'copilot integration' do
       before do
-        TestConfig.override(copilot: { enabled: true })
         allow(VCAP::CloudController::Copilot::Adapter).to receive(:map_route)
       end
 

@@ -42,9 +42,8 @@ module VCAP::CloudController
         expect(route_handler).to have_received(:update_route_information)
       end
 
-      context 'when copilot is enabled' do
+      describe 'copilot integration' do
         before do
-          TestConfig.override(copilot: { enabled: true })
           allow(Copilot::Adapter).to receive(:map_route)
         end
 
@@ -55,6 +54,7 @@ module VCAP::CloudController
           }.to change { RouteMappingModel.count }.by(1)
         end
       end
+
       describe 'recording events' do
         let(:event_repository) { double(Repositories::AppEventRepository) }
 

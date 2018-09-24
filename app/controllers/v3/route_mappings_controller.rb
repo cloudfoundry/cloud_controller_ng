@@ -67,7 +67,7 @@ class RouteMappingsController < ApplicationController
 
     if message.requested?(:weight)
       route_mapping.update(weight: message.weight)
-      Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
+      Copilot::Adapter.map_route(route_mapping)
     end
 
     render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)

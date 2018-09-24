@@ -38,9 +38,8 @@ module VCAP::CloudController
           expect(route_handler).to have_received(:update_route_information)
         end
 
-        context 'when copilot is enabled' do
+        describe 'copilot integration' do
           before do
-            TestConfig.override(copilot: { enabled: true })
             allow(Copilot::Adapter).to receive(:map_route)
           end
 

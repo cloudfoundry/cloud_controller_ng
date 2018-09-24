@@ -29,58 +29,38 @@ module VCAP::CloudController
         before do
           allow(Copilot::Adapter).to receive(:new)
           allow(access_validator).to receive(:validate_access) { |_, route| access_validator_route_arg = route }
+          allow(Copilot::Adapter).to receive(:create_route)
         end
 
-        context 'when copilot is disabled' do
-          it 'creates a route without notifying copilot' do
-            expect {
-              route = route_create.create_route(route_hash: route_hash)
-
-              expect(access_validator).to have_received(:validate_access).with(:create, instance_of(Route))
-              expect(access_validator_route_arg).to eq(route)
-              expect(Copilot::Adapter).not_to have_received(:new)
-              expect(route.host).to eq(host)
-              expect(route.path).to eq(path)
-            }.to change { Route.count }.by(1)
-          end
-
-          context 'when access validation fails' do
-            before do
-              allow(access_validator).to receive(:validate_access).and_raise('some-exception')
-            end
-
-            it 'should not create a route in the db' do
-              expect {
-                begin
-                  route_create.create_route(route_hash: route_hash)
-                rescue
-                end
-              }.not_to change { Route.count }
-            end
-
-            it 'should bubble up the exception' do
-              expect { route_create.create_route(route_hash: route_hash) }.to raise_error('some-exception')
-            end
-          end
-        end
-
-        context 'when copilot is enabled' do
+        context 'when access validation fails' do
           before do
-            TestConfig.override(copilot: { enabled: true })
-            allow(Copilot::Adapter).to receive(:create_route)
+            allow(access_validator).to receive(:validate_access).and_raise('some-exception')
           end
 
-          it 'creates a route and notifies copilot' do
+          it 'should not create a route in the db' do
             expect {
-              route = route_create.create_route(route_hash: route_hash)
-
-              expect(access_validator).to have_received(:validate_access).with(:create, instance_of(Route))
-              expect(access_validator_route_arg).to eq(route)
-              expect(Copilot::Adapter).to have_received(:create_route).with(route)
-              expect(route.host).to eq(host)
-              expect(route.path).to eq(path)
-            }.to change { Route.count }.by(1)
+              begin
+                route_create.create_route(route_hash: route_hash)
+              rescue
+              end
+            }.not_to change { Route.count }
           end
+
+          it 'should bubble up the exception' do
+            expect { route_create.create_route(route_hash: route_hash) }.to raise_error('some-exception')
+          end
+        end
+
+        it 'creates a route and notifies copilot' do
+          expect {
+            route = route_create.create_route(route_hash: route_hash)
+
+            expect(access_validator).to have_received(:validate_access).with(:create, instance_of(Route))
+            expect(access_validator_route_arg).to eq(route)
+            expect(Copilot::Adapter).to have_received(:create_route).with(route)
+            expect(route.host).to eq(host)
+            expect(route.path).to eq(path)
+          }.to change { Route.count }.by(1)
         end
       end
     end
