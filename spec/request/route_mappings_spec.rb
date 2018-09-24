@@ -79,7 +79,7 @@ RSpec.describe 'Route Mappings' do
 
   describe 'PATCH /v3/route_mappings/:route_mapping_guid' do
     let(:original_weight) { 55 }
-    let(:updated_weight) { original_weight }
+    let(:updated_weight) { original_weight + 3 }
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, weight: original_weight, app_port: 8080) }
 
     it 'updates the route mapping' do
