@@ -44,6 +44,7 @@ require 'cloud_controller/db_migrator'
 require 'cloud_controller/diagnostics'
 require 'cloud_controller/steno_configurer'
 require 'cloud_controller/constants'
+require 'cloud_controller/params_hashifier'
 
 require 'controllers/base/front_controller'
 

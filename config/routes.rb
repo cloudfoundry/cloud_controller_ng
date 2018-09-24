@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   patch '/apps/:guid', to: 'apps_v3#update'
   delete '/apps/:guid', to: 'apps_v3#destroy'
   post '/apps/:guid/actions/start', to: 'apps_v3#start'
-  post '/apps/:guid/actions``/stop', to: 'apps_v3#stop'
+  post '/apps/:guid/actions/stop', to: 'apps_v3#stop'
   post '/apps/:guid/actions/restart', to: 'apps_v3#restart'
   get '/apps/:guid/env', to: 'apps_v3#show_env'
   get '/apps/:guid/builds', to: 'apps_v3#builds'

@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     def initialize(params)
-      params = params ? params.to_unsafe_hash : {}
+      params = params ? params.deep_symbolize_keys : {}
       @requested_keys   = params.keys
       disallowed_params = params.slice!(*allowed_keys)
       @extra_keys       = disallowed_params.keys

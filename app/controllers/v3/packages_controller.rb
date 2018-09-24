@@ -129,7 +129,7 @@ class PackagesController < ApplicationController
   end
 
   def create_copy
-    app_guid = HashUtils.dig(params, :body, :relationships, :app, :data, :guid)
+    app_guid = params.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
     unprocessable_app! unless destination_app &&
       permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid) &&

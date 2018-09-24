@@ -34,6 +34,7 @@ end
 class ApplicationController < ActionController::Base
   include VCAP::CloudController
   include V3ErrorsHelper
+  include VCAP::CloudController::ParamsHashifier
 
   UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
@@ -45,6 +46,7 @@ class ApplicationController < ActionController::Base
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
   before_action :null_coalesce_body
+  before_action :hashify_params
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated

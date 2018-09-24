@@ -3,9 +3,14 @@ require 'action_controller/railtie'
 class Application < ::Rails::Application
   config.exceptions_app = self.routes
 
-  # config.middleware.swap(ActionDispatch::ParamsParser, ActionDispatch::ParamsParser, {
-  #   Mime::Type.lookup('application/x-yaml') => lambda { |body| YAML.safe_load(body).with_indifferent_access }
-  # })
+  # For Rails 5 / Rack 2 - this is how to add a new parser
+  original_parsers = ActionDispatch::Request.parameter_parsers
+  yaml_parser = lambda { |body| YAML.safe_load(body).with_indifferent_access }
+  new_parsers = original_parsers.merge({
+    Mime::Type.lookup('application/x-yaml') => yaml_parser,
+    Mime::Type.lookup('text/yaml') => yaml_parser,
+  })
+  ActionDispatch::Request.parameter_parsers = new_parsers
 
   config.middleware.delete ActionDispatch::Session::CookieStore
   config.middleware.delete ActionDispatch::Cookies

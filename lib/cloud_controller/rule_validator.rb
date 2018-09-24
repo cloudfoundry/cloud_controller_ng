@@ -37,7 +37,7 @@ module CloudController
       return false if address_list.length > 2
 
       address_list.each do |address|
-        NetAddr::CIDR.create(address)
+        NetAddr::IPv4Net.parse(address)
       end
 
       if address_list.length > 1
