@@ -29,71 +29,11 @@ namespace :db do
     end
   end
 
-  def for_each_database
-    if ENV['DB'] || ENV['DB_CONNECTION_STRING']
-      RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge(database: DbConfig.new.connection_string))
-      yield
-    else
-      %w(postgres mysql).each do |db_type|
-        RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge(database: DbConfig.new(db_type: db_type).connection_string))
-        puts "Using #{db_type}"
-        yield
-
-        DbConfig.reset_environment
-      end
-    end
-  end
-
-  def migrate
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
-    db_logger = Steno.logger('cc.db.migrations')
-    DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
-  end
-
   desc 'Perform Sequel migration to database'
   task :migrate do
     RakeConfig.context = :migrate
 
     migrate
-  end
-
-  def rollback(number_to_rollback)
-    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
-    db_logger = Steno.logger('cc.db.migrations')
-    DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
-  end
-
-  def parse_db_connection_string
-    host = port = passenv = ''
-    case ENV['DB']
-    when 'postgres'
-      user = '-U postgres'
-      pass = ''
-      if ENV['DB_CONNECTION_STRING']
-        uri = URI.parse(ENV['DB_CONNECTION_STRING'])
-        host = "-h #{uri.host}"
-        port = "-p #{uri.port}" if uri.port
-        if uri.user
-          user = "-U #{uri.user}"
-        end
-        passenv = "PGPASSWORD=#{uri.password}" if uri.password
-      end
-    when 'mysql'
-      user = '-u root'
-      pass = '--password=password'
-      if ENV['DB_CONNECTION_STRING']
-        uri = URI.parse(ENV['DB_CONNECTION_STRING'])
-        host = "-h #{uri.host}"
-        port = "-P #{uri.port}" if uri.port
-        if uri.user
-          user = "-u #{uri.user}"
-        end
-        if uri.password
-          pass = "--password=#{uri.password}"
-        end
-      end
-    end
-    [host, port, user, pass, passenv]
   end
 
   desc 'Rollback migrations to the database (one migration by default)'
@@ -102,26 +42,6 @@ namespace :db do
 
     number_to_rollback = (args[:number_to_rollback] || 1).to_i
     rollback(number_to_rollback)
-  end
-
-  namespace :dev do
-    desc 'Migrate the database set in spec/support/bootstrap/db_config'
-    task :migrate do
-      RakeConfig.context = :migrate
-
-      require_relative '../../spec/support/bootstrap/db_config'
-
-      for_each_database { migrate }
-    end
-
-    desc 'Rollback the database migration set in spec/support/bootstrap/db_config'
-    task :rollback, [:number_to_rollback] do |_, args|
-      RakeConfig.context = :migrate
-
-      require_relative '../../spec/support/bootstrap/db_config'
-      number_to_rollback = (args[:number_to_rollback] || 1).to_i
-      for_each_database { rollback(number_to_rollback) }
-    end
   end
 
   desc 'Randomly select between postgres and mysql'
@@ -181,11 +101,6 @@ namespace :db do
   desc 'Drop and create the database set in spec/support/bootstrap/db_config'
   task recreate: %w[drop create]
 
-  namespace :parallel do
-    desc 'Drop and create the database set in spec/support/bootstrap/db_config in parallel'
-    task recreate: %w[parallel:drop parallel:create]
-  end
-
   desc 'Seed the database'
   task :seed do
     RakeConfig.context = :api
@@ -228,6 +143,91 @@ namespace :db do
         puts e.class
         puts e.message
         exit 1
+      end
+    end
+  end
+
+  namespace :dev do
+    desc 'Migrate the database set in spec/support/bootstrap/db_config'
+    task :migrate do
+      RakeConfig.context = :migrate
+
+      require_relative '../../spec/support/bootstrap/db_config'
+
+      for_each_database { migrate }
+    end
+
+    desc 'Rollback the database migration set in spec/support/bootstrap/db_config'
+    task :rollback, [:number_to_rollback] do |_, args|
+      RakeConfig.context = :migrate
+
+      require_relative '../../spec/support/bootstrap/db_config'
+      number_to_rollback = (args[:number_to_rollback] || 1).to_i
+      for_each_database { rollback(number_to_rollback) }
+    end
+  end
+
+  namespace :parallel do
+    desc 'Drop and create the database set in spec/support/bootstrap/db_config in parallel'
+    task recreate: %w[parallel:drop parallel:create]
+  end
+
+  def migrate
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    db_logger = Steno.logger('cc.db.migrations')
+    DBMigrator.from_config(RakeConfig.config, db_logger).apply_migrations
+  end
+
+  def rollback(number_to_rollback)
+    Steno.init(Steno::Config.new(sinks: [Steno::Sink::IO.new(STDOUT)]))
+    db_logger = Steno.logger('cc.db.migrations')
+    DBMigrator.from_config(RakeConfig.config, db_logger).rollback(number_to_rollback)
+  end
+
+  def parse_db_connection_string
+    host = port = passenv = ''
+    case ENV['DB']
+    when 'postgres'
+      user = '-U postgres'
+      pass = ''
+      if ENV['DB_CONNECTION_STRING']
+        uri = URI.parse(ENV['DB_CONNECTION_STRING'])
+        host = "-h #{uri.host}"
+        port = "-p #{uri.port}" if uri.port
+        if uri.user
+          user = "-U #{uri.user}"
+        end
+        passenv = "PGPASSWORD=#{uri.password}" if uri.password
+      end
+    when 'mysql'
+      user = '-u root'
+      pass = '--password=password'
+      if ENV['DB_CONNECTION_STRING']
+        uri = URI.parse(ENV['DB_CONNECTION_STRING'])
+        host = "-h #{uri.host}"
+        port = "-P #{uri.port}" if uri.port
+        if uri.user
+          user = "-u #{uri.user}"
+        end
+        if uri.password
+          pass = "--password=#{uri.password}"
+        end
+      end
+    end
+    [host, port, user, pass, passenv]
+  end
+
+  def for_each_database
+    if ENV['DB'] || ENV['DB_CONNECTION_STRING']
+      RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge(database: DbConfig.new.connection_string))
+      yield
+    else
+      %w(postgres mysql).each do |db_type|
+        RakeConfig.config.set(:db, RakeConfig.config.get(:db).merge(database: DbConfig.new(db_type: db_type).connection_string))
+        puts "Using #{db_type}"
+        yield
+
+        DbConfig.reset_environment
       end
     end
   end
