@@ -124,6 +124,7 @@ namespace :db do
     end
   end
 
+  desc 'Randomly select between postgres and mysql'
   task :pick do
     unless ENV['DB_CONNECTION_STRING']
       ENV['DB'] ||= %w[mysql postgres].sample
@@ -177,9 +178,11 @@ namespace :db do
     end
   end
 
+  desc 'Drop and create the database set in spec/support/bootstrap/db_config'
   task recreate: %w[drop create]
 
   namespace :parallel do
+    desc 'Drop and create the database set in spec/support/bootstrap/db_config in parallel'
     task recreate: %w[parallel:drop parallel:create]
   end
 
