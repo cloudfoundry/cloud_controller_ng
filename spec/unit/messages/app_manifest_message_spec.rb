@@ -1059,15 +1059,26 @@ module VCAP::CloudController
             end
           end
 
-          context 'when health check type is not http and endpoint is not specified' do
+          context 'when health check type is port' do
             let(:parsed_yaml) { { 'health-check-type' => 'port' } }
 
-            it 'does not default endpoint to "/"' do
+            it 'does not set the endpoint' do
               message = AppManifestMessage.create_from_yml(parsed_yaml)
               expect(message).to be_valid
               expect(message.manifest_process_update_messages.length).to eq(1)
               expect(message.manifest_process_update_messages.first.health_check_type).to eq('port')
               expect(message.manifest_process_update_messages.first.health_check_endpoint).to be_nil
+            end
+
+            it 'applies the health check invocation timeout if supplied' do
+              parsed_yaml['health_check_invocation_timeout'] = 2493
+
+              puts parsed_yaml
+
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.length).to eq(1)
+              expect(message.manifest_process_update_messages.first.health_check_invocation_timeout).to eq(2493)
             end
           end
 
