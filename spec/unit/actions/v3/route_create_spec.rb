@@ -76,24 +76,6 @@ module VCAP::CloudController
               expect(route.path).to eq(path)
             }.to change { Route.count }.by(1)
           end
-
-          context 'when copilot handler raises an exception' do
-            before do
-              allow(Copilot::Adapter).to receive(:create_route).and_raise(Copilot::Adapter::CopilotUnavailable.new('some-error'))
-              allow(logger).to receive(:error)
-            end
-
-            it 'creates a route and logs an error' do
-              expect {
-                route = RouteCreate.create_route(route_hash: route_hash, logger: logger, user_audit_info: user_audit_info)
-
-                expect(Copilot::Adapter).to have_received(:create_route).with(route)
-                expect(logger).to have_received(:error).with('failed communicating with copilot backend: some-error')
-                expect(route.host).to eq(host)
-                expect(route.path).to eq(path)
-              }.to change { Route.count }.by(1)
-            end
-          end
         end
       end
     end

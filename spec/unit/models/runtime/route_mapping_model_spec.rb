@@ -71,22 +71,6 @@ module VCAP::CloudController
             route_mapping.destroy
           end
 
-          context 'when there is an error communicating with copilot' do
-            let(:logger) { instance_double(Steno::Logger, error: nil) }
-
-            it 'logs and swallows the error' do
-              allow(Copilot::Adapter).to receive(:unmap_route).and_raise(Copilot::Adapter::CopilotUnavailable.new('some-error'))
-              allow(Steno).to receive(:logger).and_return(logger)
-
-              expect {
-                route_mapping.destroy
-
-                expect(Copilot::Adapter).to have_received(:unmap_route).with(route_mapping)
-                expect(logger).to have_received(:error).with(/failed communicating.*some-error/)
-              }.to change { RouteMappingModel.count }.by(-1)
-            end
-          end
-
           context 'when the delete is part of a transaction' do
             it 'only executes after the transaction is completed' do
               RouteMappingModel.db.transaction do

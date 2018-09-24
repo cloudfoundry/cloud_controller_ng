@@ -67,11 +67,7 @@ class RouteMappingsController < ApplicationController
 
     if message.requested?(:weight)
       route_mapping.update(weight: message.weight)
-      begin
-        Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
-      rescue Copilot::Adapter::CopilotUnavailable => e
-        logger.error("failed communicating with copilot backend: #{e.message}")
-      end
+      Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
     end
 
     render status: :created, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)

@@ -27,11 +27,7 @@ module VCAP::CloudController
       super
 
       db.after_commit do
-        begin
-          Copilot::Adapter.unmap_route(self) if Config.config.get(:copilot, :enabled)
-        rescue Copilot::Adapter::CopilotUnavailable => e
-          logger.error("failed communicating with copilot backend: #{e.message}")
-        end
+        Copilot::Adapter.unmap_route(self) if Config.config.get(:copilot, :enabled)
       end
     end
 

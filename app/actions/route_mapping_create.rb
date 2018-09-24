@@ -30,11 +30,7 @@ module VCAP::CloudController
         RouteMappingModel.db.transaction do
           route_mapping.save
           route_handler.update_route_information
-          begin
-            Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
-          rescue Copilot::Adapter::CopilotUnavailable => e
-            logger.error("failed communicating with copilot backend: #{e.message}")
-          end
+          Copilot::Adapter.map_route(route_mapping) if Config.config.get(:copilot, :enabled)
 
           Repositories::AppEventRepository.new.record_map_route(
             process.app,

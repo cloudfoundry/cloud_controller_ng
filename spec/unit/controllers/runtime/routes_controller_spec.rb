@@ -217,31 +217,6 @@ module VCAP::CloudController
           expect(created_route.host).to eq('example')
           expect(Copilot::Adapter).to have_received(:create_route)
         end
-
-        context 'when the call to copilot fails' do
-          let(:logger) { instance_double(Steno::Logger) }
-
-          before do
-            allow(Copilot::Adapter).to receive(:create_route).and_raise(Copilot::Adapter::CopilotUnavailable.new('something'))
-            allow_any_instance_of(RoutesController).to receive(:logger).and_return(logger)
-            allow(logger).to receive(:debug)
-          end
-
-          it 'logs that we could not communicate with copilot' do
-            expect(logger).to receive(:error).with('failed communicating with copilot backend: something')
-
-            post '/v2/routes', MultiJson.dump(req)
-
-            created_route = Route.last
-            expect(last_response).to have_status_code(201)
-            expect(last_response.headers).to include('Location')
-            expect(last_response.headers['Location']).to eq("#{RoutesController.path}/#{created_route.guid}")
-            expect(last_response.body).to include(created_route.guid)
-            expect(last_response.body).to include(created_route.host)
-            expect(created_route.host).to eq('example')
-            expect(Copilot::Adapter).to have_received(:create_route)
-          end
-        end
       end
 
       context 'when the requested route specifies a system hostname and a system domain' do

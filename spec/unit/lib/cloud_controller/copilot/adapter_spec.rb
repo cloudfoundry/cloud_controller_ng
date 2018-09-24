@@ -7,9 +7,11 @@ module VCAP::CloudController
     let(:copilot_client) do
       instance_spy(::Cloudfoundry::Copilot::Client)
     end
+    let(:fake_logger) { instance_double(Steno::Logger, error: nil) }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
+      allow(Steno).to receive(:logger).and_return(fake_logger)
     end
 
     describe '#create_route' do
@@ -42,8 +44,9 @@ module VCAP::CloudController
           allow(copilot_client).to receive(:upsert_route).and_raise('uh oh')
         end
 
-        it 'raises a CopilotUnavailable exception' do
-          expect { adapter.create_route(route) }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+        it 'logs the error' do
+          adapter.create_route(route)
+          expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
     end
@@ -81,8 +84,9 @@ module VCAP::CloudController
           allow(copilot_client).to receive(:map_route).and_raise('uh oh')
         end
 
-        it 'raises a CopilotUnavailable exception' do
-          expect { adapter.map_route(route_mapping) }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+        it 'logs the error' do
+          adapter.map_route(route_mapping)
+          expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
     end
@@ -115,8 +119,9 @@ module VCAP::CloudController
           allow(copilot_client).to receive(:unmap_route).and_raise('uh oh')
         end
 
-        it 'raises a CopilotUnavailable exception' do
-          expect { adapter.unmap_route(route_mapping) }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+        it 'logs the error' do
+          adapter.unmap_route(route_mapping)
+          expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
     end
@@ -143,8 +148,9 @@ module VCAP::CloudController
           allow(copilot_client).to receive(:upsert_capi_diego_process_association).and_raise('uh oh')
         end
 
-        it 'raises a CopilotUnavailable exception' do
-          expect { adapter.upsert_capi_diego_process_association(process) }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+        it 'logs the error' do
+          adapter.upsert_capi_diego_process_association(process)
+          expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
     end
@@ -165,8 +171,9 @@ module VCAP::CloudController
           allow(copilot_client).to receive(:delete_capi_diego_process_association).and_raise('uh oh')
         end
 
-        it 'raises a CopilotUnavailable exception' do
-          expect { adapter.delete_capi_diego_process_association(process) }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+        it 'logs the error' do
+          adapter.delete_capi_diego_process_association(process)
+          expect(fake_logger).to have_received(:error).with('failed communicating with copilot backend: uh oh')
         end
       end
     end
