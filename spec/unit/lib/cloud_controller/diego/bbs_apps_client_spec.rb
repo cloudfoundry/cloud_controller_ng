@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController::Diego
   RSpec.describe BbsAppsClient do
-    subject(:client) {         BbsAppsClient.new(bbs_client, config) }
+    subject(:client) { BbsAppsClient.new(bbs_client, config) }
     let(:config) { VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
 
     describe '#desire_app' do

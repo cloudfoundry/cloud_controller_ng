@@ -1,12 +1,12 @@
-require 'rspec'
+require 'spec_helper'
 
 $LOAD_PATH.unshift('app')
 
 require 'cloud_controller/opi/apps_client'
-require 'spec_helper'
 
 # This spec requires the OPI binary to be in $PATH
-RSpec.describe 'OPI::Client', opi: true do
+skip_opi_tests = ENV['CF_RUN_OPI_SPECS'] != 'true'
+RSpec.describe(OPI::Client, opi: skip_opi_tests) do
   let(:opi_url) { 'http://localhost:8085' }
   subject(:client) { described_class.new(opi_url) }
   let(:process) { double(guid: 'jeff',
@@ -45,7 +45,7 @@ RSpec.describe 'OPI::Client', opi: true do
           name: 'jeff',
           version: '0.1.0',
           current_droplet: double(docker_receipt_image: 'http://example.org/image1234', droplet_hash: 'd_haash'),
-          command: 'ls -la',
+          specified_or_detected_command: 'ls -la',
           environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
           health_check_type: 'port',
           health_check_http_endpoint: '/healthz',

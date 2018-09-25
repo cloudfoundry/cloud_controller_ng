@@ -58,8 +58,10 @@ module OPI
       end
     end
 
+    # Currently opi does not support isolation segments. This stub is necessary
+    # because cc relies that at least one placement tag will be available
     def desired_lrp_instance(process)
-      DesiredLRP.new('a')
+      DesiredLRP.new(['placeholder'])
     end
 
     private

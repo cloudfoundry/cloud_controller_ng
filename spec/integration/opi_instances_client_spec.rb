@@ -1,14 +1,19 @@
-require 'rspec'
+require 'spec_helper'
 
 $LOAD_PATH.unshift('app')
 
 require 'cloud_controller/opi/instances_client'
 
 # This spec requires the OPI binary to be in $PATH
-RSpec.describe 'OPI::InstancesClient', opi: true do
+skip_opi_tests = ENV['CF_RUN_OPI_SPECS'] != 'true'
+RSpec.describe(OPI::InstancesClient, opi: skip_opi_tests) do
   let(:opi_url) { 'http://localhost:8085' }
   subject(:client) { described_class.new(opi_url) }
   let(:process) { double(guid: 'jeff') }
+
+  before :all do
+    WebMock.disable_net_connect!(allow_localhost: true)
+  end
 
   def up?(url)
     HTTPClient.new.get(url)
@@ -52,9 +57,6 @@ RSpec.describe 'OPI::InstancesClient', opi: true do
           expect { client.lrp_instances(process) }.to raise_error(CloudController::Errors::NoRunningInstances, 'No running instances')
         end
       end
-    end
-
-    context 'Get an app' do
     end
   end
 end

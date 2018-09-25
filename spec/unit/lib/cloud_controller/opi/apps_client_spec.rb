@@ -13,7 +13,7 @@ RSpec.describe(OPI::Client) do
         name: 'dora',
         version: '0.1.0',
         current_droplet: double(docker_receipt_image: img_url, droplet_hash: 'd_haash'),
-        command: 'ls -la',
+        specified_or_detected_command: 'ls -la',
         environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
         desired_instances: 4,
         disk_quota: 100,

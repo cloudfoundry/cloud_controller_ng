@@ -63,7 +63,7 @@ module OPI
       body = {
         process_guid: process_guid(process),
         docker_image: process.current_droplet.docker_receipt_image,
-        start_command: process.command.nil? ? process.detected_start_command : process.command,
+        start_command: process.specified_or_detected_command,
         environment: hash_values_to_s(vcap_application(process)),
         instances: process.desired_instances,
         droplet_hash: process.current_droplet.droplet_hash,

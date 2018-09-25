@@ -158,8 +158,8 @@ module VCAP::CloudController
           statsd_host: String,
           statsd_port: Integer,
         }
-        # rubocop:enable Metrics/BlockLength
       end
+      # rubocop:enable Metrics/BlockLength
 
       class << self
         def configure_components(config); end
