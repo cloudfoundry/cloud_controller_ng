@@ -70,29 +70,6 @@ module VCAP::CloudController
       current
     end
 
-    def package_state(app_guid, current_droplet_guid, latest_droplet, latest_package)
-      if latest_droplet
-        return 'FAILED' if latest_droplet[:state] == DropletModel::FAILED_STATE
-
-        # Process of staging
-        return 'PENDING' if current_droplet_guid != latest_droplet[:guid]
-
-        if latest_package
-          return 'STAGED' if latest_droplet[:package_guid] == latest_package[:guid] || latest_droplet[:created_at] > latest_package[:created_at]
-          return 'FAILED' if latest_package[:state] == PackageModel::FAILED_STATE
-          return 'PENDING'
-        end
-
-        return 'STAGED'
-      end
-
-      return 'FAILED' if latest_package && latest_package[:state] == PackageModel::FAILED_STATE
-
-      # At this point you could have no package on an app
-      # At this point you have a latest package, but no droplet. So staging has not occured
-      'PENDING'
-    end
-
     private
 
     def diego_runner(process)
