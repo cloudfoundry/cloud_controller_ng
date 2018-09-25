@@ -45,9 +45,12 @@ module VCAP::CloudController
         instances = {}
         queue = Queue.new
 
+        workpool = self.class.singleton_workpool
+        workpool.replenish
+
         # Enqueue requests to BBS in the WorkPool to be processed concurrently
         processes.each do |process|
-          self.class.singleton_workpool.submit(process) do |p|
+          workpool.submit(process) do |p|
             queue << [p.guid, number_of_starting_and_running_instances_for_process(p)]
           end
         end

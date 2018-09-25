@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       def initialize(config:)
         @config   = config
-        @workpool = WorkPool.new(50)
+        @workpool = WorkPool.new(50, store_exceptions: true)
       end
 
       def sync

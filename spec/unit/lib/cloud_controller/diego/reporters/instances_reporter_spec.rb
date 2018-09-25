@@ -262,6 +262,13 @@ module VCAP::CloudController
           instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
         end
 
+        it 'replenishes the workpool' do
+          allow(InstancesReporter.singleton_workpool).to receive(:replenish)
+          instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
+          instances_reporter.number_of_starting_and_running_instances_for_processes([process_a, process_b, process_c])
+          expect(InstancesReporter.singleton_workpool).to have_received(:replenish).twice
+        end
+
         context '"UNCLAIMED" instances' do
           let(:bbs_instances_response_a) do
             [
