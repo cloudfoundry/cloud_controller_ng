@@ -93,8 +93,6 @@ end
 group :development do
   gem 'byebug'
   gem 'debase', '>= 0.2.2.beta14'
-  gem 'guard'
-  gem 'guard-rspec'
   gem 'listen'
   gem 'roodi'
   gem 'ruby-debug-ide', '>= 0.7.0.beta4'
