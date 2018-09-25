@@ -602,7 +602,9 @@ RSpec.describe PackagesController, type: :controller do
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
-          expect(response.body).to include("Unknown query parameter(s): 'invalid', 'bad'")
+          m = /Unknown query parameter\(s\): '(\w+)', '(\w+)'/.match(response.body)
+          expect(m).not_to be_nil
+          expect([m[1], m[2]]).to match_array(%w/bad invalid/)
         end
       end
 
@@ -665,7 +667,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 201 and the package' do
           expect(app_model.packages.count).to eq(0)
 
-          post :create, body: req_body
+          post :create, body: req_body.to_json
 
           expect(response.status).to eq 201
           expect(app_model.reload.packages.count).to eq(1)
@@ -684,7 +686,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns an UnprocessableEntity error' do
-            post :create, body: req_body
+            post :create, body: req_body.to_json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -696,7 +698,7 @@ RSpec.describe PackagesController, type: :controller do
           let(:app_guid) { 'bogus-guid' }
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: req_body
+            post :create, body: req_body.to_json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -709,7 +711,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns 422' do
-            post :create, app_guid: app_model.guid, body: req_body
+            post :create, app_guid: app_model.guid, body: req_body.to_json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -723,7 +725,7 @@ RSpec.describe PackagesController, type: :controller do
             end
 
             it 'returns a 403 NotAuthorized error' do
-              post :create, app_guid: app_model.guid, body: req_body
+              post :create, app_guid: app_model.guid, body: req_body.to_json
 
               expect(response.status).to eq 403
               expect(response.body).to include 'NotAuthorized'
@@ -736,7 +738,7 @@ RSpec.describe PackagesController, type: :controller do
             end
 
             it 'returns a 422 UnprocessableEntity error' do
-              post :create, app_guid: app_model.guid, body: req_body
+              post :create, app_guid: app_model.guid, body: req_body.to_json
 
               expect(response.status).to eq 422
               expect(response.body).to include 'UnprocessableEntity'
@@ -749,7 +751,7 @@ RSpec.describe PackagesController, type: :controller do
             end
 
             it 'returns a 422 UnprocessableEntity error' do
-              post :create, app_guid: app_model.guid, body: req_body
+              post :create, app_guid: app_model.guid, body: req_body.to_json
 
               expect(response.status).to eq 422
               expect(response.body).to include 'UnprocessableEntity'
@@ -776,7 +778,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'returns a 201' do
           expect(app_model.packages.count).to eq(0)
-          post :create, body: req_body
+          post :create, body: req_body.to_json
 
           expect(response.status).to eq 201
 
@@ -808,7 +810,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 201 and the response' do
         expect(target_app_model.packages.count).to eq(0)
 
-        post :create, body: relationship_request_body, source_guid: original_package.guid
+        post :create, body: relationship_request_body.to_json, params: {source_guid: original_package.guid }
 
         copied_package = target_app_model.reload.packages.first
         response_guid = parsed_body['guid']
@@ -825,7 +827,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create, body: relationship_request_body, source_guid: original_package.guid
+            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -838,7 +840,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body, source_guid: original_package.guid
+            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -852,7 +854,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body, source_guid: original_package.guid
+            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -865,7 +867,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body, source_guid: original_package.guid
+            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -879,7 +881,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body, source_guid: original_package.guid
+            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -889,7 +891,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the source package does not exist' do
         it 'returns a 422 UnprocessableEntity error' do
-          post :create, body: relationship_request_body, source_guid: 'bogus package guid'
+          post :create, body: relationship_request_body.to_json, source_guid: 'bogus package guid'
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -900,7 +902,7 @@ RSpec.describe PackagesController, type: :controller do
         let(:relationship_request_body) { { relationships: { app: { data: { guid: 'bogus' } } } } }
 
         it 'returns a 422 UnprocessableEntity error' do
-          post :create, body: relationship_request_body, source_guid: original_package.guid
+          post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -913,7 +915,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns 422' do
-          post :create, body: relationship_request_body, source_guid: original_package.guid
+          post :create, body: relationship_request_body.to_json, params: {source_guid: original_package.guid }
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'

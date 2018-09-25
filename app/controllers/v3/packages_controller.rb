@@ -117,7 +117,7 @@ class PackagesController < ApplicationController
   private
 
   def create_fresh
-    message = PackageCreateMessage.new(params[:body])
+    message = PackageCreateMessage.new(JSON.parse(request.body))
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
@@ -129,7 +129,7 @@ class PackagesController < ApplicationController
   end
 
   def create_copy
-    app_guid = params.dig(:relationships, :app, :data, :guid)
+    app_guid = JSON.parse(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
     destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
     unprocessable_app! unless destination_app &&
       permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid) &&
