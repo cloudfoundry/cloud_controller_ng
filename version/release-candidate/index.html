@@ -8584,6 +8584,7 @@ excluded in the response based on the user&rsquo;s role.</p>
     <span class="s">disk_quota</span><span class="pi">:</span> <span class="s">512M</span>
     <span class="s">health-check-http-endpoint</span><span class="pi">:</span> <span class="s">/healthcheck</span>
     <span class="s">health-check-type</span><span class="pi">:</span> <span class="s">http</span>
+    <span class="s">health-check-invocation-timeout</span><span class="pi">:</span> <span class="s">10</span>
     <span class="s">instances</span><span class="pi">:</span> <span class="s">3</span>
     <span class="s">memory</span><span class="pi">:</span> <span class="s">500M</span>
     <span class="s">timeout</span><span class="pi">:</span> <span class="s">10</span>
@@ -8673,6 +8674,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>health-check-http-endpoint</strong></td>
 <td>Endpoint called to determine if the app is healthy.</td>
+</tr>
+<tr>
+<td><strong>health-check-invocation-timeout</strong></td>
+<td>The timeout in seconds for individual health check requests for http and port health checks.</td>
 </tr>
 <tr>
 <td><strong>health-check-type</strong></td>
@@ -9483,6 +9488,82 @@ applications:
 <td>A relationship to a process. This relationship is specified by <code class="prettyprint">type</code> instead of <code class="prettyprint">guid</code>.</td>
 <td></td>
 </tr>
+<tr>
+<td><strong>weight</strong></td>
+<td>int</td>
+<td>A relative weight for your application that must be between 1 and 128.</td>
+<td></td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-route-mapping">Update a route mapping</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "weight": 55
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/route_mappings/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
 <tr>
 <td><strong>weight</strong></td>
 <td>int</td>
