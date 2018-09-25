@@ -13,7 +13,7 @@ class OrganizationsV3Controller < ApplicationController
   include SubResource
 
   def show
-    org = fetch_org(params[:guid])
+    org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
     render status: :ok, json: Presenters::V3::OrganizationPresenter.new(org)
@@ -40,7 +40,7 @@ class OrganizationsV3Controller < ApplicationController
   def create
     unauthorized! unless permission_queryer.can_write_globally? || user_org_creation_enabled?
 
-    message = VCAP::CloudController::OrganizationCreateMessage.new(params[:body])
+    message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = OrganizationCreate.new(perm_client: perm_client).create(message)
@@ -51,7 +51,7 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def show_default_isolation_segment
-    org = fetch_org(params[:guid])
+    org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
     isolation_segment = fetch_isolation_segment(org.default_isolation_segment_guid)
@@ -68,7 +68,7 @@ class OrganizationsV3Controller < ApplicationController
     message = OrgDefaultIsoSegUpdateMessage.new(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = fetch_org(params[:guid])
+    org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
     unauthorized! unless roles.admin? || org.managers.include?(current_user)
     iso_seg_guid = message.default_isolation_segment_guid

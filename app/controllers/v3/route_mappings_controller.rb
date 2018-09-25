@@ -20,7 +20,7 @@ class RouteMappingsController < ApplicationController
     fetcher = RouteMappingListFetcher.new(message: message)
 
     if app_nested?
-      app, dataset = fetcher.fetch_for_app(app_guid: params[:app_guid])
+      app, dataset = fetcher.fetch_for_app(app_guid: hashed_params[:app_guid])
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
@@ -39,7 +39,7 @@ class RouteMappingsController < ApplicationController
   end
 
   def create
-    message = RouteMappingsCreateMessage.new(params[:body])
+    message = RouteMappingsCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app, route, process, space, org = AddRouteFetcher.fetch(message)
@@ -58,10 +58,10 @@ class RouteMappingsController < ApplicationController
   end
 
   def update
-    message = RouteMappingsUpdateMessage.new(params[:body])
+    message = RouteMappingsUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
+    route_mapping = RouteMappingModel.where(guid: hashed_params[:route_mapping_guid]).eager(:space, space: :organization).first
     route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)
 
@@ -74,13 +74,13 @@ class RouteMappingsController < ApplicationController
   end
 
   def show
-    route_mapping = RouteMappingModel.where(guid: params[:route_mapping_guid]).eager(:space, space: :organization).first
+    route_mapping = RouteMappingModel.where(guid: hashed_params[:route_mapping_guid]).eager(:space, space: :organization).first
     route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
     render status: :ok, json: Presenters::V3::RouteMappingPresenter.new(route_mapping)
   end
 
   def destroy
-    route_mapping = RouteMappingModel.where(guid: params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).all.first
+    route_mapping = RouteMappingModel.where(guid: hashed_params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).all.first
 
     route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)

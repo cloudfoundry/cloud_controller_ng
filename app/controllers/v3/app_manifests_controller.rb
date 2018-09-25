@@ -15,7 +15,7 @@ class AppManifestsController < ApplicationController
     message = AppManifestMessage.create_from_yml(parsed_app_manifest_params)
     compound_error!(message.errors.full_messages) unless message.valid?
 
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -32,14 +32,14 @@ class AppManifestsController < ApplicationController
   end
 
   def show
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
 
     manifest_presenter = Presenters::V3::AppManifestPresenter.new(app, app.service_bindings, app.routes)
     manifest_yaml = manifest_presenter.to_hash.deep_stringify_keys.to_yaml
-    render status: :ok, text: manifest_yaml, content_type: YAML_CONTENT_TYPE
+    render status: :ok, plain: manifest_yaml, content_type: YAML_CONTENT_TYPE
   end
 
   private

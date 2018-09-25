@@ -90,7 +90,7 @@ RSpec.describe BuildsController, type: :controller do
           let(:params) { { 'order_by' => '^%' } }
 
           it 'returns 400' do
-            get :index, params
+            get :index, params: params
 
             expect(response.status).to eq(400)
             expect(response.body).to include('BadQueryParameter')
@@ -102,7 +102,7 @@ RSpec.describe BuildsController, type: :controller do
           let(:params) { { 'bad_param' => 'foo' } }
 
           it 'returns 400' do
-            get :index, params
+            get :index, params: params
 
             expect(response.status).to eq(400)
             expect(response.body).to include('BadQueryParameter')
@@ -115,7 +115,7 @@ RSpec.describe BuildsController, type: :controller do
           let(:params) { { 'per_page' => 9999999999999999 } }
 
           it 'returns 400' do
-            get :index, params
+            get :index, params: params
 
             expect(response.status).to eq(400)
             expect(response.body).to include('BadQueryParameter')
@@ -127,7 +127,7 @@ RSpec.describe BuildsController, type: :controller do
           let(:params) { { 'per_page' => 1, states: VCAP::CloudController::BuildModel::STAGED_STATE } }
 
           it 'adds requested params to the links' do
-            get :index, params
+            get :index, params: params
 
             expect(parsed_body['pagination']['next']['href']).to start_with("#{link_prefix}/v3/builds")
             expect(parsed_body['pagination']['next']['href']).to match(/per_page=1/)
@@ -183,7 +183,7 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     it 'returns a 201 Created response' do
-      post :create, body: req_body.to_json
+      post :create, params: req_body, as: :json
       expect(response.status).to eq(201), response.body
     end
 
@@ -200,7 +200,7 @@ RSpec.describe BuildsController, type: :controller do
       end
 
       it 'returns a 422 Unprocessable Entity and an informative error message' do
-        post :create, body: req_body.to_json
+        post :create, params: req_body, as: :json
         expect(response.status).to eq 422
         expect(response.body).to include 'Only one build can be STAGING at a time per application.'
       end
@@ -226,7 +226,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns a 422 Unprocessable Entity' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
 
           expect(response.status).to eq(422)
           expect(response.body).to include('UnprocessableEntity')
@@ -242,7 +242,7 @@ RSpec.describe BuildsController, type: :controller do
       end
 
       it 'returns a 422 Unprocessable Entity' do
-        post :create, body: req_body.to_json
+        post :create, params: req_body, as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -273,7 +273,7 @@ RSpec.describe BuildsController, type: :controller do
       context 'when there is a buildpack request' do
         context 'when a git url is requested' do
           it 'works with a valid url' do
-            post :create, body: req_body.to_json
+            post :create, params: req_body, as: :json
 
             expect(response.status).to eq(201)
             expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpacks).to eq(['http://dan-and-zach-awesome-pack.com'])
@@ -283,7 +283,7 @@ RSpec.describe BuildsController, type: :controller do
             let(:buildpack_request) { 'totally-broke!' }
 
             it 'returns a 422' do
-              post :create, body: req_body.to_json
+              post :create, params: req_body, as: :json
 
               expect(response.status).to eq(422)
               expect(response.body).to include('UnprocessableEntity')
@@ -295,7 +295,7 @@ RSpec.describe BuildsController, type: :controller do
           let(:buildpack_request) { buildpack.name }
 
           it 'uses buildpack by name' do
-            post :create, body: req_body.to_json
+            post :create, params: req_body, as: :json
 
             expect(response.status).to eq(201)
             expect(VCAP::CloudController::BuildModel.last.buildpack_lifecycle_data.buildpacks).to eq([buildpack.name])
@@ -305,7 +305,7 @@ RSpec.describe BuildsController, type: :controller do
             let(:buildpack_request) { 'notfound' }
 
             it 'returns a 422' do
-              post :create, body: req_body.to_json
+              post :create, params: req_body, as: :json
 
               expect(response.status).to eq(422)
               expect(response.body).to include('UnprocessableEntity')
@@ -325,7 +325,7 @@ RSpec.describe BuildsController, type: :controller do
           end
 
           it 'does NOT set a buildpack on the droplet lifecycle data' do
-            post :create, body: req_body.to_json
+            post :create, params: req_body, as: :json
 
             expect(response.status).to eq(201)
             expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpacks).to be_empty
@@ -344,7 +344,7 @@ RSpec.describe BuildsController, type: :controller do
           end
 
           it 'does NOT set a buildpack on the droplet lifecycle data' do
-            post :create, body: req_body.to_json
+            post :create, params: req_body, as: :json
 
             expect(response.status).to eq(201)
             expect(VCAP::CloudController::BuildModel.last.lifecycle_data.buildpacks).to be_empty
@@ -406,7 +406,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns a 201 Created response and creates a build model with an associated package' do
-          expect { post :create, body: req_body.to_json }.
+          expect { post :create, params: req_body, as: :json }.
             to change { VCAP::CloudController::BuildModel.count }.from(0).to(1)
           build = VCAP::CloudController::BuildModel.last
           expect(build.package.guid).to eq(package.guid)
@@ -420,7 +420,7 @@ RSpec.describe BuildsController, type: :controller do
           end
 
           it 'raises a 422' do
-            post :create, body: req_body.to_json
+            post :create, params: req_body, as: :json
 
             expect(response.status).to eq(422)
             expect(response.body).to include('UnprocessableEntity')
@@ -434,7 +434,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'raises 403' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
@@ -475,7 +475,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'staging_memory_in_mb' do
         it 'sets the staging_memory_in_mb in staging_details' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
           expect(response.status).to eq(201), response.body
           expect(stager).to have_received(:stage) do |staging_details|
             expect(staging_details.staging_memory_in_mb).to eq(memory_in_mb)
@@ -499,7 +499,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns a 400 InvalidRequest error' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
 
           expect(response.status).to eq(400)
           expect(response.body).to include('InvalidRequest')
@@ -514,7 +514,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns 422 Unprocessable' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
 
           expect(response.status).to eq(422)
           expect(response.body).to include("space's memory limit exceeded")
@@ -530,7 +530,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns 422 Unprocessable' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
 
           expect(response.status).to eq(422)
           expect(response.body).to include("organization's memory limit exceeded")
@@ -544,7 +544,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns 422 Unprocessable' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
 
           expect(response.status).to eq(422)
           expect(response.body).to include('disk limit exceeded')
@@ -567,7 +567,7 @@ RSpec.describe BuildsController, type: :controller do
             'org_billing_manager' => 422,
           }
         end
-        let(:api_call) { lambda { post :create, body: req_body.to_json } }
+        let(:api_call) { lambda { post :create, params: req_body, as: :json } }
       end
 
       context 'when the user does not have write permissions for the resource' do
@@ -576,7 +576,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns the correct error message' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
           expect(response.status).to eq 422
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
@@ -589,7 +589,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns the correct error message' do
-          post :create, body: req_body.to_json
+          post :create, params: req_body, as: :json
           expect(response.status).to eq 422
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
@@ -620,7 +620,7 @@ RSpec.describe BuildsController, type: :controller do
       end
 
       it 'returns a 200 OK and the build' do
-        get :show, guid: build.guid
+        get :show, params: { guid: build.guid }
 
         expect(response.status).to eq(200)
         expect(parsed_body['guid']).to eq(build.guid)
@@ -632,7 +632,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns a 200 OK and the build' do
-          get :show, guid: build.guid
+          get :show, params: { guid: build.guid }
 
           expect(response.status).to eq(200)
           expect(parsed_body['guid']).to eq(build.guid)
@@ -641,7 +641,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when the build does not exist' do
         it 'returns a 404 Not Found' do
-          get :show, guid: 'shablam!'
+          get :show, params: { guid: 'shablam!' }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -674,7 +674,7 @@ RSpec.describe BuildsController, type: :controller do
           end
 
           it "returns #{expected_return_value}" do
-            get :show, guid: build.guid
+            get :show, params: { guid: build.guid }
             expect(response.status).to eq(expected_return_value), "Expected #{expected_return_value}, got: #{response.status} with body: #{response.body}"
           end
         end
@@ -686,7 +686,7 @@ RSpec.describe BuildsController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized error' do
-          get :show, guid: build.guid
+          get :show, params: { guid: build.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')

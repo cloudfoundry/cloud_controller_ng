@@ -11,7 +11,7 @@ class ServiceBindingsController < ApplicationController
   include AppSubResource
 
   def create
-    message = ServiceBindingCreateMessage.new(params[:body])
+    message = ServiceBindingCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app, service_instance = ServiceBindingCreateFetcher.new.fetch(message.app_guid, message.service_instance_guid)
@@ -33,7 +33,7 @@ class ServiceBindingsController < ApplicationController
   end
 
   def show
-    service_binding = VCAP::CloudController::ServiceBinding.find(guid: params[:guid])
+    service_binding = VCAP::CloudController::ServiceBinding.find(guid: hashed_params[:guid])
 
     binding_not_found! unless service_binding && permission_queryer.can_read_from_space?(service_binding.space.guid, service_binding.space.organization.guid)
     show_secrets = permission_queryer.can_read_secrets_in_space?(service_binding.space.guid, service_binding.space.organization.guid)
@@ -59,7 +59,7 @@ class ServiceBindingsController < ApplicationController
   end
 
   def destroy
-    binding = VCAP::CloudController::ServiceBinding.where(guid: params[:guid]).eager(service_instance: { space: :organization }).all.first
+    binding = VCAP::CloudController::ServiceBinding.where(guid: hashed_params[:guid]).eager(service_instance: { space: :organization }).all.first
 
     binding_not_found! unless binding && permission_queryer.can_read_from_space?(binding.space.guid, binding.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(binding.space.guid)

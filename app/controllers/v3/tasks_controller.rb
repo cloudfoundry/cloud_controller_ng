@@ -42,10 +42,10 @@ class TasksController < ApplicationController
   def create
     FeatureFlag.raise_unless_enabled!(:task_creation)
 
-    message = TaskCreateMessage.new(params[:body])
+    message = TaskCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: params[:app_guid], droplet_guid: message.droplet_guid)
+    app, space, org, droplet = TaskCreateFetcher.new.fetch(app_guid: hashed_params[:app_guid], droplet_guid: message.droplet_guid)
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -59,7 +59,7 @@ class TasksController < ApplicationController
   end
 
   def cancel
-    task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+    task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
     task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -71,7 +71,7 @@ class TasksController < ApplicationController
   end
 
   def show
-    task, space, org = TaskFetcher.new.fetch(task_guid: params[:task_guid])
+    task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
     task_not_found! unless task && can_read_task?(org, space)
 
     render status: :ok, json: Presenters::V3::TaskPresenter.new(task, show_secrets: can_read_secrets?(org, space))

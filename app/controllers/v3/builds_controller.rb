@@ -56,7 +56,7 @@ class BuildsController < ApplicationController
   end
 
   def show
-    build = BuildModel.find(guid: params[:guid])
+    build = BuildModel.find(guid: hashed_params[:guid])
 
     build_not_found! unless build && permission_queryer.can_read_from_space?(build.app.space.guid, build.app.space.organization.guid)
 

@@ -20,7 +20,7 @@ class IsolationSegmentsController < ApplicationController
   def create
     unauthorized! unless roles.admin?
 
-    message = IsolationSegmentCreateMessage.new(params[:body])
+    message = IsolationSegmentCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     isolation_segment = nil
@@ -36,7 +36,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def show
-    isolation_segment_model = find_isolation_segment(params[:guid])
+    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
     resource_not_found!(:isolation_segment) unless permission_queryer.can_read_from_isolation_segment?(isolation_segment_model)
 
     render status: :ok, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment_model)
@@ -65,7 +65,7 @@ class IsolationSegmentsController < ApplicationController
   def destroy
     unauthorized! unless roles.admin?
 
-    isolation_segment_model = find_isolation_segment(params[:guid])
+    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
     IsolationSegmentDelete.new.delete(isolation_segment_model)
 
     head :no_content
@@ -76,9 +76,9 @@ class IsolationSegmentsController < ApplicationController
   def update
     unauthorized! unless roles.admin?
 
-    isolation_segment_model = find_isolation_segment(params[:guid])
+    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
 
-    message = IsolationSegmentUpdateMessage.new(params[:body])
+    message = IsolationSegmentUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     IsolationSegmentUpdate.new.update(isolation_segment_model, message)
@@ -91,7 +91,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_orgs
-    isolation_segment_model = find_isolation_segment(params[:guid])
+    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
     resource_not_found!(:isolation_segment) unless can_list_organizations?(isolation_segment_model)
 
     fetcher = IsolationSegmentOrganizationsFetcher.new(isolation_segment_model)
@@ -106,7 +106,7 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def relationships_spaces
-    isolation_segment_model = find_isolation_segment(params[:guid])
+    isolation_segment_model = find_isolation_segment(hashed_params[:guid])
     resource_not_found!(:isolation_segment) unless permission_queryer.can_read_from_isolation_segment?(isolation_segment_model)
 
     fetcher = IsolationSegmentSpacesFetcher.new(isolation_segment_model)
@@ -134,10 +134,10 @@ class IsolationSegmentsController < ApplicationController
   def unassign_allowed_organization
     unauthorized! unless roles.admin?
 
-    isolation_segment_model = IsolationSegmentModel.first(guid: params[:guid])
+    isolation_segment_model = IsolationSegmentModel.first(guid: hashed_params[:guid])
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
-    org = Organization.first(guid: params[:org_guid])
+    org = Organization.first(guid: hashed_params[:org_guid])
     resource_not_found!(:org) unless org
 
     organization_unassigner.unassign(isolation_segment_model, org)
@@ -156,10 +156,10 @@ class IsolationSegmentsController < ApplicationController
   end
 
   def organizations_lookup
-    isolation_segment_model = IsolationSegmentModel.first(guid: params[:guid])
+    isolation_segment_model = IsolationSegmentModel.first(guid: hashed_params[:guid])
     resource_not_found!(:isolation_segment) unless isolation_segment_model
 
-    message = IsolationSegmentRelationshipOrgMessage.new(params[:body])
+    message = IsolationSegmentRelationshipOrgMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organizations = Organization.where(guid: message.guids).all

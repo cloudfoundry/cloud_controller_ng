@@ -29,7 +29,7 @@ RSpec.describe ProcessesController, type: :controller do
         process2 = VCAP::CloudController::ProcessModel.make(:process, app: app)
         VCAP::CloudController::ProcessModel.make(:process)
 
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -37,7 +37,7 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       it 'provides the correct base url in the pagination links' do
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/processes")
       end
 
@@ -50,7 +50,7 @@ RSpec.describe ProcessesController, type: :controller do
           VCAP::CloudController::ProcessModel.make(:process, app: app)
           VCAP::CloudController::ProcessModel.make(:process, app: app)
 
-          get :index, params
+          get :index, params: params
 
           parsed_response = parsed_body
           response_guids = parsed_response['resources'].map { |r| r['guid'] }
@@ -61,7 +61,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'the app does not exist' do
         it 'returns a 404 Resource Not Found' do
-          get :index, app_guid: 'hello-i-do-not-exist'
+          get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -74,7 +74,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'returns a 404 Resource Not Found error' do
-          get :index, app_guid: app.guid
+          get :index, params: { app_guid: app.guid }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -117,17 +117,19 @@ RSpec.describe ProcessesController, type: :controller do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
-          expect(response.body).to include("Unknown query parameter(s): 'invalid', 'bad'")
+          expect(response.body).to include('Unknown query parameter(s):')
+          expect(response.body).to include('invalid')
+          expect(response.body).to include('bad')
         end
       end
 
       context 'because of order_by' do
         it 'returns 400' do
-          get :index, order_by: '^=%'
+          get :index, params: { order_by: '^=%' }
 
           expect(response.status).to eq 400
           expect(response.body).to include 'BadQueryParameter'
@@ -139,7 +141,7 @@ RSpec.describe ProcessesController, type: :controller do
         let(:params) { { 'per_page' => 10000 } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -159,7 +161,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     it 'returns 200 OK with process' do
-      get :show, { process_guid: process_type.guid }
+      get :show, params: { process_guid: process_type.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body['guid']).to eq(process_type.guid)
@@ -171,7 +173,7 @@ RSpec.describe ProcessesController, type: :controller do
       let!(:process_type2) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
 
       it 'returns a 200 and the process' do
-        get :show, type: process_type.type, app_guid: app.guid
+        get :show, params: { type: process_type.type, app_guid: app.guid }
 
         expect(response.status).to eq 200
         expect(parsed_body['guid']).to eq(process_type.guid)
@@ -182,7 +184,7 @@ RSpec.describe ProcessesController, type: :controller do
           other_app = VCAP::CloudController::AppModel.make
           other_process = VCAP::CloudController::ProcessModel.make(app: other_app, type: 'potato')
 
-          get :show, type: other_process.type, app_guid: app.guid
+          get :show, params: { type: other_process.type, app_guid: app.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -192,7 +194,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the app does not exist' do
         it 'returns a 404' do
-          get :show, type: process_type.type, app_guid: 'made-up'
+          get :show, params: { type: process_type.type, app_guid: 'made-up' }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -206,7 +208,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'returns a 404' do
-          get :show, type: process_type.type, app_guid: app.guid
+          get :show, params: { type: process_type.type, app_guid: app.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -217,7 +219,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'when the process does not exist' do
       it 'raises an ApiError with a 404 code' do
-        get :show, { process_guid: 'ABC123' }
+        get :show, params: { process_guid: 'ABC123' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -230,7 +232,7 @@ RSpec.describe ProcessesController, type: :controller do
         before { set_current_user(user, scopes: []) }
 
         it 'raises an ApiError with a 403 code' do
-          get :show, { process_guid: process_type.guid }
+          get :show, params: { process_guid: process_type.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -243,7 +245,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          get :show, { process_guid: process_type.guid }
+          get :show, params: { process_guid: process_type.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -256,7 +258,7 @@ RSpec.describe ProcessesController, type: :controller do
   describe '#update' do
     let(:app) { VCAP::CloudController::AppModel.make(space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
-    let(:req_body) do
+    let(:request_body) do
       {
           'command' => 'new command',
       }
@@ -271,7 +273,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'updates the process and returns the correct things' do
       expect(process_type.command).not_to eq('new command')
 
-      patch :update, req_body.to_json, { process_guid: process_type.guid }
+      patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
       expect(process_type.reload.command).to eq('new command')
       expect(response.status).to eq(200)
@@ -286,7 +288,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'updates the process and returns the correct things' do
         expect(process_type.command).not_to eq('new command')
 
-        patch :update, req_body.to_json, { app_guid: app.guid, type: process_type.type }
+        patch :update, params: { app_guid: app.guid, type: process_type.type }.merge(request_body), as: :json
 
         expect(process_type.reload.command).to eq('new command')
         expect(response.status).to eq(200)
@@ -298,7 +300,7 @@ RSpec.describe ProcessesController, type: :controller do
           other_app = VCAP::CloudController::AppModel.make
           other_process = VCAP::CloudController::ProcessModel.make(app: other_app, type: 'potato')
 
-          patch :update, req_body.to_json, { app_guid: app.guid, type: other_process.type }
+          patch :update, params: { app_guid: app.guid, type: other_process.type }.merge(request_body), as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -308,7 +310,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the app does not exist' do
         it 'returns a 404' do
-          patch :update, req_body.to_json, { app_guid: 'made-up', type: process_type.type }
+          patch :update, params: { app_guid: 'made-up', type: process_type.type }.merge(request_body), as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -322,7 +324,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'returns a 404' do
-          patch :update, req_body.to_json, { app_guid: app.guid, type: process_type.type }
+          patch :update, params: { app_guid: app.guid, type: process_type.type }.merge(request_body), as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -333,7 +335,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'when the process does not exist' do
       it 'raises an ApiError with a 404 code' do
-        patch :update, req_body.to_json, { process_guid: 'made-up-guid' }
+        patch :update, params: { process_guid: 'made-up-guid' }.merge(request_body), as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -346,7 +348,7 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       it 'returns 422' do
-        patch :update, req_body.to_json, { process_guid: process_type.guid }
+        patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -355,10 +357,10 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     context 'when the request provides invalid data' do
-      let(:req_body) { { command: false } }
+      let(:request_body) { { command: false } }
 
       it 'returns 422' do
-        patch :update, req_body.to_json, { process_guid: process_type.guid }
+        patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -374,7 +376,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'succeeds if the process is not a webish process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'this-is-not-webish')
 
-        patch :update, req_body.to_json, { process_guid: process.guid }
+        patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(200)
       end
@@ -382,7 +384,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises 422 if the process is a web process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web')
 
-        patch :update, req_body.to_json, { process_guid: process.guid }
+        patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('ProcessUpdateDisabledDuringDeployment')
@@ -391,7 +393,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises 422 if the process is a webish process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web-deployment-test')
 
-        patch :update, req_body.to_json, { process_guid: process.guid }
+        patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('ProcessUpdateDisabledDuringDeployment')
@@ -405,7 +407,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          patch :update, req_body.to_json, { process_guid: process_type.guid }
+          patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -419,7 +421,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          patch :update, req_body.to_json, { process_guid: process_type.guid }
+          patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include('NotAuthorized')
@@ -430,7 +432,7 @@ RSpec.describe ProcessesController, type: :controller do
         before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
         it 'raises an ApiError with a 403 code' do
-          patch :update, req_body.to_json, { process_guid: process_type.guid }
+          patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.body).to include('NotAuthorized')
           expect(response.status).to eq(403)
@@ -455,7 +457,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'terminates the process instance' do
       expect(process_type.instances).to eq(1)
 
-      delete :terminate, { process_guid: process_type.guid, index: 0 }
+      delete :terminate, params: { process_guid: process_type.guid, index: 0 }
       expect(response.status).to eq(204)
 
       process_type.reload
@@ -466,14 +468,14 @@ RSpec.describe ProcessesController, type: :controller do
       it 'terminates the process instance' do
         expect(process_type.instances).to eq(1)
 
-        delete :terminate, app_guid: app.guid, type: process_type.type, index: 0
+        delete :terminate, params: { app_guid: app.guid, type: process_type.type, index: 0 }, as: :json
 
         expect(response.status).to eq(204)
         expect(index_stopper).to have_received(:stop_index).with(process_type, 0)
       end
 
       it 'returns a 404 if app does not exist' do
-        delete :terminate, app_guid: 'sad-bad-guid', type: process_type.type, index: 0
+        delete :terminate, params: { app_guid: 'sad-bad-guid', type: process_type.type, index: 0 }, as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
@@ -481,7 +483,7 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       it 'returns a 404 if process type does not exist' do
-        delete :terminate, app_guid: app.guid, type: 'bad-type', index: 0
+        delete :terminate, params: { app_guid: app.guid, type: 'bad-type', index: 0 }, as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -494,7 +496,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          delete :terminate, app_guid: app.guid, type: process_type.type, index: 0
+          delete :terminate, params: { app_guid: app.guid, type: process_type.type, index: 0 }, as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -504,7 +506,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     it 'returns a 404 if process does not exist' do
-      delete :terminate, { process_guid: 'bad-guid', index: 0 }
+      delete :terminate, params: { process_guid: 'bad-guid', index: 0 }
 
       expect(response.status).to eq(404)
       expect(response.body).to include('ResourceNotFound')
@@ -512,7 +514,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     it 'returns a 404 if instance index out of bounds' do
-      delete :terminate, { process_guid: process_type.guid, index: 1 }
+      delete :terminate, params: { process_guid: process_type.guid, index: 1 }
 
       expect(response.status).to eq(404)
       expect(response.body).to include('ResourceNotFound')
@@ -524,7 +526,7 @@ RSpec.describe ProcessesController, type: :controller do
         before { set_current_user(user, scopes: ['cloud_controller.read']) }
 
         it 'raises an ApiError with a 403 code' do
-          delete :terminate, { process_guid: process_type.guid, index: 0 }
+          delete :terminate, params: { process_guid: process_type.guid, index: 0 }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -537,7 +539,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          delete :terminate, { process_guid: process_type.guid, index: 0 }
+          delete :terminate, params: { process_guid: process_type.guid, index: 0 }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -551,7 +553,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          delete :terminate, { process_guid: process_type.guid, index: 0 }
+          delete :terminate, params: { process_guid: process_type.guid, index: 0 }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -561,7 +563,7 @@ RSpec.describe ProcessesController, type: :controller do
   end
 
   describe '#scale' do
-    let(:req_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
+    let(:request_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
     let(:app) { VCAP::CloudController::AppModel.make(space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(app: app) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -576,7 +578,7 @@ RSpec.describe ProcessesController, type: :controller do
       expect(process_type.memory).not_to eq(100)
       expect(process_type.disk_quota).not_to eq(200)
 
-      put :scale, { process_guid: process_type.guid, body: req_body }
+      put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
       process_type.reload
       expect(process_type.instances).to eq(2)
@@ -589,7 +591,7 @@ RSpec.describe ProcessesController, type: :controller do
     it 'scales the process and changes its version' do
       process_type.update(state: VCAP::CloudController::ProcessModel::STARTED)
       version = process_type.version
-      put :scale, { process_guid: process_type.guid, body: req_body }
+      put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
       expect(response.status).to eq(202)
       process_type.reload
@@ -602,7 +604,7 @@ RSpec.describe ProcessesController, type: :controller do
         expect(process_type.memory).not_to eq(100)
         expect(process_type.disk_quota).not_to eq(200)
 
-        put :scale, app_guid: app.guid, type: process_type.type, body: req_body
+        put :scale, params: { app_guid: app.guid, type: process_type.type }.merge(request_body), as: :json
 
         process_type.reload
         expect(process_type.instances).to eq(2)
@@ -615,7 +617,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the app does not exist' do
         it 'raises 404' do
-          put :scale, app_guid: 'foo', type: process_type.type
+          put :scale, params: { app_guid: 'foo', type: process_type.type }, as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -625,7 +627,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the process does not exist' do
         it 'raises 404' do
-          put :scale, app_guid: app.guid, type: 'bananas'
+          put :scale, params: { app_guid: app.guid, type: 'bananas' }, as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -639,7 +641,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          put :scale, app_guid: app.guid, type: process_type.type
+          put :scale, params: { app_guid: app.guid, type: process_type.type }, as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -654,7 +656,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          put :scale, app_guid: app.guid, type: process_type.type
+          put :scale, params: { app_guid: app.guid, type: process_type.type }, as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -668,7 +670,7 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       it 'returns 422' do
-        put :scale, { process_guid: process_type.guid, body: req_body }
+        put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -681,7 +683,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'non-admin user' do
         it 'raises 403' do
-          put :scale, { process_guid: process_type.guid, body: req_body }
+          put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
@@ -694,7 +696,7 @@ RSpec.describe ProcessesController, type: :controller do
       before { set_current_user(user, scopes: ['cloud_controller.read']) }
 
       it 'raises an ApiError with a 403 code' do
-        put :scale, { process_guid: process_type.guid, body: req_body }
+        put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq 403
         expect(response.body).to include('NotAuthorized')
@@ -702,10 +704,10 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     context 'when the request provides invalid data' do
-      let(:req_body) { { instances: 'wrong' } }
+      let(:request_body) { { instances: 'wrong' } }
 
       it 'returns 422' do
-        put :scale, { process_guid: process_type.guid, body: req_body }
+        put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -715,7 +717,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'when the process does not exist' do
       it 'raises 404' do
-        put :scale, { process_guid: 'fake-guid', body: req_body }
+        put :scale, params: { process_guid: 'fake-guid' }.merge(request_body), as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -730,7 +732,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'succeeds if the process is not a webish process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'this-is-not-webish')
 
-        put :scale, { process_guid: process.guid, body: req_body }
+        put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(202)
       end
@@ -738,7 +740,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises 422 if the process is a web process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web')
 
-        put :scale, { process_guid: process.guid, body: req_body }
+        put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('ScaleDisabledDuringDeployment')
@@ -747,7 +749,7 @@ RSpec.describe ProcessesController, type: :controller do
       it 'raises 422 if the process is a webish process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web-deployment-test')
 
-        put :scale, { process_guid: process.guid, body: req_body }
+        put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('ScaleDisabledDuringDeployment')
@@ -761,7 +763,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          put :scale, { process_guid: process_type.guid, body: req_body }
+          put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -775,7 +777,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          put :scale, { process_guid: process_type.guid, body: req_body }
+          put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -786,7 +788,7 @@ RSpec.describe ProcessesController, type: :controller do
         before { set_current_user(user, scopes: ['cloud_controller.read']) }
 
         it 'raises an ApiError with a 403 code' do
-          put :scale, { process_guid: process_type.guid, body: req_body }
+          put :scale, params: { process_guid: process_type.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include('NotAuthorized')
@@ -809,7 +811,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     it 'returns the stats for all instances for the process' do
-      get :stats, { process_guid: process_type.guid }
+      get :stats, params: { process_guid: process_type.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body['resources'][0]['type']).to eq('potato')
@@ -817,7 +819,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'accessed as app subresource' do
       it 'returns the stats for all instances of specified type for all processes of an app' do
-        get :stats, { app_guid: app.guid, type: process_type.type }
+        get :stats, params: { app_guid: app.guid, type: process_type.type }
 
         expect(response.status).to eq(200)
         expect(parsed_body['resources'][0]['type']).to eq('potato')
@@ -829,7 +831,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404 error' do
-          get :stats, { app_guid: app.guid, type: process_type.type }
+          get :stats, params: { app_guid: app.guid, type: process_type.type }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -839,7 +841,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the app does not exist' do
         it 'raises a 404 error' do
-          get :stats, { app_guid: 'bogus-guid', type: process_type.type }
+          get :stats, params: { app_guid: 'bogus-guid', type: process_type.type }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -849,7 +851,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when process does not exist' do
         it 'raises a 404 error' do
-          get :stats, { app_guid: app.guid, type: 1234 }
+          get :stats, params: { app_guid: app.guid, type: 1234 }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -860,7 +862,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'when the process does not exist' do
       it 'raises 404' do
-        get :stats, { process_guid: 'fake-guid' }
+        get :stats, params: { process_guid: 'fake-guid' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -872,7 +874,7 @@ RSpec.describe ProcessesController, type: :controller do
         before { set_current_user(user, scopes: ['cloud_controller.write']) }
 
         it 'raises an ApiError with a 403 code' do
-          get :stats, { process_guid: process_type.guid }
+          get :stats, params: { process_guid: process_type.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -885,7 +887,7 @@ RSpec.describe ProcessesController, type: :controller do
         end
 
         it 'raises 404' do
-          get :stats, { process_guid: process_type.guid }
+          get :stats, params: { process_guid: process_type.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')

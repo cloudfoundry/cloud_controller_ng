@@ -7,7 +7,7 @@ class AppFeaturesController < ApplicationController
   include AppSubResource
 
   def index
-    app, space, org = AppFetcher.new.fetch(params[:app_guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     resources = [Presenters::V3::AppFeaturePresenter.new(app)]
@@ -19,21 +19,21 @@ class AppFeaturesController < ApplicationController
   end
 
   def show
-    app, space, org = AppFetcher.new.fetch(params[:app_guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-    resource_not_found!(:feature) unless params[:name] == 'ssh'
+    resource_not_found!(:feature) unless hashed_params[:name] == 'ssh'
 
     render status: :ok, json: Presenters::V3::AppFeaturePresenter.new(app)
   end
 
   def update
-    app, space, org = AppFetcher.new.fetch(params[:app_guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    resource_not_found!(:feature) unless params[:name] == 'ssh'
+    resource_not_found!(:feature) unless hashed_params[:name] == 'ssh'
 
-    message = VCAP::CloudController::AppFeatureUpdateMessage.new(JSON.parse(request.body))
+    message = VCAP::CloudController::AppFeatureUpdateMessage.new(hashed_params['body'])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app.update(enable_ssh: message.enabled)
@@ -42,7 +42,7 @@ class AppFeaturesController < ApplicationController
   end
 
   def ssh_enabled
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 

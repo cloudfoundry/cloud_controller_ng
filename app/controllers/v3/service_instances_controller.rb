@@ -29,12 +29,12 @@ class ServiceInstancesV3Controller < ApplicationController
   def share_service_instance
     FeatureFlag.raise_unless_enabled!(:service_instance_sharing)
 
-    service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
+    service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
-    message = VCAP::CloudController::ToManyRelationshipMessage.new(params[:body])
+    message = VCAP::CloudController::ToManyRelationshipMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     spaces = Space.where(guid: message.guids)
@@ -50,12 +50,12 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def unshare_service_instance
-    service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
+    service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
 
     resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
     unauthorized! unless can_write_space?(service_instance.space)
 
-    space_guid = params[:space_guid]
+    space_guid = hashed_params[:space_guid]
     target_space = Space.first(guid: space_guid)
 
     unless target_space && service_instance.shared_spaces.include?(target_space)
@@ -71,7 +71,7 @@ class ServiceInstancesV3Controller < ApplicationController
   end
 
   def relationships_shared_spaces
-    service_instance = ServiceInstance.first(guid: params[:service_instance_guid])
+    service_instance = ServiceInstance.first(guid: hashed_params[:service_instance_guid])
     resource_not_found!(:service_instance) unless service_instance && can_read_space?(service_instance.space)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(

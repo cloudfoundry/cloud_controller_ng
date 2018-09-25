@@ -10,7 +10,7 @@ require 'fetchers/space_fetcher'
 
 class SpacesV3Controller < ApplicationController
   def show
-    space = SpaceFetcher.new.fetch(params[:guid])
+    space = SpaceFetcher.new.fetch(hashed_params[:guid])
 
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
 
@@ -18,7 +18,7 @@ class SpacesV3Controller < ApplicationController
   end
 
   def create
-    message = SpaceCreateMessage.new(params[:body])
+    message = SpaceCreateMessage.new(hashed_params[:body])
     missing_org = 'Invalid organization. Ensure the organization exists and you have access to it.'
 
     unprocessable!(missing_org) unless permission_queryer.can_read_from_org?(message.organization_guid)
@@ -47,14 +47,14 @@ class SpacesV3Controller < ApplicationController
   end
 
   def update_isolation_segment
-    space = fetch_space(params[:guid])
+    space = fetch_space(hashed_params[:guid])
     space_not_found! unless space
     org = space.organization
     org_not_found! unless org
     space_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless roles.admin? || space.organization.managers.include?(current_user)
 
-    message = SpaceUpdateIsolationSegmentMessage.new(params[:body])
+    message = SpaceUpdateIsolationSegmentMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     SpaceUpdateIsolationSegment.new(user_audit_info).update(space, org, message)
@@ -71,7 +71,7 @@ class SpacesV3Controller < ApplicationController
   end
 
   def show_isolation_segment
-    space = fetch_space(params[:guid])
+    space = fetch_space(hashed_params[:guid])
     space_not_found! unless space
 
     org = space.organization

@@ -26,12 +26,12 @@ class DeploymentsController < ApplicationController
   def create
     deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
 
-    app_guid = params[:body].dig(:relationships, :app, :data, :guid)
+    app_guid = hashed_params[:body].dig(:relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
     unprocessable!('Cannot create a deployment for a STOPPED app.') if app.stopped?
 
-    droplet_guid = params[:body].dig(:droplet, :guid)
+    droplet_guid = hashed_params[:body].dig(:droplet, :guid)
     if droplet_guid
       droplet = DropletModel.find(guid: droplet_guid)
     else
@@ -49,7 +49,7 @@ class DeploymentsController < ApplicationController
   end
 
   def show
-    deployment = DeploymentModel.find(guid: params[:guid])
+    deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
     resource_not_found!(:deployment) unless deployment &&
       permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
@@ -58,7 +58,7 @@ class DeploymentsController < ApplicationController
   end
 
   def cancel
-    deployment = DeploymentModel.find(guid: params[:guid])
+    deployment = DeploymentModel.find(guid: hashed_params[:guid])
 
     resource_not_found!(:deployment) unless deployment && permission_queryer.can_write_to_space?(deployment.app.space_guid)
 

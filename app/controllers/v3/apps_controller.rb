@@ -58,7 +58,7 @@ class AppsV3Controller < ApplicationController
 
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
@@ -73,7 +73,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def create
-    message = AppCreateMessage.new(params[:body])
+    message = AppCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
@@ -94,10 +94,10 @@ class AppsV3Controller < ApplicationController
   end
 
   def update
-    message = AppUpdateMessage.new(params[:body])
+    message = AppUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -115,7 +115,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def destroy
-    app, space, org = AppDeleteFetcher.new.fetch(params[:guid])
+    app, space, org = AppDeleteFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -132,7 +132,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def start
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -148,7 +148,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def stop
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
@@ -160,7 +160,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def restart
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unprocessable_lacking_droplet! unless app.droplet
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -181,7 +181,7 @@ class AppsV3Controller < ApplicationController
   def builds
     message = AppBuildsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     dataset = AppBuildsListFetcher.new(app.guid, message).fetch_all
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -193,7 +193,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def show_env
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     FeatureFlag.raise_unless_enabled!(:env_var_visibility)
 
@@ -208,7 +208,7 @@ class AppsV3Controller < ApplicationController
   def show_environment_variables
     FeatureFlag.raise_unless_enabled!(:env_var_visibility)
 
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
@@ -219,12 +219,12 @@ class AppsV3Controller < ApplicationController
   end
 
   def update_environment_variables
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    message = AppUpdateEnvironmentVariablesMessage.new(params[:body])
+    message = AppUpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message)
@@ -233,9 +233,9 @@ class AppsV3Controller < ApplicationController
   end
 
   def assign_current_droplet
-    app_guid     = params[:guid]
-    droplet_guid = params[:body].dig(:data, :guid)
-    cannot_remove_droplet! if params[:body].key?('data') && droplet_guid.nil?
+    app_guid     = hashed_params[:guid]
+    droplet_guid = hashed_params[:body].dig(:data, :guid)
+    cannot_remove_droplet! if hashed_params[:body].key?('data') && droplet_guid.nil?
     app, space, org, droplet = AssignCurrentDropletFetcher.new.fetch(app_guid, droplet_guid)
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
@@ -255,7 +255,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def current_droplet_relationship
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
 
@@ -270,7 +270,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def current_droplet
-    app, space, org = AppFetcher.new.fetch(params[:guid])
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     droplet = DropletModel.where(guid: app.droplet_guid).eager(:space, space: :organization).all.first
 

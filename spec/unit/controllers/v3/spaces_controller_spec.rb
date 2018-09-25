@@ -29,7 +29,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: org, space: space, user: user)
 
-            get :show, guid: space.guid
+            get :show, params: { guid: space.guid }
 
             expect(response.status).to eq(expected_return_value),
               "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
@@ -96,7 +96,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         let(:params) { { 'page' => page, 'per_page' => per_page, 'order_by' => 'name' } }
 
         it 'paginates the response' do
-          get :index, params
+          get :index, params: params
 
           parsed_response = parsed_body
           expect(parsed_response['pagination']['total_results']).to eq(3)
@@ -107,7 +107,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when invalid pagination values are specified' do
         it 'returns 400' do
-          get :index, per_page: 'meow'
+          get :index, params: { per_page: 'meow' }
 
           expect(response.status).to eq 400
           expect(response.body).to include('Per page must be a positive integer')
@@ -117,7 +117,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when unknown pagination fields are specified' do
         it 'returns 400' do
-          get :index, meow: 'bad-val', nyan: 'mow'
+          get :index, params: { meow: 'bad-val', nyan: 'mow' }
 
           expect(response.status).to eq 400
           expect(response.body).to include('BadQueryParameter')
@@ -187,7 +187,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         describe 'names' do
           it 'returns the list of matching spaces' do
-            get :index, { names: 'Alpaca,Horse' }
+            get :index, params: { names: 'Alpaca,Horse' }
 
             expect(response.status).to eq(200)
             expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
@@ -198,7 +198,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         describe 'guids' do
           it 'returns the list of matching spaces' do
-            get :index, { guids: "#{org1_space.guid},#{org2_space.guid}" }
+            get :index, params: { guids: "#{org1_space.guid},#{org2_space.guid}" }
 
             expect(response.status).to eq(200)
             expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
@@ -215,7 +215,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
         describe 'names' do
           it 'returns the list of matching spaces' do
-            get :index, { names: 'Alpaca,Horse' }
+            get :index, params: { names: 'Alpaca,Horse' }
 
             expect(response.status).to eq(200)
             expect(parsed_body['resources'].map { |s| s['name'] }).to match_array([
@@ -225,7 +225,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
           describe 'guids' do
             it 'returns the list of readable matching spaces' do
-              get :index, { guids: "#{org1_space.guid},#{org2_space.guid}" }
+              get :index, params: { guids: "#{org1_space.guid},#{org2_space.guid}" }
 
               expect(response.status).to eq(200)
               expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
@@ -273,7 +273,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when name is specified' do
         it 'returns the spaces ordered by name in ascending order' do
-          get :index, { order_by: 'name' }
+          get :index, params: { order_by: 'name' }
 
           expect(response.status).to eq(200)
 
@@ -283,7 +283,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'includes the name parameter in pagination links' do
-          get :index, { order_by: 'name', per_page: 1, page: 2 }
+          get :index, params: { order_by: 'name', per_page: 1, page: 2 }
 
           expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=1&per_page=1")
           expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=4&per_page=1")
@@ -295,7 +295,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when -name is specified' do
         it 'returns the spaces ordered by name in descending order' do
-          get :index, { order_by: '-name' }
+          get :index, params: { order_by: '-name' }
 
           expect(response.status).to eq(200)
 
@@ -305,7 +305,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'includes the -name parameter in pagination links' do
-          get :index, { order_by: '-name', per_page: 1, page: 2 }
+          get :index, params: { order_by: '-name', per_page: 1, page: 2 }
 
           expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-name&page=1&per_page=1")
           expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-name&page=4&per_page=1")
@@ -316,7 +316,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when created_at is specified' do
         it 'returns the spaces ordered by created_at in ascending order' do
-          get :index, { order_by: 'created_at' }
+          get :index, params: { order_by: 'created_at' }
 
           expect(response.status).to eq(200)
 
@@ -326,7 +326,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'includes the created_at parameter in pagination links' do
-          get :index, { order_by: 'created_at', per_page: 1, page: 2 }
+          get :index, params: { order_by: 'created_at', per_page: 1, page: 2 }
 
           expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=1&per_page=1")
           expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=4&per_page=1")
@@ -337,7 +337,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when -created_at is specified' do
         it 'returns the spaces ordered by created_at in descending order' do
-          get :index, { order_by: '-created_at' }
+          get :index, params: { order_by: '-created_at' }
 
           expect(response.status).to eq(200)
 
@@ -347,7 +347,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'includes the created_at parameter in pagination links' do
-          get :index, { order_by: '-created_at', per_page: 1, page: 2 }
+          get :index, params: { order_by: '-created_at', per_page: 1, page: 2 }
 
           expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-created_at&page=1&per_page=1")
           expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-created_at&page=4&per_page=1")
@@ -358,7 +358,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when updated_at is specified' do
         it 'includes the updated_at parameter in pagination links' do
-          get :index, { order_by: 'updated_at', per_page: 1, page: 2 }
+          get :index, params: { order_by: 'updated_at', per_page: 1, page: 2 }
 
           expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=1&per_page=1")
           expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=4&per_page=1")
@@ -369,7 +369,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when -updated_at is specified' do
         it 'includes the updated_at parameter in pagination links' do
-          get :index, { order_by: '-updated_at', per_page: 1, page: 2 }
+          get :index, params: { order_by: '-updated_at', per_page: 1, page: 2 }
 
           expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-updated_at&page=1&per_page=1")
           expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=-updated_at&page=4&per_page=1")
@@ -380,7 +380,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when a non-supported value is specified' do
         it 'returns the spaces ordered by updated_at in descending order' do
-          get :index, { order_by: 'organization_guid' }
+          get :index, params: { order_by: 'organization_guid' }
 
           expect(response.status).to eq(400)
           expect(response.body).to include 'BadQueryParameter'
@@ -427,7 +427,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: org, user: user)
 
-            post :create, body: req_body
+            post :create, params: req_body, as: :json
 
             expect(response.status).to eq expected_return_value
           end
@@ -439,7 +439,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       let(:org_guid) { 'deception' }
 
       it 'returns a 422' do
-        post :create, body: req_body
+        post :create, params: req_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -450,7 +450,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     context 'when the user does not have read permission on the org' do
       it 'returns a 422' do
         set_current_user(user_without_role)
-        post :create, body: req_body
+        post :create, params: req_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -462,7 +462,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       it 'returns a 422 and a helpful error' do
         req_body[:invalid] = 'field'
 
-        post :create, body: req_body
+        post :create, params: req_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -474,7 +474,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       let(:name) { nil }
 
       it 'returns a 422 and a helpful error' do
-        post :create, body: req_body
+        post :create, params: req_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -490,7 +490,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
 
       it 'returns a 422 and a helpful error' do
-        post :create, body: req_body
+        post :create, params: req_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -523,7 +523,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'can assign an isolation segment to a space in org1' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
           expect(response.status).to eq(200)
           space1.reload
@@ -533,13 +533,11 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'can remove an isolation segment from a space' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
-
-          expect(response.status).to eq(200)
+          space1.update(isolation_segment_guid: isolation_segment_model.guid)
           space1.reload
           expect(space1.isolation_segment_guid).to eq(isolation_segment_model.guid)
 
-          patch :update_isolation_segment, guid: space1.guid, body: { data: nil }
+          patch :update_isolation_segment, params: { guid: space1.guid, data: nil }, as: :json
           expect(response.status).to eq(200)
           space1.reload
           expect(space1.isolation_segment_guid).to eq(nil)
@@ -549,7 +547,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when the org has not been entitled with the isolation segment' do
         it 'will not assign an isolation segment to a space in a different org' do
-          patch :update_isolation_segment, guid: space3.guid, body: update_message
+          patch :update_isolation_segment, params: { guid: space3.guid }.merge(update_message), as: :json
 
           expect(response.status).to eq(422)
           expect(response.body).to include(
@@ -562,7 +560,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         let!(:update_message) { { 'data' => { 'guid' => 'potato' } } }
 
         it 'raises an error' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
           expect(response.status).to eq(422)
           expect(response.body).to include(
@@ -579,7 +577,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'throws ResourceNotFound error' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -594,7 +592,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'returns a successful response' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
           expect(response.status).to eq(200)
         end
@@ -606,7 +604,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         end
 
         it 'returns an Unauthorized error' do
-          patch :update_isolation_segment, guid: space1.guid, body: update_message
+          patch :update_isolation_segment, params: { guid: space1.guid }.merge(update_message), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -631,7 +629,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       end
 
       it 'returns a 200 and the isolation segment associated with the space' do
-        get :show_isolation_segment, guid: space.guid
+        get :show_isolation_segment, params: { guid: space.guid }
 
         expect(response.status).to eq(200)
         expect(parsed_body['data']['guid']).to eq(isolation_segment_model.guid)
@@ -639,7 +637,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
       context 'when the space does not exist' do
         it 'returns a 404' do
-          get :show_isolation_segment, guid: 'potato'
+          get :show_isolation_segment, params: { guid: 'potato' }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('Space not found')
@@ -650,7 +648,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         before { space.update(isolation_segment_guid: nil) }
 
         it 'returns a 200' do
-          get :show_isolation_segment, guid: space.guid
+          get :show_isolation_segment, params: { guid: space.guid }
 
           expect(response.status).to eq(200)
           expect(parsed_body['data']).to eq(nil)
@@ -662,7 +660,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
       before { allow_user_read_access_for(user, orgs: [], spaces: []) }
 
       it 'throws ResourceNotFound error' do
-        get :show_isolation_segment, guid: space.guid
+        get :show_isolation_segment, params: { guid: space.guid }
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'

@@ -3,7 +3,7 @@ require 'presenters/v3/job_presenter'
 module V3
   class JobsController < ApplicationController
     def show
-      job = VCAP::CloudController::PollableJobModel.find(guid: params[:guid])
+      job = VCAP::CloudController::PollableJobModel.find(guid: hashed_params[:guid])
       job_not_found! unless job
 
       render status: :ok, json: Presenters::V3::JobPresenter.new(job)

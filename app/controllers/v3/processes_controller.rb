@@ -60,7 +60,7 @@ class ProcessesController < ApplicationController
   end
 
   def terminate
-    ProcessTerminate.new(user_audit_info, @process, params[:index].to_i).terminate
+    ProcessTerminate.new(user_audit_info, @process, hashed_params[:index].to_i).terminate
 
     head :no_content
   rescue ProcessTerminate::InstanceNotFound
@@ -70,7 +70,7 @@ class ProcessesController < ApplicationController
   def scale
     FeatureFlag.raise_unless_enabled!(:app_scaling)
 
-    message = ProcessScaleMessage.new(params[:body])
+    message = ProcessScaleMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     ProcessScale.new(user_audit_info, @process, message).scale
@@ -90,11 +90,11 @@ class ProcessesController < ApplicationController
 
   def find_process_and_space
     if app_nested?
-      @process, app, @space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: params[:app_guid], process_type: params[:type])
+      @process, app, @space, org = ProcessFetcher.new.fetch_for_app_by_type(app_guid: hashed_params[:app_guid], process_type: hashed_params[:type])
       app_not_found! unless app && permission_queryer.can_read_from_space?(@space.guid, org.guid)
       process_not_found! unless @process
     else
-      @process, @space, org = ProcessFetcher.new.fetch(process_guid: params[:process_guid])
+      @process, @space, org = ProcessFetcher.new.fetch(process_guid: hashed_params[:process_guid])
       process_not_found! unless @process && permission_queryer.can_read_from_space?(@space.guid, org.guid)
     end
   end

@@ -16,7 +16,7 @@ RSpec.describe TasksController, type: :controller do
         state: VCAP::CloudController::DropletModel::STAGED_STATE)
     end
 
-    let(:req_body) do
+    let(:request_body) do
       {
         "name": 'mytask',
         "command": 'rake db:migrate && true',
@@ -37,7 +37,7 @@ RSpec.describe TasksController, type: :controller do
     end
 
     it 'returns a 202 and the task' do
-      post :create, app_guid: app_model.guid, body: req_body
+      post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
       expect(response.status).to eq(202)
       expect(parsed_body['name']).to eq('mytask')
@@ -49,7 +49,7 @@ RSpec.describe TasksController, type: :controller do
     it 'creates a task for the app' do
       expect(app_model.tasks.count).to eq(0)
 
-      post :create, app_guid: app_model.guid, body: req_body
+      post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
       expect(app_model.reload.tasks.count).to eq(1)
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
@@ -60,7 +60,7 @@ RSpec.describe TasksController, type: :controller do
         let(:tasks_enabled) { false }
 
         it 'raises 403 for non-admins' do
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
@@ -69,7 +69,7 @@ RSpec.describe TasksController, type: :controller do
 
         it 'succeeds for admins' do
           set_current_user_as_admin(user: user)
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(202)
         end
@@ -81,7 +81,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'raises 403' do
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -95,7 +95,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 403 unauthorized' do
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -108,7 +108,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -118,7 +118,7 @@ RSpec.describe TasksController, type: :controller do
 
     context 'when the app does not exist' do
       it 'returns a 404 ResourceNotFound' do
-        post :create, app_guid: 'bogus', body: req_body
+        post :create, params: { app_guid: 'bogus' }.merge(request_body), as: :json
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -128,9 +128,9 @@ RSpec.describe TasksController, type: :controller do
 
     context 'when the user has requested an invalid field' do
       it 'returns a 400 and a helpful error' do
-        req_body[:invalid] = 'field'
+        request_body[:invalid] = 'field'
 
-        post :create, app_guid: app_model.guid, body: req_body
+        post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -141,9 +141,9 @@ RSpec.describe TasksController, type: :controller do
     context 'when there is a validation failure' do
       it 'returns a 422 and a helpful error' do
         stub_const('VCAP::CloudController::TaskModel::COMMAND_MAX_LENGTH', 6)
-        req_body[:command] = 'a' * 7
+        request_body[:command] = 'a' * 7
 
-        post :create, app_guid: app_model.guid, body: req_body
+        post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -153,7 +153,7 @@ RSpec.describe TasksController, type: :controller do
 
     context 'invalid task' do
       it 'returns a useful error message' do
-        post :create, app_guid: app_model.guid, body: {}
+        post :create, params: { app_guid: app_model.guid }
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -163,7 +163,7 @@ RSpec.describe TasksController, type: :controller do
     describe 'droplets' do
       context 'when a droplet guid is not provided' do
         it "successfully creates the task on the app's droplet" do
-          post :create, app_guid: app_model.guid, body: req_body
+          post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(202)
           expect(parsed_body['droplet_guid']).to include(droplet.guid)
@@ -173,7 +173,7 @@ RSpec.describe TasksController, type: :controller do
           let(:droplet) { nil }
 
           it 'returns a 422 and a helpful error' do
-            post :create, app_guid: app_model.guid, body: req_body
+            post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -189,11 +189,11 @@ RSpec.describe TasksController, type: :controller do
         }
 
         it 'successfully creates a task on the specifed droplet' do
-          post :create, app_guid: app_model.guid, body: {
+          post :create, params: { app_guid: app_model.guid }.merge(
             "name": 'mytask',
             "command": 'rake db:migrate && true',
             "droplet_guid": custom_droplet.guid
-          }
+          ), as: :json
 
           expect(response.status).to eq 202
           expect(parsed_body['droplet_guid']).to eq(custom_droplet.guid)
@@ -202,11 +202,11 @@ RSpec.describe TasksController, type: :controller do
 
         context 'and the droplet is not found' do
           it 'returns a 404' do
-            post :create, app_guid: app_model.guid, body: {
+            post :create, params: { app_guid: app_model.guid }.merge(
               "name": 'mytask',
               "command": 'rake db:migrate && true',
               "droplet_guid": 'fake-droplet-guid'
-            }
+            ), as: :json
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -218,11 +218,11 @@ RSpec.describe TasksController, type: :controller do
           let(:custom_droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
           it 'returns a 404' do
-            post :create, app_guid: app_model.guid, body: {
+            post :create, params: { app_guid: app_model.guid }.merge(
               "name": 'mytask',
               "command": 'rake db:migrate && true',
               "droplet_guid": custom_droplet.guid
-            }
+            ), as: :json
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -243,7 +243,7 @@ RSpec.describe TasksController, type: :controller do
     end
 
     it 'returns a 200 and the task' do
-      get :show, task_guid: task.guid
+      get :show, params: { task_guid: task.guid }
 
       expect(response.status).to eq 200
       expect(parsed_body['name']).to eq('mytask')
@@ -257,7 +257,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'raises 403' do
-          get :show, task_guid: task.guid
+          get :show, params: { task_guid: task.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -270,7 +270,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          get :show, task_guid: task.guid
+          get :show, params: { task_guid: task.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -285,7 +285,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 200' do
-          get :show, task_guid: task.guid
+          get :show, params: { task_guid: task.guid }
 
           expect(response.status).to eq 200
         end
@@ -299,7 +299,7 @@ RSpec.describe TasksController, type: :controller do
 
         context 'when the user has no permissions' do
           it 'returns a 404' do
-            get :show, task_guid: task.guid
+            get :show, params: { task_guid: task.guid }
 
             expect(response.status).to eq 404
           end
@@ -311,7 +311,7 @@ RSpec.describe TasksController, type: :controller do
           end
 
           it 'returns a 200' do
-            get :show, task_guid: task.guid
+            get :show, params: { task_guid: task.guid }
 
             expect(response.status).to eq 200
           end
@@ -320,7 +320,7 @@ RSpec.describe TasksController, type: :controller do
     end
 
     it 'returns a 404 if the task does not exist' do
-      get :show, task_guid: 'bogus'
+      get :show, params: { task_guid: 'bogus' }
 
       expect(response.status).to eq 404
       expect(response.body).to include 'ResourceNotFound'
@@ -362,7 +362,7 @@ RSpec.describe TasksController, type: :controller do
         VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
 
-        get :index, params
+        get :index, params: params
 
         parsed_response = parsed_body
         expect(parsed_response['pagination']['total_results']).to eq(2)
@@ -380,7 +380,7 @@ RSpec.describe TasksController, type: :controller do
         task_2 = VCAP::CloudController::TaskModel.make(app_guid: app_model.guid)
         VCAP::CloudController::TaskModel.make
 
-        get :index, app_guid: app_model.guid
+        get :index, params: { app_guid: app_model.guid }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -388,7 +388,7 @@ RSpec.describe TasksController, type: :controller do
       end
 
       it 'provides the correct base url in the pagination links' do
-        get :index, app_guid: app_model.guid
+        get :index, params: { app_guid: app_model.guid }
 
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app_model.guid}/tasks")
       end
@@ -401,7 +401,7 @@ RSpec.describe TasksController, type: :controller do
         it 'excludes secrets' do
           VCAP::CloudController::TaskModel.make(app: app_model)
 
-          get :index, app_guid: app_model.guid
+          get :index, params: { app_guid: app_model.guid }
 
           expect(parsed_body['resources'][0]).not_to have_key('command')
         end
@@ -409,7 +409,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'the app does not exist' do
         it 'returns a 404 Resource Not Found' do
-          get :index, app_guid: 'hello-i-do-not-exist'
+          get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -422,7 +422,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 404 Resource Not Found error' do
-          get :index, app_guid: app_model.guid
+          get :index, params: { app_guid: app_model.guid }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -431,7 +431,12 @@ RSpec.describe TasksController, type: :controller do
 
       context 'when space_guids, org_guids, or app_guids are present' do
         it 'returns a 400 Bad Request' do
-          get :index, { app_guid: app_model.guid, 'space_guids' => [app_model.space.guid], 'organization_guids' => [app_model.organization.guid], 'app_guids' => [app_model.guid] }
+          get :index, params: {
+            app_guid: app_model.guid,
+            'space_guids' => [app_model.space.guid],
+            'organization_guids' => [app_model.organization.guid],
+            'app_guids' => [app_model.guid]
+          }
 
           expect(response.status).to eq 400
           expect(response.body).to include "Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'"
@@ -490,7 +495,7 @@ RSpec.describe TasksController, type: :controller do
     describe 'query params errors' do
       context 'invalid param format' do
         it 'returns 400' do
-          get :index, per_page: 'meow'
+          get :index, params: { per_page: 'meow' }
 
           expect(response.status).to eq 400
           expect(response.body).to include('Per page must be a positive integer')
@@ -500,7 +505,7 @@ RSpec.describe TasksController, type: :controller do
 
       context 'unknown query param' do
         it 'returns 400' do
-          get :index, meow: 'bad-val', nyan: 'mow'
+          get :index, params: { meow: 'bad-val', nyan: 'mow' }
 
           expect(response.status).to eq 400
           expect(response.body).to include('BadQueryParameter')
@@ -524,7 +529,7 @@ RSpec.describe TasksController, type: :controller do
     end
 
     it 'returns a 202' do
-      put :cancel, task_guid: task.guid
+      put :cancel, params: { task_guid: task.guid }
 
       expect(response.status).to eq 202
       expect(parsed_body['name']).to eq('usher')
@@ -533,7 +538,7 @@ RSpec.describe TasksController, type: :controller do
 
     context 'when the task does not exist' do
       it 'returns a 404 ResourceNotFound' do
-        put :cancel, task_guid: 'bogus-guid'
+        put :cancel, params: { task_guid: 'bogus-guid' }
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -547,7 +552,7 @@ RSpec.describe TasksController, type: :controller do
       end
 
       it 'returns a 422 Unprocessable' do
-        put :cancel, task_guid: task.guid
+        put :cancel, params: { task_guid: task.guid }
 
         expect(response.status).to eq 422
         expect(response.body).to include('sad trombone')
@@ -561,7 +566,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          put :cancel, task_guid: task.guid
+          put :cancel, params: { task_guid: task.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -576,7 +581,7 @@ RSpec.describe TasksController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized' do
-          put :cancel, task_guid: task.guid
+          put :cancel, params: { task_guid: task.guid }
 
           expect(response.status).to eq 403
           expect(response.body).to include('NotAuthorized')

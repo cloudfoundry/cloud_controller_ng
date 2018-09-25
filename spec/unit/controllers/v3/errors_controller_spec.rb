@@ -31,18 +31,5 @@ RSpec.describe ErrorsController, type: :controller do
       expect(response.status).to eq(400)
       expect(parsed_body['errors'].first['title']).to eq('CF-InvalidRequest')
     end
-
-    context 'when the json is invalid' do
-      before do
-        @request.env['action_dispatch.exception'] = ActionDispatch::ParamsParser::ParseError.new(nil, nil)
-      end
-
-      it 'it returns an error' do
-        get :bad_request
-
-        expect(response.status).to eq(400)
-        expect(response).to have_error_message('Request invalid due to parse error: invalid request body')
-      end
-    end
   end
 end

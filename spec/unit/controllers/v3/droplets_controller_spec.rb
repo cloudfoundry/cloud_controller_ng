@@ -30,7 +30,7 @@ RSpec.describe DropletsController, type: :controller do
     let(:state) { 'STAGED' }
     let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: state, app_guid: source_app_guid) }
     let(:source_droplet_guid) { source_droplet.guid }
-    let(:req_body) do
+    let(:request_body) do
       {
         relationships: {
           app: { data: { guid: target_app_guid } }
@@ -46,16 +46,15 @@ RSpec.describe DropletsController, type: :controller do
 
     it 'returns a 201 OK response with the new droplet' do
       expect {
-        post :copy, source_guid: source_droplet_guid, body: req_body
+        post :copy, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
       }.to change { target_app.reload.droplets.count }.from(0).to(1)
-
-      expect(response.status).to eq(201)
+      expect(response.status).to eq(201), response.body
       expect(target_app.droplets.first.guid).to eq(parsed_body['guid'])
     end
 
     context 'when the request is invalid' do
       it 'returns a 422' do
-        post :copy, source_guid: source_droplet_guid, body: { 'super_duper': 'bad_request' }
+        post :copy, params: { source_guid: source_droplet_guid, body: { 'super_duper': 'bad_request' } }, as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -69,7 +68,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a not found error' do
-          post :copy, source_guid: source_droplet_guid, body: req_body
+          post :copy, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include 'ResourceNotFound'
@@ -87,7 +86,7 @@ RSpec.describe DropletsController, type: :controller do
           end
 
           it 'returns a 404 ResourceNotFound error' do
-            post :copy, source_guid: source_droplet_guid, body: req_body
+            post :copy, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
             expect(response.status).to eq 404
             expect(response.body).to include 'ResourceNotFound'
@@ -101,7 +100,7 @@ RSpec.describe DropletsController, type: :controller do
           end
 
           it 'returns a forbidden error' do
-            post :copy, source_guid: source_droplet_guid, body: req_body
+            post :copy, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
             expect(response.status).to eq(403)
             expect(response.body).to include('NotAuthorized')
@@ -116,7 +115,7 @@ RSpec.describe DropletsController, type: :controller do
       end
 
       it 'returns an error ' do
-        post :copy, source_guid: source_droplet_guid, body: req_body
+        post :copy, params: { source_guid: source_droplet_guid }.merge(body: request_body), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('boom')
@@ -126,7 +125,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'when the source droplet does not exist' do
       let(:source_droplet_guid) { 'no-source-droplet-here' }
       it 'returns a not found error' do
-        post :copy, source_guid: 'no droplet here', body: req_body
+        post :copy, params: { source_guid: 'no droplet here' }.merge(body: request_body), as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
@@ -136,7 +135,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'when the target application does not exist' do
       let(:target_app_guid) { 'not a real app guid' }
       it 'returns a not found error' do
-        post :copy, source_guid: 'no droplet here', body: req_body
+        post :copy, params: { source_guid: 'no droplet here' }.merge(body: request_body), as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include 'ResourceNotFound'
@@ -155,7 +154,7 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     it 'returns a 200 OK and the droplet' do
-      get :show, guid: droplet.guid
+      get :show, params: { guid: droplet.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body['guid']).to eq(droplet.guid)
@@ -163,7 +162,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'when the droplet does not exist' do
       it 'returns a 404 Not Found' do
-        get :show, guid: 'shablam!'
+        get :show, params: { guid: 'shablam!' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -177,7 +176,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized error' do
-          get :show, guid: droplet.guid
+          get :show, params: { guid: droplet.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -193,7 +192,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a 404 not found' do
-          get :show, guid: droplet.guid
+          get :show, params: { guid: droplet.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -216,7 +215,7 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     it 'returns a 202 ACCEPTED and the job link in header' do
-      delete :destroy, guid: droplet.guid
+      delete :destroy, params: { guid: droplet.guid }
 
       expect(response.status).to eq(202)
       expect(response.body).to be_empty
@@ -225,7 +224,7 @@ RSpec.describe DropletsController, type: :controller do
 
     it 'creates a job to track the deletion and returns it in the location header' do
       expect {
-        delete :destroy, guid: droplet.guid
+        delete :destroy, params: { guid: droplet.guid }
       }.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
@@ -243,7 +242,7 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     it 'updates the job state when the job succeeds' do
-      delete :destroy, guid: droplet.guid
+      delete :destroy, params: { guid: droplet.guid }
 
       job = VCAP::CloudController::PollableJobModel.find(resource_guid: droplet.guid)
       expect(job).to_not be_nil, "Expected to find job with droplet guid '#{droplet.guid}' but did not"
@@ -257,7 +256,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'when the droplet does not exist' do
       it 'returns a 404 Not Found' do
-        delete :destroy, guid: 'not-found'
+        delete :destroy, params: { guid: 'not-found' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -271,7 +270,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns 403' do
-          delete :destroy, guid: droplet.guid
+          delete :destroy, params: { guid: droplet.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -285,7 +284,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound error' do
-          delete :destroy, guid: droplet.guid
+          delete :destroy, params: { guid: droplet.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -298,7 +297,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns 403 NotAuthorized' do
-          delete :destroy, guid: droplet.guid
+          delete :destroy, params: { guid: droplet.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -344,7 +343,7 @@ RSpec.describe DropletsController, type: :controller do
       let(:params) { { 'page' => page, 'per_page' => per_page } }
 
       it 'paginates the response' do
-        get :index, params
+        get :index, params: params
 
         parsed_response = parsed_body
         response_guids  = parsed_response['resources'].map { |r| r['guid'] }
@@ -360,7 +359,7 @@ RSpec.describe DropletsController, type: :controller do
         droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         VCAP::CloudController::DropletModel.make
 
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
 
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response.status).to eq(200)
@@ -368,7 +367,7 @@ RSpec.describe DropletsController, type: :controller do
       end
 
       it 'provides the correct base url in the pagination links' do
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
 
         expect(parsed_body['pagination']['first']['href']).to include("#{link_prefix}/v3/apps/#{app.guid}/droplets")
       end
@@ -379,7 +378,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a 404 Resource Not Found error' do
-          get :index, app_guid: app.guid
+          get :index, params: { app_guid: app.guid }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -388,7 +387,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the app does not exist' do
         it 'returns a 404 Resource Not Found error' do
-          get :index, app_guid: 'made-up'
+          get :index, params: { app_guid: 'made-up' }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -401,7 +400,7 @@ RSpec.describe DropletsController, type: :controller do
       let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       it 'returns droplets for the package' do
-        get :index, package_guid: package.guid
+        get :index, params: { package_guid: package.guid }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -409,7 +408,7 @@ RSpec.describe DropletsController, type: :controller do
       end
 
       it 'provides the correct base url in the pagination links' do
-        get :index, package_guid: package.guid
+        get :index, params: { package_guid: package.guid }
 
         expect(parsed_body['pagination']['first']['href']).to include("/v3/packages/#{package.guid}/droplets")
       end
@@ -420,7 +419,7 @@ RSpec.describe DropletsController, type: :controller do
         end
 
         it 'returns a 404 Resource Not Found error' do
-          get :index, package_guid: package.guid
+          get :index, params: { package_guid: package.guid }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -429,7 +428,7 @@ RSpec.describe DropletsController, type: :controller do
 
       context 'when the package does not exist' do
         it 'returns a 404 Resource Not Found error' do
-          get :index, package_guid: 'made-up'
+          get :index, params: { package_guid: 'made-up' }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -442,7 +441,7 @@ RSpec.describe DropletsController, type: :controller do
         let(:params) { { 'order_by' => '^%' } }
 
         it 'returns 400' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -454,7 +453,7 @@ RSpec.describe DropletsController, type: :controller do
         let(:params) { { 'bad_param' => 'foo' } }
 
         it 'returns 400' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -467,7 +466,7 @@ RSpec.describe DropletsController, type: :controller do
         let(:params) { { 'per_page' => 9999999999999999 } }
 
         it 'returns 400' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')

@@ -36,7 +36,7 @@ RSpec.describe AppManifestsController, type: :controller do
             it "returns #{expected_return_value}" do
               set_current_user_as_role(role: role, org: org, space: space, user: user)
 
-              post :apply_manifest, guid: app_model.guid, body: request_body
+              post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
               expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
             end
@@ -50,7 +50,7 @@ RSpec.describe AppManifestsController, type: :controller do
         let(:request_body) { { 'name' => 'blah', 'instances' => 4 } }
 
         it 'returns a 400' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
           expect(response.status).to eq(400)
         end
       end
@@ -59,7 +59,7 @@ RSpec.describe AppManifestsController, type: :controller do
         let(:request_body) { { 'applications' => [] } }
 
         it 'returns a 400' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
           expect(response.status).to eq(400)
         end
 
@@ -67,7 +67,7 @@ RSpec.describe AppManifestsController, type: :controller do
           let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 1, 'memory' => '4MB' }] } }
 
           it 'returns a 400' do
-            post :apply_manifest, guid: 'no-such-app-guid', body: request_body
+            post :apply_manifest, params: { guid: 'no-such-app-guid' }.merge(request_body), as: :yaml
             expect(response.status).to eq(404)
           end
         end
@@ -87,7 +87,7 @@ RSpec.describe AppManifestsController, type: :controller do
         end
 
         it 'returns a 422 and validation errors' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(10)
@@ -145,7 +145,7 @@ RSpec.describe AppManifestsController, type: :controller do
         end
 
         it 'returns a 400' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body)
           expect(response.status).to eq(400)
           # Verify we're getting the InvalidError we're expecting
           expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('InvalidRequest', 'Content-Type must be yaml').exactly :once
@@ -161,7 +161,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the buildpack' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -181,7 +181,7 @@ RSpec.describe AppManifestsController, type: :controller do
         end
 
         it 'should autodetect the buildpack' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
           expect(response.status).to eq(202)
           app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -201,7 +201,7 @@ RSpec.describe AppManifestsController, type: :controller do
         end
 
         it 'returns an error' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
@@ -225,7 +225,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the buildpacks' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -246,7 +246,7 @@ RSpec.describe AppManifestsController, type: :controller do
         end
 
         it 'returns an error' do
-          post :apply_manifest, guid: app_model.guid, body: request_body
+          post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
@@ -269,7 +269,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the stack' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -290,7 +290,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -311,7 +311,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -332,7 +332,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -353,7 +353,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -361,7 +361,7 @@ RSpec.describe AppManifestsController, type: :controller do
 
         expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
-          expect(message.health_check_invocation_timeout).to eq '55'
+          expect(message.health_check_invocation_timeout).to eq 55
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -374,7 +374,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the command' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -382,7 +382,7 @@ RSpec.describe AppManifestsController, type: :controller do
 
         expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
-          expect(message.timeout).to eq '9001'
+          expect(message.timeout).to eq 9001
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -395,7 +395,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the environment' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -416,7 +416,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'sets the route' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -431,7 +431,7 @@ RSpec.describe AppManifestsController, type: :controller do
     end
 
     it 'successfully scales the app in a background job' do
-      post :apply_manifest, guid: app_model.guid, body: request_body
+      post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
       expect(response.status).to eq(202)
       app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
@@ -439,7 +439,7 @@ RSpec.describe AppManifestsController, type: :controller do
 
       expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
         expect(app_guid).to eq app_model.guid
-        expect(message.instances).to eq '2'
+        expect(message.instances).to eq 2
         expect(action).to eq app_apply_manifest_action
       end
     end
@@ -448,7 +448,7 @@ RSpec.describe AppManifestsController, type: :controller do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
 
       expect {
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
       }.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
@@ -478,7 +478,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       it 'emits an "App Apply Manifest" audit event' do
-        post :apply_manifest, guid: app_model.guid, body: request_body
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 
         expect(app_event_repository).to have_received(:record_app_apply_manifest).
           with(app_model, app_model.space, instance_of(VCAP::CloudController::UserAuditInfo), request_body.to_yaml)
@@ -508,12 +508,12 @@ RSpec.describe AppManifestsController, type: :controller do
     end
 
     it 'returns a 200' do
-      get :show, guid: app_model.guid
+      get :show, params: { guid: app_model.guid }
       expect(response.status).to eq(200)
     end
 
     it 'returns a YAML manifest for the app' do
-      get :show, guid: app_model.guid
+      get :show, params: { guid: app_model.guid }
       expect(response.body).to eq(expected_yml_manifest)
       expect(response.headers['Content-Type']).to eq('application/x-yaml; charset=utf-8')
     end
@@ -531,7 +531,7 @@ RSpec.describe AppManifestsController, type: :controller do
           'org_auditor' => 404,
           'org_billing_manager' => 404,
         } }
-        let(:api_call) { lambda { get :show, guid: app_model.guid } }
+        let(:api_call) { lambda { get :show, params: { guid: app_model.guid } } }
       end
     end
   end

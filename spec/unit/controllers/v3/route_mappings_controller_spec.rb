@@ -9,7 +9,7 @@ RSpec.describe RouteMappingsController, type: :controller do
   let(:process_type) { 'web' }
 
   describe '#create' do
-    let(:req_body) do
+    let(:request_body) do
       {
         relationships: {
           app:     { guid: app.guid },
@@ -26,7 +26,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     it 'successfully creates a route mapping' do
-      post :create, body: req_body
+      post :create, params: request_body, as: :json
 
       expect(response.status).to eq(201)
       expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
@@ -36,14 +36,14 @@ RSpec.describe RouteMappingsController, type: :controller do
       let(:process_type) { true }
 
       it 'raises an unprocessable error' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.body).to include 'UnprocessableEntity'
       end
     end
 
     context 'when the requested route does not exist' do
-      let(:req_body) do
+      let(:request_body) do
         {
           relationships: {
             route: { guid: 'bad-route-guid' },
@@ -53,7 +53,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
 
       it 'raises an API 404 error' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 404
         expect(response.body).to include('ResourceNotFound')
@@ -62,7 +62,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     context 'when the requested app does not exist' do
-      let(:req_body) do
+      let(:request_body) do
         {
           relationships: {
             route: { guid: route.guid },
@@ -72,7 +72,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
 
       it 'raises an API 404 error' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -86,7 +86,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
 
       it 'returns an UnprocessableEntity error' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -100,7 +100,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -113,7 +113,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound error' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -127,7 +127,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises ApiError NotAuthorized' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -141,7 +141,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:updated_weight) { original_weight + 10 }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route, weight: original_weight) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:req_body) do
+    let(:request_body) do
       {
         weight: updated_weight
       }
@@ -153,7 +153,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     it 'updates the route mapping weight' do
-      patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+      patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
       expect(response.status).to eq(201)
       expect(parsed_body['guid']).to eq(route_mapping.guid)
       expect(parsed_body['weight']).to eq(updated_weight)
@@ -164,7 +164,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       let(:updated_weight) { 'infinity' }
 
       it 'raises an unprocessable error' do
-        patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+        patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -172,12 +172,12 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     context 'when there is no weight in the patch' do
-      let(:req_body) do
+      let(:request_body) do
         {}
       end
 
       it 'does not change the weight' do
-        patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+        patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
         expect(response.status).to eq(201)
         expect(route_mapping.reload.weight).to eq(original_weight)
       end
@@ -189,7 +189,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
 
       it 'delegates to the copilot handler to notify copilot' do
-        patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+        patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
         expect(route_mapping.reload.weight).to eq(updated_weight)
         expect(VCAP::CloudController::Copilot::Adapter).to have_received(:map_route).with(route_mapping)
       end
@@ -202,7 +202,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises 403' do
-          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+          patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -215,7 +215,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+          patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -230,7 +230,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises ApiError NotAuthorized' do
-          patch :update, body: req_body, route_mapping_guid: route_mapping.guid
+          patch :update, params: { route_mapping_guid: route_mapping.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -248,14 +248,14 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     it 'successfully get a route mapping' do
-      get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+      get :show, params: { app_guid: app.guid, route_mapping_guid: route_mapping.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body['guid']).to eq(VCAP::CloudController::RouteMappingModel.last.guid)
     end
 
     it 'returns a 404 if the route mapping does not exist' do
-      get :show, app_guid: app.guid, route_mapping_guid: 'fake-guid'
+      get :show, params: { app_guid: app.guid, route_mapping_guid: 'fake-guid' }
 
       expect(response.status).to eq(404)
       expect(response.body).to include 'ResourceNotFound'
@@ -269,7 +269,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises 403' do
-          get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+          get :show, params: { app_guid: app.guid, route_mapping_guid: route_mapping.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
@@ -282,7 +282,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound' do
-          get :show, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+          get :show, params: { app_guid: app.guid, route_mapping_guid: route_mapping.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -322,7 +322,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app)
         VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
 
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
 
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
         expect(response.status).to eq(200)
@@ -330,7 +330,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       end
 
       it 'provides the correct base url in the pagination links' do
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/route_mappings")
       end
 
@@ -343,7 +343,7 @@ RSpec.describe RouteMappingsController, type: :controller do
           VCAP::CloudController::RouteMappingModel.make(app: app)
           VCAP::CloudController::RouteMappingModel.make(app: app)
 
-          get :index, params
+          get :index, params: params
 
           parsed_response = parsed_body
           response_guids = parsed_response['resources'].map { |r| r['guid'] }
@@ -354,7 +354,7 @@ RSpec.describe RouteMappingsController, type: :controller do
 
       context 'the app does not exist' do
         it 'returns a 404 Resource Not Found' do
-          get :index, app_guid: 'hello-i-do-not-exist'
+          get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'App'
@@ -367,7 +367,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'returns a 404 Resource Not Found error' do
-          get :index, app_guid: app.guid
+          get :index, params: { app_guid: app.guid }
 
           expect(response.body).to include 'App'
           expect(response.status).to eq 404
@@ -381,7 +381,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'returns a 200' do
-          get :index, app_guid: app.guid
+          get :index, params: { app_guid: app.guid }
           expect(response.status).to eq 200
         end
       end
@@ -432,7 +432,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
 
     it 'successfully deletes the specified route mapping' do
-      delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+      delete :destroy, params: { app_guid: app.guid, route_mapping_guid: route_mapping.guid }
 
       expect(response.status).to eq 204
       expect(route_mapping.exists?).to be_falsey
@@ -440,7 +440,7 @@ RSpec.describe RouteMappingsController, type: :controller do
 
     context 'when the route mapping does not exist' do
       it 'raises an API 404 error' do
-        delete :destroy, app_guid: app.guid, route_mapping_guid: 'not-real'
+        delete :destroy, params: { app_guid: app.guid, route_mapping_guid: 'not-real' }
 
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'Route mapping not found'
@@ -456,7 +456,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises an API 403 error' do
-          delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+          delete :destroy, params: { app_guid: app.guid, route_mapping_guid: route_mapping.guid }
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -469,7 +469,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          delete :destroy, app_guid: app.guid, route_mapping_guid: route_mapping.guid
+          delete :destroy, params: { app_guid: app.guid, route_mapping_guid: route_mapping.guid }
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'

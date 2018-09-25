@@ -8,7 +8,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     let(:org_guid) { space.organization.guid }
     let(:service_binding_type) { 'app' }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, syslog_drain_url: 'syslog://syslog-drain.com') }
-    let(:req_body) do
+    let(:request_body) do
       {
         type: service_binding_type,
         relationships: {
@@ -45,7 +45,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     it 'returns a 201 Created and the service binding' do
-      post :create, body: req_body
+      post :create, params: request_body, as: :json
 
       service_binding = app_model.service_bindings.last
 
@@ -64,7 +64,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 403 Not Authorized' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -77,7 +77,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized error' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -86,7 +86,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     context 'when the request is missing required fields' do
-      let(:req_body) do
+      let(:request_body) do
         {
           relationships: {
             app: { guid: app_model.guid },
@@ -96,7 +96,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       it 'raises a 422 UnprocessableEntity' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -104,7 +104,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     context 'when the type is invalid' do
-      let(:req_body) do
+      let(:request_body) do
         {
           type: 1234,
           relationships: {
@@ -115,7 +115,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       it 'raises a 422 UnprocessableEntity' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -123,7 +123,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     context 'when the request includes unrecognized fields' do
-      let(:req_body) do
+      let(:request_body) do
         {
           type: 'app',
           relationships:
@@ -136,7 +136,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       it 'raises a 422 UnprocessableEntity' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
@@ -144,7 +144,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     context 'when the app does not exist' do
-      let(:req_body) do
+      let(:request_body) do
         {
           type: service_binding_type,
           relationships: {
@@ -159,7 +159,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       it 'raises an 404 ResourceNotFound error' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -168,7 +168,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     context 'when the service instance does not exist' do
-      let(:req_body) do
+      let(:request_body) do
         {
           type: service_binding_type,
           relationships: {
@@ -183,7 +183,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       it 'raises an 404 ResourceNotFound error' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
@@ -192,7 +192,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     context 'when the request includes arbitrary parameter fields' do
-      let(:req_body) do
+      let(:request_body) do
         {
           type: 'app',
           relationships: {
@@ -212,7 +212,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       it 'returns a 201 Created and the service binding' do
-        post :create, body: req_body
+        post :create, params: request_body, as: :json
 
         service_binding = app_model.service_bindings.last
 
@@ -222,7 +222,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       end
 
       context 'when data includes unauthorized keys' do
-        let(:req_body) do
+        let(:request_body) do
           {
             type: 'app',
             relationships: {
@@ -242,7 +242,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'raises a 422 UnprocessableEntity' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -262,7 +262,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'raises an UnbindableService 400 error' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 400
           expect(response.body).to include 'UnbindableService'
@@ -277,7 +277,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'raises an AsyncServiceInstanceOperationInProgress 409 error' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 409
           expect(response.body).to include 'AsyncServiceInstanceOperationInProgress'
@@ -293,7 +293,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a ServiceBindingAppServiceTaken error' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq(400)
           expect(response.body).to include 'ServiceBindingAppServiceTaken'
@@ -308,7 +308,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns CF-VolumeMountServiceDisabled' do
-          post :create, body: req_body
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include 'VolumeMountServiceDisabled'
@@ -328,7 +328,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     it 'returns a 200 OK and the service binding' do
-      get :show, guid: service_binding.guid
+      get :show, params: { guid: service_binding.guid }
 
       expect(response.status).to eq 200
       expect(parsed_body['guid']).to eq(service_binding.guid)
@@ -346,7 +346,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 200' do
-          get :show, guid: service_binding.guid
+          get :show, params: { guid: service_binding.guid }
 
           expect(response.status).to eq 200
         end
@@ -358,7 +358,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized error' do
-          get :show, guid: service_binding.guid
+          get :show, params: { guid: service_binding.guid }
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -371,7 +371,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 404' do
-          get :show, guid: service_binding.guid
+          get :show, params: { guid: service_binding.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -381,7 +381,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
 
       context 'when the service binding does not exist' do
         it 'raises an 404 ResourceNotFound error' do
-          get :show, guid: 'schmuid'
+          get :show, params: { guid: 'schmuid' }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -437,7 +437,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
       let(:params) { { 'page' => page, 'per_page' => per_page } }
 
       it 'paginates the response' do
-        get :index, params
+        get :index, params: params
 
         parsed_response = parsed_body
         response_guids = parsed_response['resources'].map { |r| r['guid'] }
@@ -464,11 +464,13 @@ RSpec.describe ServiceBindingsController, type: :controller do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
-          expect(response.body).to include("Unknown query parameter(s): 'invalid', 'bad'")
+          expect(response.body).to include('Unknown query parameter(s):')
+          expect(response.body).to include('bad')
+          expect(response.body).to include('invalid')
         end
       end
 
@@ -476,7 +478,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         let(:params) { { 'per_page' => 9999999999 } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -498,7 +500,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     end
 
     it 'returns a 204' do
-      delete :destroy, guid: service_binding.guid
+      delete :destroy, params: { guid: service_binding.guid }
       expect(response.status).to eq 204
       expect(service_binding.exists?).to be_falsey
     end
@@ -506,7 +508,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     context 'permissions' do
       context 'when the service binding does not exist' do
         it 'returns a 404' do
-          delete :destroy, guid: 'fake-guid'
+          delete :destroy, params: { guid: 'fake-guid' }
 
           expect(response.status).to eq 404
         end
@@ -519,7 +521,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 403 Not Authorized and does NOT delete the binding' do
-          delete :destroy, guid: service_binding.guid
+          delete :destroy, params: { guid: service_binding.guid }
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -533,7 +535,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized error and does NOT delete the binding' do
-          delete :destroy, guid: service_binding.guid
+          delete :destroy, params: { guid: service_binding.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -547,7 +549,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
 
         it 'returns a 404 and does NOT delete the binding' do
-          delete :destroy, guid: service_binding.guid
+          delete :destroy, params: { guid: service_binding.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'

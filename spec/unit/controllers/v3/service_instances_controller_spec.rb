@@ -27,7 +27,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
         context 'when service instances are filtered by name' do
           it 'returns only the matching service instances' do
-            get :index, names: 'service-instance-1,service-instance-2'
+            get :index, params: { names: 'service-instance-1,service-instance-2' }
             expect(response.status).to eq(200), response.body
             expect(parsed_body['resources'].length).to eq 2
 
@@ -38,7 +38,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
         context 'when service instances are filtered by space guid' do
           it 'returns only the matching service instances' do
-            get :index, space_guids: 'space-2-guid,space-3-guid'
+            get :index, params: { space_guids: 'space-2-guid,space-3-guid' }
             expect(response.status).to eq(200), response.body
             expect(parsed_body['resources'].length).to eq 2
 
@@ -124,7 +124,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when a non-supported value is specified' do
       it 'a bad query parameter error is returned' do
         set_current_user_as_admin
-        get :index, { order_by: 'banana' }
+        get :index, params: { order_by: 'banana' }
 
         expect(response.status).to eq(400)
         expect(response.body).to include 'BadQueryParameter'
@@ -158,7 +158,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: space.organization, space: space, user: user)
 
-            get :relationships_shared_spaces, service_instance_guid: service_instance.guid
+            get :relationships_shared_spaces, params: { service_instance_guid: service_instance.guid }
 
             expect(response.status).to eq(expected_return_value),
               "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
@@ -174,7 +174,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when invalid service instance guid is provided' do
       it 'returns a 404' do
         set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
-        get :relationships_shared_spaces, service_instance_guid: 'nonexistent-guid'
+        get :relationships_shared_spaces, params: { service_instance_guid: 'nonexistent-guid' }
 
         expect(response.status).to eq 404
       end
@@ -183,7 +183,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     context 'when the user has read access to the target space, but not to the source space' do
       it 'returns a 404' do
         set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
-        get :relationships_shared_spaces, service_instance_guid: service_instance.guid
+        get :relationships_shared_spaces, params: { service_instance_guid: service_instance.guid }
 
         expect(response.status).to eq 404
       end
@@ -197,7 +197,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     let(:service_instance_sharing_enabled) { true }
     let(:source_space) { service_instance.space }
 
-    let(:req_body) do
+    let(:request_body) do
       {
         data: [
           { guid: target_space.guid }
@@ -216,7 +216,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
       expect(action).to receive(:create).with(service_instance, [target_space], an_instance_of(VCAP::CloudController::UserAuditInfo))
 
-      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+      post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
     end
 
     it 'shares the service instance to multiple target spaces' do
@@ -224,9 +224,9 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       allow(VCAP::CloudController::ServiceInstanceShare).to receive(:new).and_return(action)
       expect(action).to receive(:create).with(service_instance, a_collection_containing_exactly(target_space, target_space2), an_instance_of(VCAP::CloudController::UserAuditInfo))
 
-      req_body[:data] << { guid: target_space2.guid }
+      request_body[:data] << { guid: target_space2.guid }
 
-      post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+      post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
       expect(response.status).to eq 200
     end
 
@@ -240,7 +240,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
       it 'returns the error to the user' do
         expect {
-          post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+          post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         }.to raise_error('boom')
       end
     end
@@ -249,7 +249,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       let(:service_instance_sharing_enabled) { false }
 
       it 'should return a 403 HTTP status code' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(403)
         expect(response.body).to include('FeatureDisabled')
@@ -259,7 +259,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'when the service instance does not exist' do
       it 'returns a 404' do
-        post :share_service_instance, service_instance_guid: 'nonexistent-service-instance-guid', body: req_body
+        post :share_service_instance, params: { service_instance_guid: 'nonexistent-service-instance-guid' }.merge(request_body), as: :json
         expect(response.status).to eq 404
         expect(response.body).to include('Service instance not found')
       end
@@ -269,7 +269,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       let(:service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include('User-provided services cannot be shared')
       end
@@ -284,7 +284,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include('Access to service space-scoped-service and plan my-plan is not enabled in target-org/target-space')
       end
@@ -296,7 +296,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include('Route services cannot be shared')
       end
@@ -308,7 +308,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include("A service instance called #{service_instance.name} already exists in #{target_space.name}")
       end
@@ -320,7 +320,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(service_plan: service_plan) }
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include("The #{service.label} service does not support service instance sharing.")
       end
@@ -328,11 +328,11 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'when the target space does not exist' do
       before do
-        req_body[:data] = [{ guid: 'nonexistent-space-guid' }]
+        request_body[:data] = [{ guid: 'nonexistent-space-guid' }]
       end
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistent-space-guid']. ")
         expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
@@ -346,7 +346,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}']. ")
         expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
@@ -356,7 +356,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'when multiple target spaces do not exist' do
       before do
-        req_body[:data] = [
+        request_body[:data] = [
           { guid: 'nonexistent-space-guid' },
           { guid: 'nonexistent-space-guid2' },
           { guid: target_space.guid }
@@ -364,7 +364,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'does not share to any of the valid target spaces and returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['nonexistent-space-guid', 'nonexistent-space-guid2']. ")
         expect(response.body).to include('Ensure the spaces exist and that you have access to them.')
@@ -379,7 +379,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include("Unable to share service instance #{service_instance.name} with spaces ['#{target_space.guid}']. ")
         expect(response.body).to include('Write permission is required in order to share a service instance with a space.')
@@ -392,14 +392,14 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         set_current_user_as_role(role: 'space_developer', org: source_space.organization, space: source_space, user: user)
         set_current_user_as_role(role: 'space_auditor', org: target_space.organization, space: target_space, user: user)
 
-        req_body[:data] = [
+        request_body[:data] = [
           { guid: 'nonexistent-space-guid' },
           { guid: target_space.guid }
         ]
       end
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include(
           "Unable to share service instance #{service_instance.name} with spaces ['nonexistent-space-guid']. Ensure the spaces exist and that you have access to them.\\n" \
@@ -410,7 +410,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'when the user is a SpaceAuditor in multiple target spaces' do
-      let(:req_body) do
+      let(:request_body) do
         {
           data: [
             { guid: target_space.guid },
@@ -426,7 +426,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
         expect(response.body).to include(target_space.guid)
         expect(response.body).to include(target_space2.guid)
@@ -436,14 +436,14 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'when the request is malformed' do
-      let(:req_body) {
+      let(:request_body) {
         {
           bork: 'some-name',
         }
       }
 
       it 'returns a 422' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 422
       end
     end
@@ -454,7 +454,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
 
         outer_space = VCAP::CloudController::Space.make
-        req_body[:data] = [{ guid: outer_space.guid }]
+        request_body[:data] = [{ guid: outer_space.guid }]
       end
 
       after do
@@ -462,7 +462,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'cannot share the service instance into another target space' do
-        post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+        post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
         expect(response.status).to eq 403
       end
     end
@@ -490,7 +490,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
             it "returns #{expected_return_value}" do
               set_current_user_as_role(role: role, org: target_space.organization, space: target_space, user: user)
 
-              post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+              post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
 
               expect(response.status).to eq(expected_return_value),
                 "Expected role #{role} to get #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
@@ -524,7 +524,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
             it "returns #{expected_return_value}" do
               set_current_user_as_role(role: role, org: source_space.organization, space: source_space, user: user)
 
-              post :share_service_instance, service_instance_guid: service_instance.guid, body: req_body
+              post :share_service_instance, params: { service_instance_guid: service_instance.guid }.merge(request_body), as: :json
 
               expect(response.status).to eq(expected_return_value),
                 "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
@@ -551,21 +551,21 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     it 'unshares the service instance from the target space' do
-      delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+      delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
       expect(response.status).to eq 204
       expect(service_instance.shared_spaces).to be_empty
     end
 
     context 'service instance does not exist' do
       it 'returns with 404' do
-        delete :unshare_service_instance, service_instance_guid: 'not a service instance guid', space_guid: target_space.guid
+        delete :unshare_service_instance, params: { service_instance_guid: 'not a service instance guid', space_guid: target_space.guid }
         expect(response.status).to eq(404)
       end
     end
 
     context 'target space does not exist' do
       it 'returns 422' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: 'non-existent-target-space-guid'
+        delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: 'non-existent-target-space-guid' }
         expect(response.status).to eq(422)
         error_message = 'Unable to unshare service instance from space non-existent-target-space-guid. '\
           'Ensure the space exists and the service instance has been shared to this space.'
@@ -583,7 +583,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         end
 
         it 'returns 204 and unbinds the app in the target space' do
-          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
           expect(response.status).to eq(204)
           expect(test_app.service_bindings).to be_empty
         end
@@ -595,14 +595,14 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         end
 
         it 'returns 502 and does not unshare the service' do
-          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
           expect(response.status).to eq(502)
           expect(response.body).to include('ServiceInstanceUnshareFailed')
           expect(test_app.service_bindings).to_not be_empty
         end
 
         it 'returns an error with detailed message' do
-          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
           expect(response.body).to include('The service broker returned an invalid response')
         end
       end
@@ -613,7 +613,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         end
 
         it 'returns an error with message that an operation is in progress' do
-          delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+          delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
 
           expect(response.status).to eq(502)
           expect(response.body).to include("The binding between an application and service instance #{service_instance.name}" \
@@ -629,7 +629,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'cannot unshare the service instance' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
         expect(response.status).to eq 403
       end
     end
@@ -652,7 +652,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: source_space.organization, space: source_space, user: user)
 
-            delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+            delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
 
             expect(response.status).to eq(expected_return_value),
               "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
@@ -665,7 +665,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       let(:target_space2) { VCAP::CloudController::Space.make }
 
       it 'returns 422' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space2.guid
+        delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space2.guid }
         expect(response.status).to eq(422)
         error_message = "Unable to unshare service instance from space #{target_space2.guid}. "\
           'Ensure the space exists and the service instance has been shared to this space.'
@@ -682,7 +682,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
       end
 
       it 'only deletes the requested share' do
-        delete :unshare_service_instance, service_instance_guid: service_instance.guid, space_guid: target_space.guid
+        delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space.guid }
         expect(response.status).to eq(204)
         expect(service_instance.shared_spaces).to contain_exactly(target_space2)
       end

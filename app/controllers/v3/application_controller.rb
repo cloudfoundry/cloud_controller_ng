@@ -45,8 +45,8 @@ class ApplicationController < ActionController::Base
   before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
-  before_action :null_coalesce_body
   before_action :hashify_params
+  before_action :null_coalesce_body
 
   rescue_from CloudController::Blobstore::BlobstoreError, with: :handle_blobstore_error
   rescue_from CloudController::Errors::NotAuthenticated, with: :handle_not_authenticated
@@ -171,7 +171,7 @@ class ApplicationController < ActionController::Base
   alias_method :handle_invalid_auth_token, :handle_exception
 
   def null_coalesce_body
-    params[:body] ||= {}
+    hashed_params[:body] ||= {}
   end
 
   def membership

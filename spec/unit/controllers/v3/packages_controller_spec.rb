@@ -16,7 +16,7 @@ RSpec.describe PackagesController, type: :controller do
     end
 
     it 'returns 200 and updates the package state' do
-      post :upload, params.merge(guid: package.guid)
+      post :upload, params: params.merge(guid: package.guid)
 
       expect(response.status).to eq(200)
       expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
@@ -35,7 +35,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 422 and the package' do
-          post :upload, params.merge(new_options)
+          post :upload, params: params.merge(new_options), as: :json
 
           expect(response.status).to eq(422), response.body
           expect(response.body).to include 'UnprocessableEntity'
@@ -50,7 +50,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 422 and the package' do
-          post :upload, params.merge(new_options)
+          post :upload, params: params.merge(new_options), as: :json
 
           expect(response.status).to eq(422), response.body
           expect(response.body).to include 'UnprocessableEntity'
@@ -69,7 +69,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 201 and the package' do
-          post :upload, params.merge(new_options)
+          post :upload, params: params.merge(new_options), as: :json
 
           expect(response.status).to eq(200), response.body
           expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
@@ -88,7 +88,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'non-admin user' do
         it 'raises 403' do
-          post :upload, params.merge(guid: package.guid)
+          post :upload, params: params.merge(guid: package.guid), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('FeatureDisabled')
@@ -100,7 +100,7 @@ RSpec.describe PackagesController, type: :controller do
         before { set_current_user_as_admin(user: user) }
 
         it 'returns 200 and updates the package state' do
-          post :upload, params.merge(guid: package.guid)
+          post :upload, params: params.merge(guid: package.guid), as: :json
 
           expect(response.status).to eq(200)
           expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
@@ -116,7 +116,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'returns a 422 Unprocessable' do
-        post :upload, params.merge(guid: package.guid)
+        post :upload, params: params.merge(guid: package.guid), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -126,7 +126,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when the package does not exist' do
       it 'returns a 404 ResourceNotFound error' do
-        post :upload, params.merge(guid: 'not-real')
+        post :upload, params: params.merge(guid: 'not-real'), as: :json
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -137,7 +137,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:params) { {} }
 
       it 'returns a 422 UnprocessableEntity error' do
-        post :upload, params.merge(guid: package.guid)
+        post :upload, params: params.merge(guid: package.guid), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -151,7 +151,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'returns a 400 PackageBitsAlreadyUploaded error' do
-        post :upload, params.merge(guid: package.guid)
+        post :upload, params: params.merge(guid: package.guid), as: :json
 
         expect(response.status).to eq(400)
         expect(response.body).to include('PackageBitsAlreadyUploaded')
@@ -164,7 +164,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'returns 422' do
-        post :upload, params.merge(guid: package.guid)
+        post :upload, params: params.merge(guid: package.guid), as: :json
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -178,7 +178,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns an Unauthorized error' do
-          post :upload, params.merge(guid: package.guid)
+          post :upload, params: params.merge(guid: package.guid), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -191,7 +191,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 404' do
-          post :upload, params.merge(guid: package.guid)
+          post :upload, params: params.merge(guid: package.guid), as: :json
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -205,7 +205,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 403' do
-          post :upload, params.merge(guid: package.guid)
+          post :upload, params: params.merge(guid: package.guid), as: :json
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -229,7 +229,7 @@ RSpec.describe PackagesController, type: :controller do
     end
 
     it 'returns 302 and the redirect' do
-      get :download, guid: package.guid
+      get :download, params: { guid: package.guid }
 
       expect(response.status).to eq(302)
       expect(response.headers['Location']).to eq('http://package.example.com')
@@ -242,7 +242,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'returns 422' do
-        get :download, guid: package.guid
+        get :download, params: { guid: package.guid }
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -256,7 +256,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'returns 422' do
-        get :download, guid: package.guid
+        get :download, params: { guid: package.guid }
 
         expect(response.status).to eq(422)
         expect(response.body).to include('UnprocessableEntity')
@@ -265,7 +265,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when the package cannot be found' do
       it 'returns 404' do
-        get :download, { guid: 'a-bogus-guid' }
+        get :download, params: { guid: 'a-bogus-guid' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -279,7 +279,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns an Unauthorized error' do
-          get :download, guid: package.guid
+          get :download, params: { guid: package.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -292,7 +292,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns 404' do
-          get :download, guid: package.guid
+          get :download, params: { guid: package.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -305,7 +305,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns 403' do
-          get :download, guid: package.guid
+          get :download, params: { guid: package.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -324,7 +324,7 @@ RSpec.describe PackagesController, type: :controller do
     end
 
     it 'returns a 200 OK and the package' do
-      get :show, guid: package.guid
+      get :show, params: { guid: package.guid }
 
       expect(response.status).to eq(200)
       expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
@@ -332,7 +332,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when the package does not exist' do
       it 'returns a 404 Not Found' do
-        get :show, guid: 'made-up-guid'
+        get :show, params: { guid: 'made-up-guid' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -346,7 +346,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 403 NotAuthorized error' do
-          get :show, guid: package.guid
+          get :show, params: { guid: package.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -359,7 +359,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 404 not found' do
-          get :show, guid: package.guid
+          get :show, params: { guid: package.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -383,7 +383,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when the package does not exist' do
       it 'returns a 404 Not Found' do
-        delete :destroy, guid: 'nono'
+        delete :destroy, params: { guid: 'nono' }
 
         expect(response.status).to eq(404)
         expect(response.body).to include('ResourceNotFound')
@@ -397,7 +397,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns an Unauthorized error' do
-          delete :destroy, guid: package.guid
+          delete :destroy, params: { guid: package.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -410,7 +410,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound error' do
-          delete :destroy, guid: package.guid
+          delete :destroy, params: { guid: package.guid }
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
@@ -424,7 +424,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'raises ApiError NotAuthorized' do
-          delete :destroy, guid: package.guid
+          delete :destroy, params: { guid: package.guid }
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
@@ -433,7 +433,7 @@ RSpec.describe PackagesController, type: :controller do
     end
 
     it 'successfully deletes the package in a background job' do
-      delete :destroy, guid: package.guid
+      delete :destroy, params: { guid: package.guid }
 
       package_delete_jobs = Delayed::Job.where(Sequel.lit("handler like '%PackageDelete%'"))
       expect(package_delete_jobs.count).to eq 1
@@ -449,7 +449,7 @@ RSpec.describe PackagesController, type: :controller do
 
     it 'creates a job to track the deletion and returns it in the location header' do
       expect {
-        delete :destroy, guid: package.guid
+        delete :destroy, params: { guid: package.guid }
       }.to change {
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
@@ -507,7 +507,7 @@ RSpec.describe PackagesController, type: :controller do
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
         VCAP::CloudController::PackageModel.make
 
-        get :index, app_guid: app.guid
+        get :index, params: { app_guid: app.guid }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -517,8 +517,8 @@ RSpec.describe PackagesController, type: :controller do
       it "doesn't allow filtering on space_guids in a nested query" do
         app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
 
-        get :index, { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
-                      space_guids: user_spaces.map(&:guid).join(',') }
+        get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
+                              space_guids: user_spaces.map(&:guid).join(',') }
 
         expect(response.status).to eq(400)
         expect(response.body).to include("Unknown query parameter(s): \'space_guids\'")
@@ -530,7 +530,7 @@ RSpec.describe PackagesController, type: :controller do
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
         VCAP::CloudController::PackageModel.make
 
-        get :index, { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
+        get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
 
         expect(response.status).to eq(200)
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
@@ -538,13 +538,13 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'provides the correct base url in the pagination links' do
-        get :index, app_guid: app_model.guid
+        get :index, params: { app_guid: app_model.guid }
         expect(parsed_body['pagination']['first']['href']).to include("#{link_prefix}/v3/apps/#{app_model.guid}/packages")
       end
 
       context 'the app does not exist' do
         it 'returns a 404 Resource Not Found' do
-          get :index, app_guid: 'hello-i-do-not-exist'
+          get :index, params: { app_guid: 'hello-i-do-not-exist' }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -557,7 +557,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns a 404 Resource Not Found error' do
-          get :index, app_guid: app_model.guid
+          get :index, params: { app_guid: app_model.guid }
 
           expect(response.body).to include 'ResourceNotFound'
           expect(response.status).to eq 404
@@ -584,7 +584,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:params) { { 'page' => page, 'per_page' => per_page } }
 
       it 'paginates the response' do
-        get :index, params
+        get :index, params: params
 
         parsed_response = parsed_body
         response_guids = parsed_response['resources'].map { |r| r['guid'] }
@@ -598,7 +598,7 @@ RSpec.describe PackagesController, type: :controller do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -612,7 +612,7 @@ RSpec.describe PackagesController, type: :controller do
         let(:params) { { 'per_page' => 9999999999 } }
 
         it 'returns an 400 Bad Request' do
-          get :index, params
+          get :index, params: params
 
           expect(response.status).to eq(400)
           expect(response.body).to include('BadQueryParameter')
@@ -810,7 +810,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 201 and the response' do
         expect(target_app_model.packages.count).to eq(0)
 
-        post :create, body: relationship_request_body.to_json, params: {source_guid: original_package.guid }
+        post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body)
 
         copied_package = target_app_model.reload.packages.first
         response_guid = parsed_body['guid']
@@ -891,7 +891,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the source package does not exist' do
         it 'returns a 422 UnprocessableEntity error' do
-          post :create, body: relationship_request_body.to_json, source_guid: 'bogus package guid'
+          post :create, params: { source_guid: 'bogus package guid' }.merge(relationship_request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -902,7 +902,7 @@ RSpec.describe PackagesController, type: :controller do
         let(:relationship_request_body) { { relationships: { app: { data: { guid: 'bogus' } } } } }
 
         it 'returns a 422 UnprocessableEntity error' do
-          post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
+          post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -915,7 +915,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         it 'returns 422' do
-          post :create, body: relationship_request_body.to_json, params: {source_guid: original_package.guid }
+          post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'

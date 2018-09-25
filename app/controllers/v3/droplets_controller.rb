@@ -39,14 +39,14 @@ class DropletsController < ApplicationController
   end
 
   def show
-    droplet = DropletModel.where(guid: params[:guid]).eager(:space, space: :organization).all.first
+    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(droplet.space.guid, droplet.space.organization.guid)
     show_secrets = permission_queryer.can_read_secrets_in_space?(droplet.space.guid, droplet.space.organization.guid)
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet, show_secrets: show_secrets)
   end
 
   def destroy
-    droplet, space, org = DropletDeleteFetcher.new.fetch(params[:guid])
+    droplet, space, org = DropletDeleteFetcher.new.fetch(hashed_params[:guid])
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -60,10 +60,10 @@ class DropletsController < ApplicationController
   end
 
   def copy
-    message = DropletCopyMessage.new(params[:body])
+    message = DropletCopyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    source_droplet = DropletModel.where(guid: params[:source_guid]).eager(:space, space: :organization).all.first
+    source_droplet = DropletModel.where(guid: hashed_params[:source_guid]).eager(:space, space: :organization).all.first
     droplet_not_found! unless source_droplet && permission_queryer.can_read_from_space?(source_droplet.space.guid, source_droplet.space.organization.guid)
 
     destination_app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
