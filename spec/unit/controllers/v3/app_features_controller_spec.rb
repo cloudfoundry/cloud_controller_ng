@@ -81,10 +81,10 @@ RSpec.describe AppFeaturesController, type: :controller do
       let(:api_call) { lambda { patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false } } }
     end
 
-    it 'updates a given app feature' do
+    it 'updates a given app feature' do      
       expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
       expect {
-        patch :update, app_guid: app_model.guid, name: 'ssh', body: { enabled: false }
+        patch :update, params: {app_guid: app_model.guid, name: 'ssh', }, body: { enabled: false }.to_json
       }.to change { app_model.reload.enable_ssh }.to(false)
 
       expect(response.status).to eq(200)
