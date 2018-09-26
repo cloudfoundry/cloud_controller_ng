@@ -36,15 +36,18 @@ module CloudController
 
       return false if address_list.length > 2
 
-      address_list.each do |address|
-        NetAddr::IPv4Net.parse(address)
+      if address_list.length == 1
+        NetAddr::IPv4Net.parse(address_list.first)
+        return true
       end
 
-      if address_list.length > 1
-        return false if NetAddr.ip_to_i(address_list[0]) > NetAddr.ip_to_i(address_list[1])
+      ipv4s = address_list.map do |address|
+        NetAddr::IPv4.parse(address)
       end
+      sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
+      return true if ipv4s.first == sorted_ipv4s.first
 
-      true
+      false
     rescue NetAddr::ValidationError
       false
     end

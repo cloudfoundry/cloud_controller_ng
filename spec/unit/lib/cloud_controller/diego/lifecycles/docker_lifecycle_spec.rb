@@ -11,7 +11,7 @@ module VCAP::CloudController
                         docker_password: 'dockerpassword',
                        )
     end
-    let(:staging_message) { BuildCreateMessage.new }
+    let(:staging_message) { BuildCreateMessage.new({}) }
 
     it_behaves_like 'a lifecycle'
   end
