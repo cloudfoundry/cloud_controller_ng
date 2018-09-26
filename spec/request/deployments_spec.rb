@@ -45,6 +45,10 @@ RSpec.describe 'Deployments' do
           'previous_droplet' => {
             'guid' => droplet.guid
           },
+          'new_processes' => [{
+            'guid' => deployment.deploying_web_process.guid,
+            'type' => deployment.deploying_web_process.type
+          }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -99,6 +103,10 @@ RSpec.describe 'Deployments' do
           'previous_droplet' => {
             'guid' => droplet.guid
           },
+          'new_processes' => [{
+            'guid' => deployment.deploying_web_process.guid,
+            'type' => deployment.deploying_web_process.type
+          }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -145,6 +153,10 @@ RSpec.describe 'Deployments' do
         'previous_droplet' => {
           'guid' => old_droplet.guid
         },
+        'new_processes' => [{
+          'guid' => deployment.deploying_web_process.guid,
+          'type' => deployment.deploying_web_process.type
+        }],
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -220,6 +232,10 @@ RSpec.describe 'Deployments' do
               'previous_droplet' => {
                 'guid' => droplet.guid
               },
+              'new_processes' => [{
+                'guid' => deployment.deploying_web_process.guid,
+                'type' => deployment.deploying_web_process.type
+              }],
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -247,6 +263,10 @@ RSpec.describe 'Deployments' do
               'previous_droplet' => {
                 'guid' => nil
               },
+              'new_processes' => [{
+                'guid' => deployment2.deploying_web_process.guid,
+                'type' => deployment2.deploying_web_process.type
+              }],
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -306,6 +326,10 @@ RSpec.describe 'Deployments' do
               'previous_droplet' => {
                 'guid' => droplet.guid
               },
+              'new_processes' => [{
+                'guid' => deployment.deploying_web_process.guid,
+                'type' => deployment.deploying_web_process.type
+              }],
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {

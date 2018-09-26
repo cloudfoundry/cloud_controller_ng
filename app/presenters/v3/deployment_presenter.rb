@@ -12,6 +12,7 @@ module VCAP::CloudController::Presenters::V3
         previous_droplet: {
           guid: deployment.previous_droplet_guid
         },
+        new_processes: new_processes.map { |p| { guid: p.guid, type: p.type } },
         created_at: deployment.created_at,
         updated_at: deployment.updated_at,
         relationships: {
@@ -29,6 +30,10 @@ module VCAP::CloudController::Presenters::V3
 
     def deployment
       @resource
+    end
+
+    def new_processes
+      deployment.deploying_web_process ? [deployment.deploying_web_process] : []
     end
 
     def build_links
