@@ -137,7 +137,8 @@ module VCAP::CloudController
           define_method "#{field_name}_with_encryption" do
             Encryptor.decrypt(send("#{field_name}_without_encryption"), send(salt_name), encryption_key_label)
           end
-          alias_method_chain field_name, 'encryption'
+          alias_method "#{field_name}_without_encryption", field_name
+          alias_method field_name, "#{field_name}_with_encryption"
 
           define_method "#{field_name}_with_encryption=" do |value|
             send("generate_#{salt_name}")
@@ -147,7 +148,8 @@ module VCAP::CloudController
               send("#{field_name}_without_encryption=", encrypted_value)
             end
           end
-          alias_method_chain "#{field_name}=", 'encryption'
+          alias_method "#{field_name}_without_encryption=", "#{field_name}="
+          alias_method "#{field_name}=", "#{field_name}_with_encryption="
         end
       end
     end

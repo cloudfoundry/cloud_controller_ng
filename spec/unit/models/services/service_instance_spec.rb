@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       describe 'service_plan_sti_eager_load' do
-        it 'eager loads successfuly' do
+        it 'eager loads successfully' do
           service_plan = ServicePlan.make.reload
           instance1 = ManagedServiceInstance.make(service_plan: service_plan)
           instance2 = ManagedServiceInstance.make

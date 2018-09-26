@@ -435,8 +435,10 @@ module VCAP::CloudController
                 self.sekret_without_serialization = MultiJson.dump(sekret)
               end
 
-              alias_method_chain :sekret, 'serialization'
-              alias_method_chain :sekret=, 'serialization'
+              alias_method 'sekret_without_serialization', 'sekret'
+              alias_method 'sekret', 'sekret_with_serialization'
+              alias_method 'sekret_without_serialization=', 'sekret='
+              alias_method 'sekret=', 'sekret_with_serialization='
             end
           end
 
