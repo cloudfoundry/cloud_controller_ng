@@ -676,7 +676,7 @@ RSpec.describe 'Service Broker' do
       end
     end
 
-    context 'when a service brokera already exists with the same URL' do
+    context 'when a service broker already exists with the same URL' do
       before do
         stub_catalog_fetch(200, catalog_with_small_plan)
 
