@@ -58,7 +58,7 @@ module VCAP::Services::ServiceBrokers::V2
     def validate_service
       validate_string!(:broker_provided_id, broker_provided_id, required: true)
       validate_string!(:name, name, required: true)
-      validate_string!(:description, description, required: true)
+      validate_description!(:description, description, required: true)
       validate_bool!(:bindable, bindable, required: true)
       validate_bool!(:plan_updateable, plan_updateable, required: true)
       validate_bool!(:bindings_retrievable, bindings_retrievable, required: false)

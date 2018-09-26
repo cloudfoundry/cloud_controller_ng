@@ -1,5 +1,13 @@
 module VCAP::Services::ServiceBrokers::V2
   module CatalogValidationHelper
+    def validate_description!(name, input, opts={})
+      validate_string!(name, input, opts)
+
+      if input.respond_to?(:length) && input.length > 10_000
+        errors.add("#{human_readable_attr_name(name)} may not have more than 10000 characters")
+      end
+    end
+
     def validate_string!(name, input, opts={})
       if !input.is_a?(String) && !input.nil?
         errors.add("#{human_readable_attr_name(name)} must be a string, but has value #{input.inspect}")

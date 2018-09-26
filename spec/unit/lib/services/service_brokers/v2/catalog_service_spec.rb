@@ -92,6 +92,22 @@ module VCAP::Services::ServiceBrokers::V2
         expect(service.errors.messages).to include 'Service description must be a string, but has value 123'
       end
 
+      it 'validates that @description is less than 10_001 characters' do
+        attrs = build_valid_service_attrs(description: 'A' * 10_001)
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).to_not be_valid
+
+        expect(service.errors.messages).to include 'Service description may not have more than 10000 characters'
+      end
+
+      it 'is valid if @description is 10_000 characters' do
+        attrs = build_valid_service_attrs(description: 'A' * 10_000)
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).to be_valid
+
+        expect(service.errors.messages).to be_empty
+      end
+
       it 'validates that @description is present' do
         attrs = build_valid_service_attrs
         attrs['description'] = nil

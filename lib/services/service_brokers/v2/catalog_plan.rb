@@ -44,7 +44,7 @@ module VCAP::Services::ServiceBrokers::V2
     def validate!
       validate_string!(:broker_provided_id, broker_provided_id, required: true)
       validate_string!(:name, name, required: true)
-      validate_string!(:description, description, required: true)
+      validate_description!(:description, description, required: true)
       validate_hash!(:metadata, metadata) if metadata
       validate_bool!(:free, free) if free
       validate_bool!(:bindable, bindable) if bindable
