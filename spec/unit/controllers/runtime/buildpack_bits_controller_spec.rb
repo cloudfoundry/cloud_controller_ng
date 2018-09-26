@@ -34,6 +34,12 @@ module VCAP::CloudController
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
+    let(:valid_zip_copy) do
+      zip_name = File.join(tmpdir, filename)
+      TestZip.create(zip_name, 1, 1024)
+      zip_file = File.new(zip_name)
+      Rack::Test::UploadedFile.new(zip_file)
+    end
     let(:valid_zip2) do
       zip_name = File.join(tmpdir, filename)
       TestZip.create(zip_name, 3, 1024)
@@ -196,9 +202,13 @@ module VCAP::CloudController
         end
 
         it 'reports a no content if the same buildpack is uploaded again' do
-          2.times { put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip } }
+          # We noticed strange interactions between Rack::Test::UploadedFile and our
+          # FakeNginxReverseProxy after upgrading Rack::Test. Seems like the original
+          # valid_zip gets corrupted the second time around, so we're uploading a "copy" of it instead here.
+          put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }
+          put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_copy }
 
-          expect(last_response.status).to eq(204)
+          expect(last_response.status).to eq(204), last_response.body
         end
 
         it 'does not allow uploading a buildpack which will update the stack that already has a buildpack with the same name' do

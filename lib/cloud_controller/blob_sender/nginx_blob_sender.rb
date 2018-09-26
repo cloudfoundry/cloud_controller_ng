@@ -7,7 +7,7 @@ module CloudController
 
         if controller.is_a?(ActionController::Base)
           controller.response.headers['X-Accel-Redirect'] = url
-          controller.render status: 200, nothing: true
+          controller.head :ok
         else
           return [200, { 'X-Accel-Redirect' => url }, '']
         end

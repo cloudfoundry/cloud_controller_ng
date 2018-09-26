@@ -1,5 +1,4 @@
 require 'rails_helper'
-require 'action_dispatch/middleware/params_parser'
 
 RSpec.describe ErrorsController, type: :controller do
   describe '#not_found' do

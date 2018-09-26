@@ -40,11 +40,11 @@ gem 'vmstat', '~> 2.0'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 5.0.0'
-gem 'actionview', '~> 5.0.0'
-gem 'activemodel', '~> 5.0.0'
-gem 'rails', '~> 5.0.0'
-gem 'railties', '~> 5.0.0'
+gem 'actionpack', '~> 5.2.0'
+gem 'actionview', '~> 5.2.0'
+gem 'activemodel', '~> 5.2.0'
+gem 'rails', '~> 5.2.0'
+gem 'railties', '~> 5.2.0'
 
 # Blobstore and Bits Service Dependencies
 gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122

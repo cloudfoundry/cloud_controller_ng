@@ -41,7 +41,7 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
         app = VCAP::CloudController::AppModel.find(guid: "app-guid-#{app_guid_num}")
 
         start_time = Time.now
-        get :index, { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
+        get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD' }
         end_time = Time.now
         search_time += end_time - start_time
       end

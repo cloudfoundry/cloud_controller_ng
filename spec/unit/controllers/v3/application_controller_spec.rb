@@ -98,7 +98,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'is required on show' do
-      get :show, id: 1
+      get :show, params: { id: 1 }
 
       expect(response.status).to eq(403)
       expect(response).to have_error_message('You are not authorized to perform the requested action')
@@ -115,7 +115,7 @@ RSpec.describe ApplicationController, type: :controller do
       end
 
       it 'should show a specific item' do
-        get :show, id: 1
+        get :show, params: { id: 1 }
         expect(response.status).to eq(204)
       end
     end
@@ -131,7 +131,7 @@ RSpec.describe ApplicationController, type: :controller do
       end
 
       it 'should show a specific item' do
-        get :show, id: 1
+        get :show, params: { id: 1 }
         expect(response.status).to eq(204)
       end
     end
@@ -147,7 +147,7 @@ RSpec.describe ApplicationController, type: :controller do
       end
 
       it 'should show a specific item' do
-        get :show, id: 1
+        get :show, params: { id: 1 }
         expect(response.status).to eq(204)
       end
     end
@@ -155,7 +155,7 @@ RSpec.describe ApplicationController, type: :controller do
     it 'admin can read all' do
       set_current_user_as_admin
 
-      get :show, id: 1
+      get :show, params: { id: 1 }
       expect(response.status).to eq(204)
 
       get :index
@@ -186,7 +186,7 @@ RSpec.describe ApplicationController, type: :controller do
     end
 
     it 'is not required on show' do
-      get :show, id: 1
+      get :show, params: { id: 1 }
       expect(response.status).to eq(204)
     end
 

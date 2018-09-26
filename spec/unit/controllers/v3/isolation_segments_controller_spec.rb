@@ -308,7 +308,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       context 'when the isolation segment does not exist' do
         it 'returns a 404' do
-          post :unassign_allowed_organization, guid: 'bad-guid', org_guid: org.guid
+          post :unassign_allowed_organization, params: { guid: 'bad-guid', org_guid: org.guid }, as: :json
           expect(response.status).to eq 404
         end
       end

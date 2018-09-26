@@ -650,7 +650,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:app_guid) { app_model.guid }
       let(:space) { app_model.space }
       let(:org) { space.organization }
-      let(:req_body) do
+      let(:request_body) do
         {
           type: 'bits',
           relationships: { app: { data: { guid: app_guid } } }
@@ -667,7 +667,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'returns a 201 and the package' do
           expect(app_model.packages.count).to eq(0)
 
-          post :create, body: req_body.to_json
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 201
           expect(app_model.reload.packages.count).to eq(1)
@@ -678,7 +678,7 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'with an invalid type field' do
-          let(:req_body) do
+          let(:request_body) do
             {
               type: 'ninja',
               relationships: { app: { data: { guid: app_model.guid } } }
@@ -686,7 +686,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns an UnprocessableEntity error' do
-            post :create, body: req_body.to_json
+            post :create, params: request_body, as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -698,7 +698,7 @@ RSpec.describe PackagesController, type: :controller do
           let(:app_guid) { 'bogus-guid' }
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: req_body.to_json
+            post :create, params: request_body, as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -711,7 +711,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns 422' do
-            post :create, app_guid: app_model.guid, body: req_body.to_json
+            post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -725,7 +725,7 @@ RSpec.describe PackagesController, type: :controller do
             end
 
             it 'returns a 403 NotAuthorized error' do
-              post :create, app_guid: app_model.guid, body: req_body.to_json
+              post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
               expect(response.status).to eq 403
               expect(response.body).to include 'NotAuthorized'
@@ -738,7 +738,7 @@ RSpec.describe PackagesController, type: :controller do
             end
 
             it 'returns a 422 UnprocessableEntity error' do
-              post :create, app_guid: app_model.guid, body: req_body.to_json
+              post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
               expect(response.status).to eq 422
               expect(response.body).to include 'UnprocessableEntity'
@@ -751,7 +751,7 @@ RSpec.describe PackagesController, type: :controller do
             end
 
             it 'returns a 422 UnprocessableEntity error' do
-              post :create, app_guid: app_model.guid, body: req_body.to_json
+              post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
 
               expect(response.status).to eq 422
               expect(response.body).to include 'UnprocessableEntity'
@@ -764,7 +764,7 @@ RSpec.describe PackagesController, type: :controller do
         let(:image) { 'registry/image:latest' }
         let(:docker_username) { 'naruto' }
         let(:docker_password) { 'oturan' }
-        let(:req_body) do
+        let(:request_body) do
           {
             relationships: { app: { data: { guid: app_model.guid } } },
             type: 'docker',
@@ -778,7 +778,7 @@ RSpec.describe PackagesController, type: :controller do
 
         it 'returns a 201' do
           expect(app_model.packages.count).to eq(0)
-          post :create, body: req_body.to_json
+          post :create, params: request_body, as: :json
 
           expect(response.status).to eq 201
 
@@ -827,7 +827,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 403 NotAuthorized error' do
-            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
+            post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
             expect(response.status).to eq 403
             expect(response.body).to include 'NotAuthorized'
@@ -840,7 +840,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
+            post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -854,7 +854,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
+            post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -867,7 +867,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
+            post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
@@ -881,7 +881,7 @@ RSpec.describe PackagesController, type: :controller do
           end
 
           it 'returns a 422 UnprocessableEntity error' do
-            post :create, body: relationship_request_body.to_json, source_guid: original_package.guid
+            post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
