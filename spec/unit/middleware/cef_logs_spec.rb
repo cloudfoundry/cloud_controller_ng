@@ -7,7 +7,7 @@ module CloudFoundry
       subject(:middleware) { CefLogs.new(app, logger, '10.10.10.100') }
       let(:app) { double(:app, call: [200, {}, 'a body']) }
       let(:logger) { double('logger', info: nil) }
-      let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_forwarded_ip' }) }
+      let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_forwarded_ip' }) }
       let(:fake_request) do
         instance_double(
           ActionDispatch::Request,
@@ -68,7 +68,7 @@ module CloudFoundry
         end
 
         context 'when HTTP_X_FORWARDED_FOR is not present' do
-          let(:headers) { ActionDispatch::Http::Headers.new }
+          let(:headers) { ActionDispatch::Http::Headers.from_hash({}) }
 
           it 'uses request.ip for src' do
             expect {

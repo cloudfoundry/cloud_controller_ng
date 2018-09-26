@@ -20,7 +20,7 @@ module VCAP::CloudController
     end
 
     context 'when the given key is a string' do
-      let(:params) { ActionController::Parameters.new({"hello" => "morris" }) }
+      let(:params) { ActionController::Parameters.new({ 'hello' => 'morris' }) }
 
       it 'processes the rails5 parameters' do
         expect(controller.hashed_params[:hello]).to eq('morris')
@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     context 'when the given key is a symbol' do
-      let(:params) { ActionController::Parameters.new({:hello => "morris" }) }
+      let(:params) { ActionController::Parameters.new({ hello: 'morris' }) }
 
       it 'processes the rails5 parameters' do
         expect(controller.hashed_params[:hello]).to eq('morris')
@@ -39,8 +39,8 @@ module VCAP::CloudController
 
     context 'when the params are nested' do
       let(:params) do ActionController::Parameters.new({ array1: ['abc', :def],
-                                         hash1: { abc:1, def:2, 'ghi' => 3},
-                                         cdstrings: "string1,string2,string3"
+                                                         hash1: { abc: 1, def: 2, 'ghi' => 3 },
+                                                         cdstrings: 'string1,string2,string3'
 
                                         })
       end
@@ -50,7 +50,7 @@ module VCAP::CloudController
         expect(controller.hashed_params[:hash1][:abc]).to eq(1)
         expect(controller.hashed_params[:hash1]['ghi']).to eq(3)
         expect(controller.hashed_params[:hash1][:ghi]).to eq(3)
-        expect(controller.hashed_params[:cdstrings]).to eq("string1,string2,string3")
+        expect(controller.hashed_params[:cdstrings]).to eq('string1,string2,string3')
       end
     end
   end

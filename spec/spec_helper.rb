@@ -53,6 +53,7 @@ init_block = proc do
     end
   end
   ENV['PB_IGNORE_DEPRECATIONS'] = 'true'
+  ENV['RAILS_ENV'] ||= 'test'
 
   require 'machinist/sequel'
   require 'machinist/object'

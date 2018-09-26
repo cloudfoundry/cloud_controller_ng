@@ -76,16 +76,6 @@ module CloudController::Errors
         expect(api_error.message).to eq('这是一条被翻译的信息：foo bar。')
       end
 
-      it 'should use the default locale message when the message is not translated in target locale' do
-        I18n.locale = :zh_CN
-        expect(api_error_with_partial_translation.message).to eq('This is a translated message of foo bar only in default locale')
-      end
-
-      it 'should use the default locale message when the locale is not recognized' do
-        I18n.locale = :unknown_locale
-        expect(api_error.message).to eq('This is a translated message of foo bar.')
-      end
-
       it 'should use the original message when the translation is missing' do
         I18n.locale = :en_US
         expect(api_error_with_translation_missing.message).to eq('Before foo bar after.')

@@ -155,7 +155,7 @@ module CloudFoundry
           end
 
           context 'when the user is hitting containing, but NOT starting with "/internal"' do
-            let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
+            let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
             let(:fake_request) { instance_double(ActionDispatch::Request, fullpath: '/pants/internal/1234', headers: headers) }
 
             it 'rate limits them' do
@@ -207,10 +207,15 @@ module CloudFoundry
         end
 
         describe 'when the user has a "HTTP_X_FORWARDED_FOR" header from proxy' do
-          let(:headers) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
-          let(:headers_2) { ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2' }) }
+          let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip' }) }
+          let(:headers_2) { ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip_2' }) }
           let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip', fullpath: '/some/path') }
           let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers_2, ip: 'proxy-ip', fullpath: '/some/path') }
+
+          before do
+            allow(fake_request).to receive(:fetch_header).with('HTTP_X_FORWARDED_FOR').and_return('forwarded_ip')
+            allow(fake_request_2).to receive(:fetch_header).with('HTTP_X_FORWARDED_FOR').and_return('forwarded_ip_2')
+          end
 
           it 'uses unauthenticated_limit instead of general_limit' do
             allow(ActionDispatch::Request).to receive(:new).and_return(fake_request)
@@ -244,7 +249,7 @@ module CloudFoundry
         end
 
         describe 'when the there is no "HTTP_X_FORWARDED_FOR" header' do
-          let(:headers) { ActionDispatch::Http::Headers.new({ 'X_HEADER' => 'nope' }) }
+          let(:headers) { ActionDispatch::Http::Headers.from_hash({ 'X_HEADER' => 'nope' }) }
           let(:fake_request) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip', fullpath: '/some/path') }
           let(:fake_request_2) { instance_double(ActionDispatch::Request, headers: headers, ip: 'some-ip-2', fullpath: '/some/path') }
 

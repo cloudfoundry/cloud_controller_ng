@@ -17,7 +17,7 @@ class FakeNginxReverseProxy
       raise ArgumentError unless data
       env['rack.input'] = StringIO.new(data)
       env['CONTENT_LENGTH'] = data.size.to_s
-      env['CONTENT_TYPE'] = "multipart/form-data; boundary=#{Rack::Utils::Multipart::MULTIPART_BOUNDARY}"
+      env['CONTENT_TYPE'] = "multipart/form-data; boundary=#{Rack::Multipart::MULTIPART_BOUNDARY}"
     end
     @app.call(env)
   ensure

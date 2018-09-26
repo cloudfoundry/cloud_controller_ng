@@ -8,7 +8,11 @@ module CCInitializers
       end
 
       def encode(value)
-        MultiJson.dump(value.as_json(options.dup), options.merge(pretty: true))
+        if Rails.env.test?
+          MultiJson.dump(value.as_json(options.dup))
+        else
+          MultiJson.dump(value.as_json(options.dup), options.merge(pretty: true))
+        end
       end
     end
   end

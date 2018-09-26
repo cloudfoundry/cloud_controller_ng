@@ -10,7 +10,7 @@ module CloudFoundry
 
       describe 'when the request has a "HTTP_X_FORWARDED_FOR" header' do
         it 'returns the first ip in the header' do
-          headers = ActionDispatch::Http::Headers.new({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_ip' })
+          headers = ActionDispatch::Http::Headers.from_hash({ 'HTTP_X_FORWARDED_FOR' => 'forwarded_ip, another_ip' })
           request = instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip')
 
           expect(implementor.client_ip(request)).to eq('forwarded_ip')
@@ -19,7 +19,7 @@ module CloudFoundry
 
       describe 'when the request does NOT have a "HTTP_X_FORWARDED_FOR" header' do
         it 'returns the request ip' do
-          headers = ActionDispatch::Http::Headers.new({ 'X_HEADERS' => 'nope' })
+          headers = ActionDispatch::Http::Headers.from_hash({ 'X_HEADERS' => 'nope' })
           request = instance_double(ActionDispatch::Request, headers: headers, ip: 'proxy-ip')
 
           expect(implementor.client_ip(request)).to eq('proxy-ip')

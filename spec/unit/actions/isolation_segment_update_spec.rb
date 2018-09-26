@@ -14,14 +14,14 @@ module VCAP::CloudController
 
     it 'does not update the shared segment' do
       shared_segment = IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
-      message = IsolationSegmentUpdateMessage.new
+      message = IsolationSegmentUpdateMessage.new({})
       expect {
         subject.update(shared_segment, message)
       }.to raise_error(CloudController::Errors::ApiError, /Cannot update the shared Isolation Segment/)
     end
 
     it 'does not update if the message does not request a name update' do
-      message = IsolationSegmentUpdateMessage.new
+      message = IsolationSegmentUpdateMessage.new({})
       subject.update(isolation_segment, message)
       expect(isolation_segment.name).to eq('Old Name')
     end
@@ -32,7 +32,7 @@ module VCAP::CloudController
       end
 
       it 'raises an InvalidIsolationSegment error' do
-        message = IsolationSegmentUpdateMessage.new
+        message = IsolationSegmentUpdateMessage.new({})
         expect {
           subject.update(isolation_segment, message)
         }.to raise_error(IsolationSegmentUpdate::InvalidIsolationSegment, 'booooooo')
