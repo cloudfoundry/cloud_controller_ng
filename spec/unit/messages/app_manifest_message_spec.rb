@@ -1073,8 +1073,6 @@ module VCAP::CloudController
             it 'applies the health check invocation timeout if supplied' do
               parsed_yaml['health_check_invocation_timeout'] = 2493
 
-              puts parsed_yaml
-
               message = AppManifestMessage.create_from_yml(parsed_yaml)
               expect(message).to be_valid
               expect(message.manifest_process_update_messages.length).to eq(1)
