@@ -14,6 +14,7 @@ Name | Type | Description
 **app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating.
 **droplet** | _object_ | The droplet the deployment is transitioning the app to.
 **previous_droplet** | _object_ | The app's [current droplet](#get-current-droplet-association-for-an-app) before the deployment was created.
+**new_processes** | _array_ | List of processes created as part of the deployment
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **links** | [_links object_](#links) | Links to related resources.
