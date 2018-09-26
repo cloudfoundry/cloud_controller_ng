@@ -29,6 +29,7 @@ class DeploymentsController < ApplicationController
     app_guid = HashUtils.dig(params[:body], :relationships, :app, :data, :guid)
     app = AppModel.find(guid: app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
+    unprocessable!('Cannot create a deployment for a STOPPED app.') if app.stopped?
 
     droplet_guid = HashUtils.dig(params[:body], :droplet, :guid)
     if droplet_guid
