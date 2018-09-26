@@ -198,6 +198,22 @@ RSpec.describe 'Service Broker' do
                 redirect_uri: 'http://example.com/client-1'
               },
               plans: []
+            },
+            {
+              id: '888444',
+              name: 'service-4',
+              description: 'Yet another service, duh!',
+              bindable: true,
+              dashboard_client: {
+                id: 'client-9',
+                secret: 'some-secret',
+                redirect_uri: 'http://example.com/client-1'
+              },
+              plans: [{
+                id: '999',
+                name: 'micro',
+                description: 'The smallest plan in the world'
+              }]
             }
           ]
         })
@@ -216,6 +232,7 @@ RSpec.describe 'Service Broker' do
         expect(decoded_response['description']).to eql(
           "Service broker catalog is invalid: \n" \
           "Service ids must be unique\n" \
+          "Service names must be unique within a broker\n" \
           "Service dashboard_client id must be unique\n" \
           "Service service-1\n" \
           "  Service id must be a string, but has value 12345\n" \
