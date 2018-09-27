@@ -105,7 +105,7 @@ module CloudController
       describe '#download_from_blobstore' do
         let(:ssl_config) { instance_double(HTTPClient::SSLConfig, :verify_mode= => nil, set_default_paths: nil, add_trust_ca: nil) }
         let(:httpclient) { instance_double(HTTPClient, ssl_config: ssl_config) }
-        let(:destination_path) { Dir::Tmpname.make_tmpname(Dir.mktmpdir, nil) }
+        let(:destination_path) { File.join(Dir.mktmpdir, SecureRandom.uuid) }
 
         before do
           allow(HTTPClient).to receive_messages(new: httpclient)
