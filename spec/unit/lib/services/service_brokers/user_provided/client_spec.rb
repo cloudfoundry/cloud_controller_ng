@@ -14,7 +14,6 @@ module VCAP::Services
 
     describe '#bind' do
       let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
-      let(:unsupported_arbitrary_parameters) { {} }
 
       context 'when binding to an app' do
         let(:binding) do
@@ -22,7 +21,7 @@ module VCAP::Services
         end
 
         it 'sets relevant attributes of the instance' do
-          attributes = client.bind(binding, unsupported_arbitrary_parameters)
+          attributes = client.bind(binding)
           # save to the database to ensure attributes match tables
           binding.set(attributes[:binding])
           binding.save
@@ -34,7 +33,7 @@ module VCAP::Services
         context 'when binding to a service with a route_service_url' do
           let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(:routing) }
           it 'sets relevant attributes of the instance' do
-            attributes = client.bind(binding, unsupported_arbitrary_parameters)
+            attributes = client.bind(binding)
             # save to the database to ensure attributes match tables
             binding.set(attributes[:binding])
             binding.save
@@ -55,7 +54,7 @@ module VCAP::Services
         end
 
         it 'sets relevant attributes of the instance' do
-          attributes = client.bind(binding, unsupported_arbitrary_parameters)
+          attributes = client.bind(binding)
           # save to the database to ensure attributes match tables
           binding.set(attributes[:binding])
           binding.save

@@ -282,7 +282,7 @@ module VCAP::CloudController
         let(:accepts_incomplete) { true }
 
         it 'passes the accepts_incomplete parameter to the broker client' do
-          expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), anything, true)
+          expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), arbitrary_parameters: anything, accepts_incomplete: true)
           service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
         end
 
@@ -375,7 +375,7 @@ module VCAP::CloudController
         let(:accepts_incomplete) { false }
 
         it 'passes the accepts_incomplete parameter to the broker client' do
-          expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), anything, false)
+          expect(client).to receive(:bind).with(instance_of(VCAP::CloudController::ServiceBinding), arbitrary_parameters: anything, accepts_incomplete: false)
           service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
         end
 

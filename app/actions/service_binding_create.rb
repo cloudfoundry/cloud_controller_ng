@@ -68,7 +68,7 @@ module VCAP::CloudController
     private
 
     def request_binding_from_broker(client, service_binding, parameters, accepts_incomplete)
-      client.bind(service_binding, parameters, accepts_incomplete)
+      client.bind(service_binding, arbitrary_parameters: parameters, accepts_incomplete: accepts_incomplete)
     end
 
     def cleanup_binding_without_db(binding)

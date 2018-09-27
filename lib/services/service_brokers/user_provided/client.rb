@@ -2,7 +2,7 @@ module VCAP::Services
   class ServiceBrokers::UserProvided::Client
     def provision(_); end
 
-    def bind(binding, _arbitrary_parameters, _accepts_incomplete=nil)
+    def bind(binding, arbitrary_parameters: nil, accepts_incomplete: nil)
       if binding.class.name.demodulize == 'RouteBinding'
         {
           async: false,
