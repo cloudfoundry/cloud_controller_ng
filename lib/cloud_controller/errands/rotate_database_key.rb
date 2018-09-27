@@ -49,6 +49,9 @@ module VCAP::CloudController
               row.save(validate: false)
             rescue Sequel::NoExistingObject
               raise Sequel::Rollback
+            rescue StandardError => e
+              logger.error("Error '#{e.class}' occurred while updating record: #{row.class}, id: #{row.id}")
+              raise
             end
           end
         end

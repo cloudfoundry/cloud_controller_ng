@@ -252,14 +252,18 @@ module VCAP::CloudController
       end
 
       describe 'logging' do
-        let(:logger) { instance_double(Steno::Logger, info: nil) }
-        let!(:task) { TaskModel.make }
-        let!(:task_jr) { TaskModel.make }
-        let!(:task_the_third) { TaskModel.make }
+        let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
+        let!(:app) { AppModel.make }
+        let!(:task) { TaskModel.make(app: app) }
+        let!(:task_jr) { TaskModel.make(app: app) }
+        let!(:task_the_third) { TaskModel.make(app: app) }
 
         before do
           allow(Steno).to receive(:logger).and_return(logger)
-          allow(Encryptor).to receive(:encrypted_classes).and_return(['VCAP::CloudController::TaskModel'])
+          allow(Encryptor).to receive(:encrypted_classes).and_return([
+            'VCAP::CloudController::TaskModel',
+            'VCAP::CloudController::AppModel',
+          ])
           allow(Encryptor).to receive(:current_encryption_key_label) { 'current' }
           allow(Encryptor).to receive(:database_encryption_keys) { { 'current' => 'thing' } }
         end
@@ -275,6 +279,19 @@ module VCAP::CloudController
 
           expect(logger).to have_received(:info).with('Rotated batch of 2 rows of VCAP::CloudController::TaskModel')
           expect(logger).to have_received(:info).with('Rotated batch of 1 rows of VCAP::CloudController::TaskModel')
+        end
+
+        context 'when an unexpected error occurs while updating a record' do
+          before do
+            allow_any_instance_of(AppModel).to receive(:save).and_raise(StandardError.new('nooooooooo!!!'))
+          end
+
+          it 'logs information about the record and re-raises the error' do
+            expect {
+              RotateDatabaseKey.perform
+            }.to raise_error(StandardError, 'nooooooooo!!!')
+            expect(logger).to have_received(:error).with("Error 'StandardError' occurred while updating record: #{app.class}, id: #{app.id}")
+          end
         end
       end
     end
