@@ -122,12 +122,12 @@ module VCAP::CloudController
 
       it 'allows querying by service_guid' do
         get "/v2/services/#{service.guid}/service_plans?q=service_guid:#{service.guid}"
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
 
       it 'allows querying by service_instance_guid' do
         get "/v2/services/#{service.guid}/service_plans?q=service_instance_guid:some-guid"
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
       end
     end
 
@@ -203,7 +203,7 @@ module VCAP::CloudController
 
       it 'returns plans visible to the user' do
         get '/v2/services'
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_status_code 200
         expect(decoded_guids).to eq(visible_services.map(&:guid))
       end
 
@@ -216,21 +216,72 @@ module VCAP::CloudController
           space.add_developer(user)
 
           get '/v2/services'
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           expect(decoded_guids).to include(service.guid)
         end
       end
 
-      context 'when the user has an invalid auth token' do
-        it 'raises an InvalidAuthToken error' do
-          set_current_user(User.make, token: :invalid_token)
+      context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+        end
+
+        it 'a user can view public and active services' do
           get '/v2/services'
-          expect(last_response.status).to eq 401
+          expect(last_response).to have_status_code 200
+        end
+      end
+
+      context 'when the user has an invalid auth token' do
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is disabled' do
+          it 'raises an InvalidAuthToken error' do
+            set_current_user(User.make, token: :invalid_token)
+            get '/v2/services'
+
+            expect(last_response).to have_status_code 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+          end
+        end
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+          it 'continues to raise an InvalidAuthToken error' do
+            set_current_user(User.make, token: :invalid_token)
+            get '/v2/services'
+
+            expect(last_response).to have_status_code 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+          end
         end
       end
 
       context 'when the user has no auth token' do
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is disabled' do
+          it 'they can view public and active services' do
+            set_current_user(nil)
+            get '/v2/services'
+
+            expect(last_response).to have_status_code 200
+            expect(decoded_guids).to eq([public_and_active.guid])
+          end
+        end
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'they cannot view public and active services' do
+            set_current_user(nil)
+            get '/v2/services'
+            expect(last_response).to have_status_code 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-NotAuthenticated'
+          end
+        end
+
         it 'does not allow the unauthed user to use inline-relations-depth' do
           set_current_user(nil)
           get '/v2/services?inline-relations-depth=1'
@@ -268,7 +319,7 @@ module VCAP::CloudController
 
         it 'creates a service delete event' do
           delete "/v2/services/#{service.guid}?purge=true"
-          expect(last_response.status).to eq(204)
+          expect(last_response).to have_status_code(204)
 
           event = Event.order(:id).last
           expect(event.type).to eq('audit.service.delete')
@@ -291,11 +342,11 @@ module VCAP::CloudController
         it 'requires admin headers' do
           set_current_user(nil)
           delete "/v2/services/#{service.guid}"
-          expect(last_response.status).to eq 401
+          expect(last_response).to have_status_code 401
 
           set_current_user(User.make)
           delete "/v2/services/#{service.guid}"
-          expect(last_response.status).to eq 403
+          expect(last_response).to have_status_code 403
         end
 
         it 'deletes the service and its dependent models' do

@@ -20,6 +20,8 @@ module VCAP::CloudController
 
     def enumerate
       if SecurityContext.missing_token?
+        raise CloudController::Errors::NotAuthenticated if VCAP::CloudController::FeatureFlag.enabled?(:hide_marketplace_from_unauthenticated_users)
+
         single_filter = @opts[:q][0] if @opts[:q]
         service_guid = single_filter.split(':')[1] if single_filter && single_filter.start_with?('service_guid')
 

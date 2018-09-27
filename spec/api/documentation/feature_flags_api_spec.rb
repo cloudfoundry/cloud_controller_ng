@@ -19,7 +19,7 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
       client.get '/v2/config/feature_flags', {}, headers
 
       expect(status).to eq(200)
-      expect(parsed_response.length).to eq(14)
+      expect(parsed_response.length).to eq(15)
       expect(parsed_response).to include(
         {
           'name'          => 'user_org_creation',
@@ -117,6 +117,13 @@ RSpec.resource 'Feature Flags', type: [:api, :legacy_api] do
           'enabled'       => false,
           'error_message' => nil,
           'url'           => '/v2/config/feature_flags/service_instance_sharing'
+        })
+      expect(parsed_response).to include(
+        {
+          'name'          => 'hide_marketplace_from_unauthenticated_users',
+          'enabled'       => false,
+          'error_message' => nil,
+          'url'           => '/v2/config/feature_flags/hide_marketplace_from_unauthenticated_users'
         })
     end
   end

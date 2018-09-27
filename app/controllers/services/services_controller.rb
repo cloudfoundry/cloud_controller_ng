@@ -28,6 +28,8 @@ module VCAP::CloudController
     allow_unauthenticated_access only: :enumerate
     def enumerate
       if SecurityContext.missing_token?
+        raise CloudController::Errors::NotAuthenticated if VCAP::CloudController::FeatureFlag.enabled?(:hide_marketplace_from_unauthenticated_users)
+
         @opts.delete(:inline_relations_depth)
       elsif SecurityContext.invalid_token?
         raise CloudController::Errors::InvalidAuthToken

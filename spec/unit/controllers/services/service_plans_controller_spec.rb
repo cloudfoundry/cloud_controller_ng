@@ -162,7 +162,7 @@ module VCAP::CloudController
 
         get "/v2/service_plans/#{service_plan.guid}"
 
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_status_code 200
 
         metadata = decoded_response.fetch('metadata')
         expect(metadata['guid']).to eq service_plan.guid
@@ -176,7 +176,7 @@ module VCAP::CloudController
 
         get "/v2/service_plans/#{service_plan.guid}"
 
-        expect(last_response.status).to eq 200
+        expect(last_response).to have_status_code 200
 
         schemas = decoded_response.fetch('entity')['schemas']
 
@@ -202,7 +202,7 @@ module VCAP::CloudController
 
           get "/v2/service_plans/#{service_plan.guid}"
 
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           bindable = decoded_response.fetch('entity')['bindable']
           expect(bindable).to_not be_nil
@@ -219,7 +219,7 @@ module VCAP::CloudController
 
         it 'returns the plan' do
           get "/v2/service_plans/#{service_plan.guid}"
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           metadata = decoded_response.fetch('metadata')
           expect(metadata['guid']).to eq service_plan.guid
@@ -233,7 +233,7 @@ module VCAP::CloudController
 
           it 'returns a 403' do
             get "/v2/service_plans/#{inactive_plan.guid}"
-            expect(last_response.status).to eq 403
+            expect(last_response).to have_status_code 403
           end
 
           context 'and the user has a service instance associated with that plan' do
@@ -255,7 +255,7 @@ module VCAP::CloudController
 
               set_current_user(user)
               get "/v2/service_plans/#{service_plan.guid}"
-              expect(last_response.status).to eq(200), "Expected response to be 200: #{last_response.body}"
+              expect(last_response).to have_status_code(200), "Expected response to be 200: #{last_response.body}"
 
               entity = decoded_response.fetch('entity')
               expect(entity['public']).to be_falsey
@@ -277,7 +277,7 @@ module VCAP::CloudController
 
               set_current_user(user)
               get "/v2/service_plans/#{service_plan.guid}"
-              expect(last_response.status).to eq 200
+              expect(last_response).to have_status_code 200
 
               expect(decoded_response.fetch('entity')['public']).to be_falsey
 
@@ -321,7 +321,7 @@ module VCAP::CloudController
 
             set_current_user(user)
             get '/v2/service_plans'
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_status_code 200
 
             returned_plan_guids = decoded_response.fetch('resources').map do |res|
               res['metadata']['guid']
@@ -346,7 +346,7 @@ module VCAP::CloudController
 
             set_current_user(user)
             get '/v2/service_plans'
-            expect(last_response.status).to eq 200
+            expect(last_response).to have_status_code 200
 
             returned_plan_guids = decoded_response.fetch('resources').map do |res|
               res['metadata']['guid']
@@ -367,7 +367,7 @@ module VCAP::CloudController
 
         it 'displays all service plans' do
           get '/v2/service_plans'
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           plans = ServicePlan.all
           expected_plan_guids = plans.map(&:guid)
@@ -389,7 +389,7 @@ module VCAP::CloudController
         it 'can query by service plan guid' do
           service = @services[:public][0].service
           get "/v2/service_plans?q=service_guid:#{service.guid}"
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
           expected_service_guids = [service.guid]
@@ -410,7 +410,7 @@ module VCAP::CloudController
         it 'can query by service broker guid using ":"' do
           service = @services[:public][0].service
           get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}"
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
           expected_service_guids = [service.guid]
@@ -431,7 +431,7 @@ module VCAP::CloudController
         it 'can query by service broker guid using "IN"' do
           service = @services[:public][0].service
           get "/v2/service_plans?q=service_broker_guid%20IN%20#{service.service_broker.guid}"
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           expected_plan_guids = service.service_plans.map(&:guid)
           expected_service_guids = [service.guid]
@@ -448,14 +448,37 @@ module VCAP::CloudController
           expect(returned_service_guids).to match_array expected_service_guids
           expect(returned_plan_guids).not_to include(different_service_plan.guid)
         end
+
+        context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'returns a 200' do
+            get '/v2/service_plans'
+            expect(last_response).to have_status_code 200
+          end
+        end
       end
 
       context 'when the user is not logged in' do
         before { set_current_user(nil) }
 
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'returns a 401 Not Authenticated' do
+            get '/v2/service_plans'
+            expect(last_response).to have_status_code(401)
+            expect(decoded_response.fetch('error_code')).to eq 'CF-NotAuthenticated'
+          end
+        end
+
         it 'returns plans that are public and active' do
           get '/v2/service_plans'
-          expect(last_response.status).to eq 200
+          expect(last_response).to have_status_code 200
 
           public_and_active_plans = ServicePlan.where(active: true, public: true).all
           expected_plan_guids = public_and_active_plans.map(&:guid)
@@ -497,7 +520,21 @@ module VCAP::CloudController
         it 'raises an InvalidAuthToken error' do
           set_current_user(developer, token: :invalid_token)
           get '/v2/service_plans'
-          expect(last_response.status).to eq 401
+          expect(last_response).to have_status_code 401
+          expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+        end
+
+        context 'and when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+          end
+
+          it 'continues to raise an InvalidAuthToken error' do
+            set_current_user(developer, token: :invalid_token)
+            get '/v2/service_plans'
+            expect(last_response).to have_status_code 401
+            expect(decoded_response.fetch('error_code')).to eq 'CF-InvalidAuthToken'
+          end
         end
       end
     end
@@ -511,7 +548,7 @@ module VCAP::CloudController
           set_current_user_as_admin
           put "/v2/service_plans/#{service_plan.guid}", payload
 
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_status_code(201)
           service_plan.reload
           expect(service_plan.name).to eq('old-name')
           expect(service_plan.public).to eq(false)
@@ -526,7 +563,7 @@ module VCAP::CloudController
         set_current_user_as_admin
         ManagedServiceInstance.make(service_plan: service_plan)
         delete "/v2/service_plans/#{service_plan.guid}?recursive=true"
-        expect(last_response.status).to eq(400)
+        expect(last_response).to have_status_code(400)
 
         expect(decoded_response.fetch('code')).to eq(10006)
         expect(decoded_response.fetch('description')).to eq('Please delete the service_instances associations for your service_plans.')
