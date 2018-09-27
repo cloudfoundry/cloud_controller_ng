@@ -46,7 +46,7 @@ module VCAP::CloudController
             begin
               row.lock!
               encrypt_row(encrypted_fields, row)
-              row.save
+              row.save(validate: false)
             rescue Sequel::NoExistingObject
               raise Sequel::Rollback
             end

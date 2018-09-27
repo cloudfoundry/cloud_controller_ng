@@ -10,7 +10,7 @@ module VCAP::CloudController
         let(:app) { AppModel.make }
         let(:app_the_second) { AppModel.make }
         let(:app_new_key_label) { AppModel.make }
-        let(:env_vars) { { 'environment' => 'vars' } }
+        let(:env_vars) { { 'environment' => 'vars', 'PORT' => 344, 'longstring' => 'x' * 4097 } } # PORT is invalid!
         let(:env_vars_2) { { 'vars' => 'environment' } }
 
         # Service bindings are an example of multiple encrypted fields
@@ -18,8 +18,6 @@ module VCAP::CloudController
         let(:service_binding_new_key_label) { ServiceBinding.make }
         let(:credentials) { { 'secret' => 'creds' } }
         let(:credentials_2) { { 'more' => 'secrets' } }
-        let(:volume_mounts) { { 'volume' => 'mount' } }
-        let(:volume_mounts_2) { { 'mount' => 'vesuvius' } }
 
         # Service instances are an example of single table inheritance
         let(:service_instance) { ManagedServiceInstance.make }
@@ -33,35 +31,40 @@ module VCAP::CloudController
         let(:database_encryption_keys) { { old: 'old-key', new: 'new-key' } }
 
         before do
+          # This setup is complicated and done in the before block rather
+          # than just creating the models with the expected initial data
+          # because the Encryptor is global and we have to carefully
+          # tweak its idea of the current_encryption_key_label to simulate
+          # data with data that was encrypted with older keys
+
           # These apps' encryption_key_labels will be NULL
           historical_app_with_no_environment.environment_variables = nil
-          historical_app_with_no_environment.save
+          historical_app_with_no_environment.save(validate: false)
 
           historical_app.environment_variables = env_vars
-          historical_app.save
+          historical_app.save(validate: false)
 
           allow(Encryptor).to receive(:current_encryption_key_label) { 'old' }
           allow(Encryptor).to receive(:database_encryption_keys) { database_encryption_keys }
 
           # These models' encryption_key_labels will be 'old'
           app.environment_variables = env_vars
-          app.save
+          app.save(validate: false)
 
           app_the_second.environment_variables = env_vars
-          app_the_second.save
+          app_the_second.save(validate: false)
 
           service_binding.credentials = credentials
-          service_binding.volume_mounts = volume_mounts
-          service_binding.save
+          service_binding.save(validate: false)
 
           service_instance.credentials = instance_credentials
-          service_instance.save
+          service_instance.save(validate: false)
 
           task.environment_variables = env_vars
-          task.save
+          task.save(validate: false)
 
           task_the_second.environment_variables = env_vars
-          task_the_second.save
+          task_the_second.save(validate: false)
 
           allow(Encryptor).to receive(:current_encryption_key_label) { 'new' }
 
@@ -70,7 +73,6 @@ module VCAP::CloudController
           app_new_key_label.save
 
           service_binding_new_key_label.credentials = credentials_2
-          service_binding_new_key_label.volume_mounts = volume_mounts_2
           service_binding_new_key_label.save
 
           service_instance_new_key_label.credentials = instance_credentials_2
@@ -127,9 +129,6 @@ module VCAP::CloudController
             with(JSON.dump(credentials), service_binding.salt).exactly(:twice)
 
           expect(Encryptor).to receive(:encrypt).
-            with(JSON.dump(volume_mounts), service_binding.volume_mounts_salt).exactly(:twice)
-
-          expect(Encryptor).to receive(:encrypt).
             with(JSON.dump(instance_credentials), service_instance.salt).exactly(:twice)
 
           RotateDatabaseKey.perform(batch_size: 1)
@@ -142,7 +141,6 @@ module VCAP::CloudController
           expect(historical_app.environment_variables).to eq(env_vars)
           expect(app.environment_variables).to eq(env_vars)
           expect(service_binding.credentials).to eq(credentials)
-          expect(service_binding.volume_mounts).to eq(volume_mounts)
           expect(service_instance.credentials).to eq(instance_credentials)
         end
 
@@ -152,12 +150,6 @@ module VCAP::CloudController
 
           expect(Encryptor).not_to receive(:encrypt).
             with(JSON.dump(credentials_2), service_binding_new_key_label.salt)
-
-          expect(Encryptor).not_to receive(:encrypt).
-            with(JSON.dump(volume_mounts_2), service_binding_new_key_label.volume_mounts_salt)
-
-          expect(Encryptor).not_to receive(:encrypt).
-            with(JSON.dump(volume_mounts_2), service_instance.credentials)
 
           RotateDatabaseKey.perform(batch_size: 1)
         end
@@ -193,7 +185,7 @@ module VCAP::CloudController
 
         context 'race conditions' do
           context 'rotates the rest of the members, even if a member of the batch is deleted during a row operation' do
-            RSpec.shared_examples 'a row operation' do |op|
+            RSpec.shared_examples 'a row operation' do |op, args=[]|
               it op.to_s do
                 allow(Encryptor).to receive(:encrypted_classes).and_return([
                   'VCAP::CloudController::TaskModel',
@@ -202,7 +194,7 @@ module VCAP::CloudController
                 allow_any_instance_of(VCAP::CloudController::TaskModel).to receive(op) do |task|
                   task.delete
                   allow_any_instance_of(VCAP::CloudController::TaskModel).to receive(op).and_call_original
-                  task.method(op).call
+                  task.method(op).call(*args)
                 end
 
                 expect(task_the_second.encryption_key_label).to eq('old')
@@ -215,7 +207,7 @@ module VCAP::CloudController
               end
             end
 
-            it_behaves_like('a row operation', :save)
+            it_behaves_like('a row operation', :save, [{ validate: false }])
             it_behaves_like('a row operation', :lock!)
           end
 
