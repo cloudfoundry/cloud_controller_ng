@@ -810,7 +810,7 @@ RSpec.describe PackagesController, type: :controller do
       it 'returns a 201 and the response' do
         expect(target_app_model.packages.count).to eq(0)
 
-        post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body)
+        post :create, params: { source_guid: original_package.guid }.merge(relationship_request_body), as: :json
 
         copied_package = target_app_model.reload.packages.first
         response_guid = parsed_body['guid']

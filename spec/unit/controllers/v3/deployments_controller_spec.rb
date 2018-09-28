@@ -179,7 +179,7 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         it 'returns 422 with an error message' do
-          post :create, body: request_body
+          post :create, params: request_body, as: :json
           expect(response.status).to eq 422
           expect(response.body).to include('Cannot create a deployment for a STOPPED app.')
         end

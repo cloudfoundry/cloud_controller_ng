@@ -312,7 +312,7 @@ GEM
     mustermann (1.0.3)
     mysql2 (0.4.10)
     net-ssh (5.0.2)
-    netaddr (1.5.1)
+    netaddr (2.0.3)
     newrelic_rpm (5.3.0.346)
     nio4r (2.3.1)
     nokogiri (1.8.4)
