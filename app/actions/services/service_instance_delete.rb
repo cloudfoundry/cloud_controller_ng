@@ -108,7 +108,9 @@ module VCAP::CloudController
       service_binding_deleter = ServiceBindingDelete.new(@event_repository.user_audit_info, @accepts_incomplete)
 
       errors, warnings = service_binding_deleter.delete(service_instance.service_bindings)
-      errors.reject! { |err| err.instance_of?(CloudController::Errors::ApiError) && err.code == 90008 }
+      errors.reject! do |err|
+        err.instance_of?(CloudController::Errors::ApiError) && err.name == 'AsyncServiceBindingOperationInProgress'
+      end
       bindings_in_progress(service_instance).each do |service_binding|
         errors << StandardError.new(
           "An operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} is in progress."
