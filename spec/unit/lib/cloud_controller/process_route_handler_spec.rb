@@ -27,7 +27,7 @@ module VCAP::CloudController
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
           allow(process).to receive_messages(lock!: nil)
 
-          expect(process).to receive(:set).with(updated_at: instance_of(Sequel::SQL::Constant))
+          expect(process).to receive(:set).with(updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time))
           expect(process).to receive(:save_changes).with(hash_including(validate: true))
 
           handler.update_route_information
@@ -42,7 +42,7 @@ module VCAP::CloudController
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
           allow(process).to receive_messages(lock!: nil)
 
-          expect(process).to receive(:set).with(updated_at: instance_of(Sequel::SQL::Constant))
+          expect(process).to receive(:set).with(updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time))
           expect(process).to receive(:save_changes).with(hash_including(validate: false))
 
           handler.update_route_information(perform_validation: false)

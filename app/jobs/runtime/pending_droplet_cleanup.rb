@@ -17,7 +17,7 @@ module VCAP::CloudController
             update(
               state:      DropletModel::FAILED_STATE,
               error_id:   'StagingTimeExpired',
-              updated_at: Sequel::CURRENT_TIMESTAMP
+              updated_at: DropletModel.dataset.current_datetime
             )
         end
 

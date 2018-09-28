@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       with_transaction do
         @process.lock!
-        @process.set(updated_at: Sequel::CURRENT_TIMESTAMP)
+        @process.set(updated_at: ProcessModel.dataset.current_datetime)
         @process.save_changes({ validate: perform_validation })
         @process.db.after_commit { notify_backend_of_route_update }
       end
