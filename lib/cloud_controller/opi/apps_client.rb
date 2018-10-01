@@ -101,8 +101,28 @@ module OPI
       { 'cf-router' => http_routes }
     end
 
+    def environment_variables(process)
+      initial_env = ::VCAP::CloudController::EnvironmentVariableGroup.running.environment_json
+      opi_env = initial_env.merge(process.environment_json || {}).
+                merge('VCAP_APPLICATION' => vcap_application(process), 'MEMORY_LIMIT' => "#{process.memory}m").
+                merge(SystemEnvPresenter.new(process.service_bindings).system_env)
+
+      opi_env = opi_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
+      opi_env.merge(port_environment_variables)
+    end
+
+    def port_environment_variables
+      {
+        PORT: '8080',
+        VCAP_APP_PORT: '8080',
+        VCAP_APP_HOST: '0.0.0.0',
+      }
+    end
+
     def vcap_application(process)
-      process.environment_json.merge(VCAP_APPLICATION: VCAP::VarsBuilder.new(process).to_hash)
+      VCAP::VarsBuilder.new(process).to_hash.reject do |k, _v|
+        [:users].include? k
+      end
     end
 
     def process_guid(process)

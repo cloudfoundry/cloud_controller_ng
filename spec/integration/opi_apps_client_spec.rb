@@ -42,12 +42,14 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
 
   context 'OPI system tests' do
     context 'Desire an app' do
-      let(:droplet) {
-        VCAP::CloudController::DropletModel.new(
-          docker_receipt_image: 'http://example.org/image1234',
-          droplet_hash: 'd_haash',
-          guid: 'some-droplet-guid'
-        )
+      let(:cfg) { ::VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
+      let(:lifecycle_type) { nil }
+      let(:app_model) {
+        ::VCAP::CloudController::AppModel.make(lifecycle_type,
+                                               guid: 'app-guid',
+                                               droplet: ::VCAP::CloudController::DropletModel.make(state: 'STAGED'),
+                                               enable_ssh: false,
+                                               environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' })
       }
 
       let(:process) {
@@ -73,6 +75,7 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
           updated_at: Time.at(1529064800.9),
        )
       }
+
       it 'does not error' do
         expect { client.desire_app(process) }.to_not raise_error
       end
@@ -117,3 +120,4 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
     end
   end
 end
+

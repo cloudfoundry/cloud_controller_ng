@@ -13,62 +13,87 @@ RSpec.describe(OPI::Client) do
     )
     }
 
-    let(:lrp) {
-      double(
-        guid: 'guid_1234',
-        name: 'dora',
-        version: '0.1.0',
-        desired_droplet: droplet,
-        specified_or_detected_command: 'ls -la',
-        environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
-        desired_instances: 4,
-        disk_quota: 100,
-        memory: 256,
-        file_descriptors: 0xBAAAAAAD,
-        uris: [],
-        space: double(name: 'name', guid: 'guid'),
-        health_check_type: 'http',
-        health_check_http_endpoint: '/health',
-        health_check_timeout: 1,
-        updated_at: Time.at(1529064800.9),
-     )
+    let(:cfg) { ::VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
+    let(:lifecycle_type) { nil }
+    let(:app_model) {
+      ::VCAP::CloudController::AppModel.make(lifecycle_type,
+                                             guid: 'app-guid',
+                                             droplet: ::VCAP::CloudController::DropletModel.make(state: 'STAGED'),
+                                             enable_ssh: false,
+                                             environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' })
     }
 
-    let(:cfg) { double }
+    let(:lrp) do
+      lrp = ::VCAP::CloudController::ProcessModel.make(:process,
+        app:                  app_model,
+        state:                'STARTED',
+        diego:                false,
+        guid:                 'process-guid',
+        type:                 'web',
+        health_check_timeout: 12,
+        instances:            21,
+        memory:               128,
+        disk_quota:           256,
+        command:              'ls -la',
+        file_descriptors:     32,
+        health_check_type:    'port',
+        enable_ssh:           false,
+      )
+      lrp.this.update(updated_at: Time.at(2))
+      lrp.reload
+    end
 
     context 'when request executes successfully' do
       before do
-        stub_request(:put, "#{opi_url}/apps/guid_1234-0.1.0").to_return(status: 201)
-        allow(VCAP::CloudController::Config).to receive(:config).and_return(cfg)
-        allow(cfg).to receive(:get).with(:external_domain).and_return('api.example.com')
-        allow(cfg).to receive(:get).with(:external_protocol).and_return('https')
+        stub_request(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").to_return(status: 201)
       end
 
-      it 'sends a PUT request' do
+      let(:expected_body) {
+        {
+            process_guid: "process-guid-#{lrp.version}",
+            docker_image: nil,
+            start_command: 'ls -la',
+            environment: {
+              'BISH': 'BASH',
+              'FOO': 'BAR',
+              'VCAP_APPLICATION': %{
+                  {
+                    "cf_api": "http://api2.vcap.me",
+                    "limits": {
+                      "fds": 32,
+                      "mem": 128,
+                      "disk": 256
+                     },
+                    "application_name": "#{app_model.name}",
+                    "application_uris":[],
+                    "name": "#{app_model.name}",
+                    "space_name": "#{lrp.space.name}",
+                    "space_id": "#{lrp.space.guid}",
+                    "uris": [],
+                    "application_id": "#{lrp.guid}",
+                    "version": "#{lrp.version}",
+                    "application_version": "#{lrp.version}"
+                  }}.delete(' ').delete("\n"),
+              'MEMORY_LIMIT': '128m',
+              'VCAP_SERVICES': '{}',
+              'PORT': '8080',
+              'VCAP_APP_PORT': '8080',
+              'VCAP_APP_HOST': '0.0.0.0'
+            },
+            instances: 21,
+            droplet_hash: lrp.droplet_hash,
+            health_check_type: 'port',
+            health_check_http_endpoint: nil,
+            health_check_timeout_ms: 12000,
+            last_updated: '2.0',
+        }
+      }
+
+      fit 'sends a PUT request' do
         response = client.desire_app(lrp)
 
         expect(response.status_code).to equal(201)
-        expect(WebMock).to have_requested(:put, "#{opi_url}/apps/guid_1234-0.1.0").with(body: {
-            process_guid: 'guid_1234-0.1.0',
-            docker_image: img_url,
-            start_command: 'ls -la',
-            environment: {
-                'PORT': '8080',
-                'FOO': 'BAR',
-                'VCAP_APPLICATION': '{"cf_api":"https://api.example.com","limits":{"fds":3131746989,'\
-                                      '"mem":256,"disk":100},"application_name":"dora","application_uris":[],'\
-                                      '"name":"dora","space_name":"name","space_id":"guid","uris":[],"users":null,'\
-                                      '"application_id":"guid_1234","version":"0.1.0","application_version":"0.1.0"}'
-            },
-            instances: 4,
-            droplet_hash: 'd_haash',
-            droplet_guid: 'some-droplet-guid',
-            health_check_type: 'http',
-            health_check_http_endpoint: '/health',
-            health_check_timeout_ms: 1000,
-            last_updated: '1529064800.9'
-          }.to_json
-        )
+        expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
       end
     end
   end
