@@ -51,37 +51,52 @@ module VCAP::Services::ServiceBrokers
     end
 
     def update_or_create_plans(catalog)
-      catalog.plans.each do |catalog_plan|
+      existing_plans, new_plans = catalog.plans.partition do |plan|
+        VCAP::CloudController::ServicePlan.where(unique_id: plan.broker_provided_id).present?
+      end
+
+      existing_plans.each do |catalog_plan|
         cond = {
           unique_id: catalog_plan.broker_provided_id,
           service: catalog_plan.catalog_service.cc_service,
         }
-        plan = find_or_new_model(VCAP::CloudController::ServicePlan, cond)
-        if plan.new?
-          plan.public = false
-        end
+        plan = VCAP::CloudController::ServicePlan.find(cond)
 
-        if catalog_plan.schemas
-          schemas = catalog_plan.schemas
-          create_instance = schemas.service_instance.try(:create).try(:parameters).try(:to_json)
-          update_instance = schemas.service_instance.try(:update).try(:parameters).try(:to_json)
-          create_binding = schemas.service_binding.try(:create).try(:parameters).try(:to_json)
-        end
+        update_plan_from_catalog(plan, catalog_plan)
+      end
 
-        plan.set({
-          name:        catalog_plan.name,
-          description: catalog_plan.description,
-          free:        catalog_plan.free,
-          bindable:    catalog_plan.bindable,
-          active:      true,
-          extra:       catalog_plan.metadata.try(:to_json),
-          create_instance_schema: create_instance,
-          update_instance_schema: update_instance,
-          create_binding_schema: create_binding,
+      new_plans.each do |catalog_plan|
+        plan = VCAP::CloudController::ServicePlan.new({
+          unique_id: catalog_plan.broker_provided_id,
+          service: catalog_plan.catalog_service.cc_service,
+          public: false,
         })
-        @services_event_repository.with_service_plan_event(plan) do
-          plan.save(changed: true)
-        end
+
+        update_plan_from_catalog(plan, catalog_plan)
+      end
+    end
+
+    def update_plan_from_catalog(plan, catalog_plan)
+      if catalog_plan.schemas
+        schemas = catalog_plan.schemas
+        create_instance = schemas.service_instance.try(:create).try(:parameters).try(:to_json)
+        update_instance = schemas.service_instance.try(:update).try(:parameters).try(:to_json)
+        create_binding = schemas.service_binding.try(:create).try(:parameters).try(:to_json)
+      end
+
+      plan.set({
+        name:        catalog_plan.name,
+        description: catalog_plan.description,
+        free:        catalog_plan.free,
+        bindable:    catalog_plan.bindable,
+        active:      true,
+        extra:       catalog_plan.metadata.try(:to_json),
+        create_instance_schema: create_instance,
+        update_instance_schema: update_instance,
+        create_binding_schema: create_binding,
+      })
+      @services_event_repository.with_service_plan_event(plan) do
+        plan.save(changed: true)
       end
     end
 

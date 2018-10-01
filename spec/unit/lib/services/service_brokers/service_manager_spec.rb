@@ -544,6 +544,65 @@ module VCAP::Services::ServiceBrokers
             })
           end
 
+          context 'when a plan is renamed and a new plan is added with the old name' do
+            let!(:plan) do
+              VCAP::CloudController::ServicePlan.make(
+                name: plan_name,
+                service: service,
+                unique_id: plan_id,
+                free: true,
+                bindable: false,
+                create_instance_schema: nil,
+                update_instance_schema: nil
+              )
+            end
+
+            let(:catalog_hash) do
+              {
+                'services' => [
+                  {
+                    'id'          => service_id,
+                    'name'        => service_name,
+                    'description' => service_description,
+                    'bindable'    => true,
+                    'dashboard_client' => dashboard_client_attrs,
+                    'tags'        => ['mysql', 'relational'],
+                    'requires'    => ['ultimate', 'power'],
+                    'plan_updateable' => true,
+                    'bindings_retrievable' => true,
+                    'instances_retrievable' => true,
+                    'plans' => [
+                      {
+                        'id'          => 'new-plan-id',
+                        'name'        => plan_name,
+                        'description' => plan_description,
+                        'free'        => false,
+                        'bindable'    => true,
+                      }.merge(plan_metadata_hash).merge(plan_schemas_hash),
+                      {
+                        'id'          => plan_id,
+                        'name'        => plan_name + '-legacy',
+                        'description' => plan_description,
+                        'free'        => false,
+                        'bindable'    => true,
+                      }.merge(plan_metadata_hash).merge(plan_schemas_hash)
+                    ]
+                  }.merge(service_metadata_hash)
+                ]
+              }
+            end
+
+            it 'renames the plan and creates the new plan with the old name' do
+              service_manager.sync_services_and_plans(catalog)
+
+              plan.reload
+              expect(plan.name).to eq plan_name + '-legacy'
+
+              new_plan = VCAP::CloudController::ServicePlan.find(unique_id: 'new-plan-id')
+              expect(new_plan.name).to eq plan_name
+            end
+          end
+
           context 'when the plan is public' do
             before do
               plan.update(public: true)

@@ -1116,6 +1116,57 @@ RSpec.describe 'Service Broker' do
       end
     end
 
+    context 'when a plan is re-named, and another plan is added to the front of the list of plans with the old name' do
+      let(:catalog1) do
+        {
+          services:
+          [{
+            id:          'service-guid-here',
+            name:        service_name,
+            description: 'A MySQL-compatible relational database',
+            bindable:    true,
+            plans:
+            [{
+              id:          'plan1-guid-here',
+              name:        'small',
+              description: 'A small shared database with 100mb storage quota and 10 connections'
+            }]
+          }]
+        }
+      end
+
+      let(:catalog2) do
+        {
+          services:
+          [{
+            id:          'service-guid-here',
+            name:        service_name,
+            description: 'A MySQL-compatible relational database',
+            bindable:    true,
+            plans:
+            [{
+              id:          'plan2-guid-here',
+              name:        'small',
+              description: 'A small shared database with 100mb storage quota and 10 connections'
+            }, {
+              id:          'plan1-guid-here',
+              name:        'small-legacy',
+              description: '(Legacy) A small shared database with 100mb storage quota and 10 connections'
+            }]
+          }]
+        }
+      end
+
+      it 'renames the plan and adds a new plan with the old name' do
+        setup_broker(catalog1)
+        update_broker(catalog2)
+        expect(last_response).to have_status_code(200)
+
+        expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan2-guid-here')[:name]).to eq('small')
+        expect(VCAP::CloudController::ServicePlan.find(unique_id: 'plan1-guid-here')[:name]).to eq('small-legacy')
+      end
+    end
+
     context 'when a service plan disappears from the catalog' do
       before do
         setup_broker(catalog_with_two_plans)
