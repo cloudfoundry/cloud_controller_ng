@@ -269,6 +269,7 @@ diego:
 
 opi:
   enabled: false
+  cc_uploader_url: "http://cc-uploader.service.cf.internal:9091"
   url: http://opi.service.cf.internal
   opi_staging: false
 

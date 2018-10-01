@@ -12,8 +12,9 @@ module OPI
 
     def stage(staging_guid, staging_details)
       staging_request = to_request(staging_details)
-      cc_upload_url = staging_request[:lifecycle_data][:droplet_upload_uri]
-      staging_request[:lifecycle_data][:droplet_upload_uri] = "https://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=#{cc_upload_url}"
+      dropet_upload_url = staging_request[:lifecycle_data][:droplet_upload_uri]
+      cc_uploader_url = @config.get(:opi, :cc_uploader_url)
+      staging_request[:lifecycle_data][:droplet_upload_uri] = "#{cc_uploader_url}/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=#{dropet_upload_url}"
 
       payload = MultiJson.dump(staging_request)
       response = @client.post("/stage/#{staging_guid}", body: payload)

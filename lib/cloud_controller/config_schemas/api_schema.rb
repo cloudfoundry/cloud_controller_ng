@@ -296,6 +296,7 @@ module VCAP::CloudController
             enabled: bool,
             url: String,
             opi_staging: bool,
+            cc_uploader_url: String,
           },
 
           allow_app_ssh_access: bool,

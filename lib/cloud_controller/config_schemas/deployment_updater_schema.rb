@@ -70,6 +70,7 @@ module VCAP::CloudController
             enabled: bool,
             url: String,
             opi_staging: bool,
+            cc_uploader_url: String,
           },
 
           default_app_memory: Integer,
