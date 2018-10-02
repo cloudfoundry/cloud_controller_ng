@@ -24,29 +24,28 @@ module VCAP::Services::ServiceBrokers
     private
 
     def update_or_create_services(catalog)
-      catalog.services.each do |catalog_service|
+      existing_services, new_services = catalog.services.partition do |service|
+        VCAP::CloudController::Service.where(
+          service_broker: service.service_broker,
+          unique_id: service.broker_provided_id
+        ).present?
+      end
+
+      existing_services.each do |catalog_service|
         cond = {
           service_broker: catalog_service.service_broker,
           unique_id:      catalog_service.broker_provided_id,
         }
-        obj = find_or_new_model(VCAP::CloudController::Service, cond)
+        service = VCAP::CloudController::Service.find(cond)
+        update_service_from_catalog(service, catalog_service)
+      end
 
-        obj.set(
-          label:       catalog_service.name,
-          description: catalog_service.description,
-          bindable:    catalog_service.bindable,
-          tags:        catalog_service.tags,
-          extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
-          active:      catalog_service.plans_present?,
-          requires:    catalog_service.requires,
-          plan_updateable: catalog_service.plan_updateable,
-          bindings_retrievable: catalog_service.bindings_retrievable,
-          instances_retrievable: catalog_service.instances_retrievable,
+      new_services.each do |catalog_service|
+        service = VCAP::CloudController::Service.new(
+          unique_id: catalog_service.broker_provided_id,
+          service_broker: catalog_service.service_broker,
         )
-
-        @services_event_repository.with_service_event(obj) do
-          obj.save(changed: true)
-        end
+        update_service_from_catalog(service, catalog_service)
       end
     end
 
@@ -74,6 +73,25 @@ module VCAP::Services::ServiceBrokers
         })
 
         update_plan_from_catalog(plan, catalog_plan)
+      end
+    end
+
+    def update_service_from_catalog(service, catalog_service)
+      service.set(
+        label:       catalog_service.name,
+        description: catalog_service.description,
+        bindable:    catalog_service.bindable,
+        tags:        catalog_service.tags,
+        extra:       catalog_service.metadata ? catalog_service.metadata.to_json : nil,
+        active:      catalog_service.plans_present?,
+        requires:    catalog_service.requires,
+        plan_updateable: catalog_service.plan_updateable,
+        bindings_retrievable: catalog_service.bindings_retrievable,
+        instances_retrievable: catalog_service.instances_retrievable,
+      )
+
+      @services_event_repository.with_service_event(service) do
+        service.save(changed: true)
       end
     end
 

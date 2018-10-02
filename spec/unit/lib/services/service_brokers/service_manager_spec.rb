@@ -481,6 +481,63 @@ module VCAP::Services::ServiceBrokers
           expect(plan.bindable).to be true
         end
 
+        context 'when a service is renamed and a new service is added with the old name' do
+          let!(:service) do
+            VCAP::CloudController::Service.make(
+              label: service_name,
+              service_broker: broker,
+              unique_id: service_id
+            )
+          end
+
+          let(:catalog_hash) do
+            {
+              'services' => [
+                {
+                  'id'          => 'new-service-id',
+                  'name'        => service_name,
+                  'description' => service_description,
+                  'bindable'    => true,
+                  'plans' => [
+                    {
+                      'id'          => 'new-plan-id-1',
+                      'name'        => plan_name,
+                      'description' => plan_description,
+                      'free'        => false,
+                      'bindable'    => true,
+                    },
+                  ]
+                },
+                {
+                  'id'          => service_id,
+                  'name'        => 'new-name',
+                  'description' => service_description,
+                  'bindable'    => true,
+                  'plans' => [
+                    {
+                      'id'          => 'new-plan-id-2',
+                      'name'        => plan_name,
+                      'description' => plan_description,
+                      'free'        => false,
+                      'bindable'    => true,
+                    },
+                  ]
+                },
+              ]
+            }
+          end
+
+          it 'renames the service and creates the new service with the old name' do
+            service_manager.sync_services_and_plans(catalog)
+
+            service.reload
+            expect(service.label).to eq 'new-name'
+
+            new_service = VCAP::CloudController::Service.find(unique_id: 'new-service-id')
+            expect(new_service.label).to eq service_name
+          end
+        end
+
         context 'and a plan already exists' do
           let!(:plan) do
             VCAP::CloudController::ServicePlan.make(
