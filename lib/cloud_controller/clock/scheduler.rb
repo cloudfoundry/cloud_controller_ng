@@ -28,6 +28,7 @@ module VCAP::CloudController
       @config = config
       @logger = Steno.logger('cc.clock')
       @timeout_calculator = JobTimeoutCalculator.new(@config)
+      Thread.abort_on_exception = true
     end
 
     def start
@@ -35,7 +36,7 @@ module VCAP::CloudController
       start_frequent_jobs
       start_inline_jobs
 
-      Clockwork.error_handler { |error| @logger.error("#{error} (#{error.class.name})") }
+      Clockwork.error_handler { |error| @logger.error("#{error} (#{error.class.name})"); raise error }
       Clockwork.run
     end
 

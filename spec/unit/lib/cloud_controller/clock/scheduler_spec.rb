@@ -35,8 +35,9 @@ module VCAP::CloudController
         error = StandardError.new 'Boom!'
         allow(Clockwork).to receive(:error_handler).and_yield(error)
         expect_any_instance_of(Steno::Logger).to receive(:error).with("#{error} (#{error.class.name})")
-
-        schedule.start
+        expect {
+          schedule.start
+        }.to raise_error(StandardError, 'Boom!')
       end
 
       it 'runs Clockwork' do
