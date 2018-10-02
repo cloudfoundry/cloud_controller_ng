@@ -49,7 +49,7 @@ module VCAP::CloudController
       def create_deployment_process(app, deployment_guid, web_process)
         process_type = "web-deployment-#{deployment_guid}"
 
-        ProcessModel.create(
+        process = ProcessModel.create(
           app: app,
           type: process_type,
           state: ProcessModel::STARTED,
@@ -66,6 +66,14 @@ module VCAP::CloudController
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
         )
+
+        DeploymentProcessModel.create(
+          deployment_guid: deployment_guid,
+          process_guid: process.guid,
+          process_type: process.type
+        )
+
+        process
       end
 
       def record_audit_event(deployment, droplet, user_audit_info)

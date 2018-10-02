@@ -19,6 +19,38 @@ module VCAP::CloudController
       expect(deployment.deploying_web_process).to eq(deploying_web_process)
     end
 
+    context '#processes' do
+      before do
+        DeploymentProcessModel.make(
+          deployment: deployment,
+          process_guid: deploying_web_process.guid,
+          process_type: deploying_web_process.type
+        )
+        DeploymentProcessModel.make(
+          deployment: deployment,
+          process_guid: 'guid-for-deleted-process',
+          process_type: 'i-do-not-exist!!!!!!!!!!'
+        )
+        DeploymentProcessModel.make(
+          deployment: DeploymentModel.make
+        )
+      end
+
+      it 'has deployment processes with the deploying web process' do
+        expect(
+          deployment.historical_related_processes.map(&:deployment_guid)
+        ).to contain_exactly(deployment.guid, deployment.guid)
+
+        expect(
+          deployment.historical_related_processes.map(&:process_guid)
+        ).to contain_exactly(deploying_web_process.guid, 'guid-for-deleted-process')
+
+        expect(
+          deployment.historical_related_processes.map(&:process_type)
+        ).to contain_exactly(deploying_web_process.type, 'i-do-not-exist!!!!!!!!!!')
+      end
+    end
+
     describe '#deploying?' do
       it 'returns true if the deployment is deploying' do
         deployment.state = 'DEPLOYING'
@@ -42,6 +74,30 @@ module VCAP::CloudController
         deployment.state = 'CANCELED'
 
         expect(deployment.deploying?).to be(false)
+      end
+    end
+
+    describe '#destroy' do
+      before do
+        DeploymentProcessModel.make(
+          deployment: deployment,
+          process_guid: deploying_web_process.guid,
+          process_type: deploying_web_process.type
+        )
+        DeploymentProcessModel.make(
+          deployment: deployment,
+          process_guid: 'guid-for-deleted-process',
+          process_type: 'i-do-not-exist!!!!!!!!!!'
+        )
+        DeploymentProcessModel.make(
+          deployment: DeploymentModel.make
+        )
+      end
+
+      it 'deletes any associated historical DeploymentProcessModels' do
+        expect {
+          deployment.destroy
+        }.to change { DeploymentProcessModel.count }.from(3).to(1)
       end
     end
   end

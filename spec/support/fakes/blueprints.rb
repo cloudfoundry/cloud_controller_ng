@@ -1,5 +1,6 @@
 require 'securerandom'
 require_relative 'process_model_factory'
+require_relative 'deployment_model_test_factory'
 require_relative '../test_models'
 
 Sham.define do
@@ -102,6 +103,12 @@ module VCAP::CloudController
     droplet { DropletModel.make(app: app) }
     deploying_web_process { ProcessModel.make(app: app, type: "web-deployment-#{Sham.guid}") }
     original_web_process_instance_count { 1 }
+  end
+
+  DeploymentProcessModel.blueprint do
+    deployment { DeploymentModel.make }
+    process_guid { Sham.guid }
+    process_type { ProcessTypes::WEB }
   end
 
   TaskModel.blueprint do

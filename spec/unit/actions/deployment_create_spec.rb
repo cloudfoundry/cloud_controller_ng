@@ -93,6 +93,22 @@ module VCAP::CloudController
                                        })
         end
 
+        it 'creates a DeploymentProcessModel to save historical information about the deploying processes' do
+          deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
+
+          expect(
+            deployment.historical_related_processes.map(&:deployment_guid)
+          ).to contain_exactly(deployment.guid)
+
+          expect(
+            deployment.historical_related_processes.map(&:process_guid)
+          ).to contain_exactly(deployment.deploying_web_process.guid)
+
+          expect(
+            deployment.historical_related_processes.map(&:process_type)
+          ).to contain_exactly(deployment.deploying_web_process.type)
+        end
+
         context 'when the app does not have a droplet set' do
           let(:app_without_current_droplet) { VCAP::CloudController::AppModel.make }
           let(:next_droplet) { VCAP::CloudController::DropletModel.make(app: app_without_current_droplet, process_types: { 'web' => 'asdf' }) }

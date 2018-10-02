@@ -133,7 +133,7 @@ RSpec.describe 'Deployments' do
     let(:old_droplet) { VCAP::CloudController::DropletModel.make }
 
     it 'should get and display the deployment' do
-      deployment = VCAP::CloudController::DeploymentModel.make(
+      deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
         state: 'DEPLOYING',
         app: app_model,
         droplet: droplet,
@@ -187,7 +187,14 @@ RSpec.describe 'Deployments' do
     let(:space) { app_model.space }
     let(:app_model) { droplet.app }
     let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model, droplet: app_model.droplet, previous_droplet: app_model.droplet) }
+    let!(:deployment) do
+      VCAP::CloudController::DeploymentModelTestFactory.make(
+        state: 'DEPLOYING',
+        app: app_model,
+        droplet: app_model.droplet,
+        previous_droplet: app_model.droplet
+      )
+    end
 
     context 'with an admin who can see all deployments' do
       let(:admin_user_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
@@ -198,9 +205,9 @@ RSpec.describe 'Deployments' do
       let(:app2) { droplet2.app }
       let(:app3) { droplet3.app }
       let(:app4) { droplet4.app }
-      let!(:deployment2) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app2, droplet: app2.droplet) }
-      let!(:deployment3) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app3, droplet: app3.droplet) }
-      let!(:deployment4) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app4, droplet: app4.droplet) }
+      let!(:deployment2) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: app2, droplet: app2.droplet) }
+      let!(:deployment3) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: app3, droplet: app3.droplet) }
+      let!(:deployment4) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: app4, droplet: app4.droplet) }
 
       it 'should list all deployments' do
         get '/v3/deployments?per_page=2', nil, admin_user_header
@@ -294,7 +301,7 @@ RSpec.describe 'Deployments' do
       let(:another_app) { another_droplet.app }
       let(:another_droplet) { VCAP::CloudController::DropletModel.make }
       let(:another_space) { another_app.space }
-      let!(:another_deployment) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: another_app, droplet: another_droplet) }
+      let!(:another_deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: another_app, droplet: another_droplet) }
 
       let(:user_header) { headers_for(user) }
 
@@ -359,7 +366,7 @@ RSpec.describe 'Deployments' do
       let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
 
       it 'changes the deployment state to CANCELING and rolls the droplet back' do
-        deployment = VCAP::CloudController::DeploymentModel.make(
+        deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
           state: 'DEPLOYING',
           app: app_model,
           droplet: droplet,

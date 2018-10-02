@@ -31,6 +31,14 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
+    one_to_many :historical_related_processes,
+      class: 'VCAP::CloudController::DeploymentProcessModel',
+      key: :deployment_guid,
+      primary_key: :guid,
+      without_guid_generation: true
+
+    add_association_dependencies historical_related_processes: :delete
+
     dataset_module do
       def deploying_count
         where(state: DeploymentModel::DEPLOYING_STATE).count
