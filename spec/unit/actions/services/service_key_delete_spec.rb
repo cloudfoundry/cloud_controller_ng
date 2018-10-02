@@ -49,10 +49,24 @@ module VCAP::CloudController
         expect(client).to have_received(:unbind).with(service_key_2)
       end
 
-      it 'fails if the instance has another operation in progress' do
-        service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
-        errors = service_key_delete.delete([service_key_1])
-        expect(errors.first).to be_instance_of CloudController::Errors::ApiError
+      context 'when the instance has another operation in progress' do
+        it 'raises an error' do
+          service_instance.service_instance_operation = ServiceInstanceOperation.make state: 'in progress'
+          errors = service_key_delete.delete([service_key_1])
+          expect(errors.first).to be_instance_of CloudController::Errors::ApiError
+          expect(errors.first.name).to eq('AsyncServiceInstanceOperationInProgress')
+        end
+      end
+
+      context 'when the broker returns an error' do
+        before do
+          allow(client).to receive(:unbind).with(service_key_1).and_raise('boomtown')
+        end
+
+        it 'raises a decorated error' do
+          errors = service_key_delete.delete(service_key_dataset)
+          expect(errors.first.message).to eq("Service broker failed to delete service binding for instance #{service_instance.name}: boomtown")
+        end
       end
 
       context 'when one key deletion fails' do
@@ -74,7 +88,7 @@ module VCAP::CloudController
 
         it 'returns all of the errors caught' do
           errors = service_key_delete.delete(service_key_dataset)
-          expect(errors[0].message).to eq('meow')
+          expect(errors.first.message).to include('meow')
         end
       end
     end

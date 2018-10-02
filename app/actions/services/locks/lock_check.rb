@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     def raise_if_binding_locked(service_binding)
       if service_binding.operation_in_progress?
-        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress')
+        raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
       end
     end
   end

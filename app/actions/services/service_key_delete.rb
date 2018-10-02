@@ -20,13 +20,22 @@ module VCAP::CloudController
       begin
         raise_if_instance_locked(service_instance)
 
-        client.unbind(service_binding)
+        begin
+          client.unbind(service_binding)
+        rescue => e
+          raise_wrapped_error(service_binding, e)
+        end
+
         service_binding.destroy
       rescue => e
         errors << e
       end
 
       errors
+    end
+
+    def raise_wrapped_error(service_binding, err)
+      raise err.exception("Service broker failed to delete service binding for instance #{service_binding.service_instance.name}: #{err.message}")
     end
   end
 end

@@ -74,10 +74,11 @@ module VCAP::CloudController
           allow(client).to receive(:unbind).and_raise(error)
         end
 
-        it 're-raises the same error' do
+        it 'decorates the error with app name and service instance name' do
           expect {
             service_binding_delete.foreground_delete_request(service_binding)
-          }.to raise_error(error)
+          }.to raise_error(
+            "An unbind operation for the service binding between app #{service_binding.app.name} and service instance #{service_binding.service_instance.name} failed: kablooey")
         end
       end
     end
