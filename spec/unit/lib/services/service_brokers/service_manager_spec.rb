@@ -502,6 +502,9 @@ module VCAP::Services::ServiceBrokers
             expect(plan.update_instance_schema).to be_nil
             expect(plan.create_binding_schema).to be_nil
 
+            expect(VCAP::CloudController::ServicePlan).to receive(:where).with(unique_id: plan_id, service: service).and_call_original
+            expect(VCAP::CloudController::ServicePlan).to receive(:find).with(unique_id: plan_id, service: service).and_call_original
+
             expect {
               service_manager.sync_services_and_plans(catalog)
             }.to_not change(VCAP::CloudController::ServicePlan, :count)

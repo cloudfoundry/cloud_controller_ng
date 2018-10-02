@@ -51,8 +51,9 @@ module VCAP::Services::ServiceBrokers
     end
 
     def update_or_create_plans(catalog)
-      existing_plans, new_plans = catalog.plans.partition do |plan|
-        VCAP::CloudController::ServicePlan.where(unique_id: plan.broker_provided_id).present?
+      existing_plans, new_plans = catalog.plans.partition do |catalog_plan|
+        VCAP::CloudController::ServicePlan.where(unique_id: catalog_plan.broker_provided_id,
+                                                 service: catalog_plan.catalog_service.cc_service).present?
       end
 
       existing_plans.each do |catalog_plan|
