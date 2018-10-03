@@ -54,9 +54,16 @@ module VCAP::CloudController
 
         def bulk_sync(routes:, route_mappings:, processes:)
           copilot_client.bulk_sync(
-            routes: routes.map { |r| { guid: r.guid, host: r.fqdn, path: r.path } },
-            route_mappings: route_mappings.map { |rm| { capi_process_guid: rm.process.guid, route_guid: rm.route.guid, route_weight: rm.weight } },
-            capi_diego_process_associations: processes.map do |process|
+            routes: routes.compact.map { |r| { guid: r.guid, host: r.fqdn, path: r.path } },
+            route_mappings: route_mappings.compact.map do |rm|
+              next if rm.process.nil? || rm.route.nil?
+              {
+                capi_process_guid: rm.process.guid,
+                route_guid: rm.route.guid,
+                route_weight: rm.weight
+              }
+            end.compact,
+            capi_diego_process_associations: processes.compact.map do |process|
               {
                   capi_process_guid: process.guid,
                   diego_process_guids: [Diego::ProcessGuid.from_process(process)]

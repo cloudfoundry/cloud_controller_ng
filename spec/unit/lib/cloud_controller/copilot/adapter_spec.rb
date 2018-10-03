@@ -265,6 +265,30 @@ module VCAP::CloudController
         )
       end
 
+      context 'when a route, route_mapping, or capi_diego_process_association has nil entries' do
+        let(:nil_route) { nil }
+        let(:nil_process) { nil }
+        let(:bad_route_mapping) do
+          instance_double(
+            RouteMappingModel,
+            process: nil_process,
+            route: nil_route,
+            weight: 5
+          )
+        end
+        before do
+          adapter.bulk_sync(routes: [nil_route], route_mappings: [bad_route_mapping], processes: [nil_process])
+        end
+        it 'does not map or error on nil entries' do
+          expect(copilot_client).to have_received(:bulk_sync).with(
+            routes: [],
+            route_mappings: [],
+            capi_diego_process_associations: []
+          )
+        end
+      end
+
+
       context 'when copilot_client.bulk_sync returns an error' do
         before do
           allow(copilot_client).to receive(:bulk_sync).and_raise('uh oh')
