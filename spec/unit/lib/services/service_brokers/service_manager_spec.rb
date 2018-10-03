@@ -559,9 +559,6 @@ module VCAP::Services::ServiceBrokers
             expect(plan.update_instance_schema).to be_nil
             expect(plan.create_binding_schema).to be_nil
 
-            expect(VCAP::CloudController::ServicePlan).to receive(:where).with(unique_id: plan_id, service: service).and_call_original
-            expect(VCAP::CloudController::ServicePlan).to receive(:find).with(unique_id: plan_id, service: service).and_call_original
-
             expect {
               service_manager.sync_services_and_plans(catalog)
             }.to_not change(VCAP::CloudController::ServicePlan, :count)
@@ -602,6 +599,22 @@ module VCAP::Services::ServiceBrokers
               'update_instance_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}',
               'create_binding_schema' => '{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}'
             })
+          end
+
+          context 'when the plan belongs to a different service' do
+            let(:different_service) { VCAP::CloudController::Service.make }
+            let!(:plan) do
+              VCAP::CloudController::ServicePlan.make(
+                service: different_service,
+                unique_id: plan_id
+              )
+            end
+
+            it 'raises a database error' do
+              expect {
+                service_manager.sync_services_and_plans(catalog)
+              }.to raise_error Sequel::ValidationFailed
+            end
           end
 
           context 'when a plan is renamed and a new plan is added with the old name' do
