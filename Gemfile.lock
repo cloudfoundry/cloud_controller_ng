@@ -34,13 +34,6 @@ GIT
       vhd (= 0.0.4)
 
 GIT
-  remote: https://github.com/rubyzip/rubyzip.git
-  revision: 8887b703490337f7ab68ebfb4880354db28ba648
-  ref: 8887b70
-  specs:
-    rubyzip (1.2.1)
-
-GIT
   remote: https://github.com/sporkrb/spork
   revision: 224df492657e617a0c93c0319e78f0eefee5b636
   ref: 224df49
@@ -387,6 +380,7 @@ GEM
     ruby_dep (1.5.0)
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
+    rubyzip (1.2.2)
     safe_yaml (1.0.4)
     scientist (1.1.1)
     sequel (4.49.0)
@@ -521,7 +515,7 @@ DEPENDENCIES
   rspec_api_documentation
   rubocop (~> 0.58.2)
   ruby-debug-ide (>= 0.7.0.beta4)
-  rubyzip!
+  rubyzip
   scientist (~> 1.1.0)
   sequel (~> 4.0)
   sinatra (~> 2.0)
