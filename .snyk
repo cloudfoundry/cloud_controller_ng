@@ -9,7 +9,7 @@ ignore:
   SNYK-RUBY-NOKOGIRI-20299:
     - '*':
         reason: None Given
-        expires: 2018-10-04T22:22:05.618Z
+        expires: 2018-11-03T22:58:21.603Z
   SNYK-RUBY-ERUBIS-20482:
     - '*':
         reason: None Given
