@@ -98,6 +98,10 @@ module VCAP::CloudController
         if oldest_web_process.instances > 1
           oldest_web_process.update(instances: oldest_web_process.instances - 1)
         else
+          if oldest_web_process.type == ProcessTypes::WEB
+            oldest_web_process.update(instances: 0)
+            return
+          end
           cleanup_webish_process(oldest_web_process)
         end
       end

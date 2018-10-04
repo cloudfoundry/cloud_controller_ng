@@ -162,12 +162,12 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the (oldest) web process will be at zero instances' do
-        let(:current_web_instances) { 0 }
+      context 'when the (oldest) web process will be at zero instances and is type web' do
+        let(:current_web_instances) { 1 }
 
-        it 'destroys the oldest webish process' do
+        it 'does not destroy the web process, but scales it to 0' do
           subject.scale
-          expect(ProcessModel.find(guid: web_process.guid)).to be_nil
+          expect(ProcessModel.find(guid: web_process.guid).instances).to eq 0
         end
 
         it 'does not destroy any route mappings' do
