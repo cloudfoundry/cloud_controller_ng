@@ -28,7 +28,7 @@ class FakeLoggregatorServer
   end
 
   def stop
-    @sock.close
     Thread.kill(@thread)
+    @sock.close
   end
 end
