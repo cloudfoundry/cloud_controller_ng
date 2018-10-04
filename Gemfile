@@ -43,7 +43,6 @@ gem 'yajl-ruby'
 gem 'actionpack', '~> 5.2.0'
 gem 'actionview', '~> 5.2.0'
 gem 'activemodel', '~> 5.2.0'
-gem 'rails', '~> 5.2.0'
 gem 'railties', '~> 5.2.0'
 
 # Blobstore and Bits Service Dependencies
