@@ -114,8 +114,8 @@ module VCAP::CloudController
             service_usage_event_count = ServiceUsageEvent.count
             created_event_count       = ServiceUsageEvent.where(state: ServiceUsageEventRepository::CREATED_EVENT_STATE).count
 
-            expect(service_instance_count).to eq(service_usage_event_count)
-            expect(service_usage_event_count).to eq(created_event_count)
+            expect(service_usage_event_count).to eq(service_instance_count)
+            expect(created_event_count).to eq(service_instance_count)
           end
 
           it 'reseeds events with the current time' do
@@ -137,8 +137,19 @@ module VCAP::CloudController
             managed_event_count       = ServiceUsageEvent.where(service_instance_type: 'managed_service_instance').count
             user_provided_event_count = ServiceUsageEvent.where(service_instance_type: 'user_provided_service_instance').count
 
-            expect(managed_instance_count).to eq(managed_event_count)
-            expect(user_provided_instance_count).to eq(user_provided_event_count)
+            expect(managed_event_count).to eq(managed_instance_count)
+            expect(user_provided_event_count).to eq(user_provided_instance_count)
+          end
+
+          it 'reseeds events with the correct fields' do
+            repository.purge_and_reseed_service_instances!
+
+            service_instance = ManagedServiceInstance.first
+            reseeded_event = ServiceUsageEvent.where(
+              service_instance_guid: service_instance.guid
+            ).first
+
+            expect(reseeded_event).to match_service_instance(service_instance)
           end
         end
       end
